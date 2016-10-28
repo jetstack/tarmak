@@ -43,6 +43,18 @@
 # Copyright 2016 Your name here, unless otherwise noted.
 #
 
+class etcd
+{
+  user { 'etcd':
+    ensure => present,
+    uid => 873,
+    gid => 873,
+    shell => '/sbin/nologin',
+    home => '/var/lib/etcd',
+  }
+}
+
+
 define etcd::install (
   String $etcd_version,
 ) 
