@@ -48,12 +48,16 @@ class etcd
   user { 'etcd':
     ensure => present,
     uid => 873,
-    gid => 873,
     shell => '/sbin/nologin',
     home => '/var/lib/etcd',
   }
-}
 
+  file { ['/etc/etcd', '/var/lib/etcd']:
+    ensure => directory,
+    owner = 'etcd',
+    group => 'etcd',
+  }
+}
 
 define etcd::install (
   String $etcd_version,
