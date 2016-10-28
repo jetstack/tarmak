@@ -99,6 +99,7 @@ define etcd::config (
   file { "/etc/etcd/etcd-${cluster_name}.conf":
     ensure => file,
     content => template('etcd/etcd.conf.erb'),
+    require => Class['etcd'],
   }
 }
 
@@ -110,5 +111,6 @@ define etcd::systemd (
   file { "/usr/lib/systemd/system/etcd-${cluster_name}.service":
     ensure => file,
     content => template('etcd/etcd.service.erb'),
+    require => Class['etcd'],
   }
 }
