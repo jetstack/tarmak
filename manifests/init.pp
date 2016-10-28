@@ -54,7 +54,7 @@ class etcd
 
   file { ['/etc/etcd', '/var/lib/etcd']:
     ensure => directory,
-    owner = 'etcd',
+    owner => 'etcd',
     group => 'etcd',
   }
 }
