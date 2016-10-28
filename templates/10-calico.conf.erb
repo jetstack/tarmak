@@ -1,0 +1,15 @@
+{
+    "name": "calico-k8s-network",
+    "type": "calico",
+    "etcd_endpoints": "TODO",
+    "log_level": "info",
+    "ipam": {
+        "type": "calico-ipam"
+    },
+    "policy": {
+        "type": "k8s"
+    },
+    "kubernetes": {
+        "kubeconfig": "</PATH/TO/KUBECONFIG>"
+    }
+}

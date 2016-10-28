@@ -1,6 +1,6 @@
 {
-  "name": "jetstack/etcd",
-  "version": "0.1.0",
+  "name": "jetstack/calico",
+  "version": "0.1.1",
   "author": "jetstack",
   "summary": null,
   "license": "Apache-2.0",
@@ -9,6 +9,7 @@
   "issues_url": null,
   "dependencies": [
     {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+    {"name": "archive"}
   ],
   "data_provider": null
 }

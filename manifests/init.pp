@@ -1,7 +1,7 @@
-# Class: etcd
+# Class: calico
 # ===========================
 #
-# Full description of class etcd here.
+# Full description of class calico here.
 #
 # Parameters
 # ----------
@@ -28,7 +28,7 @@
 # --------
 #
 # @example
-#    class { 'etcd':
+#    class { 'calico':
 #      servers => [ 'pool.ntp.org', 'ntp.local.company.com' ],
 #    }
 #
@@ -43,56 +43,47 @@
 # Copyright 2016 Your name here, unless otherwise noted.
 #
 
-define etcd::install (
-  String $etcd_version,
+class calico
+{
+  file { ['/etc/cni/net.d', '/opt/cni/bin']:
+    ensure => directory,
+  }
+}
+
+define calico::bin_install (
+  String $calico_cni_version,
 ) 
 {
-  wget::fetch { "download etcd version $etcd_version":
-    source => "https://github.com/coreos/etcd/releases/download/v${etcd_version}/etcd-v${etcd_version}-linux-amd64.tar.gz",
-    destination => '/root/',
-    before => Exec["untar etcd version $etcd_version"],
-  }
-    
-  exec { "untar etcd version $etcd_version":
-      command => "/bin/tar -xvzf /root/etcd-v${etcd_version}-linux-amd64.tar.gz -C /root/",
-      creates => "/root/etcd-v${etcd_version}-linux-amd64/etcd",
-  }
-
-  file { "install etcd version $etcd_version":
-    path => "/bin/etcd-${etcd_version}",
-    source => "/root/etcd-v${etcd_version}-linux-amd64/etcd",
+  wget::fetch { "download calico-cni version $calico_cni_version":
+    source => [ "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico", "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico" ]
+    destination => '/opt/cni/bin/',
     mode => '755',
-    require => Exec["untar etcd version $etcd_version"],
-  }
-
-  file { "install etcdctl version $etcd_version":
-    path => "/bin/etcdctl-${etcd_version}",
-    source => "/root/etcd-v${etcd_version}-linux-amd64/etcdctl",
-    mode => '755',
-    require => Exec["untar etcd version $etcd_version"],
   }
 }
 
-define etcd::config (
-  String $cluster_name,
-  String $etcd_version,
-  Integer $client_port,
-  Integer $peer_port,
+define calico::lo_install (
+  String $cni_plugin_version,
 )
 {
-  file { "/etc/etcd/etcd-${cluster_name}.conf":
-    ensure => file,
-    content => template('etcd/etcd.conf.erb'),
+  archive { "download and extract cni-lo version $cni_plugin_version":
+    source => "https://github.com/containernetworking/cni/releases/download/v${cni_plugin_version}/cni-v${cni_plugin_version}.tgz"
+    extract_path => '/opt/cni/bin/',
+    extract_flags => '-xzf loopback',
+    mode => '755',
+    creates => '/opt/cni/bin/loopback',
   }
 }
 
-define etcd::systemd (
-  String $cluster_name,
-  String $etcd_version,
+
+define calico::config (
+  String $calico_name,
+  Integer $etcd_count,
+  Integer $etcd_client_port,
 )
 {
-  file { "/usr/lib/systemd/system/etcd-${cluster_name}.service":
+  file { "/etc/cni/net.d/10-calico.conf":
     ensure => file,
-    content => template('etcd/etcd.service.erb'),
+    content => template('calico/10-calico.conf.erb'),
+    require => Class['etcd'],
   }
 }
