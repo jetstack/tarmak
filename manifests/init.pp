@@ -92,6 +92,7 @@ define etcd::install (
 define etcd::config (
   String $cluster_name,
   String $etcd_version,
+  String $etcd_initial_cluster,
   Integer $client_port,
   Integer $peer_port,
 )
