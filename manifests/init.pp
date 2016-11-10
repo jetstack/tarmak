@@ -26,12 +26,14 @@ class etcd_mount
   file { "/usr/local/sbin/attach_volume.sh":
     ensure => file,
     source => "puppet:///modules/etcd_mount/attach_volume.sh",
+    mode => '0754',
     before => Service["attach-ebs-volume.service"],
   }
 
   file { "/usr/local/sbin/format_volume.sh":
     ensure => file,
     source => "puppet:///modules/etcd_mount/format_volume.sh",
+    mode => '0754',
     before => Service["format-ebs-volume.service"],
   }
 
