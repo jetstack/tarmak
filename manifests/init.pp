@@ -18,20 +18,20 @@ class etcd_mount
 
   file { "/usr/lib/systemd/system/var-lib-etcd.mount":
     ensure => file,
-    source => "puppet:///modules/etcd_mount/module/var-lib-etcd.mount",
+    source => "puppet:///modules/etcd_mount/var-lib-etcd.mount",
     before => Service["var-lib-etcd.mount"],
   } ~>
   Exec['systemctl-daemon-reload']
 
   file { "/usr/local/sbin/attach_volume.sh":
     ensure => file,
-    source => "puppet:///modules/etcd_mount/module/attach_volume.sh",
+    source => "puppet:///modules/etcd_mount/attach_volume.sh",
     before => Service["attach-ebs-volume.service"],
   }
 
   file { "/usr/local/sbin/format_volume.sh":
     ensure => file,
-    source => "puppet:///modules/etcd_mount/module/format_volume.sh",
+    source => "puppet:///modules/etcd_mount/format_volume.sh",
     before => Service["format-ebs-volume.service"],
   }
 
