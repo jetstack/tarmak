@@ -35,6 +35,7 @@ class etcd_mount
     source => "puppet:///modules/etcd_mount/format_volume.sh",
     mode => '0754',
     before => Service["format-ebs-volume.service"],
+    require => User["etcd"],
   }
 
   service { "attach-ebs-volume.service":
