@@ -51,7 +51,11 @@ class etcd_mount
 
   service { "var-lib-etcd.mount":
     provider => 'systemd',
-    enable => true,
     ensure => running,
+  }
+
+  file { "/etc/systemd/system/multiuser.target.wants/var-lib-etcd.mount":
+    ensure => link,
+    target => "/usr/lib/systemd/system/var-lib-etcd.mount",
   }
 }
