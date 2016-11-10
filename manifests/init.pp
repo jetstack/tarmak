@@ -19,7 +19,7 @@ class etcd_mount
   file { "/usr/lib/systemd/system/var-lib-etcd.mount":
     ensure => file,
     source => "puppet:///etcd-mount/module/var-lib-etcd.mount",
-    before => Service["var-lib-etcd.mount"],`
+    before => Service["var-lib-etcd.mount"],
   } ~>
   Exec['systemctl-daemon-reload']
 
