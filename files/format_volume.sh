@@ -5,4 +5,4 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
-/usr/sbin/blkid /dev/xvdd || (/usr/sbin/wipefs -fa /dev/xvdd && /usr/sbin/mkfs.xfs /dev/xvdd && mount /dev/xvdd /mnt && chown etcd:etcd /mnt && chmod 0750 /mnt && umount /mnt)
+/usr/sbin/blkid /dev/xvdd || (/usr/sbin/wipefs -fa /dev/xvdd && /usr/sbin/mkfs.xfs /dev/xvdd)
