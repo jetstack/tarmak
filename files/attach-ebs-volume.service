@@ -1,0 +1,11 @@
+[Unit]
+Description=Attaches the EBS volume
+Wants=network-online.target
+After=network-online.target
+Before=format-ebs-volume.service
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/attach_volume.sh
+[Install]
+WantedBy=multiuser.target

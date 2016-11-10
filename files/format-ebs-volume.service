@@ -1,0 +1,11 @@
+[Unit]
+Description=Formats the ebs volume if needed
+Requires=attach-ebs-volume.service
+After=attach-ebs-volume.service
+Before=etcd2.service
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/format_volume.sh
+[Install]
+WantedBy=multiuser.target
