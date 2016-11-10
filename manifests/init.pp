@@ -50,6 +50,7 @@ class etcd_mount
   }
 
   service { "var-lib-etcd.mount":
+    provider => 'systemd',
     enable => true,
     ensure => running,
   }
