@@ -4,14 +4,14 @@ class etcd_mount
 
   file { "/usr/lib/systemd/system/attach-ebs-volume.service":
     ensure => file,
-    source => "puppet:///etcd_mount_module/attach-ebs-volume.service",
+    source => "puppet:///etcd_mount/attach-ebs-volume.service",
     before => Service["attach-ebs-volume.service"],
   } ~>
   Exec['systemctl-daemon-reload']
 
   file { "/usr/lib/systemd/system/format-ebs-volume.service":
     ensure => file,
-    source => "puppet:///etcd-mount-module/format-ebs-volume.service",
+    source => "puppet:///etcd-mount/format-ebs-volume.service",
     before => Service["format-ebs-volume.service"],
   } ~>
   Exec['systemctl-daemon-reload']
