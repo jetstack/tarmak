@@ -10,8 +10,15 @@ class vault_client (
   $dest_dir = $::vault_client::params::dest_dir,
 ) inherits ::vault_client::params {
 
-  $download_url = $::vault_client::params::download_url
-  $_dest_dir = "${dest_dir}/${::vault_client::params::name}-${version}"
+  # Build download URL
+  $download_url = regsubst(
+    $::vault_client::params::download_url,
+    '#VERSION#',
+    $version,
+    'G'
+  )
+
+  $_dest_dir = "${dest_dir}/${::vault_client::params::app_name}-${version}"
 
   # validate parameters here
   class { '::vault_client::install': } ->

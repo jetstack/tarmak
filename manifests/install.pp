@@ -7,6 +7,7 @@ class vault_client::install {
 
   file { $::vault_client::_dest_dir:
     ensure => directory,
+    before => File[$vault_bin],
   }
 
   archive { "${::vault_client::download_dir}/vault.zip":
@@ -16,5 +17,11 @@ class vault_client::install {
     source       => $::vault_client::download_url,
     cleanup      => true,
     creates      => $vault_bin,
+  } ->
+
+  file { $vault_bin:
+    ensure => file,
+    mode   => '0755',
   }
+
 }
