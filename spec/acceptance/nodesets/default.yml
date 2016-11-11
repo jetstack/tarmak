@@ -1,0 +1,16 @@
+HOSTS:
+  centos7-64:
+    roles:
+     - agent
+    platform: el-7-x86_64
+    image: centos:7
+    hypervisor: docker
+    docker_cmd: '["/usr/sbin/sshd","-D"]'
+    docker_image_commands:
+    - echo -e "\nPermitUserEnvironment yes\nMaxAuthTries 30" >> /etc/ssh/sshd_config
+    - ln -fs /bin/true /usr/bin/systemctl
+CONFIG:
+  type: foss
+ssh:
+  password: root
+  auth_methods: ["password"]

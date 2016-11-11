@@ -1,0 +1,20 @@
+# == Class vault_client::install
+#
+# This class is called from vault_client for install.
+#
+class vault_client::install {
+  $vault_bin = "${::vault_client::_dest_dir}/vault"
+
+  file { $::vault_client::_dest_dir:
+    ensure => directory,
+  }
+
+  archive { "${::vault_client::download_dir}/vault.zip":
+    ensure       => present,
+    extract      => true,
+    extract_path => $::vault_client::_dest_dir,
+    source       => $::vault_client::download_url,
+    cleanup      => true,
+    creates      => $vault_bin,
+  }
+}
