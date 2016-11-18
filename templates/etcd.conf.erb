@@ -23,13 +23,13 @@ ETCD_PROXY_READ_TIMEOUT="0"
 ETCD_LISTEN_PEER_URLS="http://0.0.0.0:<%= @peer_port %>"
 ETCD_INITIAL_ADVERTISE_PEER_URLS="http://<%= @ipaddress %>:<%= @peer_port%>"
 ETCD_INITIAL_CLUSTER="<%= @etcd_initial_cluster %>
-#<% require 'aws-sdk' -%>
-#<% ec2 = Aws::EC2::Resource.new(region: 'eu-west-1') -%>
-#<% j=[] -%>
-#<% ec2.instances({filters: [{name: 'tag:Role', values: ['etcd-node']}]}).each do |i| -%>
-#<%  j << i.id + '=' + i.private_ip_address -%>
-#<%end -%>
-#<%= puts j.join(',') %>"
+<% require 'aws-sdk' -%>
+<% ec2 = Aws::EC2::Resource.new(region: 'eu-west-1') -%>
+<% j=[] -%>
+<% ec2.instances({filters: [{name: 'tag:Role', values: ['etcd-node']}]}).each do |i| -%>
+<%  j << i.id + '=' + i.private_ip_address -%>
+<%end -%>
+<%= puts j.join(',') %>"
 ETCD_INITIAL_CLUSTER_STATE="new"
 ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster-<%= @cluster_name %>"
 ETCD_DISCOVERY_FALLBACK="proxy"
