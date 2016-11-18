@@ -1,6 +1,6 @@
 #[member]
-ETCD_NAME="<%= @cluster_name %>-<%= @ec2_tag_name %>"
-ETCD_DATA_DIR="/var/lib/etcd/<%= @cluster_name %>.etcd"
+ETCD_NAME="<%= @etcd_cluster_name %>-<%= @ec2_tag_name %>"
+ETCD_DATA_DIR="/var/lib/etcd/<%= @etcd_cluster_name %>.etcd"
 ETCD_WAL_DIR=""
 ETCD_SNAPSHOT_COUNTER="10000"
 ETCD_HEARTBEAT_INTERVAL="100"
@@ -24,7 +24,7 @@ ETCD_LISTEN_PEER_URLS="http://0.0.0.0:<%= @peer_port %>"
 ETCD_INITIAL_ADVERTISE_PEER_URLS="http://<%= @ipaddress %>:<%= @peer_port%>"
 ETCD_INITIAL_CLUSTER="<%= @etcd_initial_cluster %>
 ETCD_INITIAL_CLUSTER_STATE="new"
-ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster-<%= @cluster_name %>"
+ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster-<%= @etcd_cluster_name %>"
 ETCD_DISCOVERY_FALLBACK="proxy"
 ETCD_STRICT_RECONFIG_CHECK=false
 #
