@@ -97,7 +97,7 @@ define etcd::config (
   Integer $peer_port,
 )
 {
-  file { "/etc/etcd/etcd-${cluster_name}.conf":
+  file { "/etc/etcd/etcd-${etcd_cluster_name}.conf":
     ensure => file,
     content => template('etcd/etcd.conf.erb'),
     require => Class['etcd'],
@@ -109,7 +109,7 @@ define etcd::systemd (
   String $etcd_version,
 )
 {
-  file { "/usr/lib/systemd/system/etcd-${cluster_name}.service":
+  file { "/usr/lib/systemd/system/etcd-${etcd_cluster_name}.service":
     ensure => file,
     content => template('etcd/etcd.service.erb'),
     require => Class['etcd'],
