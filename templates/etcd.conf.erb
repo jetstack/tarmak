@@ -22,7 +22,7 @@ ETCD_PROXY_READ_TIMEOUT="0"
 #[cluster]
 ETCD_LISTEN_PEER_URLS="http://0.0.0.0:<%= @peer_port %>"
 ETCD_INITIAL_ADVERTISE_PEER_URLS="http://<%= @ipaddress %>:<%= @peer_port%>"
-ETCD_INITIAL_CLUSTER="<%= `REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\\" \'{print $4}\');aws ec2 describe-instances --filters "Name=tag:Role,Values=etcd-node" "Name=tag:Cluster,Values=cluster1" --query 'Reservations[].Instances[].[ Tags[?Key==\`Name\`].Value | [0], PrivateIpAddress]' --region=$REGION --output=text | awk '{ OFS="="; ORS="," } { print $1, $2 }' | head -c -1` %>"
+ETCD_INITIAL_CLUSTER="<%= `REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\\" \'{print $4}\');aws ec2 describe-instances --filters "Name=tag:Role,Values=etcd-node" "Name=tag:Cluster,Values=@ec2_tag_Cluster" --query 'Reservations[].Instances[].[ Tags[?Key==\`Name\`].Value | [0], PrivateIpAddress]' --region=$REGION --output=text | awk '{ OFS="="; ORS="," } { print $1,"http://",$2,"@peer_port" }' | head -c -1` %>"
 ETCD_INITIAL_CLUSTER_STATE="new"
 ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster-<%= @etcd_cluster_name %>"
 ETCD_DISCOVERY_FALLBACK="proxy"
