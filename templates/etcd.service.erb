@@ -11,7 +11,7 @@ Wants=var-lib-etcd.mount
 [Service]
 Type=notify
 WorkingDirectory=/var/lib/etcd/
-EnvironmentFile=-/etc/etcd/etcd-<%= @cluster_name %>.conf
+EnvironmentFile=-/etc/etcd/etcd-<%= @etcd_cluster_name %>.conf
 User=etcd
 # set GOMAXPROCS to number of processors
 ExecStart=/bin/bash -c "GOMAXPROCS=$(nproc) /usr/bin/etcd-<%= @etcd_version %> --name=\"${ETCD_NAME}\" --data-dir=\"${ETCD_DATA_DIR}\" --listen-client-urls=\"${ETCD_LISTEN_CLIENT_URLS}\""
