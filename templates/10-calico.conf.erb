@@ -1,7 +1,10 @@
 {
-    "name": "calico-k8s-network",
+    "name": "<%= @calico_name %>",
     "type": "calico",
-    "etcd_endpoints": "TODO",
+    "etcd_endpoints": "<% @etcd_count.to_i.times do |i| -%>
+<%  array<<"http://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_port}" -%>
+<% end -%>
+<%= array.join(',') %>"
     "log_level": "info",
     "ipam": {
         "type": "calico-ipam"

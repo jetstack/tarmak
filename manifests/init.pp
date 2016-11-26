@@ -55,7 +55,7 @@ define calico::bin_install (
 ) 
 {
   wget::fetch { "download calico-cni version $calico_cni_version":
-    source => [ "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico", "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico" ]
+    source => [ "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico", "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico" ],
     destination => '/opt/cni/bin/',
     mode => '755',
   }
@@ -66,7 +66,7 @@ define calico::lo_install (
 )
 {
   archive { "download and extract cni-lo version $cni_plugin_version":
-    source => "https://github.com/containernetworking/cni/releases/download/v${cni_plugin_version}/cni-v${cni_plugin_version}.tgz"
+    source => "https://github.com/containernetworking/cni/releases/download/v${cni_plugin_version}/cni-v${cni_plugin_version}.tgz",
     extract_path => '/opt/cni/bin/',
     extract_flags => '-xzf loopback',
     mode => '755',
@@ -84,6 +84,6 @@ define calico::config (
   file { "/etc/cni/net.d/10-calico.conf":
     ensure => file,
     content => template('calico/10-calico.conf.erb'),
-    require => Class['etcd'],
+    require => Class['calico'],
   }
 }
