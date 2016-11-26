@@ -78,7 +78,7 @@ define calico::lo_install (
 define calico::config (
   String $calico_name,
   Integer $etcd_count,
-  Integer $etcd_client_port,
+  Integer $calico_etcd_port,
 )
 {
   file { "/etc/cni/net.d/10-calico.conf":
