@@ -68,14 +68,7 @@ define calico::bin_install (
     before => File["/opt/cni/bin/calico-ipam"],
   }
   
-  wget::fetch { "calicoctl-v${calico_cni_version}":
-    source => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calicoctl",
-    destination => '/opt/cni/bin/',
-    require => Class['calico'],
-    before => File["/opt/cni/bin/calicoctl"],
-  }
-  
-  file { ["/opt/cni/bin/calico","/opt/cni/bin/calico-ipam","/opt/cni/bin/calicoctl"]:
+  file { ["/opt/cni/bin/calico","/opt/cni/bin/calico-ipam"]:
     ensure => file,
     mode   => '0755',
   }
@@ -119,6 +112,18 @@ define calico::node (
 {
   include ::systemd
   include k8s
+  
+  wget::fetch { "calicoctl-v${calico_cni_version}":
+    source => "https://github.com/projectcalico/calico-containers/releases/download/v${calico_node_version}/calicoctl",
+    destination => '/opt/cni/bin/',
+    require => Class['calico'],
+    before => File["/opt/cni/bin/calicoctl"],
+  }
+
+  file { ["/opt/cni/bin/calicoctl"]:
+    ensure => file,
+    mode   => '0755',
+  }
 
   file { "/etc/calico/calico.env":
     ensure => file,
