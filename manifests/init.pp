@@ -128,4 +128,10 @@ define calico::node (
     content => template('calico/calico-node.service.erb'),
   } ~>
   Exec['systemctl-daemon-reload']
+  
+  service { "calico-node":
+    ensure => running,
+    enable => true,
+    require => [ Package["docker"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"] ],
+  }
 }
