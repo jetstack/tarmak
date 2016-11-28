@@ -45,7 +45,7 @@
 
 class calico
 {
-  file { ['/etc/cni/net.d', '/opt/cni/bin']:
+  file { ['/etc/cni', '/etc/cni/net.d', '/opt/cni', '/opt/cni/bin']:
     ensure => directory,
   }
 }
@@ -57,13 +57,22 @@ define calico::bin_install (
   wget::fetch { "calico-v${calico_cni_version}":
     source => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico",
     destination => '/opt/cni/bin/',
-    mode => '755',
+    mode => '0755',
+    require => Class['calico'],
+    before => File["/opt/cni/bin/calico"]
   }
   wget::fetch { "calico-ipam-v${calico_cni_version}":
     source => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico-ipam",
     destination => '/opt/cni/bin/',
-    mode => '755',
+    mode => '0755',
+    require => Class['calico'],
+    before => File["/opt/cni/bin/calico-ipam"],
   }
+  file { ["/opt/cni/bin/calico","/opt/cni/bin/calico-ipam"]:
+    ensure => file,
+    mode   => '0755',
+  }
+  
 }
 
 define calico::lo_install (
@@ -72,10 +81,12 @@ define calico::lo_install (
 {
   archive { "download and extract cni-lo version $cni_plugin_version":
     source => "https://github.com/containernetworking/cni/releases/download/v${cni_plugin_version}/cni-v${cni_plugin_version}.tgz",
-    path => "/tmp",
+    path => "/tmp/cni-v${cni_plugin_version}.tgz",
+    extract => true,
     extract_path => '/opt/cni/bin/',
-    extract_flags => '-xzf loopback',
+    extract_command => 'tar -xzf %s ./loopback',
     creates => '/opt/cni/bin/loopback',
+    require => Class['calico'],
   }
 }
 
