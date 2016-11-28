@@ -112,10 +112,7 @@ define calico::node (
 
 {
   include ::systemd
-
-  package { "docker":
-    ensure => installed,
-  }
+  include k8s::docker_install
 
   file { "/etc/calico/calico.env":
     ensure => file,
@@ -132,6 +129,6 @@ define calico::node (
   service { "calico-node":
     ensure => running,
     enable => true,
-    require => [ Package["docker"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"] ],
+    require => [ Class["k8s::docker_install"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"] ],
   }
 }
