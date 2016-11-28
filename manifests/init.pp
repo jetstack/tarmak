@@ -103,3 +103,35 @@ define calico::config (
     require => Class['calico'],
   }
 }
+
+define calico::node (
+  String  $calico_node_version,
+  Integer $etcd_count,
+  Integer $calico_etcd_port,
+)
+{
+  file { "/etc/cni/calico.env":
+    ensure => file,
+    content => template('calico/calico.env.erb'),
+    require => Class['calico'],
+  }
+
+  file { "/var/lib/systemd/system/calico-node":
+    ensure => file,
+    content => template('calico/calico-node.erb'),
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
