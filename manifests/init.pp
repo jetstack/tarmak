@@ -74,7 +74,6 @@ define calico::lo_install (
     source => "https://github.com/containernetworking/cni/releases/download/v${cni_plugin_version}/cni-v${cni_plugin_version}.tgz",
     extract_path => '/opt/cni/bin/',
     extract_flags => '-xzf loopback',
-    mode => '755',
     creates => '/opt/cni/bin/loopback',
   }
 }
