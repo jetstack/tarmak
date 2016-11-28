@@ -109,6 +109,9 @@ define calico::node (
   Integer $etcd_count,
   Integer $calico_etcd_port,
 )
+
+include ::systemd
+
 {
   file { "/etc/cni/calico.env":
     ensure => file,
@@ -116,10 +119,11 @@ define calico::node (
     require => Class['calico'],
   }
 
-  file { "/var/lib/systemd/system/calico-node":
+  file { "/usr/lib/systemd/system/calico-node.service":
     ensure => file,
-    content => template('calico/calico-node.erb'),
-  }
+    content => template('calico/calico-node.service.erb'),
+  } ~>
+  Exec['systemctl-daemon-reload']
 }
 
 
