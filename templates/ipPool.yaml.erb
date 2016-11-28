@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ipPool
 metadata:
-  cidr: <%= @ipPoolCIDR %>
+  cidr: <%= @ip_pool %>/<%= @ip_mask %>
 spec:
   ipip:
-    enabled: <%= @ipipEnabled %>
+    enabled: <%= @ipip_enabled %>
   nat-outgoing: true
   disabled: false

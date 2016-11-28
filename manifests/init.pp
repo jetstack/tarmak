@@ -145,18 +145,19 @@ define calico::node (
 }
 
 define calico::ipPool (
-  String $ipPoolCIDR,
-  String $ipipEnabled
+  String $ip_pool,
+  Integer $ip_mask,
+  String $ipip_enabled
 )
 {
-  file { "/etc/calico/ipPool-${ipPoolCIDR}.yaml":
+  file { "/etc/calico/ipPool-${ipPool}.yaml":
     ensure => file,
     content => template('calico/ipPool.yaml.erb'),
   }
   
-  exec { "Configure calico ipPool for CIDR $ipPoolCIDR":
-    command => "\${grep ETCD_ENDPOINTS /etc/calico/calico.env} /opt/cni/bin/calicoctl apply -f /etc/calico/ipPool-${ipPoolCIDR}.yaml",
-    unless => "\${grep ETCD_ENDPOINTS /etc/calico/calico.env} /opt/cni/bin/calicoctl get -f /etc/calico/ipPool-${ipPoolCIDR}.yaml | grep ${ipPoolCIDR}",
-    require => [ Service["calico-node"], File["/opt/cni/bin/calicoctl"], File["/etc/calico/ipPool-${ipPoolCIDR}.yaml"] ],
+  exec { "Configure calico ipPool for CIDR $ip_pool":
+    command => "export ETCD_ENDPOINTS=`/usr/bin/grep ETCD_ENDPOINTS /etc/calico/calico.env` && /opt/cni/bin/calicoctl apply -f /etc/calico/ipPool-${ip_pool}.yaml",
+    unless => "export ETCD_ENDPOINTS=`/usr/bin/grep ETCD_ENDPOINTS /etc/calico/calico.env` && /opt/cni/bin/calicoctl get -f /etc/calico/ipPool-${ip_pool}.yaml | /usr/bin/grep ${ip_pool}/${ip_mask}",
+    require => [ Service["calico-node"], File["/opt/cni/bin/calicoctl"], File["/etc/calico/ipPool-${ip_pool}.yaml"] ],
   }
 }
