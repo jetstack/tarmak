@@ -1,4 +1,6 @@
-# etcd
+# calico
+
+# REQUIRES jetstack-k8s (shares docker)
 
 #### Table of Contents
 
