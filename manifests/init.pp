@@ -116,7 +116,6 @@ define calico::node (
   Integer $etcd_count,
   Integer $calico_etcd_port,
 )
-
 {
   include ::systemd
   include k8s
@@ -137,5 +136,22 @@ define calico::node (
     ensure => running,
     enable => true,
     require => [ Class["k8s"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"] ],
+  }
+}
+
+define calico::ipPool (
+  String $ipPoolCIDR,
+  String $ipipEnabled
+)
+{
+  file { "/etc/calico/ipPool-${ipPoolCIDR}.yaml":
+    ensure => file,
+    content => template('calico/ipPool.yaml.erb'),
+  }
+  
+  exec { "Configure calico ipPool for CIDR $ipPoolCIDR":
+    command => "\${grep ETCD_ENDPOINTS /etc/calico/calico.env} /opt/cni/bin/calicoctl apply -f /etc/calico/ipPool-${ipPoolCIDR}.yaml",
+    unless => "\${grep ETCD_ENDPOINTS /etc/calico/calico.env} /opt/cni/bin/calicoctl get -f /etc/calico/ipPool-${ipPoolCIDR}.yaml | grep ${ipPoolCIDR}",
+    require => [ Service["calico-node"], File["/opt/cni/bin/calicoctl"], File["/etc/calico/ipPool-${ipPoolCIDR}.yaml"] ],
   }
 }
