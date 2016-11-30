@@ -1,0 +1,73 @@
+# This manifest deploys the Calico policy controller on Kubernetes.
+# See https://github.com/projectcalico/k8s-policy
+apiVersion: extensions/v1beta1
+kind: ReplicaSet 
+metadata:
+  name: calico-policy-controller
+  namespace: kube-system
+  labels:
+    k8s-app: calico-policy
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ''
+    scheduler.alpha.kubernetes.io/tolerations: |
+      [{"key": "dedicated", "value": "master", "effect": "NoSchedule" },
+       {"key":"CriticalAddonsOnly", "operator":"Exists"}]
+spec:
+  # The policy controller can only have a single active instance.
+  replicas: 1
+  template:
+    metadata:
+      name: calico-policy-controller
+      namespace: kube-system
+      labels:
+        k8s-app: calico-policy
+    spec:
+      # The policy controller must run in the host network namespace so that
+      # it isn't governed by policy that would prevent it from working.
+      hostNetwork: true
+      containers:
+        - name: calico-policy-controller
+          image: calico/kube-policy-controller:latest
+          env:
+            # The location of the Calico etcd cluster.
+            - name: ETCD_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: etcd_endpoints
+            # Location of the CA certificate for etcd.
+            - name: ETCD_CA_CERT_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: etcd_ca
+            # Location of the client key for etcd.
+            - name: ETCD_KEY_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: etcd_key
+            # Location of the client certificate for etcd.
+            - name: ETCD_CERT_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: etcd_cert
+            # The location of the Kubernetes API.  Use the default Kubernetes
+            # service for API access.
+            - name: K8S_API
+              value: "http://k8s-master.<%= @ec2_tag_cluster %>.<%= @dns_root %>:8080"
+            # Since we're running in the host namespace and might not have KubeDNS 
+            # access, configure the container's /etc/hosts to resolve
+            # kubernetes.default to the correct service clusterIP.
+            - name: CONFIGURE_ETC_HOSTS
+              value: "true"
+          volumeMounts:
+            # Mount in the etcd TLS secrets.
+            - mountPath: /calico-secrets
+              name: etcd-certs
+      volumes:
+        # Mount in the etcd TLS secrets.
+        - name: etcd-certs
+          secret:
+            secretName: calico-etcd-secrets

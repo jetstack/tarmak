@@ -162,3 +162,32 @@ define calico::ipPool (
     require => [ Service["calico-node"], File["/opt/cni/bin/calicoctl"], File["/etc/calico/ipPool-${ip_pool}.yaml"] ],
   }
 }
+
+define calico::policy_controller (
+  String $dns_root,
+  Integer $etcd_count,
+  Integer $calico_etcd_port
+)
+{
+  file { "/root/calico-config.yaml":
+    ensure => file,
+    content => template('calico/calico-config.yaml.erb'),
+  }
+
+  file { "/root/policy-controller-rs.yaml":
+    ensure => file,
+    content => template('calico/policy-controller-rs.yaml.erb'),
+  }
+
+  exec { "deploy calico config":
+    command => "/usr/bin/kubectl apply -f /root/calico-config.yaml",
+    unless => "/usr/bin/kubectl get configmap calico-config",
+    require => File["/root/calico-config.yaml"],
+  }
+  
+  exec { "deploy calico policy controller":
+    command => "/usr/bin/kubectl apply -f /root/policy-controller-rs.yaml",
+    unless => "/usr/bin/kubectl get -f /root/policy-controller-rs.yaml",
+    require => [ Exec["deploy calico config"], File["/root/policy-controller-rs.yaml"] ],
+  } 
+}
