@@ -181,7 +181,7 @@ define calico::policy_controller (
 
   exec { "deploy calico config":
     command => "/usr/bin/kubectl apply -f /root/calico-config.yaml",
-    unless => "/usr/bin/kubectl get configmap calico-config",
+    unless => "/usr/bin/kubectl get -f /root/calico-config.yaml",
     require => File["/root/calico-config.yaml"],
   }
   
