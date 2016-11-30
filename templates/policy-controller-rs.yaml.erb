@@ -62,12 +62,12 @@ spec:
             # kubernetes.default to the correct service clusterIP.
             - name: CONFIGURE_ETC_HOSTS
               value: "true"
-          volumeMounts:
-            # Mount in the etcd TLS secrets.
-            - mountPath: /calico-secrets
-              name: etcd-certs
-      volumes:
-        # Mount in the etcd TLS secrets.
-        - name: etcd-certs
-          secret:
-            secretName: calico-etcd-secrets
+#          volumeMounts:
+#            # Mount in the etcd TLS secrets.
+#            - mountPath: /calico-secrets
+#              name: etcd-certs
+#      volumes:
+#        # Mount in the etcd TLS secrets.
+#        - name: etcd-certs
+#          secret:
+#            secretName: calico-etcd-secrets

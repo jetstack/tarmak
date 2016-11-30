@@ -11,3 +11,6 @@ data:
 <%  array<<"http://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_port}" -%>
 <% end -%>
 <%= array.join(',') %>"
+  etcd_ca: ""
+  etcd_key: ""
+  etcd_cert: ""
