@@ -12,7 +12,7 @@ class vault_client::config {
 
   exec { "update CA trust":
     command => "/usr/bin/update-ca-trust",
-    noop => true,
+    refreshonly => true,
   }  
 
 }
