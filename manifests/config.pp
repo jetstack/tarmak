@@ -6,7 +6,7 @@ class vault_client::config {
 
   file { "/etc/sysconfig/vault":
     ensure   => file,
-    content  => template('jetstack-vault_client/vault.erb'),
+    content  => template('vault_client/vault.erb'),
   }
 
   exec { "In dev mode get CA":
