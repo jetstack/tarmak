@@ -24,4 +24,9 @@ class vault_client::install {
     mode   => '0755',
   }
 
+  file { "/usr/bin/vault":
+    ensure => link,
+    target => $vault_bin,
+  }
+
 }
