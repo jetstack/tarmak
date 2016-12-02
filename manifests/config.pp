@@ -11,7 +11,7 @@ class vault_client::config {
   }
 
   exec { "update CA trust":
-    command => "update-ca-trust",
+    command => "/usr/bin/update-ca-trust",
   }  
 
 }
