@@ -9,6 +9,19 @@ class vault_client::config {
     content  => template('vault_client/vault.erb'),
   }
 
+  file { "etcd working dir for vault":
+    path => "/etc/etcd"
+    ensure => directory,
+  }
+
+  user { "etcd user for vault":
+    name => "etcd",
+    ensure => present,
+    uid => 873,
+    shell => "/sbin/nologin",
+    home => "/var/lib/etcd",
+  }
+
   exec { "In dev mode get CA":
     command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca > /etc/pki/ca-trust/source/anchors/etcd-k8s.pem'",
     unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca | diff - /etc/pki/ca-trust/source/anchors/etcd-k8s.pem'",
@@ -24,6 +37,7 @@ class vault_client::config {
     etcd_cluster => "k8s",
     frequency    => "1d",
     notify       => Exec["Trigger k8s cert"],
+    require      => [ File["etcd working dir for vault"], User["etcd user for vault"] ],
   }
 
   service { "etcd-k8s-cert.timer":
@@ -42,6 +56,7 @@ class vault_client::config {
     etcd_cluster => "overlay",
     frequency    => "1d",
     notify       => Exec["Trigger overlay cert"],
+    require      => [ File["etcd working dir for vault"], User["etcd user for vault"] ],
   }
 
   service { "etcd-overlay-cert.timer":
