@@ -29,6 +29,12 @@ class vault_client::config {
     provider => systemd,
     enable   => true,
     require  => [ File['/usr/lib/systemd/system/etcd-k8s-cert.timer'], Exec['In dev mode get CA'] ],
+    notify   => Exec["Trigger k8s cert"],
+  }
+
+  exec { "Trigger k8s cert":
+    command => "systemctl start etcd-k8s-cert.service",
+    refreshonly = true,
   }
 
   vault_client::etcd_cert_service { "overlay":
