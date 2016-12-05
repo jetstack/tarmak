@@ -5,8 +5,8 @@ ETCD_WAL_DIR=""
 ETCD_SNAPSHOT_COUNTER="10000"
 ETCD_HEARTBEAT_INTERVAL="100"
 ETCD_ELECTION_TIMEOUT="1000"
-ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:<%= @client_port %>"
-ETCD_ADVERTISE_CLIENT_URLS="http://<%= @ipaddress %>:<%= @client_port %>"
+ETCD_LISTEN_CLIENT_URLS="https://0.0.0.0:<%= @client_port %>"
+ETCD_ADVERTISE_CLIENT_URLS="https://<%= @ec2_tag_hostname %>.<%= @ec2_tag_cluster %>.<%= @dns_root %>:<%= @client_port %>"
 ETCD_MAX_SNAPSHOTS="5"
 ETCD_MAX_WALS="5"
 #
@@ -30,8 +30,10 @@ ETCD_STRICT_RECONFIG_CHECK=false
 #
 
 #[security]
-ETCD_CLIENT_CERT_AUTH=false
+ETCD_CLIENT_CERT_AUTH=true
 ETCD_PEER_CLIENT_CERT_AUTH=false
+ETCD_CERT_FILE=/etc/etcd/ssl/certs/etcd-<%= @etcd_cluster_name %>-cert.pem
+ETCD_KEY_FILE=/etc/etcd/ssl/private/etcd-<%= @etcd_cluster_name %>-key.pem
 #
 #[logging]
 ETCD_DEBUG=false
