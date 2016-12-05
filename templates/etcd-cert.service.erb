@@ -21,6 +21,4 @@ ExecStartPre=/bin/bash -c '/usr/bin/test -e /etc/etcd/ssl/certs/etcd-<%= @etcd_c
 
 ExecStartPre=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @etcd_cluster %>-etcd-token); /usr/bin/vault token-renew'
 
-ExecStart=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @etcd_cluster %>-etcd-token); /usr/bin/vault write --field certificate <%= @ec2_tag_cluster %>/pki/etcd-<%= @etcd_cluster %>/sign/client csr="$(/usr/bin/cat /etc/etcd/ssl/certs/etcd-<%= @etcd_cluster %>-csr.pem)" > /etc/etcd/ssl/certs/etcd-<%= @etcd_cluster %>-cert.pem'
-
-ExecStartPost=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @etcd_cluster %>-etcd-token); /usr/bin/vault write --field certificate <%= @ec2_tag_cluster %>/pki/etcd-<%= @etcd_cluster %>/sign/server csr="$(/usr/bin/cat /etc/etcd/ssl/certs/etcd-<%= @etcd_cluster %>-csr.pem)" > /etc/etcd/ssl/certs/etcd-<%= @etcd_cluster %>-cert.pem'
+ExecStart=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @etcd_cluster %>-etcd-token); /usr/bin/vault write --field certificate <%= @ec2_tag_cluster %>/pki/etcd-<%= @etcd_cluster %>/sign/<% if @ec2_tag_role == "etcd" %>server<% else %>client<% end %> csr="$(/usr/bin/cat /etc/etcd/ssl/certs/etcd-<%= @etcd_cluster %>-csr.pem)" > /etc/etcd/ssl/certs/etcd-<%= @etcd_cluster %>-cert.pem'
