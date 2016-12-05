@@ -10,7 +10,7 @@ class vault_client::config {
   }
 
   file { "etcd working dir for vault":
-    path => "/etc/etcd"
+    path => "/etc/etcd",
     ensure => directory,
   }
 
