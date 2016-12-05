@@ -45,6 +45,9 @@
 
 class etcd
 {
+
+  require ::vault_client
+
   user { 'etcd':
     ensure => present,
     uid => 873,
@@ -112,6 +115,6 @@ define etcd::systemd (
   file { "/usr/lib/systemd/system/etcd-${etcd_cluster_name}.service":
     ensure => file,
     content => template('etcd/etcd.service.erb'),
-    require => Class['etcd'],
+    require => [ Class['etcd'], Exec["Trigger ${etcd_cluster_name} cert"] ],
   }
 }
