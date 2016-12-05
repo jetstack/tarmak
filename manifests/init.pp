@@ -43,22 +43,34 @@
 # Copyright 2016 Your name here, unless otherwise noted.
 #
 
-class etcd
+class etcd ($use_vault = true)
 {
 
-  require ::vault_client
-
-  user { 'etcd':
-    ensure => present,
-    uid => 873,
-    shell => '/sbin/nologin',
-    home => '/var/lib/etcd',
+  if ($use_vault == true) {
+    require ::vault_client
   }
 
-  file { ['/etc/etcd', '/var/lib/etcd']:
+  else {
+
+    user { 'etcd':
+      ensure => present,
+      uid => 873,
+      shell => '/sbin/nologin',
+      home => '/var/lib/etcd',
+    }
+
+    file { '/etc/etcd':
+      ensure => directory,
+      owner => 'etcd',
+      group => 'etcd',
+    }
+  }
+
+  file { '/var/lib/etcd':
     ensure => directory,
-    owner => 'etcd',
-    group => 'etcd',
+    owner => "etcd",
+    group => "etcd",
+    require => User["etcd"],
   }
 }
 
