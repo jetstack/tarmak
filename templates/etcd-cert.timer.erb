@@ -3,7 +3,7 @@ Description=remint etcd-<%= @etcd_cluster %> certs daily and on boot
 
 [Timer]
 OnBootSec=1min
-OnUnitActiveSec=1d
+OnUnitActiveSec=<%= @frequency %>
 RandomizedDelaySec=300
 
 [Install]
