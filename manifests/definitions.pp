@@ -18,5 +18,3 @@ define vault::etcd_cert_service (
   } ~>
   Exec['systemctl-daemon-reload']
 }
-
-
