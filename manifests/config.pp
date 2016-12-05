@@ -22,9 +22,15 @@ class vault_client::config {
     home => "/var/lib/etcd",
   }
 
-  exec { "In dev mode get CA":
+  exec { "In dev mode get CA for k8s":
     command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca > /etc/pki/ca-trust/source/anchors/etcd-k8s.pem'",
     unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca | diff - /etc/pki/ca-trust/source/anchors/etcd-k8s.pem'",
+    notify  => Exec["update CA trust"],
+  }
+
+  exec { "In dev mode get CA for overlay":
+    command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca > /etc/pki/ca-trust/source/anchors/etcd-overlay.pem'",
+    unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca | diff - /etc/pki/ca-trust/source/anchors/etcd-overlay.pem'",
     notify  => Exec["update CA trust"],
   }
 
@@ -43,7 +49,7 @@ class vault_client::config {
   service { "etcd-k8s-cert.timer":
     provider => systemd,
     enable   => true,
-    require  => [ File['/usr/lib/systemd/system/etcd-k8s-cert.timer'], Exec['In dev mode get CA'] ],
+    require  => [ File['/usr/lib/systemd/system/etcd-k8s-cert.timer'], Exec['In dev mode get CA for k8s'] ],
   }
 
   exec { "Trigger k8s cert":
@@ -62,7 +68,7 @@ class vault_client::config {
   service { "etcd-overlay-cert.timer":
     provider => systemd,
     enable   => true,
-    require  => [ File['/usr/lib/systemd/system/etcd-overlay-cert.timer'], Exec['In dev mode get CA'] ],
+    require  => [ File['/usr/lib/systemd/system/etcd-overlay-cert.timer'], Exec['In dev mode get CA for overlay'] ],
   }
 
 
