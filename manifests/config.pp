@@ -33,7 +33,7 @@ class vault_client::config {
   }
 
   exec { "Trigger k8s cert":
-    command => "systemctl start etcd-k8s-cert.service",
+    command => "/usr/bin/systemctl start etcd-k8s-cert.service",
     refreshonly => true,
   }
 
