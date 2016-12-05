@@ -1,4 +1,4 @@
-define vault::etcd_cert_service (
+define vault_client::etcd_cert_service (
   String $etcd_cluster,
   String $frequency,
 )
