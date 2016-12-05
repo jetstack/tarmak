@@ -23,6 +23,7 @@ class vault_client::config {
   vault_client::etcd_cert_service { "k8s":
     etcd_cluster => "k8s",
     frequency    => "1d",
+    notify       => Exec["Trigger k8s cert"],
   }
 
   service { "etcd-k8s-cert.timer":
