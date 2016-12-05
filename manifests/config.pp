@@ -34,7 +34,7 @@ class vault_client::config {
 
   exec { "Trigger k8s cert":
     command => "systemctl start etcd-k8s-cert.service",
-    refreshonly = true,
+    refreshonly => true,
   }
 
   vault_client::etcd_cert_service { "overlay":
