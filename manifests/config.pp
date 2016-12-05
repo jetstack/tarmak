@@ -20,7 +20,7 @@ class vault_client::config {
     refreshonly => true,
   }  
 
-  etcd_cert_service { "k8s":
+  vault::etcd_cert_service { "k8s":
     etcd_cluster => "k8s",
     frequency    => "1d",
   }
@@ -31,7 +31,7 @@ class vault_client::config {
     require  => [ File['/usr/lib/system/systemd/etcd-k8s-cert.timer'], Exec['In dev mode get CA'] ],
   }
 
-  etcd_cert_service { "overlay":
+  vault::etcd_cert_service { "overlay":
     etcd_cluster => "overlay",
     frequency    => "1d",
   }
