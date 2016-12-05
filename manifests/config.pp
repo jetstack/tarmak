@@ -30,7 +30,6 @@ class vault_client::config {
     provider => systemd,
     enable   => true,
     require  => [ File['/usr/lib/systemd/system/etcd-k8s-cert.timer'], Exec['In dev mode get CA'] ],
-    notify   => Exec["Trigger k8s cert"],
   }
 
   exec { "Trigger k8s cert":
@@ -42,5 +41,25 @@ class vault_client::config {
   vault_client::etcd_cert_service { "overlay":
     etcd_cluster => "overlay",
     frequency    => "1d",
+    notify       => Exec["Trigger overlay cert"],
+  }
+
+  service { "etcd-overlay-cert.timer":
+    provider => systemd,
+    enable   => true,
+    require  => [ File['/usr/lib/systemd/system/etcd-overlay-cert.timer'], Exec['In dev mode get CA'] ],
+  }
+
+
+  exec { "Trigger overlay cert":
+    command => "/usr/bin/systemctl start etcd-overlay-cert.service",
+    user => "root",
+    refreshonly => true,
+  }
+
+  exec { "Trigger events cert":
+    command => "/usr/bin/systemctl start etcd-events-cert.service",
+    user => "root",
+    refreshonly => true,
   }
 }
