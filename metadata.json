@@ -1,15 +1,17 @@
 {
-  "name": "jetstack/etcd",
-  "version": "0.1.1",
-  "author": "jetstack",
-  "summary": null,
-  "license": "Apache-2.0",
-  "source": "",
-  "project_page": null,
-  "issues_url": null,
-  "dependencies": [
-    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
-  ],
-  "data_provider": null
+   "version" : "0.1.1",
+   "name" : "jetstack/etcd",
+   "dependencies" : [
+      {
+         "name" : "puppetlabs-stdlib",
+         "version_requirement" : ">= 4.2.0 < 5.0.0"
+      }
+   ],
+   "license" : "Apache-2.0",
+   "issues_url" : "https://github.com/puppernetes/module-etcd",
+   "source" : "https://github.com/puppernetes/module-etcd",
+   "data_provider" : null,
+   "project_page" : "https://github.com/puppernetes/module-etcd",
+   "author" : "jetstack",
+   "summary" : "Install/configure a etcd nodes"
 }
-
