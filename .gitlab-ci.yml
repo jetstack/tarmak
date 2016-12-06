@@ -1,0 +1,16 @@
+image: ruby:2.3
+
+before_script:
+- bundle install --path /cache
+
+lint:
+  script:
+  - bundle exec rake metadata_lint lint
+
+validate:
+  script:
+  - bundle exec rake validate
+
+spec:
+  script:
+  - bundle exec rake spec
