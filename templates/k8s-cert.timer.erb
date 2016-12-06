@@ -1,0 +1,10 @@
+[Unit]
+Description=remint k8s-<%= @k8s_component %> certs daily and on boot
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=<%= @frequency %>
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

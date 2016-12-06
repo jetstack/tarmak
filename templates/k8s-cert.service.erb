@@ -1,0 +1,24 @@
+[Unit]
+Description=Etcd Service to remint PKI for <%= @k8s_component %>
+
+After=network.target
+After=network-online.target
+
+Wants=network-online.target
+
+[Service]
+Type=notify
+WorkingDirectory=/etc/etcd
+EnvironmentFile=/etc/sysconfig/vault
+
+ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/ssl/private /etc/kubernetes/ssl/certs
+ExecStartPre=/usr/bin/chmod 711 /etc/kubernetes/ssl/private
+ExecStartPre=/usr/bin/vault token-renew
+
+ExecStartPre=/bin/bash -c '/usr/bin/vault token-create -address=$VAULT_ADDR -policy="<%= @ec2_tag_cluster %>/<%= @ec2_tag_role %>" -role="<%= @ec2_tag_cluster %>-<%= @ec2_tag_role %>" -format=json | /usr/bin/jq -r ".auth.client_token" > /tmp/<%= @ec2_tag_cluster %>-<%= @k8s_component %>-token'
+ExecStartPre=/bin/bash -c '/usr/bin/test -e /etc/kubernetes/ssl/private/k8s-<%= @k8s_component %>-key.pem || { /usr/bin/openssl genrsa -out /etc/kubernetes/ssl/private/k8s-<%= @k8s_component %>-key.pem 2048 && /usr/bin/rm -f /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-c*.pem && /usr/bin/chown k8s:k8s /etc/kubernetes/ssl/private/k8s-<%= @k8s_component %>-key.pem && /usr/bin/chmod 600 /etc/kubernetes/ssl/private/k8s-<%= @k8s_component %>-key.pem; }'
+ExecStartPre=/bin/bash -c '/usr/bin/test -e /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-csr.pem || { /usr/bin/openssl req -new -key /etc/kubernetes/ssl/private/k8s-<%= @k8s_component %>-key.pem -out /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-csr.pem -subj "/CN=<%= @ec2_tag_hostname %>.<%= @ec2_tag_cluster %>.<%= @dns_root %>" && /usr/bin/rm -f /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-cert.pem; }'
+
+ExecStartPre=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @k8s_component %>-token); /usr/bin/vault token-renew'
+
+ExecStart=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @k8s_component %>-token); /usr/bin/vault write --field certificate <%= @ec2_tag_cluster %>/pki/k8s-<%= @k8s_component %>/sign/<% if @ec2_tag_role == "master" %>server<% else %>client<% end %> csr="$(/usr/bin/cat /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-csr.pem)" > /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-cert.pem'
