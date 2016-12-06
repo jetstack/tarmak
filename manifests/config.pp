@@ -9,7 +9,7 @@ class vault_client::config {
     content  => template('vault_client/vault.erb'),
   }
 
-  file { [ "/etc/etcd", "/etc/etcd/ssl", "/etc/etcd/ssl/certs":
+  file { [ "/etc/etcd", "/etc/etcd/ssl", "/etc/etcd/ssl/certs" ]:
     ensure => directory,
   }
 
