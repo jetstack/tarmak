@@ -8,9 +8,9 @@ data:
       # Configure this with the location of your etcd cluster.
   etcd_endpoints: "<% array=[] -%>
 <% @etcd_count.to_i.times do |i| -%>
-<%  array<<"http://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_port}" -%>
+<%  array<<"https://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_port}" -%>
 <% end -%>
 <%= array.join(',') %>"
-  etcd_ca: ""
-  etcd_key: ""
-  etcd_cert: ""
+  etcd_ca: "certs/etcd-overlay.pem"
+  etcd_key: "private/etcd-overlay-key.pem"
+  etcd_cert: "certs/etcd-overlay-cert.pem"

@@ -3,9 +3,12 @@
     "type": "calico",
     "etcd_endpoints": "<% array=[] -%>
 <% @etcd_count.to_i.times do |i| -%>
-<%  array<<"http://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_port}" -%>
+<%  array<<"https://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_port}" -%>
 <% end -%>
 <%= array.join(',') %>",
+    "etcd_ca_cert_file": "/etc/etcd/ssl/certs/etcd-overlay.pem",
+    "etcd_cert_file": "/etc/etcd/ssl/certs/etcd-overlay-cert.pem",
+    "etcd_key_file": "/etc/etcd/ssl/private/etcd-overlay-key.pem",
     "log_level": "info",
     "ipam": {
         "type": "calico-ipam"
