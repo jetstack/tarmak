@@ -29,9 +29,8 @@ class vault_client::config {
   }
 
   exec { "In dev mode get CA for overlay":
-    command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca > /etc/pki/ca-trust/source/anchors/etcd-overlay.pem'",
-    unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca | diff - /etc/pki/ca-trust/source/anchors/etcd-overlay.pem'",
-    notify  => Exec["update CA trust"],
+    command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca > /etc/etcd/ssl/certs/etcd-overlay.pem'",
+    unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca | diff - /etc/etcd/ssl/certs/etcd-overlay.pem'",
   }
 
   exec { "update CA trust":
