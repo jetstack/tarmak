@@ -54,53 +54,53 @@ class etcd ($use_vault = true)
 
     user { 'etcd':
       ensure => present,
-      uid => 873,
-      shell => '/sbin/nologin',
-      home => '/var/lib/etcd',
+      uid    => 873,
+      shell  => '/sbin/nologin',
+      home   => '/var/lib/etcd',
     }
 
     file { '/etc/etcd':
       ensure => directory,
-      owner => 'etcd',
-      group => 'etcd',
+      owner  => 'etcd',
+      group  => 'etcd',
     }
   }
 
   file { '/var/lib/etcd':
-    ensure => directory,
-    owner => "etcd",
-    group => "etcd",
-    require => User["etcd"],
+    ensure  => directory,
+    owner   => 'etcd',
+    group   => 'etcd',
+    require => User['etcd'],
   }
 }
 
 define etcd::install (
   String $etcd_version,
-) 
+)
 {
-  wget::fetch { "download etcd version $etcd_version":
-    source => "https://github.com/coreos/etcd/releases/download/v${etcd_version}/etcd-v${etcd_version}-linux-amd64.tar.gz",
+  wget::fetch { "download etcd version ${etcd_version}":
+    source      => "https://github.com/coreos/etcd/releases/download/v${etcd_version}/etcd-v${etcd_version}-linux-amd64.tar.gz",
     destination => '/root/',
-    before => Exec["untar etcd version $etcd_version"],
-  }
-    
-  exec { "untar etcd version $etcd_version":
-      command => "/bin/tar -xvzf /root/etcd-v${etcd_version}-linux-amd64.tar.gz -C /root/",
-      creates => "/root/etcd-v${etcd_version}-linux-amd64/etcd",
+    before      => Exec["untar etcd version ${etcd_version}"],
   }
 
-  file { "install etcd version $etcd_version":
-    path => "/bin/etcd-${etcd_version}",
-    source => "/root/etcd-v${etcd_version}-linux-amd64/etcd",
-    mode => '755',
-    require => Exec["untar etcd version $etcd_version"],
+  exec { "untar etcd version ${etcd_version}":
+    command => "/bin/tar -xvzf /root/etcd-v${etcd_version}-linux-amd64.tar.gz -C /root/",
+    creates => "/root/etcd-v${etcd_version}-linux-amd64/etcd",
   }
 
-  file { "install etcdctl version $etcd_version":
-    path => "/bin/etcdctl-${etcd_version}",
-    source => "/root/etcd-v${etcd_version}-linux-amd64/etcdctl",
-    mode => '755',
-    require => Exec["untar etcd version $etcd_version"],
+  file { "install etcd version ${etcd_version}":
+    path    => "/bin/etcd-${etcd_version}",
+    source  => "/root/etcd-v${etcd_version}-linux-amd64/etcd",
+    mode    => '0755',
+    require => Exec["untar etcd version ${etcd_version}"],
+  }
+
+  file { "install etcdctl version ${etcd_version}":
+    path    => "/bin/etcdctl-${etcd_version}",
+    source  => "/root/etcd-v${etcd_version}-linux-amd64/etcdctl",
+    mode    => '0755',
+    require => Exec["untar etcd version ${etcd_version}"],
   }
 }
 
@@ -112,7 +112,7 @@ define etcd::config (
 )
 {
   file { "/etc/etcd/etcd-${etcd_cluster_name}.conf":
-    ensure => file,
+    ensure  => file,
     content => template('etcd/etcd.conf.erb'),
     require => Class['etcd'],
   }
@@ -124,7 +124,7 @@ define etcd::systemd (
 )
 {
   file { "/usr/lib/systemd/system/etcd-${etcd_cluster_name}.service":
-    ensure => file,
+    ensure  => file,
     content => template('etcd/etcd.service.erb'),
     require => [ Class['etcd'], Exec["Trigger ${etcd_cluster_name} cert"] ],
   }
