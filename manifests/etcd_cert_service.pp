@@ -4,7 +4,7 @@ define vault_client::etcd_cert_service (
 )
 {
 
-  include ::camptocamp::systemd
+  include ::systemd
 
   file { "/usr/lib/systemd/system/etcd-${etcd_cluster}-cert.service":
     ensure  => file,
