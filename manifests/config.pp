@@ -13,6 +13,10 @@ class vault_client::config {
     ensure => directory,
   }
 
+  file { [ '/etc/kubernetes', '/etc/kubernetes/ssl', '/etc/kubernetes/ssl/certs' ]:
+    ensure => directory,
+  }
+
   user { 'etcd user for vault':
     ensure => present,
     name   => 'etcd',
@@ -81,5 +85,12 @@ class vault_client::config {
     command     => '/usr/bin/systemctl start etcd-events-cert.service',
     user        => 'root',
     refreshonly => true,
+  }
+
+  vault_client::k8s_cert_service { 'kubelet':
+    k8s_component => 'kubelet',
+    frequency     => '1d',
+    notify        => Exec['Trigger kubelet cert'],
+    require       => [ File['/etc/kubernetes/ssl'], User['k8s'] ],
   }
 }
