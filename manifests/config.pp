@@ -25,6 +25,16 @@ class vault_client::config {
     home   => '/var/lib/etcd',
   }
 
+  if $vault_client::role == 'master' or $vault_client::role == 'worker' {
+    user { 'k8s user for vault':
+      ensure => present,
+      name   => 'k8s',
+      uid    => 837,
+      shell  => '/sbin/nologin',
+      home   => '/var/lib/kubernetes',
+    }
+  }
+
   if $vault_client::role == 'master' {
     exec { 'In dev mode get CA for k8s':
       command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca > /etc/etcd/ssl/certs/etcd-k8s.pem'",
@@ -49,7 +59,7 @@ class vault_client::config {
       command     => '/usr/bin/systemctl start etcd-k8s-cert.service',
       user        => 'root',
       refreshonly => true,
-    } 
+    }
   }
 
   exec { 'In dev mode get CA for overlay':
@@ -96,7 +106,7 @@ class vault_client::config {
       k8s_component => 'kubelet',
       frequency     => '1d',
       notify        => Exec['Trigger kubelet cert'],
-      require       => [ File['/etc/kubernetes/ssl'], User['k8s'] ],
+      require       => [ File['/etc/kubernetes/ssl'], User['k8s user for vault'] ],
     }
 
     exec { 'Trigger kubelet cert':
