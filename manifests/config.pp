@@ -61,7 +61,7 @@ class vault_client::config {
     command     => '/usr/bin/systemctl start etcd-k8s-cert.service',
     user        => 'root',
     unless      => '/usr/bin/openssl x509 -checkend 3600 -in /etc/etcd/ssl/certs/etcd-k8s-cert.pem | /usr/bin/grep "Certificate will not expire"',
-    #require     => File['/usr/liv/systemd/system/etcd-k8s-cert.service'],
+    #require     => File['/usr/lib/systemd/system/etcd-k8s-cert.service'],
   }
 
   exec { 'In dev mode get CA for overlay':
@@ -89,11 +89,10 @@ class vault_client::config {
     require  => [ File['/usr/lib/systemd/system/etcd-overlay-cert.timer'], Exec['In dev mode get CA for overlay'] ],
   }
 
-
   exec { 'Trigger overlay cert':
     command     => '/usr/bin/systemctl start etcd-overlay-cert.service',
     user        => 'root',
-    unless      => '/usr/bin/openssl x509 -checkend 3600 -in /etc/etcd/ssl/certs/etcd-overlay-cert.pem | /usr/bin/grep "Certificate will not expire"',
+    unless      => 'stat /etc/etcd/ssl/certs/etcd-overlay-cert.pem || /usr/bin/openssl x509 -checkend 3600 -in /etc/etcd/ssl/certs/etcd-overlay-cert.pem | /usr/bin/grep "Certificate will not expire"',
     require     => File['/usr/lib/systemd/system/etcd-overlay-cert.service'],
   }
 
