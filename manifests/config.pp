@@ -13,7 +13,7 @@ class vault_client::config {
     ensure => directory,
   }
 
-  file { [ '/etc/kubernetes', '/etc/kubernetes/ssl', '/etc/kubernetes/ssl/certs' ]:
+  file { [ '/etc/kubernetes/ssl', '/etc/kubernetes/ssl/certs' ]:
     ensure => directory,
   }
 
