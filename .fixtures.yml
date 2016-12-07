@@ -8,4 +8,4 @@ fixtures:
       ref: "v1.1.2"
     systemd:
       repo: "git://github.com/camptocamp/puppet-systemd.git"
-      ref: "v0.4.0"
+      ref: "0.4.0"
