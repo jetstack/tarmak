@@ -13,10 +13,6 @@ class vault_client::config {
     ensure => directory,
   }
 
-  file { [ '/etc/kubernetes/ssl', '/etc/kubernetes/ssl/certs' ]:
-    ensure => directory,
-  }
-
   user { 'etcd user for vault':
     ensure => present,
     name   => 'etcd',
@@ -26,7 +22,12 @@ class vault_client::config {
   }
 
   if $vault_client::role == 'master' or $vault_client::role == 'worker' {
-    user { 'k8s user for vault':
+
+  file { [ '/etc/kubernetes/ssl', '/etc/kubernetes/ssl/certs' ]:
+    ensure => directory,
+  }
+
+  user { 'k8s user for vault':
       ensure => present,
       name   => 'k8s',
       uid    => 837,
