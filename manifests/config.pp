@@ -49,7 +49,7 @@ class vault_client::config {
       command     => '/usr/bin/systemctl start etcd-k8s-cert.service',
       user        => 'root',
       refreshonly => true,
-    } 
+    }
   }
 
   exec { 'In dev mode get CA for overlay':
