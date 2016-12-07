@@ -7,13 +7,13 @@ define vault_client::etcd_cert_service (
   include ::systemd
 
   file { "/usr/lib/systemd/system/etcd-${etcd_cluster}-cert.service":
-    ensure => file,
+    ensure  => file,
     content => template('vault_client/etcd-cert.service.erb'),
   } ~>
   Exec['systemctl-daemon-reload']
 
   file { "/usr/lib/systemd/system/etcd-${etcd_cluster}-cert.timer":
-    ensure => file,
+    ensure  => file,
     content => template('vault_client/etcd-cert.service.erb'),
   } ~>
   Exec['systemctl-daemon-reload']

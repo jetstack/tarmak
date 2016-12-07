@@ -4,45 +4,45 @@
 #
 class vault_client::config {
 
-  file { "/etc/sysconfig/vault":
-    ensure   => file,
-    content  => template('vault_client/vault.erb'),
+  file { '/etc/sysconfig/vault':
+    ensure  => file,
+    content => template('vault_client/vault.erb'),
   }
 
-  file { [ "/etc/etcd", "/etc/etcd/ssl", "/etc/etcd/ssl/certs" ]:
+  file { [ '/etc/etcd', '/etc/etcd/ssl', '/etc/etcd/ssl/certs' ]:
     ensure => directory,
   }
 
   user { "etcd user for vault":
-    name => "etcd",
     ensure => present,
-    uid => 873,
-    shell => "/sbin/nologin",
-    home => "/var/lib/etcd",
+    name   => 'etcd',
+    uid    => 873,
+    shell  => '/sbin/nologin',
+    home   => '/var/lib/etcd',
   }
 
-  exec { "In dev mode get CA for k8s":
+  exec { 'In dev mode get CA for k8s':
     command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca > /etc/pki/ca-trust/source/anchors/etcd-k8s.pem'",
     unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca | diff -P /etc/pki/ca-trust/source/anchors/etcd-k8s.pem -'",
-    notify  => Exec["update CA trust"],
+    notify  => Exec['update CA trust'],
   }
 
-  exec { "In dev mode get CA for overlay":
+  exec { 'In dev mode get CA for overlay':
     command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca > /etc/etcd/ssl/certs/etcd-overlay.pem'",
     unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca | diff -P /etc/etcd/ssl/certs/etcd-overlay.pem -'",
-    require => File["/etc/etcd/ssl/certs"],
+    require => File['/etc/etcd/ssl/certs'],
   }
 
-  exec { "update CA trust":
-    command => "/usr/bin/update-ca-trust",
+  exec { 'update CA trust':
+    command     => '/usr/bin/update-ca-trust',
     refreshonly => true,
-  }  
+  } 
 
   vault_client::etcd_cert_service { "k8s":
-    etcd_cluster => "k8s",
-    frequency    => "1d",
-    notify       => Exec["Trigger k8s cert"],
-    require      => [ File["/etc/etcd/ssl"], User["etcd user for vault"] ],
+    etcd_cluster => 'k8s',
+    frequency    => '1d',
+    notify       => Exec['Trigger k8s cert'],
+    require      => [ File['/etc/etcd/ssl'], User['etcd user for vault'] ],
   }
 
   service { "etcd-k8s-cert.timer":
@@ -52,34 +52,34 @@ class vault_client::config {
   }
 
   exec { "Trigger k8s cert":
-    command => "/usr/bin/systemctl start etcd-k8s-cert.service",
-    user => "root",
+    command     => '/usr/bin/systemctl start etcd-k8s-cert.service',
+    user        => 'root',
     refreshonly => true,
   }
 
-  vault_client::etcd_cert_service { "overlay":
-    etcd_cluster => "overlay",
-    frequency    => "1d",
-    notify       => Exec["Trigger overlay cert"],
-    require      => [ File["/etc/etcd/ssl"], User["etcd user for vault"] ],
+  vault_client::etcd_cert_service { 'overlay':
+    etcd_cluster => 'overlay',
+    frequency    => '1d',
+    notify       => Exec['Trigger overlay cert'],
+    require      => [ File['/etc/etcd/ssl'], User['etcd user for vault'] ],
   }
 
-  service { "etcd-overlay-cert.timer":
+  service { 'etcd-overlay-cert.timer':
     provider => systemd,
     enable   => true,
     require  => [ File['/usr/lib/systemd/system/etcd-overlay-cert.timer'], Exec['In dev mode get CA for overlay'] ],
   }
 
 
-  exec { "Trigger overlay cert":
-    command => "/usr/bin/systemctl start etcd-overlay-cert.service",
-    user => "root",
+  exec { 'Trigger overlay cert':
+    command     => '/usr/bin/systemctl start etcd-overlay-cert.service',
+    user        => 'root',
     refreshonly => true,
   }
 
-  exec { "Trigger events cert":
-    command => "/usr/bin/systemctl start etcd-events-cert.service",
-    user => "root",
+  exec { 'Trigger events cert':
+    command     => '/usr/bin/systemctl start etcd-events-cert.service',
+    user        => 'root',
     refreshonly => true,
   }
 }

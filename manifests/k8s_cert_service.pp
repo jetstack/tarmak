@@ -7,13 +7,13 @@ define vault_client::k8s_cert_service (
   include ::systemd
 
   file { "/usr/lib/systemd/system/k8s-${k8s_component}-cert.service":
-    ensure => file,
+    ensure  => file,
     content => template('vault_client/k8s-cert.service.erb'),
   } ~>
   Exec['systemctl-daemon-reload']
 
   file { "/usr/lib/systemd/system/etcd-${k8s_component}-cert.timer":
-    ensure => file,
+    ensure  => file,
     content => template('vault_client/k8s-cert.service.erb'),
   } ~>
   Exec['systemctl-daemon-reload']
