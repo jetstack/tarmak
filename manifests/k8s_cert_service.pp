@@ -4,7 +4,7 @@ define vault_client::k8s_cert_service (
 )
 {
 
-  include ::systemd
+  include camptocamp::systemd
 
   file { "/usr/lib/systemd/system/k8s-${k8s_component}-cert.service":
     ensure  => file,
