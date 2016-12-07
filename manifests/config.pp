@@ -13,7 +13,7 @@ class vault_client::config {
     ensure => directory,
   }
 
-  user { "etcd user for vault":
+  user { 'etcd user for vault':
     ensure => present,
     name   => 'etcd',
     uid    => 873,
@@ -36,22 +36,22 @@ class vault_client::config {
   exec { 'update CA trust':
     command     => '/usr/bin/update-ca-trust',
     refreshonly => true,
-  } 
+  }
 
-  vault_client::etcd_cert_service { "k8s":
+  vault_client::etcd_cert_service { 'k8s':
     etcd_cluster => 'k8s',
     frequency    => '1d',
     notify       => Exec['Trigger k8s cert'],
     require      => [ File['/etc/etcd/ssl'], User['etcd user for vault'] ],
   }
 
-  service { "etcd-k8s-cert.timer":
+  service { 'etcd-k8s-cert.timer':
     provider => systemd,
     enable   => true,
     require  => [ File['/usr/lib/systemd/system/etcd-k8s-cert.timer'], Exec['In dev mode get CA for k8s'] ],
   }
 
-  exec { "Trigger k8s cert":
+  exec { 'Trigger k8s cert':
     command     => '/usr/bin/systemctl start etcd-k8s-cert.service',
     user        => 'root',
     refreshonly => true,

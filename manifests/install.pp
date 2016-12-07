@@ -27,5 +27,5 @@ class vault_client::install {
   file { '/usr/bin/vault':
     ensure => link,
     target => $vault_bin,
-  }  
+  }
 }
