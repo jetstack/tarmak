@@ -64,7 +64,7 @@ spec:
               value: "true"
           volumeMounts:
             # Mount in the etcd TLS secrets.
-            - mountPath: /calico-secrets
+            - mountPath: /etc/etcd/ssl
               name: etcd-certs
       volumes:
         # Mount in the etcd TLS secrets.
