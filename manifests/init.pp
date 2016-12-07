@@ -8,6 +8,7 @@ class vault_client (
   $bin_dir = $::vault_client::params::bin_dir,
   $download_dir = $::vault_client::params::download_dir,
   $dest_dir = $::vault_client::params::dest_dir,
+  $role = $::vault_client::params::role,
 ) inherits ::vault_client::params {
 
   # Build download URL
