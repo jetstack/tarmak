@@ -93,4 +93,10 @@ class vault_client::config {
     notify        => Exec['Trigger kubelet cert'],
     require       => [ File['/etc/kubernetes/ssl'], User['k8s'] ],
   }
+
+  exec { 'Trigger kubelet cert':
+    command     => '/usr/bin/systemctl start k8s-kubelet-cert.service',
+    user        => 'root',
+    refreshonly => true,
+  }
 }
