@@ -21,4 +21,4 @@ ExecStartPre=/bin/bash -c '/usr/bin/test -e /etc/kubernetes/ssl/certs/k8s-<%= @k
 
 ExecStartPre=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @k8s_component %>-token); /usr/bin/vault token-renew'
 
-ExecStart=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @k8s_component %>-token); /usr/bin/vault write --field certificate <%= @ec2_tag_cluster %>/pki/k8s-<%= @k8s_component %>/sign/<% if @ec2_tag_role == "master" %>server<% else %>client<% end %> csr="$(/usr/bin/cat /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-csr.pem)" > /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-cert.pem'
+ExecStart=/bin/bash -c 'VAULT_TOKEN=$(/usr/bin/cat /tmp/<%= @ec2_tag_cluster %>-<%= @k8s_component %>-token); /usr/bin/vault write --field certificate <%= @ec2_tag_cluster %>/pki/k8s/sign/<%= @k8s_component %> csr="$(/usr/bin/cat /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-csr.pem)" > /etc/kubernetes/ssl/certs/k8s-<%= @k8s_component %>-cert.pem'
