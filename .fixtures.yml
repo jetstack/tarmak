@@ -6,3 +6,6 @@ fixtures:
     archive:
       repo: "git://github.com/voxpupuli/puppet-archive"
       ref: "v1.1.2"
+    systemd:
+      repo: "git://github.com/camptocamp/puppet-systemd.git"
+      ref: "v0.4.0"
