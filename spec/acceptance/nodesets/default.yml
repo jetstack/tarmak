@@ -1,16 +1,11 @@
+---
 HOSTS:
-  centos7-64:
+  centos-72-x64:
     roles:
-     - agent
+      - master
     platform: el-7-x86_64
-    image: centos:7
-    hypervisor: docker
-    docker_cmd: '["/usr/sbin/sshd","-D"]'
-    docker_image_commands:
-    - echo -e "\nPermitUserEnvironment yes\nMaxAuthTries 30" >> /etc/ssh/sshd_config
-    - ln -fs /bin/true /usr/bin/systemctl
+    box: centos/7
+    hypervisor: vagrant
 CONFIG:
   type: foss
-ssh:
-  password: root
-  auth_methods: ["password"]
+  version: 4.5.2

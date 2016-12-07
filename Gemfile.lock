@@ -33,6 +33,8 @@ GEM
     beaker-hostgenerator (0.8.0)
       deep_merge (~> 1.0)
       stringify-hash (~> 0.0.0)
+    beaker-puppet_install_helper (0.5.0)
+      beaker (>= 2.0)
     beaker-rspec (6.0.0)
       beaker (~> 3.0)
       rspec
@@ -320,6 +322,7 @@ GEM
       unf_ext
     unf_ext (0.0.7.2)
     unicode-display_width (1.1.1)
+    vagrant-wrapper (2.0.3)
     xml-simple (1.1.5)
 
 PLATFORMS
@@ -327,6 +330,7 @@ PLATFORMS
 
 DEPENDENCIES
   beaker
+  beaker-puppet_install_helper
   beaker-rspec
   facter (>= 1.7.0)
   metadata-json-lint
@@ -335,6 +339,7 @@ DEPENDENCIES
   puppetlabs_spec_helper (>= 1.0.0)
   rspec-puppet
   rubocop
+  vagrant-wrapper
 
 BUNDLED WITH
    1.11.2

@@ -1,25 +1,21 @@
 require 'beaker-rspec'
 
-# Not needed for this example as our docker files have puppet installed already
-#hosts.each do |host|
-#  # Install Puppet #  install_puppet
-#end
+# Install Puppet on all hosts
+install_puppet_from_gem_on(hosts, options)
 
 RSpec.configure do |c|
-  # Project root
-  proj_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
+  module_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 
-  # Readable test descriptions
   c.formatter = :documentation
 
-  # Configure all nodes in nodeset
   c.before :suite do
-    # Install module and dependencies
-    puppet_module_install(:source => proj_root, :module_name => 'vault_client')
+    # Install module to all hosts
     hosts.each do |host|
-      # Needed for the consul module to download the binary per the modulefile
-      on host, puppet('module', 'install', 'puppetlabs-stdlib'), { :acceptable_exit_codes => [0,1] }
-      on host, puppet('module', 'install', 'nanliu/staging'), { :acceptable_exit_codes => [0,1] }
+      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'vault_client', :target_module_path => '/etc/puppetlabs/code/modules')
+      # Install dependencies
+      on(host, puppet('module', 'install', 'puppetlabs-stdlib', '--version', '4.2.0'))
+      on(host, puppet('module', 'install', 'puppet-archive', '--version', '1.1.2'))
+      on(host, puppet('module', 'install', 'camptocamp-systemd', '--version', '0.4.0'))
     end
   end
 end
