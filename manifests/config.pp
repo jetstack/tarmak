@@ -36,7 +36,7 @@ class vault_client::config {
     }
   }
 
-  if $vault_client::role == 'master' {
+  if $vault_client::role == 'master' or $vault_client::role == 'etcd' {
     exec { 'In dev mode get CA for k8s':
       command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca > /etc/etcd/ssl/certs/etcd-k8s.pem'",
       unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca | diff -P /etc/etcd/ssl/certs/etcd-k8s.pem -'",
