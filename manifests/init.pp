@@ -10,8 +10,6 @@ class vault_client (
   $dest_dir = $::vault_client::params::dest_dir,
 ) inherits ::vault_client::params {
 
-  Exec { path => [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ] }
-
   # Build download URL
   $download_url = regsubst(
     $::vault_client::params::download_url,
