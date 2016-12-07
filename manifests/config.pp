@@ -92,7 +92,7 @@ class vault_client::config {
   exec { 'Trigger overlay cert':
     command     => '/usr/bin/systemctl start etcd-overlay-cert.service',
     user        => 'root',
-    refreshonly => true,
+    unless      => '/usr/bin/openssl x509 -checkend 3600 -in /etc/etcd/ssl/certs/etcd-overlay-cert.pem | /usr/bin/grep "Certificate will not expire"'
   }
 
   exec { 'Trigger events cert':
