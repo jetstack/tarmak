@@ -23,7 +23,7 @@ class vault_client::config {
 
   if $vault_client::role == 'master' or $vault_client::role == 'worker' {
 
-  file { [ '/etc/kubernetes/ssl', '/etc/kubernetes/ssl/certs' ]:
+  file { [ '/etc/kubernetes', '/etc/kubernetes/ssl', '/etc/kubernetes/ssl/certs' ]:
     ensure => directory,
   }
 
