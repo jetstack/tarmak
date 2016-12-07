@@ -27,9 +27,9 @@ class vault_client::config {
 
   if $vault_client::role == 'master' {
     exec { 'In dev mode get CA for k8s':
-      command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca > /etc/pki/ca-trust/source/anchors/etcd-k8s.pem'",
-      unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca | diff -P /etc/pki/ca-trust/source/anchors/etcd-k8s.pem -'",
-      notify  => Exec['update CA trust'],
+      command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca > /etc/etcd/ssl/certs/etcd-k8s.pem'",
+      unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-k8s/cert/ca | diff -P /etc/etcd/ssl/certs/etcd-k8s.pem -'",
+      require => File['/etc/etcd/ssl/certs'],
     }
 
     vault_client::etcd_cert_service { 'k8s':
@@ -49,15 +49,16 @@ class vault_client::config {
       command     => '/usr/bin/systemctl start etcd-k8s-cert.service',
       user        => 'root',
       refreshonly => true,
-    }  
+    } 
   }
- 
+
   exec { 'In dev mode get CA for overlay':
     command => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca > /etc/etcd/ssl/certs/etcd-overlay.pem'",
     unless  => "/bin/bash -c 'source /etc/sysconfig/vault; /usr/bin/vault read -address=\$VAULT_ADDR -field=certificate \$CLUSTER_NAME/pki/etcd-overlay/cert/ca | diff -P /etc/etcd/ssl/certs/etcd-overlay.pem -'",
     require => File['/etc/etcd/ssl/certs'],
   }
 
+  #not used for now
   exec { 'update CA trust':
     command     => '/usr/bin/update-ca-trust',
     refreshonly => true,
