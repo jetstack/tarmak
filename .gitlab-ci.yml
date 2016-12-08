@@ -5,16 +5,25 @@ stages:
 - acceptance
 
 lint:
+  tags:
+  - ruby-2.3
+  - docker
   script:
   - bundle install --path /cache
   - bundle exec rake metadata_lint lint
 
 validate:
+  tags:
+  - ruby-2.3
+  - docker
   script:
   - bundle install --path /cache
   - bundle exec rake validate
 
 spec:
+  tags:
+  - ruby-2.3
+  - docker
   script:
   - bundle install --path /cache
   - bundle exec rake spec
