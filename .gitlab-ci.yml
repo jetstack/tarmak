@@ -35,3 +35,5 @@ beaker:
   script:
   - bundle install
   - bundle exec rake beaker
+  only:
+  - master
