@@ -1,28 +1,27 @@
-image: ruby:2.3
 
 stages:
 - test
 - acceptance
 
 lint:
+  image: ruby:2.3
   tags:
-  - ruby-2.3
   - docker
   script:
   - bundle install --path /cache
   - bundle exec rake metadata_lint lint
 
 validate:
+  image: ruby:2.3
   tags:
-  - ruby-2.3
   - docker
   script:
   - bundle install --path /cache
   - bundle exec rake validate
 
 spec:
+  image: ruby:2.3
   tags:
-  - ruby-2.3
   - docker
   script:
   - bundle install --path /cache
