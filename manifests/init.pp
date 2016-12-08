@@ -140,7 +140,7 @@ define calico::node (
   service { "calico-node":
     ensure => running,
     enable => true,
-    require => [ Class["k8s"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"], Exec["Trigger overlay cert"] ],
+    require => [ Class["k8s"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"], Exec["Trigger etcd overlay cert"] ],
   }
 }
 
@@ -160,7 +160,7 @@ define calico::ipPool (
     user => "root",
     command => "/bin/bash -c \"`/usr/bin/grep ETCD_ENDPOINTS /etc/calico/calico.env` `/usr/bin/grep ETCD_CERT_FILE /etc/calico/calico.env` `/usr/bin/grep ETCD_KEY_FILE /etc/calico/calico.env` `/usr/bin/grep ETCD_CA_CERT_FILE /etc/calico/calico.env` /opt/cni/bin/calicoctl apply -f /etc/calico/ipPool-${ip_pool}.yaml\"",
     unless => "/bin/bash -c \"`/usr/bin/grep ETCD_ENDPOINTS /etc/calico/calico.env` `/usr/bin/grep ETCD_CERT_FILE /etc/calico/calico.env` `/usr/bin/grep ETCD_KEY_FILE /etc/calico/calico.env` `/usr/bin/grep ETCD_CA_CERT_FILE /etc/calico/calico.env` /opt/cni/bin/calicoctl get -f /etc/calico/ipPool-${ip_pool}.yaml | /usr/bin/grep ${ip_pool}/${ip_mask}\"",
-    require => [ Service["calico-node"], File["/opt/cni/bin/calicoctl"], File["/etc/calico/ipPool-${ip_pool}.yaml"], Exec["Trigger overlay cert"] ],
+    require => [ Service["calico-node"], File["/opt/cni/bin/calicoctl"], File["/etc/calico/ipPool-${ip_pool}.yaml"], Exec["Trigger etcd overlay cert"] ],
   }
 }
 
@@ -189,6 +189,6 @@ define calico::policy_controller (
   exec { "deploy calico policy controller":
     command => "/usr/bin/kubectl apply -f /root/policy-controller-rs.yaml",
     unless => "/usr/bin/kubectl get -f /root/policy-controller-rs.yaml",
-    require => [ Exec["deploy calico config"], File["/root/policy-controller-rs.yaml"], Exec["Trigger overlay cert"] ],
+    require => [ Exec["deploy calico config"], File["/root/policy-controller-rs.yaml"], Exec["Trigger etcd overlay cert"] ],
   } 
 }
