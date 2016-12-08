@@ -56,7 +56,7 @@ spec:
             # The location of the Kubernetes API.  Use the default Kubernetes
             # service for API access.
             - name: K8S_API
-              value: "http://k8s-master.<%= @ec2_tag_cluster %>.<%= @dns_root %>:8080"
+              value: "https://k8s-master.<%= @ec2_tag_cluster %>.<%= @dns_root %>:6443"
             # Since we're running in the host namespace and might not have KubeDNS 
             # access, configure the container's /etc/hosts to resolve
             # kubernetes.default to the correct service clusterIP.
