@@ -1,16 +1,29 @@
 image: ruby:2.3
 
-before_script:
-- bundle install --path /cache
+stages:
+- test
+- acceptance
 
 lint:
   script:
+  - bundle install --path /cache
   - bundle exec rake metadata_lint lint
 
 validate:
   script:
+  - bundle install --path /cache
   - bundle exec rake validate
 
 spec:
   script:
+  - bundle install --path /cache
   - bundle exec rake spec
+
+beaker:
+  stage: acceptance
+  tags:
+  - ruby-2.3
+  - vagrant
+  script:
+  - bundle install
+  - bundle exec rake beaker
