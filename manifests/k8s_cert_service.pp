@@ -1,6 +1,7 @@
 define vault_client::k8s_cert_service (
   String $k8s_component,
   String $frequency,
+  String $role,
 )
 {
 

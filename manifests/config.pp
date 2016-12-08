@@ -46,6 +46,7 @@ class vault_client::config {
     vault_client::etcd_cert_service { 'k8s':
       etcd_cluster => 'k8s',
       frequency    => '1d',
+      role         => $vault_client::role,
       notify       => Exec['Trigger k8s cert'],
       require      => [ File['/etc/etcd/ssl'], User['etcd user for vault'] ],
     }
@@ -79,6 +80,7 @@ class vault_client::config {
   vault_client::etcd_cert_service { 'overlay':
     etcd_cluster => 'overlay',
     frequency    => '1d',
+    role         => $vault_client::role,
     notify       => Exec['Trigger overlay cert'],
     require      => [ File['/etc/etcd/ssl'], User['etcd user for vault'] ],
   }
@@ -108,6 +110,7 @@ class vault_client::config {
     vault_client::k8s_cert_service { 'kubelet':
       k8s_component => 'kubelet',
       frequency     => '1d',
+      role          => $vault_client::role,
       notify        => Exec['Trigger kubelet cert'],
       require       => [ File['/etc/kubernetes/ssl'], User['k8s user for vault'] ],
     }

@@ -1,6 +1,7 @@
 define vault_client::etcd_cert_service (
   String $etcd_cluster,
   String $frequency,
+  String $role,
 )
 {
 
