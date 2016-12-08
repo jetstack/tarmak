@@ -4,8 +4,7 @@ HOSTS:
     roles:
       - master
     platform: el-7-x86_64
-    box: centos/7
+    box: puppetlabs/centos-7.2-64-puppet
     hypervisor: vagrant
 CONFIG:
   type: foss
-  version: 4.5.2
