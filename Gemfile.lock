@@ -8,7 +8,7 @@ GEM
     aws-sdk-v1 (1.66.0)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
-    beaker (3.3.0)
+    beaker (3.5.0)
       aws-sdk-v1 (~> 1.57)
       beaker-hiera (~> 0.0)
       beaker-hostgenerator
@@ -20,9 +20,10 @@ GEM
       in-parallel (~> 0.1)
       inifile (~> 2.0)
       json (~> 1.8)
+      minitar (~> 0.5.4)
       minitest (~> 5.4)
       net-scp (~> 1.2)
-      net-ssh (~> 3.2)
+      net-ssh (= 3.3.0.beta1)
       open_uri_redirections (~> 0.2.1)
       rbvmomi (~> 1.9)
       rsync (~> 1.0.9)
@@ -33,6 +34,8 @@ GEM
     beaker-hostgenerator (0.8.0)
       deep_merge (~> 1.0)
       stringify-hash (~> 0.0.0)
+    beaker-puppet_install_helper (0.5.0)
+      beaker (>= 2.0)
     beaker-rspec (6.0.0)
       beaker (~> 3.0)
       rspec
@@ -41,13 +44,13 @@ GEM
     builder (3.2.2)
     deep_merge (1.1.1)
     diff-lcs (1.2.5)
-    docker-api (1.32.1)
+    docker-api (1.33.0)
       excon (>= 0.38.0)
       json
     excon (0.54.0)
     facter (2.4.6)
       CFPropertyList (~> 2.2.6)
-    faraday (0.9.2)
+    faraday (0.10.0)
       multipart-post (>= 1.2, < 3)
     fast_gettext (1.1.0)
     fission (0.5.0)
@@ -89,7 +92,7 @@ GEM
     fog-atmos (0.1.0)
       fog-core
       fog-xml
-    fog-aws (0.12.0)
+    fog-aws (0.13.0)
       fog-core (~> 1.38)
       fog-json (~> 1.0)
       fog-xml (~> 0.1)
@@ -123,7 +126,7 @@ GEM
       multi_json (~> 1.10)
     fog-local (0.3.1)
       fog-core (~> 1.27)
-    fog-openstack (0.1.17)
+    fog-openstack (0.1.18)
       fog-core (>= 1.40)
       fog-json (>= 1.0)
       ipaddress (>= 0.8)
@@ -168,7 +171,7 @@ GEM
     fog-voxel (0.1.0)
       fog-core
       fog-xml
-    fog-vsphere (1.5.1)
+    fog-vsphere (1.5.2)
       fog-core
       rbvmomi (~> 1.9)
     fog-xenserver (0.2.3)
@@ -227,14 +230,15 @@ GEM
       mime-types-data (~> 3.2015)
     mime-types-data (3.2016.0521)
     mini_portile2 (2.1.0)
-    minitest (5.9.1)
+    minitar (0.5.4)
+    minitest (5.10.1)
     mocha (1.2.1)
       metaclass (~> 0.0.1)
     multi_json (1.12.1)
     multipart-post (2.0.0)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
-    net-ssh (3.2.0)
+    net-ssh (3.3.0.beta1)
     net-telnet (0.1.1)
     nokogiri (1.6.8.1)
       mini_portile2 (~> 2.1.0)
@@ -320,6 +324,7 @@ GEM
       unf_ext
     unf_ext (0.0.7.2)
     unicode-display_width (1.1.1)
+    vagrant-wrapper (2.0.3)
     xml-simple (1.1.5)
 
 PLATFORMS
@@ -327,6 +332,7 @@ PLATFORMS
 
 DEPENDENCIES
   beaker
+  beaker-puppet_install_helper
   beaker-rspec
   facter (>= 1.7.0)
   metadata-json-lint
@@ -335,6 +341,7 @@ DEPENDENCIES
   puppetlabs_spec_helper (>= 1.0.0)
   rspec-puppet
   rubocop
+  vagrant-wrapper
 
 BUNDLED WITH
    1.11.2
