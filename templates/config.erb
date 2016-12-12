@@ -1,0 +1,5 @@
+VAULT_ADDR=<%= @server_url %>
+<% if @init_token_enabled -%>
+VAULT_INIT_ROLE=<%= @init_role %>
+VAULT_INIT_POLICIES=<%= @init_policies.join(',') %>
+<% end -%>

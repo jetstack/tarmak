@@ -1,0 +1,9 @@
+[Unit]
+Description=trigger vault token renewal service
+
+[Timer]
+OnUnitActiveSec=<%= @frequency %>
+Persistent=true
+
+[Install]
+WantedBy=timers.target

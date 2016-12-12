@@ -11,5 +11,5 @@ class vault_client::params {
   $config_dir = '/etc/vault'
   $download_dir = '/tmp'
   $download_url = 'https://releases.hashicorp.com/vault/#VERSION#/vault_#VERSION#_linux_amd64.zip'
-  $role = 'worker'
+  $server_url = 'http://127.0.0.1:8200'
 }

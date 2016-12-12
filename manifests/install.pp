@@ -10,6 +10,9 @@ class vault_client::install {
     before => File[$vault_bin],
   }
 
+  package { 'epel-release': ensure => present} ->
+  package { 'jq': ensure => present }
+
   package { 'unzip': ensure => present} ->
 
   archive { "${::vault_client::download_dir}/vault.zip":
