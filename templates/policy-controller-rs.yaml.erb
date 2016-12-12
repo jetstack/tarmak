@@ -66,6 +66,9 @@ spec:
             # Mount in the etcd TLS secrets.
             - mountPath: /etc/etcd/ssl
               name: etcd-certs
+      securityContext:
+        seLinuxOptions:
+	  user: unconfined_u
       volumes:
         # Mount in the etcd TLS secrets.
         - name: etcd-certs
