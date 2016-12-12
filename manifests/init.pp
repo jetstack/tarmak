@@ -1,31 +1,37 @@
-# TODO Full description of class etcd here.
-class etcd ($use_vault = true)
-{
+# etcd
+class etcd(
+  $data_dir = $::etcd::params::data_dir,
+  $config_dir = $::etcd::params::config_dir,
+  $uid = $::etcd::params::uid,
+  $gid = $::etcd::params::gid,
+  $user = $::etcd::params::user,
+  $group = $::etcd::params::group,
+) inherits ::etcd::params {
 
-  if ($use_vault == true) {
-    require ::vault_client
+  group { $group:
+    ensure => present,
+    gid    => $gid,
+  } ->
+  user { $user:
+    ensure => present,
+    uid    => $uid,
+    shell  => '/sbin/nologin',
+    home   => $data_dir,
   }
 
-  else {
-
-    user { 'etcd':
-      ensure => present,
-      uid    => 873,
-      shell  => '/sbin/nologin',
-      home   => '/var/lib/etcd',
-    }
-
-    file { '/etc/etcd':
-      ensure => directory,
-      owner  => 'etcd',
-      group  => 'etcd',
-    }
-  }
-
-  file { '/var/lib/etcd':
+  file { $data_dir:
     ensure  => directory,
-    owner   => 'etcd',
-    group   => 'etcd',
-    require => User['etcd'],
+    owner   => $user,
+    group   => $group,
+    mode    => '0750',
+    require => User[$user],
+  }
+
+  file { $config_dir:
+    ensure  => directory,
+    owner   => $user,
+    group   => $group,
+    mode    => '0750',
+    require => User[$user],
   }
 }

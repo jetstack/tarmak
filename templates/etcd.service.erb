@@ -1,23 +1,31 @@
 [Unit]
-Description=Etcd Server
-
-After=network.target
-After=network-online.target
-After=var-lib-etcd.mount
-
+Description=etcd server <%= @cluster_name %>
 Wants=network-online.target
-Wants=var-lib-etcd.mount
+After=network.target network-online.target
 
 [Service]
-Type=notify
-WorkingDirectory=/var/lib/etcd/
-EnvironmentFile=-/etc/etcd/etcd-<%= @etcd_cluster_name %>.conf
-User=etcd
-# set GOMAXPROCS to number of processors
-ExecStart=/bin/bash -c "GOMAXPROCS=$(nproc) /usr/bin/etcd-<%= @etcd_version %> --name=\"${ETCD_NAME}\" --data-dir=\"${ETCD_DATA_DIR}\" --listen-client-urls=\"${ETCD_LISTEN_CLIENT_URLS}\""
+User=<%= @user %>
+Group=<%= @group %>
+Environment=ETCD_NAME=<%= @nodename %>
+Environment=ETCD_DATA_DIR=<%= @data_dir %>
+Environment=ETCD_LISTEN_CLIENT_URLS=<%= @listen_client_urls %>
+Environment=ETCD_ADVERTISE_CLIENT_URLS=<%= @advertise_client_urls %>
+Environment=ETCD_LISTEN_PEER_URLS=<%= @listen_peer_urls %>
+<% if @tls -%>
+Environment=ETCD_CERT_FILE=<%= @tls_cert_path %>
+Environment=ETCD_KEY_FILE=<%= @tls_key_path %>
+Environment=ETCD_CA_FILE=<%= @tls_ca_path %>
+Environment=ETCD_CLIENT_CERT_AUTH=true
+Environment=ETCD_PEER_CLIENT_CERT_AUTH=true
+<% end -%>
+<% if @members > 1 -%>
+Environment=ETCD_INITIAL_CLUSTER_TOKEN=<%= @initial_cluster_token %>
+Environment=ETCD_INITIAL_CLUSTER=<%= @_initial_cluster %>
+Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=<%= @initial_advertise_peer_urls %>
+<% end -%>
+ExecStart=/opt/etcd-<%= @version %>/etcd
 Restart=on-failure
-LimitNOFILE=65536
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-

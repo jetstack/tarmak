@@ -27,13 +27,24 @@ spec:
   - bundle install --path /cache
   - bundle exec rake spec
 
-beaker:
+beaker-three-node-cluster:
   stage: acceptance
   tags:
   - ruby-2.3
   - vagrant
   script:
   - bundle install
-  - bundle exec rake beaker
+  - bundle exec rake beaker:3n-cluster
+  only:
+  - master
+
+beaker-single-node:
+  stage: acceptance
+  tags:
+  - ruby-2.3
+  - vagrant
+  script:
+  - bundle install
+  - bundle exec rake beaker:default
   only:
   - master
