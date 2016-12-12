@@ -175,9 +175,9 @@ define calico::policy_controller (
     content => template('calico/calico-config.yaml.erb'),
   }
 
-  file { "/root/policy-controller-rs.yaml":
+  file { "/root/policy-controller-deployment.yaml":
     ensure => file,
-    content => template('calico/policy-controller-rs.yaml.erb'),
+    content => template('calico/policy-controller-deployment.yaml.erb'),
   }
 
   exec { "deploy calico config":
@@ -187,8 +187,8 @@ define calico::policy_controller (
   }
   
   exec { "deploy calico policy controller":
-    command => "/usr/bin/kubectl apply -f /root/policy-controller-rs.yaml",
-    unless => "/usr/bin/kubectl get -f /root/policy-controller-rs.yaml",
-    require => [ Exec["deploy calico config"], File["/root/policy-controller-rs.yaml"], Exec["Trigger etcd overlay cert"] ],
+    command => "/usr/bin/kubectl apply -f /root/policy-controller-deployment.yaml",
+    unless => "/usr/bin/kubectl get -f /root/policy-controller-deployment.yaml",
+    require => [ Exec["deploy calico config"], File["/root/policy-controller-deployment.yaml"], Exec["Trigger etcd overlay cert"] ],
   } 
 }
