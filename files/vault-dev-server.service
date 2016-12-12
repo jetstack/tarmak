@@ -1,0 +1,9 @@
+[Unit]
+Description=vault dev server for acceptance tests
+
+[Service]
+ExecStartPre=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.sh download
+ExecStart=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.sh server
+ExecStartPost=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.sh config
+RestartSec=5
+Restart=on-failure

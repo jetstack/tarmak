@@ -1,0 +1,142 @@
+#!/bin/bash
+# vim: set ft=sh sts=4 ts=4 sw=4 et:
+
+set -e
+
+CONFIG_FILE=<%= scope['vault_client::config_path'] %>
+INIT_TOKEN_FILE=<%= scope['vault_client::init_token_path'] %>
+TOKEN_FILE=<%= scope['vault_client::token_path'] %>
+
+VAULT_CERT_TYPE=${VAULT_CERT_TYPE:-rsa}
+VAULT_CERT_BITS=${VAULT_CERT_BITS:-2048}
+VAULT_CERT_OWNER=${VAULT_CERT_OWNER:-root:root}
+
+function config {
+    source $CONFIG_FILE
+    export VAULT_ADDR
+    if [ ! -f ${TOKEN_FILE} ]; then
+        token_new
+    else
+        VAULT_TOKEN=$(cat ${TOKEN_FILE})
+        export VAULT_TOKEN
+    fi
+}
+
+function token_new {
+    # validate input
+    if [ ! -f ${INIT_TOKEN_FILE} ]; then
+        (>&2 echo "File ${INIT_TOKEN_FILE} not found")
+        exit 1
+    fi
+    if [ -z "${VAULT_INIT_POLICIES}" ]; then
+        (>&2 echo "No VAULT_INIT_POLICIES set")
+        exit 1
+    fi
+    if [ -z "${VAULT_INIT_ROLE}" ]; then
+        (>&2 echo "No VAULT_INIT_ROLE set")
+        exit 1
+    fi
+
+    # parse policies
+    policies=""
+    for policy in $(echo "${VAULT_INIT_POLICIES}" | tr "," "\n"); do
+        policies="${policies}-policy=${policy} "
+    done
+
+    # get initial token
+    VAULT_TOKEN=$(cat ${INIT_TOKEN_FILE})
+    export VAULT_TOKEN
+
+    # renew initial token
+    token_renew
+
+    # get new unique token"
+    TOKEN_OUTPUT=$(vault token-create ${policies} -role="${VAULT_INIT_ROLE}" -format=json)
+    VAULT_TOKEN=$(echo "${TOKEN_OUTPUT}" | jq -r ".auth.client_token")
+
+    # write token to file
+    echo "${VAULT_TOKEN}" > "${TOKEN_FILE}"
+    chmod 600 ${TOKEN_FILE}
+    export VAULT_TOKEN
+
+    # get rid of init token
+    echo "" > ${INIT_TOKEN_FILE}
+}
+
+function token_renew {
+    if [ "$(vault token-lookup -format=json | jq -r '.data.renewable')" == "false" ]; then
+        (>&2 echo "Skip token-renew as token is not refreshable")
+    else
+        vault token-renew -format json > /dev/null
+    fi
+}
+
+function status {
+    vault token-lookup -format json > /dev/null
+}
+
+function cert_prepare {
+    if [ -z "${1}" ]; then
+        (>&2 echo "No argument with the cert base name set")
+        exit 1
+    fi
+    if [ -z "${VAULT_CERT_CN}" ]; then
+        (>&2 echo "No VAULT_CERT_CN set")
+        exit 1
+    fi
+    if [ -z "${VAULT_CERT_ROLE}" ]; then
+        (>&2 echo "No VAULT_CERT_ROLE set")
+        exit 1
+    fi
+    if [ "${VAULT_CERT_TYPE}" != "rsa" ]; then
+        (>&2 echo "Invalid VAULT_CERT_TYPE set: '${VAULT_CERT_TYPE}'")
+        exit 1
+    fi
+    VAULT_CERT_KEY_PATH="${1}-key.pem"
+    VAULT_CERT_CSR_PATH="${1}-csr.pem"
+    VAULT_CERT_PATH="${1}.pem"
+    VAULT_CERT_BASE_PATH=$(dirname "{1}")
+    mkdir -p "${VAULT_CERT_BASE_PATH}"
+}
+
+function cert_key_csr {
+    if [ ! -f "${VAULT_CERT_KEY_PATH}" ] || [ ! -f "${VAULT_CERT_CSR_PATH}" ]; then
+        rm -f "${VAULT_CERT_KEY_PATH}" "${VAULT_CERT_CSR_PATH}"
+        openssl req -nodes -newkey ${VAULT_CERT_TYPE}:${VAULT_CERT_BITS} -keyout "${VAULT_CERT_KEY_PATH}" -out "${VAULT_CERT_CSR_PATH}" -subj "${VAULT_CERT_CN}"
+        chmod 600 "${VAULT_CERT_KEY_PATH}"
+        chmod 644 "${VAULT_CERT_CSR_PATH}"
+        chown "${VAULT_CERT_OWNER}" "${VAULT_CERT_KEY_PATH}" "${VAULT_CERT_CSR_PATH}"
+        rm -f "${VAULT_CERT_PATH}"
+    fi
+}
+
+function cert_sign {
+    vault write --field certificate ${VAULT_CERT_ROLE} csr="$(cat "${VAULT_CERT_CSR_PATH}")" > ${VAULT_CERT_PATH}
+    chmod 644 "${VAULT_CERT_PATH}"
+    chown "${VAULT_CERT_OWNER}" "${VAULT_CERT_PATH}"
+}
+
+case "$1" in
+    status)
+        config
+        status
+        ;;
+    token-renew)
+        config
+        token_renew
+        ;;
+    exec)
+        config
+        shift
+        exec vault "$@"
+        ;;
+    cert)
+        config
+        shift
+        cert_prepare "$1"
+        cert_key_csr
+        cert_sign
+        ;;
+    *)
+        echo "Usage: $0 {cert|exec|status|token-renew}"
+esac

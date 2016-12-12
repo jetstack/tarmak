@@ -1,0 +1,16 @@
+[Unit]
+Description=certificate service <%= @name %>
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=oneshot
+Environment=VAULT_CERT_TYPE=<%= @key_type %>
+Environment=VAULT_CERT_BITS=<%= @key_bits %>
+Environment=VAULT_CERT_CN=/CN=<%= @common_name %>
+Environment=VAULT_CERT_ROLE=<%= @role %>
+Environment=VAULT_CERT_OWNER=<%= @user %>:<%= @group %>
+ExecStart=/etc/vault/helper cert <%= @base_path %>
+<% @exec_post.each do |val| -%>
+ExecStartPost=<%= val %>
+<% end -%>

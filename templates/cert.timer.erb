@@ -1,0 +1,9 @@
+[Unit]
+Description=trigger certificate service <%= @name %>
+
+[Timer]
+OnUnitActiveSec=<%= @frequency %>
+Persistent=true
+
+[Install]
+WantedBy=timers.target
