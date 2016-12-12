@@ -1,4 +1,4 @@
-define calico::ipPool (
+define calico::ip_pool (
   String $ip_pool,
   Integer $ip_mask,
   String $ipip_enabled
