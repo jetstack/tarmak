@@ -8,6 +8,7 @@ define etcd::instance (
   String $tls_cert_path = nil,
   String $tls_key_path = nil,
   String $tls_ca_path = nil,
+  String $advertise_client_network = nil,
   Array $initial_cluster = []
 ){
   include ::etcd
@@ -25,7 +26,18 @@ define etcd::instance (
     $proto = 'http'
   }
 
-  $advertise_client_urls = "${proto}://0.0.0.0:${client_port}"
+  if $advertise_client_network != nil {
+    $advertise_client_ip = get_ipaddress_in_network($advertise_client_network)
+  } else {
+    $advertise_client_ip = undef
+  }
+
+  if $advertise_client_ip != undef {
+    $advertise_client_urls = "${proto}://${advertise_client_ip}:${client_port}"
+  } else {
+    $advertise_client_urls = undef
+  }
+
   $listen_client_urls = "${proto}://0.0.0.0:${client_port}"
 
   if $members == 1 {

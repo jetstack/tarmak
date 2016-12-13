@@ -9,7 +9,9 @@ Group=<%= @group %>
 Environment=ETCD_NAME=<%= @nodename %>
 Environment=ETCD_DATA_DIR=<%= @data_dir %>
 Environment=ETCD_LISTEN_CLIENT_URLS=<%= @listen_client_urls %>
+<% if @advertise_client_urls -%>
 Environment=ETCD_ADVERTISE_CLIENT_URLS=<%= @advertise_client_urls %>
+<% end -%>
 Environment=ETCD_LISTEN_PEER_URLS=<%= @listen_peer_urls %>
 <% if @tls -%>
 Environment=ETCD_CERT_FILE=<%= @tls_cert_path %>

@@ -18,30 +18,34 @@ if hosts.length == 3
         pp = <<-EOS
 $members = 3
 $initial_cluster = ['etcd1','etcd2','etcd3']
+$advertise_client_network = '10.123.0.0/24'
 
 etcd::instance{'k8s-main':
-  version         => '3.0.15',
-  nodename        => $::hostname,
-  members         => $members,
-  initial_cluster => $initial_cluster,
+  version                  => '3.0.15',
+  nodename                 => $::hostname,
+  members                  => $members,
+  initial_cluster          => $initial_cluster,
+  advertise_client_network => $advertise_client_network,
 }
 
 etcd::instance{'k8s-events':
-  version         => '3.0.15',
-  nodename        => $::hostname,
-  members         => $members,
-  initial_cluster => $initial_cluster,
-  client_port     => 2389,
-  peer_port       => 2390,
+  version                  => '3.0.15',
+  nodename                 => $::hostname,
+  members                  => $members,
+  initial_cluster          => $initial_cluster,
+  advertise_client_network => $advertise_client_network,
+  client_port              => 2389,
+  peer_port                => 2390,
 }
 
 etcd::instance{'k8s-overlay':
-  version         => '2.3.7',
-  nodename        => $::hostname,
-  members         => $members,
-  initial_cluster => $initial_cluster,
-  client_port     => 2399,
-  peer_port       => 2400,
+  version                  => '2.3.7',
+  nodename                 => $::hostname,
+  members                  => $members,
+  initial_cluster          => $initial_cluster,
+  advertise_client_network => $advertise_client_network,
+  client_port              => 2399,
+  peer_port                => 2400,
 }
         EOS
 
