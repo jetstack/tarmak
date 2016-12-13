@@ -8,15 +8,14 @@ RSpec.configure do |c|
 
   c.formatter = :documentation
 
+  module_path = '/etc/puppetlabs/code/modules'
+
   c.before :suite do
     # Install module to all hosts
     hosts.each do |host|
-      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'etcd', :target_module_path => '/etc/puppetlabs/code/modules')
+      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'etcd', :target_module_path => module_path)
       # Install dependencies
-      on(host, puppet('module', 'install', 'puppetlabs-stdlib', '--version', '4.2.0'))
-      on(host, puppet('module', 'install', 'camptocamp-systemd', '--version', '0.4.0'))
-      #host.shell('mkdir -p /etc/puppetlabs/code/modules/vault_client')
-      #host.shell('curl -sL https://github.com/puppernetes/module-vault_client/archive/master.tar.gz | tar xvzf - -C /etc/puppetlabs/code/modules/vault_client --strip-components=1')
+      scp_to(host, "#{module_root}/spec/fixtures/modules", File.dirname(module_path), {})
     end
   end
 end
