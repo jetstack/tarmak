@@ -55,6 +55,8 @@ etcd::instance{'k8s-overlay':
             apply_manifest_on(host, pp, :catch_failures => true).exit_code
           ).to be_zero
         end
+
+        sleep 5
       end
 
       [2379, 2389, 2399].each do |port|
