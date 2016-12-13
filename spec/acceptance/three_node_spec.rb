@@ -8,8 +8,8 @@ if hosts.length == 3
         # assign private ip addresses
         hosts_as('etcd').each do |host|
           ip = host.host_hash[:ip]
-          on host, "ifconfig enp0s8 #{ip}/24"
-          on host, "date > /tmp/test"
+          on host, "ifconfig enp0s8 #{ip}/16"
+          on host, "iptables -F INPUT"
         end
       end
 
@@ -18,7 +18,7 @@ if hosts.length == 3
         pp = <<-EOS
 $members = 3
 $initial_cluster = ['etcd1','etcd2','etcd3']
-$advertise_client_network = '10.123.0.0/24'
+$advertise_client_network = '10.123.0.0/16'
 
 etcd::instance{'k8s-main':
   version                  => '3.0.15',
@@ -54,6 +54,14 @@ etcd::instance{'k8s-overlay':
           expect(
             apply_manifest_on(host, pp, :catch_failures => true).exit_code
           ).to be_zero
+        end
+      end
+
+      [2379, 2389, 2399].each do |port|
+        hosts_as('etcd').each do |host|
+          it "test etcd on port #{port} on host #{host.name}" do
+            result = host.shell "ETCDCTL=http://127.0.0.1:#{port} /opt/etcd-3.0.15/etcdctl cluster-health"
+          end
         end
       end
     end
