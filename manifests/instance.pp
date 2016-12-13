@@ -32,7 +32,7 @@ define etcd::instance (
     $listen_peer_urls = "${proto}://127.0.0.1:${peer_port}"
   } else {
     $listen_peer_urls = "${proto}://0.0.0.0:${peer_port}"
-    $initial_advertise_peer_urls = "${proto}://${::fqdn}:${peer_port}"
+    $initial_advertise_peer_urls = "${proto}://${nodename}:${peer_port}"
     $_initial_cluster = $initial_cluster.map |$node| { "${node}=${proto}://${node}:${peer_port}" }.join(',')
     $_initial_cluster_hash = md5($_initial_cluster)
     $initial_cluster_token = "etcd-${cluster_name}-${_initial_cluster_hash}"

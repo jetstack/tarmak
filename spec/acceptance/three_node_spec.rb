@@ -21,12 +21,14 @@ $initial_cluster = ['etcd1','etcd2','etcd3']
 
 etcd::instance{'k8s-main':
   version         => '3.0.15',
+  nodename        => $::hostname,
   members         => $members,
   initial_cluster => $initial_cluster,
 }
 
 etcd::instance{'k8s-events':
   version         => '3.0.15',
+  nodename        => $::hostname,
   members         => $members,
   initial_cluster => $initial_cluster,
   client_port     => 2389,
@@ -35,6 +37,7 @@ etcd::instance{'k8s-events':
 
 etcd::instance{'k8s-overlay':
   version         => '2.3.7',
+  nodename        => $::hostname,
   members         => $members,
   initial_cluster => $initial_cluster,
   client_port     => 2399,
