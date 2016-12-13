@@ -1,3 +1,5 @@
+/.tmp/
+/.librarian/
 /.vagrant/
-/log/
+log/
 /spec/fixtures

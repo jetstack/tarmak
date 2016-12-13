@@ -1,8 +1,0 @@
-fixtures:
-  repositories:
-    stdlib:
-      repo: "git://github.com/puppetlabs/puppetlabs-stdlib"
-      ref: "4.2.2"
-    archive:
-      repo: "git://github.com/voxpupuli/puppet-archive"
-      ref: "v1.1.2"

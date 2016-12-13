@@ -8,14 +8,15 @@ RSpec.configure do |c|
 
   c.formatter = :documentation
 
+  module_path = '/etc/puppetlabs/code/modules'
+
   c.before :suite do
     # Install module to all hosts
     hosts.each do |host|
-      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'vault_client', :target_module_path => '/etc/puppetlabs/code/modules')
+      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'vault_client', :target_module_path => module_path)
       # Install dependencies
-      on(host, puppet('module', 'install', 'puppetlabs-stdlib', '--version', '4.2.0'))
-      on(host, puppet('module', 'install', 'puppet-archive', '--version', '1.1.2'))
-      on(host, puppet('module', 'install', 'camptocamp-systemd', '--version', '0.4.0'))
+      # Install dependencies
+      scp_to(host, "#{module_root}/spec/fixtures/modules", File.dirname(module_path), {})
     end
   end
 end
