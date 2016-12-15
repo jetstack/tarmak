@@ -49,17 +49,16 @@ class calico
     ensure => directory,
   }
   
+  file { '/usr/local/bin/sourcedestcheck.sh':
+    ensure  => file,
+    content => template('calico/sourcedestcheck.sh.erb'),
+    mode    => '0755',
+  }
+  
   exec { 'Disable source dest check':
-    command => @(CMD)'/bin/bash -c "REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .region); \
-      INSTANCE=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .instanceId); \
-      /usr/bin/aws ec2 modify-instance-attribute --instance-id $INSTANCE --no-source-dest-check --region $REGION"'
-      | CMD
-      ,
-    unless  => @(UNL)'/bin/bash -c "REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .region); \
-      INSTANCE=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .instanceId); \
-      /usr/bin/aws ec2 describe-instance-attribute --instance-id $INSTANCE --attribute sourceDestCheck --region $REGION | /usr/bin/jq .SourceDestCheck.Value | /usr/bin/grep false"'
-      | UNL
-      ,
+    command => '/usr/local/bin/sourcedestcheck.sh set',
+    unless  => '/usr/local/bin/sourcedestcheck.sh test',
+    require => File['/usr/local/bin/sourcedestcheck.sh'],
   }
 }
 
