@@ -48,6 +48,19 @@ class calico
   file { ['/etc/cni', '/etc/cni/net.d', '/etc/calico', '/opt/cni', '/opt/cni/bin']:
     ensure => directory,
   }
+  
+  exec { 'Disable source dest check':
+    command => @(CMD)'/bin/bash -c "REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .region); \
+      INSTANCE=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .instanceId); \
+      /usr/bin/aws ec2 modify-instance-attribute --instance-id $INSTANCE --no-source-dest-check --region $REGION"'
+      | CMD
+      ,
+    unless  => @(UNL)'/bin/bash -c "REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .region); \
+      INSTANCE=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .instanceId); \
+      /usr/bin/aws ec2 describe-instance-attribute --instance-id $INSTANCE --attribute sourceDestCheck --region $REGION | /usr/bin/jq .SourceDestCheck.Value | /usr/bin/grep false"'
+      | UNL
+      ,
+  }
 }
 
 class calico::policy_controller {
