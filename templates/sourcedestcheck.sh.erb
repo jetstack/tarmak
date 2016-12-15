@@ -1,0 +1,15 @@
+#!/bin/bash
+
+REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .region)
+INSTANCE=$(/usr/bin/curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | /usr/bin/jq -r .instanceId)
+
+case "$1" in
+  set)
+    /usr/bin/aws ec2 modify-instance-attribute --instance-id $INSTANCE --no-source-dest-check --region $REGION
+    ;;
+  test)
+    /usr/bin/aws ec2 describe-instance-attribute --instance-id $INSTANCE --attribute sourceDestCheck --region $REGION | /usr/bin/jq ".SourceDestCheck.Value" | /usr/bin/grep false
+    ;;
+  *)
+    /usr/bin/echo "Usage: {set|test}"
+esac
