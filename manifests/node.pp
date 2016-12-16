@@ -36,4 +36,15 @@ define calico::node (
     enable => true,
     require => [ Class["k8s"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"], Exec["Trigger etcd overlay cert"] ],
   }
+
+  file { "/usr/local/sbin/calico_filter_hack.sh":
+    ensure  => file,
+    content => template('calico/calico_filter_hack.sh.erb'),
+    mode    => '0750',
+  }
+
+  exec { "Modify calico filter":
+    command => '/usr/local/sbin/calico_filter_hack.sh set',
+    unless  => '/usr/local/sbin/calico_filter_hack.sh test',
+  }
 }
