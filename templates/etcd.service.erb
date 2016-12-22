@@ -16,7 +16,10 @@ Environment=ETCD_LISTEN_PEER_URLS=<%= @listen_peer_urls %>
 <% if @tls -%>
 Environment=ETCD_CERT_FILE=<%= @tls_cert_path %>
 Environment=ETCD_KEY_FILE=<%= @tls_key_path %>
-Environment=ETCD_CA_FILE=<%= @tls_ca_path %>
+Environment=ETCD_TRUSTED_CA_FILE=<%= @tls_ca_path %>
+Environment=ETCD_PEER_CERT_FILE=<%= @tls_cert_path %>
+Environment=ETCD_PEER_KEY_FILE=<%= @tls_key_path %>
+Environment=ETCD_PEER_TRUSTED_CA_FILE=<%= @tls_ca_path %>
 Environment=ETCD_CLIENT_CERT_AUTH=true
 Environment=ETCD_PEER_CLIENT_CERT_AUTH=true
 <% end -%>
