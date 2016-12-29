@@ -111,7 +111,7 @@ function cert_key_csr {
 }
 
 function cert_sign {
-    vault write --field certificate ${VAULT_CERT_ROLE} csr="$(cat "${VAULT_CERT_CSR_PATH}")" > ${VAULT_CERT_PATH}
+    vault write --field certificate ${VAULT_CERT_ROLE} csr="$(cat "${VAULT_CERT_CSR_PATH}")" $1 > ${VAULT_CERT_PATH}
     chmod 644 "${VAULT_CERT_PATH}"
     chown "${VAULT_CERT_OWNER}" "${VAULT_CERT_PATH}"
 }
@@ -135,8 +135,8 @@ case "$1" in
         shift
         cert_prepare "$1"
         cert_key_csr
-        cert_sign
+        cert_sign "$2"
         ;;
     *)
-        echo "Usage: $0 {cert|exec|status|token-renew}"
+        echo "Usage: $0 {cert <extra vault opt>|exec <vault command>|status|token-renew}"
 esac
