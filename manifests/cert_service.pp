@@ -21,11 +21,10 @@ define vault_client::cert_service (
     content => template('vault_client/cert.service.erb'),
     notify  => Exec['systemctl-daemon-reload'],
   } ~>
-  exec { "${service_name}-remove-existing-cets":
+  exec { "${service_name}-remove-existing-certs":
     command     => "rm -rf ${base_path}-key.pem ${base_path}-csr.pem",
     path        => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
     refreshonly => true,
-    require     => Exec['systemctl-daemon-reload'],
   } ~>
   exec { "${service_name}-trigger":
     command     => "systemctl start ${service_name}.service",
