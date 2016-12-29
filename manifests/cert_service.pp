@@ -2,6 +2,7 @@ define vault_client::cert_service (
   String $base_path,
   String $common_name,
   String $role,
+  String $extra_opts,
   String $key_type = 'rsa',
   Integer $key_bits = 2048,
   Integer $frequency = 86400,

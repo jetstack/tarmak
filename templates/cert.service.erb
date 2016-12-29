@@ -10,7 +10,7 @@ Environment=VAULT_CERT_BITS=<%= @key_bits %>
 Environment=VAULT_CERT_CN=/CN=<%= @common_name %>
 Environment=VAULT_CERT_ROLE=<%= @role %>
 Environment=VAULT_CERT_OWNER=<%= @user %>:<%= @group %>
-ExecStart=/etc/vault/helper cert <%= @base_path %>
+ExecStart=/etc/vault/helper cert <%= @base_path %> <%= @extra_opts %>
 <% @exec_post.each do |val| -%>
 ExecStartPost=<%= val %>
 <% end -%>
