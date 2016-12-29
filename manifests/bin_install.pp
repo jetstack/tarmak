@@ -3,20 +3,20 @@ define calico::bin_install (
 )
 {
   wget::fetch { "calico-v${calico_cni_version}":
-    source => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico",
+    source      => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico",
     destination => '/opt/cni/bin/',
-    require => Class['calico'],
-    before => File["/opt/cni/bin/calico"]
+    require     => Class['calico'],
+    before      => File['/opt/cni/bin/calico']
   }
 
   wget::fetch { "calico-ipam-v${calico_cni_version}":
-    source => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico-ipam",
+    source      => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico-ipam",
     destination => '/opt/cni/bin/',
-    require => Class['calico'],
-    before => File["/opt/cni/bin/calico-ipam"],
+    require     => Class['calico'],
+    before      => File['/opt/cni/bin/calico-ipam'],
   }
 
-  file { ["/opt/cni/bin/calico","/opt/cni/bin/calico-ipam"]:
+  file { ['/opt/cni/bin/calico','/opt/cni/bin/calico-ipam']:
     ensure => file,
     mode   => '0755',
   }
