@@ -34,7 +34,7 @@ define calico::node (
   service { "calico-node":
     ensure => running,
     enable => true,
-    require => [ Class["k8s"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"], Exec["Trigger etcd overlay cert"] ],
+    require => [ Class["k8s"], File["/etc/calico/calico.env"], File["/usr/lib/systemd/system/calico-node.service"] ],
   }
 
   file { "/usr/local/sbin/calico_filter_hack.sh":

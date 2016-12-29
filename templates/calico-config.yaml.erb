@@ -11,6 +11,6 @@ data:
 <%  array<<"https://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_client_port}" -%>
 <% end -%>
 <%= array.join(',') %>"
-  etcd_ca: "/etc/etcd/ssl/certs/etcd-overlay.pem"
-  etcd_key: "/etc/etcd/ssl/private/etcd-overlay-key.pem"
-  etcd_cert: "/etc/etcd/ssl/certs/etcd-overlay-cert.pem"
+  etcd_ca: "/etc/etcd/ssl/etcd-overlay-ca.pem"
+  etcd_key: "/etc/etcd/ssl/etcd-overlay-key.pem"
+  etcd_cert: "/etc/etcd/ssl/etcd-overlay.pem"

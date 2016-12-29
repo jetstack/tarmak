@@ -14,6 +14,6 @@ define calico::ip_pool (
     user => "root",
     command => "/bin/bash -c \"`/usr/bin/grep ETCD_ENDPOINTS /etc/calico/calico.env` `/usr/bin/grep ETCD_CERT_FILE /etc/calico/calico.env` `/usr/bin/grep ETCD_KEY_FILE /etc/calico/calico.env` `/usr/bin/grep ETCD_CA_CERT_FILE /etc/calico/calico.env` /opt/cni/bin/calicoctl apply -f /etc/calico/ipPool-${ip_pool}.yaml\"",
     unless => "/bin/bash -c \"`/usr/bin/grep ETCD_ENDPOINTS /etc/calico/calico.env` `/usr/bin/grep ETCD_CERT_FILE /etc/calico/calico.env` `/usr/bin/grep ETCD_KEY_FILE /etc/calico/calico.env` `/usr/bin/grep ETCD_CA_CERT_FILE /etc/calico/calico.env` /opt/cni/bin/calicoctl get -f /etc/calico/ipPool-${ip_pool}.yaml | /usr/bin/grep ${ip_pool}/${ip_mask}\"",
-    require => [ Service["calico-node"], File["/opt/cni/bin/calicoctl"], File["/etc/calico/ipPool-${ip_pool}.yaml"], Exec["Trigger etcd overlay cert"] ],
+    require => [ Service["calico-node"], File["/opt/cni/bin/calicoctl"], File["/etc/calico/ipPool-${ip_pool}.yaml"] ],
   }
 }

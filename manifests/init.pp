@@ -82,6 +82,6 @@ class calico::policy_controller {
   exec { "deploy calico policy controller":
     command => "/usr/bin/kubectl apply -f /root/policy-controller-deployment.yaml",
     unless => "/usr/bin/kubectl get -f /root/policy-controller-deployment.yaml",
-    require => [ Exec["deploy calico config"], File["/root/policy-controller-deployment.yaml"], Exec["Trigger etcd overlay cert"] ],
+    require => [ Exec["deploy calico config"], File["/root/policy-controller-deployment.yaml"] ],
   } 
 }
