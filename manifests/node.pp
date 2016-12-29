@@ -7,7 +7,7 @@ define calico::node (
   include ::systemd
   include k8s
 
-  wget::fetch { "calicoctl-v${calico::calico_cni_version}":
+  wget::fetch { "calicoctl-v${calico::calico_node_version}":
     source      => "https://github.com/projectcalico/calico-containers/releases/download/v${calico_node_version}/calicoctl",
     destination => '/opt/cni/bin/',
     require     => Class['calico'],
