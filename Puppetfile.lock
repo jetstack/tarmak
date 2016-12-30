@@ -1,0 +1,61 @@
+FORGE
+  remote: https://forgeapi.puppetlabs.com
+  specs:
+    camptocamp-systemd (0.4.0)
+    puppet-archive (1.1.2)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+    puppetlabs-stdlib (4.14.0)
+
+GIT
+  remote: git@git.jetstack.net:puppernetes/module-calico.git
+  ref: master
+  sha: bab618d23381cf44c0da871d560ae0c2218ee18b
+  specs:
+    jetstack-calico (0.1.1)
+      puppet-archive (< 1.2.0, >= 1.1.2)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+
+GIT
+  remote: git@git.jetstack.net:puppernetes/module-etcd.git
+  ref: master
+  sha: 689c150d8cda4c1477a2155a678b8326f86578ce
+  specs:
+    jetstack-etcd (0.1.1)
+      camptocamp-systemd (< 1.0.0, >= 0.4.0)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+
+GIT
+  remote: git@git.jetstack.net:puppernetes/module-etcd_mount.git
+  ref: master
+  sha: d42cd978d014ea164cd2c681a4935bc4ca96e7aa
+  specs:
+    jetstack-etcd_mount (0.1.0)
+      camptocamp-systemd (< 0.5.0, >= 0.4.0)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+
+GIT
+  remote: git@git.jetstack.net:puppernetes/module-k8s.git
+  ref: master
+  sha: 864ea876d4352e9484ef95e1e7a86f24b2ae4024
+  specs:
+    jetstack-k8s (0.1.0)
+      camptocamp-systemd (< 0.5.0, >= 0.4.0)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+
+GIT
+  remote: git@git.jetstack.net:puppernetes/module-vault_client.git
+  ref: master
+  sha: 54e53e3be6b9f65a86b621f1772fdc344074b08a
+  specs:
+    jetstack-vault_client (0.1.0)
+      camptocamp-systemd (< 0.5.0, >= 0.4.0)
+      puppet-archive (< 1.2.0, >= 1.1.2)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+
+DEPENDENCIES
+  jetstack-calico (>= 0)
+  jetstack-etcd (>= 0)
+  jetstack-etcd_mount (>= 0)
+  jetstack-k8s (>= 0)
+  jetstack-vault_client (>= 0)
+

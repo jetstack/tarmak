@@ -1,0 +1,13 @@
+{
+  "name": "jetstack-puppernetes",
+  "version": "0.1.0",
+  "author": "jetstack",
+  "summary": "Install/configure a Kubernetes cluster",
+  "license": "Apache-2.0",
+  "source": "",
+  "project_page": null,
+  "issues_url": null,
+  "dependencies": [],
+  "data_provider": null
+}
+
