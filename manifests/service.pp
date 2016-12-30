@@ -3,9 +3,15 @@ class vault_client::service {
   $service_name = $::vault_client::token_service_name
   $frequency = 86400
 
+  $path = defined('$::path') ? {
+    default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+    true    => $::path
+  }
+
   exec { "${module_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
+    path        => $path,
   }
 
   file { "${systemd_dir}/${service_name}.service":
@@ -15,7 +21,7 @@ class vault_client::service {
   } ~>
   exec { "${service_name}-trigger":
     command     => "systemctl start ${service_name}.service",
-    path        => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
+    path        => $path,
     refreshonly => true,
     require     => Exec["${module_name}-systemctl-daemon-reload"],
   }

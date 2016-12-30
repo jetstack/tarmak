@@ -14,9 +14,15 @@ define vault_client::cert_service (
   $systemd_dir = '/etc/systemd/system'
   $service_name = "${name}-cert"
 
+  $path = defined('$::path') ? {
+    default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+    true    => $::path,
+  }
+
   exec { "${service_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
+    path        => $path,
   }
 
   file { "${systemd_dir}/${service_name}.service":
@@ -26,10 +32,12 @@ define vault_client::cert_service (
   } ~>
   exec { "${service_name}-remove-existing-certs":
     command     => "rm -rf ${base_path}-key.pem ${base_path}-csr.pem",
+    path        => $path,
     refreshonly => true,
   } ~>
   exec { "${service_name}-trigger":
     command     => "systemctl start ${service_name}.service",
+    path        => $path,
     refreshonly => true,
   }
 
