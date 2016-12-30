@@ -34,6 +34,7 @@ define vault_client::cert_service (
     command     => "rm -rf ${base_path}-key.pem ${base_path}-csr.pem",
     path        => $path,
     refreshonly => true,
+    require     => Exec["${service_name}-systemctl-daemon-reload"],
   } ~>
   exec { "${service_name}-trigger":
     command     => "systemctl start ${service_name}.service",
