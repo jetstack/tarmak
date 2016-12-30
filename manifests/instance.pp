@@ -12,7 +12,6 @@ define etcd::instance (
   Array $initial_cluster = []
 ){
   include ::etcd
-  include ::systemd
 
   $user = $::etcd::user
   $group = $::etcd::group
@@ -63,6 +62,15 @@ define etcd::instance (
     mode   => '0750',
   }
 
+  exec { "${cluster_name}-systemctl-daemon-reload":
+    command     => 'systemctl daemon-reload',
+    refreshonly => true,
+    path        => defined('$::path') ? {
+      default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+      true    => $::path
+    },
+  }
+
   file { "/etc/systemd/system/${service_name}.service":
     ensure  => file,
     content => template('etcd/etcd.service.erb'),
@@ -70,14 +78,14 @@ define etcd::instance (
       Etcd::Install[$version],
       Class['etcd'],
     ],
-    notify  => Exec['systemctl-daemon-reload']
+    notify  => Exec["${cluster_name}-systemctl-daemon-reload"]
   } ~>
   service { "${service_name}.service":
     ensure  => running,
     enable  => true,
     require => [
       File[$data_dir],
-      Exec['systemctl-daemon-reload'],
+      Exec["${cluster_name}-systemctl-daemon-reload"],
     ],
   }
 

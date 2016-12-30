@@ -5,10 +5,6 @@
       {
          "name" : "puppetlabs-stdlib",
          "version_requirement" : ">= 4.2.0 < 5.0.0"
-      },
-      {
-         "name" : "camptocamp-systemd",
-         "version_requirement" : ">= 0.4.0 < 1.0.0"
       }
    ],
    "license" : "Apache-2.0",

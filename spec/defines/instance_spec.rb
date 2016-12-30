@@ -2,10 +2,6 @@ require 'spec_helper'
 
 describe 'etcd::instance', :type => :define do
 
-  let(:pre_condition) {[
-    'class systemd{}'
-  ]}
-
   let(:config) {
     contain_file('/etc/systemd/system/etcd-test.service')
   }
