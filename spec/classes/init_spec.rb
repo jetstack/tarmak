@@ -1,13 +1,6 @@
 require 'spec_helper'
 
 describe 'vault_client' do
-  let(:pre_condition) {[
-    """class systemd{
-    exec {'systemctl-daemon-reload':}
-}
-    """
-  ]}
-
   context 'with none of init_token and token specified' do
     it do
       is_expected.to compile.and_raise_error(/provide at least one of/)

@@ -14,28 +14,29 @@ define vault_client::cert_service (
   $systemd_dir = '/etc/systemd/system'
   $service_name = "${name}-cert"
 
-  include ::systemd
+  exec { "${service_name}-systemctl-daemon-reload":
+    command     => 'systemctl daemon-reload',
+    refreshonly => true,
+  }
 
   file { "${systemd_dir}/${service_name}.service":
     ensure  => file,
     content => template('vault_client/cert.service.erb'),
-    notify  => Exec['systemctl-daemon-reload'],
+    notify  => Exec["${service_name}-systemctl-daemon-reload"],
   } ~>
   exec { "${service_name}-remove-existing-certs":
     command     => "rm -rf ${base_path}-key.pem ${base_path}-csr.pem",
-    path        => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
     refreshonly => true,
   } ~>
   exec { "${service_name}-trigger":
     command     => "systemctl start ${service_name}.service",
-    path        => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
     refreshonly => true,
   }
 
   file { "${systemd_dir}/${service_name}.timer":
     ensure  => file,
     content => template('vault_client/cert.timer.erb'),
-    notify  => Exec['systemctl-daemon-reload']
+    notify  => Exec["${service_name}-systemctl-daemon-reload"],
   } ~>
   service { "${service_name}.timer":
     ensure => 'running',
