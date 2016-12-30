@@ -12,6 +12,8 @@ class puppernetes::params{
   $etcd_group = 'etcd'
   $etcd_config_dir = '/etc/etcd'
   $etcd_ssl_dir = '/etc/etcd/ssl'
+  $etcd_instances = 3
+  $etcd_advertise_client_network = '172.16.0.0/12'
 
   # overlay etcd
   $etcd_overlay_client_port= 2359

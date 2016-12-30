@@ -7,6 +7,8 @@ class puppernetes (
   String $etcd_group = $puppernetes::params::etcd_group,
   String $etcd_config_dir = $puppernetes::params::etcd_config_dir,
   String $etcd_ssl_dir = $puppernetes::params::etcd_ssl_dir,
+  Integer $etcd_instances = $puppernetes::params::etcd_instances,
+  String $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
   Integer $etcd_overlay_client_port = $puppernetes::params::etcd_overlay_client_port,
   Integer $etcd_overlay_peer_port = $puppernetes::params::etcd_overlay_peer_port,
   String $etcd_overlay_ca_name = $puppernetes::params::etcd_overlay_ca_name,
