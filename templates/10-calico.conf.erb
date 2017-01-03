@@ -1,14 +1,10 @@
 {
-    "name": "<%= @calico_name %>",
+    "name": "calico",
     "type": "calico",
-    "etcd_endpoints": "<% array=[] -%>
-<% @etcd_count.to_i.times do |i| -%>
-<%  array<<"https://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_port}" -%>
-<% end -%>
-<%= array.join(',') %>",
-    "etcd_ca_cert_file": "/etc/etcd/ssl/etcd-overlay-ca.pem",
-    "etcd_cert_file": "/etc/etcd/ssl/etcd-overlay.pem",
-    "etcd_key_file": "/etc/etcd/ssl/etcd-overlay-key.pem",
+    "etcd_endpoints": "<%= scope['calico::etcd_endpoints'] %>"
+    "etcd_ca_cert_file": "<%= scope['calico::etcd_ca_file'] %>",
+    "etcd_cert_file": "<%= scope['calico::etcd_cert_file'] %>",
+    "etcd_key_file": "<%= scope['calico::etcd_key_file'] %>",
     "log_level": "info",
     "ipam": {
         "type": "calico-ipam"
@@ -17,6 +13,6 @@
         "type": "k8s"
     },
     "kubernetes": {
-        "kubeconfig": "/etc/kubernetes/kubeconfig-kubelet"
+        "kubeconfig": "<%= scope['calico::params::kubeconfig'] %>"
     }
 }

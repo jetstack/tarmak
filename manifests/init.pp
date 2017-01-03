@@ -1,63 +1,52 @@
-# Class: calico
-# ===========================
-#
-# Full description of class calico here.
-#
-# Parameters
-# ----------
-#
-# Document parameters here.
-#
-# * `sample parameter`
-# Explanation of what this parameter affects and what it defaults to.
-# e.g. "Specify one or more upstream ntp servers as an array."
-#
-# Variables
-# ----------
-#
-# Here you should define a list of variables that this module would require.
-#
-# * `sample variable`
-#  Explanation of how this variable affects the function of this class and if
-#  it has a default. e.g. "The parameter enc_ntp_servers must be set by the
-#  External Node Classifier as a comma separated list of hostnames." (Note,
-#  global variables should be avoided in favor of class parameters as
-#  of Puppet 2.6.)
-#
-# Examples
-# --------
-#
-# @example
-#    class { 'calico':
-#      servers => [ 'pool.ntp.org', 'ntp.local.company.com' ],
-#    }
-#
-# Authors
-# -------
-#
-# Author Name <author@domain.com>
-#
-# Copyright
-# ---------
-#
-# Copyright 2016 Your name here, unless otherwise noted.
-#
+# calico init.pp
 
-class calico
+class calico(
+  $helper_dir = $::calico::params::helper_dir,
+  $config_dir = $::calico::params::config_dir,
+  $secure_config_dir = $::calico::params::secure_config_dir,
+  $cni_base_dir = $::calico::params::cni_base_dir,
+  $install_dir = $::calico::params::install_dir,
+  $tls = $::calico::params::tls,
+  $etcd_cluster = []
+) inherits ::calico::params
 {
-  file { ['/etc/cni', '/etc/cni/net.d', '/etc/calico', '/opt/cni', '/opt/cni/bin']:
+  if $tls {
+    $proto = 'https'
+  } else {
+    $proto = 'http'
+  }
+
+  $etcd_cert_file = "${::calico::etcd_cert_path}/${::calico::etcd_cert_base_name}.pem"
+  $etcd_key_file = "${::calico::etcd_cert_path}/${::calico::etcd_cert_base_name}-key.pem"
+  $etcd_ca_file = "${::calico::etcd_cert_path}/${::calico::etcd_cert_base_name}-ca.pem"
+
+  $etcd_endpoints = $etcd_cluster.map |$node| { "${proto}://${node}:${::calico::etcd_overlay_port}" }.join(',')
+
+
+  file { [$cni_base_dir, "${cni_base_dir}/cni", "${cni_base_dir}/cni/net.d", $config_dir, $install_dir, "${install_dir}/bin"]:
     ensure => directory,
   }
 
-  file { '/usr/local/bin/sourcedestcheck.sh':
+  file { "${helper_dir}/sourcedestcheck.sh":
     ensure  => file,
     content => template('calico/sourcedestcheck.sh.erb'),
     mode    => '0755',
   }
 
   exec { 'Disable source dest check':
-    command => '/usr/local/bin/sourcedestcheck.sh set',
-    unless  => '/usr/local/bin/sourcedestcheck.sh test',
-    require => File['/usr/local/bin/sourcedestcheck.sh'],
+    command => "${helper_dir}/sourcedestcheck.sh set",
+    unless  => "${helper_dir}/sourcedestcheck.sh test",
+    require => File["${helper_dir}/sourcedestcheck.sh"],
+  }
+
+  $path = defined('$::path') ? {
+    default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+    true    => $::path
+  }
+
+  exec { "${module_name}-systemctl-daemon-reload":
+    command     => 'systemctl daemon-reload',
+    refreshonly => true,
+    path        => $path,
   }
 }

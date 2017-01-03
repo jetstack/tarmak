@@ -1,15 +1,26 @@
-define calico::lo_install (
-  String $cni_plugin_version,
-)
+class calico::lo_install
 {
-  archive { "download and extract cni-lo version ${cni_plugin_version}":
-    source          => "https://github.com/containernetworking/cni/releases/download/v${cni_plugin_version}/cni-v${cni_plugin_version}.tgz",
-    path            => "/tmp/cni-v${cni_plugin_version}.tgz",
+
+  include ::calico
+
+  $version = $::calico::params::calico_cni_version
+
+  $dest_dir = "${::calico::install_dir}/bin"
+
+  $download_url = regsubst(
+    $::calico::params::cni_download_url,
+    '#VERSION#',
+    $version,
+    'G'
+  )
+
+  archive { "download and extract cni-lo version ${version}":
+    source          => $download_url,
+    path            => "/tmp/cni-v${version}.tgz",
     extract         => true,
-    extract_path    => '/opt/cni/bin/',
+    extract_path    => "${dest_dir}/",
     extract_command => 'tar -xzf %s ./loopback',
-    creates         => '/opt/cni/bin/loopback',
+    creates         => "${dest_dir}/loopback",
     require         => Class['calico'],
   }
 }
-

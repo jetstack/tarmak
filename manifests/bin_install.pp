@@ -1,22 +1,33 @@
-define calico::bin_install (
-  String $calico_cni_version,
-)
-{
-  wget::fetch { "calico-v${calico_cni_version}":
-    source      => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico",
-    destination => '/opt/cni/bin/',
+class calico::bin_install {
+
+  include ::calico
+
+  $version = $::calico::params::calico_bin_version
+
+  $dest_dir = "${::calico::install_dir}/bin"
+
+  $download_url = regsubst(
+    $::calico::params::calico_bin_download_url,
+    '#VERSION#',
+    $version,
+    'G'
+    )
+
+  wget::fetch { "calico-v${version}":
+    source      => "${download_url}/calico",
+    destination => $dest_dir,
     require     => Class['calico'],
-    before      => File['/opt/cni/bin/calico']
+    before      => File["${dest_dir}/calico"],
   }
 
-  wget::fetch { "calico-ipam-v${calico_cni_version}":
-    source      => "https://github.com/projectcalico/calico-cni/releases/download/v${calico_cni_version}/calico-ipam",
-    destination => '/opt/cni/bin/',
+  wget::fetch { "calico-ipam-v${version}":
+    source      => "${download_url}/calico-ipam",
+    destination => $dest_dir,
     require     => Class['calico'],
-    before      => File['/opt/cni/bin/calico-ipam'],
+    before      => File["${dest_dir}/calico-ipam"],
   }
 
-  file { ['/opt/cni/bin/calico','/opt/cni/bin/calico-ipam']:
+  file { ["${dest_dir}/calico","${dest_dir}/calico-ipam"]:
     ensure => file,
     mode   => '0755',
   }
