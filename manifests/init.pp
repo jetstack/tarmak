@@ -54,5 +54,4 @@ class calico(
   include ::calico::config
   include ::calico::lo_install
   include ::calico::node
-  include ::calico::policy_controller
 }
