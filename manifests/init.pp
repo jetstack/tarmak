@@ -49,4 +49,10 @@ class calico(
     refreshonly => true,
     path        => $path,
   }
+
+  include ::calico::bin_install
+  include ::calico::config
+  include ::calico::lo_install
+  include ::calico::node
+  include ::calico::policy_controller
 }
