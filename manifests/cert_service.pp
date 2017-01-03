@@ -2,7 +2,8 @@ define vault_client::cert_service (
   String $base_path,
   String $common_name,
   String $role,
-  String $extra_opts = '',
+  String $alt_names = '',
+  String $ip_sans = '',
   String $key_type = 'rsa',
   Integer $key_bits = 2048,
   Integer $frequency = 86400,
@@ -51,5 +52,4 @@ define vault_client::cert_service (
     ensure => 'running',
     enable => true,
   }
-
 }
