@@ -18,8 +18,8 @@ define calico::ip_pool (
   } ->
   exec { "Configure calico ipPool for CIDR ${ip_pool}":
     user    => 'root',
-    command => "${::calico::helper_dir}/calico_helper.sh apply -f ${::calico::config_dir}/ipPool-${ip_pool}.yaml",
-    unless  => "${::calico::helper_dir}/calico_helper.sh get -f ${::calico::config_dir}/ipPool-${ip_pool}.yaml | /usr/bin/grep ${ip_pool}/${ip_mask}",
+    command => "${::calico::helper_dir}/calico_helper.sh apply ${::calico::config_dir}/ipPool-${ip_pool}.yaml",
+    unless  => "${::calico::helper_dir}/calico_helper.sh get ${::calico::config_dir}/ipPool-${ip_pool}.yaml | /usr/bin/grep ${ip_pool}/${ip_mask}",
     require => [ Service['calico-node'], File["${::calico::install_dir}/bin/calicoctl"] ],
   }
 }

@@ -25,7 +25,7 @@ class calico::node
     mode   => '0755',
   }
 
-  file { "${::calico::conf_dir}/calico.env":
+  file { "${::calico::config_dir}/calico.env":
     ensure  => file,
     content => template('calico/calico.env.erb'),
     require => Class['calico'],
@@ -40,8 +40,8 @@ class calico::node
   service { 'calico-node':
     ensure    => running,
     enable    => true,
-    require   => [ Class['k8s'], File["${::calico::conf_dir}/calico.env"], File["${::calico::systemd_dir}/calico-node.service"] ],
-    subscribe => File["${::calico::conf_dir}/calico.env"],
+    require   => [ Class['k8s'], File["${::calico::config_dir}/calico.env"], File["${::calico::systemd_dir}/calico-node.service"] ],
+    subscribe => File["${::calico::config_dir}/calico.env"],
   }
 
   file { "${::calico::helper_dir}/calico_filter_hack.sh":
