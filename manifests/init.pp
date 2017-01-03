@@ -23,7 +23,7 @@ class calico(
   $etcd_endpoints = $etcd_cluster.map |$node| { "${proto}://${node}:${::calico::etcd_overlay_port}" }.join(',')
 
 
-  file { [$cni_base_dir, "${cni_base_dir}/cni", "${cni_base_dir}/cni/net.d", $config_dir, $install_dir, "${install_dir}/bin"]:
+  file { ["${cni_base_dir}/cni", "${cni_base_dir}/cni/net.d", $config_dir, $install_dir, "${install_dir}/bin"]:
     ensure => directory,
   }
 

@@ -3,7 +3,7 @@
 class calico::params {
   $install_dir = '/opt/cni'
   $config_dir = '/etc/calico'
-  $cni_base_dir = '/etc/cni'
+  $cni_base_dir = '/etc'
   $helper_dir = '/usr/local/sbin'
   $systemd_dir = '/usr/lib/systemd/system'
   $secure_config_dir = '/root'
