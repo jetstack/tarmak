@@ -33,19 +33,4 @@ define etcd::install (
     creates => "${dest_dir}/etcd",
     path    => ['/usr/bin/', '/bin'],
   }
-
-
-
-  #file { $dest_dir:
-  #  ensure => directory,
-  #  mode   => '0755',
-  #} ->
-  #archive { "${::etcd::download_dir}/etcd-${version}.tar.gz":
-  ##  ensure       => present,
-  #  extract      => true,
-  #  extract_path => $dest_dir,
-  #  cleanup      => true,
-  #  creates      => $etcd_bin,
-  #  require      => Class['etcd']
-  #}
 }
