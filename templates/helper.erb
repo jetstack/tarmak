@@ -164,6 +164,6 @@ case "$1" in
         cert_sign
         ;;
     *)
-        echo "Usage: $0 {cert <extra vault opt>|exec <vault command>|read <field> <vault path> <output path>|status|token-renew}"
+        echo "Usage: $0 {cert|exec <vault command>|read <vault path> <field> <output path>|status|token-renew}"
         exit 1
 esac
