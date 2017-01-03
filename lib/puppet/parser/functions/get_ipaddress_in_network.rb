@@ -9,6 +9,19 @@ module Puppet::Parser::Functions
       )
     end
 
+    if (args[0].include?('/')) then
+      input = args[0]
+    elsif IPAddr.new(args[0]).ipv4? then
+      input = args[0] + '/32'
+    elsif IPAddr.new(args[0]).ipv6? then
+      input = args[0] + '/64'
+    else
+      raise(
+        Puppet::ParseError,
+        "get_ipaddress_in_network(): No CIDR or IP address supplied",
+        )
+    end
+
     interfaces = lookupvar('interfaces')
 
     # If we do not have any interfaces, then there are no requested attributes
@@ -17,7 +30,7 @@ module Puppet::Parser::Functions
     interfaces = interfaces.split(',')
 
     begin
-      network = IPAddr.new(args[0])
+      network = IPAddr.new(input)
       interfaces.each do |iface|
         begin
           ip = IPAddr.new(lookupvar("ipaddress_#{iface}"))
