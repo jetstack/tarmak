@@ -4,7 +4,7 @@ class puppernetes::etcd(
   include ::vault_client
   Class['vault_client'] -> Class['puppernetes::etcd']
 
-  $initial_cluster = range(0, $::puppernetes::etcd_instances).map |$i| {
+  $initial_cluster = range(0, $::puppernetes::etcd_instances-1).map |$i| {
     "etcd-${i}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
   }
 
