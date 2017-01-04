@@ -42,14 +42,16 @@ class calico::node
     subscribe => File["${::calico::config_dir}/calico.env"],
   }
 
-  file { "${::calico::helper_dir}/calico_filter_hack.sh":
-    ensure  => file,
-    content => template('calico/calico_filter_hack.sh.erb'),
-    mode    => '0750',
-  } ->
-  exec { 'Modify calico filter':
-    command => "${::calico::helper_dir}/calico_filter_hack.sh set",
-    unless  => "${::calico::helper_dir}/calico_filter_hack.sh test",
-    require => Service['calico-node'],
+  if $::calico::params::aws_filter_hack {
+    file { "${::calico::helper_dir}/calico_filter_hack.sh":
+      ensure  => file,
+      content => template('calico/calico_filter_hack.sh.erb'),
+      mode    => '0750',
+    } ->
+    exec { 'Modify calico filter':
+      command => "${::calico::helper_dir}/calico_filter_hack.sh set",
+      unless  => "${::calico::helper_dir}/calico_filter_hack.sh test",
+      require => Service['calico-node'],
+    }
   }
 }

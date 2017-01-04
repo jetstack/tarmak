@@ -7,6 +7,7 @@ class calico(
   $cni_base_dir = $::calico::params::cni_base_dir,
   $install_dir = $::calico::params::install_dir,
   $tls = $::calico::params::tls,
+  $aws = $::calico::params::aws,
   $etcd_cluster = []
 ) inherits ::calico::params
 {
@@ -27,16 +28,19 @@ class calico(
     ensure => directory,
   }
 
-  file { "${helper_dir}/sourcedestcheck.sh":
-    ensure  => file,
-    content => template('calico/sourcedestcheck.sh.erb'),
-    mode    => '0755',
-  }
 
-  exec { 'Disable source dest check':
-    command => "${helper_dir}/sourcedestcheck.sh set",
-    unless  => "${helper_dir}/sourcedestcheck.sh test",
-    require => File["${helper_dir}/sourcedestcheck.sh"],
+  if $aws {
+    file { "${helper_dir}/sourcedestcheck.sh":
+      ensure  => file,
+      content => template('calico/sourcedestcheck.sh.erb'),
+      mode    => '0755',
+    }
+
+    exec { 'Disable source dest check':
+      command => "${helper_dir}/sourcedestcheck.sh set",
+      unless  => "${helper_dir}/sourcedestcheck.sh test",
+      require => File["${helper_dir}/sourcedestcheck.sh"],
+    }
   }
 
   $path = defined('$::path') ? {
