@@ -39,6 +39,12 @@ beaker:
   - ruby-2.3
   - vagrant
   script:
+  - mkdir -p ~/.ssh
+  - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+  - chmod 400 ~/.ssh/id_rsa
+  - echo "git.jetstack.net ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP3g6Syk+FiWj8kTW39jS8i5BTJ0VAuS8BhXnRBXm5//" >> ~/.ssh/known_hosts
+  - echo "git.jetstack.net ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7D7wmfWkOCv7AU0ml8bh866VOBFcd+GpJlQ4qS50V7NmYJb9r49zbmEIwA96QUEcYu2ZAXEjJZmdVMifDtWr0HysnDgxZqfzd7hFax33BTCoBQ1G3cWsY6PL+lbzbJ63K00A3yPrj0ha81Sxatgu41ZKQ6SrFOSzvWJSpXodI2BPFG6yPsXE2KJtmRlLlHBNVyyzIWtBcixgrjE+MOMpsOmJT3mWuU/zkFZDDbdKMgSqjhC1CYVhjdBFCtCMUcXcGXej22NBtoYxJN3+h73ymB2OclbhBSVeSyggBhVMpzghNU3sUuwg0K56NYZ2FQG8+5y7KOIWsKuLFqhaHKqLL" >> ~/.ssh/known_hosts
+  - echo "git.jetstack.net ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBJhXGTTVqF6wsQMtgr6SnTdX2VkEE6ORVITsuS5yGt/+E18022+vqLJ8cQDqr+zS7t6C+hObFxOlt9+p4q5HWmA=" >> ~/.ssh/known_hosts
   - bundle install
   - bundle exec rake beaker
   only:
