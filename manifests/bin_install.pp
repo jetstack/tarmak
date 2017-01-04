@@ -13,6 +13,8 @@ class calico::bin_install {
     'G'
     )
 
+  notify{"Calico bin download url is ${download_url}/calico":}
+
   wget::fetch { "calico-v${version}":
     source      => "${download_url}/calico",
     destination => $dest_dir,

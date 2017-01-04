@@ -11,7 +11,7 @@ class calico::params {
   $calico_node_version = '1.0.0'
   $calico_cni_version = '0.3.0'
   $cni_download_url = 'https://github.com/containernetworking/cni/releases/download/v#VERSION#/cni-v#VERSION#.tgz'
-  $calico_bin_download_url = 'https://github.com/projectcalico/calico-cni/releases/download/v#VERSION#'
+  $calico_bin_download_url = 'https://github.com/projectcalico/cni-plugin/releases/download/v#VERSION#'
   $calico_node_download_url = 'https://github.com/projectcalico/calico-containers/releases/download/v#VERSION#'
   $etcd_cert_path = '/etc/etcd/ssl'
   $etcd_cert_base_name = 'etcd-overlay'
