@@ -4,7 +4,7 @@ class calico::bin_install {
 
   $version = $::calico::params::calico_bin_version
 
-  $dest_dir = "${::calico::install_dir}/bin"
+  $dest_dir = "${::calico::install_dir}/bin/"
 
   $download_url = regsubst(
     $::calico::params::calico_bin_download_url,
@@ -12,8 +12,6 @@ class calico::bin_install {
     $version,
     'G'
     )
-
-  notify{"Calico bin download url is ${download_url}/calico":}
 
   wget::fetch { "calico-v${version}":
     source      => "${download_url}/calico",
