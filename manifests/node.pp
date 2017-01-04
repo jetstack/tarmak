@@ -3,8 +3,6 @@ class calico::node
 
   include ::calico
 
-  include k8s
-
   $version = $::calico::params::calico_node_version
 
   $download_url = regsubst(
@@ -40,7 +38,7 @@ class calico::node
   service { 'calico-node':
     ensure    => running,
     enable    => true,
-    require   => [ Class['k8s'], File["${::calico::config_dir}/calico.env"], File["${::calico::systemd_dir}/calico-node.service"] ],
+    require   => [ File["${::calico::config_dir}/calico.env"], File["${::calico::systemd_dir}/calico-node.service"] ],
     subscribe => File["${::calico::config_dir}/calico.env"],
   }
 
