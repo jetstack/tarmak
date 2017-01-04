@@ -13,8 +13,7 @@ RSpec.configure do |c|
   c.before :suite do
     # Install module to all hosts
     hosts.each do |host|
-      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'vault_client', :target_module_path => module_path)
-      # Install dependencies
+      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'puppernetes', :target_module_path => module_path)
       # Install dependencies
       scp_to(host, "#{module_root}/spec/fixtures/modules", File.dirname(module_path), {})
     end
