@@ -18,6 +18,7 @@ class calico::params {
   $etcd_overlay_port = 2359
   $kubectl_bin = '/usr/bin/kubectl'
   $kubeconfig = '/etc/kubernetes/kubeconfig-kubelet'
+  $tls = false
   $aws = true
   $aws_filter_hack = true
 }

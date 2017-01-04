@@ -11,6 +11,20 @@ PuppetLint.configuration.send('disable_80chars')
 PuppetLint.configuration.relative = true
 PuppetLint.configuration.ignore_paths = ['spec/**/*.pp', 'pkg/**/*.pp']
 
+desc 'Prepare module dependecies'
+task :librarian_prepare do
+  sh 'librarian-puppet install --path=spec/fixtures/modules'
+end
+
+desc 'Clean module dependecies'
+task :librarian_clean do
+  sh 'librarian-puppet clean'
+end
+task :spec => :librarian_prepare
+task :clean => :librarian_clean
+
+task :beaker => :librarian_prepare
+
 desc 'Validate manifests, templates, and ruby files'
 task :validate do
   Dir['manifests/**/*.pp'].each do |manifest|
