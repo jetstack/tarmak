@@ -1,0 +1,22 @@
+#!/bin/bash
+
+CONFIG_FILE=<%= scope['calico::config_dir'] %>/calico.env
+source $CONFIG_FILE
+export ETCD_ENDPOINTS
+export ETCD_CA_CERT_FILE
+export ETCD_CERT_FILE
+export ETCD_KEY_FILE
+
+case "$1" in
+  apply)
+    <%= scope['calico::install_dir'] %>/bin/calicoctl apply -f $2
+    ;;
+  get)
+    <%= scope['calico::install_dir'] %>/bin/calicoctl get -f $2
+    ;;
+  delete)
+    <%= scope['calico::install_dir'] %>/bin/calicoctl delete -f $2
+    ;;
+  *)
+    /usr/bin/echo "Usage: {apply <config.yaml>|get <config.yaml>|delete <config.yaml>}"
+esac

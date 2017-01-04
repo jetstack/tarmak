@@ -6,11 +6,7 @@ metadata:
   namespace: kube-system
 data:
       # Configure this with the location of your etcd cluster.
-  etcd_endpoints: "<% array=[] -%>
-<% @etcd_count.to_i.times do |i| -%>
-<%  array<<"https://etcd-#{i}.#{@ec2_tag_cluster}.#{@dns_root}:#{@calico_etcd_client_port}" -%>
-<% end -%>
-<%= array.join(',') %>"
-  etcd_ca: "/etc/etcd/ssl/etcd-overlay-ca.pem"
-  etcd_key: "/etc/etcd/ssl/etcd-overlay-key.pem"
-  etcd_cert: "/etc/etcd/ssl/etcd-overlay.pem"
+  etcd_endpoints: "<%= scope['calico::etcd_endpoints'] %>"
+  etcd_ca: "<%= scope['calico::etcd_ca_file'] %>"
+  etcd_key: "<%= scope['calico::etcd_key_file'] %>"
+  etcd_cert: "<%= scope['calico::etcd_cert_file'] %>"

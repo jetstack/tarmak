@@ -1,10 +1,9 @@
-define calico::config (
-  String $calico_name,
-  Integer $etcd_count,
-  Integer $calico_etcd_port,
-)
+class calico::config
 {
-  file { '/etc/cni/net.d/10-calico.conf':
+
+  include ::calico
+
+  file { "${::calico::cni_base_dir}/cni/net.d/10-calico.conf":
     ensure  => file,
     content => template('calico/10-calico.conf.erb'),
     require => Class['calico'],

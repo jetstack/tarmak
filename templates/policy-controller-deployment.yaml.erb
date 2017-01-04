@@ -66,10 +66,10 @@ spec:
               value: "true"
           volumeMounts:
             # Mount in the etcd TLS secrets.
-            - mountPath: /etc/etcd/ssl
+            - mountPath: <%= scope['calico::params::etcd_cert_path'] %>
               name: etcd-certs
       volumes:
         # Mount in the etcd TLS secrets.
         - name: etcd-certs
           hostPath:
-            path: /etc/etcd/ssl
+            path: <%= scope['calico::params::etcd_cert_path'] %>
