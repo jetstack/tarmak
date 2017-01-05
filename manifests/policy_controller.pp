@@ -1,4 +1,8 @@
-class calico::policy_controller {
+class calico::policy_controller (
+  $etcd_cert_path = $::calico::etcd_cert_path,
+  $policy_controller_version = $::calico::policy_controller_version,
+) inherits ::calico
+{
 
   include ::calico
 

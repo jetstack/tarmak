@@ -1,21 +1,23 @@
-class calico::node
+class calico::node(
+  $aws_filter_hack = $::calico::params::aws_filter_hack,
+  $node_version = $::calico::params::calico_node_version,
+  $etcd_cert_path = $::calico::params::etcd_cert_path
+) inherits ::calico
 {
 
   include ::calico
 
-  $version = $::calico::params::calico_node_version
-
   $download_url = regsubst(
     $::calico::params::calico_node_download_url,
     '#VERSION#',
-    $version,
+    $node_version,
     'G')
 
-  wget::fetch { "calicoctl-v${version}":
-    source      => "${$download_url}/calicoctl",
-    destination => "${::calico::install_dir}/bin/",
-    require     => Class['calico'],
-    before      => File["${::calico::install_dir}/bin/calicoctl"],
+  calico::wget_file { 'calicoctl':
+    url             => "${$download_url}/calicoctl",
+    destination_dir => "${::calico::install_dir}/bin",
+    require         => Class['calico'],
+    before          => File["${::calico::install_dir}/bin/calicoctl"],
   }
 
   file { "${::calico::install_dir}/bin/calicoctl":
@@ -42,7 +44,7 @@ class calico::node
     subscribe => File["${::calico::config_dir}/calico.env"],
   }
 
-  if $::calico::params::aws_filter_hack {
+  if $aws_filter_hack {
     file { "${::calico::helper_dir}/calico_filter_hack.sh":
       ensure  => file,
       content => template('calico/calico_filter_hack.sh.erb'),
