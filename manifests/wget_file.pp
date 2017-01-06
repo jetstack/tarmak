@@ -2,7 +2,7 @@ define calico::wget_file(
   String $url,
   String $destination_dir,
   String $destination_file = '',
-  String $user = '',
+  String $user = 'root',
   String $umask = '022',
 )
 {
