@@ -7,11 +7,11 @@ case "$1" in
       sleep 1
       ((timer++))
     done;
-    kubectl apply -f $1
+    kubectl apply -f $2
     ;;
   get)
-    kubectl get -f $1
+    kubectl get -f $2
     ;;
   *)
-    /usr/bin/echo "Usage: {set <file.yaml> |test <file.yaml>}"
+    /usr/bin/echo "Usage: {apply <file.yaml> |get <file.yaml>}"
 esac
