@@ -44,6 +44,5 @@ class calico(
   class {'::calico::config':} ->
   class {'::calico::node':
     etcd_endpoints => $etcd_endpoints,
-  } ->
-  Class['::calico']
+  }
 }
