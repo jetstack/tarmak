@@ -1,8 +1,6 @@
 require 'spec_helper'
 describe 'calico::lo_install' do
   context 'with defaults' do
-    let(:pre_condition) { "class calico { $etcd_cluster = ['etcd1'] }" }
-
     it do
       should contain_class('calico::lo_install')
       should contain_archive('download and extract cni-lo').with(
@@ -12,7 +10,6 @@ describe 'calico::lo_install' do
   end
 
   context 'with custom version' do
-    let(:pre_condition) { "class calico { $etcd_cluster = ['etcd1'] }" }
     let(:params) {
       {
         :cni_version => 'v0.6.7'

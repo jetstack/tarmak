@@ -1,11 +1,13 @@
 class calico::node(
+  $etcd_endpoints,
   $aws_filter_hack = $::calico::params::aws_filter_hack,
   $node_version = $::calico::params::calico_node_version,
   $etcd_cert_path = $::calico::params::etcd_cert_path
-) inherits ::calico
+) inherits ::calico::params
 {
-
-  include ::calico
+  $etcd_cert_file = "${etcd_cert_path}/${::calico::params::etcd_cert_base_name}.pem"
+  $etcd_key_file = "${etcd_cert_path}/${::calico::params::etcd_cert_base_name}-key.pem"
+  $etcd_ca_file = "${etcd_cert_path}/${::calico::params::etcd_cert_base_name}-ca.pem"
 
   $download_url = regsubst(
     $::calico::params::calico_node_download_url,
@@ -15,23 +17,21 @@ class calico::node(
 
   calico::wget_file { 'calicoctl':
     url             => "${$download_url}/calicoctl",
-    destination_dir => "${::calico::install_dir}/bin",
-    require         => Class['calico'],
-    before          => File["${::calico::install_dir}/bin/calicoctl"],
+    destination_dir => "${::calico::params::install_dir}/bin",
+    before          => File["${::calico::params::install_dir}/bin/calicoctl"],
   }
 
-  file { "${::calico::install_dir}/bin/calicoctl":
+  file { "${::calico::params::install_dir}/bin/calicoctl":
     ensure => file,
     mode   => '0755',
   }
 
-  file { "${::calico::config_dir}/calico.env":
+  file { "${::calico::params::config_dir}/calico.env":
     ensure  => file,
     content => template('calico/calico.env.erb'),
-    require => Class['calico'],
   }
 
-  file { "${::calico::systemd_dir}/calico-node.service":
+  file { "${::calico::params::systemd_dir}/calico-node.service":
     ensure  => file,
     content => template('calico/calico-node.service.erb'),
   } ~>
@@ -43,19 +43,19 @@ class calico::node(
   service { 'calico-node':
     ensure    => running,
     enable    => true,
-    require   => [ File["${::calico::config_dir}/calico.env"], File["${::calico::systemd_dir}/calico-node.service"] ],
-    subscribe => File["${::calico::config_dir}/calico.env"],
+    require   => [ File["${::calico::params::config_dir}/calico.env"], File["${::calico::params::systemd_dir}/calico-node.service"] ],
+    subscribe => File["${::calico::params::config_dir}/calico.env"],
   }
 
   if $aws_filter_hack {
-    file { "${::calico::helper_dir}/calico_filter_hack.sh":
+    file { "${::calico::params::helper_dir}/calico_filter_hack.sh":
       ensure  => file,
       content => template('calico/calico_filter_hack.sh.erb'),
       mode    => '0750',
     } ->
     exec { 'Modify calico filter':
-      command => "${::calico::helper_dir}/calico_filter_hack.sh set",
-      unless  => "${::calico::helper_dir}/calico_filter_hack.sh test",
+      command => "${::calico::params::helper_dir}/calico_filter_hack.sh set",
+      unless  => "${::calico::params::helper_dir}/calico_filter_hack.sh test",
       require => Service['calico-node'],
     }
   }

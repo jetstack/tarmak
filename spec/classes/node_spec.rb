@@ -2,9 +2,11 @@ require 'spec_helper'
 describe 'calico::node' do
   context 'with defaults and a single node etcd cluster' do
 
-    let(:pre_condition) {[ 
-      "class calico { $etcd_cluster = ['etcd1'] }"
-    ]}
+    let(:params) {
+      {
+        :etcd_endpoints => 'http://etcd1:2359'
+      }
+    }
 
     it do
       should contain_class('calico::node')
@@ -20,19 +22,14 @@ describe 'calico::node' do
     end
   end
 
-  context 'custom version, tls on, filter hack off, custom port, cert path, multi-node etcd cluster' do
-
-    let(:pre_condition) {[
-      "class calico { $etcd_cluster = ['etcd1','etcd2','etcd3','etcd4','etcd5'] }",
-      "class calico { $etcd_overlay_port = 2345 }",
-      "class calico { $tls = true }"
-    ]}
+  context 'custom version, tls on, filter hack off, cert path' do
 
     let(:params) {
       {
         :node_version    => 'v2.3.4',
         :aws_filter_hack => false,
         :etcd_cert_path  => '/opt/etc/etcd/tls',
+        :etcd_endpoints  => 'https://etcd1:2345,https://etcd2:2345,https://etcd3:2345'
       }
     }
 
@@ -44,7 +41,7 @@ describe 'calico::node' do
       should contain_calico__wget_file('calicoctl').with(
         'url'  => 'https://github.com/projectcalico/calico-containers/releases/download/v2.3.4/calicoctl'
       )
-      should contain_file('/etc/calico/calico.env').with_content(/^ETCD_ENDPOINTS=\"https:\/\/etcd1:2345,https:\/\/etcd2:2345,https:\/\/etcd3:2345,https:\/\/etcd4:2345,https:\/\/etcd5:2345\"$/)
+      should contain_file('/etc/calico/calico.env').with_content(/^ETCD_ENDPOINTS=\"https:\/\/etcd1:2345,https:\/\/etcd2:2345,https:\/\/etcd3:2345"$/)
     end
 
     it do

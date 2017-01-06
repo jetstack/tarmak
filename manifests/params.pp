@@ -6,6 +6,7 @@ class calico::params {
   $cni_base_dir = '/etc'
   $helper_dir = '/usr/local/sbin'
   $systemd_dir = '/usr/lib/systemd/system'
+  $tmp_dir = '/tmp'
   $secure_config_dir = '/root'
   $calico_bin_version = 'v1.5.5'
   $calico_node_version = 'v1.0.0'

@@ -1,8 +1,6 @@
 require 'spec_helper'
 describe 'calico::bin_install' do
   context 'with defaults' do
-    let(:pre_condition) { "class calico { $etcd_cluster = ['etcd1'] }" }
-
     it do
       should contain_class('calico::bin_install')
       should contain_file('/opt/cni/bin/calico').with('mode' => '0755',)
@@ -15,7 +13,6 @@ describe 'calico::bin_install' do
     end
   end
   context 'with custom version' do
-    let(:pre_condition) { "class calico { $etcd_cluster = ['etcd1'] }" }
     let(:params) {
       {
         :bin_version => 'v5.6.7'

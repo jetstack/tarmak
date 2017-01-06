@@ -1,11 +1,8 @@
 class calico::bin_install (
-  $bin_version = $::calico::calico_bin_version
-) inherits ::calico
+  $bin_version = $::calico::params::calico_bin_version
+) inherits ::calico::params
 {
-
-  include ::calico
-
-  $dest_dir = "${::calico::install_dir}/bin"
+  $dest_dir = "${::calico::params::install_dir}/bin"
 
   $download_url = regsubst(
     $::calico::params::calico_bin_download_url,
