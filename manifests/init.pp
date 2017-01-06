@@ -37,20 +37,9 @@ class calico(
     }
   }
 
-  $path = defined('$::path') ? {
-    default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
-    true    => $::path
-  }
-
   file { "${::calico::helper_dir}/calico_helper.sh":
     ensure  => file,
     content => template('calico/calico_helper.sh.erb'),
     mode    => '0755',
-  }
-
-  exec { "${module_name}-systemctl-daemon-reload":
-    command     => 'systemctl daemon-reload',
-    refreshonly => true,
-    path        => $path,
   }
 }

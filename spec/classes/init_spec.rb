@@ -12,10 +12,6 @@ describe 'calico' do
         'ensure' => 'file',
         'mode'   => '0755',
       })
-      should contain_exec('calico-systemctl-daemon-reload').with({
-        'command'     => 'systemctl daemon-reload',
-        'refreshonly' => 'true',
-      })
     end
   end
 

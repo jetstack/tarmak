@@ -3,8 +3,7 @@ describe 'calico::node' do
   context 'with defaults and a single node etcd cluster' do
 
     let(:pre_condition) {[ 
-      "class calico { $etcd_cluster = ['etcd1'] }",
-      "exec {'calico-systemctl-daemon-reload':}"
+      "class calico { $etcd_cluster = ['etcd1'] }"
     ]}
 
     it do
@@ -26,8 +25,7 @@ describe 'calico::node' do
     let(:pre_condition) {[
       "class calico { $etcd_cluster = ['etcd1','etcd2','etcd3','etcd4','etcd5'] }",
       "class calico { $etcd_overlay_port = 2345 }",
-      "class calico { $tls = true }",
-      "exec {'calico-systemctl-daemon-reload':}"
+      "class calico { $tls = true }"
     ]}
 
     let(:params) {
@@ -50,6 +48,10 @@ describe 'calico::node' do
     end
 
     it do
+      should contain_exec('calico-systemctl-daemon-reload').with({
+        'command'     => '/usr/bin/systemctl daemon-reload',
+        'refreshonly' => 'true',
+      })
       should contain_file('/usr/lib/systemd/system/calico-node.service').with(
         'notify' => '["Exec[calico-systemctl-daemon-reload]"]'
       )

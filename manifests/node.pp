@@ -35,7 +35,10 @@ class calico::node(
     ensure  => file,
     content => template('calico/calico-node.service.erb'),
   } ~>
-  Exec["${module_name}-systemctl-daemon-reload"]
+  exec { "${module_name}-systemctl-daemon-reload":
+    command     => '/usr/bin/systemctl daemon-reload',
+    refreshonly => true,
+  }
 
   service { 'calico-node':
     ensure    => running,
