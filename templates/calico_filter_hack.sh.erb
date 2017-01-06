@@ -8,6 +8,7 @@ case "$1" in
       sleep 1
       ((timer++))
     done;
+    sleep 10
     docker exec -i `docker ps | awk '/calico\/node/ { print $1 }'` sh <<'EOF'
 sed -i '/filter calico_ipip/,$d' /etc/calico/confd/templates/bird_ipam.cfg.template;
 echo -e "filter calico_ipip { \n if ( gw != $(ip -4 route | awk '/^default/ { print $3 }') ) then { \n accept; \n } else { \n krt_tunnel = \"tunl0\"; \n accept; \n  } \n}" >> /etc/calico/confd/templates/bird_ipam.cfg.template;
