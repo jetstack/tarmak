@@ -7,6 +7,8 @@ define calico::wget_file(
 )
 {
 
+  ensure_packages([ 'wget' ])
+
   if "x${destination_file}x" == 'xx' {
     $filename = regsubst($url, '^http.*\/([^\/]+)$', '\1')
   } else {
@@ -19,5 +21,6 @@ define calico::wget_file(
     creates => "${destination_dir}/${filename}",
     user    => $user,
     umask   => $umask,
+    require => Package['wget'],
     }
 }
