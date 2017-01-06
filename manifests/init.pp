@@ -13,6 +13,10 @@ class calico(
     $proto = 'http'
   }
 
+  $etcd_cert_file = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}.pem"
+  $etcd_key_file  = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}-key.pem"
+  $etcd_ca_file   = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}-ca.pem"
+
   $etcd_endpoints = $etcd_cluster.map |$node| { "${proto}://${node}:${etcd_overlay_port}" }.join(',')
 
   file { ["${::calico::cni_base_dir}/cni", "${::calico::cni_base_dir}/cni/net.d", $::calico::config_dir, $::calico::install_dir, "${::calico::install_dir}/bin"]:
@@ -41,8 +45,10 @@ class calico(
 
   class {'::calico::bin_install':} ->
   class {'::calico::lo_install':} ->
-  class {'::calico::config':} ->
   class {'::calico::node':
     etcd_endpoints => $etcd_endpoints,
+    etcd_cert_file => $etcd_cert_file,
+    etcd_key_file  => $etcd_key_file,
+    etcd_ca_file   => $etcd_ca_file
   }
 }

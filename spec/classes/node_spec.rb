@@ -4,7 +4,10 @@ describe 'calico::node' do
 
     let(:params) {
       {
-        :etcd_endpoints => 'http://etcd1:2359'
+        :etcd_endpoints => 'http://etcd1:2359',
+        :etcd_cert_file => '/etc/etcd/ssl/etcd-overlay.pem',
+        :etcd_key_file  => '/etc/etcd/ssl/etcd-overlay-key.pem',
+        :etcd_ca_file   => '/etc/etcd/ssl/etcd-overlay-ca.pem',
       }
     }
 
@@ -22,14 +25,17 @@ describe 'calico::node' do
     end
   end
 
-  context 'custom version, tls on, filter hack off, cert path' do
+  context 'custom version, tls on, filter hack off, cert paths' do
 
     let(:params) {
       {
         :node_version    => 'v2.3.4',
         :aws_filter_hack => false,
+        :etcd_endpoints  => 'https://etcd1:2345,https://etcd2:2345,https://etcd3:2345',
         :etcd_cert_path  => '/opt/etc/etcd/tls',
-        :etcd_endpoints  => 'https://etcd1:2345,https://etcd2:2345,https://etcd3:2345'
+        :etcd_cert_file  => '/opt/etc/etcd/tls/etcd-overlay.pem',
+        :etcd_key_file   => '/opt/etc/etcd/tls/etcd-overlay-key.pem',
+        :etcd_ca_file    => '/opt/etc/etcd/tls/etcd-overlay-ca.pem',
       }
     }
 

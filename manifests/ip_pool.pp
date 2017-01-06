@@ -15,6 +15,6 @@ define calico::ip_pool (
     user    => 'root',
     command => "${::calico::helper_dir}/calico_helper.sh apply ${::calico::config_dir}/ipPool-${ip_pool}-${ip_mask}.yaml",
     unless  => "${::calico::helper_dir}/calico_helper.sh get ${::calico::config_dir}/ipPool-${ip_pool}-${ip_mask}.yaml | /usr/bin/grep ${ip_pool}/${ip_mask}",
-    require => [ Service['calico-node'], File["${::calico::install_dir}/bin/calicoctl"] ],
+    require => [ Class['calico::node'], File["${::calico::install_dir}/bin/calicoctl"] ],
   }
 }

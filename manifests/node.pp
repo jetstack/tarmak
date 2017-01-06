@@ -1,19 +1,23 @@
 class calico::node(
   $etcd_endpoints,
+  $etcd_cert_file,
+  $etcd_key_file,
+  $etcd_ca_file,
   $aws_filter_hack = $::calico::params::aws_filter_hack,
   $node_version = $::calico::params::calico_node_version,
   $etcd_cert_path = $::calico::params::etcd_cert_path
 ) inherits ::calico::params
 {
-  $etcd_cert_file = "${etcd_cert_path}/${::calico::params::etcd_cert_base_name}.pem"
-  $etcd_key_file = "${etcd_cert_path}/${::calico::params::etcd_cert_base_name}-key.pem"
-  $etcd_ca_file = "${etcd_cert_path}/${::calico::params::etcd_cert_base_name}-ca.pem"
-
   $download_url = regsubst(
     $::calico::params::calico_node_download_url,
     '#VERSION#',
     $node_version,
     'G')
+
+  file { "${::calico::params::cni_base_dir}/cni/net.d/10-calico.conf":
+    ensure  => file,
+    content => template('calico/10-calico.conf.erb'),
+  }
 
   calico::wget_file { 'calicoctl':
     url             => "${$download_url}/calicoctl",

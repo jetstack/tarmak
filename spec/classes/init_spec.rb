@@ -16,7 +16,6 @@ describe 'calico' do
     it do
       should contain_class('calico::bin_install')
       should contain_class('calico::lo_install')
-      should contain_class('calico::config')
     end
     it do
       should contain_class('calico::node').with({
