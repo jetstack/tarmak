@@ -9,6 +9,7 @@ class calico::policy_controller (
   file { "${::calico::helper_dir}/kubectl_helper.sh":
     ensure  => file,
     content => template('calico/kubectl_helper.sh.erb'),
+    mode    => '0755',
   } ->
   file { "${::calico::secure_config_dir}/calico-config.yaml":
     ensure  => file,
