@@ -1,22 +1,19 @@
-class calico::lo_install
+class calico::lo_install (
+  $cni_version = $::calico::params::calico_cni_version
+) inherits ::calico::params
 {
-
-  include ::calico
-
-  $version = $::calico::params::calico_cni_version
-
-  $dest_dir = "${::calico::install_dir}/bin"
+  $dest_dir = "${::calico::params::install_dir}/bin"
 
   $download_url = regsubst(
     $::calico::params::cni_download_url,
     '#VERSION#',
-    $version,
+    $cni_version,
     'G'
   )
 
-  archive { "download and extract cni-lo version ${version}":
+  archive { 'download and extract cni-lo':
     source          => $download_url,
-    path            => "/tmp/cni-v${version}.tgz",
+    path            => "${::calico::params::tmp_dir}/cni-${cni_version}.tgz",
     extract         => true,
     extract_path    => "${dest_dir}/",
     extract_command => 'tar -xzf %s ./loopback',

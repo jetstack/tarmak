@@ -1,10 +1,10 @@
 {
     "name": "calico",
     "type": "calico",
-    "etcd_endpoints": "<%= scope['calico::etcd_endpoints'] %>",
-    "etcd_ca_cert_file": "<%= scope['calico::etcd_ca_file'] %>",
-    "etcd_cert_file": "<%= scope['calico::etcd_cert_file'] %>",
-    "etcd_key_file": "<%= scope['calico::etcd_key_file'] %>",
+    "etcd_endpoints": "<%= @etcd_endpoints %>",
+    "etcd_ca_cert_file": "<%= @etcd_ca_file %>",
+    "etcd_cert_file": "<%= @etcd_cert_file %>",
+    "etcd_key_file": "<%= @etcd_key_file %>",
     "log_level": "info",
     "ipam": {
         "type": "calico-ipam"
