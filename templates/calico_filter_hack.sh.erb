@@ -2,8 +2,9 @@
 
 case "$1" in
   set)
+    sleep 5
     timer=0
-    until [[ "`docker ps | grep 'calico/node' | wc -l`" -gt 0 || timer -gt 30 ]]; do
+    until [[ "`docker ps | grep 'calico/node' | grep 'start_runit' | wc -l`" -gt 0 || timer -gt 30 ]]; do
       sleep 1
       ((timer++))
     done;
