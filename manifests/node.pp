@@ -3,11 +3,14 @@ class calico::node(
   $etcd_cert_file,
   $etcd_key_file,
   $etcd_ca_file,
-  $aws_filter_hack = $::calico::params::aws_filter_hack,
+  $aws_filter_hack,
+  $tls,
   $node_version = $::calico::params::calico_node_version,
   $etcd_cert_path = $::calico::params::etcd_cert_path
 ) inherits ::calico::params
 {
+  ensure_packages([ 'docker' ])
+
   $download_url = regsubst(
     $::calico::params::calico_node_download_url,
     '#VERSION#',
