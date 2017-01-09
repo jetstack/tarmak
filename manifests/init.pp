@@ -5,6 +5,7 @@ class calico(
   $etcd_overlay_port = $::calico::params::etcd_overlay_port,
   $tls = $::calico::params::tls,
   $aws = $::calico::params::aws,
+  $aws_filter_hack = $::calico::params::aws_filter_hack,
 ) inherits ::calico::params
 {
   if $tls {
@@ -46,9 +47,11 @@ class calico(
   class {'::calico::bin_install':} ->
   class {'::calico::lo_install':} ->
   class {'::calico::node':
-    etcd_endpoints => $etcd_endpoints,
-    etcd_cert_file => $etcd_cert_file,
-    etcd_key_file  => $etcd_key_file,
-    etcd_ca_file   => $etcd_ca_file
+    etcd_endpoints  => $etcd_endpoints,
+    etcd_cert_file  => $etcd_cert_file,
+    etcd_key_file   => $etcd_key_file,
+    etcd_ca_file    => $etcd_ca_file,
+    aws_filter_hack => $aws_filter_hack,
+    tls             => $tls,
   }
 }
