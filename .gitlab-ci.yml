@@ -47,5 +47,4 @@ publish-forge:
   - bundle install --path /cache
   - bundle exec rake module:push
   only:
-  - master
   - tags
