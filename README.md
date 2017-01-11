@@ -37,34 +37,33 @@ non-Kubernetes orchestrators, at least for now.
 (via the policy_controller class)
 * It requires (and includes, by way of ensure_packages) docker
 
-### Setup Requirements **OPTIONAL**
+### Setup Requirements
 
-If your module requires anything extra before setting up (pluginsync enabled,
-etc.), mention it here.
-
-If your most recent release breaks compatibility or requires particular steps
-for upgrading, you might want to include an additional "Upgrading" section
-here.
+This module (and calico) doesn't do very much without a functioning ETCD cluster with the correct array
+of cluster nodes and port number specified (note 2379 is the default).
+The AWS specific functionality will fail if not on AWS (turn it off).
+You'll also need to tell the kubelet to use the 'cni' network plugin
+`--network-plugin cni`
 
 ### Beginning with calico
 
 ```puppet
 class { 'calico':
-  etcd_cluster      => [ 'etcd1.mydomain', 'etcd2.mydomain', 'etcd3.mydomain' ],
-  aws               => true,
-  aws_filter_hack   => true,
-  tls               => false,
-  etcd_overlay_port => 2379,
+  etcd_cluster      => [ 'etcd1.mydomain', 'etcd2.mydomain', 'etcd3.mydomain' ], #REQUIRED
+  aws               => true, #default
+  aws_filter_hack   => true, #default
+  tls               => false, #default
+  etcd_overlay_port => 2379, #default
 }
 
-calico::ip_pool { '10.234.235.0/24':
-  ip_pool      => '10.234.235.0',
-  ip_mask      => 24,
-  ipip_enabled => 'false',
+calico::ip_pool { '10.234.235.0/24': #doesn't have to be called this, but must be named
+  ip_pool      => '10.234.235.0', #string
+  ip_mask      => 24, #integer
+  ipip_enabled => 'false', #string - may need to lint:ignore:quoted_booleans
 }
 
 class { 'calico::policy_controller':
-  require => Service['kubernetes_apiserver']
+  require => Service['kubernetes_apiserver'] # this subclass is intended to run on a machine running kubectl without extra auth, e.g. the apiserver after the apiserver has started up
 }
 ```
 
