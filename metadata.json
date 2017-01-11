@@ -1,6 +1,6 @@
 {
-   "version" : "0.1.1",
-   "name" : "jetstack/etcd",
+   "version" : "0.1.0",
+   "name" : "jetstack-etcd",
    "dependencies" : [
       {
          "name" : "puppetlabs-stdlib",
