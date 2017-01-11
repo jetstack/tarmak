@@ -4,7 +4,7 @@
   "author": "jetstack",
   "summary": "Install/configure a vault client",
   "license": "Apache-2.0",
-  "source": "",
+  "source": "https://github.com/puppernetes/module-vault_client",
   "project_page": null,
   "issues_url": null,
   "dependencies": [

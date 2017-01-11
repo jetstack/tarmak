@@ -2,6 +2,7 @@
 stages:
 - test
 - acceptance
+- publish
 
 lint:
   image: ruby:2.3
@@ -37,3 +38,17 @@ beaker:
   - bundle exec rake beaker
   only:
   - master
+  - tags
+
+publish-forge:
+  stage: publish
+  image: ruby:2.3
+  tags:
+  - docker
+  script:
+  - 'echo "---\nurl: https://forgeapi.puppetlabs.com\nusername: ${FORGE_USER}\npassword: ${FORGE_PASSWORD}" > ${HOME}/.puppetforge.yml'
+  - bundle install --path /cache
+  - bundle exec rake module:push
+  only:
+  - master
+  - tags
