@@ -1,4 +1,3 @@
-
 stages:
 - test
 - acceptance
@@ -11,7 +10,6 @@ lint:
   script:
   - bundle install --path /cache
   - bundle exec rake metadata_lint lint
-
 validate:
   image: ruby:2.3
   tags:
@@ -19,7 +17,6 @@ validate:
   script:
   - bundle install --path /cache
   - bundle exec rake validate
-
 spec:
   image: ruby:2.3
   tags:
@@ -28,14 +25,14 @@ spec:
   - bundle install --path /cache
   - bundle exec rake spec
 
-beaker:
+beaker-default:
   stage: acceptance
   tags:
   - ruby-2.3
   - vagrant
   script:
   - bundle install
-  - bundle exec rake beaker
+  - bundle exec rake beaker:default
   only:
   - master
   - tags
@@ -46,9 +43,8 @@ publish-forge:
   tags:
   - docker
   script:
-  - 'echo "---\nurl: https://forgeapi.puppetlabs.com\nusername: ${FORGE_USER}\npassword: ${FORGE_PASSWORD}" > ${HOME}/.puppetforge.yml'
+  - 'echo -e "---\nurl: https://forgeapi.puppetlabs.com\nusername: ${FORGE_USER}\npassword: ${FORGE_PASSWORD}" > ${HOME}/.puppetforge.yml'
   - bundle install --path /cache
   - bundle exec rake module:push
   only:
-  - master
   - tags
