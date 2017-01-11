@@ -1,6 +1,6 @@
 {
   "name": "jetstack-calico",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "jetstack",
   "summary": "Installs calico components and sets up advanced overlay networking for kubernetes",
   "license": "Apache-2.0",
