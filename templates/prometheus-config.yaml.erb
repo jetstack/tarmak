@@ -11,21 +11,30 @@ data:
       # scrape_timeout is set to the global default (10s).
 
     scrape_configs:
-    #- job_name: 'etcd'
-    #  scrape_interval: 60s
-    #  scrape_timeout: 45s
-    #  static_configs:
-    #  - targets:
-    #    - etcd-0.cluster1-dev.yakov.io:2359
-    #    - etcd-1.cluster1-dev.yakov.io:2359
-    #    - etcd-2.cluster1-dev.yakov.io:2359
-    #    - etcd-3.cluster1-dev.yakov.io:2359
-    #    - etcd-4.cluster1-dev.yakov.io:2359
-    #  scheme: https
-    #  tls_config:
-    #    ca_file: /etc/etcd/ssl/etcd-overlay-ca.pem
-    #    cert_file: /etc/etcd/ssl/etcd-overlay.pem
-    #    key_file: /etc/etcd/ssl/etcd-overlay-key.pem
+    - job_name: 'etcd_k8s'
+      metrics_path: /probe
+      params:
+        module: [k8s_proxy]
+      static_configs:
+        - targets:
+          - etcd-0.cluster1-dev.yakov.io:9115
+          - etcd-1.cluster1-dev.yakov.io:9115
+          - etcd-2.cluster1-dev.yakov.io:9115
+          - etcd-3.cluster1-dev.yakov.io:9115
+          - etcd-4.cluster1-dev.yakov.io:9115
+      relabel_configs:
+        - source_labels: []
+          regex: (.*)
+          target_label: __param_target
+          replacement: https://127.0.0.1:2379/metrics
+        - source_labels: [__param_target]
+          regex: (.*)
+          target_label: __address__
+          replacement: ${1}
+        - source_labels: [__param_target]
+          regex: .*
+          regex: (.*)
+          replacement: ${1}
 
     - job_name: 'kubernetes-apiservers'
       kubernetes_sd_configs:
