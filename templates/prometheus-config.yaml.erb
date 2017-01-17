@@ -29,6 +29,32 @@ data:
     #    cert_file: /etc/etcd/ssl/etcd-overlay.pem
     #    key_file: /etc/etcd/ssl/etcd-overlay-key.pem
 
+    - job_name: 'etcd_k8s'
+      metrics_path: /probe
+      params:
+        module: [k8s_proxy]
+      static_configs:
+        - targets:
+          - etcd-0.cluster1-dev.yakov.io:9115
+          - etcd-1.cluster1-dev.yakov.io:9115
+          - etcd-2.cluster1-dev.yakov.io:9115
+          - etcd-3.cluster1-dev.yakov.io:9115
+          - etcd-4.cluster1-dev.yakov.io:9115
+      relabel_configs:
+        - source_labels: []
+          regex: (.*)
+          target_label: __param_target
+          replacement: https://127.0.0.1:2379/metrics
+        - source_labels: [__param_target]
+          regex: (.*)
+          target_label: __address__
+          replacement: ${1}
+        - source_labels: [__param_target]
+          regex: .*
+          regex: (.*)
+          target_label: instance
+          replacement: ${1}
+
     - job_name: 'kubernetes-apiservers'
       kubernetes_sd_configs:
       - role: endpoints
