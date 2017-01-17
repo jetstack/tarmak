@@ -27,12 +27,17 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
+        - name: rules-volume
+          mountPath: /etc/prometheus-rules
         #- name: etcd-certs
         #  mountPath: /etc/etcd/ssl
       volumes:
       - name: config-volume
         configMap:
           name: prometheus
+      - name: rules-volume
+        configMap:
+          name: prometheus-rules
       #- name: etcd-certs
       #  hostPath:
       #    path: /etc/etcd/ssl
