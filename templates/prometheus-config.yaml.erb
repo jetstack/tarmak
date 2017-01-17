@@ -32,8 +32,8 @@ data:
           target_label: __address__
           replacement: ${1}
         - source_labels: [__param_target]
-          regex: .*
           regex: (.*)
+          target_label: instance
           replacement: ${1}
 
     - job_name: 'kubernetes-apiservers'
