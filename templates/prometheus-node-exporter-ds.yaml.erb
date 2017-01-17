@@ -1,0 +1,61 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    name: node-exporter
+spec:
+  template:
+    metadata:
+      labels:
+        name: node-exporter
+      annotations:
+         prometheus.io/scrape: "true"
+         prometheus.io/port: "<%= @prom_port %>"
+    spec:
+      hostPID: true
+      hostNetwork: true
+      containers:
+        - ports:
+            - containerPort: <%= @prom_port %>
+              hostPort: <%= @prom_port %>
+              protocol: TCP
+          resources:
+            requests:
+              memory: 30Mi
+              cpu: 150m
+            limits:
+              memory: 50Mi
+              cpu: 250m
+          image: prom/node-exporter:v<%= @prom_ne_version %>
+          args:
+            - -collector.procfs
+            - /host/proc
+            - -collector.sysfs
+            - /host/sys
+            - -collector.filesystem.ignored-mount-points
+            - '"^/(sys|proc|dev|host|etc)($|/)"'
+          name: node-exporter
+          volumeMounts:
+            - name: dev
+              mountPath: /host/dev
+            - name: proc
+              mountPath: /host/proc
+            - name: sys
+              mountPath: /host/sys
+            - name: rootfs
+              mountPath: /rootfs
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: rootfs
+          hostPath:
+            path: /
