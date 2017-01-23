@@ -19,7 +19,7 @@ describe 'calico::node' do
         'mode' => '0755',
       )
       should contain_file('/etc/calico/calico.env').with_content(/^ETCD_ENDPOINTS=\"http:\/\/etcd1:2359\"$/)
-      should contain_file('/usr/lib/systemd/system/calico-node.service').with(
+      should contain_file('/etc/systemd/system/calico-node.service').with(
         'notify' => '["Exec[calico-systemctl-daemon-reload]"]'
       )
       should contain_file('/etc/systemd/system/calico-node.service').with_content(/^EnvironmentFile=\/etc\/calico\/calico.env$/)
@@ -61,9 +61,9 @@ describe 'calico::node' do
       should contain_file('/etc/systemd/system/calico-node.service').with(
         'notify' => '["Exec[calico-systemctl-daemon-reload]"]'
       )
-      should contain_file('/usr/lib/systemd/system/calico-node.service').with_content(/^EnvironmentFile=\/etc\/calico\/calico.env$/)
-      should contain_file('/usr/lib/systemd/system/calico-node.service').with_content(/^ calico\/node:v2.3.4$/)
-      should contain_file('/usr/lib/systemd/system/calico-node.service').with_content(/^ -v \/opt\/etc\/etcd\/tls:\/etc\/etcd\/ssl \\$/)
+      should contain_file('/etc/systemd/system/calico-node.service').with_content(/^EnvironmentFile=\/etc\/calico\/calico.env$/)
+      should contain_file('/etc/systemd/system/calico-node.service').with_content(/^ calico\/node:v2.3.4$/)
+      should contain_file('/etc/systemd/system/calico-node.service').with_content(/^ -v \/opt\/etc\/etcd\/tls:\/etc\/etcd\/ssl \\$/)
     end
 
     it do
