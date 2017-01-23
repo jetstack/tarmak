@@ -22,7 +22,7 @@ describe 'calico::node' do
       should contain_file('/usr/lib/systemd/system/calico-node.service').with(
         'notify' => '["Exec[calico-systemctl-daemon-reload]"]'
       )
-      should contain_file('/usr/lib/systemd/system/calico-node.service').with_content(/^EnvironmentFile=\/etc\/calico\/calico.env$/)
+      should contain_file('/etc/systemd/system/calico-node.service').with_content(/^EnvironmentFile=\/etc\/calico\/calico.env$/)
       should contain_file('/usr/local/sbin/calico_filter_hack.sh')
     end
   end
@@ -58,7 +58,7 @@ describe 'calico::node' do
         'command'     => '/usr/bin/systemctl daemon-reload',
         'refreshonly' => 'true',
       })
-      should contain_file('/usr/lib/systemd/system/calico-node.service').with(
+      should contain_file('/etc/systemd/system/calico-node.service').with(
         'notify' => '["Exec[calico-systemctl-daemon-reload]"]'
       )
       should contain_file('/usr/lib/systemd/system/calico-node.service').with_content(/^EnvironmentFile=\/etc\/calico\/calico.env$/)
