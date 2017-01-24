@@ -1,0 +1,10 @@
+[Unit]
+Description=blackbox-exporter
+After=network.target
+
+[Service]
+ExecStart=<%= @blackbox_dest_dir %>/blackbox-exporter
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

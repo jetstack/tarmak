@@ -1,0 +1,17 @@
+#!/bin/bash
+
+case "$1" in
+  apply)
+    timer=0
+    until [[ "`curl http://localhost:8080/healthz | grep ok | wc -l`" -gt 0 || timer -gt 30 ]]; do
+      sleep 1
+      ((timer++))
+    done;
+    kubectl apply -f $2
+    ;;
+  get)
+    kubectl get -f $2
+    ;;
+  *)
+    /usr/bin/echo "Usage: {apply <file.yaml> | get <file.yaml>}"
+esac

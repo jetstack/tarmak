@@ -1,6 +1,0 @@
-### Get blackbox_exporter
-
-```
-curl -sLO https://github.com/jetstack-experimental/blackbox_exporter/releases/download/poc-proxy/blackbox_exporter
-chmod +x blackbox_exporter
-```
