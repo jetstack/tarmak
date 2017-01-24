@@ -27,6 +27,11 @@ class prometheus::blackbox_etcd (
     mode   => '0755',
   }
 
+  file { "${dest_dir}/blackbox_exporter.yaml":
+    ensure  => file,
+    content => template('prometheus/blackbox_exporter.yaml.erb'),
+  }
+
   file { "${systemd_path}/blackbox_exporter":
     ensure  => file,
     content => template('prometheus/blackbox_exporter.service.erb'),
@@ -36,6 +41,6 @@ class prometheus::blackbox_etcd (
   service { 'blackbox_exporter':
     ensure  => running,
     enable  => true,
-    require => [ File[ "${dest_dir}/blackbox_exporter"], File["${systemd_path}/blackbox_exporter.service.erb"]],
+    require => [ File[ "${dest_dir}/blackbox_exporter"], File["${dest_dir}/blackbox_exporter.yaml.erb"], File["${systemd_path}/blackbox_exporter.service.erb"]],
   }
 }
