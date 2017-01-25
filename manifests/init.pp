@@ -1,5 +1,9 @@
 class prometheus(
   $role = '',
+  $etcd_cluster = '',
+  $etcd_k8s_port = $::prometheus::params::etcd_k8s_port,
+  $etcd_events_port = $::prometheus::params::etcd_events_port,
+  $etcd_overlay_port = $::prometheus::params::etcd_overlay_port,
   $blackbox_download_url = $::prometheus::params::blackbox_download_url,
   $blackbox_dest_dir = $::prometheus::params::blackbox_dest_dir,
   $systemd_path = $::prometheus::params::systemd_path,

@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: prometheus
-  namespace: monitoring
+  namespace: <%= @prometheus_namespace %>
 spec:
   replicas: 1
   selector:
@@ -16,21 +16,19 @@ spec:
     spec:
       containers:
       - name: prometheus
-        image: quay.io/prometheus/prometheus:v1.4.1
+        image: <%= @prometheus_image %>:<%= @prometheus_version %>
         args:
-          - '-storage.local.retention=6h'
-          - '-storage.local.memory-chunks=500000'
+          - '-storage.local.retention=<%= @prometheus_storage_local_retention %>'
+          - '-storage.local.memory-chunks=<%= @prometheus_storage_local_memchunks %>'
           - '-config.file=/etc/prometheus/prometheus.yml'
         ports:
         - name: web
-          containerPort: 9090
+          containerPort: <%= @prometheus_port %>
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
         - name: rules-volume
           mountPath: /etc/prometheus-rules
-        #- name: etcd-certs
-        #  mountPath: /etc/etcd/ssl
       volumes:
       - name: config-volume
         configMap:
@@ -38,6 +36,3 @@ spec:
       - name: rules-volume
         configMap:
           name: prometheus-rules
-      #- name: etcd-certs
-      #  hostPath:
-      #    path: /etc/etcd/ssl

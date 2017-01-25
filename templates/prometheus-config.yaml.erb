@@ -19,16 +19,19 @@ data:
         module: [k8s_proxy]
       static_configs:
         - targets:
-          - etcd-0.cluster1-dev.yakov.io:9115
-          - etcd-1.cluster1-dev.yakov.io:9115
-          - etcd-2.cluster1-dev.yakov.io:9115
-          - etcd-3.cluster1-dev.yakov.io:9115
-          - etcd-4.cluster1-dev.yakov.io:9115
+          <% @etcd_cluster.each do |etcd| -%>
+          <%= etcd %>:9115
+	  <% end -%>
+          #- etcd-0.cluster1-dev.yakov.io:9115
+          #- etcd-1.cluster1-dev.yakov.io:9115
+          #- etcd-2.cluster1-dev.yakov.io:9115
+          #- etcd-3.cluster1-dev.yakov.io:9115
+          #- etcd-4.cluster1-dev.yakov.io:9115
       relabel_configs:
         - source_labels: []
           regex: (.*)
           target_label: __param_target
-          replacement: https://127.0.0.1:2379/metrics
+          replacement: https://127.0.0.1:<%= @etcd_k8s_port %>/metrics
 
     - job_name: 'events_k8s'
       metrics_path: /probe

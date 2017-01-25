@@ -8,6 +8,10 @@ class prometheus::prometheus_deployment (
   $prometheus_storage_local_memchunks = $::prometheus::prometheus_storage_local_memchunks,
   $prometheus_port = $::prometheus::prometheus_port,
   $prometheus_use_module_config = $::prometheus::prometheus_use_module_config,
+  $etcd_cluster = $::prometheus::etcd_cluster,
+  $etcd_k8s_port = $::prometheus::etcd_k8s_port,
+  $etcd_events_port = $::prometheus::etcd_events_port,
+  $etcd_overlay_port = $::prometheus::etcd_overlay_port,
   $prometheus_use_module_rules = $::prometheus::prometheus_use_module_rules,
   $prometheus_install_state_metrics = $::prometheus::prometheus_install_state_metrics,
   $prometheus_install_node_exporter = $::prometheus::prometheus_install_node_exporter
