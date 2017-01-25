@@ -4,7 +4,7 @@ class prometheus::params {
   $etcd_overlay_port = 2359
   $blackbox_download_url = 'https://github.com/jetstack-experimental/blackbox_exporter/releases/download/poc-proxy/'
   $blackbox_dest_dir = '/usr/local/sbin'
-  $blackbox_config_dir = '/etc'
+  $blackbox_config_dir = '/etc/blackbox'
   $systemd_path = '/etc/systemd/system'
   $addon_dir = '/etc/kubernetes/addons'
   $helper_dir = '/usr/local/sbin'
