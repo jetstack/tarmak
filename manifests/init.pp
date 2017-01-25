@@ -15,7 +15,7 @@ class prometheus(
   $prometheus_namespace = $::prometheus::params::prometheus_namespace,
   $prometheus_image = $::prometheus::params::prometheus_image,
   $prometheus_version = $::prometheus::params::prometheus_version,
-  $prometheus_storage_local_retention = $::prometheus::params::prometheus_retention,
+  $prometheus_storage_local_retention = $::prometheus::params::prometheus_storage_local_retention,
   $prometheus_storage_local_memchunks = $::prometheus::params::prometheus_storage_local_memchunks,
   $prometheus_port = $::prometheus::params::prometheus_port,
   $prometheus_use_module_config = $::prometheus::params::prometheus_use_module_config,
