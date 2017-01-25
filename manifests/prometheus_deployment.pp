@@ -59,6 +59,16 @@ class prometheus::prometheus_deployment (
     require => File["${helper_dir}/kubectl_helper_prom.sh"],
   }
 
+  file { "${addon_dir}/prometheus-svc.yaml":
+    ensure  => file,
+    content => template('prometheus/prometheus-svc.yaml.erb'),
+  } ->
+  exec { 'Install prom-svc':
+    command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/prometheus-svc.yaml",
+    unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/prometheus-svc.yaml",
+    require => File["${helper_dir}/kubectl_helper_prom.sh"],
+  }
+
   if $prometheus_install_state_metrics {
     file { "${addon_dir}/kube-state-metrics-deployment.yaml":
       ensure  => file,
