@@ -5,12 +5,10 @@ class prometheus::node_exporter_service (
   $node_exporter_port = $::prometheus::node_exporter_port
 )
 {
-  include ::systemd
-
   file { "${systemd_path}/prometheus-node-exporter.service":
     ensure  => file,
     content => template('prometheus/prometheus-node-exporter.service.erb'),
-    notify  => Exec['systemd-daemon-reload'],
+    notify  => Exec["${module_name}-systemctl-daemon-reload"],
   } ->
   service { 'prometheus-node-exporter':
     ensure => running,
