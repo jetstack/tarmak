@@ -20,7 +20,7 @@ data:
       static_configs:
         - targets:
           <% @etcd_cluster.each do |etcd| -%>
-<%= etcd %>:9115
+          - <%= etcd %>:9115
 <% end -%>
           #- etcd-0.cluster1-dev.yakov.io:9115
           #- etcd-1.cluster1-dev.yakov.io:9115
