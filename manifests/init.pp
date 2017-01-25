@@ -22,7 +22,7 @@ class prometheus(
   $prometheus_use_module_rules = $::prometheus::params::prometheus_use_module_rules,
   $prometheus_install_state_metrics = $::prometheus::params::prometheus_install_state_metrics,
   $prometheus_install_node_exporter = $::prometheus::params::prometheus_install_node_exporter
-) inherits prometheus::params
+) inherits ::prometheus::params
 {
   if $role == 'etcd' {
     include prometheus::blackbox_etcd
