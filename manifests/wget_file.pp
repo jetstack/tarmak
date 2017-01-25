@@ -1,4 +1,4 @@
-define calico::wget_file(
+define prometheus::wget_file(
   String $url,
   String $destination_dir,
   String $destination_file = '',
