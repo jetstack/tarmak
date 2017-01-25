@@ -34,9 +34,9 @@ data:
         module: [events_proxy]
       static_configs:
         - targets:
-          <% @etcd_cluster.each do |etcd| -%>
+          <%- @etcd_cluster.each do |etcd| -%>
           - <%= etcd %>:9115
-<% end -%>
+          <%- end -%>
       relabel_configs:
         - source_labels: []
           regex: (.*)
@@ -49,9 +49,9 @@ data:
         module: [overlay_proxy]
       static_configs:
         - targets:
-          <% @etcd_cluster.each do |etcd| -%>
+          <%- @etcd_cluster.each do |etcd| -%>
           - <%= etcd %>:9115
-<% end -%>
+          <%- end -%>
       relabel_configs:
         - source_labels: []
           regex: (.*)
