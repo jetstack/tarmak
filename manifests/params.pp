@@ -10,7 +10,7 @@ class prometheus::params {
   $helper_dir = '/usr/local/sbin'
   $node_exporter_image = 'prom/node-exporter'
   $node_exporter_version = 'v0.13.0'
-  $node_exporter_port = 9190
+  $node_exporter_port = 9100
   $prometheus_namespace = 'monitoring'
   $prometheus_image = 'quay.io/prometheus/prometheus'
   $prometheus_version = 'v1.4.1'
