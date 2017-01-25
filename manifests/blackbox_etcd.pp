@@ -30,7 +30,7 @@ class prometheus::blackbox_etcd (
     content => template('prometheus/blackbox_exporter.yaml.erb'),
   }
 
-  file { "${systemd_path}/blackbox_exporter":
+  file { "${systemd_path}/blackbox_exporter.service":
     ensure  => file,
     content => template('prometheus/blackbox_exporter.service.erb'),
   } ~>
