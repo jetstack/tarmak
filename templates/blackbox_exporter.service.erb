@@ -3,7 +3,7 @@ Description=blackbox-exporter
 After=network.target
 
 [Service]
-ExecStart=<%= @blackbox_dest_dir %>/blackbox-exporter
+ExecStart=<%= @dest_dir %>/blackbox-exporter
 Restart=on-failure
 
 [Install]
