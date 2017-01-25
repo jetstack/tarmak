@@ -43,6 +43,6 @@ class prometheus::blackbox_etcd (
   service { 'blackbox_exporter':
     ensure  => running,
     enable  => true,
-    require => [ File[ "${dest_dir}/blackbox_exporter"], File["${dest_dir}/blackbox_exporter.yaml"], File["${systemd_path}/blackbox_exporter.service.erb"]],
+    require => [ File[ "${dest_dir}/blackbox_exporter"], File["${dest_dir}/blackbox_exporter.yaml"], File["${systemd_path}/blackbox_exporter.service"]],
   }
 }
