@@ -1,6 +1,7 @@
 ### Get blackbox_exporter
 class prometheus::blackbox_etcd (
   $download_url = $::prometheus::blackbox_download_url,
+  $config_dir = $::prometheus::blackbox_config_dir,
   $dest_dir = $::prometheus::blackbox_dest_dir,
   $systemd_path = $::prometheus::systemd_path
 )
@@ -13,7 +14,7 @@ class prometheus::blackbox_etcd (
 #    'G'
 #    )
 
-  file { $dest_dir:
+  file { [ $dest_dir, $config_dir ]:
     ensure => directory,
   } ->
   prometheus::wget_file { 'blackbox_exporter':
@@ -25,7 +26,7 @@ class prometheus::blackbox_etcd (
     mode   => '0755',
   }
 
-  file { "${dest_dir}/blackbox.yml":
+  file { "${config_dir}/blackbox_exporter.yaml":
     ensure  => file,
     content => template('prometheus/blackbox_exporter.yaml.erb'),
   }
@@ -43,6 +44,6 @@ class prometheus::blackbox_etcd (
   service { 'blackbox_exporter':
     ensure  => running,
     enable  => true,
-    require => [ File[ "${dest_dir}/blackbox_exporter"], File["${dest_dir}/blackbox.yml"], File["${systemd_path}/blackbox_exporter.service"]],
+    require => [ File[ "${dest_dir}/blackbox_exporter"], File["${config_dir}/blackbox_exporter.yaml"], File["${systemd_path}/blackbox_exporter.service"]],
   }
 }

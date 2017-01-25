@@ -17,9 +17,9 @@ modules:
       valid_targets:
       - https://127.0.0.1:2369/metrics
       tls_config:
-        ca_file: /etc/etcd/ssl/etcd-events-ca.pem
-        key_file: /etc/etcd/ssl/etcd-events-key.pem
-        cert_file: /etc/etcd/ssl/etcd-events.pem
+        ca_file: /etc/etcd/ssl/etcd-k8s-ca.pem
+        key_file: /etc/etcd/ssl/etcd-k8s-key.pem
+        cert_file: /etc/etcd/ssl/etcd-k8s.pem
         insecure_skip_verify: true
   overlay_proxy:
     prober: proxy

@@ -6,6 +6,7 @@ class prometheus(
   $etcd_overlay_port = $::prometheus::params::etcd_overlay_port,
   $blackbox_download_url = $::prometheus::params::blackbox_download_url,
   $blackbox_dest_dir = $::prometheus::params::blackbox_dest_dir,
+  $blackbox_config_dir = $::prometheus::params::blackbox_config_dir,
   $systemd_path = $::prometheus::params::systemd_path,
   $node_exporter_image = $::prometheus::params::node_exporter_image,
   $node_exporter_version = $::prometheus::params::node_exporter_version,
