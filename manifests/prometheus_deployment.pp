@@ -19,7 +19,8 @@ class prometheus::prometheus_deployment (
 {
   file { "${helper_dir}/kubectl_helper_prom.sh":
     ensure  => file,
-    content => template('prometheus/kubectl_helper.sh.erb')
+    content => template('prometheus/kubectl_helper.sh.erb'),
+    mode    => '0755',
   }
 
   if $prometheus_use_module_config {
