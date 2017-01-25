@@ -6,8 +6,6 @@ class prometheus::blackbox_etcd (
 )
 {
 
-  include ::systemd
-
 #  $download_url = regsubst(
 #    $::calico::params::calico_bin_download_url,
 #    '#VERSION#',
@@ -35,8 +33,12 @@ class prometheus::blackbox_etcd (
   file { "${systemd_path}/blackbox_exporter":
     ensure  => file,
     content => template('prometheus/blackbox_exporter.service.erb'),
-    notify  => Exec['systemd-daemon-reload'],
+  } ~>
+  exec { "${module_name}-systemctl-daemon-reload":
+    command     => '/usr/bin/systemctl daemon-reload',
+    refreshonly => true,
   }
+
 
   service { 'blackbox_exporter':
     ensure  => running,
