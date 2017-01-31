@@ -70,6 +70,10 @@ class vault_client (
 
   $_dest_dir = "${dest_dir}/${::vault_client::params::app_name}-${version}"
 
+  contain 'vault_client::install'
+  contain 'vault_client::config'
+  contain 'vault_client::service'
+
   class { '::vault_client::install': } ->
   class { '::vault_client::config': } ->
   class { '::vault_client::service': } ->
