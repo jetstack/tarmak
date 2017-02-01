@@ -2,8 +2,6 @@
 
 set -e
 
-VAULT_CMD=/tmp/vault-dev-bin
-
 export VAULT_ADDR=http://127.0.0.1:8200
 export VAULT_DEV_ROOT_TOKEN_ID=root-token
 export VAULT_TOKEN=root-token

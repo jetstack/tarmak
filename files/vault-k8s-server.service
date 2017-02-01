@@ -1,10 +1,10 @@
 [Unit]
-Description=vault dev server for acceptance tests
+Description=vault k8s server for acceptance tests
 
 [Service]
 Environment=VAULT_CMD=/tmp/vault-dev-bin
 ExecStartPre=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.sh download
 ExecStart=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.sh server
-ExecStartPost=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.sh config
+ExecStartPost=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-k8s-setup.sh
 RestartSec=5
 Restart=on-failure
