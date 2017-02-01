@@ -3,7 +3,7 @@ class vault_client::service {
   $service_name = $::vault_client::token_service_name
   $frequency = 86400
 
-  if $::vault_client::set_ca == true {
+  if $::vault_client::ca_cert_path != undef {
     $ca_cert_path = $::vault_client::ca_cert_path
   }
 

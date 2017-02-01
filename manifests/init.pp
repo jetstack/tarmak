@@ -31,8 +31,7 @@ class vault_client (
   $init_policies = [],
   $init_role = undef,
   $token = undef,
-  $set_ca = false,
-  $ca_cert_path = '',
+  $ca_cert_path = undef,
 ) inherits ::vault_client::params {
 
   # verify inputs
