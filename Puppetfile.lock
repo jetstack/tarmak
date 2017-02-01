@@ -4,23 +4,23 @@ FORGE
     camptocamp-systemd (0.4.0)
     puppet-archive (1.1.2)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
-    puppetlabs-stdlib (4.14.0)
+    puppetlabs-stdlib (4.15.0)
 
 GIT
   remote: git@git.jetstack.net:puppernetes/module-calico.git
   ref: master
-  sha: bab618d23381cf44c0da871d560ae0c2218ee18b
+  sha: 0ffa15daac9a77fb4927547aedccc8bf4ef4da84
   specs:
-    jetstack-calico (0.1.1)
+    jetstack-calico (0.1.2)
       puppet-archive (< 1.2.0, >= 1.1.2)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
   remote: git@git.jetstack.net:puppernetes/module-etcd.git
   ref: master
-  sha: 1a39d137abaac02b918cdc916f04e21b69ea9ebd
+  sha: 0eb063a9f29fb24dc6514ff4444fc5cad3b877ec
   specs:
-    jetstack-etcd (0.1.1)
+    jetstack-etcd (0.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
@@ -35,7 +35,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-k8s.git
   ref: master
-  sha: 50f25a7ffe5a6aea3c9c1ad341ecbd751536fbf1
+  sha: d5553ee597589b21a306832581b566cd50b6327c
   specs:
     jetstack-k8s (0.1.0)
       camptocamp-systemd (< 0.5.0, >= 0.4.0)
@@ -52,7 +52,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-vault_client.git
   ref: master
-  sha: 573ef605930d86f28c856ed91ca04f1c75aa8140
+  sha: 03c71b2e72f332c1f1f184ccd4c3abae6f4b4382
   specs:
     jetstack-vault_client (0.1.0)
       puppet-archive (< 1.2.0, >= 1.1.2)

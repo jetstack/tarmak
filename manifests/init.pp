@@ -22,6 +22,7 @@ class puppernetes (
   String $etcd_k8s_events_ca_name = $puppernetes::params::etcd_k8s_events_ca_name,
   String $etcd_k8s_events_version = $puppernetes::params::etcd_k8s_events_version,
   String $vault_version = $puppernetes::params::vault_version,
+  String $cloud_provider = $puppernetes::params::cloud_provider,
 ) inherits ::puppernetes::params {
 
 }

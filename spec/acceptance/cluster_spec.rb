@@ -1,15 +1,27 @@
 require 'spec_helper_acceptance'
 
 describe '::puppernetes' do
+
   context 'test one master, two worker cluster' do
+    let :role do
+      'unknown'
+    end
+
+    let :cluster_name do
+      'test'
+    end
+
     let :global_pp do
       "
 class{'puppernetes':
-  cluster_name => 'beaker',
+  cluster_name  => '#{cluster_name}',
 }
 
 class{'vault_client':
-  token => 'beaker-token',
+  init_token    => 'init-token-etcd',
+  init_role     => '#{cluster_name}-#{role}',
+  init_policies => ['#{cluster_name}/#{role}'],
+  server_url    => 'http://10.123.0.12:8200'
 }
 "
     end
@@ -21,12 +33,23 @@ class{'vault_client':
         on host, "ifconfig enp0s8 #{ip}/16"
         on host, "iptables -F INPUT"
       end
+
+      # Ensure vault-dev server is setup
+      hosts_as('vault').each do |host|
+        host.shell 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-k8s-server.service /etc/systemd/system/vault-k8s-server.service'
+        host.shell 'systemctl daemon-reload'
+        host.shell 'systemctl start vault-k8s-server.service'
+      end
     end
 
     # TODO: do vault here
 
     # Make sure etcd is running and setup as expected
     context 'etcd' do
+      let :role do
+        'etcd'
+      end
+
       let :pp do
         global_pp + "\nclass{'puppernetes::etcd':}"
       end

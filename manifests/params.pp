@@ -34,4 +34,7 @@ class puppernetes::params{
   ## Vault
   $vault_version = '0.6.4'
 
+  ## Cloud Provider
+  $cloud_provider = 'vagrant'
+
 }

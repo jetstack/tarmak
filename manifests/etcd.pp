@@ -2,7 +2,10 @@ class puppernetes::etcd(
 ){
   include ::puppernetes
   include ::vault_client
-  include ::etcd_mount
+
+  if $::puppernetes::cloud_provider == 'aws' {
+    include ::etcd_mount
+  }
 
   file { $::puppernetes::etcd_ssl_dir:
     ensure  => directory,
