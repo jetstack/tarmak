@@ -8,7 +8,7 @@ export VAULT_TOKEN=root-token
 
 
 function server {
-    exec ${VAULT_CMD} server -dev
+    exec ${VAULT_CMD} server -dev -dev-listen-address="0.0.0.0:8200"
 }
 
 function download {
