@@ -8,36 +8,31 @@ class puppernetes::etcd(
     ensure  => directory,
     owner   => 'etcd',
     group   => 'etcd',
-    require => [ File['/etc/etcd'], User['etcd'] ],
+    mode    => '0750',
+    require => [ File['/etc/etcd'], User[$::puppernetes::etcd_user] ],
   }
 
   $common_name = "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
 
   vault_client::cert_service { 'etcd-k8s-main':
-    base_path   => '/etc/etcd/ssl/etcd-k8s',
+    base_path   => '$::puppernetes::etcd_ssl_dir/etcd-k8s',
     common_name => $common_name,
-    role        => "${::cluster_name}/pki/etcd-overlay/sign/server",
+    role        => "${puppernetes::cluster_name}/pki/etcd-main/sign/server",
     user        => 'etcd',
-    ip_sans     => $::ipaddress,
-    require     => [ User['etcd'], File['/etc/etcd/ssl'] ],
-    before      => Service['etcd-k8s-main.service'],
+    require     => [ User[$::puppernetes::etcd_user], File[$::puppernetes::etcd_ssl_dir] ],
+    # TODO: enable me: before => Service['etcd-k8s-main.service'],
   }
 
 
   vault_client::cert_service { 'etcd-k8s-overlay':
-    base_path   => '/etc/etcd/ssl/etcd-overlay',
+    base_path   => '$::puppernetes::etcd_ssl_dir/etcd-overlay',
     common_name => $common_name,
-    role        => "${::cluster_name}/pki/etcd-overlay/sign/server",
+    role        => "${puppernetes::cluster_name}/pki/etcd-overlay/sign/server",
     user        => 'etcd',
-    ip_sans     => $::ipaddress,
-    require     => [ User['etcd'], File['/etc/etcd/ssl'] ],
-    before      => Service['etcd-k8s-overlay.service'],
+    require     => [ User[$::puppernetes::etcd_user], File[$::puppernetes::etcd_ssl_dir] ],
+    # TODO: enable me: before => Service['etcd-k8s-overlay.service'],
   }
 
-
-
-  $initial_cluster = $etcd_cluster
-  $advertise_client_network = $::facts['networking']['interfaces']['eth0']['ip']
 
   Class['vault_client'] -> Class['puppernetes::etcd']
 
