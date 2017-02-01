@@ -42,6 +42,14 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
+  remote: git@git.jetstack.net:puppernetes/module-prometheus.git
+  ref: master
+  sha: 81a15fed2019f71b659f9dad34665392dc0a297a
+  specs:
+    jetstack-prometheus (0.1.0)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+
+GIT
   remote: git@git.jetstack.net:puppernetes/module-vault_client.git
   ref: master
   sha: 573ef605930d86f28c856ed91ca04f1c75aa8140
@@ -55,5 +63,6 @@ DEPENDENCIES
   jetstack-etcd (>= 0)
   jetstack-etcd_mount (>= 0)
   jetstack-k8s (>= 0)
+  jetstack-prometheus (>= 0)
   jetstack-vault_client (>= 0)
 

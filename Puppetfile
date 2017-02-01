@@ -20,6 +20,8 @@ mod 'jetstack/calico',
   :git => 'git@git.jetstack.net:puppernetes/module-calico.git'
 mod 'jetstack/vault_client',
   :git => 'git@git.jetstack.net:puppernetes/module-vault_client.git'
+mod 'jetstack/prometheus',
+  :git => 'git@git.jetstack.net:puppernetes/module-prometheus.git'
 
 # TODO: after publishing all modules use this line:
 #metadata
