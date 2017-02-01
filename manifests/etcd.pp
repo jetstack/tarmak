@@ -2,6 +2,43 @@ class puppernetes::etcd(
 ){
   include ::puppernetes
   include ::vault_client
+  include ::etcd_mount
+
+  file { $::puppernetes::etcd_ssl_dir:
+    ensure  => directory,
+    owner   => 'etcd',
+    group   => 'etcd',
+    require => [ File['/etc/etcd'], User['etcd'] ],
+  }
+
+  $common_name = "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
+
+  vault_client::cert_service { 'etcd-k8s-main':
+    base_path   => '/etc/etcd/ssl/etcd-k8s',
+    common_name => $common_name,
+    role        => "${::cluster_name}/pki/etcd-overlay/sign/server",
+    user        => 'etcd',
+    ip_sans     => $::ipaddress,
+    require     => [ User['etcd'], File['/etc/etcd/ssl'] ],
+    before      => Service['etcd-k8s-main.service'],
+  }
+
+
+  vault_client::cert_service { 'etcd-k8s-overlay':
+    base_path   => '/etc/etcd/ssl/etcd-overlay',
+    common_name => $common_name,
+    role        => "${::cluster_name}/pki/etcd-overlay/sign/server",
+    user        => 'etcd',
+    ip_sans     => $::ipaddress,
+    require     => [ User['etcd'], File['/etc/etcd/ssl'] ],
+    before      => Service['etcd-k8s-overlay.service'],
+  }
+
+
+
+  $initial_cluster = $etcd_cluster
+  $advertise_client_network = $::facts['networking']['interfaces']['eth0']['ip']
+
   Class['vault_client'] -> Class['puppernetes::etcd']
 
   $initial_cluster = range(0, $::puppernetes::etcd_instances-1).map |$i| { #lint:ignore:variable_contains_dash
@@ -53,5 +90,9 @@ class puppernetes::etcd(
     tls_cert_path            => "${::puppernetes::etcd_ssl_dir}/etcd-${::puppernetes::etcd_overlay_ca_name}.pem",
     tls_key_path             => "${::puppernetes::etcd_ssl_dir}/etcd-${::puppernetes::etcd_overlay_ca_name}-key.pem",
     tls_ca_path              => "${::puppernetes::etcd_ssl_dir}/etcd-${::puppernetes::etcd_overlay_ca_name}-ca.pem",
+  }
+
+  class { 'prometheus':
+    role => 'etcd',
   }
 }
