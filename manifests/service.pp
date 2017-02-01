@@ -3,10 +3,6 @@ class vault_client::service {
   $service_name = $::vault_client::token_service_name
   $frequency = 86400
 
-  if $::vault_client::ca_cert_path != undef {
-    $ca_cert_path = $::vault_client::ca_cert_path
-  }
-
   $path = defined('$::path') ? {
     default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
     true    => $::path

@@ -12,6 +12,9 @@ class vault_client::config {
   $init_role = $::vault_client::init_role
   $init_policies = $::vault_client::init_policies
 
+  if $::vault_client::ca_cert_path != undef {
+    $ca_cert_path = $::vault_client::ca_cert_path
+  }
 
   file { $::vault_client::config_dir:
     ensure => directory,
