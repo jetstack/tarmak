@@ -7,6 +7,14 @@ describe '::puppernetes' do
       'unknown'
     end
 
+    let :vault_ip do
+        vault_ip = nil
+        hosts_as('vault').each do |host|
+          vault_ip = host.host_hash[:ip]
+        end
+        vault_ip
+    end
+
     let :cluster_name do
       'test'
     end
@@ -21,7 +29,7 @@ class{'vault_client':
   init_token    => 'init-token-etcd',
   init_role     => '#{cluster_name}-#{role}',
   init_policies => ['#{cluster_name}/#{role}'],
-  server_url    => 'http://10.123.0.12:8200'
+  server_url    => 'http://#{vault_ip}:8200'
 }
 "
     end
