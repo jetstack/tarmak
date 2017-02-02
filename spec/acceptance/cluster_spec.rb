@@ -22,7 +22,9 @@ describe '::puppernetes' do
     let :global_pp do
       "
 class{'puppernetes':
-  cluster_name  => '#{cluster_name}',
+  cluster_name                  => '#{cluster_name}',
+  etcd_instances                => 1,
+  etcd_advertise_client_network => '10.0.0.0/8'
 }
 
 class{'vault_client':

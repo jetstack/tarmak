@@ -12,7 +12,7 @@ class puppernetes::etcd(
     owner   => 'etcd',
     group   => 'etcd',
     mode    => '0750',
-    require => [ File['/etc/etcd'], User[$::puppernetes::etcd_user] ],
+    require => [ File[$::puppernetes::etcd_config_dir], User[$::puppernetes::etcd_user] ],
   }
 
   $common_name = "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
@@ -37,7 +37,7 @@ class puppernetes::etcd(
 
   Class['vault_client'] -> Class['puppernetes::etcd']
 
-  $initial_cluster = range(0, $::puppernetes::etcd_instances-1).map |$i| { #lint:ignore:variable_contains_dash
+  $initial_cluster = range(1, $::puppernetes::etcd_instances).map |$i| { #lint:ignore:variable_contains_dash
     "etcd-${i}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
   }
 
