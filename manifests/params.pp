@@ -10,7 +10,8 @@ class puppernetes::params{
   # etcd user + group
   $etcd_user = 'etcd'
   $etcd_group = 'etcd'
-  $etcd_config_dir = '/etc/etcd'
+  $etcd_uid = 873
+  $etcd_home = '/etc/etcd'
   $etcd_ssl_dir = '/etc/etcd/ssl'
   $etcd_instances = 3
   $etcd_advertise_client_network = '172.16.0.0/12'
@@ -33,6 +34,13 @@ class puppernetes::params{
 
   ## Vault
   $vault_version = '0.6.4'
+
+  ## K8S
+  $k8s_user = 'k8s'
+  $k8s_group = 'k8s'
+  $k8s_uid = 837
+  $k8s_home = '/etc/k8s'
+  $k8s_ssl_dir = '/etc/k8s/ssl'
 
   ## Cloud Provider
   $cloud_provider = 'vagrant'

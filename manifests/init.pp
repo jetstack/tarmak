@@ -5,7 +5,8 @@ class puppernetes (
   String $kubernetes_version = $puppernetes::params::kubernetes_version,
   String $etcd_user = $puppernetes::params::etcd_user,
   String $etcd_group = $puppernetes::params::etcd_group,
-  String $etcd_config_dir = $puppernetes::params::etcd_config_dir,
+  Integer $etcd_uid = $puppernetes::params::etcd_uid,
+  String $etcd_home = $puppernetes::params::etcd_home,
   String $etcd_ssl_dir = $puppernetes::params::etcd_ssl_dir,
   Integer $etcd_instances = $puppernetes::params::etcd_instances,
   String $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
@@ -23,6 +24,12 @@ class puppernetes (
   String $etcd_k8s_events_version = $puppernetes::params::etcd_k8s_events_version,
   String $vault_version = $puppernetes::params::vault_version,
   String $cloud_provider = $puppernetes::params::cloud_provider,
+  String $k8s_user = $puppernetes::params::k8s_user,
+  String $k8s_group = $puppernetes::params::k8s_group,
+  Integer $k8s_uid = $puppernetes::params::k8s_uid,
+  String $k8s_home = $puppernetes::params::k8s_home,
+  String $k8s_ssl_dir = $puppernetes::params::k8s_ssl_dir,
+  String $helper_path = $puppernetes::params::helper_path,
 ) inherits ::puppernetes::params {
 
 }
