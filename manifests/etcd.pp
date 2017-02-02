@@ -87,8 +87,4 @@ class puppernetes::etcd(
     tls_key_path             => "${::puppernetes::etcd_ssl_dir}/etcd-${::puppernetes::etcd_overlay_ca_name}-key.pem",
     tls_ca_path              => "${::puppernetes::etcd_ssl_dir}/etcd-${::puppernetes::etcd_overlay_ca_name}-ca.pem",
   }
-
-  class { 'prometheus':
-    role => 'etcd',
-  }
 }
