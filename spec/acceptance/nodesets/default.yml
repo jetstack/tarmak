@@ -21,7 +21,7 @@ HOSTS:
   #    box: puppetlabs/centos-7.2-64-puppet
   #    hypervisor: vagrant
   #    ip: 11.123.0.23
-  etcd:
+  etcd-1:
     roles:
       - etcd
     platform: el-7-x86_64
