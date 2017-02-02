@@ -1,12 +1,13 @@
 ---
 HOSTS:
-  #  k8s-master:
-  #    roles:
-  #      - master
-  #    platform: el-7-x86_64
-  #    box: puppetlabs/centos-7.2-64-puppet
-  #    hypervisor: vagrant
-  #    ip: 10.123.0.21
+  k8s-master:
+    roles:
+      - master
+    platform: el-7-x86_64
+    box: puppetlabs/centos-7.2-64-puppet
+    hypervisor: vagrant
+    ip: 10.123.0.21
+    netmask: 255.255.255.0
   #  k8s-worker-1:
   #    roles:
   #      - worker
@@ -32,7 +33,6 @@ HOSTS:
   vault:
     roles:
       - vault
-      - master
     platform: el-7-x86_64
     box: puppetlabs/centos-7.2-64-puppet
     hypervisor: vagrant

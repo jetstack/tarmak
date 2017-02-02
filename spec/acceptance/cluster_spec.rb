@@ -28,7 +28,7 @@ class{'puppernetes':
 }
 
 class{'vault_client':
-  init_token    => 'init-token-etcd',
+  init_token    => 'init-token-#{role}',
   init_role     => '#{cluster_name}-#{role}',
   init_policies => ['#{cluster_name}/#{role}'],
   server_url    => 'http://#{vault_ip}:8200'
@@ -66,6 +66,25 @@ class{'vault_client':
 
       it 'should work with no errors based on the example' do
         hosts_as('etcd').each do |host|
+          apply_manifest_on(host, pp, :catch_failures => true)
+          expect(
+            apply_manifest_on(host, pp, :catch_failures => true).exit_code
+          ).to be_zero
+        end
+      end
+    end
+
+    context 'master' do
+      let :role do
+        'master'
+      end
+
+      let :pp do
+        global_pp + "\nclass{'puppernetes::master':}"
+      end
+
+      it 'should work with no errors based on the example' do
+        hosts_as('master').each do |host|
           apply_manifest_on(host, pp, :catch_failures => true)
           expect(
             apply_manifest_on(host, pp, :catch_failures => true).exit_code

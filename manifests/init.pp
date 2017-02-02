@@ -31,5 +31,5 @@ class puppernetes (
   String $k8s_ssl_dir = $puppernetes::params::k8s_ssl_dir,
   String $helper_path = $puppernetes::params::helper_path,
 ) inherits ::puppernetes::params {
-
+$ipaddress = $::ipaddress
 }

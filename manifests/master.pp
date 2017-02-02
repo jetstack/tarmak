@@ -3,6 +3,8 @@ class puppernetes::master {
   $apiserver_alt_names='kubernetes.default'
   $apiserver_ip_sans='10.254.0.1'
 
+  include ::puppernetes
+
 ###
   #include ::puppernetes::node
 #temporary
@@ -37,7 +39,7 @@ class puppernetes::master {
     ensure  => directory,
     owner   => $::puppernetes::k8s_user,
     group   => $::puppernetes::k8s_group,
-    require => [ User[$::puppernetes::k8s_user], File[$::puppernetes::k8s_home] ],
+    require => [ User[$::puppernetes::k8s_user] ],
   }
 ###
 
@@ -47,7 +49,7 @@ class puppernetes::master {
     role        => "${::puppernetes::cluster_name}/pki/k8s/sign/kube-controller-manager",
     user        =>  $::puppernetes::k8s_user,
     exec_post   =>  [ "${::puppernetes::helper_path}/helper read ${::puppernetes::cluster_name}/secrets/service-accounts key ${::puppernetes::k8s_ssl_dir}/service-account-key.pem",
-                      "chown ${::puppernetes::k8s_user}:${::puppernetes::k8s_group} ${::puppernetes::k8s_ssl_dir/service-account-key.pem}",
+                      "chown ${::puppernetes::k8s_user}:${::puppernetes::k8s_group} ${::puppernetes::k8s_ssl_dir}/service-account-key.pem",
                     ],
     require     => [User[$::puppernetes::k8s_user], Class['vault_client']]
   }
@@ -74,7 +76,7 @@ class puppernetes::master {
   }
 
   vault_client::cert_service { 'etcd-k8s':
-    base_path   => "${::puppernetes::etcd_ssl_path}/etcd-${::puppernetes::etcd_k8s_main_ca_name}",
+    base_path   => "${::puppernetes::etcd_ssl_dir}/etcd-${::puppernetes::etcd_k8s_main_ca_name}",
     common_name => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
     role        => "${::puppernetes::cluster_name}/pki/etcd-k8s/sign/client",
     user        => $::puppernetes::k8s_user,

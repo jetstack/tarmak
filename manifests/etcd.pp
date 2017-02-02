@@ -12,7 +12,7 @@ class puppernetes::etcd(
     owner   => $::puppernetes::etcd_user,
     group   => $::puppernetes::etcd_group,
     mode    => '0750',
-    require => [ File[$::puppernetes::etcd_home], User[$::puppernetes::etcd_user] ],
+    require => [ Class['etcd'] ],
   }
 
   $common_name = "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
@@ -21,7 +21,7 @@ class puppernetes::etcd(
     base_path   => "${::puppernetes::etcd_ssl_dir}/etcd-k8s",
     common_name => $common_name,
     role        => "${puppernetes::cluster_name}/pki/etcd-k8s/sign/server",
-    user        => 'etcd',
+    user        => $::puppernetes::etcd_user,
   }
 
 
