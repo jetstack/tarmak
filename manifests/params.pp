@@ -2,8 +2,16 @@ class puppernetes::params{
   $cluster_name = 'cluster'
   $dns_root = 'jetstack.net'
 
+  ## General
+  $helper_path = '/usr/local/sbin'
+
   ## Kubernetes
   $kubernetes_version = '1.5.1'
+  $k8s_user = 'k8s'
+  $k8s_group = 'k8s'
+  $k8s_uid = 837
+  $k8s_home = '/etc/k8s'
+  $k8s_ssl_dir = '/etc/k8s/ssl'
 
   ## Etcd
 
@@ -34,13 +42,6 @@ class puppernetes::params{
 
   ## Vault
   $vault_version = '0.6.4'
-
-  ## K8S
-  $k8s_user = 'k8s'
-  $k8s_group = 'k8s'
-  $k8s_uid = 837
-  $k8s_home = '/etc/k8s'
-  $k8s_ssl_dir = '/etc/k8s/ssl'
 
   ## Cloud Provider
   $cloud_provider = 'vagrant'
