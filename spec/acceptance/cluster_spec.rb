@@ -46,9 +46,9 @@ class{'vault_client':
 
       # Ensure vault-dev server is setup
       hosts_as('vault').each do |host|
-        host.shell 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-k8s-server.service /etc/systemd/system/vault-k8s-server.service'
-        host.shell 'systemctl daemon-reload'
-        host.shell 'systemctl start vault-k8s-server.service'
+        on host, 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-k8s-server.service /etc/systemd/system/vault-k8s-server.service'
+        on host, 'systemctl daemon-reload'
+        on host, 'systemctl start vault-k8s-server.service'
       end
     end
 
