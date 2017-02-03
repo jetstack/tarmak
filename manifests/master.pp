@@ -43,14 +43,12 @@ class puppernetes::master {
   }
 ###
 
+  $service_account_key_path = "${::puppernetes::k8s_ssl_dir}/service-account-key.pem"
   vault_client::cert_service { 'controller-manager':
     base_path   => "${::puppernetes::k8s_ssl_dir}/kube-controller-manager",
     common_name => "kube-controller-manager.${::puppernetes::cluster_name}",
     role        => "${::puppernetes::cluster_name}/pki/k8s/sign/kube-controller-manager",
     user        =>  $::puppernetes::k8s_user,
-    exec_post   =>  [ "${::puppernetes::helper_path}/helper read ${::puppernetes::cluster_name}/secrets/service-accounts key ${::puppernetes::k8s_ssl_dir}/service-account-key.pem",
-                      "/bin/chown ${::puppernetes::k8s_user}:${::puppernetes::k8s_group} ${::puppernetes::k8s_ssl_dir}/service-account-key.pem",
-                    ],
     require     => [User[$::puppernetes::k8s_user], Class['vault_client']]
   }
 
@@ -62,7 +60,6 @@ class puppernetes::master {
     require     => [User[$::puppernetes::k8s_user], Class['vault_client']]
   }
 
-  $service_account_key_path = "${::puppernetes::k8s_ssl_dir}/service-account-key.pem"
   vault_client::cert_service { 'apiserver':
     base_path   => "${::puppernetes::k8s_ssl_dir}/kube-apiserver",
     common_name => "kube-apiserver.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
@@ -70,10 +67,6 @@ class puppernetes::master {
     user        => $::puppernetes::k8s_user,
     ip_sans     => "${apiserver_ip_sans},${::puppernetes::ipaddress}",
     alt_names   => $apiserver_alt_names,
-    exec_post   =>  [
-      "${::puppernetes::helper_path}/helper read ${::puppernetes::cluster_name}/secrets/service-accounts key ${service_account_key_path}",
-      "chown ${::puppernetes::k8s_user}:${::puppernetes::k8s_group} ${::puppernetes::k8s_ssl_dir}/service-account-key.pem"
-    ],
     require     => [User[$::puppernetes::k8s_user], Class['vault_client']],
   }
 
