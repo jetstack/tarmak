@@ -1,10 +1,6 @@
 require 'spec_helper'
 
 describe 'puppernetes::master' do
-  let(:facts) do
-    @default_facts
-  end
-
   let(:pre_condition) {[
     """
 class{'vault_client': token => 'test-token'}
