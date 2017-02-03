@@ -40,3 +40,4 @@ HOSTS:
     netmask: 255.255.255.0
 CONFIG:
   type: foss
+  trace_limit: 1024
