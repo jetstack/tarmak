@@ -74,9 +74,18 @@ class prometheus::prometheus_deployment (
       ensure  => file,
       content => template('prometheus/kube-state-metrics-deployment.yaml.erb'),
     } ->
-    exec { 'Install kube-state-metrics':
+    exec { 'Install kube-state-metrics deployment':
       command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/kube-state-metrics-deployment.yaml",
       unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/kube-state-metrics-deployment.yaml",
+      require => File["${helper_dir}/kubectl_helper_prom.sh"],
+    }
+    file { "${addon_dir}/kube-state-metrics-service.yaml":
+      ensure  => file,
+      content => template('prometheus/kube-state-metrics-service.yaml.erb'),
+    } ->
+    exec { 'Install kube-state-metrics service':
+      command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/kube-state-metrics-service.yaml",
+      unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/kube-state-metrics-service.yaml",
       require => File["${helper_dir}/kubectl_helper_prom.sh"],
     }
   }
