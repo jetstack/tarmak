@@ -20,7 +20,6 @@ ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/controller-manager \
   --logtostderr=true
 
 Restart=on-failure
-Type=notify
 LimitNOFILE=65536
 
 [Install]

@@ -42,7 +42,6 @@ ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/apiserver \
   --logtostderr=true
 
 Restart=on-failure
-Type=notify
 LimitNOFILE=65536
 
 [Install]
