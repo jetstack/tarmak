@@ -1,0 +1,48 @@
+require 'spec_helper_acceptance'
+
+describe '::kubernetes' do
+  let :cluster_name do
+    'test'
+  end
+
+  context 'test one master, two worker cluster, no tls' do
+    let :global_pp do
+      "
+class{'kubernetes':
+  cluster_name                  => '#{cluster_name}',
+}
+"
+    end
+
+    before(:all) do
+      # assign private ip addresses
+      hosts.each do |host|
+        ip = host.host_hash[:ip]
+        on host, "ifconfig enp0s8 #{ip}/24"
+        on host, "iptables -F INPUT"
+      end
+
+      # Ensure vault-dev server is setup
+      hosts_as('k8s-master').each do |host|
+        on host, "sed -i 's#/etc/puppetlabs/code/modules/##{$module_path}#g' #{$module_path}vault_client/files/vault-k8s-server.service"
+        on host, "ln -sf #{$module_path}vault_client/files/vault-k8s-server.service /etc/systemd/system/vault-k8s-server.service"
+        on host, 'systemctl daemon-reload'
+        on host, 'systemctl start vault-k8s-server.service'
+      end
+    end
+    context '::kubernetes::master' do
+      let :pp do
+        global_pp + "\nclass{'kubernetes::master':}"
+      end
+
+      it 'should setup master without errors based on the example' do
+        hosts_as('k8s-master').each do |host|
+          apply_manifest_on(host, pp, :catch_failures => true)
+          expect(
+            apply_manifest_on(host, pp, :catch_failures => true).exit_code
+          ).to be_zero
+        end
+      end
+    end
+  end
+end

@@ -1,0 +1,27 @@
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+User=<%= scope['kubernetes::user'] %>
+Group=<%= scope['kubernetes::group'] %>
+ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/controller-manager \
+  --v=<%= scope['kubernetes::log_level'] %> \
+<% if scope['kubernetes::cloud_provider'] -%>
+  --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
+<% end -%>
+  --kubeconfig=<%= @kubeconfig_path %> \
+<% if scope['kubernetes::controller_manager::ca_file'] -%>
+  --client-ca-file=<%= scope['kubernetes::controller_manager::ca_file'] %> \
+<% end -%>
+<%- if scope['kubernetes::master::service_account_key_file'] -%>
+  --service-account-key-file=<%= scope['kubernetes::master::service_account_key_file'] %> \
+<% end -%>
+  --logtostderr=true
+
+Restart=on-failure
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

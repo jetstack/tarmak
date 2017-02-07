@@ -1,0 +1,49 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+
+[Service]
+User=<%= scope['kubernetes::user'] %>
+Group=<%= scope['kubernetes::group'] %>
+ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/apiserver \
+  --v=<%= scope['kubernetes::log_level'] %> \
+  --insecure-bind-address=127.0.0.1 \
+<% if scope['kubernetes::cloud_provider'] -%>
+  --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
+<% end -%>
+<% if scope['kubernetes::apiserver::ca_file'] -%>
+  --client-ca-file=<%= scope['kubernetes::apiserver::ca_file'] %> \
+<% end -%>
+<% if scope['kubernetes::apiserver::cert_file'] -%>
+  --tls-cert-file=<%= scope['kubernetes::apiserver::cert_file'] %> \
+<% end -%>
+<% if scope['kubernetes::apiserver::key_file'] -%>
+  --tls-private-key-file=<%= scope['kubernetes::apiserver::key_file'] %> \
+<% end -%>
+  --etcd-servers="<%= @etcd_servers %>" \
+<% @etcd_servers_overrides.each do |override| -%>
+  --etcd-servers-overrides="<%= override %>" \
+<% end -%>
+<%- if scope['kubernetes::apiserver::etcd_ca_file'] -%>
+  --etcd-cafile=<%= scope['kubernetes::apiserver::etcd_ca_file'] %> \
+<% end -%>
+<% if scope['kubernetes::apiserver::etcd_cert_file'] -%>
+  --etcd-certfile=<%= scope['kubernetes::apiserver::etcd_cert_file'] %> \
+<% end -%>
+<% if scope['kubernetes::apiserver::etcd_key_file'] -%>
+  --etcd-keyfile=<%= scope['kubernetes::apiserver::etcd_key_file'] %> \
+<% end -%>
+  --service-cluster-ip-range=<%= scope['kubernetes::master::cluster_ip'] %>/<%= scope['kubernetes::master::cluster_ip_mask'] %> \
+  --admission-control=<%= scope['kubernetes::apiserver::admission_control'].join(',') %> \
+<%- if scope['kubernetes::master::service_account_key_file'] -%>
+  --service-account-key-file=<%= scope['kubernetes::master::service_account_key_file'] %> \
+<% end -%>
+  --logtostderr=true
+
+Restart=on-failure
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
