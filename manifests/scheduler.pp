@@ -4,7 +4,7 @@ class kubernetes::scheduler(
   $cert_file = undef,
   $key_file = undef,
 )  {
-  include ::kubernetes
+  require ::kubernetes
 
   $service_name = 'kube-scheduler'
 
