@@ -16,7 +16,7 @@ class kubernetes::scheduler(
     mode    => '0640',
     owner   => 'root',
     group   => $kubernetes::group,
-    content => template("kubernetes/kubeconfig.erb"),
+    content => template('kubernetes/kubeconfig.erb'),
     notify  => Service["${service_name}.service"],
   }
 
