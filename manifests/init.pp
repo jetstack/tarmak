@@ -18,7 +18,7 @@ class kubernetes (
   $dns_root = undef,
   $cluster_dns = 'cluster.local',
   $cluster_ip = '10.254.0.0',
-  $cluster_uip_mask = 16,
+  $cluster_ip_mask = 16,
   $leader_elect = true,
   $allow_privileged = true,
   $service_account_key_file = undef,

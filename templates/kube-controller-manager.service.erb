@@ -14,8 +14,8 @@ ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/controller-manager \
 <% if scope['kubernetes::controller_manager::ca_file'] -%>
   --client-ca-file=<%= scope['kubernetes::controller_manager::ca_file'] %> \
 <% end -%>
-<%- if scope['kubernetes::master::service_account_key_file'] -%>
-  --service-account-key-file=<%= scope['kubernetes::master::service_account_key_file'] %> \
+<%- if scope['kubernetes::service_account_key_file'] -%>
+  --service-account-key-file=<%= scope['kubernetes::service_account_key_file'] %> \
 <% end -%>
   --logtostderr=true
 
