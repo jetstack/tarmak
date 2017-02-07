@@ -17,7 +17,7 @@ RSpec.configure do |c|
         on host, 'yum install -y rsync'
       end
       logger.notify "ensure rsync exists on #{host}"
-      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'puppernetes', :target_module_path => $module_path)
+      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'kubernetes', :target_module_path => $module_path)
       rsync_to(host, "#{module_root}/spec/fixtures/modules/", $module_path, {})
       on host, "chown -R 0:0 #{$module_path}"
     end

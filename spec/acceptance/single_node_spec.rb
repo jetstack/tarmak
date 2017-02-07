@@ -5,13 +5,14 @@ describe '::kubernetes' do
     'test'
   end
 
-  context 'test one master, two worker cluster, no tls' do
-    let :global_pp do
+  context 'test master and worker on a single node, no tls' do
+    let :pp do
       "
 class{'kubernetes':
-  cluster_name                  => '#{cluster_name}',
+  cluster_name => '#{cluster_name}',
 }
-"
+class{'kubernetes::master':}
+      "
     end
 
     before(:all) do
@@ -23,25 +24,18 @@ class{'kubernetes':
       end
 
       # Ensure vault-dev server is setup
-      hosts_as('k8s-master').each do |host|
-        on host, "sed -i 's#/etc/puppetlabs/code/modules/##{$module_path}#g' #{$module_path}vault_client/files/vault-k8s-server.service"
-        on host, "ln -sf #{$module_path}vault_client/files/vault-k8s-server.service /etc/systemd/system/vault-k8s-server.service"
+      hosts_as('master').each do |host|
+        on host, "ln -sf #{$module_path}kubernetes/files/etcd.service /etc/systemd/system/etcd.service"
         on host, 'systemctl daemon-reload'
-        on host, 'systemctl start vault-k8s-server.service'
+        on host, 'systemctl start etcd.service'
       end
     end
-    context '::kubernetes::master' do
-      let :pp do
-        global_pp + "\nclass{'kubernetes::master':}"
-      end
-
-      it 'should setup master without errors based on the example' do
-        hosts_as('k8s-master').each do |host|
-          apply_manifest_on(host, pp, :catch_failures => true)
-          expect(
-            apply_manifest_on(host, pp, :catch_failures => true).exit_code
-          ).to be_zero
-        end
+    it 'should setup single node without errors based on the example' do
+      hosts_as('k8s-master').each do |host|
+        apply_manifest_on(host, pp, :catch_failures => true)
+        expect(
+          apply_manifest_on(host, pp, :catch_failures => true).exit_code
+        ).to be_zero
       end
     end
   end
