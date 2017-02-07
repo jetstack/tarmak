@@ -36,6 +36,11 @@ class{'kubernetes::master':}
         expect(
           apply_manifest_on(host, pp, :catch_failures => true).exit_code
         ).to be_zero
+
+        # verify master setup
+        result = shell('/opt/bin/kubectl get cs')
+        expect(result.exit_code).to eq(0)
+        expect(result.stdout.scan(/Healthy/m).size).to eq(3)
       end
     end
   end
