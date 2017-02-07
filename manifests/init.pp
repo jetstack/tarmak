@@ -17,9 +17,10 @@ class kubernetes (
   $cloud_provider = undef,
   $cluster_name = undef,
   $dns_root = undef,
-  $cluster_dns = 'cluster.local',
-  $cluster_ip = '10.254.0.0',
-  $cluster_ip_mask = 16,
+  $cluster_dns = undef,
+  $cluster_domain = 'cluster.local',
+  $service_ip_range_network = '10.254.0.0',
+  $service_ip_range_mask = '16',
   $leader_elect = true,
   $allow_privileged = true,
   $service_account_key_file = undef,
@@ -37,6 +38,13 @@ class kubernetes (
     $real_ssl_dir = "${config_dir}/ssl"
   } else {
     $real_ssl_dir = $ssl_dir
+  }
+
+  if $cluster_dns == undef {
+    $_sir_parts = $service_ip_range_network.split('\.')
+    $_cluster_dns = "${_sir_parts[0]}.${_sir_parts[1]}.${_sir_parts[2]}.10"
+  } else {
+    $_cluster_dns = $cluster_dns
   }
 
   $path = defined('$::path') ? {

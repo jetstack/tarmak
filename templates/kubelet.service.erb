@@ -1,0 +1,45 @@
+[Unit]
+Description=Kubernetes Kubelet Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+<% if $container_engine == 'docker' %>
+After=docker.service
+Requires=docker.service
+<% end -%>
+
+[Service]
+WorkingDirectory=<%= @kubelet_dir %>
+ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/kubelet \
+  --v=<%= scope['kubernetes::log_level'] %> \
+  --register-schedulable=<%= @_register_schedulable %> \
+  --register-node=<%= @register_node %> \
+<% if @kubeconfig_path -%>
+  --kubeconfig=<%= @kubeconfig_path %> \
+  --require-kubeconfig \
+<% end -%>
+<% if @_node_labels_string and @_node_labels_string.length > 0 -%>
+  --node-labels=<%= @_node_labels_string %> \
+<% end -%>
+  --cluster-dns=<%= @cluster_dns %> \
+  --cluster-domain=<%= @cluster_domain %> \
+<% if @pod_cidr -%>
+  --pod-cidr=<%= @pod_cidr %> \
+<% end -%>
+<% if @network_plugin -%>
+  --network-plugin=<%= @network_plugin %> \
+<% if @network_plugin_mtu -%>
+  --network-plugin-mtu=<%= @network_plugin_mtu %> \
+<% end -%>
+<% end -%>
+<% if scope['kubernetes::cloud_provider'] -%>
+  --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
+<% end -%>
+<% if @container_runtime -%>
+  --container-runtime=<%= @container_runtime %> \
+<% end -%>
+  --logtostderr=true
+
+Restart=on-failure
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
