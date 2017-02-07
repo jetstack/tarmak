@@ -6,6 +6,7 @@ class kubernetes (
   $dest_dir = $::kubernetes::params::dest_dir,
   $config_dir = $::kubernetes::params::config_dir,
   $systemd_dir = $::kubernetes::params::systemd_dir,
+  $run_dir = $::kubernetes::params::run_dir,
   $uid = $::kubernetes::params::uid,
   $gid = $::kubernetes::params::gid,
   $user = $::kubernetes::params::user,
@@ -66,6 +67,14 @@ class kubernetes (
     owner  => $user,
     group  => $group,
     mode   => '0750',
+  }
+
+  file {$::kubernetes::params::run_dir:
+    ensure  => directory,
+    owner   => $user,
+    group   => $group,
+    mode    => '0750',
+    require => User[$user],
   }
 
 }
