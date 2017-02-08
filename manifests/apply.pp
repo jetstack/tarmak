@@ -26,7 +26,7 @@ define kubernetes::apply(
     owner   => 'root',
     group   => $kubernetes::group,
     content => $manifests_content,
-    notify  => Service["${service_name}.service"],
+    notify  => Exec["${service_name}-trigger"],
   }
 
   file{"${::kubernetes::systemd_dir}/${service_name}.service":
@@ -50,7 +50,7 @@ define kubernetes::apply(
     require => Kubernetes::Symlink['kubectl'],
   } ->
   exec { "${service_name}-trigger":
-    command     => "systemctl start ${service_name}",
+    command     => "systemctl start ${service_name}.service",
     path        => $::kubernetes::path,
     refreshonly => true,
   }

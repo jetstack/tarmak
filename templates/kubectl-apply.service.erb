@@ -7,8 +7,9 @@ After=network.target network-online.target kube-apiserver.service
 User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
 Type=oneshot
+TimeoutStartSec=600
 # Wait for API server to be healthy
-ExecStartPre=<%= @curl_path %> --retry 120 --retry-delay 5 -s -o /dev/null http://localhost:8080/healthz
+ExecStartPre=<%= @curl_path %> --retry 120 --retry-delay 5 -s  http://localhost:8080/healthz
 # Apply template
 ExecStart=<%= @kubectl_path %> apply -f <%= @apply_file %>
 
