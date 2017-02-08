@@ -6,6 +6,7 @@ describe 'kubernetes::master' do
     it { should contain_class('kubernetes::scheduler') }
     it { should contain_class('kubernetes::controller_manager') }
     it { should contain_class('kubernetes::kubelet') }
+    it { should contain_class('kubernetes::dns') }
   end
 
   context 'with disabled kubelet' do

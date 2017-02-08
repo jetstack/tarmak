@@ -71,4 +71,9 @@ class kubernetes::kubelet(
     enable => true,
   }
 
+  # ensure socat installed (for portforward)
+  ensure_resource('package', 'socat',{
+    ensure => 'present',
+  })
+
 }

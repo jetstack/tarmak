@@ -1,0 +1,16 @@
+[Unit]
+Description=kubectl apply <%= @name %>
+Wants=network-online.target
+After=network.target network-online.target kube-apiserver.service
+
+[Service]
+User=<%= scope['kubernetes::user'] %>
+Group=<%= scope['kubernetes::group'] %>
+Type=oneshot
+# Wait for API server to be healthy
+ExecStartPre=<%= @curl_path %> --retry 120 --retry-delay 5 -s -o /dev/null http://localhost:8080/healthz
+# Apply template
+ExecStart=<%= @kubectl_path %> apply -f <%= @apply_file %>
+
+[Install]
+WantedBy=multi-user.target

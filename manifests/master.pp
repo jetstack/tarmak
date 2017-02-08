@@ -5,6 +5,7 @@ class kubernetes::master (
   include ::kubernetes::apiserver
   include ::kubernetes::controller_manager
   include ::kubernetes::scheduler
+  include ::kubernetes::dns
   kubernetes::symlink{'kubectl':}
   if ! $disable_kubelet {
     class{'kubernetes::kubelet':
