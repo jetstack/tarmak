@@ -1,6 +1,7 @@
 # class kubernetes::master
 class kubernetes::master (
   $disable_kubelet = false,
+  $disable_proxy = false,
 ){
   include ::kubernetes::apiserver
   include ::kubernetes::controller_manager
@@ -11,5 +12,8 @@ class kubernetes::master (
     class{'kubernetes::kubelet':
       role => 'master',
     }
+  }
+  if ! $disable_proxy {
+    class{'kubernetes::proxy':}
   }
 }

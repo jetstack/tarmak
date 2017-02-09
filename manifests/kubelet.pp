@@ -42,6 +42,12 @@ class kubernetes::kubelet(
 
   $service_name = 'kubelet'
 
+  if $ca_file == undef {
+    $_ca_file = '/var/run/kubernetes/apiserver.crt'
+  } else {
+    $_ca_file = $ca_file
+  }
+
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-kubelet"
   file{$kubeconfig_path:
     ensure  => file,

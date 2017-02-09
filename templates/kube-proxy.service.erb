@@ -1,0 +1,18 @@
+[Unit]
+Description=Kubernetes Kube-Proxy Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+
+[Service]
+ExecStart=<%= scope['kubernetes::_dest_dir'] %>/proxy \
+  --v=<%= scope['kubernetes::log_level'] %> \
+<% if @kubeconfig_path -%>
+  --kubeconfig=<%= @kubeconfig_path %> \
+<% end -%>
+  --logtostderr=true
+
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

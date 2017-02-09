@@ -2,4 +2,5 @@
 class kubernetes::worker (
 ){
   include ::kubernetes::kubelet
+  include ::kubernetes::proxy
 }

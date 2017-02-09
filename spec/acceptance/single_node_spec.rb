@@ -16,10 +16,12 @@ describe '::kubernetes' do
     let :pp do
       "
 class{'kubernetes':
-  cluster_name => '#{cluster_name}',
+  cluster_name                 => '#{cluster_name}',
+  service_account_key_generate => true,
 }
 class{'kubernetes::master':
   disable_kubelet => true,
+  disable_proxy => true,
 }
 class{'kubernetes::worker':
 }

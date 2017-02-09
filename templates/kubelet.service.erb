@@ -36,6 +36,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @container_runtime -%>
   --container-runtime=<%= @container_runtime %> \
 <% end -%>
+<% if @_ca_file -%>
+  --client-ca-file=<%= @_ca_file %> \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure
