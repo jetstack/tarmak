@@ -8,7 +8,7 @@ Requires=docker.service
 
 [Service]
 WorkingDirectory=<%= @kubelet_dir %>
-ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/kubelet \
+ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
   --register-schedulable=<%= @_register_schedulable %> \
   --register-node=<%= @register_node %> \

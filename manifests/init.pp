@@ -25,6 +25,7 @@ class kubernetes (
   $leader_elect = true,
   $allow_privileged = true,
   $service_account_key_file = undef,
+  $service_account_key_generate = false,
 ) inherits ::kubernetes::params
 {
   $download_url = regsubst(
@@ -33,12 +34,18 @@ class kubernetes (
     $version,
     'G'
   )
-  $real_dest_dir = "${dest_dir}/kubernetes-${version}"
+  $_dest_dir = "${dest_dir}/kubernetes-${version}"
 
   if $ssl_dir == undef {
-    $real_ssl_dir = "${config_dir}/ssl"
+    $_ssl_dir = "${config_dir}/ssl"
   } else {
-    $real_ssl_dir = $ssl_dir
+    $_ssl_dir = $ssl_dir
+  }
+
+  if $service_account_key_file == undef {
+    $_service_account_key_file = "${_ssl_dir}/service-account-key.pem"
+  } else {
+    $_service_account_key_file = $service_account_key_file
   }
 
   if $cluster_dns == undef {
@@ -71,7 +78,7 @@ class kubernetes (
     mode    => '0750',
     require => User[$user],
   } ->
-  file { $real_ssl_dir:
+  file { $_ssl_dir:
     ensure => directory,
     owner  => $user,
     group  => $group,

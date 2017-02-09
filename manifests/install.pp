@@ -2,9 +2,9 @@
 class kubernetes::install {
   include kubernetes
 
-  $hyperkube_path = "${::kubernetes::real_dest_dir}/hyperkube"
+  $hyperkube_path = "${::kubernetes::_dest_dir}/hyperkube"
 
-  file { $::kubernetes::real_dest_dir:
+  file { $::kubernetes::_dest_dir:
     ensure => directory,
     mode   => '0755',
   } ->
@@ -13,7 +13,7 @@ class kubernetes::install {
     creates => $hyperkube_path,
     path    => ['/usr/bin/', '/bin'],
   } ->
-  file {"${::kubernetes::real_dest_dir}/hyperkube":
+  file {"${::kubernetes::_dest_dir}/hyperkube":
     ensure => file,
     mode   => '0755',
     owner  => 'root',

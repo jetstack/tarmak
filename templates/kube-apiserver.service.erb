@@ -6,7 +6,10 @@ After=network.target
 [Service]
 User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
-ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/apiserver \
+<%- if scope['kubernetes::_service_account_key_file'] and scope['kubernetes::service_account_key_generate'] -%>
+ExecStartPre=/bin/sh -c "test -e <%= scope['kubernetes::_service_account_key_file'] %> || { openssl genrsa -out <%= scope['kubernetes::_service_account_key_file'] %> 2048 && chmod 640 <%= scope['kubernetes::_service_account_key_file'] %>; }"
+<% end -%>
+ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --v=<%= scope['kubernetes::log_level'] %> \
   --insecure-bind-address=127.0.0.1 \
 <% if scope['kubernetes::cloud_provider'] -%>
@@ -36,8 +39,8 @@ ExecStart=<%= scope['kubernetes::real_dest_dir'] %>/apiserver \
 <% end -%>
   --service-cluster-ip-range=<%= scope['kubernetes::service_ip_range_network'] %>/<%= scope['kubernetes::service_ip_range_mask'] %> \
   --admission-control=<%= scope['kubernetes::apiserver::admission_control'].join(',') %> \
-<%- if scope['kubernetes::service_account_key_file'] -%>
-  --service-account-key-file=<%= scope['kubernetes::service_account_key_file'] %> \
+<%- if scope['kubernetes::_service_account_key_file'] -%>
+  --service-account-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>
   --logtostderr=true
 

@@ -2,8 +2,8 @@
 define kubernetes::symlink (
 ){
   include kubernetes::install
-  File["${::kubernetes::real_dest_dir}/hyperkube"] ->
-  file { "${::kubernetes::real_dest_dir}/${title}":
+  File["${::kubernetes::_dest_dir}/hyperkube"] ->
+  file { "${::kubernetes::_dest_dir}/${title}":
     ensure => link,
     target => 'hyperkube',
   }
@@ -16,6 +16,6 @@ define kubernetes::symlink (
   File[$::kubernetes::bin_dir] ->
   file { "${::kubernetes::bin_dir}/${title}":
     ensure => link,
-    target => "${::kubernetes::real_dest_dir}/hyperkube",
+    target => "${::kubernetes::_dest_dir}/hyperkube",
   }
 }
