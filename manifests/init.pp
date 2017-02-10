@@ -27,6 +27,7 @@ class vault_client (
   $download_dir = $::vault_client::params::download_dir,
   $dest_dir = $::vault_client::params::dest_dir,
   $server_url = $::vault_client::params::server_url,
+  $systemd_dir = $::vault_client::params::systemd_dir,
   $init_token = undef,
   $init_policies = [],
   $init_role = undef,
@@ -45,6 +46,10 @@ class vault_client (
   }
 
   # paths
+  $path = defined('$::path') ? {
+    default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+    true    => $::path,
+  }
 
   ## build download URL
   $download_url = regsubst(

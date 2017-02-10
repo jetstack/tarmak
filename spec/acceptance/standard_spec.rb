@@ -37,6 +37,11 @@ EOS
 
     it 'requests a client cert from test-ca' do
       pp = <<-EOS
+class {'vault_client':
+  version => '0.6.2',
+  token => 'root-token'
+}
+
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client',
   base_path    => '/tmp/test-cert-client',
@@ -54,6 +59,11 @@ EOS
 
     it 'requests new cert for a changed common_name' do
       pp = <<-EOS
+class {'vault_client':
+  version => '0.6.2',
+  token => 'root-token'
+}
+
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',

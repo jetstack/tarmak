@@ -12,44 +12,41 @@ define vault_client::cert_service (
   Array $exec_post = [],
 )
 {
-  $systemd_dir = '/etc/systemd/system'
-  $service_name = "${name}-cert"
+  require vault_client
 
-  $path = defined('$::path') ? {
-    default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
-    true    => $::path,
-  }
+  $service_name = "${name}-cert"
 
   exec { "${service_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
-    path        => $path,
+    path        => $::vault_client::path,
   }
 
-  file { "${systemd_dir}/${service_name}.service":
+  file { "${::vault_client::systemd_dir}/${service_name}.service":
     ensure  => file,
     content => template('vault_client/cert.service.erb'),
     notify  => Exec["${service_name}-systemctl-daemon-reload"],
   } ~>
   exec { "${service_name}-remove-existing-certs":
     command     => "rm -rf ${base_path}-key.pem ${base_path}-csr.pem",
-    path        => $path,
+    path        => $::vault_client::path,
     refreshonly => true,
     require     => Exec["${service_name}-systemctl-daemon-reload"],
   } ~>
-  exec { "${service_name}-trigger":
-    command     => "systemctl start ${service_name}.service",
-    path        => $path,
-    refreshonly => true,
+  service { "${service_name}.service":
+    ensure  => 'running',
+    enable  => true,
+    require => Exec["${service_name}-systemctl-daemon-reload"],
   }
 
-  file { "${systemd_dir}/${service_name}.timer":
+  file { "${vault_client::systemd_dir}/${service_name}.timer":
     ensure  => file,
     content => template('vault_client/cert.timer.erb'),
     notify  => Exec["${service_name}-systemctl-daemon-reload"],
   } ~>
   service { "${service_name}.timer":
-    ensure => 'running',
-    enable => true,
+    ensure  => 'running',
+    enable  => true,
+    require => Exec["${service_name}-systemctl-daemon-reload"],
   }
 }
