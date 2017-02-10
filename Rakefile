@@ -14,12 +14,12 @@ PuppetLint.configuration.ignore_paths = ['spec/**/*.pp', 'pkg/**/*.pp', 'vendor/
 
 desc 'Prepare module dependecies'
 task :librarian_prepare do
-  #sh 'librarian-puppet install --path=spec/fixtures/modules'
+  sh 'librarian-puppet install --path=spec/fixtures/modules'
 end
 
 desc 'Clean module dependecies'
 task :librarian_clean do
-  #sh 'librarian-puppet clean'
+  sh 'librarian-puppet clean'
 end
 task :spec => :librarian_prepare
 task :clean => :librarian_clean
