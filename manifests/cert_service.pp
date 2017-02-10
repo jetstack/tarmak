@@ -25,7 +25,7 @@ define vault_client::cert_service (
   file { "${::vault_client::systemd_dir}/${service_name}.service":
     ensure  => file,
     content => template('vault_client/cert.service.erb'),
-    notify  => Exec["${service_name}-systemctl-daemon-reload"],
+    notify  => Exec["${service_name}-systemctl-daemon-reload", "${service_name}-trigger"],
   } ~>
   exec { "${service_name}-remove-existing-certs":
     command     => "rm -rf ${base_path}-key.pem ${base_path}-csr.pem",
@@ -34,8 +34,22 @@ define vault_client::cert_service (
     require     => Exec["${service_name}-systemctl-daemon-reload"],
   } ~>
   service { "${service_name}.service":
-    ensure  => 'running',
     enable  => true,
+    require => Exec["${service_name}-systemctl-daemon-reload"],
+  }
+
+  $trigger_cmd = "systemctl start ${service_name}.service"
+
+  exec { "${service_name}-trigger":
+    path        => $::vault_client::path,
+    command     => $trigger_cmd,
+    refreshonly => true,
+    require     => Exec["${service_name}-systemctl-daemon-reload"],
+  } ->
+  exec { "${service_name}-create-if-missing":
+    command => $trigger_cmd,
+    creates => "${base_path}.pem",
+    path    => $::vault_client::path,
     require => Exec["${service_name}-systemctl-daemon-reload"],
   }
 
