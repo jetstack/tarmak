@@ -3,15 +3,21 @@ class puppernetes::params{
   $dns_root = 'jetstack.net'
 
   ## General
+  $dest_dir = '/opt'
+  $bin_dir = '/opt/bin'
   $helper_path = '/usr/local/sbin'
 
   ## Kubernetes
-  $kubernetes_version = '1.5.1'
-  $k8s_user = 'k8s'
-  $k8s_group = 'k8s'
-  $k8s_uid = 837
-  $k8s_home = '/etc/k8s'
-  $k8s_ssl_dir = '/etc/k8s/ssl'
+  $kubernetes_version = '1.5.2'
+  $kubernetes_config_dir = '/etc/kubernetes'
+  $kubernetes_ssl_dir = '/etc/kubernetes/ssl'
+  $kubernetes_user = 'kubernetes'
+  $kubernetes_group = 'kubernetes'
+  $kubernetes_uid = 837
+  $kubernetes_gid = 837
+  $kubernetes_ca_name = 'k8s'
+  $kubernetes_api_secure_port = 6443
+  $kubernetes_api_insecure_port = 8080
 
   ## Etcd
 
@@ -27,23 +33,20 @@ class puppernetes::params{
   # overlay etcd
   $etcd_overlay_client_port= 2359
   $etcd_overlay_peer_port = 2360
-  $etcd_overlay_ca_name = 'overlay'
+  $etcd_overlay_ca_name = 'etcd-overlay'
   $etcd_overlay_version = '2.3.7'
 
   # k8s etcds
   $etcd_k8s_main_client_port = 2379
   $etcd_k8s_main_peer_port = 2380
-  $etcd_k8s_main_ca_name = 'k8s'
+  $etcd_k8s_main_ca_name = 'etcd-k8s'
   $etcd_k8s_main_version = '3.0.15'
   $etcd_k8s_events_client_port = 2369
   $etcd_k8s_events_peer_port = 2370
-  $etcd_k8s_events_ca_name = 'k8s'
+  $etcd_k8s_events_ca_name = 'etcd-k8s'
   $etcd_k8s_events_version = '3.0.15'
 
   ## Vault
   $vault_version = '0.6.4'
-
-  ## Cloud Provider
-  $cloud_provider = 'vagrant'
 
 }

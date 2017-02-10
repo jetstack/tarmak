@@ -33,18 +33,17 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
-  remote: git@git.jetstack.net:puppernetes/module-k8s.git
+  remote: git@git.jetstack.net:puppernetes/module-kubernetes.git
   ref: master
-  sha: d5553ee597589b21a306832581b566cd50b6327c
+  sha: 54fa1d55f798019a3f2f5cc574f64eb5d8a47889
   specs:
-    jetstack-k8s (0.1.0)
-      camptocamp-systemd (< 0.5.0, >= 0.4.0)
+    jetstack-kubernetes (0.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
   remote: git@git.jetstack.net:puppernetes/module-prometheus.git
   ref: master
-  sha: 81a15fed2019f71b659f9dad34665392dc0a297a
+  sha: cf3be27d6afc54a585cf6d12facc1a644536bb4e
   specs:
     jetstack-prometheus (0.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
@@ -52,7 +51,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-vault_client.git
   ref: master
-  sha: 03c71b2e72f332c1f1f184ccd4c3abae6f4b4382
+  sha: c29209ccf1fa7d56ffd9d47caf2b44def9e96930
   specs:
     jetstack-vault_client (0.1.0)
       puppet-archive (< 1.2.0, >= 1.1.2)
@@ -62,7 +61,7 @@ DEPENDENCIES
   jetstack-calico (>= 0)
   jetstack-etcd (>= 0)
   jetstack-etcd_mount (>= 0)
-  jetstack-k8s (>= 0)
+  jetstack-kubernetes (>= 0)
   jetstack-prometheus (>= 0)
   jetstack-vault_client (>= 0)
 
