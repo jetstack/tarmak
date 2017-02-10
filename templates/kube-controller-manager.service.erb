@@ -15,7 +15,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/controller-manager \
 <% end -%>
   --kubeconfig=<%= @kubeconfig_path %> \
 <% if scope['kubernetes::controller_manager::ca_file'] -%>
-  --client-ca-file=<%= scope['kubernetes::controller_manager::ca_file'] %> \
+  --root-ca-file=<%= scope['kubernetes::controller_manager::ca_file'] %> \
 <% end -%>
 <%- if scope['kubernetes::_service_account_key_file'] -%>
   --service-account-private-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
