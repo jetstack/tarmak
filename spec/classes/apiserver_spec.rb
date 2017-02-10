@@ -1,14 +1,24 @@
 require 'spec_helper'
 
 describe 'kubernetes::apiserver' do
+  let :service_file do
+    '/etc/systemd/system/kube-apiserver.service'
+  end
+
   context 'with default values for all parameters' do
     it { should contain_class('kubernetes::apiserver') }
     it do
-      have_service_file = contain_file('/etc/systemd/system/kube-apiserver.service')
-      should have_service_file.with_content(/User=kubernetes/)
-      should have_service_file.with_content(/Group=kubernetes/)
-      should have_service_file.with_content(/#{Regexp.escape('--etcd-servers="http://127.0.0.1:2379"')}/)
-      should have_service_file.with_content(%r{--service-cluster-ip-range=10\.254\.0\.0/16})
+      should contain_file(service_file).with_content(/User=kubernetes/)
+      should contain_file(service_file).with_content(/Group=kubernetes/)
+      should contain_file(service_file).with_content(/#{Regexp.escape('--etcd-servers="http://127.0.0.1:2379"')}/)
+      should contain_file(service_file).with_content(%r{--service-cluster-ip-range=10\.254\.0\.0/16})
     end
+
+  context 'with etcd override for events' do
+    let(:params) { {'etcd_events_port' => 1234 } }
+    it 'should have an etcd overrides line' do
+      should contain_file(service_file).with_content(/#{Regexp.escape('--etcd-servers-overrides="/events#http://127.0.0.1:1234"')}/)
+    end
+  end
   end
 end

@@ -1,7 +1,7 @@
 # class kubernetes::master
 class kubernetes::apiserver(
   $admission_control = ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota'],
-  $etcd_nodes = ['127.0.0.1'],
+  $etcd_nodes = ['localhost'],
   $etcd_port = 2379,
   $etcd_events_port = undef,
   $etcd_ca_file = undef,
@@ -23,7 +23,17 @@ class kubernetes::apiserver(
 
   $_etcd_urls = map($etcd_nodes) |$node| { "${etcd_proto}://${node}:${etcd_port}" }
   $etcd_servers = $_etcd_urls.join(',')
-  $etcd_servers_overrides = []
+
+  if $etcd_events_port == undef {
+    $etcd_servers_overrides = []
+  }
+  else {
+    $_etcd_events_urls = map($etcd_nodes) |$node| { "${etcd_proto}://${node}:${etcd_events_port}" }
+    $etcd_events_servers = $_etcd_events_urls.join(',')
+    $etcd_servers_overrides = [
+      "/events#${etcd_events_servers}",
+    ]
+  }
 
   kubernetes::symlink{'apiserver':} ->
   file{"${::kubernetes::systemd_dir}/${service_name}.service":
