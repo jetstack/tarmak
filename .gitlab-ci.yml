@@ -25,7 +25,7 @@ spec:
   - bundle install --path /cache
   - bundle exec rake spec
 
-beaker-default:
+acceptance::beaker::centos:
   stage: acceptance
   tags:
   - ruby-2.3
@@ -33,6 +33,18 @@ beaker-default:
   script:
   - bundle install
   - bundle exec rake beaker:default
+  only:
+  - master
+  - tags
+
+acceptance::beaker::ubuntu:
+  stage: acceptance
+  tags:
+  - ruby-2.3
+  - vagrant
+  script:
+  - bundle install
+  - bundle exec rake beaker:ubuntu_1604_single_node
   only:
   - master
   - tags

@@ -1,7 +1,3 @@
-# == Class vault_client::install
-#
-# This class is called from vault_client for install.
-#
 class vault_client::install {
   $vault_bin = "${::vault_client::_dest_dir}/vault"
 
@@ -10,10 +6,20 @@ class vault_client::install {
     before => File[$vault_bin],
   }
 
-  package { 'epel-release': ensure => present} ->
-  package { 'jq': ensure => present }
+  if $::osfamily == 'RedHat' {
+    ensure_resource('package', 'epel-release',{
+      ensure => present
+    })
+    Package['epel-release'] -> Package['jq']
+  }
 
-  package { 'unzip': ensure => present} ->
+  ensure_resource('package', 'jq',{
+    ensure => present
+  })
+
+  ensure_resource('package', 'unzip',{
+    ensure => present
+  })
 
   archive { "${::vault_client::download_dir}/vault.zip":
     ensure       => present,
@@ -22,6 +28,7 @@ class vault_client::install {
     source       => $::vault_client::download_url,
     cleanup      => true,
     creates      => $vault_bin,
+    require      => Package['unzip'],
   } ->
 
   file { $vault_bin:

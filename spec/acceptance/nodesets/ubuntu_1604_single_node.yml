@@ -1,10 +1,10 @@
 ---
 HOSTS:
-  centos-72-x64:
+  ubuntu-1604-x64:
     roles:
       - master
-    platform: el-7-x86_64
-    box: centos/7
+    platform: ubuntu-16.04-amd64
+    box: puppetlabs/ubuntu-16.04-64-nocm
     hypervisor: vagrant
 CONFIG:
   type: foss

@@ -3,9 +3,17 @@ require 'spec_helper_acceptance'
 describe '::vault_client' do
 
   before(:all) do
-    shell 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.service /etc/systemd/system/vault-dev-server.service'
-    shell 'systemctl daemon-reload'
-    shell 'systemctl start vault-dev-server.service'
+    hosts.each do |host|
+      on host, "iptables -F INPUT"
+      if fact_on(host, 'osfamily') == 'RedHat'
+        on(host, 'yum install -y unzip')
+      elsif fact_on(host, 'osfamily') == 'Debian'
+        on(host, 'apt-get install -y unzip')
+      end
+      on host, 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.service /etc/systemd/system/vault-dev-server.service'
+      on host, 'systemctl daemon-reload'
+      on host, 'systemctl start vault-dev-server.service'
+    end
   end
 
   context 'vault with non refreshable token' do
