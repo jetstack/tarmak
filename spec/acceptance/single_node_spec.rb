@@ -10,6 +10,10 @@ describe '::pupperentes::single_node' do
     "test-#{SecureRandom.hex}"
   end
 
+  let :kubernetes_version do
+    ENV['KUBERNETES_VERSION'] || '1.5.2'
+  end
+
   context 'single node with master + worker components' do
     let :cluster_name do
       'test'
@@ -26,7 +30,8 @@ class{'puppernetes':
   cluster_name                  => '#{cluster_name}',
   etcd_instances                => 1,
   etcd_advertise_client_network => '10.0.0.0/8',
-  kubernetes_api_url => 'https://10.0.2.15:6443'
+  kubernetes_api_url            => 'https://10.0.2.15:6443',
+  kubernetes_version            => '#{kubernetes_version}',
 }
 
 class{'puppernetes::single_node':}
@@ -39,13 +44,23 @@ class{'puppernetes::single_node':}
         # reset firewall
         on host, "iptables -F INPUT"
 
+        # make sure curl unzip vim is installed
+        if fact_on(host, 'osfamily') == 'RedHat'
+          on(host, 'yum install -y unzip docker')
+        elsif fact_on(host, 'osfamily') == 'Debian'
+          on(host, 'apt-get install -y unzip apt-transport-https ca-certificates curl python-software-properties')
+          on(host, 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D')
+          on(host, 'echo "deb https://apt.dockerproject.org/repo debian-jessie main" > /etc/apt/sources.list.d/docker.list')
+          on(host, 'apt-get update')
+          on(host, 'apt-get -y install docker-engine')
+        end
+
         # setup develop vault server
         on host, 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-k8s-server.service /etc/systemd/system/vault-k8s-server.service'
         on host, 'systemctl daemon-reload'
         on host, 'systemctl start vault-k8s-server.service'
 
-        # setup docker
-        on host, 'yum install -y docker'
+        # start docker
         on host, 'systemctl start docker.service'
       end
     end

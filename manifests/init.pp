@@ -61,5 +61,6 @@ class puppernetes (
     uid            => $kubernetes_uid,
     group          => $kubernetes_group,
     gid            => $kubernetes_gid,
+    version        => $kubernetes_version,
   }
 }

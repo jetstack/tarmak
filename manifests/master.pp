@@ -11,7 +11,7 @@ class puppernetes::master(
   Class['vault_client'] -> Class['puppernetes::master']
 
   $service_account_key_path = "${::puppernetes::kubernetes_ssl_dir}/service-account-key.pem"
-  vault_client::secret_service { 'service-account-key':
+  vault_client::secret_service { 'kube-service-account-key':
     field       => 'key',
     secret_path => "${::puppernetes::cluster_name}/secrets/service-accounts",
     user        => $::puppernetes::kubernetes_user,
@@ -62,17 +62,31 @@ class puppernetes::master(
       etcd_cert_file   => "${etcd_apiserver_base_path}.pem",
       etcd_port        => $::puppernetes::etcd_k8s_main_client_port,
       etcd_events_port => $::puppernetes::etcd_k8s_events_client_port,
+      systemd_after    => ['kube-apiserver-cert.service', 'kube-service-account-key-secret.service'],
+      systemd_requires => ['kube-apiserver-cert.service', 'kube-service-account-key-secret.service'],
   }
+
   class { 'kubernetes::controller_manager':
-      ca_file   => "${controller_manager_base_path}-ca.pem",
-      key_file  => "${controller_manager_base_path}-key.pem",
-      cert_file => "${controller_manager_base_path}.pem",
+      ca_file          => "${controller_manager_base_path}-ca.pem",
+      key_file         => "${controller_manager_base_path}-key.pem",
+      cert_file        => "${controller_manager_base_path}.pem",
+      systemd_after    => ['kube-controller-manager-cert.service', 'kube-service-account-key-secret.service'],
+      systemd_requires => ['kube-controller-manager-cert.service', 'kube-service-account-key-secret.service'],
   }
+
   class { 'kubernetes::scheduler':
-      ca_file   => "${scheduler_base_path}-ca.pem",
-      key_file  => "${scheduler_base_path}-key.pem",
-      cert_file => "${scheduler_base_path}.pem",
+      ca_file          => "${scheduler_base_path}-ca.pem",
+      key_file         => "${scheduler_base_path}-key.pem",
+      cert_file        => "${scheduler_base_path}.pem",
+      systemd_after    => ['kube-scheduler-cert.service'],
+      systemd_requires => ['kube-scheduler-cert.service'],
   }
+
+  Service['kube-scheduler-cert.service'] -> Service['kube-scheduler.service']
+  Service['kube-controller-manager-cert.service'] -> Service['kube-controller-manager.service']
+  Service['kube-apiserver-cert.service'] -> Service['kube-apiserver.service']
+  Service['kube-service-account-key-secret.service'] -> Service['kube-controller-manager.service']
+  Service['kube-service-account-key-secret.service'] -> Service['kube-apiserver.service']
 
   class { 'kubernetes::master':
     disable_kubelet => $disable_kubelet,

@@ -18,7 +18,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-etcd.git
   ref: master
-  sha: 0eb063a9f29fb24dc6514ff4444fc5cad3b877ec
+  sha: 6ba27f8298303c3192c86d4524ee20655c4854be
   specs:
     jetstack-etcd (0.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
@@ -35,7 +35,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-kubernetes.git
   ref: master
-  sha: 54fa1d55f798019a3f2f5cc574f64eb5d8a47889
+  sha: 322414959b44927af2c2a6234584e153cdcbffd3
   specs:
     jetstack-kubernetes (0.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
@@ -51,7 +51,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-vault_client.git
   ref: master
-  sha: c29209ccf1fa7d56ffd9d47caf2b44def9e96930
+  sha: 2ede3b18ba98a7551329768966e4c42c0e49801a
   specs:
     jetstack-vault_client (0.1.0)
       puppet-archive (< 1.2.0, >= 1.1.2)

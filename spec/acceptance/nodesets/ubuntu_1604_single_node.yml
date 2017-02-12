@@ -5,8 +5,8 @@ HOSTS:
       - master
       - k8s-master
       - k8s-worker
-    platform: el-7-x86_64
-    box: centos/7
+    platform: ubuntu-16.04-amd64
+    box: puppetlabs/ubuntu-16.04-64-nocm
     hypervisor: vagrant
 CONFIG:
   type: foss

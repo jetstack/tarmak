@@ -3,7 +3,9 @@ require 'beaker-rspec'
 $module_path = '/etc/puppetlabs/code/modules/'
 
 # Install Puppet on all hosts
-install_puppet_on(hosts, options)
+install_puppet_agent_on(hosts, {
+  :puppet_agent_version          => '1.9.1',
+})
 
 RSpec.configure do |c|
   module_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
