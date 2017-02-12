@@ -22,6 +22,14 @@ function download {
 }
 
 function config {
+    while true; do
+        STATUS=$(curl -s -o /dev/null -w '%{http_code}' "${VAULT_ADDR}/v1/sys/health" || true)
+        if [ "${STATUS}" -eq 200 ]; then
+            break
+        fi
+        sleep 1
+    done
+
     path="test-ca"
     description="Test CA"
     ${VAULT_CMD} mount -path "${path}" -description "${description}" pki

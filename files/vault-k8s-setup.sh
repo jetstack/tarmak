@@ -9,6 +9,15 @@ VAULT_INIT_TOKEN_MASTER=${VAULT_INIT_TOKEN_MASTER:-init-token-master}
 VAULT_INIT_TOKEN_WORKER=${VAULT_INIT_TOKEN_WORKER:-init-token-worker}
 VAULT_INIT_TOKEN_ETCD=${VAULT_INIT_TOKEN_ETCD:-init-token-etcd}
 
+# wait for healthy vault
+while true; do
+    STATUS=$(curl -s -o /dev/null -w '%{http_code}' "${VAULT_ADDR}/v1/sys/health" || true)
+    if [ "${STATUS}" -eq 200 ]; then
+        break
+    fi
+    sleep 1
+done
+
 # create a CA per component (not intermediate)
 for component in ${COMPONENTS}; do
     path="${BASE_PATH}/${component}"
