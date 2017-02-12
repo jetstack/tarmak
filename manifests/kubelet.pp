@@ -2,6 +2,7 @@
 class kubernetes::kubelet(
   $role = 'worker',
   $container_runtime = 'docker',
+  $kubelet_dir = '/var/lib/kubelet',
   $network_plugin = undef,
   $network_plugin_mtu = 1460,
   $allow_privileged = true,
@@ -46,6 +47,34 @@ class kubernetes::kubelet(
     $_ca_file = '/var/run/kubernetes/apiserver.crt'
   } else {
     $_ca_file = $ca_file
+  }
+
+
+  $seltype = 'svirt_sandbox_file_t'
+  file{$kubelet_dir:
+    ensure  => 'directory',
+    mode    => '0750',
+    owner   => 'root',
+    group   => 'root',
+    seltype => $seltype,
+  }
+
+  file{"${kubelet_dir}/pods":
+    ensure  => 'directory',
+    mode    => '0750',
+    owner   => 'root',
+    group   => 'root',
+    seltype => $seltype,
+    require => File[$kubelet_dir],
+  }
+
+  file{"${kubelet_dir}/plugins":
+    ensure  => 'directory',
+    mode    => '0750',
+    owner   => 'root',
+    group   => 'root',
+    seltype => $seltype,
+    require => File[$kubelet_dir],
   }
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-kubelet"
