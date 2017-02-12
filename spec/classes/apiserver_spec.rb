@@ -8,6 +8,7 @@ describe 'kubernetes::apiserver' do
   context 'with default values for all parameters' do
     it { should contain_class('kubernetes::apiserver') }
     it do
+      should contain_file(service_file).with_content(/After=network.target/)
       should contain_file(service_file).with_content(/User=kubernetes/)
       should contain_file(service_file).with_content(/Group=kubernetes/)
       should contain_file(service_file).with_content(/#{Regexp.escape('--etcd-servers="http://localhost:2379"')}/)

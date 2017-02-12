@@ -1,6 +1,7 @@
 [Unit]
 Description=Kubernetes Scheduler Plugin
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+<%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
 User=<%= scope['kubernetes::user'] %>

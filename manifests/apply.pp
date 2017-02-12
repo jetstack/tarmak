@@ -3,6 +3,10 @@ define kubernetes::apply(
   $manifests = [],
   $force = false,
   $format = 'yaml',
+  $systemd_wants = [],
+  $systemd_requires = [],
+  $systemd_after = [],
+  $systemd_before = [],
 ){
   require ::kubernetes
 
@@ -12,6 +16,12 @@ define kubernetes::apply(
 
   ensure_resource('kubernetes::symlink', 'kubectl',{})
 
+  $service_apiserver = 'kube-apiserver.service'
+
+  $_systemd_wants = $systemd_wants
+  $_systemd_requires = [$service_apiserver] + $systemd_requires
+  $_systemd_after = ['network.target', $service_apiserver] + $systemd_after
+  $_systemd_before = $systemd_before
 
   $service_name = "kubectl-apply-${name}"
   $manifests_content = $manifests.join("\n---\n")

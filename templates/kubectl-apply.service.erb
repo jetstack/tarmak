@@ -1,7 +1,7 @@
 [Unit]
 Description=kubectl apply <%= @name %>
-Wants=network-online.target
-After=network.target network-online.target kube-apiserver.service
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+<%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
 User=<%= scope['kubernetes::user'] %>

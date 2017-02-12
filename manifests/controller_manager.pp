@@ -3,8 +3,17 @@ class kubernetes::controller_manager(
   $ca_file = undef,
   $cert_file = undef,
   $key_file = undef,
+  $systemd_wants = [],
+  $systemd_requires = [],
+  $systemd_after = [],
+  $systemd_before = [],
 )  {
   require ::kubernetes
+
+  $_systemd_wants = $systemd_wants
+  $_systemd_requires = $systemd_requires
+  $_systemd_after = ['network.target'] + $systemd_after
+  $_systemd_before = $systemd_before
 
   $service_name = 'kube-controller-manager'
 
