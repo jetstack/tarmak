@@ -1,6 +1,6 @@
 # class kubernetes::master
 class kubernetes::apiserver(
-  $admission_control = ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota'],
+  $admission_control = undef,
   $etcd_nodes = ['localhost'],
   $etcd_port = 2379,
   $etcd_events_port = undef,
@@ -21,6 +21,19 @@ class kubernetes::apiserver(
   $_systemd_requires = $systemd_requires
   $_systemd_after = ['network.target'] + $systemd_after
   $_systemd_before = $systemd_before
+
+  # Admission controllers
+  if $admission_control == undef {
+    # No DefaultStorageClass controller pre 1.4
+    if versioncmp($::kubernetes::version, '1.4.0') >= 0 {
+      $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota']
+    } else {
+      $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'ResourceQuota']
+
+    }
+  } else {
+    $_admission_control = $admission_control
+  }
 
   $service_name = 'kube-apiserver'
 

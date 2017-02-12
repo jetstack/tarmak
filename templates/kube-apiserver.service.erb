@@ -38,7 +38,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --etcd-keyfile=<%= scope['kubernetes::apiserver::etcd_key_file'] %> \
 <% end -%>
   --service-cluster-ip-range=<%= scope['kubernetes::service_ip_range_network'] %>/<%= scope['kubernetes::service_ip_range_mask'] %> \
-  --admission-control=<%= scope['kubernetes::apiserver::admission_control'].join(',') %> \
+  --admission-control=<%= @_admission_control.join(',') %> \
 <%- if scope['kubernetes::_service_account_key_file'] -%>
   --service-account-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>

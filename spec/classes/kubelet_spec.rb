@@ -59,7 +59,7 @@ describe 'kubernetes::kubelet' do
       it { should_not contain_file(service_file).with_content(%r{--client-ca-file=/tmp/ca\.pem}) }
     end
 
-    context 'versions >= 1.5' do
+    context 'versions 1.5+' do
       let(:pre_condition) {[
         """
         class{'kubernetes': version => '1.5.0'}
