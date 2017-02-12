@@ -36,7 +36,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @container_runtime -%>
   --container-runtime=<%= @container_runtime %> \
 <% end -%>
-<% if @_ca_file -%>
+<% if @_ca_file and scope.function_versioncmp([scope['kubernetes::version'], '1.5.0']) >= 0 -%>
   --client-ca-file=<%= @_ca_file %> \
 <% end -%>
   --logtostderr=true

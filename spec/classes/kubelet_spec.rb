@@ -47,4 +47,27 @@ describe 'kubernetes::kubelet' do
       should have_service_file.with_content(/--node-labels=role=worker/)
     end
   end
+
+  context 'flag --client-ca-file' do
+    let(:params) { {'ca_file' => '/tmp/ca.pem' } }
+    context 'versions before 1.5' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.4.8'}
+        """
+      ]}
+      it { should_not contain_file(service_file).with_content(%r{--client-ca-file=/tmp/ca\.pem}) }
+    end
+
+    context 'versions >= 1.5' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.5.0'}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(%r{--client-ca-file=/tmp/ca\.pem}) }
+    end
+  end
+
+
 end
