@@ -8,8 +8,9 @@ User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
 Type=oneshot
 TimeoutStartSec=600
+RemainAfterExit=yes
 # Wait for API server to be healthy
-ExecStartPre=<%= @curl_path %> --retry 120 --retry-delay 5 -s  http://localhost:8080/healthz
+ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
 # Apply template
 ExecStart=<%= @kubectl_path %> apply -f <%= @apply_file %>
 

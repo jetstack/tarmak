@@ -13,6 +13,7 @@ class kubernetes (
   $user = $::kubernetes::params::user,
   $group = $::kubernetes::params::group,
   $master_url = $::kubernetes::params::master_url,
+  $curl_path = $::kubernetes::params::curl_path,
   $ssl_dir = undef,
   $source = undef,
   $cloud_provider = undef,

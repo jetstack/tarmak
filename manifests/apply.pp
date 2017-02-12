@@ -27,8 +27,7 @@ define kubernetes::apply(
   $manifests_content = $manifests.join("\n---\n")
   $apply_file = "${::kubernetes::apply_dir}/${name}.${format}"
   $kubectl_path = "${::kubernetes::bin_dir}/kubectl"
-  $curl_path = '/bin/curl'
-
+  $curl_path = $::kubernetes::curl_path
 
   file{$apply_file:
     ensure  => file,
@@ -36,7 +35,7 @@ define kubernetes::apply(
     owner   => 'root',
     group   => $kubernetes::group,
     content => $manifests_content,
-    notify  => Exec["${service_name}-trigger"],
+    notify  => Service["${service_name}.service"],
   }
 
   file{"${::kubernetes::systemd_dir}/${service_name}.service":
@@ -47,7 +46,6 @@ define kubernetes::apply(
     content => template('kubernetes/kubectl-apply.service.erb'),
     notify  => [
       Service["${service_name}.service"],
-      Exec["${service_name}-trigger"],
     ]
   } ~>
   exec { "${service_name}-daemon-reload":
@@ -56,12 +54,11 @@ define kubernetes::apply(
     refreshonly => true,
   } ->
   service{ "${service_name}.service":
+    ensure  => 'running',
     enable  => true,
-    require => Kubernetes::Symlink['kubectl'],
-  } ->
-  exec { "${service_name}-trigger":
-    command     => "systemctl start ${service_name}.service",
-    path        => $::kubernetes::path,
-    refreshonly => true,
+    require => [
+      Kubernetes::Symlink['kubectl'],
+      Service[$service_apiserver],
+    ]
   }
 }
