@@ -61,6 +61,12 @@ class kubernetes (
       true    => $::path
   }
 
+  $nologin = $::osfamily ? {
+    'RedHat' => '/sbin/nologin',
+    'Debian' => '/usr/sbin/nologin',
+    default  => '/usr/sbin/nologin',
+  }
+
   group { $group:
     ensure => present,
     gid    => $gid,
@@ -68,8 +74,8 @@ class kubernetes (
   user { $user:
     ensure => present,
     uid    => $uid,
-    shell  => '/sbin/nologin',
     home   => $config_dir,
+    shell  => $nologin,
   }
 
   file { $config_dir:
