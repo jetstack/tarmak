@@ -25,7 +25,7 @@ spec:
   - bundle install --path /cache
   - bundle exec rake spec
 
-acceptance::beaker::centos:
+beaker::centos:
   stage: acceptance
   tags:
   - ruby-2.3
@@ -37,7 +37,7 @@ acceptance::beaker::centos:
   - master
   - tags
 
-acceptance::beaker::ubuntu:
+beaker::ubuntu:
   stage: acceptance
   tags:
   - ruby-2.3
