@@ -8,6 +8,12 @@ class etcd(
   $group = $::etcd::params::group,
 ) inherits ::etcd::params {
 
+  $nologin = $::osfamily ? {
+    'RedHat' => '/sbin/nologin',
+    'Debian' => '/usr/sbin/nologin',
+    default  => '/usr/sbin/nologin',
+  }
+
   group { $group:
     ensure => present,
     gid    => $gid,
@@ -15,7 +21,7 @@ class etcd(
   user { $user:
     ensure => present,
     uid    => $uid,
-    shell  => '/sbin/nologin',
+    shell  => $nologin,
     home   => $data_dir,
   }
 
