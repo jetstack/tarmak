@@ -14,7 +14,11 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --register-node=<%= @register_node %> \
 <% if @kubeconfig_path -%>
   --kubeconfig=<%= @kubeconfig_path %> \
+<% if scope.function_versioncmp([scope['kubernetes::version'], '1.4.0']) >= 0 -%>
   --require-kubeconfig \
+<% else -%>
+  --api-servers=<%= scope['kubernetes::master_url'] %> \
+<% end -%>
 <% end -%>
 <% if @_node_labels_string and @_node_labels_string.length > 0 -%>
   --node-labels=<%= @_node_labels_string %> \

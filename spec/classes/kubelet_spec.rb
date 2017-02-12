@@ -47,6 +47,34 @@ describe 'kubernetes::kubelet' do
       should have_service_file.with_content(/--node-labels=role=worker/)
     end
   end
+  
+  context 'apiservers config --api-servers vs --kubeconfig' do
+    let(:params) { {'ca_file' => '/tmp/ca.pem' } }
+    context 'versions before 1.4' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.3.8'}
+        """
+      ]}
+      it do
+        should_not contain_file(service_file).with_content(%r{--require-kubeconfig})
+        should contain_file(service_file).with_content(%r{--api-servers=http://127\.0\.0\.1:8080})
+      end
+    end
+
+    context 'versions 1.4+' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.4.0'}
+        """
+      ]}
+      it do
+        should contain_file(service_file).with_content(%r{--require-kubeconfig})
+        should_not contain_file(service_file).with_content(%r{--api-servers=})
+      end
+    end
+  end
+
 
   context 'flag --client-ca-file' do
     let(:params) { {'ca_file' => '/tmp/ca.pem' } }
