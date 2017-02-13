@@ -1,4 +1,5 @@
 require 'beaker-rspec'
+require 'rspec/retry'
 
 $module_path = '/etc/puppetlabs/code/modules/'
 

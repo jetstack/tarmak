@@ -73,5 +73,39 @@ class{'puppernetes::single_node':}
         ).to be_zero
       end
     end
+
+    it 'should setup a healthy master', :retry => 20, :retry_wait => 5 do
+      # verify master setup
+      result = shell('/opt/bin/kubectl version')
+      logger.notify "kubectl version:\n#{result.stdout}"
+      expect(result.exit_code).to eq(0)
+      result = shell('/opt/bin/kubectl get cs')
+      logger.notify "kubectl get cs:\n#{result.stdout}"
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout.scan(/Healthy/m).size).to be >= 2
+    end
+
+    it 'should have a ready node', :retry => 20, :retry_wait => 5 do
+      result = shell('/opt/bin/kubectl get nodes')
+      logger.notify "kubectl get nodes:\n#{result.stdout}"
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout.scan(/Ready/m).size).to eq(1)
+    end
+
+    it 'should have two ready dns pods', :retry => 20, :retry_wait => 5 do
+      result = shell('/opt/bin/kubectl get pods --namespace kube-system -l k8s-app=kube-dns')
+      logger.notify "kubectl get pods:\n#{result.stdout}"
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout.scan(/Running/m).size).to eq(2)
+      expect(result.stdout.scan(/4\/4/m).size).to eq(2)
+    end
+
+    it 'should have a ready dns autoscaler pod', :retry => 20, :retry_wait => 5 do
+      result = shell('/opt/bin/kubectl get pods --namespace kube-system -l k8s-app=kube-dns-autoscaler')
+      logger.notify "kubectl get pods:\n#{result.stdout}"
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout.scan(/Running/m).size).to eq(1)
+      expect(result.stdout.scan(/1\/1/m).size).to eq(1)
+    end
   end
 end
