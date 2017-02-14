@@ -11,7 +11,9 @@ ExecStartPre=/bin/sh -c "test -e <%= scope['kubernetes::_service_account_key_fil
 <% end -%>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --v=<%= scope['kubernetes::log_level'] %> \
-  --insecure-bind-address=127.0.0.1 \
+<% if @insecure_bind_address -%>
+  --insecure-bind-address=<%= @insecure_bind_address %> \
+<% end -%>
 <% if scope['kubernetes::cloud_provider'] -%>
   --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
 <% end -%>

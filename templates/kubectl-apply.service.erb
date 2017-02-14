@@ -8,6 +8,7 @@ User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
 Type=oneshot
 TimeoutStartSec=600
+Environment=KUBECONFIG=<%= scope['kubernetes::kubectl::kubeconfig_path'] %>
 RemainAfterExit=yes
 # Wait for API server to be healthy
 ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"

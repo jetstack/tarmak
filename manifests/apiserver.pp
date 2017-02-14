@@ -14,6 +14,7 @@ class kubernetes::apiserver(
   $systemd_requires = [],
   $systemd_after = [],
   $systemd_before = [],
+  $insecure_bind_address = undef,
 )  {
   require ::kubernetes
 

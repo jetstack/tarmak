@@ -9,12 +9,11 @@ define kubernetes::apply(
   $systemd_before = [],
 ){
   require ::kubernetes
+  require ::kubernetes::kubectl
 
   if ! defined(Class['kubernetes::apiserver']) {
     fail('This defined type can only be used on the kubernetes master')
   }
-
-  ensure_resource('kubernetes::symlink', 'kubectl',{})
 
   $service_apiserver = 'kube-apiserver.service'
 
@@ -57,7 +56,6 @@ define kubernetes::apply(
     ensure  => 'running',
     enable  => true,
     require => [
-      Kubernetes::Symlink['kubectl'],
       Service[$service_apiserver],
     ]
   }

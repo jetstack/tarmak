@@ -23,6 +23,16 @@ describe 'kubernetes::apiserver' do
     end
   end
 
+  context 'insecure bind address' do
+    context 'is specified' do
+      let(:params) { {'insecure_bind_address' => '127.0.0.1' } }
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--insecure-bind-address=127.0.0.1')}/)}
+    end
+    context 'not specified' do
+      it { should_not contain_file(service_file).with_content(/#{Regexp.escape('--insecure-bind-address=')}/)}
+    end
+  end
+
   context 'admission controllers' do
     context 'customized' do
       let(:params) { {'admission_control' => ['Test1'] } }
