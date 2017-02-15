@@ -19,7 +19,6 @@ class calico::params {
   $policy_controller_image = 'calico/kube-policy-controller'
   $etcd_cert_path = '/etc/etcd/ssl'
   $etcd_cert_base_name = 'etcd-overlay'
-  $etcd_overlay_port = 2359
   $kubectl_bin = '/usr/bin/kubectl'
   $kubeconfig = '/etc/kubernetes/kubeconfig-kubelet'
   $tls = false
@@ -27,8 +26,10 @@ class calico::params {
   $aws_filter_hack = true
 
   if defined('::puppernetes') {
-    $etcd_cluster = $::puppernetes::etcd_cluster
+    $etcd_cluster = $::puppernetes::_etcd_cluster
+    $etcd_overlay_port = $::puppernetes::etcd_overlay_client_port
   } else {
     $etcd_cluster = undef
+    $etcd_overlay_port = 2359
   }
 }
