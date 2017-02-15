@@ -1,7 +1,4 @@
 class prometheus::params {
-  $etcd_k8s_port = 2379
-  $etcd_events_port = 2369
-  $etcd_overlay_port = 2359
   $blackbox_download_url = 'https://github.com/jetstack-experimental/blackbox_exporter/releases/download/poc-proxy/'
   $blackbox_dest_dir = '/usr/local/sbin'
   $blackbox_config_dir = '/etc/blackbox'
@@ -21,4 +18,16 @@ class prometheus::params {
   $prometheus_use_module_rules = true
   $prometheus_install_state_metrics = true
   $prometheus_install_node_exporter = true
+
+  if defined('::puppernetes') {
+    $etcd_cluster = $::puppernetes::_etcd_cluster
+    $etcd_k8s_port = $::puppernetes::etcd_main_client_port
+    $etcd_events_port = $::puppernetes::etcd_events_client_port
+    $etcd_overlay_port = $::puppernetes::etcd_overlay_client_port
+  } else {
+    $etcd_cluster = undef
+    $etcd_k8s_port = 2379
+    $etcd_events_port = 2369
+    $etcd_overlay_port = 2359
+  }
 }
