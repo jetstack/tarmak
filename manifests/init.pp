@@ -4,6 +4,7 @@ class puppernetes (
   $bin_dir = $::puppernetes::params::bin_dir,
   $cluster_name = $puppernetes::params::cluster_name,
   $vault_version = $puppernetes::params::vault_version,
+  $role = undef,
   $kubernetes_version = $puppernetes::params::kubernetes_version,
   $kubernetes_user = $puppernetes::params::kubernetes_user,
   $kubernetes_group = $puppernetes::params::kubernetes_group,
@@ -16,6 +17,7 @@ class puppernetes (
   $kubernetes_api_secure_port = $puppernetes::params::kubernetes_api_secure_port,
   $kubernetes_api_url = undef,
   $dns_root = $puppernetes::params::dns_root,
+  $etcd_cluster = undef,
   $etcd_user = $puppernetes::params::etcd_user,
   $etcd_group = $puppernetes::params::etcd_group,
   $etcd_uid = $puppernetes::params::etcd_uid,
@@ -45,6 +47,14 @@ class puppernetes (
   }
   else {
       $_kubernetes_api_url = $kubernetes_api_url
+  }
+
+  if $etcd_cluster == undef {
+    $_etcd_cluster = range(1, $etcd_instances).map |$i| {
+        "etcd-${i}.${cluster_name}.${dns_root}"
+    }
+  } else {
+    $_etcd_cluster = $etcd_cluster
   }
 
   class { 'kubernetes':
