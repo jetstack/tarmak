@@ -25,4 +25,10 @@ class calico::params {
   $tls = false
   $aws = true
   $aws_filter_hack = true
+
+  if defined('::puppernetes') {
+    $etcd_cluster = $::puppernetes::etcd_cluster
+  } else {
+    $etcd_cluster = undef
+  }
 }

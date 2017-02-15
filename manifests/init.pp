@@ -1,7 +1,7 @@
 # calico init.pp
 
 class calico(
-  $etcd_cluster,
+  $etcd_cluster = $::calico::params::etcd_cluster,
   $etcd_overlay_port = $::calico::params::etcd_overlay_port,
   $tls = $::calico::params::tls,
   $aws = $::calico::params::aws,
@@ -14,13 +14,19 @@ class calico(
     $proto = 'http'
   }
 
+
   $etcd_cert_file = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}.pem"
   $etcd_key_file  = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}-key.pem"
   $etcd_ca_file   = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}-ca.pem"
 
   $etcd_endpoints = $etcd_cluster.map |$node| { "${proto}://${node}:${etcd_overlay_port}" }.join(',')
 
-  file { ["${::calico::cni_base_dir}/cni", "${::calico::cni_base_dir}/cni/net.d", $::calico::config_dir, $::calico::install_dir, "${::calico::install_dir}/bin"]:
+  file { [
+    "${::calico::cni_base_dir}/cni",
+    "${::calico::cni_base_dir}/cni/net.d",
+    $::calico::config_dir, $::calico::install_dir,
+    "${::calico::install_dir}/bin"
+  ]:
     ensure => directory,
   }
 
