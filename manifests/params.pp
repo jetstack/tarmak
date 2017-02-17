@@ -21,8 +21,8 @@ class prometheus::params {
 
   if defined('::puppernetes') {
     $etcd_cluster = $::puppernetes::_etcd_cluster
-    $etcd_k8s_port = $::puppernetes::etcd_main_client_port
-    $etcd_events_port = $::puppernetes::etcd_events_client_port
+    $etcd_k8s_port = $::puppernetes::etcd_k8s_main_client_port
+    $etcd_events_port = $::puppernetes::etcd_k8s_events_client_port
     $etcd_overlay_port = $::puppernetes::etcd_overlay_client_port
   } else {
     $etcd_cluster = undef
