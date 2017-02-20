@@ -1,6 +1,6 @@
 class prometheus(
   $role = '',
-  $etcd_cluster = '',
+  $etcd_cluster = $::prometheus::params::etcd_cluster,
   $etcd_k8s_port = $::prometheus::params::etcd_k8s_port,
   $etcd_events_port = $::prometheus::params::etcd_events_port,
   $etcd_overlay_port = $::prometheus::params::etcd_overlay_port,
