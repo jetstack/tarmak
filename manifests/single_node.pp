@@ -1,12 +1,18 @@
 class puppernetes::single_node(
-  $dns_root = 'jetstack.net',
-  $cluster_name = 'cluster',
-){
+  $dns_root = $puppernetes::params::dns_root,
+  $cluster_name = $puppernetes::params::cluster_name,
+  $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
+  $kubernetes_api_url = undef,
+  $kubernetes_version = $puppernetes::params::kubernetes_version,
+) inherits puppernetes::params{
   ensure_resource('class', '::puppernetes',{
-    cluster_name   => $cluster_name,
-    dns_root       => $dns_root,
-    etcd_cluster   => ["${::hostname}.${cluster_name}.${dns_root}"],
-    etcd_instances => 1,
+    dns_root                      => $dns_root,
+    cluster_name                  => $cluster_name,
+    etcd_advertise_client_network => $etcd_advertise_client_network,
+    kubernetes_api_url            => $kubernetes_api_url,
+    kubernetes_version            => $kubernetes_version,
+    etcd_cluster                  => ["${::hostname}.${cluster_name}.${dns_root}"],
+    etcd_instances                => 1,
   })
 
   include '::puppernetes::etcd'

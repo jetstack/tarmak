@@ -26,15 +26,13 @@ class{'vault_client':
   server_url => 'http://127.0.0.1:8200',
 }
 
-class{'puppernetes':
+class{'puppernetes::single_node':
   cluster_name                  => '#{cluster_name}',
-  etcd_instances                => 1,
   etcd_advertise_client_network => '10.0.0.0/8',
   kubernetes_api_url            => 'https://10.0.2.15:6443',
   kubernetes_version            => '#{kubernetes_version}',
 }
 
-class{'puppernetes::single_node':}
 
 "
     end
