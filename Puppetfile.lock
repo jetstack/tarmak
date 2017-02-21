@@ -7,15 +7,6 @@ FORGE
     puppetlabs-stdlib (4.15.0)
 
 GIT
-  remote: git@git.jetstack.net:puppernetes/module-calico.git
-  ref: master
-  sha: 0ffa15daac9a77fb4927547aedccc8bf4ef4da84
-  specs:
-    jetstack-calico (0.1.2)
-      puppet-archive (< 1.2.0, >= 1.1.2)
-      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
-
-GIT
   remote: git@git.jetstack.net:puppernetes/module-etcd.git
   ref: master
   sha: 6ba27f8298303c3192c86d4524ee20655c4854be
@@ -41,27 +32,17 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
-  remote: git@git.jetstack.net:puppernetes/module-prometheus.git
-  ref: master
-  sha: cf3be27d6afc54a585cf6d12facc1a644536bb4e
-  specs:
-    jetstack-prometheus (0.1.0)
-      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
-
-GIT
   remote: git@git.jetstack.net:puppernetes/module-vault_client.git
   ref: master
-  sha: 2ede3b18ba98a7551329768966e4c42c0e49801a
+  sha: 58bed4d387e9e8f9f79b1ba906ae92e1e5d22169
   specs:
     jetstack-vault_client (0.1.0)
       puppet-archive (< 1.2.0, >= 1.1.2)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 DEPENDENCIES
-  jetstack-calico (>= 0)
   jetstack-etcd (>= 0)
   jetstack-etcd_mount (>= 0)
   jetstack-kubernetes (>= 0)
-  jetstack-prometheus (>= 0)
   jetstack-vault_client (>= 0)
 
