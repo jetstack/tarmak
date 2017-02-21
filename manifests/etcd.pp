@@ -15,9 +15,14 @@ class puppernetes::etcd(
     require => [ Class['etcd'] ],
   }
 
-  $common_name = "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
+  $nodename = "${::puppernetes::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
+  $common_name = $nodename
   $alt_names = "localhost,${::fqdn}"
   $ip_sans = "127.0.0.1,${::ipaddress}"
+
+  if ! ($nodename in $::puppernetes::_etcd_cluster) {
+    fail("The node ${nodename} is not within the etcd_cluster (${puppernetes::_etcd_cluster})")
+  }
 
   vault_client::cert_service { 'etcd-k8s-main':
     base_path   => "${::puppernetes::etcd_ssl_dir}/${::puppernetes::etcd_k8s_main_ca_name}",
@@ -42,12 +47,6 @@ class puppernetes::etcd(
 
   Class['vault_client'] -> Class['puppernetes::etcd']
 
-  $initial_cluster = range(1, $::puppernetes::etcd_instances).map |$i| { #lint:ignore:variable_contains_dash
-    "etcd-${i}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
-  }
-
-  $nodename                 = "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
-
   class{'etcd':
     user  => $::puppernetes::etcd_user,
     group => $::puppernetes::etcd_group
@@ -57,7 +56,7 @@ class puppernetes::etcd(
     version                  => $::puppernetes::etcd_k8s_main_version,
     nodename                 => $nodename,
     members                  => $::puppernetes::etcd_instances,
-    initial_cluster          => $initial_cluster,
+    initial_cluster          => $::puppernetes::_etcd_cluster,
     advertise_client_network => $::puppernetes::etcd_advertise_client_network,
     client_port              => $::puppernetes::etcd_k8s_main_client_port,
     peer_port                => $::puppernetes::etcd_k8s_main_peer_port,
@@ -70,7 +69,7 @@ class puppernetes::etcd(
     version                  => $::puppernetes::etcd_k8s_events_version,
     nodename                 => $nodename,
     members                  => $::puppernetes::etcd_instances,
-    initial_cluster          => $initial_cluster,
+    initial_cluster          => $::puppernetes::_etcd_cluster,
     advertise_client_network => $::puppernetes::etcd_advertise_client_network,
     client_port              => $::puppernetes::etcd_k8s_events_client_port,
     peer_port                => $::puppernetes::etcd_k8s_events_peer_port,
@@ -83,7 +82,7 @@ class puppernetes::etcd(
     version                  => $::puppernetes::etcd_overlay_version,
     nodename                 => $nodename,
     members                  => $::puppernetes::etcd_instances,
-    initial_cluster          => $initial_cluster,
+    initial_cluster          => $::puppernetes::_etcd_cluster,
     advertise_client_network => $::puppernetes::etcd_advertise_client_network,
     client_port              => $::puppernetes::etcd_overlay_client_port,
     peer_port                => $::puppernetes::etcd_overlay_peer_port,

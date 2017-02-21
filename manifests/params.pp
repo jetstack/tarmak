@@ -1,6 +1,7 @@
 class puppernetes::params{
   $cluster_name = 'cluster'
   $dns_root = 'jetstack.net'
+  $hostname = $::hostname
 
   ## General
   $dest_dir = '/opt'
@@ -28,6 +29,7 @@ class puppernetes::params{
   $etcd_home = '/etc/etcd'
   $etcd_ssl_dir = '/etc/etcd/ssl'
   $etcd_instances = 3
+  $etcd_start_index = 1
   $etcd_advertise_client_network = '172.16.0.0/12'
 
   # overlay etcd
