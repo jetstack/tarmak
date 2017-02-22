@@ -1,6 +1,6 @@
 class puppernetes::master(
-  $disable_kubelet = false,
-  $disable_proxy = false,
+  $disable_kubelet = true,
+  $disable_proxy = true,
 ){
 
   $apiserver_alt_names='kubernetes.default'
