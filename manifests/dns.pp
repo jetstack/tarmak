@@ -10,7 +10,7 @@ class kubernetes::dns(
   $exechealthz_version='1.2',
   $autoscaler_image='gcr.io/google_containers/cluster-proportional-autoscaler-amd64',
   $autoscaler_version='1.0.0',
-  $min_replicas=2,
+  $min_replicas=3,
 ){
   require ::kubernetes
 
