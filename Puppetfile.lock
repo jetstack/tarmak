@@ -7,6 +7,15 @@ FORGE
     puppetlabs-stdlib (4.15.0)
 
 GIT
+  remote: git@git.jetstack.net:puppernetes/module-calico.git
+  ref: master
+  sha: 3b23c0af91a1b3d82d16d662b8104f279e2fd6d8
+  specs:
+    jetstack-calico (0.1.2)
+      puppet-archive (< 1.2.0, >= 1.1.2)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+
+GIT
   remote: git@git.jetstack.net:puppernetes/module-etcd.git
   ref: master
   sha: 6ba27f8298303c3192c86d4524ee20655c4854be
@@ -41,6 +50,7 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 DEPENDENCIES
+  jetstack-calico (>= 0)
   jetstack-etcd (>= 0)
   jetstack-etcd_mount (>= 0)
   jetstack-kubernetes (>= 0)

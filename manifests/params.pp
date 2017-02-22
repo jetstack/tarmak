@@ -19,6 +19,7 @@ class puppernetes::params{
   $kubernetes_ca_name = 'k8s'
   $kubernetes_api_secure_port = 6443
   $kubernetes_api_insecure_port = 8080
+  $kubernetes_pod_network = '10.234.0.0/16'
 
   ## Etcd
 

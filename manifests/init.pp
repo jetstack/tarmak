@@ -15,6 +15,7 @@ class puppernetes (
   $kubernetes_config_dir = $puppernetes::params::kubernetes_config_dir,
   $kubernetes_api_insecure_port = $puppernetes::params::kubernetes_api_insecure_port,
   $kubernetes_api_secure_port = $puppernetes::params::kubernetes_api_secure_port,
+  $kubernetes_pod_network = $puppernetes::params::kubernetes_pod_network,
   $kubernetes_api_url = undef,
   $dns_root = $puppernetes::params::dns_root,
   $hostname = $puppernetes::params::hostname,
@@ -58,6 +59,9 @@ class puppernetes (
   } else {
     $_etcd_cluster = $etcd_cluster
   }
+
+  $kubernetes_pod_network_host = split($kubernetes_pod_network, '/')[0]
+  $kubernetes_pod_network_mask = Integer(split($kubernetes_pod_network, '/')[1], 10)
 
   class { 'kubernetes':
     cluster_name   => $cluster_name,
