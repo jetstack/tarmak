@@ -70,6 +70,7 @@ class puppernetes::master(
       etcd_cert_file   => "${etcd_apiserver_base_path}.pem",
       etcd_port        => $::puppernetes::etcd_k8s_main_client_port,
       etcd_events_port => $::puppernetes::etcd_k8s_events_client_port,
+      etcd_nodes       => $::puppernetes::_etcd_cluster,
       systemd_after    => ['kube-apiserver-cert.service', 'kube-service-account-key-secret.service'],
       systemd_requires => ['kube-apiserver-cert.service', 'kube-service-account-key-secret.service'],
   }
