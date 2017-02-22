@@ -12,14 +12,14 @@ spec:
         name: node-exporter
       annotations:
          prometheus.io/scrape: "true"
-         prometheus.io/port: "<%= @prom_port %>"
+         prometheus.io/port: "<%= @node_exporter_port %>"
     spec:
       hostPID: true
       hostNetwork: true
       containers:
         - ports:
-            - containerPort: <%= @prom_port %>
-              hostPort: <%= @prom_port %>
+            - containerPort: <%= @node_exporter_port %>
+              hostPort: <%= @node_exporter_port %>
               protocol: TCP
           resources:
             requests:
@@ -28,7 +28,7 @@ spec:
             limits:
               memory: 50Mi
               cpu: 250m
-          image: prom/node-exporter:v<%= @prom_ne_version %>
+          image: <%= @node_exporter_image %>:<%= @node_exporter_version %>
           args:
             - -collector.procfs
             - /host/proc

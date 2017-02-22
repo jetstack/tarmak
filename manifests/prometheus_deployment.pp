@@ -14,91 +14,36 @@ class prometheus::prometheus_deployment (
   $etcd_overlay_port = $::prometheus::etcd_overlay_port,
   $prometheus_use_module_rules = $::prometheus::prometheus_use_module_rules,
   $prometheus_install_state_metrics = $::prometheus::prometheus_install_state_metrics,
-  $prometheus_install_node_exporter = $::prometheus::prometheus_install_node_exporter
+  $prometheus_install_node_exporter = $::prometheus::prometheus_install_node_exporter,
+  $node_exporter_image = $::prometheus::node_exporter_image,
+  $node_exporter_port = $::prometheus::node_exporter_port,
+  $node_exporter_version = $::prometheus::node_exporter_version,
 )
 {
-  file { "${helper_dir}/kubectl_helper_prom.sh":
-    ensure  => file,
-    content => template('prometheus/kubectl_helper.sh.erb'),
-    mode    => '0755',
+  require ::kubernetes
+
+  kubernetes::apply{'prometheus-server':
+    manifests => [
+      template('prometheus/prometheus-ns.yaml.erb'),
+      template('prometheus/prometheus-config.yaml.erb'),
+      template('prometheus/prometheus-rules.yaml.erb'),
+      template('prometheus/prometheus-deployment.yaml.erb'),
+      template('prometheus/prometheus-svc.yaml.erb'),
+    ],
   }
 
-  if $prometheus_use_module_config {
-    file { "${addon_dir}/prometheus-config.yaml":
-      ensure  => file,
-      content => template('prometheus/prometheus-config.yaml.erb'),
-    } ->
-    exec { 'Install prom-config':
-      command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/prometheus-config.yaml",
-      unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/prometheus-config.yaml",
-      before  => Exec['Install prom-deploy'],
-      require => File["${helper_dir}/kubectl_helper_prom.sh"],
-    }
+  kubernetes::apply{'kube-state-metrics':
+    manifests => [
+      template('prometheus/prometheus-ns.yaml.erb'),
+      template('prometheus/kube-state-metrics-deployment.yaml.erb'),
+      template('prometheus/kube-state-metrics-service.yaml.erb'),
+    ],
   }
 
-  if $prometheus_use_module_rules {
-    file { "${addon_dir}/prometheus-rules.yaml":
-      ensure  => file,
-      content => template('prometheus/prometheus-rules.yaml.erb'),
-    } ->
-    exec { 'Install prom-rules':
-      command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/prometheus-rules.yaml",
-      unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/prometheus-rules.yaml",
-      before  => Exec['Install prom-deploy'],
-      require => File["${helper_dir}/kubectl_helper_prom.sh"],
-    }
-  }
-
-  file { "${addon_dir}/prometheus-deployment.yaml":
-    ensure  => file,
-    content => template('prometheus/prometheus-deployment.yaml.erb'),
-  } ->
-  exec { 'Install prom-deploy':
-    command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/prometheus-deployment.yaml",
-    unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/prometheus-deployment.yaml",
-    require => File["${helper_dir}/kubectl_helper_prom.sh"],
-  }
-
-  file { "${addon_dir}/prometheus-svc.yaml":
-    ensure  => file,
-    content => template('prometheus/prometheus-svc.yaml.erb'),
-  } ->
-  exec { 'Install prom-svc':
-    command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/prometheus-svc.yaml",
-    unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/prometheus-svc.yaml",
-    require => File["${helper_dir}/kubectl_helper_prom.sh"],
-  }
-
-  if $prometheus_install_state_metrics {
-    file { "${addon_dir}/kube-state-metrics-deployment.yaml":
-      ensure  => file,
-      content => template('prometheus/kube-state-metrics-deployment.yaml.erb'),
-    } ->
-    exec { 'Install kube-state-metrics deployment':
-      command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/kube-state-metrics-deployment.yaml",
-      unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/kube-state-metrics-deployment.yaml",
-      require => File["${helper_dir}/kubectl_helper_prom.sh"],
-    }
-    file { "${addon_dir}/kube-state-metrics-service.yaml":
-      ensure  => file,
-      content => template('prometheus/kube-state-metrics-service.yaml.erb'),
-    } ->
-    exec { 'Install kube-state-metrics service':
-      command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/kube-state-metrics-service.yaml",
-      unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/kube-state-metrics-service.yaml",
-      require => File["${helper_dir}/kubectl_helper_prom.sh"],
-    }
-  }
-
-  if $prometheus_install_node_exporter {
-    file { "${addon_dir}/prometheus-node-exporter-ds.yaml":
-      ensure  => file,
-      content => template('prometheus/prometheus-node-exporter-ds.yaml.erb'),
-    } ->
-    exec { 'Install prom-node-exporter':
-      command => "${helper_dir}/kubectl_helper_prom.sh apply ${addon_dir}/prometheus-node-exporter-ds.yaml",
-      unless  => "${helper_dir}/kubectl_helper_prom.sh get ${addon_dir}/prometheus-node-exporter-ds.yaml",
-      require => File["${helper_dir}/kubectl_helper_prom.sh"],
-    }
+  kubernetes::apply{'node-exporter':
+    manifests => [
+      template('prometheus/prometheus-ns.yaml.erb'),
+      template('prometheus/prometheus-node-exporter-ds.yaml.erb'),
+    ],
   }
 }
