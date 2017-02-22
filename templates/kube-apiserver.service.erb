@@ -26,9 +26,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if scope['kubernetes::apiserver::key_file'] -%>
   --tls-private-key-file=<%= scope['kubernetes::apiserver::key_file'] %> \
 <% end -%>
-  --etcd-servers="<%= @etcd_servers %>" \
+  "--etcd-servers=<%= @etcd_servers %>" \
 <% @etcd_servers_overrides.each do |override| -%>
-  --etcd-servers-overrides="<%= override %>" \
+  "--etcd-servers-overrides=<%= override %>" \
 <% end -%>
 <%- if scope['kubernetes::apiserver::etcd_ca_file'] -%>
   --etcd-cafile=<%= scope['kubernetes::apiserver::etcd_ca_file'] %> \

@@ -52,7 +52,7 @@ class kubernetes::apiserver(
   }
   else {
     $_etcd_events_urls = map($etcd_nodes) |$node| { "${etcd_proto}://${node}:${etcd_events_port}" }
-    $etcd_events_servers = $_etcd_events_urls.join(',')
+    $etcd_events_servers = $_etcd_events_urls.join(';')
     $etcd_servers_overrides = [
       "/events#${etcd_events_servers}",
     ]
