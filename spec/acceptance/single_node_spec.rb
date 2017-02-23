@@ -1,6 +1,8 @@
 require 'securerandom'
 require 'spec_helper_acceptance'
 
+$ip = '10.0.2.15'
+
 describe '::pupperentes::single_node' do
   let :cluster_name do
     'test'
@@ -29,7 +31,7 @@ class{'vault_client':
 class{'puppernetes::single_node':
   cluster_name                  => '#{cluster_name}',
   etcd_advertise_client_network => '10.0.0.0/8',
-  kubernetes_api_url            => 'https://10.0.2.15:6443',
+  kubernetes_api_url            => 'https://#{$ip}:6443',
   kubernetes_version            => '#{kubernetes_version}',
 }
 
@@ -41,6 +43,10 @@ class{'puppernetes::single_node':
       hosts.each do |host|
         # reset firewall
         on host, "iptables -F INPUT"
+
+        # make hostname resolvable
+        line = "#{$ip} k8s.test.jetstack.net k8s"
+        on(host, "grep -q \"#{line}\" /etc/hosts || echo \"#{line}\" >> /etc/hosts")
 
         # make sure curl unzip vim is installed
         if fact_on(host, 'osfamily') == 'RedHat'
