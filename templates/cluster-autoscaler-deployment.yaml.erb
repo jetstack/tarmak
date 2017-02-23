@@ -1,0 +1,48 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+    spec:
+      hostNetwork: true
+      containers:
+      - image: "<%= @image %>:<%= @version %>"
+        name: cluster-autoscaler
+        resources:
+          limits:
+            cpu: <%= @limit_cpu %>
+            memory: <%= @limit_mem %>
+          requests:
+            cpu: <%= @request_cpu %>
+            memory: <%= @request_mem %>
+        command:
+        - ./cluster-autoscaler
+        - --v=4
+        - --cloud-provider=<%= @cloud_provider %>
+        - --skip-nodes-with-local-storage=false
+        - --nodes=<%= @min_instances %>:<%= @max_instances %>:<%= @asg_name %>
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: ssl-certs
+          readOnly: true
+          mountPath: <%= @ca_bundle_path %>
+      volumes:
+      - name: ssl-certs
+        hostPath:
+          path: <%= @ca_bundle_path %>

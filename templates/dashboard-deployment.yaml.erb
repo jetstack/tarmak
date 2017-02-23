@@ -1,0 +1,41 @@
+# This file is managed by puppet module-k8s
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kubernetes-dashboard
+  namespace: kube-system
+  labels:
+    k8s-app: kubernetes-dashboard
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    matchLabels:
+      k8s-app: kubernetes-dashboard
+  template:
+    metadata:
+      labels:
+        k8s-app: kubernetes-dashboard
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+    spec:
+      containers:
+      - name: kubernetes-dashboard
+        image: <%= @image %>:<%= @version %>
+        imagePullPolicy: Always
+        resources:
+          # keep request = limit to keep this container in guaranteed class
+          limits:
+            cpu: <%= @limit_cpu %>
+            memory: <%= @limit_mem %>
+          requests:
+            cpu: <%= @request_cpu %>
+            memory: <%= @request_mem %>
+        ports:
+        - containerPort: 9090
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 9090
+          initialDelaySeconds: 30
+          timeoutSeconds: 30
