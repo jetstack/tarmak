@@ -5,6 +5,7 @@ class kubernetes_addons::dashboard(
   $request_mem=$::kubernetes_addons::params::dashboard_request_mem,
   $limit_cpu=$::kubernetes_addons::params::dashboard_limit_cpu,
   $limit_mem=$::kubernetes_addons::params::dashboard_limit_mem,
+  $replicas=undef,
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 

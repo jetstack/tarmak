@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: nginx-ingress-lb
+  name: nginx-ingress-lb
+  namespace: <%= @namespace %>
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  - name: node
+    port: 3000
+    protocol: TCP
+    targetPort: 3000
+  - name: java-etc
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    name: nginx-ingress-lb
+  sessionAffinity: None
+  type: LoadBalancer

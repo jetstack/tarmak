@@ -8,6 +8,9 @@ metadata:
     k8s-app: kubernetes-dashboard
     kubernetes.io/cluster-service: "true"
 spec:
+<% if @replicas -%>
+  replicas: <%= @replicas %>
+<% end -%>
   selector:
     matchLabels:
       k8s-app: kubernetes-dashboard

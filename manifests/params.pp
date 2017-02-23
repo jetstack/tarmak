@@ -37,6 +37,8 @@ class kubernetes_addons::params{
     ]
   }
 
+  $namespace = 'kube-system'
+
   $tiller_image = 'gcr.io/kubernetes-helm/tiller'
   $tiller_version = 'v2.2.0'
 
@@ -88,8 +90,8 @@ class kubernetes_addons::params{
   $heapster_extra_cpu='0.5m'
   $heapster_extra_mem='4Mi'
 
-  $influxdb_image='luxas/heapster-influxdb-amd64'
-  $influxdb_version='v0.13.0'
+  $influxdb_image='gcr.io/google_containers/heapster-influxdb-amd64'
+  $influxdb_version='v1.1.1'
 
   $grafana_image='gcr.io/google_containers/heapster-grafana-amd64'
   $grafana_version='v4.0.2'
