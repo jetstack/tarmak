@@ -10,6 +10,7 @@ class kubernetes_addons::cluster_autoscaler(
   $max_instances=$::kubernetes_addons::params::cluster_autoscaler_max_instances,
   $ca_bundle_path=$::kubernetes_addons::params::ca_bundle_path,
   $cloud_provider=$::kubernetes_addons::params::cloud_provider,
+  $aws_region=$::kubernetes_addons::params::aws_region,
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 

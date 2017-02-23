@@ -1,5 +1,15 @@
 require 'spec_helper'
 describe 'kubernetes_addons::cluster_autoscaler' do
+  let(:facts) do
+    {
+      :ec2_metadata => {
+        'placement' => {
+          'availability-zone' => 'eu-west-1a',
+        }
+      }
+    }
+  end
+
   let(:pre_condition) do
     "
       class kubernetes{
@@ -42,6 +52,10 @@ describe 'kubernetes_addons::cluster_autoscaler' do
 
     it 'has cert path set' do
       expect(manifests[0]).to match(%{path: /etc/ssl/certs})
+    end
+
+    it 'has AWS_REGION set' do
+      expect(manifests[0]).to match(%r{value: eu-west-1$})
     end
   end
 end

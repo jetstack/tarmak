@@ -7,6 +7,12 @@ class kubernetes_addons::params{
     $cloud_provider=undef
   }
 
+  if $cloud_provider == 'aws' {
+    $aws_region = $::ec2_metadata['placement']['availability-zone'][0,-2]
+  } else {
+    $aws_region = undef
+  }
+
   $ca_bundle_path='/etc/ssl/certs'
   $tiller_image = 'gcr.io/kubernetes-helm/tiller'
   $tiller_version = 'v2.2.0'

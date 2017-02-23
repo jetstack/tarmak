@@ -37,6 +37,11 @@ spec:
         - --cloud-provider=<%= @cloud_provider %>
         - --skip-nodes-with-local-storage=false
         - --nodes=<%= @min_instances %>:<%= @max_instances %>:<%= @asg_name %>
+<% if @aws_region -%>
+        env:
+        - name: AWS_REGION
+          value: <%= @aws_region %>
+<% end -%>
         imagePullPolicy: Always
         volumeMounts:
         - name: ssl-certs
