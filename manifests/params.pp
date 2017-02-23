@@ -13,7 +13,30 @@ class kubernetes_addons::params{
     $aws_region = undef
   }
 
-  $ca_bundle_path='/etc/ssl/certs'
+  if $::osfamily == 'RedHat' {
+    $ca_mounts=[
+      {
+        name      => 'ssl-certs',
+        readOnly  => true,
+        mountPath => '/etc/ssl/certs',
+      },
+      {
+        name      => 'ssl-pki',
+        readOnly  => true,
+        mountPath => '/etc/pki',
+      },
+    ]
+  }
+  else {
+    $ca_mounts=[
+      {
+        name      => 'ssl-certs',
+        readOnly  => true,
+        mountPath => '/etc/ssl/certs',
+      },
+    ]
+  }
+
   $tiller_image = 'gcr.io/kubernetes-helm/tiller'
   $tiller_version = 'v2.2.0'
 

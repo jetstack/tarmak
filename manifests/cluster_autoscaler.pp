@@ -8,7 +8,7 @@ class kubernetes_addons::cluster_autoscaler(
   $asg_name=$::kubernetes_addons::params::cluster_autoscaler_asg_name,
   $min_instances=$::kubernetes_addons::params::cluster_autoscaler_min_instances,
   $max_instances=$::kubernetes_addons::params::cluster_autoscaler_max_instances,
-  $ca_bundle_path=$::kubernetes_addons::params::ca_bundle_path,
+  $ca_mounts=$::kubernetes_addons::params::ca_mounts,
   $cloud_provider=$::kubernetes_addons::params::cloud_provider,
   $aws_region=$::kubernetes_addons::params::aws_region,
 ) inherits ::kubernetes_addons::params {

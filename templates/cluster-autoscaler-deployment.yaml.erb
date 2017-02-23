@@ -44,10 +44,14 @@ spec:
 <% end -%>
         imagePullPolicy: Always
         volumeMounts:
-        - name: ssl-certs
-          readOnly: true
-          mountPath: <%= @ca_bundle_path %>
+<% @ca_mounts.each do |ca| -%>
+        - name: <%= ca['name'] %>
+          readOnly: <%= ca['readOnly'] %>
+          mountPath: <%= ca['mountPath'] %>
+<% end -%>
       volumes:
-      - name: ssl-certs
+<% @ca_mounts.each do |ca| -%>
+      - name: <%= ca['name'] %>
         hostPath:
-          path: <%= @ca_bundle_path %>
+          path: <%= ca['mountPath'] %>
+<% end -%>
