@@ -25,6 +25,11 @@ class calico::params {
   $aws = true
   $aws_filter_hack = true
 
+  $systemd_wants = []
+  $systemd_requires = []
+  $systemd_after = []
+  $systemd_before = []
+
   if defined('::puppernetes') {
     $etcd_cluster = $::puppernetes::_etcd_cluster
     $etcd_overlay_port = $::puppernetes::etcd_overlay_client_port

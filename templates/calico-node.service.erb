@@ -1,7 +1,17 @@
 [Unit]
 Description=calico-node
-After=docker.service
-Requires=docker.service
+<% if @systemd_after.length > 0  -%>
+After=<%= @systemd_after.join(' ') %>
+<% end  -%>
+<% if @systemd_before.length > 0  -%>
+Before=<%= @systemd_before.join(' ') %>
+<% end  -%>
+<% if @systemd_wants.length > 0  -%>
+Wants=<%= @systemd_wants.join(' ') %>
+<% end  -%>
+<% if @systemd_requires.length > 0  -%>
+Requires=<%= @systemd_requires.join(' ') %>
+<% end  -%>
 
 [Service]
 EnvironmentFile=<%= scope['calico::params::config_dir'] %>/calico.env

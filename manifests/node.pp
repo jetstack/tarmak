@@ -5,12 +5,14 @@ class calico::node(
   $etcd_ca_file,
   $aws_filter_hack,
   $tls,
+  $systemd_wants = $::calico::params::systemd_wants,
+  $systemd_requires = $::calico::params::systemd_requires,
+  $systemd_after = $::calico::params::systemd_after,
+  $systemd_before = $::calico::params::systemd_before,
   $node_version = $::calico::params::calico_node_version,
   $etcd_cert_path = $::calico::params::etcd_cert_path
 ) inherits ::calico::params
 {
-  ensure_packages([ 'docker' ])
-
   $download_url = regsubst(
     $::calico::params::calico_node_download_url,
     '#VERSION#',
@@ -45,13 +47,18 @@ class calico::node(
   exec { "${module_name}-systemctl-daemon-reload":
     command     => '/usr/bin/systemctl daemon-reload',
     refreshonly => true,
-  }
-
-  service { 'calico-node':
+  } ->
+  service { 'calico-node.service':
     ensure    => running,
     enable    => true,
-    require   => [ File["${::calico::params::config_dir}/calico.env"], File["${::calico::params::systemd_dir}/calico-node.service"] ],
-    subscribe => File["${::calico::params::config_dir}/calico.env"],
+    subscribe => [
+      File["${::calico::params::config_dir}/calico.env"],
+      File["${::calico::params::systemd_dir}/calico-node.service"],
+    ],
+  }
+
+  if defined('site_module::docker'){
+    Class['site_module::docker'] -> Service['calico-node.service']
   }
 
   if $aws_filter_hack {
@@ -63,7 +70,7 @@ class calico::node(
     exec { 'Modify calico filter':
       command => "${::calico::params::helper_dir}/calico_filter_hack.sh set",
       unless  => "${::calico::params::helper_dir}/calico_filter_hack.sh test",
-      require => Service['calico-node'],
+      require => Service['calico-node.service'],
     }
   }
 }
