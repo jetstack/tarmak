@@ -59,11 +59,13 @@ class kubernetes::kubelet(
     seltype => $seltype,
   }
 
-  exec { 'semanage_fcontext_kubelet_dir':
-    command => "semanage fcontext -a -t ${seltype} \"${kubelet_dir}(/.*)?\"",
-    unless  => "semanage fcontext -l | grep \"${kubelet_dir}(/.*).*:${seltype}\"",
-    require => File[$kubelet_dir],
-    path    => $::kubernetes::path
+  if dig($facts, ['os','selinux','enabled'], false) {
+    exec { 'semanage_fcontext_kubelet_dir':
+      command => "semanage fcontext -a -t ${seltype} \"${kubelet_dir}(/.*)?\"",
+      unless  => "semanage fcontext -l | grep \"${kubelet_dir}(/.*).*:${seltype}\"",
+      require => File[$kubelet_dir],
+      path    => $::kubernetes::path
+    }
   }
 
   file{"${kubelet_dir}/pods":
