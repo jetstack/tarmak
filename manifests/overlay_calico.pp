@@ -11,9 +11,13 @@ class puppernetes::overlay_calico {
   }
 
   class { 'calico':
-    etcd_cluster => $::puppernetes::_etcd_cluster,
-    tls          => true,
+    etcd_cluster     => $::puppernetes::_etcd_cluster,
+    tls              => true,
+    systemd_after    => ['etcd-overlay-cert.service'],
+    systemd_requires => ['etcd-overlay-cert.service'],
   }
+
+  Service['etcd-overlay-cert.service'] -> Service['calico-node.service']
 
   if $::puppernetes::role == 'master' {
     class { 'calico::policy_controller': }
