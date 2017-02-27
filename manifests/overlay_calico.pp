@@ -2,6 +2,10 @@ class puppernetes::overlay_calico {
   include ::puppernetes
   require ::vault_client
 
+  ensure_resource('file', $::puppernetes::etcd_home, {'ensure'    => 'directory' })
+  ensure_resource('file', $::puppernetes::etcd_ssl_dir, {'ensure' => 'directory' })
+
+
   $etcd_overlay_base_path = "${::puppernetes::etcd_ssl_dir}/${::puppernetes::etcd_overlay_ca_name}"
   vault_client::cert_service { 'etcd-overlay':
     base_path   => $etcd_overlay_base_path,
@@ -16,6 +20,8 @@ class puppernetes::overlay_calico {
     systemd_after    => ['etcd-overlay-cert.service'],
     systemd_requires => ['etcd-overlay-cert.service'],
   }
+
+  File[$::puppernetes::etcd_home] -> File[$::puppernetes::etcd_ssl_dir] -> Service['etcd-overlay-cert.service']
 
   Service['etcd-overlay-cert.service'] -> Service['calico-node.service']
 
