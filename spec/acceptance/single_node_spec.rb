@@ -96,12 +96,12 @@ class{'puppernetes::single_node':
       expect(result.stdout.scan(/Ready/m).size).to eq(1)
     end
 
-    it 'should have two ready dns pods', :retry => 20, :retry_wait => 5 do
+    it 'should have three ready dns pods', :retry => 20, :retry_wait => 5 do
       result = shell('/opt/bin/kubectl get pods --namespace kube-system -l k8s-app=kube-dns')
       logger.notify "kubectl get pods:\n#{result.stdout}"
       expect(result.exit_code).to eq(0)
-      expect(result.stdout.scan(/Running/m).size).to eq(2)
-      expect(result.stdout.scan(/4\/4/m).size).to eq(2)
+      expect(result.stdout.scan(/Running/m).size).to eq(3)
+      expect(result.stdout.scan(/4\/4/m).size).to eq(3)
     end
 
     it 'should have a ready dns autoscaler pod', :retry => 20, :retry_wait => 5 do
