@@ -40,7 +40,7 @@ resource "aws_security_group_rule" "ingress_allow_ssh_all" {
 resource "aws_instance" "bastion" {
   ami                    = "${var.centos_ami[var.region]}"
   instance_type          = "${var.bastion_instance_type}"
-  subnet_id              = "${data.terraform_remote_state.network.private_subnet_ids[0]}"
+  subnet_id              = "${data.terraform_remote_state.network.public_subnet_ids[0]}"
   key_name               = "${var.key_name}"
   vpc_security_group_ids = ["${aws_security_group.bastion.id}"]
 
@@ -54,7 +54,7 @@ resource "aws_instance" "bastion" {
 
 resource "aws_route53_record" "bastion" {
   zone_id = "${data.terraform_remote_state.network.public_zone_ids[0]}"
-  name    = "www"
+  name    = "bastion"
   type    = "A"
   ttl     = "300"
   records = ["${aws_eip.bastion.public_ip}"]
