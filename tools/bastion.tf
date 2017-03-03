@@ -3,6 +3,7 @@ variable "bastion_instance_type" {
 }
 
 resource "aws_eip" "bastion" {
+  count    = 0
   vpc      = true
   instance = "${aws_instance.bastion.id}"
 }
@@ -57,7 +58,7 @@ resource "aws_route53_record" "bastion" {
   name    = "bastion"
   type    = "A"
   ttl     = "300"
-  records = ["${aws_eip.bastion.public_ip}"]
+  records = ["${aws_instance.bastion.public_ip}"]
 }
 
 output "bastion_fqdn" {
@@ -65,5 +66,5 @@ output "bastion_fqdn" {
 }
 
 output "bastion_ip" {
-  value = "${aws_eip.bastion.public_ip}"
+  value = "${aws_instance.bastion.public_ip}"
 }
