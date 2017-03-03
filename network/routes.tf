@@ -2,7 +2,7 @@ resource "aws_route_table" "public" {
   vpc_id = "${aws_vpc.main.id}"
 
   tags {
-    Name        = "${var.vpc_name}_public"
+    Name        = "${data.template_file.stack_name.rendered}_public"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
@@ -20,7 +20,7 @@ resource "aws_route_table" "private" {
   vpc_id = "${aws_vpc.main.id}"
 
   tags {
-    Name        = "${var.vpc_name}_private_${var.availability_zones[count.index]}"
+    Name        = "${data.template_file.stack_name.rendered}_private_${var.availability_zones[count.index]}"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"

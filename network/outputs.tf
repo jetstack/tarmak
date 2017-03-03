@@ -2,20 +2,28 @@ output "vpc_id" {
   value = "${aws_vpc.main.id}"
 }
 
-output "vpc_name" {
-  value = "${var.vpc_name}"
+output "vpc_net" {
+  value = "${aws_vpc.main.cidr}"
 }
 
-output "vpc_cidr_block" {
-  value = "${aws_vpc.main.cidr_block}"
+output "stack_name" {
+  value = "${data.template_file.stack_name.rendered}"
 }
 
 output "private_subnet_ids" {
   value = ["${aws_subnet.private.*.id}"]
 }
 
+output "private_subnets" {
+  value = ["${aws_subnet.private.*.cidr_block}"]
+}
+
 output "public_subnet_ids" {
   value = ["${aws_subnet.public.*.id}"]
+}
+
+output "public_subnets" {
+  value = ["${aws_subnet.public.*.cidr_block}"]
 }
 
 output "nat_public_ips" {
@@ -38,10 +46,18 @@ output "availability_zones" {
   value = "${var.availability_zones}"
 }
 
-output "aws_route53_zone_private_id" {
+output "private_zone_ids" {
   value = ["${aws_route53_zone.private.*.id}"]
 }
 
-output "aws_route53_zone_public_id" {
+output "private_zones" {
+  value = ["${aws_route53_zone.private.*.name}"]
+}
+
+output "public_zone_ids" {
   value = ["${aws_route53_zone.public.*.id}"]
+}
+
+output "public_zones" {
+  value = ["${aws_route53_zone.public.*.name}"]
 }

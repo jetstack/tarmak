@@ -1,9 +1,42 @@
-variable "network" {
-  default = "10.61.0.0/20"
+variable "network" {}
+
+variable "name" {}
+
+variable "stack" {
+  default = ""
+}
+
+variable "state_bucket" {
+  default = ""
+}
+
+variable "stack_name_prefix" {
+  default = ""
+}
+
+data "template_file" "stack_name" {
+  template = "${var.stack_name_prefix}${var.environment}_${var.name}"
+}
+
+variable "allowed_account_ids" {
+  type    = "list"
+  default = ["513013539150"]
+}
+
+variable "state_buckets" {
+  type = "list"
+}
+
+variable "public_zones" {
+  type = "list"
+}
+
+variable "private_zones" {
+  type = "list"
 }
 
 variable "environment" {
-  default = "non_prod"
+  default = "nonprod"
 }
 
 variable "region" {
@@ -21,5 +54,3 @@ variable "project" {
 variable "contact" {
   default = "matt.turner@skyscanner.net"
 }
-
-variable "vpc_name" {}

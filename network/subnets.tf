@@ -6,7 +6,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags {
-    Name        = "${var.vpc_name}_public_${var.availability_zones[count.index]}"
+    Name        = "${data.template_file.stack_name.rendered}_public_${var.availability_zones[count.index]}"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
@@ -20,7 +20,7 @@ resource "aws_subnet" "private" {
   availability_zone = "${var.availability_zones[count.index]}"
 
   tags {
-    Name        = "${var.vpc_name}_private_${var.availability_zones[count.index]}"
+    Name        = "${data.template_file.stack_name.rendered}_private_${var.availability_zones[count.index]}"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
