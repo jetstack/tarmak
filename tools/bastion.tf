@@ -28,12 +28,12 @@ resource "aws_security_group_rule" "egress_allow_all" {
   security_group_id = "${aws_security_group.bastion.id}"
 }
 
-resource "aws_security_group_rule" "ingress_allow_ssh_admin" {
+resource "aws_security_group_rule" "ingress_allow_ssh_all" {
   type              = "ingress"
   protocol          = "tcp"
   from_port         = 22
   to_port           = 22
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = ["${var.admin_ips}"]
   security_group_id = "${aws_security_group.bastion.id}"
 }
 

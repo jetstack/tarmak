@@ -31,6 +31,12 @@ variable "allowed_account_ids" {
   default = ["513013539150"]
 }
 
+# TODO: restrict to admin IPs
+variable "admin_ips" {
+  type    = "list"
+  default = ["0.0.0.0/0"]
+}
+
 variable "environment" {
   default = "nonprod"
 }
