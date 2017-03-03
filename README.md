@@ -40,3 +40,13 @@ eval $(bundle exec rake aws:login_mfa )
 ```
 
 It will read the MFA serial from `.aws/config` and generate temporary tokens that are exported to then environment
+
+### Terraform
+
+
+#### Plan Hub Network and Tools
+
+```
+bundle exec rake terraform:plan TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod TERRAFORM_STACK=network
+bundle exec rake terraform:plan TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod TERRAFORM_STACK=tools
+```
