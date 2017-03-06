@@ -111,10 +111,10 @@ namespace :terraform do
   end
 
   task :fmt do
-    sh 'git ls-files "*.tf" | xargs -n1 dirname | sort -u | xargs -n 1 terraform fmt -write=false -diff=true'
+    sh 'find . -name "*.tf" | xargs -n1 dirname | sort -u | xargs -n 1 terraform fmt -write=false -diff=true'
   end
 
   task :validate do
-    sh 'git ls-files "*.tf" | xargs -n1 dirname | sort -u | xargs -n 1 terraform validate'
+    sh 'find . -name "*.tf" | xargs -n1 dirname | sort -u | xargs -n 1 terraform validate'
   end
 end
