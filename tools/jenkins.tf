@@ -11,8 +11,9 @@ variable "jenkins_data_size" {
 }
 
 resource "aws_security_group" "jenkins" {
-  name   = "${data.template_file.stack_name.rendered}-jenkins"
-  vpc_id = "${data.terraform_remote_state.network.vpc_id}"
+  name        = "${data.template_file.stack_name.rendered}-jenkins"
+  vpc_id      = "${data.terraform_remote_state.network.vpc_id}"
+  description = "Jenkins instance in ${data.template_file.stack_name.rendered}"
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}-jenkins"
