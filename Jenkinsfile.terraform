@@ -1,7 +1,12 @@
 node {
   checkout scm
 
-  def imageName = "platform.kubernetes.terraform:${env.BUILD_NUMBER}"
+  def splitJobName = env.JOB_NAME.split('/')
+  def terraformStack = splitJobName[-1]
+  def terraformName = splitJobName[-2]
+  def terraformEnvironment = splitJobName[-3]
+
+  def imageName = "platform.kubernetes.terraform:${terraformEnvironment}-${terraformName}-${terraformStack}-${env.BUILD_NUMBER}"
 
   stage ('build docker image'){
     docker.build(imageName)
