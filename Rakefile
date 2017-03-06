@@ -9,7 +9,11 @@ namespace :aws do
     @aws_region = ENV['AWS_DEFAULT_REGION'] || 'eu-west-1'
     @aws_profile = ENV['AWS_PROFILE'] || 'ss_non_prod'
     @aws_config_file = IniFile.load(ENV['HOME'] + '/.aws/config')
-    @aws_config = @aws_config_file["profile #{@aws_profile}"]
+    begin
+      @aws_config = @aws_config_file["profile #{@aws_profile}"]
+    rescue
+      @aws_config = {}
+    end
     @aws_credentials = Aws::SharedCredentials.new(profile_name: @aws_profile)
   end
 

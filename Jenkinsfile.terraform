@@ -1,0 +1,22 @@
+node {
+  checkout scm
+
+  def imageName = "platform.kubernetes.terraform:${env.BUILD_NUMBER}"
+
+  stage ('build docker image'){
+    docker.build(imageName)
+  }
+
+  stage('terraform plan network') {
+    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+      sh "docker run --rm ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod TERRAFORM_STACK=network"
+    }
+  }
+
+  input 'Shall I apply?'
+  stage('terraform apply network') {
+    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+      sh "docker run --rm ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod TERRAFORM_STACK=network"
+    }
+  }
+}
