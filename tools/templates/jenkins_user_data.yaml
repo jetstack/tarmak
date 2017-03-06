@@ -26,7 +26,7 @@ runcmd:
 - curl -sLo /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
 - rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
 - yum -y install jenkins
-- yum -y install vim docker java
+- yum -y install vim docker java git
 - usermod -a -G root jenkins
 - systemctl enable docker.service jenkins.service
 - systemctl start docker.service jenkins.service
