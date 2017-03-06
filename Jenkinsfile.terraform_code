@@ -1,0 +1,21 @@
+node {
+  checkout scm
+
+  def imageName = "platform.kubernetes.terraform:code-${env.BUILD_NUMBER}"
+
+  stage ('build docker image'){
+    docker.build(imageName)
+  }
+
+  stage('validate terraform') {
+    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+      sh "docker run --rm ${imageName} bundle exec rake terraform:validate"
+    }
+  }
+
+  stage('fmt terraform') {
+    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+      sh "docker run --rm ${imageName} bundle exec rake terraform:fmt"
+    }
+  }
+}
