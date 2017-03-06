@@ -1,0 +1,34 @@
+#cloud-config
+repo_update: true
+repo_upgrade: all
+
+write_files:
+- path: /etc/systemd/system/var-lib-jenkins.mount
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Mount jenkins data
+
+    [Mount]
+    What=/dev/xvdd
+    Where=/var/lib/jenkins
+    Type=ext4
+
+- path: /etc/systemd/system/jenkins.service.d/10-require-mount.conf
+  permissions: '0644'
+  content: |
+    [Unit]
+    After=var-lib-jenkins.mount
+    Requires=var-lib-jenkins.mount
+
+runcmd:
+- hostname "jenkins.${dns_zone}"
+- curl -sLo /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+- rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
+- yum -y install jenkins
+- yum -y install vim docker java
+- usermod -a -G root jenkins
+- systemctl enable docker.service jenkins.service
+- systemctl start docker.service jenkins.service
+
+output : { all : '| tee -a /var/log/cloud-init-output.log' }
