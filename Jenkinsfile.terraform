@@ -14,14 +14,14 @@ node {
 
   stage('terraform plan network') {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      sh "docker run --rm ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod TERRAFORM_STACK=network"
+      sh "docker run --rm ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack}"
     }
   }
 
   input 'Shall I apply?'
   stage('terraform apply network') {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      sh "docker run --rm ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod TERRAFORM_STACK=network"
+      sh "docker run --rm ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack}"
     }
   }
 }
