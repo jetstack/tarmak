@@ -71,10 +71,11 @@ resource "aws_ebs_volume" "vault" {
   availability_zone = "${element(data.terraform_remote_state.network.availability_zones, count.index % length(data.terraform_remote_state.network.availability_zones))}"
 
   tags {
-    Name        = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
+    Name         = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
+    Environment  = "${var.environment}"
+    Project      = "${var.project}"
+    Contact      = "${var.contact}"
+    VaultCluster = "${var.environment}"
   }
 
   lifecycle = {
