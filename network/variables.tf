@@ -25,14 +25,17 @@ variable "allowed_account_ids" {
 
 variable "state_buckets" {
   type = "list"
+  default = []
 }
 
 variable "public_zones" {
   type = "list"
+  default = []
 }
 
 variable "private_zones" {
   type = "list"
+  default = []
 }
 
 variable "environment" {
@@ -53,4 +56,13 @@ variable "project" {
 
 variable "contact" {
   default = "matt.turner@skyscanner.net"
+}
+
+variable "secrets_buckets" {
+  type = "list"
+  default = []
+}
+
+variable "secrets_kms" {
+  default = 0
 }
