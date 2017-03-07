@@ -83,7 +83,7 @@ resource "aws_route53_record" "jenkins_elb" {
   alias {
     name                   = "${aws_elb.jenkins.dns_name}"
     zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
-    evaluate_target_health = true
+    evaluate_target_health = false
   }
 }
 
