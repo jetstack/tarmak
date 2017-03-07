@@ -36,11 +36,20 @@ resource "aws_security_group" "alb" {
   }
 }
 
-resource "aws_security_group_rule" "alb_ingress_allow_https_admins" {
+resource "aws_security_group_rule" "alb_ingress_allow_jenkins_admins" {
   type              = "ingress"
   protocol          = "tcp"
   from_port         = 443
   to_port           = 443
+  cidr_blocks       = ["${var.admin_ips}"]
+  security_group_id = "${aws_security_group.alb.id}"
+}
+
+resource "aws_security_group_rule" "alb_ingress_allow_foreman_admins" {
+  type              = "ingress"
+  protocol          = "tcp"
+  from_port         = 8443
+  to_port           = 8443
   cidr_blocks       = ["${var.admin_ips}"]
   security_group_id = "${aws_security_group.alb.id}"
 }
@@ -61,4 +70,13 @@ resource "aws_security_group_rule" "jenkins_ingress_allow_jenkins_alb" {
   to_port                  = 8080
   source_security_group_id = "${aws_security_group.alb.id}"
   security_group_id        = "${aws_security_group.jenkins.id}"
+}
+
+resource "aws_security_group_rule" "puppet_master_ingress_allow_foreman_alb" {
+  type                     = "ingress"
+  protocol                 = "tcp"
+  from_port                = 443
+  to_port                  = 443
+  source_security_group_id = "${aws_security_group.alb.id}"
+  security_group_id        = "${aws_security_group.puppet_master.id}"
 }
