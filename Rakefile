@@ -149,15 +149,10 @@ namespace :vault_secrets do
     @vault_path = "vault-#{@terraform_environment}"
     logger.info "vault CA zone=#{@vault_zone} instances=#{@vault_instances}"
 
-    @secrets_bucket = @terraform_hub_outputs['secrets_bucket']['value']
+    secrets_bucket = @terraform_hub_outputs['secrets_bucket']['value']
+    @secrets_bucket = @s3.bucket(secrets_bucket)
     @secrets_kms_arn = @terraform_hub_outputs['secrets_kms_arn']['value']
-    kms = Aws::KMS::Client.new(region: @aws_region)
-    @s3_secrets = Aws::S3::Encryption::Client.new(
-      region: @aws_region,
-      kms_key_id: @secrets_kms_arn,
-      kms_client: kms,
-    )
-    logger.info "secrets bucket=#{@secrets_bucket} kms_arn=#{@secrets_kms_arn}"
+    logger.info "secrets bucket=#{secrets_bucket} kms_arn=#{@secrets_kms_arn}"
   end
 
   task :ensure_ca => :prepare do
@@ -172,7 +167,7 @@ namespace :vault_secrets do
     begin
       ca = {}
       [:cert, :key].each do |type|
-        obj = @s3_secrets.get_object(bucket: @secrets_bucket, key: instance_eval("#{type.to_s}_path"))
+        obj = @secrets_bucket.object(instance_eval("#{type.to_s}_path")).get
         ca[type.to_s] = obj.body.read
       end
       @ca = ca
@@ -183,8 +178,8 @@ namespace :vault_secrets do
         stdin.close
         fail "Generating CA failed: #{stderr.read}" if wait_thr.value != 0
         @ca = JSON.parse(stdout.read)
-        @s3_secrets.put_object(bucket: @secrets_bucket, key: cert_path, body: @ca['cert'])
-        @s3_secrets.put_object(bucket: @secrets_bucket, key: key_path, body: @ca['key'])
+        @secrets_bucket.put_object(key: cert_path, body: @ca['cert'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
+        @secrets_bucket.put_object(key: key_path, body: @ca['key'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
       end
     end
   end
@@ -216,10 +211,11 @@ namespace :vault_secrets do
 
     begin
       [:cert, :key].each do |type|
-        @s3_secrets.get_object(bucket: @secrets_bucket, key: instance_eval("#{type.to_s}_path"))
+        @secrets_bucket.object(instance_eval("#{type.to_s}_path")).get
       end
     rescue Aws::S3::Errors::NoSuchKey
       logger.info "Generating a new certificate"
+
       temp_files = [
         JSON.generate(ca_config),
         @ca['key'],
@@ -231,18 +227,15 @@ namespace :vault_secrets do
         file
       end
 
-      logger.info JSON.generate(csr)
-
       cmd = ['cfssl', 'gencert', "-ca=#{temp_files[2].path}", "-ca-key=#{temp_files[1].path}", "-config=#{temp_files[0].path}", '-profile=server', "-hostname=#{nodes.join(',')}", '-']
 
       Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
         stdin.write(JSON.generate(csr))
         stdin.close
         fail "Generating cert failed: #{stderr.read}" if wait_thr.value != 0
-        puts stdout.read
-        puts stderr.read
-        @s3_secrets.put_object(bucket: @secrets_bucket, key: cert_path, body: @ca['cert'])
-        @s3_secrets.put_object(bucket: @secrets_bucket, key: key_path, body: @ca['key'])
+        cert = JSON.parse(stdout.read)
+        @secrets_bucket.put_object(key: cert_path, body: cert['cert'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
+        @secrets_bucket.put_object(key: key_path, body: cert['key'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
       end
 
       # cleanup files
