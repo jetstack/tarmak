@@ -61,3 +61,7 @@ output "public_zone_ids" {
 output "public_zones" {
   value = ["${aws_route53_zone.public.*.name}"]
 }
+
+output "bucket_prefix" {
+  value = "${var.bucket_prefix}"
+}

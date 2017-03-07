@@ -24,17 +24,17 @@ variable "allowed_account_ids" {
 }
 
 variable "state_buckets" {
-  type = "list"
+  type    = "list"
   default = []
 }
 
 variable "public_zones" {
-  type = "list"
+  type    = "list"
   default = []
 }
 
 variable "private_zones" {
-  type = "list"
+  type    = "list"
   default = []
 }
 
@@ -58,11 +58,6 @@ variable "contact" {
   default = "matt.turner@skyscanner.net"
 }
 
-variable "secrets_buckets" {
-  type = "list"
-  default = []
-}
-
-variable "secrets_kms" {
-  default = 0
+variable "bucket_prefix" {
+  default = ""
 }
