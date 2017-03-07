@@ -69,8 +69,8 @@ resource "aws_security_group_rule" "jenkins_elb_egress_allow_all" {
 resource "aws_security_group_rule" "jenkins_ingress_allow_jenkins_elb" {
   type                     = "ingress"
   protocol                 = "tcp"
-  from_port                = 443
-  to_port                  = 443
+  from_port                = 8080
+  to_port                  = 8080
   source_security_group_id = "${aws_security_group.jenkins_elb.id}"
   security_group_id        = "${aws_security_group.jenkins.id}"
 }
