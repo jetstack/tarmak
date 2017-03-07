@@ -62,6 +62,7 @@ resource "aws_instance" "vault" {
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
+    VaultCluster = "${var.environment}"
   }
 }
 
@@ -75,7 +76,6 @@ resource "aws_ebs_volume" "vault" {
     Environment  = "${var.environment}"
     Project      = "${var.project}"
     Contact      = "${var.contact}"
-    VaultCluster = "${var.environment}"
   }
 
   lifecycle = {
