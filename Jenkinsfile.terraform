@@ -1,7 +1,9 @@
+// vim: et:ts=2:sw=2:ft=groovy
 node {
   checkout scm
 
   def splitJobName = env.JOB_NAME.split('/')
+
   def terraformStack = splitJobName[-1]
   def terraformName = splitJobName[-2]
   def terraformEnvironment = splitJobName[-3]
@@ -12,14 +14,14 @@ node {
     docker.build(imageName)
   }
 
-  stage('terraform plan network') {
+  stage("terraform plan ${terraformStack}") {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
       sh "docker run --rm ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack}"
     }
   }
 
   input 'Shall I apply?'
-  stage('terraform apply network') {
+  stage("terraform apply ${terraformStack}") {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
       sh "docker run --rm ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack}"
     }
