@@ -1,0 +1,74 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AttachVolume",
+        "ec2:DetachVolume"
+      ],
+      "Resource": [
+        "arn:aws:ec2:${region}:${account_id}:volume/${volume_id}",
+        "arn:aws:ec2:${region}:${account_id}:instance/${instance_id}"
+      ],
+      "Condition": {
+        "ArnEquals": {
+          "ec2:SourceInstanceARN": "arn:aws:ec2:${region}:${account_id}:instance/${instance_id}"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+          "arn:aws:s3:::${secrets_bucket_prefix}/ca.pem",
+          "arn:aws:s3:::${secrets_bucket_prefix}/cert-key.pem",
+          "arn:aws:s3:::${secrets_bucket_prefix}/cert.pem"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt"
+      ],
+      "Resource": [
+          "${kms_arn}"
+      ]
+    },
+    {
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Effect": "Allow",
+      "Resource":["arn:aws:s3:::${backup_bucket}/*"]
+    },
+    {
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Effect": "Allow",
+      "Resource":["arn:aws:s3:::${backup_bucket}"]
+    },
+    {
+      "Action": [
+        "ssm:GetParameters"
+      ],
+      "Effect": "Allow",
+      "Resource":["arn:aws:ssm:${region}:${account_id}:parameter/${unseal_parameter}"]
+    }
+  ]
+}

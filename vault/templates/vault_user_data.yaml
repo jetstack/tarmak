@@ -1,0 +1,279 @@
+#cloud-config
+
+coreos:
+  update:
+    reboot-strategy: off
+  units:
+  - name: attach-ebs-volume.service
+    content: |
+      [Unit]
+      Description=(De-)Attaches the EBS volume if needed
+      After=network-online.target
+      Requires=network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      Environment=IMAGE=docker://mikesir87/aws-cli:1.11.33
+      Environment=VOLUME_ID=${VOLUME_ID}
+      # fetch image
+      ExecStartPre=-/usr/bin/rkt --insecure-options=image fetch $${IMAGE}
+      ExecStartPre=-/usr/bin/rkt --insecure-options=image fetch $${IMAGE}
+      ExecStartPre=/usr/bin/rkt --insecure-options=image fetch $${IMAGE}
+      # attach EBS volume
+      ExecStart=/bin/bash -c ' \
+        test -e /dev/xvdf && exit 0; \
+        exec rkt --insecure-options=image run $${IMAGE} \
+         --net=host \
+         --inherit-env \
+         --volume=resolv,kind=host,source=/etc/resolv.conf \
+         --mount volume=resolv,target=/etc/resolv.conf \
+         --exec /usr/bin/aws -- ec2 attach-volume --region ${REGION} --volume-id $${VOLUME_ID} --instance-id $(curl -sL http://169.254.169.254/latest/meta-data/instance-id) --device /dev/xvdf \
+      '
+      # wait for volume to appear
+      ExecStart=/bin/bash -c ' \
+        until test -e /dev/xvdf; do \
+          echo "Waiting for device /dev/xvdf ..."; \
+          sleep 1; \
+        done \
+      '
+      # detach volume on shutdown
+      ExecStop=/bin/bash -c ' \
+        test -e /dev/xvdf || exit 0 \
+        exec rkt --insecure-options=image run $${IMAGE} \
+         --net=host \
+         --inherit-env \
+         --volume=resolv,kind=host,source=/etc/resolv.conf \
+         --mount volume=resolv,target=/etc/resolv.conf \
+         --exec /usr/bin/aws -- ec2 detach-volume --region ${REGION} --volume-id $${VOLUME_ID} --instance-id $(curl -sL http://169.254.169.254/latest/meta-data/instance-id) \
+      '
+
+  - name: format-ebs-volume.service
+    content: |
+      [Unit]
+      Description=Formats the EBS volume if needed
+      After=attach-ebs-volume.service
+      Requires=attach-ebs-volume.service
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=/bin/bash -c '/usr/sbin/blkid /dev/xvdf || (/usr/sbin/wipefs -fa /dev/xvdf && /usr/sbin/mkfs.ext4 /dev/xvdf && mount /dev/xvdf /mnt && chown 100:100 /mnt && chmod 0750 /mnt && umount /mnt)'
+
+  - name: var-lib-consul.mount
+    content: |
+      [Unit]
+      Description=Mount EBS Volume to /var/lib/consul
+      Requires=format-ebs-volume.service
+      After=format-ebs-volume.service
+
+      [Mount]
+      What=/dev/xvdf
+      Where=/var/lib/consul
+      Type=ext4
+
+  - name: consul.service
+    command: start
+    enabled: true
+    content: |
+      [Unit]
+      Description=Consul server
+      Requires=var-lib-consul.mount
+      After=var-lib-consul.mount
+
+      [Service]
+      Environment=IMAGE=docker://consul:${CONSUL_VERSION}
+      ExecStartPre=/usr/bin/mkdir -p /var/lib/consul/data
+      ExecStartPre=/usr/bin/chown 100:100 /var/lib/consul/data
+      ExecStartPre=/usr/bin/chmod 0750 /var/lib/consul/data
+      ExecStartPre=/usr/bin/rkt --insecure-options=image fetch $${IMAGE}
+      ExecStart=/usr/bin/rkt --insecure-options=image run $${IMAGE} \
+         --volume=resolv,kind=host,source=/etc/resolv.conf \
+         --mount=volume=resolv,target=/etc/resolv.conf \
+         --volume=conf,kind=host,source=/etc/consul \
+         --mount=volume=conf,target=/etc/consul \
+         --volume=data,kind=host,source=/var/lib/consul/data \
+         --mount=volume=data,target=/consul/data \
+         --net=host \
+         --inherit-env \
+         --exec /bin/consul -- agent \
+         -node=${FQDN} \
+         -data-dir=/consul/data \
+         -server \
+         -config-dir=/etc/consul \
+         -advertise=$private_ipv4 \
+         -retry-join-ec2-tag-key=VaultCluster \
+         -retry-join-ec2-tag-value=${ENVIRONMENT}
+
+  - name: vault-assets.service
+    content: |
+      [Unit]
+      Description=Fetch vault assets
+      After=network-online.target
+      Requires=network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      Environment=IMAGE=docker://mikesir87/aws-cli:1.11.33
+      ExecStartPre=/usr/bin/mkdir -p /etc/vault/tls
+      ExecStartPre=/usr/bin/rkt --insecure-options=image fetch $${IMAGE}
+      ExecStart=/usr/bin/rkt --insecure-options=image run $${IMAGE} \
+         --net=host \
+         --inherit-env \
+         --volume=resolv,kind=host,source=/etc/resolv.conf \
+         --mount volume=resolv,target=/etc/resolv.conf \
+         --volume=conf,kind=host,source=/etc/vault \
+         --mount volume=conf,target=/etc/vault \
+         --exec /bin/sh -- -c "aws configure set s3.signature_version s3v4 && aws s3 cp ${VAULT_TLS_CERT_PATH} /etc/vault/tls/tls.pem && aws s3 cp ${VAULT_TLS_KEY_PATH} /etc/vault/tls/tls-key.pem && chmod 0600 /etc/vault/tls/tls-key.pem && aws s3 cp ${VAULT_TLS_CA_PATH} /etc/vault/tls/ca.pem"
+
+  - name: vault.service
+    command: start
+    enabled: true
+    content: |
+      [Unit]
+      Description=Vault server
+      Requires=consul.service vault-assets.service
+      After=consul.service vault-assets.service
+
+      [Service]
+      Environment=IMAGE=docker://vault:${VAULT_VERSION}
+      ExecStartPre=/usr/bin/rkt --insecure-options=image fetch $${IMAGE}
+      ExecStart=/usr/bin/rkt --insecure-options=image run $${IMAGE} \
+         --volume=resolv,kind=host,source=/etc/resolv.conf \
+         --mount=volume=resolv,target=/etc/resolv.conf \
+         --volume=conf,kind=host,source=/etc/vault \
+         --mount=volume=conf,target=/etc/vault \
+         --net=host \
+         --inherit-env \
+         --exec /bin/vault -- server \
+         -config=/etc/vault/vault.hcl
+
+  - name: vault-unseal.service
+    command: start
+    enabled: true
+    content: |
+      [Unit]
+      Description=Unseal vault server
+      Requires=vault.service
+      After=vault.service
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      Environment=IMAGE=docker://mikesir87/aws-cli:1.11.33
+      Environment=KEY_NAME=vault-${ENVIRONMENT}-seal-key
+      Environment=AWS_REGION=${REGION}
+      # fetch image
+      ExecStartPre=/usr/bin/rkt --insecure-options=image fetch $${IMAGE}
+      ExecStart=/bin/bash /etc/vault/vault-unseal.sh
+
+  - name: backup-consul.service
+    content: |
+      [Unit]
+      Description=Backup consul KV store
+      Requires=consul.service
+      After=consul.service
+
+      [Service]
+      Type=oneshot
+      Environment=IMAGE=docker://jetstackexperimental/backup-consul:0.1
+      Environment=ENDPOINT=s3.amazonaws.com
+      Environment=BUCKET_NAME=${BUCKET_BACKUP}
+      Environment=CONSUL_HTTP_TOKEN=${CONSUL_MASTER_TOKEN}
+      ExecStartPre=/usr/bin/rkt --insecure-options=image fetch $${IMAGE}
+      ExecStart=/usr/bin/rkt --insecure-options=image run $${IMAGE} \
+         --volume=resolv,kind=host,source=/etc/resolv.conf \
+         --mount=volume=resolv,target=/etc/resolv.conf \
+         --volume=conf,kind=host,source=/etc/vault \
+         --mount=volume=conf,target=/etc/vault \
+         --net=host \
+         --inherit-env
+
+  - name: backup-consul.timer
+    command: start
+    enabled: true
+    content: |
+      [Unit]
+      Description=Backup consul according to schedule
+
+      [Timer]
+      OnCalendar=${BACKUP_SCHEDULE}
+
+      [Install]
+      WantedBy=timers.target
+
+write_files:
+  - path: "/etc/consul/consul.json"
+    permissions: "0600"
+    owner: "100:100"
+    content: |
+      {
+        "acl_default_policy" : "deny",
+        "acl_down_policy" : "deny",
+        "acl_master_token" : "${CONSUL_MASTER_TOKEN}",
+        "acl_datacenter" : "${REGION}",
+        "datacenter" : "${REGION}",
+        "log_level" : "INFO",
+        "disable_remote_exec" : true,
+        "client_addr" : "0.0.0.0",
+        "bind_addr" : "0.0.0.0",
+        "encrypt" : "${CONSUL_ENCRYPT}",
+        "server" : true,
+        "bootstrap_expect" : ${INSTANCE_COUNT}
+        }
+
+  - path: "/etc/vault/vault.hcl"
+    permissions: "0600"
+    owner: "100:100"
+    content: |
+      backend "consul" {
+        address = "127.0.0.1:8500"
+        scheme = "http"
+        token  = "${CONSUL_MASTER_TOKEN}"
+        path = "vault-${ENVIRONMENT}/"
+        disable_registration = "true"
+      }
+
+      listener "tcp" {
+        address = "0.0.0.0:8200"
+        tls_cert_file = "/etc/vault/tls/tls.pem"
+        tls_key_file = "/etc/vault/tls/tls-key.pem"
+      }
+
+      default_lease_ttl = "168h"
+      max_lease_ttl = "720h"
+      disable_mlock = true
+
+  - path: /etc/vault/vault-unseal.sh
+    permissions: "0600"
+    content: |
+      #!/bin/bash
+
+      set -e
+
+      while true; do
+        # exit right away if sealed
+        if [ "$(curl -s -k https://localhost:8200/v1/sys/health | jq -r .sealed)" == "false" ]; then exit 0; fi
+
+        # try to unseal if initialized
+        if [ "$(curl -s -k https://localhost:8200/v1/sys/init | jq -r .initialized)" == "true" ]; then
+          echo "get unseal key"
+          SEAL_KEY=$(rkt --insecure-options=image run $${IMAGE} \
+            --net=host \
+            --inherit-env \
+            --volume=resolv,kind=host,source=/etc/resolv.conf \
+            --mount volume=resolv,target=/etc/resolv.conf \
+            --exec /usr/bin/aws -- ssm get-parameters --region $${AWS_REGION} --names $${KEY_NAME} --with-decryption |  grep -o '"Value": ".*"' | cut -d '"' -f 4)
+          curl -s -k -X PUT -d "{\"key\": \"$${SEAL_KEY}\"}" https://localhost:8200/v1/sys/unseal
+          # check status
+          if [ "$(curl -s -k https://localhost:8200/v1/sys/health | jq -r .sealed)" == "false" ]; then
+            echo "vault unsealed"
+            exit 0
+          fi
+        else
+          echo "vault uninitialized"
+        fi
+
+        sleep 5
+      done

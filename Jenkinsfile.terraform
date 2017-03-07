@@ -14,6 +14,14 @@ node {
     docker.build(imageName)
   }
 
+  if terraformStack == "vault" {
+    stage("ensure vault secrets exist") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+        sh "docker run --rm ${imageName} bundle exec rake vault_secrets:all TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+      }
+    }
+  }
+
   stage("terraform plan ${terraformStack}") {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
       sh "docker run --rm ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack}"

@@ -141,7 +141,7 @@ namespace :packer do
   end
 end
 
-namespace :vault_tls do
+namespace :vault_secrets do
   task :prepare => :'terraform:hub_outputs' do
     vault_instances = ENV['VAULT_INSTANCES'] || 5
     @vault_instances = vault_instances.to_i
@@ -248,4 +248,6 @@ namespace :vault_tls do
       temp_files.each(&:unlink)
     end
   end
+
+  task :all => [:ensure_ca, :ensure_cert]
 end
