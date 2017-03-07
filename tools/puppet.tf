@@ -49,6 +49,15 @@ resource "aws_security_group_rule" "puppet_master_ingress_allow_bastion_all" {
   security_group_id        = "${aws_security_group.puppet_master.id}"
 }
 
+resource "aws_security_group_rule" "puppet_master_ingress_allow_jenkins_ssh" {
+  type                     = "ingress"
+  protocol                 = "tcp"
+  from_port                = 22
+  to_port                  = 22
+  source_security_group_id = "${aws_security_group.jenkins.id}"
+  security_group_id        = "${aws_security_group.puppet_master.id}"
+}
+
 data "template_file" "puppet_master_user_data" {
   template = "${file("${path.module}/templates/puppet_master_user_data.yaml")}"
 
