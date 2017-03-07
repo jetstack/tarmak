@@ -94,7 +94,7 @@ namespace :terraform do
   end
 
   task :hub_outputs => :prepare_env do
-    @s3 = Aws::S3::Resource.new
+    @s3 = Aws::S3::Resource.new(region: @aws_region)
     bucket = @s3.bucket(@terraform_state_bucket)
     state = JSON.parse(bucket.object("network_#{@terraform_environment}_hub.tfstate").get.body.read)
     state['modules'].each do |mod|
@@ -151,8 +151,9 @@ namespace :vault_secrets do
 
     @secrets_bucket = @terraform_hub_outputs['secrets_bucket']['value']
     @secrets_kms_arn = @terraform_hub_outputs['secrets_kms_arn']['value']
-    kms = Aws::KMS::Client.new
+    kms = Aws::KMS::Client.new(region: @aws_region)
     @s3_secrets = Aws::S3::Encryption::Client.new(
+      region: @aws_region,
       kms_key_id: @secrets_kms_arn,
       kms_client: kms,
     )
