@@ -1,0 +1,37 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": ""
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "eu-west-1",
+      "source_ami": "ami-7abd0209",
+      "instance_type": "m4.large",
+      "ssh_username": "centos",
+      "ssh_pty": "true",
+      "ami_name": "CentOS 7 x86_64 with puppet-agent {{timestamp}}",
+      "associate_public_ip_address": true,
+      "run_tags": {
+        "Project": "cynosura",
+        "Contact": "matt.turner@skyscanner.net"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "sudo -E -S sh '{{ .Path }}'",
+      "inline": [
+        "rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm",
+        "yum update -y",
+        "yum install -y epel-release",
+        "yum install -y git puppet-agent vim socat python-pip at jq unzip",
+        "pip install awscli"
+      ]
+    }
+  ]
+}

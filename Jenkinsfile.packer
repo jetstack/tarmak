@@ -1,0 +1,19 @@
+// vim: et:ts=2:sw=2:ft=groovy
+node {
+  checkout scm
+
+  def splitJobName = env.JOB_NAME.split('/')
+  def packerName = splitJobName[-1]
+
+  def imageName = "platform.kubernetes.terraform:packer-${packerName}-${env.BUILD_NUMBER}"
+
+  stage ('build docker image'){
+    docker.build(imageName)
+  }
+
+  stage('packer build') {
+    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+      sh "docker run --rm ${imageName} bundle exec rake packer:build PACKER_NAME=${packerName}"
+    }
+  }
+}

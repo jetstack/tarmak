@@ -118,3 +118,11 @@ namespace :terraform do
     sh 'find . -name "*.tf" | xargs -n1 dirname | sort -u | xargs -n 1 terraform validate'
   end
 end
+
+namespace :packer do
+  task :build do
+    Dir.chdir('packer') do
+    sh 'packer', 'build', "#{ENV['PACKER_NAME']}.json"
+    end
+  end
+end

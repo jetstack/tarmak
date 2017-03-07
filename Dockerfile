@@ -20,6 +20,16 @@ RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terr
     mv terraform /usr/local/bin/terraform && \
     chmod +x /usr/local/bin/terraform
 
+# install packer
+ENV PACKER_VERSION 0.12.3
+ENV PACKER_HASH d11c7ff78f546abaced4fcc7828f59ba1346e88276326d234b7afed32c9578fe
+RUN curl -sL  https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip > /tmp/packer.zip && \
+    echo "${PACKER_HASH}  /tmp/packer.zip" | sha256sum  -c && \
+    unzip /tmp/packer.zip && \
+    rm /tmp/packer.zip && \
+    mv packer /usr/local/bin/packer && \
+    chmod +x /usr/local/bin/packer
+
 # install rubygems
 WORKDIR /work
 ADD Gemfile .
