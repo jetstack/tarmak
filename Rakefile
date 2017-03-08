@@ -269,12 +269,36 @@ namespace :vault do
     url = "https://#{@vault_cn}:8200"
     logger.info "vault url = #{url}"
     uri = URI(url)
-    Net::HTTP.start(
+    resp = Net::HTTP.start(
       uri.host, uri.port,
       :use_ssl => uri.scheme == 'https',
       :verify_mode => OpenSSL::SSL::VERIFY_NONE,
     ) do |http|
-        puts http.request(Net::HTTP::Get.new('/v1/sys/init'))
+      resp = JSON.parse(http.request(Net::HTTP::Get.new('/v1/sys/init')).body)
+
+      if resp['initialized']
+        logger.info 'vault is already initialized'
+      else
+        logger.info 'initialize vault'
+
+        req = Net::HTTP::Put.new('/v1/sys/init', { 'Content-Type' => 'application/json'})
+        req.body = JSON.generate({:secret_shares => 1, :secret_threshold => 1})
+
+        resp = JSON.parse(http.request(req).body)
+
+        logger.debug 'store root token in S3'
+        @secrets_bucket.put_object(key: @vault_root_token_path, body: resp['root_token'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
+
+        logger.debug 'store unseal key in AWS parameter store'
+        ssm = Aws::SSM::Client.new(region: 'eu-west-1')
+        ssm.put_parameter({
+          name: "vault-#{@terraform_environment}-seal-key",
+          value: resp['keys_base64'].first,
+            type: 'SecureString',
+            key_id: @secrets_kms_arn,
+            overwrite: true,
+        })
+      end
     end
   end
 end
