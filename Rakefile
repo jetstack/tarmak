@@ -1,5 +1,6 @@
 require 'logger'
 require 'open3'
+require 'json'
 logger = Logger.new(STDERR)
 logger.level = Logger::DEBUG
 
@@ -48,6 +49,19 @@ namespace :aws do
     puts "export AWS_ACCESS_KEY_ID=#{credentials.access_key_id}"
     puts "export AWS_SECRET_ACCESS_KEY=#{credentials.secret_access_key}"
     puts "export AWS_SESSION_TOKEN=#{credentials.session_token}"
+  end
+
+  desc 'login using jetstack vault'
+  task :login_jetstack do
+    cmd = ['vault', 'read', '-format', 'json', 'customer-skyscanner/aws/kubernetes-nonprod/sts/admin']
+    Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
+      stdin.close
+      fail "Getting credentails from vault failed: #{stderr.read}" if wait_thr.value != 0
+      credentials = JSON.parse(stdout.read)
+      puts "export AWS_ACCESS_KEY_ID=#{credentials['data']['access_key']}"
+      puts "export AWS_SECRET_ACCESS_KEY=#{credentials['data']['secret_key']}"
+      puts "export AWS_SESSION_TOKEN=#{credentials['data']['security_token']}"
+    end
   end
 end
 
