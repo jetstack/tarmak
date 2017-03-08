@@ -22,10 +22,13 @@ node {
     }
   }
 
+  def statusPlan = 0
+  def dockerVolume = ''
+
   stage("terraform plan ${terraformStack}") {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      def dockerVolume = sh script: "docker volume create", returnStdout: true
-      def statusPlan = sh script: "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan", returnStatus: true
+      dockerVolume = sh(script: "docker volume create", returnStdout: true).trim()
+      statusPlan = sh script: "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan", returnStatus: true
     }
   }
 
