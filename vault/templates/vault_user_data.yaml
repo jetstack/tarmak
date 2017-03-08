@@ -178,7 +178,7 @@ coreos:
       [Service]
       Type=oneshot
       Environment=IMAGE=docker://jetstackexperimental/backup-consul:0.1
-      Environment=ENDPOINT=s3.amazonaws.com
+      Environment=ENDPOINT=${S3_ENDPOINT}
       Environment=BUCKET_NAME=${BUCKET_BACKUP}
       Environment=CONSUL_HTTP_TOKEN=${CONSUL_MASTER_TOKEN}
       ExecStartPre=/usr/bin/rkt --insecure-options=image fetch $${IMAGE}

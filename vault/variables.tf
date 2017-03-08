@@ -10,6 +10,13 @@ variable "coreos_ami" {
   }
 }
 
+variable "s3_endpoint" {
+  default = {
+    us-east-1 = "s3.amazonaws.com"
+    eu-west-1 = "s3-eu-west-1.amazonaws.com"
+  }
+}
+
 variable "key_name" {
   default = "skyscanner_non_prod"
 }
