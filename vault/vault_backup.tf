@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "vault-backup" {
-  bucket = "${data.terraform_remote_state.network.bucket_prefix}-${var.environment}-${var.region}-vault-backup"
+  bucket = "${data.terraform_remote_state.network.bucket_prefix}${var.environment}-${var.region}-vault-backup"
   acl    = "private"
 
   lifecycle_rule {
