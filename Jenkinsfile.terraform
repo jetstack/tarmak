@@ -24,14 +24,18 @@ node {
 
   stage("terraform plan ${terraformStack}") {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      sh "docker run --rm ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack}"
+      def dockerVolume = "docker volume create", returnStdout: true
+      def statusPlan = "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan", returnStatus: true
     }
   }
 
-  input 'Shall I apply?'
-  stage("terraform apply ${terraformStack}") {
-    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      sh "docker run --rm ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack}"
+  // this is only run if plan has actual changes
+  if (statusPlan == 2){
+    input 'Shall I apply?'
+    stage("terraform apply ${terraformStack}") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+        sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan"
+      }
     }
   }
 

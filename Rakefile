@@ -67,6 +67,7 @@ end
 
 namespace :terraform do
   task :prepare_env => :'aws:prepare' do
+    @terraform_plan= ENV['TERRAFORM_PLAN']
     @terraform_environments = ['nonprod']
     @terraform_environment = ENV['TERRAFORM_ENVIRONMENT'] || 'nonprod'
     unless @terraform_environments.include?(@terraform_environment)
@@ -120,13 +121,30 @@ namespace :terraform do
 
   task :plan => :prepare do
     Dir.chdir(@terraform_stack) do
-      sh 'terraform', 'plan', *@terraform_args
+      args = @terraform_args
+
+      # generate plan and return a 2 exitcode if there's something to change
+      if not @terraform_plan.nil?
+        args << "-out=#{@terraform_plan}"
+        args << '-detailed-exitcode'
+        sh 'terraform', 'plan', *args do |ok, res|
+          fail "terraform plan failed" if res.exitstatus != 0 and res.exitstatus != 2
+          exit res.exitstatus
+        end
+      else
+        sh 'terraform', 'plan', *args
+      end
     end
   end
 
   task :apply => :prepare do
     Dir.chdir(@terraform_stack) do
-      sh 'terraform', 'apply', *@terraform_args
+      if @terraform_plan.nil?
+        args = @terraform_args
+      else
+        args = [@terraform_plan]
+      end
+      sh 'terraform', 'apply', *args
     end
   end
 
