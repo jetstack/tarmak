@@ -155,7 +155,7 @@ namespace :packer do
   end
 end
 
-namespace :vault_secrets do
+namespace :vault do
   task :prepare => :'terraform:hub_outputs' do
     vault_instances = ENV['VAULT_INSTANCES'] || 5
     @vault_instances = vault_instances.to_i
@@ -163,13 +163,21 @@ namespace :vault_secrets do
     @vault_path = "vault-#{@terraform_environment}"
     logger.info "vault CA zone=#{@vault_zone} instances=#{@vault_instances}"
 
+    # generate node names
+    @vault_cn = "vault.#{@vault_zone}"
+    @vault_nodes = [@vault_cn]
+    (1..@vault_instances).to_a.each do |i|
+      @vault_nodes << "vault-#{i}.#{@vault_zone}"
+    end
+
     secrets_bucket = @terraform_hub_outputs['secrets_bucket']['value']
     @secrets_bucket = @s3.bucket(secrets_bucket)
     @secrets_kms_arn = @terraform_hub_outputs['secrets_kms_arn']['value']
     logger.info "secrets bucket=#{secrets_bucket} kms_arn=#{@secrets_kms_arn}"
   end
 
-  task :ensure_ca => :prepare do
+  desc 'Ensure Cert certificate exists'
+  task :secrets_ca => :prepare do
     spec = {
       'CN' => "Vault CA #{@terraform_environment}",
       'key' => { 'algo' => 'rsa', 'size' => 2048 },
@@ -197,15 +205,12 @@ namespace :vault_secrets do
       end
     end
   end
-  task :ensure_cert => :ensure_ca do
-    cn = "vault.#{@vault_zone}"
-    nodes = [cn]
-    (1..@vault_instances).to_a.each do |i|
-      nodes << "vault-#{i}.#{@vault_zone}"
-    end
+
+  desc 'Ensure CA certificate exists'
+  task :secrets_cert => :secrets_ca do
     csr = {
-      'CN' => cn,
-      'hosts' => nodes,
+      'CN' => @vault_cn,
+      'hosts' => @vault_nodes,
       'key' => { 'algo' => 'rsa', 'size' => 2048 },
     }
     ca_config = {
@@ -241,7 +246,7 @@ namespace :vault_secrets do
         file
       end
 
-      cmd = ['cfssl', 'gencert', "-ca=#{temp_files[2].path}", "-ca-key=#{temp_files[1].path}", "-config=#{temp_files[0].path}", '-profile=server', "-hostname=#{nodes.join(',')}", '-']
+      cmd = ['cfssl', 'gencert', "-ca=#{temp_files[2].path}", "-ca-key=#{temp_files[1].path}", "-config=#{temp_files[0].path}", '-profile=server', "-hostname=#{@vault_nodes.join(',')}", '-']
 
       Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
         stdin.write(JSON.generate(csr))
@@ -257,5 +262,19 @@ namespace :vault_secrets do
     end
   end
 
-  task :all => [:ensure_ca, :ensure_cert]
+  task :secrets => [:secrets_ca, :secrets_cert]
+
+  desc 'Initialize vault if needed'
+  task :initialize => :prepare do
+    url = "https://#{@vault_cn}:8200"
+    logger.info "vault url = #{url}"
+    uri = URI(url)
+    Net::HTTP.start(
+      uri.host, uri.port,
+      :use_ssl => uri.scheme == 'https',
+      :verify_mode => OpenSSL::SSL::VERIFY_NONE,
+    ) do |http|
+        puts http.request(Net::HTTP::Get.new('/v1/sys/init'))
+    end
+  end
 end

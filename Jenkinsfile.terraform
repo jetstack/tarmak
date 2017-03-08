@@ -17,7 +17,7 @@ node {
   if (terraformStack == 'vault') {
     stage("ensure vault secrets exist") {
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-        sh "docker run --rm ${imageName} bundle exec rake vault_secrets:all TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+        sh "docker run --rm ${imageName} bundle exec rake vault:secrets TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
       }
     }
   }
@@ -34,4 +34,13 @@ node {
       sh "docker run --rm ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack}"
     }
   }
+
+  if (terraformStack == 'vault') {
+    stage("ensure vault is initialized") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+        sh "docker run --rm ${imageName} bundle exec rake vault:initialize TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+      }
+    }
+  }
+
 }
