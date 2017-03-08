@@ -116,6 +116,10 @@ write_files:
     test "204" -eq "$(curl -s -o /dev/null -w %{http_code} -k --cert /etc/puppetlabs/puppet/ssl/certs/$(hostname).pem --key /etc/puppetlabs/puppet/ssl/private_keys/$(hostname).pem --cacert /etc/puppetlabs/puppet/ssl/ca/ca_crt.pem -X DELETE https://localhost:8140/puppet-admin-api/v1/environment-cache)"
 
 runcmd:
+- systemctl start var-lib-puppet.mount
+- mkdir -p /var/lib/puppet/code /var/lib/puppet/puppet/ssl /etc/puppetlabs/code /etc/puppetlabs/puppet/ssl
+- systemctl start etc-puppetlabs-code.mount
+- systemctl start etc-puppetlabs-puppet-ssl.mount
 - useradd -g 0 -u 0 -o -d /var/lib/puppet-deploy puppet-deploy
 - rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
 - yum -y install epel-release https://yum.theforeman.org/releases/1.13/el7/x86_64/foreman-release.rpm
