@@ -33,12 +33,14 @@ node {
   }
 
   // this is only run if plan has actual changes
-  if (statusPlan == 2){
-    input 'Shall I apply?'
-    stage("terraform apply ${terraformStack}") {
+  stage("terraform apply ${terraformStack}") {
+    if (statusPlan == 2){
+      input 'Shall I apply?'
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
         sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan"
       }
+    } else {
+      echo 'No changes - no apply needed'
     }
   }
 
