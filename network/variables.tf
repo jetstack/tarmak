@@ -38,6 +38,10 @@ variable "private_zones" {
   default = []
 }
 
+variable "vpc_peer_stack" {
+  default = ""
+}
+
 variable "environment" {
   default = "nonprod"
 }
