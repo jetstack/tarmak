@@ -122,7 +122,7 @@ namespace :terraform do
   task :plan => :prepare do
     Dir.chdir(@terraform_stack) do
       args = @terraform_args
-      args << '-var-file=/share/tokens.tfvars' if @terraform_stack == 'kubernetes' and File.exists?('/share/tokens.tfvar')
+      args << '-var-file=/share/tokens.tfvar' if @terraform_stack == 'kubernetes' and File.exists?('/share/tokens.tfvar')
       # generate plan and return a 2 exitcode if there's something to change
       if not @terraform_plan.nil?
         args << "-out=#{@terraform_plan}"
