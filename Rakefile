@@ -357,7 +357,7 @@ namespace :vault do
     ENV['VAULT_TOKEN'] = root_token
     ENV['VAULT_CACERT'] = ca_file.path
     @terraform_name = ENV['TERRAFORM_NAME']
-    ENV['CLUSTER_ID'] = "#{@terraform_environment}_#{@terraform_name}"
+    ENV['CLUSTER_ID'] = "#{@terraform_environment}-#{@terraform_name}"
     sh "vault/scripts/setup_vault.sh"
     sh 'mv', 'tokens.tfvar', '/share' if File.directory?("/share")
     ca_file.unlink
