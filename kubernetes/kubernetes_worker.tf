@@ -31,7 +31,7 @@ resource "aws_elb" "kubernetes_nodeport" {
 }
 
 resource "aws_elb" "kubernetes_ingress_controller" {
-  name     = "${data.template_file.stack_name_dns.rendered}-k8s-ingress"
+  name    = "${data.template_file.stack_name_dns.rendered}-k8s-ingress"
   subnets = ["${data.terraform_remote_state.network.public_subnet_ids}"]
 
   security_groups = [

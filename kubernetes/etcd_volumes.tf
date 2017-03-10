@@ -5,9 +5,9 @@ resource "aws_ebs_volume" "etcd" {
   type              = "gp2"
 
   tags {
-    Name               = "${data.template_file.stack_name.rendered}-etcd-${count.index+1}"
-    Environment        = "${var.environment}"
-    Project            = "${var.project}"
-    Contact            = "${var.contact}"
+    Name        = "${data.template_file.stack_name.rendered}-etcd-${count.index+1}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
   }
 }

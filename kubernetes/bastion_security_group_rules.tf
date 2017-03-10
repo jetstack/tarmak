@@ -24,4 +24,3 @@ resource "aws_security_group_rule" "etcd_allow_bastion_ssh" {
   source_security_group_id = "${aws_security_group.etcd.id}"
   security_group_id        = "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
 }
-

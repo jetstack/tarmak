@@ -3,20 +3,11 @@ resource "aws_security_group" "etcd" {
   vpc_id = "${data.terraform_remote_state.network.vpc_id}"
 
   tags {
-    Name               = "${data.template_file.stack_name.rendered}-k8s-etcd"
-    Environment        = "${var.environment}"
-    Project            = "${var.project}"
-    Contact            = "${var.contact}"
+    Name        = "${data.template_file.stack_name.rendered}-k8s-etcd"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
   }
-}
-
-resource "aws_security_group_rule" "etcd_allow_ssh_puppet_master" {
-  type                     = "ingress"
-  from_port                = 22
-  to_port                  = 22
-  protocol                 = "tcp"
-  source_security_group_id = "${data.terraform_remote_state.hub_tools.puppet_master_security_group_id}",
-  security_group_id        = "${aws_security_group.etcd.id}"
 }
 
 resource "aws_security_group_rule" "etcd_allow_ssh_CI" {
@@ -26,15 +17,6 @@ resource "aws_security_group_rule" "etcd_allow_ssh_CI" {
   protocol                 = "tcp"
   source_security_group_id = "${data.terraform_remote_state.hub_tools.jenkins_security_group_id}"
   security_group_id        = "${aws_security_group.etcd.id}"
-}
-
-resource "aws_security_group_rule" "puppet_master_allow_puppet_etcd" {
-  type                     = "ingress"
-  from_port                = 8140
-  to_port                  = 8140
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.etcd.id}"
-  security_group_id        = "${data.terraform_remote_state.hub_tools.puppet_master_security_group_id}",
 }
 
 resource "aws_security_group_rule" "etcd_allow_etcd_client_kubernetes_master" {
