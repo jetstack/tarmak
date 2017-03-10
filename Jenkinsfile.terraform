@@ -32,6 +32,15 @@ node {
     }
   }
 
+  // this is only for stack kubernetes
+  if (terraformStack == 'kubernetes') {
+    stage("setup k8s cluster in vault") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+        sh "docker run --rm ${imageName} bundle exec rake vault:setup_k8s TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
+      }
+    }
+  }
+
   // this is only run if plan has actual changes
   stage("terraform apply ${terraformStack}") {
     if (statusPlan == 2){

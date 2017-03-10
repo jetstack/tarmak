@@ -343,4 +343,22 @@ namespace :vault do
       end
     end
   end
+
+  desc 'Setup a k8s cluster in cault'
+  task :setup_k8s => :prepare do
+    ca_s3_path = "#{@vault_path}/ca.pem"
+    root_token_s3_path = "#{@vault_path}/root-token"
+    ca_file = Tempfile.new
+    ca_file.write(@secrets_bucket.object(ca_s3_path).get.body.read)
+    ca_file.close
+    root_token = @secrets_bucket.object(root_token_s3_path).get.body.read
+    puts root_token
+    ENV['VAULT_ADDR'] = "https://#{@vault_cn}:8200"
+    ENV['VAULT_TOKEN'] = root_token
+    ENV['VAULT_CACERT'] = ca_file.path
+    @terraform_name = ENV['TERRAFORM_NAME']
+    ENV['CLUSTER_ID'] = "#{@terraform_environment}_#{@terraform_name}"
+    sh "vault/scripts/setup_vault.sh"
+    ca_file.unlink
+  end
 end

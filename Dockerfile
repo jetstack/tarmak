@@ -33,6 +33,16 @@ RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terr
     mv terraform /usr/local/bin/terraform && \
     chmod +x /usr/local/bin/terraform
 
+# install vault
+ENV VAULT_VERSION 0.6.5
+ENV VAULT_HASH c9d414a63e9c4716bc9270d46f0a458f0e9660fd576efb150aede98eec16e23e
+RUN curl -sL  https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip > /tmp/vault.zip && \
+    echo "${VAULT_HASH}  /tmp/vault.zip" | sha256sum  -c && \
+    unzip /tmp/vault.zip && \
+    rm /tmp/vault.zip && \
+    mv vault /usr/local/bin/vault && \
+    chmod +x /usr/local/bin/vault
+
 # install kubectl
 ENV KUBECTL_VERSION 1.5.3
 ENV KUBECTL_HASH 9cfc6cfb959d934cc8080c2dea1e5a6490fd29e592718c5b2b2cfda5f92e787e
