@@ -23,7 +23,7 @@ resource "aws_instance" "etcd" {
     Environment        = "${var.environment}"
     Project            = "${var.project}"
     Contact            = "${var.contact}"
-    Etcd_Volume_Attach = "kubernetes.${data.template_file.stack_name.rendered}.etcd.${count.index}"
+    Etcd_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
     Role               = "etcd"
   }
 
