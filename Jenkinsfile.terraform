@@ -23,22 +23,23 @@ node {
     }
   }
 
+  // stores terraform plan status
+  def statusPlan = 0
+
+  // docker volume that is shared between the runs
+  def dockerVolume = sh(script: "docker volume create", returnStdout: true).trim()
+
   // this is only for stack kubernetes
   if (terraformStack == 'kubernetes') {
     stage("setup k8s cluster in vault") {
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-        sh "docker run --rm ${imageName} bundle exec rake vault:setup_k8s TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
+        sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake vault:setup_k8s TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
       }
     }
   }
 
-  def statusPlan = 0
-  def dockerVolume = ''
-
-
   stage("terraform plan ${terraformStack}") {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      dockerVolume = sh(script: "docker volume create", returnStdout: true).trim()
       statusPlan = sh script: "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan", returnStatus: true
     }
   }

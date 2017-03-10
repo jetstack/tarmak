@@ -122,7 +122,7 @@ namespace :terraform do
   task :plan => :prepare do
     Dir.chdir(@terraform_stack) do
       args = @terraform_args
-
+      args << '-var-file=/share/tokens.tfvars' if @terraform_stack == 'kubernetes' and File.exists?('/share/tokens.tfvar')
       # generate plan and return a 2 exitcode if there's something to change
       if not @terraform_plan.nil?
         args << "-out=#{@terraform_plan}"
@@ -359,6 +359,7 @@ namespace :vault do
     @terraform_name = ENV['TERRAFORM_NAME']
     ENV['CLUSTER_ID'] = "#{@terraform_environment}_#{@terraform_name}"
     sh "vault/scripts/setup_vault.sh"
+    sh 'mv', 'tokens.tfvar', '/share' if File.directory?("/share")
     ca_file.unlink
   end
 end
