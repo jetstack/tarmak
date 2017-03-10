@@ -4,6 +4,15 @@ repo_upgrade: all
 
 write_files:
 
+  - path: /etc/sysconfig/puppernetes
+    permissions: '0644'
+    content: |
+      PUPPERNETES_ROLE=${puppernetes_role}
+      PUPPERNETES_CLUSTER=${puppernetes_cluster}
+      PUPPERNETES_DNS_ROOT=${puppernetes_dns_root}
+      PUPPERNETES_HOSTNAME=${puppernetes_hostname}
+      PUPPERNETES_ENVIRONMENT=${puppernetes_environment}
+
   - path: /etc/puppetlabs/puppet/puppet.conf
     permissions: '0644'
     content: |
@@ -17,11 +26,11 @@ write_files:
       #!/bin/bash
       echo VAULT_TOKEN=${vault_token}
 
-  - path: /etc/facter/facts.d/dns_root
+  - path: /etc/facter/facts.d/puppernetes
     permissions: '0700'
     content: |
       #!/bin/bash
-      echo DNS_ROOT=${dns_root}
+      cat /etc/sysconfig/puppernetes
 
   - path: /etc/sudoers
     permissions: '0440'

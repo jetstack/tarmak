@@ -27,18 +27,25 @@ resource "aws_instance" "etcd" {
     Role               = "etcd"
   }
 
-  user_data = "${data.template_file.etcd_user_data.rendered}"
+  user_data = "${element(data.template_file.etcd_user_data.*.rendered, count.index)}"
 }
 
 data "template_file" "etcd_user_data" {
+  count    = "${var.etcd_instance_count}"
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
   vars {
     puppet_fqdn        = "puppetmaster.${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
     puppet_environment = "${replace(data.template_file.stack_name.rendered, "-", "_")}"
     puppet_runinterval = "${var.puppet_runinterval}"
-    vault_token        = "${var.vault_init_token_etcd}"
-    dns_root           = "${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
+
+    vault_token = "${var.vault_init_token_etcd}"
+
+    puppernetes_dns_root    = "${data.terraform_remote_state.hub_network.private_zones[0]}"
+    puppernetes_role        = "etcd"
+    puppernetes_hostname    = "etcd-${count.index+1}"
+    puppernetes_cluster     = "${data.template_file.stack_name.rendered}"
+    puppernetes_environment = "${var.environment}"
   }
 }
 

@@ -60,8 +60,14 @@ data "template_file" "kubernetes_master_user_data" {
     puppet_fqdn        = "puppetmaster.${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
     puppet_environment = "${replace(data.template_file.stack_name.rendered, "-", "_")}"
     puppet_runinterval = "${var.puppet_runinterval}"
-    vault_token        = "${var.vault_init_token_master}"
-    dns_root           = "${data.terraform_remote_state.hub_network.private_zones[0]}"
+
+    vault_token = "${var.vault_init_token_master}"
+
+    puppernetes_dns_root    = "${data.terraform_remote_state.hub_network.private_zones[0]}"
+    puppernetes_role        = "master"
+    puppernetes_hostname    = "master"
+    puppernetes_cluster     = "${data.template_file.stack_name.rendered}"
+    puppernetes_environment = "${var.environment}"
   }
 }
 
