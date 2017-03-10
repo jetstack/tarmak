@@ -37,7 +37,7 @@ class puppernetes::master(
   $apiserver_base_path = "${::puppernetes::kubernetes_ssl_dir}/kube-apiserver"
   vault_client::cert_service { 'kube-apiserver':
     base_path   => $apiserver_base_path,
-    common_name => "kube-apiserver.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
+    common_name => "api.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-apiserver",
     user        => $::puppernetes::kubernetes_user,
     ip_sans     => "${apiserver_ip_sans},${::puppernetes::ipaddress}",
