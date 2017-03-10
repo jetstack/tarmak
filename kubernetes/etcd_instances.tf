@@ -52,7 +52,7 @@ data "template_file" "etcd_user_data" {
 
 resource "aws_route53_record" "etcd" {
   zone_id = "${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
-  name    = "etcd-${count.index}.${data.template_file.stack_name.rendered}"
+  name    = "etcd-${count.index+1}.${data.template_file.stack_name_dns.rendered}"
   type    = "A"
   ttl     = "300"
   records = ["${element(aws_instance.etcd.*.private_ip, count.index)}"]
