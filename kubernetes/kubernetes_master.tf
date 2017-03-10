@@ -1,5 +1,5 @@
 resource "aws_elb" "kubernetes_master" {
-  name     = "${data.template_file.stack_name.rendered}-master"
+  name     = "${data.template_file.stack_name_dns.rendered}-master"
   subnets  = ["${data.terraform_remote_state.network.private_subnet_ids}"]
   internal = true
 

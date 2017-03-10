@@ -1,5 +1,5 @@
 resource "aws_elb" "kubernetes_nodeport" {
-  name     = "${data.template_file.stack_name.rendered}-k8s-nodeport"
+  name     = "${data.template_file.stack_name_dns.rendered}-k8s-nodeport"
   subnets  = ["${data.terraform_remote_state.network.private_subnet_ids}"]
   internal = true
 
@@ -31,7 +31,7 @@ resource "aws_elb" "kubernetes_nodeport" {
 }
 
 resource "aws_elb" "kubernetes_ingress_controller" {
-  name    = "${data.template_file.stack_name.rendered}-k8s-ingress-controller"
+  name     = "${data.template_file.stack_name_dns.rendered}-k8s-ingress"
   subnets = ["${data.terraform_remote_state.network.public_subnet_ids}"]
 
   security_groups = [
@@ -64,22 +64,6 @@ resource "aws_elb" "kubernetes_ingress_controller" {
     instance_protocol = "http"
     lb_port           = 8080
     lb_protocol       = "http"
-  }
-
-  listener {
-    instance_port      = 31443
-    instance_protocol  = "http"
-    lb_port            = 8443
-    lb_protocol        = "https"
-    ssl_certificate_id = "${aws_iam_server_certificate.stardotyakovio.arn}"
-  }
-
-  listener {
-    instance_port      = 32443
-    instance_protocol  = "https"
-    lb_port            = 9443
-    lb_protocol        = "https"
-    ssl_certificate_id = "${aws_iam_server_certificate.stardotyakovio.arn}"
   }
 
   health_check {

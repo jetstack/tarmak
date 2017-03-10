@@ -26,6 +26,10 @@ data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}_${var.name}"
 }
 
+data "template_file" "stack_name_dns" {
+  template = "${var.stack_name_prefix}${var.environment}-${var.name}"
+}
+
 variable "allowed_account_ids" {
   type    = "list"
   default = ["513013539150"]
