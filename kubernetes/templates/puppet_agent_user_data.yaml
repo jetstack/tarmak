@@ -6,8 +6,8 @@ write_files:
 
   - path: /etc/vault/ca.pem
     permissions: '0644'
-    content: |
-      ${vault_ca}
+    encoding: b64
+    content: ${vault_ca}
 
   - path: /etc/sysconfig/puppernetes
     permissions: '0644'
