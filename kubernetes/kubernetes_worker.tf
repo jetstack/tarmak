@@ -100,7 +100,6 @@ resource "aws_launch_configuration" "kubernetes_worker" {
 
   security_groups = [
     "${aws_security_group.kubernetes_worker.id}",
-    "${data.terraform_remote_state.hub_tools.remote_admin_security_group_id}",
   ]
 
   root_block_device {

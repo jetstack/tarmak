@@ -11,7 +11,6 @@ resource "aws_instance" "etcd" {
 
   vpc_security_group_ids = [
     "${aws_security_group.etcd.id}",
-    "${data.terraform_remote_state.hub_tools.remote_admin_security_group_id}",
   ]
 
   root_block_device {
