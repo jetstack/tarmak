@@ -218,8 +218,20 @@ namespace :vault do
         stdin.close
         fail "Generating CA failed: #{stderr.read}" if wait_thr.value != 0
         @ca = JSON.parse(stdout.read)
-        @secrets_bucket.put_object(key: cert_path, body: @ca['cert'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
-        @secrets_bucket.put_object(key: key_path, body: @ca['key'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
+        @secrets_bucket.put_object(
+          key: cert_path,
+          body: @ca['cert'],
+          server_side_encryption: 'aws:kms',
+          ssekms_key_id: @secrets_kms_arn,
+          content_type: 'text/plain',
+        )
+        @secrets_bucket.put_object(
+          key: key_path,
+          body: @ca['key'],
+          server_side_encryption: 'aws:kms',
+          ssekms_key_id: @secrets_kms_arn,
+          content_type: 'text/plain',
+        )
       end
     end
   end
@@ -271,8 +283,20 @@ namespace :vault do
         stdin.close
         fail "Generating cert failed: #{stderr.read}" if wait_thr.value != 0
         cert = JSON.parse(stdout.read)
-        @secrets_bucket.put_object(key: cert_path, body: cert['cert'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
-        @secrets_bucket.put_object(key: key_path, body: cert['key'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
+        @secrets_bucket.put_object(
+          key: cert_path,
+          body: cert['cert'],
+          server_side_encryption: 'aws:kms',
+          ssekms_key_id: @secrets_kms_arn,
+          content_type: 'text/plain',
+        )
+        @secrets_bucket.put_object(
+          key: key_path,
+          body: cert['key'],
+          server_side_encryption: 'aws:kms',
+          ssekms_key_id: @secrets_kms_arn,
+          content_type: 'text/plain',
+        )
       end
 
       # cleanup files
