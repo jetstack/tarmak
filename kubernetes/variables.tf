@@ -69,7 +69,7 @@ variable "puppet_runinterval" {
 
 # etcd
 variable "etcd_instance_type" {
-  default = "c4.large"
+  default = "m3.medium"
 }
 
 variable "etcd_instance_count" {
