@@ -51,3 +51,9 @@ resource "aws_route" "them_peering_private" {
   destination_cidr_block    = "${var.network}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peering.id}"
 }
+
+resource "aws_route53_zone_association" "hub_zone" {
+  count   = "${signum(length(var.vpc_peer_stack))}"
+  zone_id = "${data.terraform_remote_state.vpc_peer_stack.private_zone_ids[0]}"
+  vpc_id  = "${aws_vpc.main.id}"
+}
