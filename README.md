@@ -2,6 +2,8 @@
 
 ## Terraform
 
+![terraform architecture](docs/terraform-diagram.png "Terraform Architecture")
+
 ### Stacks
 
 #### network
