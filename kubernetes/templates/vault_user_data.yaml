@@ -4,6 +4,11 @@ repo_upgrade: all
 
 write_files:
 
+- path: /etc/vault/ca.pem
+  permissions: 0644
+  content: |
+    ${vault_ca}
+
 - path: /etc/sysconfig/vault
   permissions: 0600
   content: |

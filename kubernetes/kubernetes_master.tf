@@ -62,6 +62,7 @@ data "template_file" "kubernetes_master_user_data" {
     puppet_runinterval = "${var.puppet_runinterval}"
 
     vault_token = "${var.vault_init_token_master}"
+    vault_ca    = "${data.aws_s3_bucket_object.vault_ca.body}"
 
     puppernetes_dns_root    = "${data.terraform_remote_state.hub_network.private_zones[0]}"
     puppernetes_role        = "master"
