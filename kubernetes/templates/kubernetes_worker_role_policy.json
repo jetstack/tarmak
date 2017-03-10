@@ -1,0 +1,37 @@
+{
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*",
+        "autoscaling:Describe*",
+	"autoscaling:SetDesiredCapacity",
+	"autoscaling:TerminateInstanceInAutoScalingGroup",
+        "ec2:AttachVolume",
+        "ec2:DetachVolume",
+        "ec2:ModifyInstanceAttribute"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages",
+        "ecr:BatchGetImage",
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+	"ecr:InitiateLayerUpload",
+        "ecr:CreateRepository"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ],
+  "Version": "2012-10-17"
+}
