@@ -3,7 +3,7 @@ output "vpc_id" {
 }
 
 output "vpc_net" {
-  value = "${aws_vpc.main.cidr}"
+  value = "${aws_vpc.main.cidr_block}"
 }
 
 output "stack_name" {
