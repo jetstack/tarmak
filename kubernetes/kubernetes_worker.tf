@@ -120,7 +120,7 @@ data "template_file" "kubernetes_worker_user_data" {
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
   vars {
-    puppet_fqdn        = "puppetmaster.${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
+    puppet_fqdn        = "puppet.${data.terraform_remote_state.hub_network.private_zones[0]}"
     puppet_environment = "${replace(data.template_file.stack_name.rendered, "-", "_")}"
     puppet_runinterval = "${var.puppet_runinterval}"
 
