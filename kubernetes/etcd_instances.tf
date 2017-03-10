@@ -45,7 +45,7 @@ data "template_file" "etcd_user_data" {
     puppernetes_dns_root    = "${data.terraform_remote_state.hub_network.private_zones[0]}"
     puppernetes_role        = "etcd"
     puppernetes_hostname    = "etcd-${count.index+1}"
-    puppernetes_cluster     = "${data.template_file.stack_name.rendered}"
+    puppernetes_cluster     = "${data.template_file.stack_name_dns.rendered}"
     puppernetes_environment = "${var.environment}"
   }
 }
