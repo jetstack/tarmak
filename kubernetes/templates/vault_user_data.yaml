@@ -6,6 +6,7 @@ write_files:
 
 - path: /etc/vault/ca.pem
   permissions: 0644
+  encoding: "base64"
   content: |
     ${vault_ca}
 
