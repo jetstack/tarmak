@@ -123,7 +123,7 @@ resource "aws_autoscaling_group" "kubernetes_master" {
 
 resource "aws_route53_record" "kubernetes_master" {
   zone_id = "${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
-  name    = "kube-apiserver.${data.template_file.stack_name.rendered}"
+  name    = "api.${data.template_file.stack_name_dns.rendered}"
   type    = "CNAME"
   ttl     = "60"
   records = ["${aws_elb.kubernetes_master.dns_name}"]
