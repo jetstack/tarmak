@@ -14,21 +14,12 @@ node {
     docker.build(imageName)
   }
 
+  // this is only for stack vault
   if (terraformStack == 'vault') {
     stage("ensure vault secrets exist") {
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
         sh "docker run --rm ${imageName} bundle exec rake vault:secrets TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
       }
-    }
-  }
-
-  def statusPlan = 0
-  def dockerVolume = ''
-
-  stage("terraform plan ${terraformStack}") {
-    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      dockerVolume = sh(script: "docker volume create", returnStdout: true).trim()
-      statusPlan = sh script: "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan", returnStatus: true
     }
   }
 
@@ -38,6 +29,17 @@ node {
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
         sh "docker run --rm ${imageName} bundle exec rake vault:setup_k8s TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
       }
+    }
+  }
+
+  def statusPlan = 0
+  def dockerVolume = ''
+
+
+  stage("terraform plan ${terraformStack}") {
+    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+      dockerVolume = sh(script: "docker volume create", returnStdout: true).trim()
+      statusPlan = sh script: "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan", returnStatus: true
     }
   }
 

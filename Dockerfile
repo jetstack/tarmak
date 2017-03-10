@@ -1,7 +1,7 @@
 FROM ruby:2.3
 
 # apt-get install
-RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y unzip jq && rm -rf /var/lib/apt/lists/*
 
 # install cloudflare ssl
 ENV CFSSL_VERSION 1.2
