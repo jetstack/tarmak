@@ -63,8 +63,8 @@ write_files:
 
     :hierarchy:
       - "nodes/%{::trusted.certname}"
-      - "role/%{ec2_tag_role}"
-      - "environment/%{ec2_tag_environment}"
+      - "role/%{::puppernetes_role}"
+      - "environment/%{puppernetes_environment}"
       - common
 
     :yaml:
