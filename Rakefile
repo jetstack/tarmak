@@ -130,6 +130,7 @@ namespace :terraform do
       if not @terraform_plan.nil?
         args << "-out=#{@terraform_plan}"
         args << '-detailed-exitcode'
+        args << '-destroy' if ENV['TERRAFORM_DESTROY'] == 'true'
         sh 'terraform', 'plan', *args do |ok, res|
           fail "terraform plan failed" if res.exitstatus != 0 and res.exitstatus != 2
           exit res.exitstatus
@@ -367,7 +368,6 @@ namespace :vault do
     ENV['CLUSTER_ID'] = @cluster_name
     sh "vault/scripts/setup_vault.sh"
     sh 'mv', 'tokens.tfvar', '/share' if File.directory?("/share")
-    ca_file.unlink
   end
 
   desc 'Generate kubeconfig for cluster'
