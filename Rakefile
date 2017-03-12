@@ -399,21 +399,20 @@ namespace :vault do
         'user' => {},
       }],
     }
-    cmd = ['vault', 'write', '-format', 'json', "#{ENV['CLUSTER_ID']}/nonprod-devcluster/pki/k8s/sign/admin", "common_name=admin"]
+    cmd = ['vault', 'write', '-format', 'json', "#{ENV['CLUSTER_ID']}/nonprod-devcluster/pki/k8s/issue/admin", "common_name=admin"]
     Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
       stdin.close
       fail "Getting credentails from vault failed: #{stderr.read}" if wait_thr.value != 0
-      creds = JSON.parse(stdout.read)
+      creds = JSON.parse(stdout.read)['data']
       kubeconfig['users'][0]['user']['client-key-data'] = Base64.encode64(creds['private_key'])
       kubeconfig['users'][0]['user']['client-certificate-data'] = Base64.encode64(creds['certificate'])
-      kubeconfig['clusters'][0]['cluster']['certificate-authority-data'] = Base64.encode64(creds['ca_chain'])
+      kubeconfig['clusters'][0]['cluster']['certificate-authority-data'] = Base64.encode64(creds['issuing_ca'])
       dest_file = 'kubeconfig-tunnel'
       File.open(dest_file, 'w') do |f|
-        f.write '# SSH tunnel to API via Bastion:\n'
-        f.write "# ssh -N -L6443:api.#{cluster_name}.#{@terraform_hub_outputs['private_zones']['value'].first}:6443 centos@bastion.#{@terraform_hub_outputs['public_zones']['value'].first}"
-        f.write '#\n\n'
-        d.to_yaml
-        f.write d.to_yaml
+        f.write "# SSH tunnel to API via Bastion:\n"
+        f.write "# ssh -N -L6443:api.#{@cluster_name}.#{@terraform_hub_outputs['private_zones']['value'].first}:6443 centos@bastion.#{@terraform_hub_outputs['public_zones']['value'].first}\n"
+        f.write "#\n\n"
+        f.write kubeconfig.to_yaml
       end
       logger.info "Wrote #{dest_file}"
     end

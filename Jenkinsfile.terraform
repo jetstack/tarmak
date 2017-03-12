@@ -1,9 +1,10 @@
 // vim: et:ts=2:sw=2:ft=groovy
 node {
-
-  parameters {
-    booleanParam(name: 'terraformDestroy', defaultValue: false, description: 'Should this stack be destroyed?')
-  }
+  properties([
+    parameters([
+      booleanParam(name: 'terraformDestroy', defaultValue: false, description: 'Should this stack be destroyed?')
+    ])
+  ])
 
   checkout scm
 
@@ -80,10 +81,14 @@ node {
     stage("generate kubeconfig file") {
       if (params.terraformDestroy != true) {
         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-          sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake vault:kubeconfig TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
+          containerID = sh(script: "docker create ${imageName} sleep 3600", returnStdout: true).trim()
+          sh "docker start ${containerID}"
+          sh "docker exec ${containerID} bundle exec rake vault:kubeconfig TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
+          sh "docker cp ${containerID}:/work/kubeconfig-tunnel ."
+          sh "docker rm -f ${containerID}"
+          archiveArtifacts artifacts: 'kubeconfig-tunnel', fingerprint: true
         }
       }
     }
   }
-
 }
