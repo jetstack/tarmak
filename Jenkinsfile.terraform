@@ -1,5 +1,16 @@
 // vim: et:ts=2:sw=2:ft=groovy
 node {
+
+  properties([
+    parameters([
+      booleanParam(
+        defaultValue: false,
+        description: 'This will destroy the stack',
+        name: 'destroyStack'
+      ),
+    ])
+  ])
+
   checkout scm
 
   def splitJobName = env.JOB_NAME.split('/')
@@ -17,8 +28,10 @@ node {
   // this is only for stack vault
   if (terraformStack == 'vault') {
     stage("ensure vault secrets exist") {
-      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-        sh "docker run --rm ${imageName} bundle exec rake vault:secrets TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+      if (args.destroyStack == false) {
+        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+          sh "docker run --rm ${imageName} bundle exec rake vault:secrets TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+        }
       }
     }
   }
@@ -32,15 +45,17 @@ node {
   // this is only for stack kubernetes
   if (terraformStack == 'kubernetes') {
     stage("setup k8s cluster in vault") {
-      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-        sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake vault:setup_k8s TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
+      if (args.destroyStack == false) {
+        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+          sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake vault:setup_k8s TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
+        }
       }
     }
   }
 
   stage("terraform plan ${terraformStack}") {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      statusPlan = sh script: "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan", returnStatus: true
+      statusPlan = sh script: "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan TERRAFORM_EDESTROY=${args.destroyStack}", returnStatus: true
     }
   }
 
@@ -58,8 +73,21 @@ node {
 
   if (terraformStack == 'vault') {
     stage("ensure vault is initialized") {
-      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-        sh "docker run --rm ${imageName} bundle exec rake vault:initialize TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+      if (args.destroyStack == false) {
+        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+          sh "docker run --rm ${imageName} bundle exec rake vault:initialize TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+        }
+      }
+    }
+  }
+
+  // this is only for stack kubernetes
+  if (terraformStack == 'kubernetes') {
+    stage("generate kubeconfig file") {
+      if (args.destroyStack == false) {
+        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+          sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake vault:kubeconfig TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
+        }
       }
     }
   }
