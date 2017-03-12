@@ -9,9 +9,10 @@ class puppernetes::overlay_calico {
   $etcd_overlay_base_path = "${::puppernetes::etcd_ssl_dir}/${::puppernetes::etcd_overlay_ca_name}"
   vault_client::cert_service { 'etcd-overlay':
     base_path   => $etcd_overlay_base_path,
-    common_name => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
+    common_name =>  'etcd-client',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::etcd_overlay_ca_name}/sign/client",
     ip_sans     => $::puppernetes::ipaddress,
+    alt_names   => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
   }
 
   class { 'calico':

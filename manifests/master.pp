@@ -2,11 +2,22 @@ class puppernetes::master(
   $disable_kubelet = true,
   $disable_proxy = true,
 ){
-
-  $apiserver_alt_names='kubernetes.default'
-  $apiserver_ip_sans='10.254.0.1'
   include ::puppernetes
   include ::vault_client
+
+  $apiserver_alt_names = unique([
+    "api.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
+    'kubernetes',
+    'kubernetes.default',
+    'kubernetes.default.svc',
+    'kubernetes.default.svc.cluster.local',
+    'localhost'
+  ])
+  $apiserver_ip_sans = unique([
+    $::puppernetes::ipaddress,
+    '10.254.0.1',
+    '127.0.0.1'
+  ])
 
   Class['vault_client'] -> Class['puppernetes::master']
 
@@ -37,11 +48,11 @@ class puppernetes::master(
   $apiserver_base_path = "${::puppernetes::kubernetes_ssl_dir}/kube-apiserver"
   vault_client::cert_service { 'kube-apiserver':
     base_path   => $apiserver_base_path,
-    common_name => "api.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
+    common_name => 'kube-apiserver',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-apiserver",
     user        => $::puppernetes::kubernetes_user,
-    ip_sans     => "${apiserver_ip_sans},${::puppernetes::ipaddress}",
-    alt_names   => $apiserver_alt_names,
+    ip_sans     => $apiserver_ip_sans.join(','),
+    alt_names   => $apiserver_alt_names.join(','),
   }
 
   $admin_base_path = "${::puppernetes::kubernetes_ssl_dir}/kube-admin"
@@ -55,10 +66,11 @@ class puppernetes::master(
   $etcd_apiserver_base_path = "${::puppernetes::kubernetes_ssl_dir}/${::puppernetes::etcd_k8s_main_ca_name}"
   vault_client::cert_service { 'etcd-apiserver':
     base_path   => $etcd_apiserver_base_path,
-    common_name => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
+    common_name =>  'etcd-client',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::etcd_k8s_main_ca_name}/sign/client",
     user        => $::puppernetes::kubernetes_user,
     ip_sans     => $::puppernetes::ipaddress,
+    alt_names   => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
   }
 
   class { 'kubernetes::apiserver':

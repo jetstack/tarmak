@@ -16,9 +16,15 @@ class puppernetes::etcd(
   }
 
   $nodename = "${::puppernetes::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"
-  $common_name = $nodename
-  $alt_names = "localhost,${::fqdn}"
-  $ip_sans = "127.0.0.1,${::ipaddress}"
+  $alt_names = unique([
+    $nodename,
+    $::fqdn,
+    'localhost',
+  ])
+  $ip_sans = unique([
+    '127.0.0.1',
+    $::ipaddress,
+  ])
 
   if ! ($nodename in $::puppernetes::_etcd_cluster) {
     fail("The node ${nodename} is not within the etcd_cluster (${puppernetes::_etcd_cluster})")
@@ -26,9 +32,9 @@ class puppernetes::etcd(
 
   vault_client::cert_service { 'etcd-k8s-main':
     base_path   => "${::puppernetes::etcd_ssl_dir}/${::puppernetes::etcd_k8s_main_ca_name}",
-    common_name => $common_name,
-    alt_names   => $alt_names,
-    ip_sans     => $ip_sans,
+    common_name => 'etcd-server',
+    alt_names   => $alt_names.join(','),
+    ip_sans     => $ip_sans.join(','),
     role        => "${puppernetes::cluster_name}/pki/${::puppernetes::etcd_k8s_main_ca_name}/sign/server",
     user        => $::puppernetes::etcd_user,
   }
@@ -36,9 +42,9 @@ class puppernetes::etcd(
 
   vault_client::cert_service { 'etcd-k8s-overlay':
     base_path   => "${::puppernetes::etcd_ssl_dir}/${::puppernetes::etcd_overlay_ca_name}",
-    common_name => $common_name,
-    alt_names   => $alt_names,
-    ip_sans     => $ip_sans,
+    common_name => 'etcd-server',
+    alt_names   => $alt_names.join(','),
+    ip_sans     => $ip_sans.join(','),
     role        => "${puppernetes::cluster_name}/pki/${::puppernetes::etcd_overlay_ca_name}/sign/server",
     user        => $::puppernetes::etcd_user,
     require     => [ User[$::puppernetes::etcd_user], File[$::puppernetes::etcd_ssl_dir] ],
