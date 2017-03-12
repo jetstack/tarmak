@@ -1,6 +1,9 @@
 require 'logger'
 require 'open3'
 require 'json'
+require 'yaml'
+require 'base64'
+
 logger = Logger.new(STDERR)
 logger.level = Logger::DEBUG
 
@@ -344,8 +347,7 @@ namespace :vault do
     end
   end
 
-  desc 'Setup a k8s cluster in cault'
-  task :setup_k8s => :prepare do
+  task :prepare_login => :prepare do
     ca_s3_path = "#{@vault_path}/ca.pem"
     root_token_s3_path = "#{@vault_path}/root-token"
     ca_file = Tempfile.new
@@ -357,9 +359,63 @@ namespace :vault do
     ENV['VAULT_TOKEN'] = root_token
     ENV['VAULT_CACERT'] = ca_file.path
     @terraform_name = ENV['TERRAFORM_NAME']
-    ENV['CLUSTER_ID'] = "#{@terraform_environment}-#{@terraform_name}"
+    @cluster_name = "#{@terraform_environment}-#{@terraform_name}"
+  end
+
+  desc 'Setup a k8s cluster in vault'
+  task :setup_k8s => :prepare_login do
+    ENV['CLUSTER_ID'] = @cluster_name
     sh "vault/scripts/setup_vault.sh"
     sh 'mv', 'tokens.tfvar', '/share' if File.directory?("/share")
     ca_file.unlink
+  end
+
+  desc 'Generate kubeconfig for cluster'
+  task :kubeconfig => :prepare_login do
+    kubeconfig = {
+      'current-context' => @cluster_name,
+      'apiVersion' => 'v1',
+      'clusters' => [{
+        'cluster' => {
+          'apiVersion' => 'v1',
+          'server' => 'https://localhost:6443',
+        },
+        'name' => @cluster_name,
+      }],
+      'contexts' => [{
+        'context' => {
+          'cluster' => @cluster_name,
+          'namespace' => 'kube-system',
+          'user' => @cluster_name,
+        },
+        'name' => @cluster_name,
+      }],
+      'kind' => 'Config',
+      'preferences' => {
+        'colors' => true,
+      },
+      'users' => [{
+        'name' => @cluster_name,
+        'user' => {},
+      }],
+    }
+    cmd = ['vault', 'write', '-format', 'json', "#{ENV['CLUSTER_ID']}/nonprod-devcluster/pki/k8s/sign/admin", "common_name=admin"]
+    Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
+      stdin.close
+      fail "Getting credentails from vault failed: #{stderr.read}" if wait_thr.value != 0
+      creds = JSON.parse(stdout.read)
+      kubeconfig['users'][0]['user']['client-key-data'] = Base64.encode64(creds['private_key'])
+      kubeconfig['users'][0]['user']['client-certificate-data'] = Base64.encode64(creds['certificate'])
+      kubeconfig['clusters'][0]['cluster']['certificate-authority-data'] = Base64.encode64(creds['ca_chain'])
+      dest_file = 'kubeconfig-tunnel'
+      File.open(dest_file, 'w') do |f|
+        f.write '# SSH tunnel to API via Bastion:\n'
+        f.write "# ssh -N -L6443:api.#{cluster_name}.#{@terraform_hub_outputs['private_zones']['value'].first}:6443 centos@bastion.#{@terraform_hub_outputs['public_zones']['value'].first}"
+        f.write '#\n\n'
+        d.to_yaml
+        f.write d.to_yaml
+      end
+      logger.info "Wrote #{dest_file}"
+    end
   end
 end
