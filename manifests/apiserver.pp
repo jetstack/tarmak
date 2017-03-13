@@ -1,6 +1,7 @@
 # class kubernetes::master
 class kubernetes::apiserver(
   $admission_control = undef,
+  $count = 1,
   $etcd_nodes = ['localhost'],
   $etcd_port = 2379,
   $etcd_events_port = undef,

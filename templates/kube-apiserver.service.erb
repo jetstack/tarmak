@@ -27,6 +27,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --tls-private-key-file=<%= scope['kubernetes::apiserver::key_file'] %> \
 <% end -%>
   "--etcd-servers=<%= @etcd_servers %>" \
+  "--etcd-quorum-read=true" \
 <% @etcd_servers_overrides.each do |override| -%>
   "--etcd-servers-overrides=<%= override %>" \
 <% end -%>
@@ -44,6 +45,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <%- if scope['kubernetes::_service_account_key_file'] -%>
   --service-account-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>
+  --apiserver-count=<%= @count %> \
   --logtostderr=true
 
 Restart=on-failure
