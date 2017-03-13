@@ -9,6 +9,7 @@ Group=<%= scope['kubernetes::group'] %>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/scheduler \
   --v=<%= scope['kubernetes::log_level'] %> \
   --kubeconfig=<%= @kubeconfig_path %> \
+  --leader-elect=true \
   --logtostderr=true
 
 Restart=on-failure

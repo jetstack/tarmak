@@ -1,13 +1,17 @@
 require 'spec_helper'
 
 describe 'kubernetes::controller_manager' do
+  let :service_file do
+    '/etc/systemd/system/kube-controller-manager.service'
+  end
+
   context 'with default values for all parameters' do
     it { should contain_class('kubernetes::controller_manager') }
     it do
-      have_service_file = contain_file('/etc/systemd/system/kube-controller-manager.service')
-      should have_service_file.with_content(/User=kubernetes/)
-      should have_service_file.with_content(/Group=kubernetes/)
-      should have_service_file.with_content(%r{--kubeconfig=/etc/kubernetes/kubeconfig-controller-manager})
+      should contain_file(service_file).with_content(/User=kubernetes/)
+      should contain_file(service_file).with_content(/Group=kubernetes/)
+      should contain_file(service_file).with_content(%r{--kubeconfig=/etc/kubernetes/kubeconfig-controller-manager})
+      should contain_file(service_file).with_content(%r{--leader-elect=true})
     end
     it do
       have_kubeconfig_file = contain_file('/etc/kubernetes/kubeconfig-controller-manager')
