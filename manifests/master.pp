@@ -6,7 +6,7 @@ class puppernetes::master(
   include ::vault_client
 
   $apiserver_alt_names = unique([
-    "api.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
+    "${::puppernetes::kubernetes_api_prefix}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
     'kubernetes',
     'kubernetes.default',
     'kubernetes.default.svc',

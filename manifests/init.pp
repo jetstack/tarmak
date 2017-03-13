@@ -17,6 +17,7 @@ class puppernetes (
   $kubernetes_api_secure_port = $puppernetes::params::kubernetes_api_secure_port,
   $kubernetes_pod_network = $puppernetes::params::kubernetes_pod_network,
   $kubernetes_api_url = undef,
+  $kubernetes_api_prefix = $puppernetes::params::kubernetes_api_prefix,
   $dns_root = $puppernetes::params::dns_root,
   $hostname = $puppernetes::params::hostname,
   $etcd_cluster = undef,
