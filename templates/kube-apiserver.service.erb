@@ -46,6 +46,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --service-account-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>
   --apiserver-count=<%= @count %> \
+<% if @_storage_backend -%>
+  --storage-backend=<%= @_storage_backend %> \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure

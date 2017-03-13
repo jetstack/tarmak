@@ -57,4 +57,29 @@ describe 'kubernetes::apiserver' do
       it { should contain_file(service_file).with_content(/#{Regexp.escape('--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota')}/)}
     end
   end
+
+  context 'storage backend' do
+    context 'customized' do
+      let(:params) { {'storage_backend' => 'consulator' } }
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--storage-backend=consulator')}/)}
+    end
+
+    context 'default pre 1.5' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.4.8'}
+        """
+      ]}
+      it { should_not contain_file(service_file).with_content(/#{Regexp.escape('--storage-backend=etcd2')}/)}
+    end
+
+    context 'default 1.5+' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.5.0'}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--storage-backend=etcd2')}/)}
+    end
+  end
 end

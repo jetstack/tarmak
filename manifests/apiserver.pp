@@ -2,6 +2,7 @@
 class kubernetes::apiserver(
   $admission_control = undef,
   $count = 1,
+  $storage_backend = undef,
   $etcd_nodes = ['localhost'],
   $etcd_port = 2379,
   $etcd_events_port = undef,
@@ -35,6 +36,13 @@ class kubernetes::apiserver(
     }
   } else {
     $_admission_control = $admission_control
+  }
+
+  # Default to etcd2 for versions bigger than 1.5
+  if $storage_backend == undef and versioncmp($::kubernetes::version, '1.5.0') >= 0 {
+    $_storage_backend = 'etcd2'
+  } else {
+    $_storage_backend = $storage_backend
   }
 
   $service_name = 'kube-apiserver'
