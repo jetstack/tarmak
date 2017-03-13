@@ -7,6 +7,7 @@ class puppernetes::params{
   $dest_dir = '/opt'
   $bin_dir = '/opt/bin'
   $helper_path = '/usr/local/sbin'
+  $systemctl_path = '/bin/systemctl'
 
   ## Kubernetes
   $kubernetes_version = '1.5.2'

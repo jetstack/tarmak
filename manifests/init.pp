@@ -4,6 +4,7 @@ class puppernetes (
   $bin_dir = $::puppernetes::params::bin_dir,
   $cluster_name = $puppernetes::params::cluster_name,
   $vault_version = $puppernetes::params::vault_version,
+  $systemctl_path = $puppernetes::params::systemctl_path,
   $role = undef,
   $kubernetes_version = $puppernetes::params::kubernetes_version,
   $kubernetes_user = $puppernetes::params::kubernetes_user,

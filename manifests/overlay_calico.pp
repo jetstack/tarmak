@@ -5,7 +5,6 @@ class puppernetes::overlay_calico {
   ensure_resource('file', $::puppernetes::etcd_home, {'ensure'    => 'directory' })
   ensure_resource('file', $::puppernetes::etcd_ssl_dir, {'ensure' => 'directory' })
 
-
   $etcd_overlay_base_path = "${::puppernetes::etcd_ssl_dir}/${::puppernetes::etcd_overlay_ca_name}"
   vault_client::cert_service { 'etcd-overlay':
     base_path   => $etcd_overlay_base_path,
@@ -13,6 +12,10 @@ class puppernetes::overlay_calico {
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::etcd_overlay_ca_name}/sign/client",
     ip_sans     => $::puppernetes::ipaddress,
     alt_names   => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
+    exec_post   => [
+      "${::puppernetes::systemctl_path} --no-block try-restart calico-node.service",
+      "-/bin/bash -c 'docker ps -q --filter=label=io.kubernetes.container.name=calico-policy-controller | xargs docker kill'",
+    ],
   }
 
   class { 'calico':

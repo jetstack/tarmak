@@ -8,7 +8,13 @@ class puppernetes::worker {
     common_name => 'kube-proxy',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-proxy",
     user        => $::puppernetes::kubernetes_user,
-    require     => [User[$::puppernetes::kubernetes_user], Class['vault_client']]
+    require     => [
+      User[$::puppernetes::kubernetes_user],
+      Class['vault_client']
+    ],
+    exec_post   => [
+      "${::puppernetes::systemctl_path} --no-block try-restart kube-proxy.service"
+    ],
   }
 
   $kubelet_base_path = "${::puppernetes::kubernetes_ssl_dir}/kubelet"
@@ -17,7 +23,13 @@ class puppernetes::worker {
     common_name => 'kubelet',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kubelet",
     user        => $::puppernetes::kubernetes_user,
-    require     => [User[$::puppernetes::kubernetes_user], Class['vault_client']]
+    require     => [
+      User[$::puppernetes::kubernetes_user],
+      Class['vault_client']
+    ],
+    exec_post   => [
+      "${::puppernetes::systemctl_path} --no-block try-restart kubelet.service"
+    ],
   }
 
   class { 'kubernetes::kubelet':
