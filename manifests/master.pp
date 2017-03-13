@@ -36,7 +36,7 @@ class puppernetes::master(
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-controller-manager",
     user        => $::puppernetes::kubernetes_user,
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart kube-controller-manager.service"
+      "-${::puppernetes::systemctl_path} --no-block try-restart kube-controller-manager.service"
     ],
   }
 
@@ -47,7 +47,7 @@ class puppernetes::master(
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-scheduler",
     user        => $::puppernetes::kubernetes_user,
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart kube-scheduler.service"
+      "-${::puppernetes::systemctl_path} --no-block try-restart kube-scheduler.service"
     ],
   }
 
@@ -60,7 +60,7 @@ class puppernetes::master(
     ip_sans     => $apiserver_ip_sans.join(','),
     alt_names   => $apiserver_alt_names.join(','),
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart kube-apiserver.service"
+      "-${::puppernetes::systemctl_path} --no-block try-restart kube-apiserver.service"
     ],
   }
 
@@ -81,7 +81,7 @@ class puppernetes::master(
     ip_sans     => $::puppernetes::ipaddress,
     alt_names   => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart kube-apiserver.service"
+      "-${::puppernetes::systemctl_path} --no-block try-restart kube-apiserver.service"
     ],
   }
 

@@ -38,7 +38,7 @@ class puppernetes::etcd(
     role        => "${puppernetes::cluster_name}/pki/${::puppernetes::etcd_k8s_main_ca_name}/sign/server",
     user        => $::puppernetes::etcd_user,
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart etcd-k8s-main.service etcd-k8s-events.service"
+      "-${::puppernetes::systemctl_path} --no-block try-restart etcd-k8s-main.service etcd-k8s-events.service"
     ],
   }
 
@@ -51,7 +51,7 @@ class puppernetes::etcd(
     user        => $::puppernetes::etcd_user,
     require     => [ User[$::puppernetes::etcd_user], File[$::puppernetes::etcd_ssl_dir] ],
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart etcd-overlay.service"
+      "-${::puppernetes::systemctl_path} --no-block try-restart etcd-overlay.service"
     ],
   }
 

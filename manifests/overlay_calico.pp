@@ -13,7 +13,7 @@ class puppernetes::overlay_calico {
     ip_sans     => $::puppernetes::ipaddress,
     alt_names   => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart calico-node.service",
+      "-${::puppernetes::systemctl_path} --no-block try-restart calico-node.service",
       "-/bin/bash -c 'docker ps -q --filter=label=io.kubernetes.container.name=calico-policy-controller | xargs docker kill'",
     ],
   }

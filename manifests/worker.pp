@@ -13,7 +13,7 @@ class puppernetes::worker {
       Class['vault_client']
     ],
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart kube-proxy.service"
+      "-${::puppernetes::systemctl_path} --no-block try-restart kube-proxy.service"
     ],
   }
 
@@ -28,7 +28,7 @@ class puppernetes::worker {
       Class['vault_client']
     ],
     exec_post   => [
-      "${::puppernetes::systemctl_path} --no-block try-restart kubelet.service"
+      "-${::puppernetes::systemctl_path} --no-block try-restart kubelet.service"
     ],
   }
 
