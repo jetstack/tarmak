@@ -19,7 +19,9 @@ Contains:
 #### tools
 
 * Jenkins
+  * [Jenkins (non-prod)]:(https://jenkins.nonprod.jetsky.jetstack.net/)
 * Puppet
+  * [Foreman Dashboard (non-prod)]:(https://foreman.nonprod.jetsky.jetstack.net/)
 * Bastion
 
 #### kubernetes
