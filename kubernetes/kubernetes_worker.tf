@@ -133,6 +133,7 @@ data "template_file" "kubernetes_worker_user_data" {
     puppernetes_cluster       = "${data.template_file.stack_name_dns.rendered}"
     puppernetes_environment   = "${var.environment}"
     puppernetes_desired_count = 0
+    puppernetes_volume_id     = ""
   }
 }
 

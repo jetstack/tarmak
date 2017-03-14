@@ -70,6 +70,7 @@ data "template_file" "kubernetes_master_user_data" {
     puppernetes_cluster       = "${data.template_file.stack_name_dns.rendered}"
     puppernetes_environment   = "${var.environment}"
     puppernetes_desired_count = "${var.kubernetes_master_count}"
+    puppernetes_volume_id     = ""
   }
 }
 

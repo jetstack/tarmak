@@ -18,6 +18,7 @@ write_files:
       PUPPERNETES_HOSTNAME=${puppernetes_hostname}
       PUPPERNETES_ENVIRONMENT=${puppernetes_environment}
       PUPPERNETES_DESIRED_COUNT=${puppernetes_desired_count}
+      PUPPERNETES_VOLUME_ID=${puppernetes_volume_id}
 
   - path: /etc/profile.d/puppernetes.sh
     permissions: '0644'
