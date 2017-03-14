@@ -1,3 +1,4 @@
+@private
 class puppernetes::params{
   $cluster_name = 'cluster'
   $dns_root = 'jetstack.net'
