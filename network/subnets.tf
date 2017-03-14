@@ -6,10 +6,11 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags {
-    Name        = "${data.template_file.stack_name.rendered}_public_${var.availability_zones[count.index]}"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
+    Name              = "${data.template_file.stack_name.rendered}_public_${var.availability_zones[count.index]}"
+    Environment       = "${var.environment}"
+    Project           = "${var.project}"
+    Contact           = "${var.contact}"
+    KubernetesCluster = "${data.template_file.stack_name_dns.rendered}"
   }
 }
 
@@ -20,9 +21,10 @@ resource "aws_subnet" "private" {
   availability_zone = "${var.availability_zones[count.index]}"
 
   tags {
-    Name        = "${data.template_file.stack_name.rendered}_private_${var.availability_zones[count.index]}"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
+    Name              = "${data.template_file.stack_name.rendered}_private_${var.availability_zones[count.index]}"
+    Environment       = "${var.environment}"
+    Project           = "${var.project}"
+    Contact           = "${var.contact}"
+    KubernetesCluster = "${data.template_file.stack_name_dns.rendered}"
   }
 }
