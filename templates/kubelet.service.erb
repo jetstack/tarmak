@@ -34,7 +34,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --network-plugin-mtu=<%= @network_plugin_mtu %> \
 <% end -%>
 <% end -%>
-<% if scope['kubernetes::cloud_provider'] -%>
+<% if scope['kubernetes::cloud_provider'] != '' -%>
   --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
 <% end -%>
 <% if @container_runtime -%>

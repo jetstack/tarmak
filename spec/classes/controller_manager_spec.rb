@@ -18,4 +18,19 @@ describe 'kubernetes::controller_manager' do
       should have_kubeconfig_file.with_content(%r{server: http://127\.0\.0\.1:8080})
     end
   end
+
+  context 'cloud provider' do
+    context 'default' do
+      it { should_not contain_file(service_file).with_content(%r{--cloud-provider}) }
+    end
+
+    context 'aws' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': cloud_provider => 'aws'}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(%r{--cloud-provider=aws}) }
+    end
+  end
 end

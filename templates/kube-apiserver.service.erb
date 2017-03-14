@@ -14,7 +14,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if @insecure_bind_address -%>
   --insecure-bind-address=<%= @insecure_bind_address %> \
 <% end -%>
-<% if scope['kubernetes::cloud_provider'] -%>
+<% if scope['kubernetes::cloud_provider'] != '' -%>
   --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
 <% end -%>
 <% if scope['kubernetes::apiserver::ca_file'] -%>

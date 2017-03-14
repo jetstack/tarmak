@@ -11,7 +11,7 @@ ExecStartPre=/bin/sh -c "test -e <%= scope['kubernetes::_service_account_key_fil
 <% end -%>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/controller-manager \
   --v=<%= scope['kubernetes::log_level'] %> \
-<% if scope['kubernetes::cloud_provider'] -%>
+<% if scope['kubernetes::cloud_provider'] != '' -%>
   --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
 <% end -%>
   --kubeconfig=<%= @kubeconfig_path %> \

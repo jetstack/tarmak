@@ -20,6 +20,21 @@ describe 'kubernetes::kubelet' do
     end
   end
 
+  context 'cloud provider' do
+    context 'default' do
+      it { should_not contain_file(service_file).with_content(%r{--cloud-provider}) }
+    end
+
+    context 'aws' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': cloud_provider => 'aws'}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(%r{--cloud-provider=aws}) }
+    end
+  end
+
   context 'network_plugin enabled' do
     let(:params) { {'network_plugin' => 'kubenet' } }
       it do

@@ -16,7 +16,7 @@ class kubernetes (
   $curl_path = $::kubernetes::params::curl_path,
   $ssl_dir = undef,
   $source = undef,
-  $cloud_provider = undef,
+  Enum['aws', ''] $cloud_provider = '',
   $cluster_name = undef,
   $dns_root = undef,
   $cluster_dns = undef,
