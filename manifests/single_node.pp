@@ -1,9 +1,9 @@
 class puppernetes::single_node(
-  $dns_root = $puppernetes::params::dns_root,
-  $cluster_name = $puppernetes::params::cluster_name,
-  $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
-  $kubernetes_api_url = undef,
-  $kubernetes_version = $puppernetes::params::kubernetes_version,
+  String $dns_root = $puppernetes::params::dns_root,
+  String $cluster_name = $puppernetes::params::cluster_name,
+  String $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
+  String $kubernetes_api_url = nil,
+  String $kubernetes_version = $puppernetes::params::kubernetes_version,
 ) inherits puppernetes::params{
   ensure_resource('class', '::puppernetes',{
     dns_root                      => $dns_root,

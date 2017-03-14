@@ -1,60 +1,78 @@
-# Class: puppernetes
+# Puppernetes
+#
+# This is the top-level class for the puppernetes project. It's not including
+# any component. It's just setting global variables for the cluster
+#
+# @example Declaring the class
+#   include ::puppernetes
+# @example Overriding the kubernetes version
+#   class{'puppernetes':
+#     kubernetes_version => '1.5.4'
+#   }
+#
+# @param dest_dir path to installation directory for components
+# @param bin_dir path to the binary directory for components
+# @param cluster_name a DNS compatible name for the cluster
+# @param vault_version vault version to use (deprecated)
+# @param systemctl_path absoulute path to systemctl binary
+# @param role which role to build
+# @param kubernetes_version Kubernetes version to install
 class puppernetes (
-  $dest_dir = $::puppernetes::params::dest_dir,
-  $bin_dir = $::puppernetes::params::bin_dir,
-  $cluster_name = $puppernetes::params::cluster_name,
-  $vault_version = $puppernetes::params::vault_version,
-  $systemctl_path = $puppernetes::params::systemctl_path,
-  $role = undef,
-  $kubernetes_version = $puppernetes::params::kubernetes_version,
-  $kubernetes_user = $puppernetes::params::kubernetes_user,
-  $kubernetes_group = $puppernetes::params::kubernetes_group,
-  $kubernetes_uid = $puppernetes::params::kubernetes_uid,
-  $kubernetes_gid = $puppernetes::params::kubernetes_gid,
-  $kubernetes_ca_name = $puppernetes::params::kubernetes_ca_name,
-  $kubernetes_ssl_dir = $puppernetes::params::kubernetes_ssl_dir,
-  $kubernetes_config_dir = $puppernetes::params::kubernetes_config_dir,
-  $kubernetes_api_insecure_port = $puppernetes::params::kubernetes_api_insecure_port,
-  $kubernetes_api_secure_port = $puppernetes::params::kubernetes_api_secure_port,
-  $kubernetes_pod_network = $puppernetes::params::kubernetes_pod_network,
-  $kubernetes_api_url = undef,
-  $kubernetes_api_prefix = $puppernetes::params::kubernetes_api_prefix,
-  $dns_root = $puppernetes::params::dns_root,
-  $hostname = $puppernetes::params::hostname,
-  $etcd_cluster = undef,
-  $etcd_start_index = $puppernetes::params::etcd_start_index,
-  $etcd_user = $puppernetes::params::etcd_user,
-  $etcd_group = $puppernetes::params::etcd_group,
-  $etcd_uid = $puppernetes::params::etcd_uid,
-  $etcd_home = $puppernetes::params::etcd_home,
-  $etcd_ssl_dir = $puppernetes::params::etcd_ssl_dir,
-  $etcd_instances = $puppernetes::params::etcd_instances,
-  $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
-  $etcd_overlay_client_port = $puppernetes::params::etcd_overlay_client_port,
-  $etcd_overlay_peer_port = $puppernetes::params::etcd_overlay_peer_port,
-  $etcd_overlay_ca_name = $puppernetes::params::etcd_overlay_ca_name,
-  $etcd_overlay_version = $puppernetes::params::etcd_overlay_version,
-  $etcd_k8s_main_client_port = $puppernetes::params::etcd_k8s_main_client_port,
-  $etcd_k8s_main_peer_port = $puppernetes::params::etcd_k8s_main_peer_port,
-  $etcd_k8s_main_ca_name = $puppernetes::params::etcd_k8s_main_ca_name,
-  $etcd_k8s_main_version = $puppernetes::params::etcd_k8s_main_version,
-  $etcd_k8s_events_client_port = $puppernetes::params::etcd_k8s_events_client_port,
-  $etcd_k8s_events_peer_port = $puppernetes::params::etcd_k8s_events_peer_port,
-  $etcd_k8s_events_ca_name = $puppernetes::params::etcd_k8s_events_ca_name,
-  $etcd_k8s_events_version = $puppernetes::params::etcd_k8s_events_version,
-  $cloud_provider = undef,
-  $helper_path = $puppernetes::params::helper_path,
+  String $dest_dir = '/opt',
+  String $bin_dir = '/opt/bin',
+  String $cluster_name = $puppernetes::params::cluster_name,
+  String $systemctl_path = $puppernetes::params::systemctl_path,
+  Enum['etcd','master','worker', nil] $role = nil,
+  String $kubernetes_version = $puppernetes::params::kubernetes_version,
+  String $kubernetes_user = 'kubernetes',
+  String $kubernetes_group = 'kubernetes',
+  Integer $kubernetes_uid = 837,
+  Integer $kubernetes_gid = 837,
+  String $kubernetes_ca_name = 'k8s',
+  String $kubernetes_ssl_dir = '/etc/kubernetes/ssl',
+  String $kubernetes_config_dir = '/etc/kubernetes',
+  Integer[1,65535] $kubernetes_api_insecure_port = 6443,
+  Integer[1,65535] $kubernetes_api_secure_port = 8080,
+  String $kubernetes_pod_network = '10.234.0.0/16',
+  String $kubernetes_api_url = nil,
+  String $kubernetes_api_prefix = 'api',
+  String $dns_root = $puppernetes::params::dns_root,
+  String $hostname = $puppernetes::params::hostname,
+  Array[String] $etcd_cluster = [],
+  Integer[0,1] $etcd_start_index = 1,
+  String $etcd_user = 'etcd',
+  String $etcd_group = 'etcd',
+  Integer $etcd_uid = 873,
+  Integer $etcd_gid = 873,
+  String $etcd_home = '/etc/etcd',
+  String $etcd_ssl_dir = '/etcd/etcd/ssl',
+  Integer $etcd_instances = 3,
+  String $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
+  Integer[1,65535] $etcd_overlay_client_port = 2359,
+  Integer[1,65535] $etcd_overlay_peer_port = 2360,
+  String $etcd_overlay_ca_name = 'etcd-overlay',
+  String $etcd_overlay_version = '2.3.7',
+  Integer[1,65535] $etcd_k8s_main_client_port = 2379,
+  Integer[1,65535] $etcd_k8s_main_peer_port = 2380,
+  String $etcd_k8s_main_ca_name = 'etcd-k8s',
+  String $etcd_k8s_main_version = '3.0.15',
+  Integer[1,65535] $etcd_k8s_events_client_port = 2369,
+  Integer[1,65535] $etcd_k8s_events_peer_port = 2370,
+  String $etcd_k8s_events_ca_name = 'etcd-k8s',
+  String $etcd_k8s_events_version = '3.0.15',
+  Enum['aws', nil] $cloud_provider = nil,
+  String $helper_path = $puppernetes::params::helper_path,
 ) inherits ::puppernetes::params {
   $ipaddress = $::ipaddress
 
-  if $kubernetes_api_url == undef {
+  if $kubernetes_api_url == nil {
       $_kubernetes_api_url = "http://localhost:${$kubernetes_api_insecure_port}"
   }
   else {
       $_kubernetes_api_url = $kubernetes_api_url
   }
 
-  if $etcd_cluster == undef {
+  if $etcd_cluster == [] {
     $_etcd_cluster = range($etcd_start_index, ($etcd_instances + $etcd_start_index -1)).map |$i| {
         "etcd-${i}.${cluster_name}.${dns_root}"
     }
