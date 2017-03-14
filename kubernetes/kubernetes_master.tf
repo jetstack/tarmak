@@ -64,11 +64,12 @@ data "template_file" "kubernetes_master_user_data" {
     vault_token = "${var.vault_init_token_master}"
     vault_ca    = "${base64encode(data.aws_s3_bucket_object.vault_ca.body)}"
 
-    puppernetes_dns_root    = "${data.terraform_remote_state.hub_network.private_zones[0]}"
-    puppernetes_role        = "master"
-    puppernetes_hostname    = "master"
-    puppernetes_cluster     = "${data.template_file.stack_name_dns.rendered}"
-    puppernetes_environment = "${var.environment}"
+    puppernetes_dns_root      = "${data.terraform_remote_state.hub_network.private_zones[0]}"
+    puppernetes_role          = "master"
+    puppernetes_hostname      = "master"
+    puppernetes_cluster       = "${data.template_file.stack_name_dns.rendered}"
+    puppernetes_environment   = "${var.environment}"
+    puppernetes_desired_count = "${var.kubernetes_master_count}"
   }
 }
 

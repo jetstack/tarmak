@@ -17,6 +17,7 @@ write_files:
       PUPPERNETES_DNS_ROOT=${puppernetes_dns_root}
       PUPPERNETES_HOSTNAME=${puppernetes_hostname}
       PUPPERNETES_ENVIRONMENT=${puppernetes_environment}
+      PUPPERNETES_DESIRED_COUNT=${puppernetes_desired_count}
 
   - path: /etc/profile.d/puppernetes.sh
     permissions: '0644'
