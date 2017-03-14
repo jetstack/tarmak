@@ -26,6 +26,8 @@ write_files:
         export PATH=$PATH:/opt/bin
       fi
 
+      export PS1="[\u@${puppernetes_cluster}|${puppernetes_hostname}|\h \W]\$ "
+
   - path: /etc/puppetlabs/puppet/puppet.conf
     permissions: '0644'
     content: |
