@@ -45,7 +45,7 @@ class puppernetes (
   Integer $etcd_uid = 873,
   Integer $etcd_gid = 873,
   String $etcd_home = '/etc/etcd',
-  String $etcd_ssl_dir = '/etcd/etcd/ssl',
+  String $etcd_ssl_dir = '/etc/etcd/ssl',
   Integer $etcd_instances = 3,
   String $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
   Integer[1,65535] $etcd_overlay_client_port = 2359,
