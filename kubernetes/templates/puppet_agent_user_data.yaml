@@ -18,6 +18,14 @@ write_files:
       PUPPERNETES_HOSTNAME=${puppernetes_hostname}
       PUPPERNETES_ENVIRONMENT=${puppernetes_environment}
 
+  - path: /etc/profile.d/puppernetes.sh
+    permissions: '0644'
+    content: |
+      # Add /opt/bin to the path
+      if ! echo $PATH | grep -q /opt/bin ; then
+        export PATH=$PATH:/opt/bin
+      fi
+
   - path: /etc/puppetlabs/puppet/puppet.conf
     permissions: '0644'
     content: |
