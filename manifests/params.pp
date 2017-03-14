@@ -1,4 +1,5 @@
-@private
+# Defines parameters for other classes to reuse
+# @private
 class puppernetes::params{
   $cluster_name = 'cluster'
   $dns_root = 'jetstack.net'
