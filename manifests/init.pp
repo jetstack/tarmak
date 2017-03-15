@@ -1,62 +1,29 @@
-class etcd_mount
-{
-  include ::systemd
+class aws_ebs(
+  String $systemd_dir = '/etc/systemd/system',
+  String $bin_dir = '/opt/bin',
+  String $dest_dir = '/opt',
+){
 
-  file { '/usr/lib/systemd/system/attach-ebs-volume.service':
-    ensure => file,
-    source => 'puppet:///modules/etcd_mount/attach-ebs-volume.service',
-    before => Service['attach-ebs-volume.service'],
-  } ~>
-  Exec['systemctl-daemon-reload']
-
-  file { '/usr/lib/systemd/system/format-ebs-volume.service':
-    ensure => file,
-    source => 'puppet:///modules/etcd_mount/format-ebs-volume.service',
-    before => Service['format-ebs-volume.service'],
-  } ~>
-  Exec['systemctl-daemon-reload']
-
-  file { '/usr/lib/systemd/system/var-lib-etcd.mount':
-    ensure => file,
-    source => 'puppet:///modules/etcd_mount/var-lib-etcd.mount',
-    before => Service['var-lib-etcd.mount'],
-  } ~>
-  Exec['systemctl-daemon-reload']
-
-  file { '/usr/local/sbin/attach_volume.sh':
-    ensure => file,
-    source => 'puppet:///modules/etcd_mount/attach_volume.sh',
-    mode   => '0750',
-    before => Service['attach-ebs-volume.service'],
+  $path = defined('$::path') ? {
+    default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+    true    => $::path,
   }
 
-  file { '/usr/local/sbin/format_volume.sh':
+  ensure_resource('package', ['curl', 'gawk', 'util-linux', 'awscli', 'xfsprogs'],{
+    ensure => present
+  })
+
+  $attach_bin_path = "${bin_dir}/aws_ebs_attach_volume.sh"
+  file { $attach_bin_path:
     ensure  => file,
-    source  => 'puppet:///modules/etcd_mount/format_volume.sh',
-    mode    => '0750',
-    before  => Service['format-ebs-volume.service'],
-    require => User['etcd'],
+    content => template('aws_ebs/attach_volume.sh.erb'),
+    mode    => '0755',
   }
 
-  service { 'attach-ebs-volume.service':
-    ensure => running,
-    enable => true,
-    before => Service['format-ebs-volume.service'],
-  }
-
-  service { 'format-ebs-volume.service':
-    ensure => running,
-    enable => true,
-    before => Service['var-lib-etcd.mount'],
-  }
-
-  service { 'var-lib-etcd.mount':
-    ensure   => running,
-    provider => 'systemd',
-  }
-
-  file { '/etc/systemd/system/multiuser.target.wants/var-lib-etcd.mount':
-    ensure => link,
-    target => '/usr/lib/systemd/system/var-lib-etcd.mount',
+  $format_bin_path = "${bin_dir}/aws_ebs_ensure_volume_formatted.sh"
+  file {$format_bin_path:
+    ensure  => file,
+    content => template('aws_ebs/ensure_volume_formatted.sh.erb'),
+    mode    => '0755',
   }
 }

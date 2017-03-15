@@ -1,15 +1,14 @@
 {
-  "name": "jetstack-etcd_mount",
+  "name": "jetstack-aws_ebs",
   "version": "0.1.0",
   "author": "jetstack",
-  "summary": "Mounts persistent disk for etcd data",
+  "summary": "Attaches, formats and mounts AWS EBS disks",
   "license": "Apache-2.0",
   "source": "",
   "project_page": null,
   "issues_url": null,
   "dependencies": [
-    {"name":"puppetlabs-stdlib","version_requirement":">= 4.2.0 < 5.0.0"},
-    {"name":"camptocamp-systemd","version_requirement":">= 0.4.0 < 0.5.0"}
+    {"name":"puppetlabs-stdlib","version_requirement":">= 4.2.0 < 5.0.0"}
   ],
   "data_provider": null
 }
