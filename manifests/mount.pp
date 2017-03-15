@@ -1,3 +1,17 @@
+# This defined type attaches, formats (if needed) and mounts a single EBS
+# volume in AWS.
+#
+# @example Attach, format & mount EBS volume
+#   aws_ebs::mount{'data':
+#     volume_id => 'vol-deadbeef',
+#     device    => '/dev/xvdd',
+#     dest_path => '/mnt',
+#   }
+#
+# @param volume_id the volume id of the AWS EBS volume
+# @param dest_path where to mount the device (needs to exists)
+# @param device block device to attach to (should be `/dev/xvd[a-z]`)
+# @param filesystem select the filesystem to initialize a volume
 define aws_ebs::mount(
   String $volume_id,
   String $dest_path,
