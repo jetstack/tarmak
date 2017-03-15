@@ -10,6 +10,7 @@ gem 'rspec-puppet'
 gem 'librarian-puppet'
 gem 'puppet-blacksmith'
 gem 'puppet-strings'
+gem 'puppet_readme_generator'
 
 # rspec must be v2 for ruby 1.8.7
 if RUBY_VERSION >= '1.8.7' && RUBY_VERSION < '1.9'
