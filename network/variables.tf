@@ -24,7 +24,7 @@ data "template_file" "stack_name_dns" {
 
 variable "allowed_account_ids" {
   type    = "list"
-  default = ["513013539150"]
+  default = []
 }
 
 variable "state_buckets" {
@@ -59,11 +59,11 @@ variable "availability_zones" {
 }
 
 variable "project" {
-  default = "cynosura"
+  default = "p9s"
 }
 
 variable "contact" {
-  default = "matt.turner@skyscanner.net"
+  default = "christian@jetstack.io"
 }
 
 variable "bucket_prefix" {

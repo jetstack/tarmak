@@ -3,6 +3,7 @@ require 'open3'
 require 'json'
 require 'yaml'
 require 'base64'
+require 'rhcl'
 
 logger = Logger.new(STDERR)
 logger.level = Logger::DEBUG
@@ -22,41 +23,9 @@ namespace :aws do
     @aws_credentials = Aws::SharedCredentials.new(profile_name: @aws_profile)
   end
 
-  desc 'login using multi-factor-auth'
-  task :login_mfa => :prepare do
-
-    logger.debug "credentials: #{@aws_credentials}"
-    logger.debug "config: #{@aws_config}"
-    duration = 86400
-
-    if @aws_config['mfa_serial'].nil?
-      fail "No mfa_serial in AWS config #{@aws_config_file} for profile #{@aws_profile}"
-    end
-
-    if ENV['MFA_TOKEN']
-      token = ENV['MFA_TOKEN']
-    else
-      require 'highline'
-      hl = HighLine.new($stdin, $stderr)
-      token = hl.ask('Enter MFA token: ')
-    end
-
-    logger.info "generate temporary credentials using aws profile '#{@aws_profile}', mfa #{@aws_config['mfa_serial']}, token '#{token}'"
-    sts = Aws::STS::Client.new(credentials: @aws_credentials)
-    credentials =sts.get_session_token(
-      :serial_number => @aws_config['mfa_serial'],
-      :token_code => token,
-      :duration_seconds => duration,
-    ).credentials
-
-    puts "export AWS_ACCESS_KEY_ID=#{credentials.access_key_id}"
-    puts "export AWS_SECRET_ACCESS_KEY=#{credentials.secret_access_key}"
-    puts "export AWS_SESSION_TOKEN=#{credentials.session_token}"
-  end
-
   desc 'login using jetstack vault'
   task :login_jetstack do
-    cmd = ['vault', 'read', '-format', 'json', 'customer-skyscanner/aws/kubernetes-nonprod/sts/admin']
+    cmd = ['vault', 'read', '-format', 'json', 'jetstack/aws/jetstack-dev/sts/admin']
     Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
       stdin.close
       fail "Getting credentails from vault failed: #{stderr.read}" if wait_thr.value != 0
@@ -69,6 +38,7 @@ namespace :aws do
 end
 
 namespace :terraform do
+
   task :prepare_env => :'aws:prepare' do
     @terraform_plan= ENV['TERRAFORM_PLAN']
     @terraform_environments = ['nonprod']
@@ -76,7 +46,8 @@ namespace :terraform do
     unless @terraform_environments.include?(@terraform_environment)
       fail "Please provide a TERRAFORM_ENVIRONMENT out of #{@terraform_environments}"
     end
-    @terraform_state_bucket = "skyscanner-k8s-#{@terraform_environment}-#{@aws_region}-terraform-state"
+    tfvars = Rhcl.parse(File.open("tfvars/network_#{@terraform_environment}_hub.tfvars").read)
+    @terraform_state_bucket = "#{tfvars['bucket_prefix']}#{@terraform_environment}-#{@aws_region}-terraform-state"
   end
 
   task :prepare => :prepare_env do
