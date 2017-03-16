@@ -282,6 +282,9 @@ GEM
     puppet_forge (1.0.6)
       activesupport (~> 4.2)
       her (~> 0.6.8)
+    puppet_readme_generator (0.1.1)
+      puppet-strings (~> 1.0)
+      rake
     puppetlabs_spec_helper (1.2.2)
       mocha (~> 1.0)
       puppet-lint (~> 2.0)
@@ -372,7 +375,7 @@ DEPENDENCIES
   metadata-json-lint
   puppet (>= 3.3)
   puppet-lint (>= 1.0.0)
-  puppet-strings
+  puppet_readme_generator
   puppetlabs_spec_helper (>= 1.0.0)
   rspec-puppet
   rspec-retry
