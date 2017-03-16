@@ -3,6 +3,17 @@ repo_update: true
 repo_upgrade: all
 
 write_files:
+- path: /etc/systemd/system/ensure-ebs-volume-formatted.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Format EBS volume if needed
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/bin/bash -c 'blkid /dev/xvdd || (wipefs -fa /dev/xvdd && mkfs.ext4 /dev/xvdd)'
+
 - path: /etc/systemd/system/etc-puppetlabs-code.mount
   permissions: '0644'
   content: |
@@ -34,6 +45,8 @@ write_files:
   content: |
     [Unit]
     Description=Mount puppet data
+    After=ensure-ebs-volume-formatted.service
+    Requires=ensure-ebs-volume-formatted.service
 
     [Mount]
     What=/dev/xvdd

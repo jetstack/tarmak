@@ -11,7 +11,7 @@ variable "centos_ami" {
 }
 
 variable "key_name" {
-  default = "skyscanner_non_prod"
+  default = "jetstack_nonprod"
 }
 
 variable "state_bucket" {
@@ -28,7 +28,7 @@ data "template_file" "stack_name" {
 
 variable "allowed_account_ids" {
   type    = "list"
-  default = ["513013539150"]
+  default = []
 }
 
 # TODO: restrict to admin IPs
@@ -46,9 +46,9 @@ variable "region" {
 }
 
 variable "project" {
-  default = "cynosura"
+  default = "p9s"
 }
 
 variable "contact" {
-  default = "matt.turner@skyscanner.net"
+  default = "christian@jetstack.io"
 }

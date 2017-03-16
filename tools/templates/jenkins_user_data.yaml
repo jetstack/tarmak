@@ -3,11 +3,24 @@ repo_update: true
 repo_upgrade: all
 
 write_files:
+- path: /etc/systemd/system/ensure-ebs-volume-formatted.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Format EBS volume if needed
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/bin/bash -c 'blkid /dev/xvdd || (wipefs -fa /dev/xvdd && mkfs.ext4 /dev/xvdd)'
+
 - path: /etc/systemd/system/var-lib-jenkins.mount
   permissions: '0644'
   content: |
     [Unit]
     Description=Mount jenkins data
+    After=ensure-ebs-volume-formatted.service
+    Requires=ensure-ebs-volume-formatted.service
 
     [Mount]
     What=/dev/xvdd
@@ -20,6 +33,10 @@ write_files:
     [Unit]
     After=var-lib-jenkins.mount
     Requires=var-lib-jenkins.mount
+
+    [Service]
+    ExecStartPre=/bin/chmod 750 /var/lib/jenkins
+    ExecStartPre=/bin/chown jenkins:jenkins /var/lib/jenkins
 
 runcmd:
 - hostname "jenkins.${dns_zone}"
