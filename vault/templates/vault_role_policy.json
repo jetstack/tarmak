@@ -68,7 +68,7 @@
         "ssm:GetParameters"
       ],
       "Effect": "Allow",
-      "Resource":["arn:aws:ssm:${region}:${account_id}:parameter/${unseal_parameter}"]
+      "Resource":["arn:aws:ssm:${region}:${account_id}:parameter/${vault_unseal_key_name}"]
     }
   ]
 }

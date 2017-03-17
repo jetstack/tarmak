@@ -3,26 +3,28 @@ data "template_file" "vault" {
   count    = "${var.instance_count}"
 
   vars {
-    FQDN           = "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zones[0]}"
-    ENVIRONMENT    = "${var.environment}"
-    REGION         = "${var.region}"
-    INSTANCE_COUNT = "${var.instance_count}"
-    VAULT_VERSION  = "${var.vault_version}"
-    VOLUME_ID      = "${element(aws_ebs_volume.vault.*.id, count.index)}"
+    fqdn           = "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zones[0]}"
+    environment    = "${var.environment}"
+    region         = "${var.region}"
+    instance_count = "${var.instance_count}"
+    volume_id      = "${element(aws_ebs_volume.vault.*.id, count.index)}"
+    private_ip     = "${cidrhost(element(data.terraform_remote_state.network.private_subnets, count.index % length(data.terraform_remote_state.network.availability_zones)),(10 + (count.index/length(data.terraform_remote_state.network.availability_zones))))}"
 
-    CONSUL_VERSION      = "${var.consul_version}"
-    CONSUL_MASTER_TOKEN = "${var.consul_master_token}"
-    CONSUL_ENCRYPT      = "${var.consul_encrypt}"
+    consul_version      = "${var.consul_version}"
+    consul_master_token = "${var.consul_master_token}"
+    consul_encrypt      = "${var.consul_encrypt}"
 
-    VAULT_TLS_CERT_PATH = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/cert.pem"
-    VAULT_TLS_KEY_PATH  = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/cert-key.pem"
-    VAULT_TLS_CA_PATH   = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/ca.pem"
+    vault_version         = "${var.vault_version}"
+    vault_tls_cert_path   = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/cert.pem"
+    vault_tls_key_path    = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/cert-key.pem"
+    vault_tls_ca_path     = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/ca.pem"
+    vault_unseal_key_name = "${data.template_file.vault_unseal_key_name.rendered}"
 
-    S3_ENDPOINT = "${var.s3_endpoint[var.region]}"
-    BUCKET_BACKUP = "${aws_s3_bucket.vault-backup.bucket}"
+    s3_endpoint   = "${var.s3_endpoint[var.region]}"
+    bucket_backup = "${aws_s3_bucket.vault-backup.bucket}"
 
     # run backup once per instance spread throughout the day
-    BACKUP_SCHEDULE = "*-*-* ${format("%02d",count.index * (24/var.instance_count))}:00:00"
+    backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.instance_count))}:00:00"
   }
 }
 
@@ -45,7 +47,7 @@ resource "aws_cloudwatch_metric_alarm" "vault-autorecover" {
 }
 
 resource "aws_instance" "vault" {
-  ami                  = "${var.coreos_ami[var.region]}"
+  ami                  = "${var.centos_ami[var.region]}"
   instance_type        = "${var.vault_instance_type}"
   key_name             = "${var.key_name}"
   subnet_id            = "${element(data.terraform_remote_state.network.private_subnet_ids, count.index % length(data.terraform_remote_state.network.availability_zones))}"
@@ -59,10 +61,10 @@ resource "aws_instance" "vault" {
   ]
 
   tags {
-    Name        = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
+    Name         = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
+    Environment  = "${var.environment}"
+    Project      = "${var.project}"
+    Contact      = "${var.contact}"
     VaultCluster = "${var.environment}"
   }
 }
@@ -73,10 +75,10 @@ resource "aws_ebs_volume" "vault" {
   availability_zone = "${element(data.terraform_remote_state.network.availability_zones, count.index % length(data.terraform_remote_state.network.availability_zones))}"
 
   tags {
-    Name         = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
-    Environment  = "${var.environment}"
-    Project      = "${var.project}"
-    Contact      = "${var.contact}"
+    Name        = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
   }
 
   lifecycle = {

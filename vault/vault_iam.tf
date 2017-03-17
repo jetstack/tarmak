@@ -31,7 +31,6 @@ data "template_file" "vault_policy" {
     backup_bucket         = "${aws_s3_bucket.vault-backup.bucket}"
     secrets_bucket_prefix = "${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}"
     kms_arn               = "${data.terraform_remote_state.network.secrets_kms_arn}"
-
-    unseal_parameter = "vault-${var.environment}-seal-key"
+    vault_unseal_key_name = "${data.template_file.vault_unseal_key_name.rendered}"
   }
 }

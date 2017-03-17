@@ -4,9 +4,9 @@ variable "stack" {
   default = ""
 }
 
-variable "coreos_ami" {
+variable "centos_ami" {
   default = {
-    eu-west-1 = "ami-4829072e"
+    eu-west-1 = "ami-7abd0209"
   }
 }
 
@@ -18,7 +18,7 @@ variable "s3_endpoint" {
 }
 
 variable "key_name" {
-  default = "skyscanner_non_prod"
+  default = "jetstack_nonprod"
 }
 
 variable "state_bucket" {
@@ -35,7 +35,7 @@ data "template_file" "stack_name" {
 
 variable "allowed_account_ids" {
   type    = "list"
-  default = ["513013539150"]
+  default = []
 }
 
 variable "environment" {
@@ -47,11 +47,11 @@ variable "region" {
 }
 
 variable "project" {
-  default = "cynosura"
+  default = "p9s"
 }
 
 variable "contact" {
-  default = "matt.turner@skyscanner.net"
+  default = "christian@jetstack.io"
 }
 
 variable "consul_version" {
@@ -77,3 +77,15 @@ variable "vault_instance_type" {
 variable "consul_master_token" {}
 
 variable "consul_encrypt" {}
+
+data "template_file" "vault_unseal_key_name" {
+  template = "vault-${var.environment}-unseal-key"
+}
+
+output "vault_kms_key_id" {
+  value = "${element(split("/", data.terraform_remote_state.network.secrets_kms_arn), 1)}"
+}
+
+output "vault_unseal_key_name" {
+  value = "${data.template_file.vault_unseal_key_name.rendered}"
+}
