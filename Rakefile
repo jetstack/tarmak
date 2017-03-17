@@ -305,8 +305,8 @@ namespace :vault do
         resp = JSON.parse(http.request(req).body)
 
         logger.debug 'store root token in S3'
-        vault_root_token_s3_path = "#{@vault_path}/root-token"
-        @secrets_bucket.put_object(key: vault_root_token_path, body: resp['root_token'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
+        root_token_s3_path = "#{@vault_path}/root-token"
+        @secrets_bucket.put_object(key: root_token_s3_path, body: resp['root_token'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
 
         logger.debug 'store unseal key in AWS parameter store'
         ssm = Aws::SSM::Client.new(region: 'eu-west-1')
