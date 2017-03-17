@@ -538,6 +538,11 @@ class kubernetes::master
 * Default: `[]`
 
 
+### `kubernetes::storage_classes`
+
+This class sets up the default storage classes for cloud providers
+
+
 ### `kubernetes::worker`
 
 class kubernetes::worker

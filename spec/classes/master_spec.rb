@@ -7,6 +7,7 @@ describe 'kubernetes::master' do
     it { should contain_class('kubernetes::controller_manager') }
     it { should contain_class('kubernetes::kubelet') }
     it { should contain_class('kubernetes::proxy') }
+    it { should contain_class('kubernetes::storage_classes') }
     it { should contain_class('kubernetes::dns') }
   end
 
