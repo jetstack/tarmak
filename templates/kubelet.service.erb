@@ -43,6 +43,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @_ca_file and scope.function_versioncmp([scope['kubernetes::version'], '1.5.0']) >= 0 -%>
   --client-ca-file=<%= @_ca_file %> \
 <% end -%>
+<% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
+  --cgroup-driver=<%= @cgroup_driver %> \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure

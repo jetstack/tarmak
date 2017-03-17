@@ -446,6 +446,11 @@ class kubernetes::kubelet
 * Type: `Any`
 * Default: `undef`
 
+##### `cgroup_driver`
+
+* Type: `Enum['systemd', 'cgroupfs']`
+* Default: `'systemd'`
+
 
 ### `kubernetes::master`
 

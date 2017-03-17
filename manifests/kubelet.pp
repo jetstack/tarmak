@@ -13,6 +13,7 @@ class kubernetes::kubelet(
   $key_file = undef,
   $node_labels = undef,
   $pod_cidr = undef,
+  Enum['systemd', 'cgroupfs'] $cgroup_driver = 'systemd',
 ){
   require ::kubernetes
 

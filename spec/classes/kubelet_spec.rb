@@ -112,5 +112,25 @@ describe 'kubernetes::kubelet' do
     end
   end
 
+  context 'flag --cgroup-driver' do
+    context 'versions before 1.6' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.5.4'}
+        """
+      ]}
+      it { should_not contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+    end
+
+    context 'versions 1.6+' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.6.0'}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+    end
+  end
+
 
 end
