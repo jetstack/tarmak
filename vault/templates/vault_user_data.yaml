@@ -278,6 +278,13 @@ write_files:
       sleep 5
     done
 
+- path: /etc/profile.d/vault.sh
+  permissions: "0644"
+  content: |
+    export PATH=$PATH:/usr/local/bin
+    export VAULT_ADDR=https://localhost:8200
+    export VAULT_CACERT=/etc/vault/tls/ca.pem
+
 runcmd:
 - chown consul:consul /etc/consul/consul.json
 - chown vault:vault /etc/vault/vault.hcl
