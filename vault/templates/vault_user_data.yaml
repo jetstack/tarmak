@@ -255,10 +255,10 @@ write_files:
   content: |
     #!/bin/bash
 
-    set -euo pipefail
+    set -e
 
     while true; do
-      # exit right away if sealed
+      # exit right away if already unsealed
       if [ "$(curl -s -k https://localhost:8200/v1/sys/health | jq -r .sealed)" == "false" ]; then exit 0; fi
 
       # try to unseal if initialized

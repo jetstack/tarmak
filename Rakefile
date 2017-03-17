@@ -162,6 +162,7 @@ namespace :vault do
     (1..@vault_instances).to_a.each do |i|
       @vault_nodes << "vault-#{i}.#{@vault_zone}"
     end
+    @vault_nodes << 'localhost'
 
     secrets_bucket = @terraform_hub_outputs['secrets_bucket']['value']
     @secrets_bucket = @s3.bucket(secrets_bucket)
