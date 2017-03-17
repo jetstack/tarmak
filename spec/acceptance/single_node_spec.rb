@@ -13,7 +13,7 @@ describe '::pupperentes::single_node' do
   end
 
   let :kubernetes_version do
-    ENV['KUBERNETES_VERSION'] || '1.5.2'
+    ENV['KUBERNETES_VERSION'] || '1.5.4'
   end
 
   context 'single node with master + worker components' do

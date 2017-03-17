@@ -47,16 +47,24 @@ spec:
   only:
   - master
 
-beaker::centos-7-k8s-latest:
+beaker::centos-7-k8s-1.6:
   <<: *beaker_definition
   only: []
   variables:
+    KUBERNETES_VERSION: 1.6.0-beta.3
+    TASK: beaker
+
+beaker::centos-7-k8s-1.5:
+  <<: *beaker_definition
+  only: []
+  variables:
+    KUBERNETES_VERSION: 1.5.4
     TASK: beaker
 
 beaker::centos-7-k8s-1.4:
   <<: *beaker_definition
   variables:
-    KUBERNETES_VERSION: 1.4.8
+    KUBERNETES_VERSION: 1.4.9
     TASK: beaker
 
 beaker::centos-7-k8s-1.3:
