@@ -289,7 +289,7 @@ namespace :vault do
     uri = URI(url)
 
     # retry initialize for 10 times
-    retries = 10
+    retries = 100
     begin
       resp = Net::HTTP.start(
         uri.host, uri.port,
@@ -309,7 +309,12 @@ namespace :vault do
           resp = JSON.parse(http.request(req).body)
 
           logger.debug 'store root token in S3'
-          @secrets_bucket.put_object(key: @vault_root_token_path, body: resp['root_token'], server_side_encryption: 'aws:kms', ssekms_key_id: @secrets_kms_arn)
+          @secrets_bucket.put_object(
+            key: "#{@vault_path}/root-token",
+            body: resp['root_token'],
+            server_side_encryption: 'aws:kms',
+            ssekms_key_id: @secrets_kms_arn,
+          )
 
           logger.debug 'store unseal key in AWS parameter store'
           ssm = Aws::SSM::Client.new(region: 'eu-west-1')
@@ -325,7 +330,8 @@ namespace :vault do
     rescue Errno::ECONNREFUSED => e
       retries -= 1
       if retries > 0
-        sleep 6
+        log.warn 'Connection to vault failed, retrying in 5 seconds'
+        sleep 5
         retry
       else
         raise e
