@@ -38,6 +38,14 @@ resource "aws_security_group_rule" "ingress_allow_ssh_all" {
   security_group_id = "${aws_security_group.bastion.id}"
 }
 
+data "template_file" "bastion_user_data" {
+  template = "${file("${path.module}/templates/bastion_user_data.yaml")}"
+
+  vars {
+    fqdn = "bastion.${data.terraform_remote_state.network.public_zones[0]}"
+  }
+}
+
 resource "aws_instance" "bastion" {
   ami                    = "${var.centos_ami[var.region]}"
   instance_type          = "${var.bastion_instance_type}"
@@ -51,6 +59,8 @@ resource "aws_instance" "bastion" {
     Project     = "${var.project}"
     Contact     = "${var.contact}"
   }
+
+  user_data = "${data.template_file.bastion_user_data.rendered}"
 }
 
 resource "aws_route53_record" "bastion" {

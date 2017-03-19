@@ -136,6 +136,7 @@ runcmd:
 - useradd -g 0 -u 0 -o -d /var/lib/puppet-deploy puppet-deploy
 - rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
 - yum -y install epel-release https://yum.theforeman.org/releases/1.13/el7/x86_64/foreman-release.rpm
+  yum -y update
 - yum -y install foreman-installer
 - echo "puppet.${dns_zone}" > /etc/hostname
 - hostname -F /etc/hostname
