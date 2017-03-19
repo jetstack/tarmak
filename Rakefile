@@ -330,7 +330,7 @@ namespace :vault do
     rescue Errno::ECONNREFUSED => e
       retries -= 1
       if retries > 0
-        log.warn 'Connection to vault failed, retrying in 5 seconds'
+        logger.warn 'Connection to vault failed, retrying in 5 seconds'
         sleep 5
         retry
       else
