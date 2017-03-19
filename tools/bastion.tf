@@ -2,6 +2,10 @@ variable "bastion_instance_type" {
   default = "t2.micro"
 }
 
+variable "bastion_root_size" {
+  default = "16"
+}
+
 resource "aws_eip" "bastion" {
   vpc      = true
   instance = "${aws_instance.bastion.id}"
@@ -52,6 +56,11 @@ resource "aws_instance" "bastion" {
   subnet_id              = "${data.terraform_remote_state.network.public_subnet_ids[0]}"
   key_name               = "${var.key_name}"
   vpc_security_group_ids = ["${aws_security_group.bastion.id}"]
+
+  root_block_device = {
+    volume_type = "gp2"
+    volume_size = "${var.bastion_root_size}"
+  }
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}-bastion"

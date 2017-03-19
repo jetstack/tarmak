@@ -62,6 +62,10 @@ variable "vault_version" {
   default = "0.6.5"
 }
 
+variable "vault_root_size" {
+  default = "16"
+}
+
 variable "vault_data_size" {
   default = "10"
 }

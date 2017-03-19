@@ -60,6 +60,11 @@ resource "aws_instance" "vault" {
     "${aws_security_group.vault.id}",
   ]
 
+  root_block_device = {
+    volume_type = "gp2"
+    volume_size = "${var.vault_root_size}"
+  }
+
   tags {
     Name         = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
     Environment  = "${var.environment}"
