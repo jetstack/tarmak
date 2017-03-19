@@ -324,7 +324,7 @@ namespace :vault do
       end
     rescue Errno::ECONNREFUSED => e
       retries -= 1
-      if tries > 0
+      if retries > 0
         sleep 6
         retry
       else
