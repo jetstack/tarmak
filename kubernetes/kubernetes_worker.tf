@@ -98,6 +98,8 @@ resource "aws_launch_configuration" "kubernetes_worker" {
   key_name             = "${var.key_name}"
   iam_instance_profile = "${aws_iam_role.kubernetes_worker.name}"
 
+  spot_price = "${var.kubernetes_worker_spot_price}"
+
   security_groups = [
     "${aws_security_group.kubernetes_worker.id}",
   ]

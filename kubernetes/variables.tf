@@ -113,3 +113,7 @@ variable "kubernetes_worker_root_volume_size" {
 variable "kubernetes_worker_docker_volume_size" {
   default = 50
 }
+
+variable "kubernetes_worker_spot_price" {
+  default = ""
+}
