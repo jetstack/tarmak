@@ -6,89 +6,107 @@ node {
     ])
   ])
 
-  checkout scm
+  try {
+    checkout scm
 
-  def splitJobName = env.JOB_NAME.split('/')
+    def splitJobName = env.JOB_NAME.split('/')
 
-  def terraformStack = splitJobName[-1]
-  def terraformName = splitJobName[-2]
-  def terraformEnvironment = splitJobName[-3]
+    def terraformStack = splitJobName[-1]
+    def terraformName = splitJobName[-2]
+    def terraformEnvironment = splitJobName[-3]
+    env.TERRAFORM_ENVIRONMENT = terraformEnvironment
+    env.TERRAFORM_NAME = terraformName
+    env.TERRAFORM_STACK = terraformStack
+    env.TERRAFORM_DESTROY = params.terraformDestroy
 
-  def imageName = "platform.kubernetes.terraform:${terraformEnvironment}-${terraformName}-${terraformStack}-${env.BUILD_NUMBER}"
+    env.IMAGE_NAME = "jetstack/puppernetes-terraform"
+    env.IMAGE_TAG = "${terraformEnvironment}-${terraformName}-${terraformStack}-${env.BUILD_NUMBER}"
 
-  stage ('build docker image'){
-    docker.build(imageName)
-  }
+    stage ('build docker image'){
+      sh "make build terraform_sync"
+    }
 
-  // this is only for stack vault
-  if (terraformStack == 'vault') {
-    stage("ensure vault secrets exist") {
-      if (params.terraformDestroy != true) {
-        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-          sh "docker run --rm ${imageName} bundle exec rake vault:secrets TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+    // this is only for stack vault
+    if (terraformStack == 'vault') {
+      stage("ensure vault secrets exist") {
+        if (params.terraformDestroy != true) {
+          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+            sh "make vault_secrets"
+          }
         }
       }
     }
-  }
 
-  // stores terraform plan status
-  def statusPlan = 0
+    // stores terraform plan status
+    def statusPlan = 0
 
-  // docker volume that is shared between the runs
-  def dockerVolume = sh(script: "docker volume create", returnStdout: true).trim()
+    // this is only for stack kubernetes
+    if (terraformStack == 'kubernetes') {
+      stage("setup k8s cluster in vault") {
+        if (params.terraformDestroy != true) {
+          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+            sh "make vault_setup_k8s"
+          }
+        }
+      }
 
-  // this is only for stack kubernetes
-  if (terraformStack == 'kubernetes') {
-    stage("setup k8s cluster in vault") {
-      if (params.terraformDestroy != true) {
-        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-          sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake vault:setup_k8s TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
+      stage("deploy puppet code to environment") {
+        if (params.terraformDestroy != true) {
+          withCredentials([file(credentialsId: 'id_jenkins_p9s_nonprod_file', variable: 'SSH_KEY_PATH')]) {
+            wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+              step ([
+                $class: 'CopyArtifact',
+                projectName: 'puppet/puppet_code',
+                filter: 'puppet.tar.gz',
+              ])
+              sh "make puppet_deploy_env"
+            }
+          }
         }
       }
     }
-  }
 
-  stage("terraform plan ${terraformStack}") {
-    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      statusPlan = sh script: "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:plan TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan TERRAFORM_DESTROY=${params.terraformDestroy}", returnStatus: true
-    }
-  }
-
-  // this is only run if plan has actual changes
-  stage("terraform apply ${terraformStack}") {
-    if (statusPlan == 2){
-      input 'Shall I apply?'
+    stage("terraform plan ${terraformStack}") {
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-        sh "docker run --rm -v ${dockerVolume}:/share ${imageName} bundle exec rake terraform:apply TERRAFORM_NAME=${terraformName} TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_STACK=${terraformStack} TERRAFORM_PLAN=/share/terraform.plan"
+        statusPlan = sh script: 'make terraform_plan', returnStatus: true
       }
-    } else {
-      echo 'No changes - no apply needed'
     }
-  }
 
-  if (terraformStack == 'vault') {
-    stage("ensure vault is initialized") {
-      if (params.terraformDestroy != true) {
+    // this is only run if plan has actual changes
+    stage("terraform apply ${terraformStack}") {
+      if (statusPlan == 2){
+        input 'Shall I apply?'
         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-          sh "docker run --rm ${imageName} bundle exec rake vault:initialize TERRAFORM_ENVIRONMENT=${terraformEnvironment}"
+          sh "make terraform_apply"
+        }
+      } else {
+        echo 'No changes - no apply needed'
+      }
+    }
+
+    if (terraformStack == 'vault') {
+      stage("ensure vault is initialized") {
+        if (params.terraformDestroy != true) {
+          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+            sh "make vault_initialize"
+          }
+        }
+      }
+    }
+
+    // this is only for stack kubernetes
+    if (terraformStack == 'kubernetes') {
+      stage("generate kubeconfig file") {
+        if (params.terraformDestroy != true) {
+          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+            sh "make vault_kubeconfig"
+            archiveArtifacts artifacts: 'kubeconfig-tunnel', fingerprint: true
+          }
         }
       }
     }
   }
-
-  // this is only for stack kubernetes
-  if (terraformStack == 'kubernetes') {
-    stage("generate kubeconfig file") {
-      if (params.terraformDestroy != true) {
-        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-          containerID = sh(script: "docker create ${imageName} sleep 3600", returnStdout: true).trim()
-          sh "docker start ${containerID}"
-          sh "docker exec ${containerID} bundle exec rake vault:kubeconfig TERRAFORM_ENVIRONMENT=${terraformEnvironment} TERRAFORM_NAME=${terraformName}"
-          sh "docker cp ${containerID}:/work/kubeconfig-tunnel ."
-          sh "docker rm -f ${containerID}"
-          archiveArtifacts artifacts: 'kubeconfig-tunnel', fingerprint: true
-        }
-      }
-    }
+  finally {
+    sh "make clean"
   }
 }

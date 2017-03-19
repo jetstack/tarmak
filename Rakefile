@@ -48,16 +48,14 @@ namespace :terraform do
     end
     tfvars = Rhcl.parse(File.open("tfvars/network_#{@terraform_environment}_hub.tfvars").read)
     @terraform_state_bucket = "#{tfvars['bucket_prefix']}#{@terraform_environment}-#{@aws_region}-terraform-state"
-  end
-
-  task :prepare => :prepare_env do
     @terraform_names = /^[a-z0-9]{3,16}$/
     if not @terraform_names.match(ENV['TERRAFORM_NAME'])
       fail "Please provide a TERRAFORM_NAME variable with that matches #{@terraform_names}"
     end
     @terraform_name = ENV['TERRAFORM_NAME']
+  end
 
-
+  task :prepare => :prepare_env do
     @terraform_stacks = ['network', 'vault', 'tools', 'kubernetes']
     unless @terraform_stacks.include?(ENV['TERRAFORM_STACK'])
       fail "Please provide a TERRAFORM_STACK out of #{@terraform_stacks}"
@@ -96,7 +94,7 @@ namespace :terraform do
   task :plan => :prepare do
     Dir.chdir(@terraform_stack) do
       args = @terraform_args
-      args << '-var-file=/share/tokens.tfvar' if @terraform_stack == 'kubernetes' and File.exists?('/share/tokens.tfvar')
+      args << '-var-file=/work/tokens.tfvar' if @terraform_stack == 'kubernetes' and File.exists?('/work/tokens.tfvar')
       # generate plan and return a 2 exitcode if there's something to change
       if not @terraform_plan.nil?
         args << "-out=#{@terraform_plan}"
@@ -358,7 +356,6 @@ namespace :vault do
   task :setup_k8s => :prepare_login do
     ENV['CLUSTER_ID'] = @cluster_name
     sh "vault/scripts/setup_vault.sh"
-    sh 'mv', 'tokens.tfvar', '/share' if File.directory?("/share")
   end
 
   desc 'Generate kubeconfig for cluster'
@@ -407,5 +404,17 @@ namespace :vault do
       end
       logger.info "Wrote #{dest_file}"
     end
+  end
+end
+
+namespace :puppet do
+  task :prepare => :'terraform:hub_outputs' do
+    zone = @terraform_hub_outputs['private_zones']['value'].first
+    @puppet_master = "puppet.#{zone}"
+  end
+
+  desc 'Deploy puppet.tar.gz to the puppet master'
+  task :deploy_env => :prepare do
+    sh "cat puppet.tar.gz | ssh -o StrictHostKeyChecking=no puppet-deploy@#{@puppet_master} #{@terraform_environment}_#{@terraform_name}"
   end
 end

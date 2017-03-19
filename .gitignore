@@ -1,1 +1,4 @@
 .terraform/
+/.container_id
+terraform.tfstate
+terraform.tfstate.backup

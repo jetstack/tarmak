@@ -55,6 +55,3 @@ WORKDIR /work
 ADD Gemfile .
 ADD Gemfile.lock .
 RUN bundle install --path vendor/
-
-# add terraform
-ADD . .
