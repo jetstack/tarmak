@@ -288,7 +288,8 @@ write_files:
 runcmd:
 - chown consul:consul /etc/consul/consul.json
 - chown vault:vault /etc/vault/vault.hcl
-- hostname ${fqdn}
+- echo "${fqdn}" > /etc/hostname
+- hostname -F /etc/hostname
 - yum -y install epel-release
 - yum -y install unzip jq curl gpg awscli
 - /usr/local/bin/download-vault-consul.sh
