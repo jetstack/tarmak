@@ -319,11 +319,11 @@ namespace :vault do
           logger.debug 'store unseal key in AWS parameter store'
           ssm = Aws::SSM::Client.new(region: 'eu-west-1')
           ssm.put_parameter({
-            name: "vault-#{@terraform_environment}-seal-key",
+            name: "vault-#{@terraform_environment}-unseal-key",
             value: resp['keys_base64'].first,
-              type: 'SecureString',
-              key_id: @secrets_kms_arn,
-              overwrite: true,
+            type: 'SecureString',
+            key_id: @secrets_kms_arn,
+            overwrite: true,
           })
         end
       end
