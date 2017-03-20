@@ -1,5 +1,6 @@
 # class kubernetes::master
 class kubernetes::apiserver(
+  $allow_privileged = true,
   $admission_control = undef,
   $count = 1,
   $storage_backend = undef,

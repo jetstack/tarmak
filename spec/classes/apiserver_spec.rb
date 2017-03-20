@@ -13,6 +13,7 @@ describe 'kubernetes::apiserver' do
       should contain_file(service_file).with_content(/Group=kubernetes/)
       should contain_file(service_file).with_content(/#{Regexp.escape('"--etcd-servers=http://localhost:2379"')}/)
       should contain_file(service_file).with_content(%r{--service-cluster-ip-range=10\.254\.0\.0/16})
+      should contain_file(service_file).with_content(%r{--allow-privileged=true})
     end
   end
 
