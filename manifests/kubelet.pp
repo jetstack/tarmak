@@ -87,6 +87,46 @@ class kubernetes::kubelet(
     require => File[$kubelet_dir],
   }
 
+  $availability_zone = $facts.dig('ec2_metadata','placement','availability-zone')
+  if $::kubernetes::cloud_provider == 'aws' and $availability_zone != undef {
+    file{"${kubelet_dir}/plugins/kubernetes.io":
+      ensure  => 'directory',
+      mode    => '0750',
+      owner   => 'root',
+      group   => 'root',
+      seltype => $seltype,
+      require => File["${kubelet_dir}/plugins"],
+    } ->
+    file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs":
+      ensure  => 'directory',
+      mode    => '0750',
+      owner   => 'root',
+      group   => 'root',
+      seltype => $seltype,
+    } ->
+    file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts":
+      ensure  => 'directory',
+      mode    => '0750',
+      owner   => 'root',
+      group   => 'root',
+      seltype => $seltype,
+    } ->
+    file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws":
+      ensure  => 'directory',
+      mode    => '0750',
+      owner   => 'root',
+      group   => 'root',
+      seltype => $seltype,
+    } ->
+    file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws/${availability_zone}":
+      ensure  => 'directory',
+      mode    => '0750',
+      owner   => 'root',
+      group   => 'root',
+      seltype => $seltype,
+    }
+  }
+
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-kubelet"
   file{$kubeconfig_path:
     ensure  => file,

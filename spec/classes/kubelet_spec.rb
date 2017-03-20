@@ -36,6 +36,34 @@ describe 'kubernetes::kubelet' do
     end
   end
 
+  context 'aws ebs with SElinux' do
+    let(:facts) do
+      {
+        'ec2_metadata' => {
+          'placement' => {
+            'availability-zone' => 'my-zone-1z',
+          },
+        }
+      }
+    end
+
+    let(:pre_condition) {[
+      """
+        class{'kubernetes': cloud_provider => 'aws'}
+      """
+    ]}
+
+    let(:parent_dir) do
+      '/var/lib/kubelet/plugins/kubernetes.io/aws-ebs/mounts/aws/my-zone-1z'
+    end
+
+    it 'should have seltype set on parent dir' do
+      should contain_file(parent_dir).with_ensure('directory')
+      should contain_file(parent_dir).with_seltype('svirt_sandbox_file_t')
+    end
+  end
+
+
   context 'network_plugin enabled' do
     let(:params) { {'network_plugin' => 'kubenet' } }
       it do
