@@ -35,7 +35,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-kubernetes.git
   ref: master
-  sha: 6e384127022d125d678538d7e36a52bcaa1bbc8d
+  sha: dc38d7070dfb4fd3d7eff91d63c71179602b11ae
   specs:
     jetstack-kubernetes (0.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
