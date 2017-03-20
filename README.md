@@ -158,6 +158,11 @@ class kubernetes::master
 
 #### Parameters
 
+##### `allow_privileged`
+
+* Type: `Any`
+* Default: `true`
+
 ##### `admission_control`
 
 * Type: `Any`
