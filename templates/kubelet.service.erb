@@ -12,6 +12,11 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
   --register-schedulable=<%= @_register_schedulable %> \
   --register-node=<%= @register_node %> \
+<% if @allow_privileged -%>
+  --allow-privileged=true \
+<% else -%>
+  --allow-privileged=false \
+<% end -%>
 <% if @kubeconfig_path -%>
   --kubeconfig=<%= @kubeconfig_path %> \
 <% if scope.function_versioncmp([scope['kubernetes::version'], '1.4.0']) >= 0 -%>

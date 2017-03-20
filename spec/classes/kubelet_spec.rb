@@ -13,6 +13,7 @@ describe 'kubernetes::kubelet' do
       should contain_file(service_file).with_content(/--node-labels=role=worker/)
       should contain_file(service_file).with_content(/--cluster-dns=10.254.0.10/)
       should contain_file(service_file).with_content(/--cluster-domain=cluster.local/)
+      should contain_file(service_file).with_content(/--allow-privileged=true/)
       should_not contain_file(service_file).with_content(/--network-plugin/)
       should contain_file(service_file).with_content(/--container-runtime=docker/)
       should contain_file(service_file).with_content(%r{--kubeconfig=/etc/kubernetes/kubeconfig-kubelet})
