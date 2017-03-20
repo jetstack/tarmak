@@ -387,6 +387,8 @@ namespace :vault do
         'user' => {},
       }],
     }
+    api_host = "api.#{@cluster_name}.#{@terraform_hub_outputs['private_zones']['value'].first}:6443"
+    tunnel_host = "localhost:6443"
     cmd = ['vault', 'write', '-format', 'json', "#{ENV['CLUSTER_ID']}/nonprod-devcluster/pki/k8s/issue/admin", "common_name=admin"]
     Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
       stdin.close
@@ -398,8 +400,14 @@ namespace :vault do
       dest_file = 'kubeconfig-tunnel'
       File.open(dest_file, 'w') do |f|
         f.write "# SSH tunnel to API via Bastion:\n"
-        f.write "# ssh -N -L6443:api.#{@cluster_name}.#{@terraform_hub_outputs['private_zones']['value'].first}:6443 centos@bastion.#{@terraform_hub_outputs['public_zones']['value'].first}\n"
+        f.write "# ssh -N -L6443:#{api_host} centos@bastion.#{@terraform_hub_outputs['public_zones']['value'].first}\n"
         f.write "#\n\n"
+        f.write kubeconfig.to_yaml
+      end
+      logger.info "Wrote #{dest_file}"
+      dest_file = 'kubeconfig-private'
+      File.open(dest_file, 'w') do |f|
+        kubeconfig['clusters'][0]['cluster']['server'] = "https://#{api_host}"
         f.write kubeconfig.to_yaml
       end
       logger.info "Wrote #{dest_file}"

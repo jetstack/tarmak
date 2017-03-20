@@ -63,6 +63,7 @@ vault_setup_k8s: container
 vault_kubeconfig: container
 	docker exec $(CONTAINER_ID) bundle exec rake vault:kubeconfig TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_NAME=$(TERRAFORM_NAME)
 	docker cp $(CONTAINER_ID):$(WORK_DIR)/kubeconfig-tunnel kubeconfig-tunnel
+	docker cp $(CONTAINER_ID):$(WORK_DIR)/kubeconfig-private kubeconfig-private
 
 vault_initialize: container
 	docker exec $(CONTAINER_ID) bundle exec rake vault:initialize TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT)

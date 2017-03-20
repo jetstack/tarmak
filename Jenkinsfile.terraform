@@ -103,7 +103,7 @@ node {
         if (params.terraformDestroy != true) {
           wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
             sh "make vault_kubeconfig"
-            archiveArtifacts artifacts: 'kubeconfig-tunnel', fingerprint: true
+            archiveArtifacts artifacts: 'kubeconfig-*', fingerprint: true
           }
         }
       }
