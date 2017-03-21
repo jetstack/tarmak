@@ -105,8 +105,8 @@ resource "aws_security_group_rule" "kubernetes_worker_allow_ingress_controller_e
   from_port                = "${var.ingress_elb_nodeport_http}"
   to_port                  = "${var.ingress_elb_nodeport_http}"
   protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_ingress_controller_elb.id}"
-  security_group_id        = "${aws_security_group.kubernetes_worker.id}"
+  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
+  security_group_id        = "${aws_security_group.kubernetes_ingress_controller_elb.id}"
 }
 
 resource "aws_security_group_rule" "kubernetes_worker_allow_ingress_controller_services_world_http" {
