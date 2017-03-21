@@ -3,9 +3,9 @@ class kubernetes_addons::kibana(
   String $image='gcr.io/google_containers/kibana',
   String $version='v4.6.1-1',
   String $request_cpu='50m',
-  String $request_mem='128Mi',
+  String $request_mem='256Mi',
   String $limit_cpu='100m',
-  String $limit_mem='256Mi',
+  String $limit_mem='512Mi',
   Integer $replicas=2,
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
