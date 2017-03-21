@@ -1,7 +1,8 @@
 resource "aws_elb" "kubernetes_master" {
-  name     = "${data.template_file.stack_name_dns.rendered}-master"
-  subnets  = ["${data.terraform_remote_state.network.private_subnet_ids}"]
-  internal = true
+  name         = "${data.template_file.stack_name_dns.rendered}-master"
+  subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
+  idle_timeout = 3600
+  internal     = true
 
   security_groups = [
     "${aws_security_group.kubernetes_master_elb.id}",
