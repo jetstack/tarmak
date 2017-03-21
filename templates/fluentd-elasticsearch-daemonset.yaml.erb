@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: fluentd-es
-      - image: <%= @image %>:<%= @version %>
+        image: <%= @image %>:<%= @version %>
         command:
         - '/bin/sh'
         - '-c'
@@ -42,7 +42,7 @@ spec:
       volumes:
       - name: var-log
         hostPath:
-          path: /var/log
+          path: /var/lib/kubelet/plugins/fluentd
       - name: var-lib-docker-containers
         hostPath:
           path: /var/lib/docker/containers

@@ -9,14 +9,12 @@ metadata:
 spec:
   replicas: <%= @replicas %>
   selector:
-    k8s-app: elasticsearch-logging
-    version: v1
+    matchLabels:
+      k8s-app: elasticsearch-logging
   template:
     metadata:
       labels:
         k8s-app: elasticsearch-logging
-        version: v1
-        kubernetes.io/cluster-service: "true"
     spec:
       containers:
       - image: <%= @image %>:<%= @version %>
