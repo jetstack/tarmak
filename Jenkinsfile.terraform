@@ -2,7 +2,8 @@
 node {
   properties([
     parameters([
-      booleanParam(name: 'terraformDestroy', defaultValue: false, description: 'Should this stack be destroyed?')
+      booleanParam(name: 'terraformDestroy', defaultValue: false, description: 'Should this stack be destroyed?'),
+      booleanParam(name: 'interactiveMode', defaultValue: true, description: 'Should I ask interactively before applying changes?')
     ])
   ])
 
@@ -75,7 +76,9 @@ node {
     // this is only run if plan has actual changes
     stage("terraform apply ${terraformStack}") {
       if (statusPlan == 2){
-        input 'Shall I apply?'
+        if (params.interactiveMode) {
+          input 'Shall I apply?'
+        }
         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
           sh "make terraform_apply"
         }
