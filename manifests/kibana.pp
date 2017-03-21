@@ -4,7 +4,7 @@ class kubernetes_addons::kibana(
   String $version='v4.6.1-1',
   String $request_cpu='50m',
   String $request_mem='768Mi',
-  String $limit_cpu='100m',
+  String $limit_cpu='1',
   String $limit_mem='2Gi',
   Integer $replicas=2,
 ) inherits ::kubernetes_addons::params {
