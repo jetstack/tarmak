@@ -14,6 +14,7 @@ class kubernetes_addons::elasticsearch(
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
+  # TODO: Support elasticsearch using StatefulSet pods
   kubernetes::apply{'elasticsearch':
     manifests => [
       template('kubernetes_addons/elasticsearch-svc.yaml.erb'),
