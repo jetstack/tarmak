@@ -35,14 +35,22 @@ spec:
         volumeMounts:
         - name: var-log
           mountPath: /var/log
+        - name: var-log-containers
+          mountPath: /var/log/containers
+          readOnly: true
         - name: var-lib-docker-containers
           mountPath: /var/lib/docker/containers
           readOnly: true
+        securityContext:
+          privileged: true
       terminationGracePeriodSeconds: 30
       volumes:
       - name: var-log
         hostPath:
           path: /var/lib/kubelet/plugins/fluentd
+      - name: var-log-containers
+        hostPath:
+          path: /var/log/containers
       - name: var-lib-docker-containers
         hostPath:
           path: /var/lib/docker/containers
