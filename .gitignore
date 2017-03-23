@@ -1,4 +1,5 @@
 .terraform/
+/.terraform_exitcode
 /.container_id
 terraform.tfstate
 terraform.tfstate.backup
