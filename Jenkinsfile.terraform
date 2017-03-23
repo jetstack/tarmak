@@ -57,7 +57,7 @@ node {
             wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
               step ([
                 $class: 'CopyArtifact',
-                projectName: 'puppet/puppet_code',
+                projectName: '../../puppet/puppet_code',
                 filter: 'puppet.tar.gz',
               ])
               sh "make puppet_deploy_env"
