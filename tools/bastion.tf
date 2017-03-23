@@ -1,5 +1,5 @@
 variable "bastion_instance_type" {
-  default = "t2.micro"
+  default = "t2.nano"
 }
 
 variable "bastion_root_size" {
