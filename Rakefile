@@ -101,8 +101,13 @@ namespace :terraform do
         args << '-detailed-exitcode'
         args << '-destroy' if ENV['TERRAFORM_DESTROY'] == 'true'
         sh 'terraform', 'plan', *args do |ok, res|
-          fail "terraform plan failed" if res.exitstatus != 0 and res.exitstatus != 2
-          exit res.exitstatus
+          File.open('../.terraform_exitcode', 'w') do |f|
+            f.write res.exitstatus.to_s
+          end
+          if res.exitstatus != 0 and res.exitstatus != 2
+            puts "terraform plan failed"
+            exit res.exitstatus
+          end
         end
       else
         sh 'terraform', 'plan', *args

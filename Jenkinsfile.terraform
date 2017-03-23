@@ -69,7 +69,9 @@ node {
 
     stage("terraform plan ${terraformStack}") {
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-        statusPlan = sh script: 'make terraform_plan', returnStatus: true
+        sh 'make terraform_plan'
+        exitCode = sh(script: 'cat .terraform_exitcode', returnStdout: true)
+        statusPlan = exitCode.trim() as int
         if (statusPlan != 2 && statusPlan != 0){
           error("terrafrom plan failed with exit code ${statusPlan}")
         }

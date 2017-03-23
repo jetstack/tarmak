@@ -44,6 +44,7 @@ terraform_sync: container
 
 terraform_plan: container
 	docker exec $(CONTAINER_ID) bundle exec rake terraform:plan TERRAFORM_NAME=$(TERRAFORM_NAME) TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_STACK=$(TERRAFORM_STACK) TERRAFORM_PLAN=/work/terraform.plan TERRAFORM_DESTROY=$(TERRAFORM_DESTROY)
+	docker cp $(CONTAINER_ID):$(WORK_DIR)/.terraform_exitcode .terraform_exitcode
 
 terraform_apply: container
 	docker exec $(CONTAINER_ID) bundle exec rake terraform:apply TERRAFORM_NAME=$(TERRAFORM_NAME) TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_STACK=$(TERRAFORM_STACK) TERRAFORM_PLAN=/work/terraform.plan
