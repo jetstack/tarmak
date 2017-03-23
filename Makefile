@@ -55,7 +55,7 @@ terraform_fmt: container
 	docker exec $(CONTAINER_ID) bundle exec rake terraform:fmt
 
 vault_secrets: container
-	docker exec $(CONTAINER_ID) bundle exec rake vault:secrets TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT)
+	docker exec $(CONTAINER_ID) bundle exec rake vault:secrets TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_NAME=$(TERRAFORM_NAME)
 
 vault_setup_k8s: container
 	docker exec $(CONTAINER_ID) bundle exec rake vault:setup_k8s TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_NAME=$(TERRAFORM_NAME)
