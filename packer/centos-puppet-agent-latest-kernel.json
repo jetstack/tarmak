@@ -26,7 +26,12 @@
         "yum update -y",
         "yum install -y epel-release",
         "yum install -y git puppet-agent vim socat python-pip at jq unzip",
-        "pip install awscli"
+        "pip install awscli",
+        "rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org",
+        "rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm",
+        "yum --enablerepo=elrepo-kernel install -y kernel-ml",
+        "grub2-set-default 0",
+        "grub2-mkconfig -o /boot/grub2/grub.cfg"
       ]
     }
   ]
