@@ -31,7 +31,7 @@ resource "aws_route53_record" "ingress_wildcard_v6" {
   type    = "AAAA"
 
   alias {
-    name                   = "${aws_elb.ingress_controller.dns_name}"
+    name                   = "dualstack.${aws_elb.ingress_controller.dns_name}"
     zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
     evaluate_target_health = true
   }
