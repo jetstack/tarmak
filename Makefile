@@ -66,7 +66,7 @@ vault_kubeconfig: container
 	docker cp $(CONTAINER_ID):$(WORK_DIR)/kubeconfig-private kubeconfig-private
 
 vault_initialize: container
-	docker exec $(CONTAINER_ID) bundle exec rake vault:initialize TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT)
+	docker exec $(CONTAINER_ID) bundle exec rake vault:initialize TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_NAME=$(TERRAFORM_NAME)
 
 puppet_deploy_env: ssh_agent
 	docker cp puppet.tar.gz $(CONTAINER_ID):$(WORK_DIR)
