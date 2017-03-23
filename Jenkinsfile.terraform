@@ -13,7 +13,7 @@ node {
 
     def terraformStack = splitJobName[-1]
     def terraformName = splitJobName[-2]
-    def terraformEnvironment = splitJobName[-3]
+    def terraformEnvironment = splitJobName[-4]
     env.TERRAFORM_ENVIRONMENT = terraformEnvironment
     env.TERRAFORM_NAME = terraformName
     env.TERRAFORM_STACK = terraformStack
