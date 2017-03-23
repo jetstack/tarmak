@@ -68,4 +68,6 @@ write_files:
       #includedir /etc/sudoers.d
 
 runcmd:
+- echo "${puppernetes_cluster}-${puppernetes_role}-$(curl http://169.254.169.254/latest/meta-data/instance-id).$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}').compute.internal" > /etc/hostname
+- hostname -F /etc/hostname
 - service puppet restart
