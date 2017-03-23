@@ -48,6 +48,12 @@ terraform_plan: container
 terraform_apply: container
 	docker exec $(CONTAINER_ID) bundle exec rake terraform:apply TERRAFORM_NAME=$(TERRAFORM_NAME) TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_STACK=$(TERRAFORM_STACK) TERRAFORM_PLAN=/work/terraform.plan
 
+terraform_validate: container
+	docker exec $(CONTAINER_ID) bundle exec rake terraform:validate
+
+terraform_fmt: container
+	docker exec $(CONTAINER_ID) bundle exec rake terraform:fmt
+
 vault_secrets: container
 	docker exec $(CONTAINER_ID) bundle exec rake vault:secrets TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT)
 

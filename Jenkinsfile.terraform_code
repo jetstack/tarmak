@@ -1,22 +1,25 @@
 // vim: et:ts=2:sw=2:ft=groovy
 node {
-  checkout scm
+  try {
+    checkout scm
 
-  def imageName = "platform.kubernetes.terraform:code-${env.BUILD_NUMBER}"
+    stage ('build docker image'){
+      sh "make build terraform_sync"
+    }
 
-  stage ('build docker image'){
-    docker.build(imageName)
-  }
+    stage('validate terraform') {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+        sh "make terraform_validate"
+      }
+    }
 
-  stage('validate terraform') {
-    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      sh "docker run --rm ${imageName} bundle exec rake terraform:validate"
+    stage('fmt terraform') {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+        sh "make terraform_fmt"
+      }
     }
   }
-
-  stage('fmt terraform') {
-    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-      sh "docker run --rm ${imageName} bundle exec rake terraform:fmt"
-    }
+  finally {
+    sh "make clean"
   }
 }
