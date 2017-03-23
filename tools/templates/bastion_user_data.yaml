@@ -2,6 +2,8 @@
 repo_update: true
 repo_upgrade: all
 
+preserve_hostname: true
+
 write_files:
 - path: /etc/hosts
   permissions: '0644'
