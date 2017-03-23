@@ -6,7 +6,7 @@ variable "stack" {
 
 variable "centos_ami" {
   default = {
-    eu-west-1 = "ami-7abd0209"
+    eu-west-1 = "ami-b790a3d1"
   }
 }
 
