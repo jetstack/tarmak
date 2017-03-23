@@ -53,6 +53,31 @@ write_files:
     RemainAfterExit=yes
     ExecStart=/bin/bash -c 'blkid /dev/xvdd || (wipefs -fa /dev/xvdd && mkfs.ext4 /dev/xvdd)'
 
+- path: /etc/systemd/system/consul-backup.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Backup consul KV store
+    Requires=consul.service
+    After=consul.service
+
+    [Service]
+    Type=oneshot
+    Environment=AWS_DEFAULT_REGION=${region}
+    Environment=BUCKET_NAME=${bucket_backup}
+    Environment=CONSUL_HTTP_TOKEN=${consul_master_token}
+    ExecStart=/usr/local/bin/consul-backup.sh
+
+- path: /etc/systemd/system/consul-backup.timer
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Backup consul according to schedule
+    [Timer]
+    OnCalendar=${backup_schedule}
+    [Install]
+    WantedBy=timers.target
+
 - path: /etc/systemd/system/var-lib-consul.mount
   permissions: '0644'
   content: |
@@ -250,6 +275,48 @@ write_files:
     download_app "vault" "$${VAULT_VERSION}"
     download_app "consul" "$${CONSUL_VERSION}"
 
+- path: /usr/local/bin/download-consul-backinator.sh
+  permissions: "0755"
+  content: |
+    #!/bin/bash
+
+    set -euo pipefail
+
+    CONSUL_BACKINATOR_VERSION=1.3
+    CONSUL_BACKINATOR_HASH=8ea624487a86007825884685dbc978ba87f7a448f11d59b9eb29fd5b1b2a0e87
+
+    mkdir -p /tmp/consul-backinator
+
+    curl -sL https://github.com/myENA/consul-backinator/releases/download/v$${CONSUL_BACKINATOR_VERSION}/consul-backinator-$${CONSUL_BACKINATOR_VERSION}-amd64-linux.tar.gz > /tmp/consul-backinator/consul-backinator.tar.gz
+    echo "$${CONSUL_BACKINATOR_HASH}  /tmp/consul-backinator/consul-backinator.tar.gz" | sha256sum -c
+
+    tar xvzf /tmp/consul-backinator/consul-backinator.tar.gz -C /tmp/consul-backinator
+    mv /tmp/consul-backinator/consul-backinator-$${CONSUL_BACKINATOR_VERSION}-amd64-linux/consul-backinator-$${CONSUL_BACKINATOR_VERSION} /usr/local/bin/consul-backinator
+    chown root:root /usr/local/bin/consul-backinator
+    rm -rf /tmp/consul-backinator
+
+- path: /usr/local/bin/consul-backup.sh
+  permissions: "0755"
+  content: |
+    #!/bin/bash
+
+    set -euo pipefail
+
+    backup_local_path=/tmp/consul-backup
+    backup_local_acls_path=/tmp/consul-backup-acls
+
+    consul-backinator backup -file "$${backup_local_path}" -acls "$${backup_local_acls_path}"
+
+    backup_s3_prefix="s3://$${BUCKET_NAME}/consul-backup-$(date -u +"%Y-%m-%d_%H-%M-%S")"
+    backup_s3_path="$${backup_s3_prefix}/consul-backup"
+    backup_s3_acls_path="$${backup_s3_prefix}/consul-backup-acls"
+
+    aws s3 cp "$${backup_local_path}"          "$${backup_s3_path}"
+    aws s3 cp "$${backup_local_path}.sig"      "$${backup_s3_path}.sig"
+    aws s3 cp "$${backup_local_acls_path}"     "$${backup_s3_acls_path}"
+    aws s3 cp "$${backup_local_acls_path}.sig" "$${backup_s3_acls_path}.sig"
+
+    rm -rf "$${backup_local_path}" "$${backup_local_path}.sig" "$${backup_local_acls_path}" "$${backup_local_acls_path}.sig"
 
 - path: /usr/local/bin/vault-unseal.sh
   permissions: "0755"
@@ -289,9 +356,10 @@ write_files:
 runcmd:
 - chown consul:consul /etc/consul/consul.json
 - chown vault:vault /etc/vault/vault.hcl
-- hostnamectl set-hostname "$(fqdn)"
+- hostnamectl set-hostname "${fqdn}"
 - yum -y install epel-release
 - yum -y install unzip jq curl gpg awscli
 - /usr/local/bin/download-vault-consul.sh
-- systemctl enable consul.service vault.service
-- systemctl start consul.service vault.service
+- /usr/local/bin/download-consul-backinator.sh
+- systemctl enable consul.service vault.service consul-backup.timer
+- systemctl start consul.service vault.service consul-backup.timer
