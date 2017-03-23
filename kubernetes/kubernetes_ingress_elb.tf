@@ -25,18 +25,6 @@ resource "aws_route53_record" "ingress_wildcard" {
   }
 }
 
-resource "aws_route53_record" "ingress_wildcard_v6" {
-  zone_id = "${data.terraform_remote_state.hub_network.public_zone_ids[0]}"
-  name    = "*.${var.name}"
-  type    = "AAAA"
-
-  alias {
-    name                   = "dualstack.${aws_elb.ingress_controller.dns_name}"
-    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
-    evaluate_target_health = true
-  }
-}
-
 resource "aws_elb" "ingress_controller" {
   name         = "${data.template_file.stack_name_dns.rendered}-k8s-ingress"
   subnets      = ["${data.terraform_remote_state.network.public_subnet_ids}"]
