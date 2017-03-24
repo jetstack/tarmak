@@ -48,7 +48,6 @@ runcmd:
 - yum -y install jenkins
 - yum -y install vim docker java git
 - usermod -a -G root jenkins
-- chcon -vt docker_exec_t /usr/libexec/docker/docker-* /bin/docker* /usr/bin/docker*
 - systemctl enable docker.service jenkins.service
 - systemctl start docker.service jenkins.service
 
