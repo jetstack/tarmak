@@ -8,6 +8,13 @@ require 'rhcl'
 logger = Logger.new(STDERR)
 logger.level = Logger::DEBUG
 
+def instance_name(i)
+  i.tags.each do |tag|
+    return tag.value if tag.key == 'Name'
+  end
+  return 'unknown'
+end
+
 namespace :aws do
   task :prepare do
     require 'aws-sdk'
@@ -426,8 +433,74 @@ namespace :puppet do
     @puppet_master = "puppet.#{zone}"
   end
 
-  desc 'Deploy puppet.tar.gz to the puppet master'
+  desc 'deploy puppet.tar.gz to the puppet master'
   task :deploy_env => :prepare do
     sh "cat puppet.tar.gz | ssh -o StrictHostKeyChecking=no puppet-deploy@#{@puppet_master} #{@terraform_environment}_#{@terraform_name}"
+  end
+
+  desc 'run puppet apply on every node in a cluster'
+  task :node_apply => :prepare do
+    require 'aws-sdk'
+    require 'thread'
+    semaphore = Mutex.new
+    cluster_id = "#{@terraform_environment}-#{@terraform_name}"
+    ec2 = Aws::EC2::Resource.new(region: @aws_region)
+
+    threads = []
+    results_failed = []
+    results_successful = []
+
+    # Get all instances in cluster
+    ec2.instances({filters: [
+      {name: 'tag:KubernetesCluster', values: [cluster_id]},
+    ]}).each do |i|
+      # ignore non running instances
+      next if i.state.name != 'running'
+
+      logger.info "connecting to host #{instance_name(i)} (#{i.private_ip_address})"
+      threads << Thread.new do
+        node = i.private_ip_address
+        cmd = [
+          'ssh',
+          '-o',
+          'StrictHostKeyChecking=no',
+          '-o',
+          'ConnectTimeout=10',
+          "puppet-deploy@#{node}",
+        ]
+        Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
+          stdin.close
+          exit_code = wait_thr.value
+          output_stdout = stdout.read
+          output_stderr = stderr.read
+          output = output_stdout
+          if stderr != ''
+            output += "\nSTDERR: #{output_stderr}"
+          end
+          semaphore.synchronize do
+            if exit_code == 0 or exit_code == 2
+              results_successful << [i, output]
+            else
+              results_failed << [i, output]
+            end
+          end
+        end
+      end
+    end
+    threads.each do |thr|
+      thr.join
+    end
+    return_code = 0
+
+    results_successful.each do |i, output|
+      puts "execution on host #{instance_name(i)} (#{i.private_ip_address}) succeeded:"
+      puts output
+    end
+    results_failed.each do |i, output|
+      puts "execution on host #{instance_name(i)} (#{i.private_ip_address}) failed:"
+      puts output
+      return_code = 1
+    end
+    exit return_code
   end
 end

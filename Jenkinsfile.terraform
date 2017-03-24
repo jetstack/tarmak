@@ -112,6 +112,14 @@ node {
           }
         }
       }
+
+      stage("run puppet apply on every node") {
+        if (params.terraformDestroy != true) {
+          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+            sh "make puppet_node_apply"
+          }
+        }
+      }
     }
   }
   finally {

@@ -72,3 +72,6 @@ vault_initialize: container
 puppet_deploy_env: ssh_agent
 	docker cp puppet.tar.gz $(CONTAINER_ID):$(WORK_DIR)
 	docker exec $(CONTAINER_ID) bundle exec rake puppet:deploy_env TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_NAME=$(TERRAFORM_NAME)
+
+puppet_node_apply: ssh_agent
+	docker exec $(CONTAINER_ID) bundle exec rake puppet:node_apply TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_NAME=$(TERRAFORM_NAME)
