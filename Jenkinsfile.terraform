@@ -7,8 +7,11 @@ node {
     ])
   ])
 
+
   try {
     checkout scm
+
+    def sshCredentialId = 'id_jenkins_p9s_nonprod_file'
 
     def splitJobName = env.JOB_NAME.split('/')
 
@@ -53,7 +56,7 @@ node {
 
       stage("deploy puppet code to environment") {
         if (params.terraformDestroy != true) {
-          withCredentials([file(credentialsId: 'id_jenkins_p9s_nonprod_file', variable: 'SSH_KEY_PATH')]) {
+          withCredentials([file(credentialsId: sshCredentialId, variable: 'SSH_KEY_PATH')]) {
             wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
               step ([
                 $class: 'CopyArtifact',
@@ -116,7 +119,9 @@ node {
       stage("run puppet apply on every node") {
         if (params.terraformDestroy != true) {
           wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-            sh "make puppet_node_apply"
+            withCredentials([file(credentialsId: sshCredentialId, variable: 'SSH_KEY_PATH')]) {
+              sh "make puppet_node_apply"
+            }
           }
         }
       }
