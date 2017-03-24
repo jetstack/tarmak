@@ -13,8 +13,7 @@ write_files:
     127.0.1.1   ${fqdn}
 
 runcmd:
-- echo "${fqdn}" > /etc/hostname
-- hostname -F /etc/hostname
+- hostnamectl set-hostname "${fqdn}"
 - yum -y update
 - yum -y install vim
 

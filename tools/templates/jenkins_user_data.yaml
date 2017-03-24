@@ -41,8 +41,7 @@ write_files:
     ExecStartPre=/bin/chown jenkins:jenkins /var/lib/jenkins
 
 runcmd:
-- echo "jenkins.${dns_zone}" > /etc/hostname
-- hostname -F /etc/hostname
+- hostnamectl set-hostname "jenkins.${dns_zone}"
 - curl -sLo /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
 - rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
 - yum -y update

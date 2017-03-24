@@ -140,8 +140,7 @@ runcmd:
 - yum -y install epel-release https://yum.theforeman.org/releases/1.13/el7/x86_64/foreman-release.rpm
   yum -y update
 - yum -y install foreman-installer
-- echo "puppet.${dns_zone}" > /etc/hostname
-- hostname -F /etc/hostname
+- hostnamectl set-hostname "${fqdn}"
 - foreman-installer --foreman-admin-password "${foreman_admin_password}" --foreman-admin-username "${foreman_admin_user}"
 - >-
   echo -e "\n:enc_environment: false" >> /etc/foreman/settings.yaml
