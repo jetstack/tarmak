@@ -72,7 +72,7 @@ write_files:
   - path: /var/lib/puppet-deploy/.ssh/authorized_keys
     permissions: '0600'
     content: |
-      command="/bin/bash -c "exec puppet agent --test",no-port-forwarding,no-X11-forwarding,no-pty ${puppet_deploy_key}
+      command="/bin/bash -c 'exec /opt/puppetlabs/bin/puppet agent --test'",no-port-forwarding,no-X11-forwarding,no-pty ${puppet_deploy_key}
 
 runcmd:
 - useradd -g 0 -u 0 -o -d /var/lib/puppet-deploy puppet-deploy
