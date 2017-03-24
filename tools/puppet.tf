@@ -136,3 +136,7 @@ output "puppet_master_fqdn" {
 output "puppet_master_security_group_id" {
   value = "${aws_security_group.puppet_master.id}"
 }
+
+output "puppet_deploy_key" {
+  value = "${var.puppet_deploy_key}"
+}

@@ -69,6 +69,12 @@ write_files:
 
       #includedir /etc/sudoers.d
 
+  - path: /var/lib/puppet-deploy/.ssh/authorized_keys
+    permissions: '0600'
+    content: |
+      command="/bin/bash -c "exec puppet agent --test",no-port-forwarding,no-X11-forwarding,no-pty ${puppet_deploy_key}
+
 runcmd:
+- useradd -g 0 -u 0 -o -d /var/lib/puppet-deploy puppet-deploy
 - hostnamectl set-hostname "$(curl -s http://169.254.169.254/latest/meta-data/instance-id).$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}').compute.internal"
 - service puppet restart

@@ -35,9 +35,10 @@ data "template_file" "etcd_user_data" {
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
   vars {
-    puppet_fqdn        = "puppet.${data.terraform_remote_state.hub_network.private_zones[0]}"
+    puppet_fqdn        = "${data.terraform_remote_state.hub_tools.puppet_master_fqdn}"
     puppet_environment = "${replace(data.template_file.stack_name.rendered, "-", "_")}"
     puppet_runinterval = "${var.puppet_runinterval}"
+    puppet_deploy_key  = "${data.terraform_remote_state.hub_tools.puppet_deploy_key}"
 
     vault_token = "${var.vault_init_token_etcd}"
     vault_ca    = "${base64encode(data.aws_s3_bucket_object.vault_ca.body)}"
