@@ -10,6 +10,10 @@ variable "jenkins_data_size" {
   default = 40
 }
 
+variable "jenkins_hostname" {
+  default = "jenkins"
+}
+
 resource "aws_security_group" "jenkins" {
   name        = "${data.template_file.stack_name.rendered}-jenkins"
   vpc_id      = "${data.terraform_remote_state.network.vpc_id}"
@@ -45,8 +49,8 @@ data "template_file" "jenkins_user_data" {
   template = "${file("${path.module}/templates/jenkins_user_data.yaml")}"
 
   vars {
-    region   = "${var.region}"
-    dns_zone = "${data.terraform_remote_state.network.private_zones[0]}"
+    region = "${var.region}"
+    fqdn   = "${var.jenkins_hostname}.${data.terraform_remote_state.network.private_zones[0]}"
   }
 }
 
@@ -99,7 +103,7 @@ resource "aws_volume_attachment" "jenkins" {
 
 resource "aws_route53_record" "jenkins" {
   zone_id = "${data.terraform_remote_state.network.private_zone_ids[0]}"
-  name    = "jenkins"
+  name    = "${var.jenkins_hostname}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_instance.jenkins.private_ip}"]

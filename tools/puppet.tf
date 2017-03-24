@@ -10,6 +10,10 @@ variable "puppet_master_data_size" {
   default = 40
 }
 
+variable "puppet_master_hostname" {
+  default = "puppet"
+}
+
 variable "puppet_deploy_key" {}
 
 variable "foreman_admin_user" {
@@ -63,7 +67,7 @@ data "template_file" "puppet_master_user_data" {
 
   vars {
     region                 = "${var.region}"
-    dns_zone               = "${data.terraform_remote_state.network.private_zones[0]}"
+    fqdn                   = "${var.puppet_master_hostname}.${data.terraform_remote_state.network.private_zones[0]}"
     puppet_deploy_key      = "${var.puppet_deploy_key}"
     foreman_admin_user     = "${var.foreman_admin_user}"
     foreman_admin_password = "${var.foreman_admin_password}"
@@ -119,7 +123,7 @@ resource "aws_volume_attachment" "puppet_master" {
 
 resource "aws_route53_record" "puppet_master" {
   zone_id = "${data.terraform_remote_state.network.private_zone_ids[0]}"
-  name    = "puppet"
+  name    = "${var.puppet_master_hostname}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_instance.puppet_master.private_ip}"]
