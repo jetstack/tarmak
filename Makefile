@@ -12,10 +12,13 @@ build:
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
 
 container_create:
+	env | grep '^AWS_' > .aws_credentials
+	chmod 600 .aws_credentials
 	# create/start container if needed
 	if [ ! -f .container_id ] || [ -z "$$(cat .container_id 2> /dev/null)" ] || ! docker inspect $$(cat .container_id 2> /dev/null) > /dev/null; then \
 		docker create \
 		--env SSH_AUTH_SOCK=/tmp/ssh-auth-sock \
+		--env-file .aws_credentials \
 		$(IMAGE_NAME):$(IMAGE_TAG) \
 		sleep 3600 > .container_id; \
 	fi; \
