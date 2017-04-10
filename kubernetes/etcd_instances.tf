@@ -25,7 +25,7 @@ resource "aws_instance" "etcd" {
     Contact            = "${var.contact}"
     Etcd_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
     Role               = "etcd"
-    KubernetesCluster  = "${data.template_file.stack_name_dns.rendered}"
+    KubernetesCluster  = "${data.template_file.stack_name.rendered}"
   }
 
   user_data = "${element(data.template_file.etcd_user_data.*.rendered, count.index)}"
@@ -47,7 +47,7 @@ data "template_file" "etcd_user_data" {
     puppernetes_dns_root      = "${data.terraform_remote_state.hub_network.private_zones[0]}"
     puppernetes_role          = "etcd"
     puppernetes_hostname      = "etcd-${count.index+1}"
-    puppernetes_cluster       = "${data.template_file.stack_name_dns.rendered}"
+    puppernetes_cluster       = "${data.template_file.stack_name.rendered}"
     puppernetes_environment   = "${var.environment}"
     puppernetes_desired_count = "${var.etcd_instance_count}"
     puppernetes_volume_id     = "${element(aws_ebs_volume.etcd.*.id, count.index)}"
@@ -56,7 +56,7 @@ data "template_file" "etcd_user_data" {
 
 resource "aws_route53_record" "etcd" {
   zone_id = "${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
-  name    = "etcd-${count.index+1}.${data.template_file.stack_name_dns.rendered}"
+  name    = "etcd-${count.index+1}.${data.template_file.stack_name.rendered}"
   type    = "A"
   ttl     = "300"
   records = ["${element(aws_instance.etcd.*.private_ip, count.index)}"]

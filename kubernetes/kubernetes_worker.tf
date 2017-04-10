@@ -44,7 +44,7 @@ data "template_file" "kubernetes_worker_user_data" {
     puppernetes_dns_root      = "${data.terraform_remote_state.hub_network.private_zones[0]}"
     puppernetes_role          = "worker"
     puppernetes_hostname      = "worker"
-    puppernetes_cluster       = "${data.template_file.stack_name_dns.rendered}"
+    puppernetes_cluster       = "${data.template_file.stack_name.rendered}"
     puppernetes_environment   = "${var.environment}"
     puppernetes_desired_count = 0
     puppernetes_volume_id     = ""
@@ -94,7 +94,7 @@ resource "aws_autoscaling_group" "kubernetes_worker" {
   # Required for AWS cloud provider
   tag {
     key                 = "KubernetesCluster"
-    value               = "${data.template_file.stack_name_dns.rendered}"
+    value               = "${data.template_file.stack_name.rendered}"
     propagate_at_launch = true
   }
 }

@@ -1,5 +1,5 @@
 resource "aws_elb" "kubernetes_master" {
-  name         = "${data.template_file.stack_name_dns.rendered}-master"
+  name         = "${data.template_file.stack_name.rendered}-master"
   subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
   idle_timeout = 3600
   internal     = true
@@ -69,7 +69,7 @@ data "template_file" "kubernetes_master_user_data" {
     puppernetes_dns_root      = "${data.terraform_remote_state.hub_network.private_zones[0]}"
     puppernetes_role          = "master"
     puppernetes_hostname      = "master"
-    puppernetes_cluster       = "${data.template_file.stack_name_dns.rendered}"
+    puppernetes_cluster       = "${data.template_file.stack_name.rendered}"
     puppernetes_environment   = "${var.environment}"
     puppernetes_desired_count = "${var.kubernetes_master_count}"
     puppernetes_volume_id     = ""
@@ -120,14 +120,14 @@ resource "aws_autoscaling_group" "kubernetes_master" {
   # Required for AWS cloud provider
   tag {
     key                 = "KubernetesCluster"
-    value               = "${data.template_file.stack_name_dns.rendered}"
+    value               = "${data.template_file.stack_name.rendered}"
     propagate_at_launch = true
   }
 }
 
 resource "aws_route53_record" "kubernetes_master" {
   zone_id = "${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
-  name    = "api.${data.template_file.stack_name_dns.rendered}"
+  name    = "api.${data.template_file.stack_name.rendered}"
   type    = "CNAME"
   ttl     = "60"
   records = ["${aws_elb.kubernetes_master.dns_name}"]
