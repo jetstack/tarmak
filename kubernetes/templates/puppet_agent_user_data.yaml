@@ -35,9 +35,11 @@ write_files:
   - path: /etc/puppetlabs/puppet/puppet.conf
     permissions: '0644'
     content: |
+      [main]
       server = ${puppet_fqdn}
       environment = ${puppet_environment}
       runinterval = ${puppet_runinterval}
+      certname = ##instance_id##
 
   - path: /etc/facter/facts.d/vault_token
     permissions: '0700'
@@ -76,5 +78,5 @@ write_files:
 
 runcmd:
 - useradd -g 0 -u 0 -o -d /var/lib/puppet-deploy puppet-deploy
-- hostnamectl set-hostname "$(curl -s http://169.254.169.254/latest/meta-data/instance-id).$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}').compute.internal"
+- sed -i "s/##instance_id##/$(curl -s http://169.254.169.254/latest/meta-data/instance-id).$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}').compute.internal/g" /etc/puppetlabs/puppet/puppet.conf
 - service puppet restart
