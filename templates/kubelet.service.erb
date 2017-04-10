@@ -30,6 +30,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% end -%>
   --cluster-dns=<%= @cluster_dns %> \
   --cluster-domain=<%= @cluster_domain %> \
+<% if @hostname_override -%>
+  --hostname-override=<%= @hostname_override %> \
+<% end -%>
 <% if @pod_cidr -%>
   --pod-cidr=<%= @pod_cidr %> \
 <% end -%>
