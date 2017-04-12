@@ -9,4 +9,5 @@ mod 'jetstack-etcd_mount',
 mod 'jetstack-vault_client',
   :git => 'git@git.jetstack.net:puppernetes/module-vault_client.git'
 mod 'jetstack-calico',
-  :git => 'git@git.jetstack.net:puppernetes/module-calico.git'
+  :git => 'git@git.jetstack.net:puppernetes/module-calico.git',
+  :ref => 'hosted'

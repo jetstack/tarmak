@@ -19,23 +19,17 @@ class puppernetes::overlay_calico {
   }
 
   class { 'calico':
-    etcd_cluster     => $::puppernetes::_etcd_cluster,
-    tls              => true,
-    systemd_after    => ['etcd-overlay-cert.service'],
-    systemd_requires => ['etcd-overlay-cert.service'],
+    etcd_cluster   => $::puppernetes::_etcd_cluster,
+    etcd_ca_file   => "${etcd_overlay_base_path}-ca.pem",
+    etcd_cert_file => "${etcd_overlay_base_path}.pem",
+    etcd_key_file  => "${etcd_overlay_base_path}-key.pem",
   }
 
   File[$::puppernetes::etcd_home] -> File[$::puppernetes::etcd_ssl_dir] -> Service['etcd-overlay-cert.service']
 
-  Service['etcd-overlay-cert.service'] -> Service['calico-node.service']
-
   if $::puppernetes::role == 'master' {
-    class { 'calico::policy_controller': }
-
-    calico::ip_pool {$::puppernetes::kubernetes_pod_network:
-      ip_pool      => $::puppernetes::kubernetes_pod_network_host,
-      ip_mask      => $::puppernetes::kubernetes_pod_network_mask,
-      ipip_enabled => 'true', #lint:ignore:quoted_booleans
-    }
+    class { 'calico::config': }
+    Class['calico::config'] -> class { 'calico::policy_controller': }
+    Class['calico::config'] -> class { 'calico::node': }
   }
 }

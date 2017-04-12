@@ -62,6 +62,7 @@ class puppernetes (
   String $etcd_k8s_events_version = '3.0.15',
   Enum['aws', ''] $cloud_provider = '',
   String $helper_path = $puppernetes::params::helper_path,
+  String $systemd_dir = '/etc/systemd/system',
 ) inherits ::puppernetes::params {
   $ipaddress = $::ipaddress
 
