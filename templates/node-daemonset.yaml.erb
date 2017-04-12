@@ -112,6 +112,9 @@ spec:
                 configMapKeyRef:
                   name: calico-config
                   key: cni_network_config
+          # This is required for SELinux, otherwise no access to the host directories allowed
+          securityContext:
+            privileged: true
           volumeMounts:
             - mountPath: /host/opt/cni/bin
               name: cni-bin-dir
