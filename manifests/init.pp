@@ -1,69 +1,47 @@
 # calico init.pp
 class calico(
-  $etcd_cluster = $::calico::params::etcd_cluster,
-  $etcd_overlay_port = $::calico::params::etcd_overlay_port,
-  $tls = $::calico::params::tls,
-  $aws = $::calico::params::aws,
-  $aws_filter_hack = $::calico::params::aws_filter_hack,
-  $systemd_wants = $::calico::params::systemd_wants,
-  $systemd_requires = $::calico::params::systemd_requires,
-  $systemd_after = $::calico::params::systemd_after,
-  $systemd_before = $::calico::params::systemd_before,
+  Array[String] $etcd_cluster = $::calico::params::etcd_cluster,
+  Integer[1,65535] $etcd_overlay_port = $::calico::params::etcd_overlay_port,
+  Enum['etcd', 'kubernetes'] $backend = 'etcd',
+  String $etcd_ca_file = '',
+  String $etcd_cert_file = '',
+  String $etcd_key_file = '',
+  String $cloud_provider = $::calico::params::cloud_provider,
+  String $namespace = 'kube-system',
 ) inherits ::calico::params
 {
-  if $tls {
-    $proto = 'https'
-  } else {
-    $proto = 'http'
+  $path = defined('$::path') ? {
+      default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+      true    => $::path
   }
 
-  $etcd_cert_file = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}.pem"
-  $etcd_key_file  = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}-key.pem"
-  $etcd_ca_file   = "${::calico::params::etcd_cert_path}/${::calico::params::etcd_cert_base_name}-ca.pem"
+  if $backend == 'etcd' {
+    if $etcd_ca_file != '' and $etcd_cert_file != '' and $etcd_key_file != '' {
+      $etcd_proto = 'https'
 
-  $etcd_endpoints = $etcd_cluster.map |$node| { "${proto}://${node}:${etcd_overlay_port}" }.join(',')
-
-  file { [
-    "${::calico::cni_base_dir}/cni",
-    "${::calico::cni_base_dir}/cni/net.d",
-    $::calico::config_dir, $::calico::install_dir,
-    "${::calico::install_dir}/bin"
-  ]:
-    ensure => directory,
-  }
-
-  if $aws {
-    file { "${::calico::helper_dir}/sourcedestcheck.sh":
-      ensure  => file,
-      content => template('calico/sourcedestcheck.sh.erb'),
-      mode    => '0755',
+      if dirname($etcd_ca_file) != dirname($etcd_key_file) or dirname($etcd_key_file) != dirname($etcd_cert_file) {
+        fail('etcd_key_file, etcd_cert_file and etcd_ca_file must be stored in the same directory')
+      }
+      $etcd_tls_dir = dirname($etcd_ca_file)
+    } else {
+      $etcd_proto = 'http'
     }
-
-    exec { 'Disable source dest check':
-      command => "${::calico::helper_dir}/sourcedestcheck.sh set",
-      unless  => "${::calico::helper_dir}/sourcedestcheck.sh test",
-      require => File["${::calico::helper_dir}/sourcedestcheck.sh"],
-    }
+    $etcd_endpoints = $etcd_cluster.map |$node| { "${etcd_proto}://${node}:${etcd_overlay_port}" }.join(',')
+  } elsif $backend == 'kubernetes' {
+    fail('Backend storage kubernetes is not yet supported')
   }
 
-  file { "${::calico::helper_dir}/calico_helper.sh":
-    ensure  => file,
-    content => template('calico/calico_helper.sh.erb'),
-    mode    => '0755',
+  if $cloud_provider == 'aws' {
+    include ::calico::disable_source_destination_check
   }
 
-  class {'::calico::bin_install':} ->
-  class {'::calico::lo_install':} ->
-  class {'::calico::node':
-    etcd_endpoints   => $etcd_endpoints,
-    etcd_cert_file   => $etcd_cert_file,
-    etcd_key_file    => $etcd_key_file,
-    etcd_ca_file     => $etcd_ca_file,
-    aws_filter_hack  => $aws_filter_hack,
-    tls              => $tls,
-    systemd_wants    => $systemd_wants,
-    systemd_requires => ['docker.service'] + $systemd_requires,
-    systemd_after    => ['docker.service'] + $systemd_after,
-    systemd_before   => $systemd_before,
+  # make sure old stuff is disabled
+  $node_service_name = 'calico-node.service'
+  exec {"systemctl stop ${node_service_name}":
+    onlyif => "test -f ${calico::systemd_dir}/${node_service_name}",
+    path   => $path,
+  } ->
+  file{"${calico::systemd_dir}/${node_service_name}":
+    ensure =>  absent,
   }
 }

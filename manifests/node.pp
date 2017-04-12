@@ -1,76 +1,22 @@
-class calico::node(
-  $etcd_endpoints,
-  $etcd_cert_file,
-  $etcd_key_file,
-  $etcd_ca_file,
-  $aws_filter_hack,
-  $tls,
-  $systemd_wants = $::calico::params::systemd_wants,
-  $systemd_requires = $::calico::params::systemd_requires,
-  $systemd_after = $::calico::params::systemd_after,
-  $systemd_before = $::calico::params::systemd_before,
-  $node_version = $::calico::params::calico_node_version,
-  $etcd_cert_path = $::calico::params::etcd_cert_path
-) inherits ::calico::params
+class calico::node (
+  String $node_image = 'quay.io/calico/node',
+  String $node_version = '1.1.0',
+  String $cni_image = 'quay.io/calico/cni',
+  String $cni_version = '1.6.1',
+  String $ipv4_pool_cidr = '10.231.0.0/16',
+  Enum['always', 'cross-subnet', 'off'] $ipv4_pool_ipip_mode = 'always',
+)
 {
-  $download_url = regsubst(
-    $::calico::params::calico_node_download_url,
-    '#VERSION#',
-    $node_version,
-    'G')
+  include ::kubernetes
+  include ::calico
 
-  file { "${::calico::params::cni_base_dir}/cni/net.d/10-calico.conf":
-    ensure  => file,
-    content => template('calico/10-calico.conf.erb'),
-  }
+  $namespace = $::calico::namespace
+  $etcd_cert_path = $::calico::etcd_cert_path
 
-  calico::wget_file { 'calicoctl':
-    url             => "${$download_url}/calicoctl",
-    destination_dir => "${::calico::params::install_dir}/bin",
-    before          => File["${::calico::params::install_dir}/bin/calicoctl"],
-  }
-
-  file { "${::calico::params::install_dir}/bin/calicoctl":
-    ensure => file,
-    mode   => '0755',
-  }
-
-  file { "${::calico::params::config_dir}/calico.env":
-    ensure  => file,
-    content => template('calico/calico.env.erb'),
-  }
-
-  file { "${::calico::params::systemd_dir}/calico-node.service":
-    ensure  => file,
-    content => template('calico/calico-node.service.erb'),
-  } ~>
-  exec { "${module_name}-systemctl-daemon-reload":
-    command     => '/usr/bin/systemctl daemon-reload',
-    refreshonly => true,
-  } ->
-  service { 'calico-node.service':
-    ensure    => running,
-    enable    => true,
-    subscribe => [
-      File["${::calico::params::config_dir}/calico.env"],
-      File["${::calico::params::systemd_dir}/calico-node.service"],
+  kubernetes::apply{'calico-node':
+    manifests => [
+      template('calico/node-daemonset.yaml.erb'),
     ],
   }
 
-  if defined('site_module::docker'){
-    Class['site_module::docker'] -> Service['calico-node.service']
-  }
-
-  if $aws_filter_hack {
-    file { "${::calico::params::helper_dir}/calico_filter_hack.sh":
-      ensure  => file,
-      content => template('calico/calico_filter_hack.sh.erb'),
-      mode    => '0750',
-    } ->
-    exec { 'Modify calico filter':
-      command => "${::calico::params::helper_dir}/calico_filter_hack.sh set",
-      unless  => "${::calico::params::helper_dir}/calico_filter_hack.sh test",
-      require => Service['calico-node.service'],
-    }
-  }
 }

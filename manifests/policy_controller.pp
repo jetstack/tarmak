@@ -1,15 +1,26 @@
 class calico::policy_controller (
-  $etcd_cert_path = $::calico::params::etcd_cert_path,
-  $policy_controller_version = $::calico::params::policy_controller_version,
-) inherits ::calico::params
+  String $image = 'quay.io/calico/kube-policy-controller',
+  String $version = '0.5.4',
+)
 {
   include ::kubernetes
   include ::calico
 
-  kubernetes::apply{'calico-policy-controller':
-    manifests => [
-      template('calico/calico-config.yaml.erb'),
-      template('calico/policy-controller-deployment.yaml.erb'),
-    ],
+  if $::calico::backend == 'etcd' {
+    $namespace = $::calico::namespace
+
+    if $::calico::etcd_proto == 'https' {
+      $etcd_tls_dir = $::calico::etcd_tls_dir
+      $tls = true
+    } else {
+      $tls = false
+    }
+
+
+    kubernetes::apply{'calico-policy-controller':
+      manifests => [
+        template('calico/policy-controller-deployment.yaml.erb'),
+      ],
+    }
   }
 }

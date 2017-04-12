@@ -4,7 +4,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: calico-policy-controller
-  namespace: kube-system
+  namespace: <%= @namespace %>
   labels:
     k8s-app: calico-policy
   annotations:
@@ -20,7 +20,6 @@ spec:
   template:
     metadata:
       name: calico-policy-controller
-      namespace: kube-system
       labels:
         k8s-app: calico-policy
     spec:
@@ -29,7 +28,7 @@ spec:
       hostNetwork: true
       containers:
         - name: calico-policy-controller
-          image: <%= scope['calico::params::policy_controller_image'] %>:<%= @policy_controller_version %>
+          image: <%= @image %>:v<%= @version %>
           env:
             # The location of the Calico etcd cluster.
             - name: ETCD_ENDPOINTS
@@ -37,6 +36,7 @@ spec:
                 configMapKeyRef:
                   name: calico-config
                   key: etcd_endpoints
+<% if @tls -%>
             # Location of the CA certificate for etcd.
             - name: ETCD_CA_CERT_FILE
               valueFrom:
@@ -55,21 +55,24 @@ spec:
                 configMapKeyRef:
                   name: calico-config
                   key: etcd_cert
+<% end -%>
             # The location of the Kubernetes API.  Use the default Kubernetes
             # service for API access.
             - name: K8S_API
               value: "https://kubernetes.default:443"
-            # Since we're running in the host namespace and might not have KubeDNS 
+            # Since we're running in the host namespace and might not have KubeDNS
             # access, configure the container's /etc/hosts to resolve
             # kubernetes.default to the correct service clusterIP.
             - name: CONFIGURE_ETC_HOSTS
               value: "true"
+<% if @tls -%>
           volumeMounts:
             # Mount in the etcd TLS secrets.
-            - mountPath: <%= @etcd_cert_path %>
+            - mountPath: <%= @etcd_tls_dir %>
               name: etcd-certs
       volumes:
         # Mount in the etcd TLS secrets.
         - name: etcd-certs
           hostPath:
-            path: <%= @etcd_cert_path%>
+            path: <%= @etcd_tls_dir %>
+<% end -%>

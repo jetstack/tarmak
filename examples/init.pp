@@ -13,12 +13,3 @@
 class { 'calico':
   etcd_cluster => [ 'etcd1' ],
 }
-
-class { 'calico::policy_controller': }
-
-calico::ip_pool { '10.234.0.0/16':
-  ip_pool      => '10.234.0.0',
-  ip_mask      => 16,
-  ipip_enabled => 'true', #lint:ignore:quoted_booleans
-}
-

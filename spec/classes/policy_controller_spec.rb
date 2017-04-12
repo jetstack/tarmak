@@ -4,7 +4,7 @@ describe 'calico::policy_controller' do
     "
       class{'calico':
        etcd_cluster => [#{etcd_cluster}],
-       tls => #{tls},
+       #{tls}
       }
       class kubernetes{}
       define kubernetes::apply(
@@ -13,7 +13,7 @@ describe 'calico::policy_controller' do
     "
   end
 
-  let(:tls) { 'false' }
+  let(:tls) { '' }
 
   let(:etcd_cluster) { "'etcd-1'" }
 
@@ -22,34 +22,33 @@ describe 'calico::policy_controller' do
   end
 
   context 'with defaults' do
-
     it do
       should contain_class('calico::policy_controller')
-      expect(manifests[0]).to match(%{^[-\s].*etcd_endpoints: "http://etcd-1:2359"$})
-      expect(manifests[1]).to match(%{^[-\s].*name: calico-config$})
+      expect(manifests[0]).to match(%{^[-\s].*key: etcd_endpoints$})
+      expect(manifests[0]).to match(%{^[-\s].*name: calico-config$})
+      expect(manifests[0]).not_to match(%{^[-\s].*key: etcd_ca$})
     end
   end
 
   context 'with custom version, multiple etcd, tls' do
     let(:etcd_cluster) { "'etcd-1', 'etcd-2', 'etcd-3'" }
-    let(:tls) { 'true' }
-
-    let(:params) do
-      {
-        :etcd_cert_path => '/opt/etc/etcd/tls',
-        :policy_controller_version => 'v5.6.7.8'
-      }
+    let(:tls) do
+      "
+          etcd_key_file => '/my/etcd-secrets/etcd-key.pem',
+          etcd_cert_file => '/my/etcd-secrets/etcd-cert.pem',
+          etcd_ca_file => '/my/etcd-secrets/etcd-ca.pem',
+      "
     end
 
     it do
       should contain_class('calico::policy_controller')
-      expect(manifests[0]).to match(%{^[-\s].*etcd_endpoints: "https://etcd-1:2359,https://etcd-2:2359,https://etcd-3:2359"$})
+      expect(manifests[0]).to match(%{^[-\s].*key: etcd_ca$})
     end
 
     it do
-      expect(manifests[1]).to match(/^[-\s].*name: calico-config$/)
-      expect(manifests[1]).to match(/^[-\s].*image: calico\/kube-policy-controller:v5.6.7.8$/)
-      expect(manifests[1]).to match(/^[-\s].*mountPath: \/opt\/etc\/etcd\/tls$/)
+      expect(manifests[0]).to match(/^[-\s].*name: calico-config$/)
+      expect(manifests[0]).to match(/^[-\s].*image: quay.io\/calico\/kube-policy-controller:v/)
+      expect(manifests[0]).to match(/^[-\s].*mountPath: \/my\/etcd-secrets$/)
     end
   end
 end
