@@ -33,10 +33,9 @@ class puppernetes::worker {
   }
 
   class { 'kubernetes::kubelet':
-      ca_file           => "${kubelet_base_path}-ca.pem",
-      key_file          => "${kubelet_base_path}-key.pem",
-      cert_file         => "${kubelet_base_path}.pem",
-      hostname_override =>  $::puppernetes::ipaddress,
+      ca_file   => "${kubelet_base_path}-ca.pem",
+      key_file  => "${kubelet_base_path}-key.pem",
+      cert_file => "${kubelet_base_path}.pem",
   }
 
   class { 'kubernetes::proxy':

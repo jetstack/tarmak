@@ -4,7 +4,7 @@ FORGE
     camptocamp-systemd (0.4.0)
     puppet-archive (1.1.2)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
-    puppetlabs-stdlib (4.16.0)
+    puppetlabs-stdlib (4.15.0)
 
 GIT
   remote: git@git.jetstack.net:puppernetes/module-calico.git
@@ -35,7 +35,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-kubernetes.git
   ref: master
-  sha: 154520320c8e5dcd3b23b53b22fdc4d0a303a9d9
+  sha: dc38d7070dfb4fd3d7eff91d63c71179602b11ae
   specs:
     jetstack-kubernetes (0.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
