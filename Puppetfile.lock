@@ -9,7 +9,7 @@ FORGE
 GIT
   remote: git@git.jetstack.net:puppernetes/module-calico.git
   ref: hosted
-  sha: 0669c00be63a13f356b0b7c1ad9eeb700800fdf9
+  sha: 507b471c4b42d27eeda759bd554764052b378e01
   specs:
     jetstack-calico (0.1.2)
       puppet-archive (< 1.2.0, >= 1.1.2)
