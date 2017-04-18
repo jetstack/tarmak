@@ -80,12 +80,6 @@ spec:
             # Auto-detect the BGP IP address.
             - name: IP
               value: ""
-            # Set based on the k8s node name.
-            - name: NODENAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
           securityContext:
             privileged: true
           resources:
