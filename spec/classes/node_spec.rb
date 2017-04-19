@@ -1,5 +1,8 @@
 require 'spec_helper'
-describe 'calico::policy_controller' do
+
+require 'yaml'
+
+describe 'calico::node' do
   let(:pre_condition) do
     "
       class kubernetes{}
@@ -20,13 +23,30 @@ describe 'calico::policy_controller' do
   let(:etcd_cluster) { '' }
   let(:etcd_tls) { '' }
 
-  let(:calico_policy_controller) do
-    catalogue.resource('Kubernetes::Apply', 'calico-policy-controller').send(:parameters)[:manifests][0]
+  let(:calico_node) do
+    catalogue.resource('Kubernetes::Apply', 'calico-node').send(:parameters)[:manifests][0]
   end
 
   context 'with default parameters' do
     it 'is valid yaml' do
-      YAML.load(calico_policy_controller)
+      YAML.load(calico_node)
+    end
+
+    it 'has default mtu' do
+      expect(calico_node).to match(/name: FELIX_IPINIPMTU\s+value: "1480"/)
+    end
+  end
+
+  context 'with mtu 8981' do
+    let(:mtu) do
+      'mtu => 8981,'
+    end
+    it 'is valid yaml' do
+      YAML.load(calico_node)
+    end
+
+    it 'has custom mtu' do
+      expect(calico_node).to match(/name: FELIX_IPINIPMTU\s+value: "8981"/)
     end
   end
 
@@ -48,20 +68,17 @@ describe 'calico::policy_controller' do
           "
         end
         it 'sets up TLS' do
-          expect(calico_policy_controller).to match(/^[-\s].*name: calico-config$/)
-          expect(calico_policy_controller).to match(/^[-\s].*image: quay.io\/calico\/kube-policy-controller:v/)
-          expect(calico_policy_controller).to match(/^[-\s].*mountPath: \/my\/etcd-secrets$/)
+          expect(calico_node).to match(%r{name: etcd-certs\s+hostPath:\s+path: /etc/etcd/ssl})
+          expect(calico_node).to match(%r{mountPath: /etc/etcd/ssl\s+name: etcd-certs})
         end
       end
 
       context 'without TLS' do
         it 'doesn\'t set up TLS' do
-          expect(calico_policy_controller).to match(%{^[-\s].*key: etcd_endpoints$})
-          expect(calico_policy_controller).to match(%{^[-\s].*name: calico-config$})
-          expect(calico_policy_controller).not_to match(%{^[-\s].*key: etcd_ca$})
+          expect(calico_node).not_to match(%r{name: etcd-certs\s+hostPath:\s+path: /etc/etcd/ssl})
+          expect(calico_node).not_to match(%r{mountPath: /etc/etcd/ssl\s+name: etcd-certs})
         end
       end
     end
   end
 end
-
