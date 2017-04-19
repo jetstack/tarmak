@@ -80,6 +80,9 @@ spec:
             # Auto-detect the BGP IP address.
             - name: IP
               value: ""
+            # Setup a custom MTU value
+            - name: FELIX_IPINIPMTU
+              value: "<%= @mtu %>"
           securityContext:
             privileged: true
           resources:

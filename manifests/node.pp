@@ -11,7 +11,9 @@ class calico::node (
   include ::calico
 
   $namespace = $::calico::namespace
+  $mtu = $::calico::mtu
   $etcd_cert_path = $::calico::etcd_cert_path
+  $etcd_proto = $::calico::etcd_proto
 
   kubernetes::apply{'calico-node':
     manifests => [

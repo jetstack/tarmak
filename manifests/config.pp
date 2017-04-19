@@ -2,6 +2,7 @@ class calico::config{
   include ::kubernetes
   include ::calico
 
+  $mtu = $::calico::mtu
   $namespace = $::calico::namespace
   $etcd_endpoints = $::calico::etcd_endpoints
 

@@ -8,6 +8,7 @@ class calico(
   String $etcd_key_file = '',
   String $cloud_provider = $::calico::params::cloud_provider,
   String $namespace = 'kube-system',
+  Integer[1000,65535] $mtu = 1480,
 ) inherits ::calico::params
 {
   $path = defined('$::path') ? {
