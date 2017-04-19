@@ -59,6 +59,7 @@ spec:
             # Set Felix logging to "info"
             - name: FELIX_LOGSEVERITYSCREEN
               value: "info"
+<% if @etcd_proto == 'https' -%>
             # Location of the CA certificate for etcd.
             - name: ETCD_CA_CERT_FILE
               valueFrom:
@@ -77,6 +78,7 @@ spec:
                 configMapKeyRef:
                   name: calico-config
                   key: etcd_cert
+<% end -%>
             # Auto-detect the BGP IP address.
             - name: IP
               value: ""
@@ -95,8 +97,10 @@ spec:
             - mountPath: /var/run/calico
               name: var-run-calico
               readOnly: false
+<% if @etcd_proto == 'https' -%>
             - mountPath: <%= @etcd_cert_path%>
               name: etcd-certs
+<% end -%>
         # This container installs the Calico CNI binaries
         # and CNI network config file on each node.
         - name: install-cni
@@ -123,8 +127,10 @@ spec:
               name: cni-bin-dir
             - mountPath: /host/etc/cni/net.d
               name: cni-net-dir
+<% if @etcd_proto == 'https' -%>
             - mountPath: <%= @etcd_cert_path%>
               name: etcd-certs
+<% end -%>
       volumes:
         # Used by calico/node.
         - name: lib-modules
@@ -141,7 +147,8 @@ spec:
           hostPath:
             path: /etc/cni/net.d
         # Mount in the etcd TLS secrets.
+<% if @etcd_proto == 'https' -%>
         - name: etcd-certs
           hostPath:
             path: <%= @etcd_cert_path%>
-
+<% end -%>
