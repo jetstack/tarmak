@@ -1,97 +1,130 @@
-# Calico
+# calico
 
 #### Table of Contents
 
 1. [Description](#description)
-1. [Setup - The basics of getting started with calico](#setup)
-    * [What calico does](#what-etcd-affects)
-    * [Setup requirements](#setup-requirements)
-    * [Beginning with calico](#beginning-with-etcd)
-1. [Usage - Configuration options and additional functionality](#usage)
-1. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
-1. [Limitations - OS compatibility, etc.](#limitations)
-1. [Development - Guide for contributing to the module](#development)
-
+2. [Classes](#classes)
 ## Description
+calico init.pp
 
-This module installs [Calico](https://www.projectcalico.org/) on servers running a
-binary distribution of Kubernetes and was initially developed to do this on CentOS 7 
-running across multiple AZs on AWS EC2.
+## Classes
 
-It should be parameterised and customisable in such a way that use on other cloud
-providers (or bare metal) are in scope. It's probably harder to use this module for
-non-Kubernetes orchestrators, at least for now.
+### `calico`
 
-## Setup
+calico init.pp
 
-### What calico does
+#### Parameters
 
-* Installs the calico and calico-ipam binaries used for CNI (Container Network Integration).
-* Installs the 'localhost' CNI binary used by the kubelet.
-* Installs a systemd service that runs the calico-node container that creates the routing mesh
-* Configures all of these to communicate with a (dedicated or shared) etcd cluster
-* **Optionally** disables AWS source/destination checking on the instance (given correct IAM permissions)
-* **Optionally** hacks the shipped calico filters to use L2 networking within the AZ and L3 between AZs
-* **Can** be used to add an IP pool for calico (via the ip_pool defined function)
-* **Can** be used to deploy the calico policy controller for Kubernetes, which is necessary 
-(via the policy_controller class)
-* It requires (and includes, by way of ensure_packages) docker
+##### `etcd_cluster`
 
-### Setup Requirements
+* Type: `Array[String]`
+* Default: `$::calico::params::etcd_cluster`
 
-This module (and calico) doesn't do very much without a functioning ETCD cluster with the correct array
-of cluster nodes and port number specified (note 2379 is the default).
-The AWS specific functionality will fail if not on AWS (turn it off).
-You'll also need to tell the kubelet to use the 'cni' network plugin
-`--network-plugin cni`
+##### `etcd_overlay_port`
 
-### Beginning with calico
+* Type: `Integer[1,65535]`
+* Default: `$::calico::params::etcd_overlay_port`
 
-```puppet
-class { 'calico':
-  etcd_cluster      => [ 'etcd1.mydomain', 'etcd2.mydomain', 'etcd3.mydomain' ], #REQUIRED
-  aws               => true, #default
-  aws_filter_hack   => true, #default
-  tls               => false, #default
-  etcd_overlay_port => 2379, #default
-}
+##### `backend`
 
-calico::ip_pool { '10.234.235.0/24': #doesn't have to be called this, but must be named
-  ip_pool      => '10.234.235.0', #string
-  ip_mask      => 24, #integer
-  ipip_enabled => 'false', #string - may need to lint:ignore:quoted_booleans
-}
+* Type: `Enum['etcd', 'kubernetes']`
+* Default: `'etcd'`
 
-class { 'calico::policy_controller':
-  require => Service['kubernetes_apiserver'] # this subclass is intended to run on a machine running kubectl without extra auth, e.g. the apiserver after the apiserver has started up
-}
-```
+##### `etcd_ca_file`
 
-## Usage
+* Type: `String`
+* Default: `''`
 
-This section is where you describe how to customize, configure, and do the
-fancy stuff with your module here. It's especially helpful if you include usage
-examples and code samples for doing things with your module.
+##### `etcd_cert_file`
 
-## Reference
+* Type: `String`
+* Default: `''`
 
-Here, include a complete list of your module's classes, types, providers,
-facts, along with the parameters for each. Users refer to this section (thus
-the name "Reference") to find specific details; most users don't read it per
-se.
+##### `etcd_key_file`
 
-## Limitations
+* Type: `String`
+* Default: `''`
 
-This is where you list OS compatibility, version compatibility, etc. If there
-are Known Issues, you might want to include them under their own heading here.
+##### `cloud_provider`
 
-## Development
+* Type: `String`
+* Default: `$::calico::params::cloud_provider`
 
-Since your module is awesome, other users will want to play with it. Let them
-know what the ground rules for contributing are.
+##### `namespace`
 
-## Release Notes/Contributors/Etc. **Optional**
+* Type: `String`
+* Default: `'kube-system'`
 
-If you aren't using changelog, put your release notes here (though you should
-consider using changelog). You can also add any additional sections you feel
-are necessary or important to include here. Please use the `## ` header.
+##### `mtu`
+
+* Type: `Integer[1000,65535]`
+* Default: `1480`
+
+
+### `calico::config`
+
+
+
+
+### `calico::disable_source_destination_check`
+
+This class disable the source/destination check on AWS instances
+
+
+### `calico::node`
+
+
+
+#### Parameters
+
+##### `node_image`
+
+* Type: `String`
+* Default: `'quay.io/calico/node'`
+
+##### `node_version`
+
+* Type: `String`
+* Default: `'1.1.1'`
+
+##### `cni_image`
+
+* Type: `String`
+* Default: `'quay.io/calico/cni'`
+
+##### `cni_version`
+
+* Type: `String`
+* Default: `'1.6.2'`
+
+##### `ipv4_pool_cidr`
+
+* Type: `String`
+* Default: `'10.231.0.0/16'`
+
+##### `ipv4_pool_ipip_mode`
+
+* Type: `Enum['always', 'cross-subnet', 'off']`
+* Default: `'always'`
+
+
+### `calico::params`
+
+calico params.pp
+
+
+### `calico::policy_controller`
+
+
+
+#### Parameters
+
+##### `image`
+
+* Type: `String`
+* Default: `'quay.io/calico/kube-policy-controller'`
+
+##### `version`
+
+* Type: `String`
+* Default: `'0.5.4'`
