@@ -11,7 +11,10 @@ include kubernetes::master
 
   context 'without params' do
     it do
-      should contain_calico__ip_pool('10.234.0.0/16')
+      should contain_class('calico')
+      should contain_class('calico::config')
+      should contain_class('calico::node')
+      should contain_class('calico::policy_controller')
     end
   end
 end
