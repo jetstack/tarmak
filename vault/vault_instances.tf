@@ -20,7 +20,6 @@ data "template_file" "vault" {
     vault_tls_ca_path     = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/ca.pem"
     vault_unseal_key_name = "${data.template_file.vault_unseal_key_name.rendered}"
 
-    s3_endpoint   = "${var.s3_endpoint[var.region]}"
     bucket_backup = "${aws_s3_bucket.vault-backup.bucket}"
 
     # run backup once per instance spread throughout the day

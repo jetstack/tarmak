@@ -5,21 +5,14 @@ variable "stack" {
 }
 
 variable "centos_ami" {
-  default = {
-    eu-west-1 = "ami-b790a3d1"
-  }
+  type = "map"
 }
 
-variable "s3_endpoint" {
-  default = {
-    us-east-1 = "s3.amazonaws.com"
-    eu-west-1 = "s3-eu-west-1.amazonaws.com"
-  }
-}
+variable "project" {}
 
-variable "key_name" {
-  default = "jetstack_nonprod"
-}
+variable "contact" {}
+
+variable "key_name" {}
 
 variable "state_bucket" {
   default = ""
@@ -44,14 +37,6 @@ variable "environment" {
 
 variable "region" {
   default = "eu-west-1"
-}
-
-variable "project" {
-  default = "p9s"
-}
-
-variable "contact" {
-  default = "christian@jetstack.io"
 }
 
 variable "consul_version" {

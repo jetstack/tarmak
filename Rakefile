@@ -43,6 +43,29 @@ namespace :aws do
       puts "export AWS_SESSION_TOKEN=#{credentials['data']['security_token']}"
     end
   end
+
+  desc 'ensure EC2 key pair exists'
+  task :ensure_key_pair => [:prepare, :'terraform:global_tfvars'] do
+    ec2 = Aws::EC2::Client.new(region: @aws_region)
+    key_name = @terraform_global_tfvars['key_name']
+    begin
+      ec2.describe_key_pairs({key_names:[key_name]})
+      logger.info "AWS key pair #{key_name} already exists"
+    rescue Aws::EC2::Errors::InvalidKeyPairNotFound
+      key_pair_path = 'credentials/aws_key_pair'
+
+      logger.info 'generating new AWS key pair'
+      sh 'mkdir', '-p', File.dirname(key_pair_path)
+      sh 'ssh-keygen', '-t', 'rsa', '-b', '4096', '-N', '', '-f', key_pair_path, '-C', "aws-keypair-#{key_name}"
+
+      ec2.import_key_pair({
+        key_name: key_name,
+        public_key_material: File.open("#{key_pair_path}.pub").read,
+      })
+      logger.info "AWS key pair #{key_name} generated and public key uploaded"
+      logger.warn "Make sure you save the private key in '#{key_pair_path}'"
+    end
+  end
 end
 
 namespace :terraform do
@@ -51,20 +74,34 @@ namespace :terraform do
     @terraform_global_tfvars = Rhcl.parse(File.open("tfvars/global.tfvars").read)
   end
 
-  task :prepare_env => :'aws:prepare' do
-    @terraform_plan= ENV['TERRAFORM_PLAN']
-    @terraform_environments = ['nonprod']
-    @terraform_environment = ENV['TERRAFORM_ENVIRONMENT'] || 'nonprod'
-    unless @terraform_environments.include?(@terraform_environment)
-      fail "Please provide a TERRAFORM_ENVIRONMENT out of #{@terraform_environments}"
+  task :prepare_regex do
+    @terraform_regex = /^[a-z0-9]{3,16}$/
+  end
+
+  task :prepare_environment => :prepare_regex do
+    key = 'TERRAFORM_ENVIRONMENT'
+    if not ENV[key]
+      @terraform_environment = 'nonprod'
+    elsif not @terraform_regex.match(ENV[key])
+      fail "Please provide a #{key} variable with that matches #{@terraform_regex}"
+    else
+      @terraform_environment = ENV[key]
     end
+  end
+
+  task :prepare_name => :prepare_regex do
+    key = 'TERRAFORM_NAME'
+    if not @terraform_regex.match(ENV[key])
+      fail "Please provide a #{key} variable with that matches #{@terraform_regex}"
+    else
+      @terraform_name = ENV[key]
+    end
+  end
+
+  task :prepare_env => [:'aws:prepare', :prepare_name, :prepare_environment] do
+    @terraform_plan= ENV['TERRAFORM_PLAN']
     tfvars = Rhcl.parse(File.open("tfvars/network_#{@terraform_environment}_hub.tfvars").read)
     @terraform_state_bucket = "#{tfvars['bucket_prefix']}#{@terraform_environment}-#{@aws_region}-terraform-state"
-    @terraform_names = /^[a-z0-9]{3,16}$/
-    if not @terraform_names.match(ENV['TERRAFORM_NAME'])
-      fail "Please provide a TERRAFORM_NAME variable with that matches #{@terraform_names}"
-    end
-    @terraform_name = ENV['TERRAFORM_NAME']
   end
 
   task :prepare => :prepare_env do
@@ -80,6 +117,7 @@ namespace :terraform do
     @terraform_vars_file = "#{terraform_file_base}.tfvars"
 
     @terraform_args = [
+      "-var-file=../tfvars/global.tfvars",
       "-var-file=../tfvars/#{@terraform_vars_file}"
     ] + ['name', 'environment', 'stack','state_bucket'].map do |name|
       "-var=#{name}=#{instance_variable_get(("@terraform_" + name))}"
@@ -87,8 +125,25 @@ namespace :terraform do
 
     # configure remote state
     Dir.chdir(@terraform_stack) do
-      sh "rm -rf .terraform"
-      sh "terraform remote config -backend=s3 '-backend-config=bucket=#{@terraform_state_bucket}' '-backend-config=key=#{@terraform_state_file}' '-backend-config=region=#{@aws_region}'"
+      terraform_remote_state_file = 'terraform_remote_state.tf'
+      if ENV['TERRAFORM_DISABLE_REMOTE_STATE'] != 'true'
+        remote_state = [
+          'terraform {',
+          '  backend "s3" {',
+          "    bucket = \"#{@terraform_state_bucket}\"",
+          "    key = \"#{@terraform_state_file}\"",
+          "    region = \"#{@aws_region}\"",
+          "    lock_table = \"#{@terraform_state_bucket}\"",
+          ' }',
+          '}'
+        ].join("\n")
+        File.open(terraform_remote_state_file, 'w') do |f|
+          f.write remote_state
+        end
+        sh 'terraform init'
+      else
+        sh 'rm', '-rf', terraform_remote_state_file
+      end
     end
   end
 
@@ -438,6 +493,14 @@ namespace :puppet do
     @puppet_master = "puppet.#{zone}"
   end
 
+  desc 'ensure Puppet key pair exists'
+  task :ensure_key_pair do
+    logger.info 'generating new Puppet key pair'
+    key_pair_path = 'credentials/puppet_key_pair'
+    sh 'mkdir', '-p', File.dirname(key_pair_path)
+    sh 'ssh-keygen', '-t', 'rsa', '-b', '4096', '-N', '', '-f', key_pair_path, '-C', "puppetmaster"
+  end
+
   desc 'deploy puppet.tar.gz to the puppet master'
   task :deploy_env => :prepare do
     sh "cat puppet.tar.gz | ssh -o StrictHostKeyChecking=no puppet-deploy@#{@puppet_master} #{@terraform_environment}_#{@terraform_name}"
@@ -507,5 +570,10 @@ namespace :puppet do
       return_code = 1
     end
     exit return_code
+  end
+end
+
+namespace :jenkins do
+  task :initialize do
   end
 end

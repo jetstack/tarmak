@@ -2,6 +2,10 @@ variable "network" {}
 
 variable "name" {}
 
+variable "project" {}
+
+variable "contact" {}
+
 variable "stack" {
   default = ""
 }
@@ -52,14 +56,6 @@ variable "region" {
 
 variable "availability_zones" {
   default = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
-}
-
-variable "project" {
-  default = "p9s"
-}
-
-variable "contact" {
-  default = "christian@jetstack.io"
 }
 
 variable "bucket_prefix" {

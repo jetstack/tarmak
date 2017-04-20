@@ -5,14 +5,14 @@ variable "stack" {
 }
 
 variable "centos_ami" {
-  default = {
-    eu-west-1 = "ami-b790a3d1"
-  }
+  type = "map"
 }
 
-variable "key_name" {
-  default = "jetstack_nonprod"
-}
+variable "key_name" {}
+
+variable "project" {}
+
+variable "contact" {}
 
 variable "state_bucket" {
   default = ""
@@ -43,12 +43,4 @@ variable "environment" {
 
 variable "region" {
   default = "eu-west-1"
-}
-
-variable "project" {
-  default = "p9s"
-}
-
-variable "contact" {
-  default = "christian@jetstack.io"
 }
