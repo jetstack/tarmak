@@ -10,7 +10,7 @@ resource "aws_subnet" "public" {
     Environment       = "${var.environment}"
     Project           = "${var.project}"
     Contact           = "${var.contact}"
-    KubernetesCluster = "${data.template_file.stack_name_dns.rendered}"
+    KubernetesCluster = "${data.template_file.stack_name.rendered}"
   }
 }
 
@@ -25,6 +25,6 @@ resource "aws_subnet" "private" {
     Environment       = "${var.environment}"
     Project           = "${var.project}"
     Contact           = "${var.contact}"
-    KubernetesCluster = "${data.template_file.stack_name_dns.rendered}"
+    KubernetesCluster = "${data.template_file.stack_name.rendered}"
   }
 }

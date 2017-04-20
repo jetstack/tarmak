@@ -30,7 +30,7 @@ variable "stack_name_prefix" {
 }
 
 data "template_file" "stack_name" {
-  template = "${var.stack_name_prefix}${var.environment}_${var.name}"
+  template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }
 
 variable "allowed_account_ids" {
