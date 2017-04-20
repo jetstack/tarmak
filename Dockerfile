@@ -14,8 +14,8 @@ RUN curl -s -L -o /usr/local/bin/cfssl     https://pkg.cfssl.org/R${CFSSL_VERSIO
     echo "${CFSSLJSON_HASH}  /usr/local/bin/cfssljson" | sha256sum -c
 
 # install packer
-ENV PACKER_VERSION 0.12.3
-ENV PACKER_HASH d11c7ff78f546abaced4fcc7828f59ba1346e88276326d234b7afed32c9578fe
+ENV PACKER_VERSION 1.0.0
+ENV PACKER_HASH ed697ace39f8bb7bf6ccd78e21b2075f53c0f23cdfb5276c380a053a7b906853
 RUN curl -sL  https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip > /tmp/packer.zip && \
     echo "${PACKER_HASH}  /tmp/packer.zip" | sha256sum  -c && \
     unzip /tmp/packer.zip && \
