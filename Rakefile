@@ -16,10 +16,11 @@ def instance_name(i)
 end
 
 namespace :aws do
-  task :prepare do
+  task :prepare => [:'terraform:global_tfvars'] do
     require 'aws-sdk'
     require 'inifile'
-    @aws_region = ENV['AWS_DEFAULT_REGION'] || 'eu-west-1'
+    @aws_region = @terraform_global_tfvars['region']
+    ENV['AWS_DEFAULT_REGION'] = @aws_region
     @aws_profile = ENV['AWS_PROFILE'] || 'ss_non_prod'
     @aws_config_file = IniFile.load(ENV['HOME'] + '/.aws/config')
     begin
@@ -45,6 +46,10 @@ namespace :aws do
 end
 
 namespace :terraform do
+  desc 'parse terraform global variables'
+  task :global_tfvars do
+    @terraform_global_tfvars = Rhcl.parse(File.open("tfvars/global.tfvars").read)
+  end
 
   task :prepare_env => :'aws:prepare' do
     @terraform_plan= ENV['TERRAFORM_PLAN']
@@ -151,7 +156,7 @@ namespace :terraform do
 end
 
 namespace :packer do
-  task :build do
+  task :build => [:'aws:prepare'] do
     Dir.chdir('packer') do
     sh 'packer', 'build', "#{ENV['PACKER_NAME']}.json"
     end
@@ -327,7 +332,7 @@ namespace :vault do
           )
 
           logger.debug 'store unseal key in AWS parameter store'
-          ssm = Aws::SSM::Client.new(region: 'eu-west-1')
+          ssm = Aws::SSM::Client.new(region: @aws_region)
           ssm.put_parameter({
             name: "vault-#{@terraform_environment}-unseal-key",
             value: resp['keys_base64'].first,

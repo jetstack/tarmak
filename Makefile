@@ -37,9 +37,11 @@ ssh_agent: container
 ssh_gitlab: container
 	docker exec $(CONTAINER_ID) ssh git@gitlab.jetstack.net
 
-terraform_sync: container
+common_sync: container
 	docker cp Rakefile $(CONTAINER_ID):$(WORK_DIR)
 	docker cp tfvars $(CONTAINER_ID):$(WORK_DIR)
+
+terraform_sync: common_sync
 	docker cp network $(CONTAINER_ID):$(WORK_DIR)
 	docker cp tools $(CONTAINER_ID):$(WORK_DIR)
 	docker cp vault $(CONTAINER_ID):$(WORK_DIR)
@@ -78,3 +80,13 @@ puppet_deploy_env: ssh_agent
 
 puppet_node_apply: ssh_agent
 	docker exec $(CONTAINER_ID) bundle exec rake puppet:node_apply TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_NAME=$(TERRAFORM_NAME)
+
+
+packer_sync: common_sync
+	docker cp packer $(CONTAINER_ID):$(WORK_DIR)
+
+packer_build: packer_sync
+	docker exec $(CONTAINER_ID) bundle exec rake packer:build PACKER_NAME=centos-puppet-agent
+
+packer_build_latest_kernel: packer_sync
+	docker exec $(CONTAINER_ID) bundle exec rake packer:build PACKER_NAME=centos-puppet-agent-latest-kernel
