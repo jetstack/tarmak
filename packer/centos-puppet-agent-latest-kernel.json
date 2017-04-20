@@ -1,19 +1,27 @@
 {
   "variables": {
     "aws_access_key": "",
-    "aws_secret_key": ""
+    "aws_secret_key": "",
+    "region": "{{env `AWS_DEFAULT_REGION`}}"
   },
   "builders": [
     {
       "type": "amazon-ebs",
       "access_key": "{{user `aws_access_key`}}",
       "secret_key": "{{user `aws_secret_key`}}",
-      "region": "eu-west-1",
-      "source_ami": "ami-7abd0209",
-      "instance_type": "m4.large",
+      "region": "{{user `region`}}",
+      "source_ami_filter": {
+          "filters": {
+              "owner-alias": "aws-marketplace",
+              "product-code": "aw0evgkw8e5c1q413zgy5pjce",
+              "virtualization-type": "hvm"
+          },
+          "most_recent": true
+      },
+      "instance_type": "c4.xlarge",
       "ssh_username": "centos",
       "ssh_pty": "true",
-      "ami_name": "CentOS 7 x86_64 with puppet-agent {{timestamp}}",
+      "ami_name": "CentOS 7 x86_64 with puppet-agent and upstream kernel {{timestamp}}",
       "associate_public_ip_address": true
     }
   ],
