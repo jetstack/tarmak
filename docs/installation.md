@@ -104,7 +104,7 @@ TERRAFORM_DISABLE_REMOTE_STATE=true TERRAFORM_STACK=network TERRAFORM_NAME=hub T
 TERRAFORM_DISABLE_REMOTE_STATE=true TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod make terraform_apply
 
 ## sync local state to remote state (response yes)
-TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod make terraform_apply
+TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod make terraform_plan
 ```
 
 ### Setup tools hub
