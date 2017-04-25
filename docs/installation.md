@@ -97,26 +97,30 @@ The domain zone which is specified needs a AWS Wild Certificate created.
 ```
 # Create network stack for hub (contains state buckets/dynamodb)
 
+export TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod
+
+
 ## plan
-TERRAFORM_DISABLE_REMOTE_STATE=true TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod make clean build terraform_sync terraform_plan
+TERRAFORM_DISABLE_REMOTE_STATE=true make clean build terraform_sync terraform_plan
 
 ## apply
-TERRAFORM_DISABLE_REMOTE_STATE=true TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod make terraform_apply
+TERRAFORM_DISABLE_REMOTE_STATE=true make terraform_apply
 
 ## sync local state to remote state (response yes)
-TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod make terraform_plan
+make terraform_plan
 ```
 
 ### Setup tools hub
 
 ```
 # Create network stack for hub (contains state buckets/dynamodb)
+export TERRAFORM_STACK=tools TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod
 
 ## plan
-TERRAFORM_STACK=tools TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod make clean build terraform_sync terraform_plan
+make clean build terraform_sync terraform_plan
 
 ## apply
-TERRAFORM_STACK=tools TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod make terraform_apply
+make terraform_apply
 ```
 
 ### Ensure you can connect to the bastion instance
