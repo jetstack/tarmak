@@ -78,7 +78,7 @@ class kubernetes_addons::params{
   $dashboard_request_mem='64Mi'
 
   $heapster_image='gcr.io/google_containers/heapster-amd64'
-  $heapster_version='v1.3.0-beta.1'
+  $heapster_version='v1.3.0'
   $heapster_nanny_limit_cpu='50m'
   $heapster_nanny_limit_mem='100Mi'
   $heapster_nanny_request_cpu='50m'
