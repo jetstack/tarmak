@@ -191,7 +191,7 @@ namespace :terraform do
       end
       sh 'terraform', 'apply', *args
       # clean up plan, to prevent duplication
-      sh 'rm', '-f', @terraform_pla unless @terraform_plan.nil?
+      sh 'rm', '-f', @terraform_plan unless @terraform_plan.nil?
     end
   end
 
