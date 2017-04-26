@@ -67,8 +67,8 @@ bundle exec rake aws:ensure_key_pair
 
 ```
 network = "10.99.128.0/20"
-public_zones = ["nonprodde.p9s.jetstack.net"]
-private_zones = ["nonprodde-private.p9s.jetstack.net"]
+public_zones = ["nonprod.p9s.jetstack.net"]
+private_zones = ["nonprod-private.p9s.jetstack.net"]
 bucket_prefix = "jetstack-p9s-"
 ```
 
@@ -96,9 +96,7 @@ The domain zone which is specified needs a AWS Wild Certificate created.
 
 ```
 # Create network stack for hub (contains state buckets/dynamodb)
-
 export TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod
-
 
 ## plan
 TERRAFORM_DISABLE_REMOTE_STATE=true make clean build terraform_sync terraform_plan
@@ -129,28 +127,36 @@ The only instance with a public IP address directly assigned is the bastion inst
 
 ```
 # Connect to bastion instance
-ssh -i credentials/aws_key_pair -o IdentitiesOnly=yes centos@bastion.nonprodde.p9s.jetstack.net
+ssh -i credentials/aws_key_pair -o IdentitiesOnly=yes centos@bastion.nonprod.p9s.jetstack.net
 ```
 
 ### Initialise Jenkins
 
+#### Setup jenkins itself
+
 ```
 # SSH into jenkins instance
-ssh -i credentials/aws_key_pair -o IdentitiesOnly=yes -o ProxyCommand="ssh -W %h:%p -i credentials/aws_key_pair -o IdentitiesOnly=yes centos@bastion.nonprodde.p9s.jetstack.net" centos@jenkins.nonprodde-private.p9s.jetstack.net
+ssh -i credentials/aws_key_pair -o IdentitiesOnly=yes -o ProxyCommand="ssh -W %h:%p -i credentials/aws_key_pair -o IdentitiesOnly=yes centos@bastion.nonprod.p9s.jetstack.net" centos@jenkins.nonprod-private.p9s.jetstack.net
 
 # Retrieve initial password
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 # Go to Jenkins
-> https://jenkins.nonprodde.p9s.jetstack.net/
+> https://jenkins.nonprod.p9s.jetstack.net/
 
 # Put initial password in
 
 # Install suggested plugins
 
 # Setup an admin user account
+```
 
+#### Bootstrap jobs/credentials
 
-
-
+```
+export TERRAFORM_ENVIRONMENT=nonprod
+export JENKINS_URL=https://jenkins.nonprod.p9s.jetstack.net/
+export JENKINS_USER=admin
+export JENKINS_PASSWORD=admin
+bundle exec rake jenkins:initialize
 ```

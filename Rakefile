@@ -4,6 +4,8 @@ require 'json'
 require 'yaml'
 require 'base64'
 require 'rhcl'
+require 'excon'
+require 'securerandom'
 
 logger = Logger.new(STDERR)
 logger.level = Logger::DEBUG
@@ -13,6 +15,239 @@ def instance_name(i)
     return tag.value if tag.key == 'Name'
   end
   return 'unknown'
+end
+
+class Jenkins
+    JOB_XML = <<-EOS
+<flow-definition plugin="workflow-job@2.10">
+  <actions/>
+  <description/>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.29">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@3.1.0">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>%<git_url>s</url>
+          <credentialsId>%<git_secret>s</credentialsId>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>%<git_branch>s</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+      <submoduleCfg class="list"/>
+      <extensions/>
+    </scm>
+    <scriptPath>%<jenkinsfile>s</scriptPath>
+    <lightweight>true</lightweight>
+  </definition>
+  <triggers/>
+</flow-definition>
+EOS
+    FOLDER_XML = <<-EOS
+<?xml version="1.0" encoding="UTF-8"?>
+<com.cloudbees.hudson.plugins.folder.Folder plugin="cloudbees-folder@5.18">
+   <actions />
+   <description />
+   <properties />
+   <folderViews class="com.cloudbees.hudson.plugins.folder.views.DefaultFolderViewHolder">
+      <views>
+         <hudson.model.AllView>
+            <owner class="com.cloudbees.hudson.plugins.folder.Folder" reference="../../../.." />
+            <name>All</name>
+            <filterExecutors>false</filterExecutors>
+            <filterQueue>false</filterQueue>
+            <properties class="hudson.model.View$PropertyList" />
+         </hudson.model.AllView>
+      </views>
+      <tabBar class="hudson.views.DefaultViewsTabBar" />
+   </folderViews>
+   <healthMetrics>
+      <com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric>
+         <nonRecursive>false</nonRecursive>
+      </com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric>
+   </healthMetrics>
+   <icon class="com.cloudbees.hudson.plugins.folder.icons.StockFolderIcon" />
+</com.cloudbees.hudson.plugins.folder.Folder>
+EOS
+
+  def initialize(*args)
+    @client = Excon.new(*args)
+    @logger = Logger.new(STDERR)
+  end
+
+  def post(opts)
+    crub = @client.get(
+      :expects => [200, 201],
+      :path => '/crumbIssuer/api/json',
+    )
+    crumb = JSON.parse(crub.body)
+    opts[:headers] = {} if opts[:headers].nil?
+    opts[:headers][crumb['crumbRequestField']] = crumb['crumb']
+
+    @client.post(opts)
+  end
+
+  def create_split_path(in_path)
+    parts = in_path.split('/')
+
+    path = ''
+    parts[0,parts.length-1].each do |part|
+      path = File.join path, 'job', part
+    end
+    path = File.join path, '/createItem'
+
+    return parts.last, path
+  end
+
+  def create_job(job, opts={})
+    opts = {
+      git_branch: '*/master',
+      jenkinsfile: 'Jenkinsfile',
+    }.update(opts)
+
+    name, path = create_split_path(job)
+    begin
+      resp = post(
+        :expects => [200, 201],
+        :path => path,
+        :query => {'name' => name},
+        :body => sprintf(JOB_XML, opts),
+        :headers => {
+          "Content-Type" => "application/xml",
+        },
+      )
+      @logger.debug "job #{job} created"
+      resp
+    rescue Excon::Error::BadRequest => e
+      if e.response.headers['X-Error'].match(/job already exists/)
+        @logger.debug "job #{job} already exists"
+        e.response
+      else
+        raise e
+      end
+    end
+  end
+
+  def create_folder(folder)
+    name, path = create_split_path(folder)
+    begin
+      resp = post(
+        :expects => [200, 201],
+        :path => path,
+        :query => {'name' => name},
+        :body => FOLDER_XML,
+        :headers => {
+          "Content-Type" => "application/xml",
+        },
+      )
+      @logger.debug "folder #{folder} created"
+      resp
+    rescue Excon::Error::BadRequest => e
+      if e.response.headers['X-Error'].match(/job already exists/)
+        @logger.debug "folder #{folder} already exists"
+        e.response
+      else
+        raise e
+      end
+    end
+  end
+
+  def create_ssh_credential(name, username, private_key)
+    json = {
+      credentials: {
+        username: username,
+        'privateKeySource': {
+          value: '0',
+          'privateKey': private_key,
+          'stapler-class': 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey$DirectEntryPrivateKeySource',
+        },
+        passphrase: '',
+        id: name,
+        description: "puppernetes secret #{name}",
+        'stapler-class': 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey',
+        '$class': 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey',
+      },
+    }
+
+    resp = post(
+      :expects => [301, 302],
+      :path => '/credentials/store/system/domain/_/createCredentials',
+      :body => URI.encode_www_form(:json =>  JSON.generate(json)),
+      :headers => {
+        'Content-Type' => 'application/x-www-form-urlencoded',
+      },
+    )
+    @logger.debug "ensured ssh credentials #{name} exists"
+    resp
+  end
+
+  def create_file_credential(name, private_key)
+    body      = ''
+    boundary  = SecureRandom.hex(8)
+
+    json = {
+      credentials: {
+        file: 'file0',
+        id: name,
+        description: "puppernetes file secret #{name}",
+        'stapler-class': 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl',
+        '$class': 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl'
+      },
+    }
+    body << "--#{boundary}" << Excon::CR_NL
+    body << 'Content-Disposition: form-data; name="file0"; filename="ssh_id"' << Excon::CR_NL
+    body << 'Content-Type: text/plain' << Excon::CR_NL
+    body << Excon::CR_NL
+    body << private_key
+    body << Excon::CR_NL
+    body << "--#{boundary}" << Excon::CR_NL
+    body << 'Content-Disposition: form-data; name="json"' << Excon::CR_NL
+    body << Excon::CR_NL
+    body << JSON.generate(json)
+    body << Excon::CR_NL
+    body << "--#{boundary}--" << Excon::CR_NL
+
+    resp = post(
+      :expects => [301, 302],
+      :path => '/credentials/store/system/domain/_/createCredentials',
+      :body => body,
+      :headers => {
+        'Content-Type' => %{multipart/form-data; boundary="#{boundary}"},
+      },
+    )
+    @logger.debug "ensured file credentials #{name} exists"
+    resp
+  end
+
+  def install_plugins(*plugins)
+    xml = '<jenkins>'
+    plugins.each do |plugin|
+      xml << %{<install plugin="#{plugin}" />}
+    end
+    xml << '</jenkins>'
+    post(
+      :expects => [301, 302],
+      :path => '/pluginManager/installNecessaryPlugins',
+      :body => xml,
+      :headers => {
+        'Content-Type' => 'application/xml',
+      },
+    )
+    @logger.debug "installing plugins #{plugins.join(',')}"
+  end
+
+  def safe_restart
+    post(
+      :expects => [301, 302],
+      :path => '/updateCenter/safeRestart',
+    )
+    @logger.debug "requesting a jenkins restart"
+  end
 end
 
 namespace :aws do
@@ -576,6 +811,110 @@ namespace :puppet do
 end
 
 namespace :jenkins do
-  task :initialize do
+  task :list_folders => [:list_jobs] do
+    # create a list of unique parent folders
+    folders = @jenkins_jobs.keys.map do |job, values|
+      ret = []
+      current = ''
+      File.dirname(job.to_s).split('/').each do |part|
+        if current.length == 0 
+          current = part
+        else
+          current = File.join(current, part)
+        end
+        ret << current
+      end
+      ret
+    end.flatten.uniq
+
+    # order the folders
+    folders = folders.sort_by(&:length)
+    @jenkins_folders = folders
+    logger.info "folders to create: #{folders.join(', ')}"
+  end
+
+  task :list_jobs => [:'terraform:prepare_environment'] do
+    jobs = {
+      "#{@terraform_environment}/terraform_code": {
+        git_url: 'git@gitlab.jetstack.net:puppernetes/terraform.git',
+        jenkinsfile: 'Jenkinsfile.terraform_code',
+      },
+      "#{@terraform_environment}/puppet_code": {
+        git_url: 'git@gitlab.jetstack.net:puppernetes/puppet.git',
+      },
+    }
+
+    # list terraform jobs
+    Dir['tfvars/*.tfvars'].each do |path|
+      # only files
+      next unless File.file?(path)
+
+      # split and check for 3 segments
+      parts = File.basename(path).split('.tfvars').first.split('_')
+      next if parts.length != 3
+      stack, env, name = parts
+
+      # env has to match
+      next if env != @terraform_environment
+      jobs["#{env}/#{name}/terraform/#{stack}"] = {
+        git_url: 'git@gitlab.jetstack.net:puppernetes/terraform.git',
+        jenkinsfile: 'Jenkinsfile.terraform',
+      }
+
+    end
+
+    # list packer jobs
+    Dir['packer/*.json'].each do |path|
+      # only files
+      next unless File.file?(path)
+
+      # split and check for 3 segments
+      name = File.basename(path).split('.json').first
+      jobs["#{@terraform_environment}/packer_#{name}"] = {
+        git_url: 'git@gitlab.jetstack.net:puppernetes/terraform.git',
+        jenkinsfile: 'Jenkinsfile.packer',
+      }
+    end
+
+    @jenkins_jobs = jobs
+    logger.info "jobs to create: #{jobs.keys.join(', ')}"
+  end
+
+  task :initialize => [:list_folders, :list_jobs] do
+
+
+    @jenkins = Jenkins.new(
+      ENV['JENKINS_URL'],
+      :user     => ENV['JENKINS_USER'],
+      :password => ENV['JENKINS_PASSWORD'],
+    )
+
+    @jenkins_folders.each do |folder|
+      @jenkins.create_folder folder
+    end
+
+    git_secret_name = "ssh_git_jenkins_#{@terraform_environment}"
+    @jenkins_jobs.each do |job, opts|
+      opts.update({
+        git_secret: git_secret_name,
+      })
+      @jenkins.create_job(job.to_s, opts) 
+    end
+
+    @jenkins.create_ssh_credential(
+      git_secret_name,
+      'git',
+      File.open('credentials/puppet_key_pair').read
+    )
+
+    ssh_secret_name = "ssh_jenkins_#{@terraform_environment}"
+    @jenkins.create_file_credential(
+      ssh_secret_name,
+      File.open('credentials/puppet_key_pair').read
+    )
+
+    @jenkins.install_plugins('copyartifact@1.38.1','ansicolor@0.5.0')
+    sleep 5
+    @jenkins.safe_restart
   end
 end
