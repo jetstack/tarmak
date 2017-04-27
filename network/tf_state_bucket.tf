@@ -16,6 +16,7 @@ resource "aws_s3_bucket" "terraform_state" {
 }
 
 resource "aws_dynamodb_table" "terraform_state" {
+  count          = "${signum(length(var.bucket_prefix))}"
   name           = "${var.bucket_prefix}${var.environment}-${var.region}-terraform-state"
   read_capacity  = 1
   write_capacity = 1
