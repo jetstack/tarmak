@@ -7,3 +7,4 @@ centos_ami = {
   eu-west-1 = "ami-b790a3d1"
   eu-central-1 = "ami-d21cc1bd"
 }
+jetstack_vault_aws_path = "jetstack/aws/jetstack-dev"
