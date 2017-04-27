@@ -104,6 +104,8 @@ write_files:
     Group=consul
     PermissionsStartOnly=true
     ExecStartPre=/bin/mkdir -p /var/lib/consul/data
+    ExecStartPre=/bin/chown -c root:consul /var/lib/consul
+    ExecStartPre=/bin/chmod 0750 /var/lib/consul
     ExecStartPre=/bin/chown -cR consul:consul /var/lib/consul/data
     ExecStartPre=/bin/chmod 0750 /var/lib/consul/data
     ExecStart=/usr/local/bin/consul \
