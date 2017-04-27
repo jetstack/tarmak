@@ -267,8 +267,8 @@ namespace :aws do
   end
 
   desc 'login using jetstack vault'
-  task :login_jetstack do
-    cmd = ['vault', 'read', '-format', 'json', 'jetstack/aws/jetstack-dev/sts/admin']
+  task :login_jetstack => [:'terraform:global_tfvars'] do
+    cmd = ['vault', 'read', '-format', 'json', File.join(@terraform_global_tfvars['jetstack_vault_aws_path'],'sts/admin')]
     Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
       stdin.close
       fail "Getting credentails from vault failed: #{stderr.read}" if wait_thr.value != 0
