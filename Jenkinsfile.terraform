@@ -11,8 +11,6 @@ node {
   try {
     checkout scm
 
-    def sshCredentialId = 'id_jenkins_p9s_nonprod_file'
-
     def splitJobName = env.JOB_NAME.split('/')
 
     def terraformStack = splitJobName[-1]
@@ -22,6 +20,8 @@ node {
     env.TERRAFORM_NAME = terraformName
     env.TERRAFORM_STACK = terraformStack
     env.TERRAFORM_DESTROY = params.terraformDestroy
+
+    def sshCredentialId = "ssh_jenkins_${terraformEnvironment}"
 
     env.IMAGE_NAME = "jetstack/puppernetes-terraform"
     env.IMAGE_TAG = "${terraformEnvironment}-${terraformName}-${terraformStack}-${env.BUILD_NUMBER}"
