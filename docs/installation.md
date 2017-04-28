@@ -18,7 +18,10 @@
 
 AWS CentOS images require the acceptance of T's & C's first, make sure you have done that for every account, where you want to use the toolkit
 
-* https://aws.amazon.com/marketplace/pp/B00O7WM7QW
+* Make sure your browser is logged into AWS console
+* Go to https://aws.amazon.com/marketplace/pp/B00O7WM7QW
+* Click on "Continue"
+* Click on "Accept T's & C's"
 
 ### Build customised and updated CentOS AMI using packer
 
