@@ -165,3 +165,14 @@ export JENKINS_USER=admin
 export JENKINS_PASSWORD=admin
 make clean build jenkins_initialize
 ```
+
+## Known issues
+
+### `Signature expired: TIMESTAMP is now earlier than TIMESTAMP`
+
+Your machine (or the docker Virtual Machine's time is out of sync). This
+happens mostly on Mac OS. Workaround:
+
+```
+docker run --rm --privileged alpine hwclock -s
+```
