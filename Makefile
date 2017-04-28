@@ -12,13 +12,15 @@ build:
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
 
 container_create:
-	env | grep '^AWS_' > .aws_credentials || touch .aws_credentials
-	chmod 600 .aws_credentials
+	echo "" > .container_env
+	chmod 600 .container_env
+	env | grep '^AWS_' >> .container_env || true
+	env | grep '^JENKINS_' >> .container_env || true
 	# create/start container if needed
 	if [ ! -f .container_id ] || [ -z "$$(cat .container_id 2> /dev/null)" ] || ! docker inspect $$(cat .container_id 2> /dev/null) > /dev/null; then \
 		docker create \
 		--env SSH_AUTH_SOCK=/tmp/ssh-auth-sock \
-		--env-file .aws_credentials \
+		--env-file .container_env \
 		$(IMAGE_NAME):$(IMAGE_TAG) \
 		sleep 3600 > .container_id; \
 	fi; \
@@ -81,7 +83,6 @@ puppet_deploy_env: ssh_agent
 puppet_node_apply: ssh_agent
 	docker exec $(CONTAINER_ID) bundle exec rake puppet:node_apply TERRAFORM_ENVIRONMENT=$(TERRAFORM_ENVIRONMENT) TERRAFORM_NAME=$(TERRAFORM_NAME)
 
-
 packer_sync: common_sync
 	docker cp packer $(CONTAINER_ID):$(WORK_DIR)
 
@@ -97,3 +98,8 @@ credentials_ensure: common_sync
 	test -e credentials/jenkins_key_pair || ssh-keygen -t rsa -b 4096 -N '' -f credentials/jenkins_key_pair -C jenkins-keypair
 	docker cp credentials $(CONTAINER_ID):$(WORK_DIR)
 	docker exec $(CONTAINER_ID) bundle exec rake aws:ensure_key_pair
+
+jenkins_initialize: common_sync
+	mkdir -p credentials
+	docker cp credentials $(CONTAINER_ID):$(WORK_DIR)
+	docker exec $(CONTAINER_ID) bundle exec rake jenkins:initialize

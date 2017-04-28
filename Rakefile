@@ -840,31 +840,38 @@ namespace :jenkins do
     logger.info "folders to create: #{folders.join(', ')}"
   end
 
-  task :list_jobs => [:'terraform:prepare_environment'] do
+  task :list_jobs => [
+    :'terraform:prepare_environment',
+    :'terraform:global_tfvars',
+  ] do
     jobs = {
       "#{@terraform_environment}/terraform_code": {
-        git_url: 'git@gitlab.jetstack.net:puppernetes/terraform.git',
+        git_url: @terraform_global_tfvars['jenkins_terraform_git_url'],
+        git_branch: "**/#{@terraform_global_tfvars['jenkins_terraform_git_branch']}",
         jenkinsfile: 'Jenkinsfile.terraform_code',
       },
       "#{@terraform_environment}/puppet_code": {
-        git_url: 'git@gitlab.jetstack.net:puppernetes/puppet.git',
+        git_url: @terraform_global_tfvars['jenkins_puppet_git_url'],
+        git_branch: "**/#{@terraform_global_tfvars['jenkins_puppet_git_branch']}",
       },
     }
 
     # list terraform jobs
-    Dir['tfvars/*.tfvars'].each do |path|
+    Dir["tfvars/#{@terraform_environment}/*/*.tfvars"].each do |path|
       # only files
       next unless File.file?(path)
 
       # split and check for 3 segments
-      parts = File.basename(path).split('.tfvars').first.split('_')
-      next if parts.length != 3
-      stack, env, name = parts
+      parts = path.split('.tfvars').first.split('/')
+      next if parts.length != 4
+      stack = parts[-1]
+      name = parts[-2]
+      logger.debug "jobs to create: #{parts.inspect}"
 
       # env has to match
-      next if env != @terraform_environment
-      jobs["#{env}/#{name}/terraform/#{stack}"] = {
-        git_url: 'git@gitlab.jetstack.net:puppernetes/terraform.git',
+      jobs["#{@terraform_environment}/#{name}/terraform/#{stack}"] = {
+        git_url: @terraform_global_tfvars['jenkins_terraform_git_url'],
+        git_branch: "**/#{@terraform_global_tfvars['jenkins_terraform_git_branch']}",
         jenkinsfile: 'Jenkinsfile.terraform',
       }
 
@@ -878,18 +885,18 @@ namespace :jenkins do
       # split and check for 3 segments
       name = File.basename(path).split('.json').first
       jobs["#{@terraform_environment}/packer_#{name}"] = {
-        git_url: 'git@gitlab.jetstack.net:puppernetes/terraform.git',
+        git_url: @terraform_global_tfvars['jenkins_terraform_git_url'],
+        git_branch: "**/#{@terraform_global_tfvars['jenkins_terraform_git_branch']}",
         jenkinsfile: 'Jenkinsfile.packer',
       }
     end
 
     @jenkins_jobs = jobs
     logger.info "jobs to create: #{jobs.keys.join(', ')}"
+    logger.debug "jobs to create: #{jobs.inspect}"
   end
 
   task :initialize => [:list_folders, :list_jobs] do
-
-
     @jenkins = Jenkins.new(
       ENV['JENKINS_URL'],
       :user     => ENV['JENKINS_USER'],

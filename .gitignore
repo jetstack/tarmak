@@ -3,5 +3,5 @@
 /.container_id
 terraform.tfstate
 terraform.tfstate.backup
-.aws_credentials
+.container_env
 /credentials/
