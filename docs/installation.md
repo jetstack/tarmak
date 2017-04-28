@@ -50,11 +50,11 @@ centos_ami = {
 
 ```
 # Generate and upload an AWS key pair
-bundle exec rake aws:ensure_key_pair
-
-# Generate and Puppet key pair
-
+# Generate jenkins
+make clean build credentials_ensure
 ```
+
+The Jenkins key pair needs to added to all Github repositories with read access
 
 ### Setup tfvar files for hub
 
@@ -75,7 +75,7 @@ bucket_prefix = "jetstack-p9s-"
 #### `tfvars/tools_${ENVIRONMENT}.tfvars`
 
 - `foreman_admin_password` generate a new password used for the puppet dashboard of foreman
-- `puppet_deploy_key` needs to cotain the public key from `credentials/puppet_key_piar.pub`
+- `puppet_deploy_key` needs to cotain the public key from `credentials/jenkins_key_pair.pub`
 
 ```
 foreman_admin_password = "secure123"

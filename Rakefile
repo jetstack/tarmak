@@ -745,14 +745,6 @@ namespace :puppet do
     @puppet_master = "puppet.#{zone}"
   end
 
-  desc 'ensure Puppet key pair exists'
-  task :ensure_key_pair do
-    logger.info 'generating new Puppet key pair'
-    key_pair_path = 'credentials/puppet_key_pair'
-    sh 'mkdir', '-p', File.dirname(key_pair_path)
-    sh 'ssh-keygen', '-t', 'rsa', '-b', '4096', '-N', '', '-f', key_pair_path, '-C', "puppetmaster"
-  end
-
   desc 'deploy puppet.tar.gz to the puppet master'
   task :deploy_env => :prepare do
     sh "cat puppet.tar.gz | ssh -o StrictHostKeyChecking=no puppet-deploy@#{@puppet_master} #{@terraform_environment}_#{@terraform_name}"
@@ -919,13 +911,13 @@ namespace :jenkins do
     @jenkins.create_ssh_credential(
       git_secret_name,
       'git',
-      File.open('credentials/puppet_key_pair').read
+      File.open('credentials/jenkins_key_pair').read
     )
 
     ssh_secret_name = "ssh_jenkins_#{@terraform_environment}"
     @jenkins.create_file_credential(
       ssh_secret_name,
-      File.open('credentials/puppet_key_pair').read
+      File.open('credentials/jenkins_key_pair').read
     )
 
     @jenkins.install_plugins('copyartifact@1.38.1','ansicolor@0.5.0')

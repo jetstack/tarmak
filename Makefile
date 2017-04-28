@@ -90,3 +90,10 @@ packer_build: packer_sync
 
 packer_build_latest_kernel: packer_sync
 	docker exec $(CONTAINER_ID) bundle exec rake packer:build PACKER_NAME=centos-puppet-agent-latest-kernel
+
+credentials_ensure: common_sync
+	mkdir -p credentials
+	test -e credentials/aws_key_pair || ssh-keygen -t rsa -b 4096 -N '' -f credentials/aws_key_pair -C aws-keypair
+	test -e credentials/jenkins_key_pair || ssh-keygen -t rsa -b 4096 -N '' -f credentials/jenkins_key_pair -C jenkins-keypair
+	docker cp credentials $(CONTAINER_ID):$(WORK_DIR)
+	docker exec $(CONTAINER_ID) bundle exec rake aws:ensure_key_pair
