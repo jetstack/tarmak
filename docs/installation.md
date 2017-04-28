@@ -58,7 +58,7 @@ The Jenkins key pair needs to added to all Github repositories with read access
 
 ### Setup tfvar files for hub
 
-#### `tfvars/network_${ENVIRONMENT}.tfvars`
+#### `tfvars/${ENVIRONMENT}/hub/network.tfvars`
 
 - `network should` be a private IPv4 CIDR which is not yet used by your organisation
 - `public_zones` has to contain exactly one zone, which is used and available publicly
@@ -72,7 +72,7 @@ private_zones = ["nonprod-private.p9s.jetstack.net"]
 bucket_prefix = "jetstack-p9s-"
 ```
 
-#### `tfvars/tools_${ENVIRONMENT}.tfvars`
+#### `tfvars/${ENVIRONMENT}/hub/tools.tfvars`
 
 - `foreman_admin_password` generate a new password used for the puppet dashboard of foreman
 - `puppet_deploy_key` needs to cotain the public key from `credentials/jenkins_key_pair.pub`
@@ -107,6 +107,8 @@ TERRAFORM_DISABLE_REMOTE_STATE=true make terraform_apply
 ## sync local state to remote state (response yes)
 make terraform_plan
 ```
+
+### Setup delegation for public Route 53 zone
 
 ### Setup tools hub
 
@@ -158,5 +160,5 @@ export TERRAFORM_ENVIRONMENT=nonprod
 export JENKINS_URL=https://jenkins.nonprod.p9s.jetstack.net/
 export JENKINS_USER=admin
 export JENKINS_PASSWORD=admin
-bundle exec rake jenkins:initialize
+make clean build jenkins_initialize
 ```
