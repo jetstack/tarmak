@@ -335,7 +335,7 @@ namespace :terraform do
 
   task :prepare_env => [:'aws:prepare', :prepare_name, :prepare_environment] do
     @terraform_plan= ENV['TERRAFORM_PLAN']
-    tfvars = Rhcl.parse(File.open("tfvars/network_#{@terraform_environment}_hub.tfvars").read)
+    tfvars = Rhcl.parse(File.open("tfvars/#{@terraform_environment}/hub/network.tfvars").read)
     @terraform_state_bucket = "#{tfvars['bucket_prefix']}#{@terraform_environment}-#{@aws_region}-terraform-state"
   end
 
@@ -346,15 +346,30 @@ namespace :terraform do
     end
     @terraform_stack = ENV['TERRAFORM_STACK']
 
-    sh 'mkdir -p tfstate'
     terraform_file_base = "#{@terraform_stack}_#{@terraform_environment}_#{@terraform_name}"
     @terraform_state_file = "#{terraform_file_base}.tfstate"
-    @terraform_vars_file = "#{terraform_file_base}.tfvars"
 
-    @terraform_args = [
-      "-var-file=../tfvars/global.tfvars",
-      "-var-file=../tfvars/#{@terraform_vars_file}"
-    ] + ['name', 'environment', 'stack','state_bucket'].map do |name|
+    @terraform_args = []
+
+    # adds global tfvars
+    path = "tfvars/global.tfvars"
+    if File.exist? path
+      @terraform_args << "-var-file=../#{path}"
+    end
+
+    # adds per environment tfvars
+    path = "tfvars/#{@terraform_environment}/environment.tfvars"
+    if File.exist? path
+      @terraform_args << "-var-file=../#{path}"
+    end
+
+    # adds per stack
+    path = "tfvars/#{@terraform_environment}/#{@terraform_name}/#{@terraform_stack}.tfvars"
+    if File.exist? path
+      @terraform_args << "-var-file=../#{path}"
+    end
+
+    @terraform_args += ['name', 'environment', 'stack','state_bucket'].map do |name|
       "-var=#{name}=#{instance_variable_get(("@terraform_" + name))}"
     end
 
