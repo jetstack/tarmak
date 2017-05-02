@@ -1,5 +1,5 @@
 # adds resources to a kubernetes master
-define kubernetes::apply(
+define kubernetes::apply_fragment(
   $manifests = [],
   $force = false,
   $format = 'yaml',
