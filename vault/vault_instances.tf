@@ -3,7 +3,7 @@ data "template_file" "vault" {
   count    = "${var.instance_count}"
 
   vars {
-    fqdn           = "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zones[0]}"
+    fqdn           = "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zone}"
     environment    = "${var.environment}"
     region         = "${var.region}"
     instance_count = "${var.instance_count}"
@@ -15,9 +15,9 @@ data "template_file" "vault" {
     consul_encrypt      = "${var.consul_encrypt}"
 
     vault_version         = "${var.vault_version}"
-    vault_tls_cert_path   = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/cert.pem"
-    vault_tls_key_path    = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/cert-key.pem"
-    vault_tls_ca_path     = "s3://${data.terraform_remote_state.network.secrets_bucket}/vault-${var.environment}/ca.pem"
+    vault_tls_cert_path   = "s3://${data.terraform_remote_state.state.secrets_bucket}/vault-${var.environment}/cert.pem"
+    vault_tls_key_path    = "s3://${data.terraform_remote_state.state.secrets_bucket}/vault-${var.environment}/cert-key.pem"
+    vault_tls_ca_path     = "s3://${data.terraform_remote_state.state.secrets_bucket}/vault-${var.environment}/ca.pem"
     vault_unseal_key_name = "${data.template_file.vault_unseal_key_name.rendered}"
 
     bucket_backup = "${aws_s3_bucket.vault-backup.bucket}"

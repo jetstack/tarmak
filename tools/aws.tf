@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 data "aws_acm_certificate" "wildcard" {
-  domain   = "*.${data.terraform_remote_state.network.public_zones[0]}"
+  domain   = "*.${data.terraform_remote_state.state.public_zone}"
   statuses = ["ISSUED"]
 }
 

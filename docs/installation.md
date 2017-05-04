@@ -61,18 +61,24 @@ The Jenkins key pair needs to added to all Github repositories with read access
 
 ### Setup tfvar files for hub
 
-#### `tfvars/${ENVIRONMENT}/hub/network.tfvars`
+#### `tfvars/${ENVIRONMENT}/hub/state.tfvars`
 
-- `network should` be a private IPv4 CIDR which is not yet used by your organisation
-- `public_zones` has to contain exactly one zone, which is used and available publicly
-- `private_zones` has to contain exactly one zone, which can be arbitrary and is only available to services with a VPC
+- `public_zone` has to be a zone, which is used and available publicly (including delegations)
 - `bucket_prefix` needs to be string which prefixes all buckets
 
 ```
-network = "10.99.128.0/20"
-public_zones = ["nonprod.p9s.jetstack.net"]
-private_zones = ["nonprod-private.p9s.jetstack.net"]
+public_zone = "nonprod.p9s.jetstack.net"
 bucket_prefix = "jetstack-p9s-"
+```
+
+#### `tfvars/${ENVIRONMENT}/hub/network.tfvars`
+
+- `network should` be a private IPv4 CIDR which is not yet used by your organisation
+- `private_zone` has be a zone, which can be arbitrary and is only available to services with a VPC
+
+```
+network = "10.99.128.0/20"
+private_zone = "nonprod-private.p9s.jetstack.net"
 ```
 
 #### `tfvars/${ENVIRONMENT}/hub/tools.tfvars`
@@ -85,21 +91,11 @@ foreman_admin_password = "secure123"
 puppet_deploy_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDncOnSrQmQ+xZ0MLEEiCubalsBrZmaztkeC1CjVzJMbxlNCab9vkTGgzBdC9VgBk/DBagUbMqcBHZvz98ESOtrab/m3WPreTy4vMPqBt1LBORq4n9enIh/DUZqY4H6sY0y1e2wwgHthsXer5XgqkD6KkRCvgCggPZARYKKhjRQkai2p08e0U2SBcA6IC7lrZWZQTC6RToqXvRtjMxpd5t94SilnFfA42KJvnvaajH3NQqgFNilY+5uVjkQL88wb5uP/L7NrkZpZ2meDR0El4pHaZVjIf6dzyUcYn2+FMP5ux9Vfoab0RgWgq5L+25T2nZho3gwGtWNYGatYtfXq7Jrk/iaWAEWliOquIdiAXo5JAyc4CXZVvR3aK98/iHf0KWH0nqZcA/1PA071GnbKkDgCrHHauRNNtEsnF9076nz2m1jPSwoivsFtXo0j9siFITGy6IiAgts0EzGtLj5/pNlsy9Jw8UYpUmaeRny8kCwc79ZnPDVn6fNKOG/yODkNq2CjVyxrle3NYus3rNMT45+WGV930RnYlvzuzLIrAVRMjZxKFTp8+mNoNTyMbTBit9lBX8JNh2OT56OCeUWnoLh+DRTZ0B1+CY3TniAZlT6IbhB0ZprVUVGibAPPkXCkWTMJkese76Fm12Do7RSP0rghiQBlkL3SZFQG44tfOWm2w== puppetmaster"
 ```
 
-### Ensure AWS Certificates exist
-
-The domain zone which is specified needs a AWS Wild Certificate created.
-
-- Go to this AWS page: https://console.aws.amazon.com/acm/home
-- Request a new certificate which is valid for these names:
-  -  `*.public_zones[0]`
-  -  `*.devcluster.public_zones[0]`
-- Validate the validity of the request and wait till the certificate is issued
-
-### Setup network hub
+### Setup state hub
 
 ```
-# Create network stack for hub (contains state buckets/dynamodb)
-export TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod
+# Create network stack for hub (contains state buckets/dynamodb public zone)
+export TERRAFORM_STACK=state TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod
 
 ## plan
 TERRAFORM_DISABLE_REMOTE_STATE=true make clean build terraform_sync terraform_plan
@@ -111,7 +107,50 @@ TERRAFORM_DISABLE_REMOTE_STATE=true make terraform_apply
 make terraform_plan
 ```
 
-### Setup delegation for public Route 53 zone
+### Ensure AWS Certificates exist
+
+The public domain zone (`public_zone = nonprod.p9s.jetstack.net`) which is
+specified needs a AWS Wild Certificate created.
+
+- Go to this AWS page: https://console.aws.amazon.com/acm/home
+- Request a new certificate which is valid for these names:
+  -  `*.public_zone`
+  -  `*.devcluster.public_zone`
+- Validate the validity of the request and wait till the certificate is issued
+
+### Ensure Route 53 public zone delegation
+
+The public domain zone needs to be delegated from the DNS root. You get the
+nameservers for it from the output of the last `terraform apply`:
+
+```
+public_zone_name_servers = [
+    ns-ww.awsdns-57.net,
+    ns-xx.awsdns-19.org,
+    ns-yy.awsdns-03.co.uk,
+    ns-zz.awsdns-63.com
+]
+```
+
+Test the delegation:
+
+```
+$ dig -t txt +short _puppernetes.nonprod.p9s.jetstack.net
+"delegation for nonprod-hub works"
+```
+
+### Setup network hub
+
+```
+# Create network stack for hub (contains state buckets/dynamodb)
+export TERRAFORM_STACK=network TERRAFORM_NAME=hub TERRAFORM_ENVIRONMENT=nonprod
+
+## plan
+make clean build terraform_sync terraform_plan
+
+## apply
+make terraform_apply
+```
 
 ### Setup tools hub
 

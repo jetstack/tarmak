@@ -27,21 +27,6 @@ variable "allowed_account_ids" {
   default = []
 }
 
-variable "state_buckets" {
-  type    = "list"
-  default = []
-}
-
-variable "public_zones" {
-  type    = "list"
-  default = []
-}
-
-variable "private_zones" {
-  type    = "list"
-  default = []
-}
-
 variable "vpc_peer_stack" {
   default = ""
 }
@@ -58,6 +43,6 @@ variable "availability_zones" {
   default = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
 }
 
-variable "bucket_prefix" {
+variable "private_zone" {
   default = ""
 }

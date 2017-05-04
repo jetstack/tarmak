@@ -76,7 +76,7 @@ resource "aws_security_group_rule" "jenkins_ingress_allow_jenkins_elb" {
 }
 
 resource "aws_route53_record" "jenkins_elb" {
-  zone_id = "${data.terraform_remote_state.network.public_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.state.public_zone_id}"
   name    = "jenkins"
   type    = "A"
 

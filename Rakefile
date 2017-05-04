@@ -305,8 +305,12 @@ end
 
 namespace :terraform do
   desc 'parse terraform global variables'
-  task :global_tfvars do
+  task :global_tfvars => :prepare_environment do
     @terraform_global_tfvars = Rhcl.parse(File.open("tfvars/global.tfvars").read)
+    env_path = "tfvars/#{@terraform_environment}/environment.tfvars"
+    if File.exist? env_path
+      @terraform_global_tfvars.update(Rhcl.parse(File.open(env_path).read))
+    end
   end
 
   task :prepare_regex do
@@ -335,12 +339,12 @@ namespace :terraform do
 
   task :prepare_env => [:'aws:prepare', :prepare_name, :prepare_environment] do
     @terraform_plan= ENV['TERRAFORM_PLAN']
-    tfvars = Rhcl.parse(File.open("tfvars/#{@terraform_environment}/hub/network.tfvars").read)
+    tfvars = Rhcl.parse(File.open("tfvars/#{@terraform_environment}/hub/state.tfvars").read)
     @terraform_state_bucket = "#{tfvars['bucket_prefix']}#{@terraform_environment}-#{@aws_region}-terraform-state"
   end
 
   task :prepare => :prepare_env do
-    @terraform_stacks = ['network', 'vault', 'tools', 'kubernetes']
+    @terraform_stacks = Dir.entries(Dir.pwd).select {|f| File.directory? f} - ["docs", "doc", ".git", "..", ".", "credentials", "packer", "tfvars", "tfstate"]
     unless @terraform_stacks.include?(ENV['TERRAFORM_STACK'])
       fail "Please provide a TERRAFORM_STACK out of #{@terraform_stacks}"
     end
@@ -390,10 +394,10 @@ namespace :terraform do
         File.open(terraform_remote_state_file, 'w') do |f|
           f.write remote_state
         end
-        sh 'terraform init'
       else
         sh 'rm', '-rf', terraform_remote_state_file
       end
+      sh 'terraform init'
     end
   end
 

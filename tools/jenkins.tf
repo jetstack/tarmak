@@ -6,10 +6,6 @@ variable "jenkins_root_size" {
   default = 20
 }
 
-variable "jenkins_data_size" {
-  default = 40
-}
-
 variable "jenkins_hostname" {
   default = "jenkins"
 }
@@ -50,7 +46,7 @@ data "template_file" "jenkins_user_data" {
 
   vars {
     region = "${var.region}"
-    fqdn   = "${var.jenkins_hostname}.${data.terraform_remote_state.network.private_zones[0]}"
+    fqdn   = "${var.jenkins_hostname}.${data.terraform_remote_state.network.private_zone}"
   }
 }
 
@@ -77,32 +73,15 @@ resource "aws_instance" "jenkins" {
   user_data = "${data.template_file.jenkins_user_data.rendered}"
 }
 
-resource "aws_ebs_volume" "jenkins" {
-  availability_zone = "${data.terraform_remote_state.network.availability_zones[0]}"
-  size              = "${var.jenkins_data_size}"
-  type              = "gp2"
-
-  tags {
-    Name        = "${data.template_file.stack_name.rendered}-jenkins"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
-  }
-
-  lifecycle = {
-    prevent_destroy = true
-  }
-}
-
 resource "aws_volume_attachment" "jenkins" {
   device_name  = "/dev/xvdd"
-  volume_id    = "${aws_ebs_volume.jenkins.id}"
+  volume_id    = "${data.terraform_remote_state.state.jenkins_data_volume_id}"
   instance_id  = "${aws_instance.jenkins.id}"
   skip_destroy = true
 }
 
 resource "aws_route53_record" "jenkins" {
-  zone_id = "${data.terraform_remote_state.network.private_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.network.private_zone_id}"
   name    = "${var.jenkins_hostname}"
   type    = "A"
   ttl     = "300"

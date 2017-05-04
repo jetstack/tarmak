@@ -38,30 +38,18 @@ output "route_table_private_ids" {
   value = ["${aws_route_table.private.*.id}"]
 }
 
+output "private_zone_id" {
+  value = "${aws_route53_zone.private.id}"
+}
+
+output "private_zone" {
+  value = "${aws_route53_zone.private.name}"
+}
+
 output "environment" {
   value = "${var.environment}"
 }
 
 output "availability_zones" {
   value = "${var.availability_zones}"
-}
-
-output "private_zone_ids" {
-  value = ["${aws_route53_zone.private.*.id}"]
-}
-
-output "private_zones" {
-  value = ["${aws_route53_zone.private.*.name}"]
-}
-
-output "public_zone_ids" {
-  value = ["${aws_route53_zone.public.*.id}"]
-}
-
-output "public_zones" {
-  value = ["${aws_route53_zone.public.*.name}"]
-}
-
-output "bucket_prefix" {
-  value = "${var.bucket_prefix}"
 }

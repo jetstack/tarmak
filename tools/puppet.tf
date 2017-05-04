@@ -6,10 +6,6 @@ variable "puppet_master_root_size" {
   default = 20
 }
 
-variable "puppet_master_data_size" {
-  default = 40
-}
-
 variable "puppet_master_hostname" {
   default = "puppet"
 }
@@ -67,7 +63,7 @@ data "template_file" "puppet_master_user_data" {
 
   vars {
     region                 = "${var.region}"
-    fqdn                   = "${var.puppet_master_hostname}.${data.terraform_remote_state.network.private_zones[0]}"
+    fqdn                   = "${var.puppet_master_hostname}.${data.terraform_remote_state.network.private_zone}"
     puppet_deploy_key      = "${var.puppet_deploy_key}"
     foreman_admin_user     = "${var.foreman_admin_user}"
     foreman_admin_password = "${var.foreman_admin_password}"
@@ -97,32 +93,15 @@ resource "aws_instance" "puppet_master" {
   user_data = "${data.template_file.puppet_master_user_data.rendered}"
 }
 
-resource "aws_ebs_volume" "puppet_master" {
-  availability_zone = "${data.terraform_remote_state.network.availability_zones[0]}"
-  size              = "${var.puppet_master_data_size}"
-  type              = "gp2"
-
-  tags {
-    Name        = "${data.template_file.stack_name.rendered}-puppet_master"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
-  }
-
-  lifecycle = {
-    prevent_destroy = true
-  }
-}
-
 resource "aws_volume_attachment" "puppet_master" {
   device_name  = "/dev/xvdd"
-  volume_id    = "${aws_ebs_volume.puppet_master.id}"
+  volume_id    = "${data.terraform_remote_state.state.puppet_master_data_volume_id}"
   instance_id  = "${aws_instance.puppet_master.id}"
   skip_destroy = true
 }
 
 resource "aws_route53_record" "puppet_master" {
-  zone_id = "${data.terraform_remote_state.network.private_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.network.private_zone_id}"
   name    = "${var.puppet_master_hostname}"
   type    = "A"
   ttl     = "300"

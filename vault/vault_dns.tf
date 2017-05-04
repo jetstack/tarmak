@@ -1,6 +1,6 @@
 resource "aws_route53_record" "per-instance" {
   count   = "${var.instance_count}"
-  zone_id = "${data.terraform_remote_state.network.private_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.network.private_zone_id}"
   name    = "vault-${count.index + 1}"
   type    = "A"
   ttl     = "180"
@@ -8,7 +8,7 @@ resource "aws_route53_record" "per-instance" {
 }
 
 resource "aws_route53_record" "endpoint" {
-  zone_id = "${data.terraform_remote_state.network.private_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.network.private_zone_id}"
   name    = "vault"
   type    = "A"
   ttl     = "180"

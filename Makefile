@@ -48,6 +48,7 @@ terraform_sync: common_sync
 	docker cp tools $(CONTAINER_ID):$(WORK_DIR)
 	docker cp vault $(CONTAINER_ID):$(WORK_DIR)
 	docker cp kubernetes $(CONTAINER_ID):$(WORK_DIR)
+	docker cp state $(CONTAINER_ID):$(WORK_DIR)
 
 terraform_plan: container
 	docker exec -i $(CONTAINER_ID) bundle exec rake terraform:plan $(shell env | grep '^TERRAFORM_') TERRAFORM_PLAN=$(WORK_DIR)/terraform.plan

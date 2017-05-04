@@ -46,7 +46,7 @@ data "template_file" "bastion_user_data" {
   template = "${file("${path.module}/templates/bastion_user_data.yaml")}"
 
   vars {
-    fqdn = "bastion.${data.terraform_remote_state.network.public_zones[0]}"
+    fqdn = "bastion.${data.terraform_remote_state.state.public_zone}"
   }
 }
 
@@ -73,7 +73,7 @@ resource "aws_instance" "bastion" {
 }
 
 resource "aws_route53_record" "bastion" {
-  zone_id = "${data.terraform_remote_state.network.public_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.state.public_zone_id}"
   name    = "bastion"
   type    = "A"
   ttl     = "300"
