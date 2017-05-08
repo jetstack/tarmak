@@ -61,7 +61,7 @@ class kubernetes::kubelet(
     seltype => $seltype,
   }
 
-  if dig($facts, ['os','selinux','enabled'], false) {
+  if dig44($facts, ['os', 'selinux', 'enabled'], false) {
     exec { 'semanage_fcontext_kubelet_dir':
       command => "semanage fcontext -a -t ${seltype} \"${kubelet_dir}(/.*)?\"",
       unless  => "semanage fcontext -l | grep \"${kubelet_dir}(/.*).*:${seltype}\"",
@@ -88,7 +88,7 @@ class kubernetes::kubelet(
     require => File[$kubelet_dir],
   }
 
-  $availability_zone = $facts.dig('ec2_metadata','placement','availability-zone')
+  $availability_zone = dig44($facts, ['ec2_metadata', 'placement', 'availability-zone'])
   if $::kubernetes::cloud_provider == 'aws' and $availability_zone != undef {
     file{"${kubelet_dir}/plugins/kubernetes.io":
       ensure  => 'directory',
