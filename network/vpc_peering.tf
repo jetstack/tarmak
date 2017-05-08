@@ -54,6 +54,6 @@ resource "aws_route" "them_peering_private" {
 
 resource "aws_route53_zone_association" "hub_zone" {
   count   = "${signum(length(var.vpc_peer_stack))}"
-  zone_id = "${data.terraform_remote_state.vpc_peer_stack.private_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.vpc_peer_stack.private_zone_id}"
   vpc_id  = "${aws_vpc.main.id}"
 }
