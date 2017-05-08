@@ -404,12 +404,18 @@ namespace :terraform do
   task :hub_outputs => :prepare_env do
     @s3 = Aws::S3::Resource.new(region: @aws_region)
     bucket = @s3.bucket(@terraform_state_bucket)
-    state = JSON.parse(bucket.object("network_#{@terraform_environment}_hub.tfstate").get.body.read)
-    state['modules'].each do |mod|
-      next if mod['path'] != ["root"]
-      @terraform_hub_outputs = mod['outputs']
+    @terraform_hub_outputs = {}
+    [
+     "state_#{@terraform_environment}_hub.tfstate",
+     "network_#{@terraform_environment}_hub.tfstate",
+    ].each do |path|
+      state = JSON.parse(bucket.object(path).get.body.read)
+      state['modules'].each do |mod|
+        next if mod['path'] != ["root"]
+        @terraform_hub_outputs.merge!(mod['outputs'])
+      end
     end
-    fail "No hub outputs found" if @terraform_hub_outputs.nil?
+    fail "No hub outputs found" if @terraform_hub_outputs.length == 0
   end
 
   task :plan => :prepare do
@@ -478,7 +484,7 @@ namespace :vault do
   task :prepare => :'terraform:hub_outputs' do
     vault_instances = ENV['VAULT_INSTANCES'] || 5
     @vault_instances = vault_instances.to_i
-    @vault_zone = @terraform_hub_outputs['private_zones']['value'].first
+    @vault_zone = @terraform_hub_outputs['private_zone']['value']
     @vault_path = "vault-#{@terraform_environment}"
     logger.info "vault CA zone=#{@vault_zone} instances=#{@vault_instances}"
 
@@ -715,7 +721,7 @@ namespace :vault do
         'user' => {},
       }],
     }
-    api_host = "api.#{@cluster_name}.#{@terraform_hub_outputs['private_zones']['value'].first}:6443"
+    api_host = "api.#{@cluster_name}.#{@terraform_hub_outputs['private_zone']['value']}:6443"
     tunnel_host = "localhost:6443"
     cmd = ['vault', 'write', '-format', 'json', "#{ENV['CLUSTER_ID']}/nonprod-devcluster/pki/k8s/issue/admin", "common_name=admin"]
     Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
@@ -728,7 +734,7 @@ namespace :vault do
       dest_file = 'kubeconfig-tunnel'
       File.open(dest_file, 'w') do |f|
         f.write "# SSH tunnel to API via Bastion:\n"
-        f.write "# ssh -N -L6443:#{api_host} centos@bastion.#{@terraform_hub_outputs['public_zones']['value'].first}\n"
+        f.write "# ssh -N -L6443:#{api_host} centos@bastion.#{@terraform_hub_outputs['public_zone']['value']}\n"
         f.write "#\n\n"
         f.write kubeconfig.to_yaml
       end
@@ -745,7 +751,7 @@ end
 
 namespace :puppet do
   task :prepare => :'terraform:hub_outputs' do
-    zone = @terraform_hub_outputs['private_zones']['value'].first
+    zone = @terraform_hub_outputs['private_zone']['value']
     @puppet_master = "puppet.#{zone}"
   end
 
