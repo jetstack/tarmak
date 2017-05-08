@@ -640,6 +640,10 @@ namespace :vault do
 
           resp = JSON.parse(http.request(req).body)
 
+          if not resp.has_key? 'keys_base64' or resp['keys_base64'].length != 1 or not resp.has_key? 'root_token'
+            logger.warn "Unexpected vault response: #{resp.inspect}"
+          end
+
           logger.debug 'store root token in S3'
           @secrets_bucket.put_object(
             key: "#{@vault_path}/root-token",
