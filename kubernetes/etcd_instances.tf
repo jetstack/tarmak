@@ -48,7 +48,7 @@ data "template_file" "etcd_user_data" {
     vault_token = "${var.vault_init_token_etcd}"
     vault_ca    = "${base64encode(data.aws_s3_bucket_object.vault_ca.body)}"
 
-    puppernetes_dns_root      = "${data.terraform_remote_state.hub_network.private_zones[0]}"
+    puppernetes_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
     puppernetes_role          = "etcd"
     puppernetes_hostname      = "etcd-${count.index+1}"
     puppernetes_cluster       = "${data.template_file.stack_name.rendered}"
@@ -59,7 +59,7 @@ data "template_file" "etcd_user_data" {
 }
 
 resource "aws_route53_record" "etcd" {
-  zone_id = "${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
   name    = "etcd-${count.index+1}.${data.template_file.stack_name.rendered}"
   type    = "A"
   ttl     = "300"

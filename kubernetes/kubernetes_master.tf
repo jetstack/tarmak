@@ -66,7 +66,7 @@ data "template_file" "kubernetes_master_user_data" {
     vault_token = "${var.vault_init_token_master}"
     vault_ca    = "${base64encode(data.aws_s3_bucket_object.vault_ca.body)}"
 
-    puppernetes_dns_root      = "${data.terraform_remote_state.hub_network.private_zones[0]}"
+    puppernetes_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
     puppernetes_role          = "master"
     puppernetes_hostname      = "master"
     puppernetes_cluster       = "${data.template_file.stack_name.rendered}"
@@ -126,7 +126,7 @@ resource "aws_autoscaling_group" "kubernetes_master" {
 }
 
 resource "aws_route53_record" "kubernetes_master" {
-  zone_id = "${data.terraform_remote_state.hub_network.private_zone_ids[0]}"
+  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
   name    = "api.${data.template_file.stack_name.rendered}"
   type    = "CNAME"
   ttl     = "60"
