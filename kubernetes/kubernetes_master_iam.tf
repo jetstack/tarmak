@@ -5,8 +5,8 @@ resource "aws_iam_role" "kubernetes_master" {
 }
 
 resource "aws_iam_instance_profile" "kubernetes_master" {
-  name  = "kubernetes.${data.template_file.stack_name.rendered}.kubernetes_master"
-  roles = ["${aws_iam_role.kubernetes_master.name}"]
+  name = "kubernetes.${data.template_file.stack_name.rendered}.kubernetes_master"
+  role = "${aws_iam_role.kubernetes_master.name}"
 }
 
 resource "aws_iam_policy" "kubernetes_master" {

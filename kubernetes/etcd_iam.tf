@@ -5,8 +5,8 @@ resource "aws_iam_role" "etcd" {
 }
 
 resource "aws_iam_instance_profile" "etcd" {
-  name  = "kubernetes.${data.template_file.stack_name.rendered}.etcd"
-  roles = ["${aws_iam_role.etcd.name}"]
+  name = "kubernetes.${data.template_file.stack_name.rendered}.etcd"
+  role = "${aws_iam_role.etcd.name}"
 }
 
 resource "aws_iam_policy" "etcd" {

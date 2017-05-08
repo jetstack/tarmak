@@ -5,8 +5,8 @@ resource "aws_iam_role" "puppet_master" {
 }
 
 resource "aws_iam_instance_profile" "puppet_master" {
-  name  = "${data.template_file.stack_name.rendered}-puppet_master"
-  roles = ["${aws_iam_role.puppet_master.name}"]
+  name = "${data.template_file.stack_name.rendered}-puppet_master"
+  role = "${aws_iam_role.puppet_master.name}"
 }
 
 # TODO: Warning this grants all (!!) rights to the puppet_master instance

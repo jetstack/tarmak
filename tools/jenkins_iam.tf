@@ -5,8 +5,8 @@ resource "aws_iam_role" "jenkins" {
 }
 
 resource "aws_iam_instance_profile" "jenkins" {
-  name  = "${data.template_file.stack_name.rendered}-jenkins"
-  roles = ["${aws_iam_role.jenkins.name}"]
+  name = "${data.template_file.stack_name.rendered}-jenkins"
+  role = "${aws_iam_role.jenkins.name}"
 }
 
 # TODO: Warning this grants all (!!) rights to the jenkins instance
