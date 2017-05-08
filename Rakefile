@@ -659,7 +659,7 @@ namespace :vault do
           })
         end
       end
-    rescue Errno::ECONNREFUSED => e
+    rescue Errno::ECONNREFUSED,Net::OpenTimeout => e
       retries -= 1
       if retries > 0
         logger.warn 'Connection to vault failed, retrying in 5 seconds'
