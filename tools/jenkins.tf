@@ -71,6 +71,10 @@ resource "aws_instance" "jenkins" {
   }
 
   user_data = "${data.template_file.jenkins_user_data.rendered}"
+
+  lifecycle {
+    ignore_changes = ["volume_tags"]
+  }
 }
 
 resource "aws_volume_attachment" "jenkins" {

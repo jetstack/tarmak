@@ -29,6 +29,10 @@ resource "aws_instance" "etcd" {
   }
 
   user_data = "${element(data.template_file.etcd_user_data.*.rendered, count.index)}"
+
+  lifecycle {
+    ignore_changes = ["volume_tags"]
+  }
 }
 
 data "template_file" "etcd_user_data" {

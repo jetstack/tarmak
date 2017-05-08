@@ -71,6 +71,10 @@ resource "aws_instance" "vault" {
     Contact      = "${var.contact}"
     VaultCluster = "${var.environment}"
   }
+
+  lifecycle {
+    ignore_changes = ["volume_tags"]
+  }
 }
 
 resource "aws_ebs_volume" "vault" {

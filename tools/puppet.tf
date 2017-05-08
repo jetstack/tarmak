@@ -91,6 +91,10 @@ resource "aws_instance" "puppet_master" {
   }
 
   user_data = "${data.template_file.puppet_master_user_data.rendered}"
+
+  lifecycle {
+    ignore_changes = ["volume_tags"]
+  }
 }
 
 resource "aws_volume_attachment" "puppet_master" {
