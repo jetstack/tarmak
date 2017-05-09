@@ -727,7 +727,7 @@ namespace :vault do
     }
     api_host = "api.#{@cluster_name}.#{@terraform_hub_outputs['private_zone']['value']}:6443"
     tunnel_host = "localhost:6443"
-    cmd = ['vault', 'write', '-format', 'json', "#{ENV['CLUSTER_ID']}/nonprod-devcluster/pki/k8s/issue/admin", "common_name=admin"]
+    cmd = ['vault', 'write', '-format', 'json', "#{ENV['CLUSTER_ID']}/#{@cluster_name}/pki/k8s/issue/admin", "common_name=admin"]
     Open3.popen3(*cmd) do | stdin, stdout, stderr, wait_thr|
       stdin.close
       fail "Getting credentails from vault failed: #{stderr.read}" if wait_thr.value != 0
