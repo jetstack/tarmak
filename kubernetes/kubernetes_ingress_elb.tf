@@ -26,7 +26,7 @@ resource "aws_route53_record" "ingress_wildcard" {
 }
 
 resource "aws_elb" "ingress_controller" {
-  name         = "${data.template_file.stack_name.rendered}-k8s-ingress"
+  name         = "${format("%.20s-k8s-ingress", data.template_file.stack_name.rendered)}"
   subnets      = ["${data.terraform_remote_state.network.public_subnet_ids}"]
   idle_timeout = 600
 
