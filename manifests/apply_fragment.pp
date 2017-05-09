@@ -8,6 +8,7 @@ define kubernetes::apply_fragment(
   $systemd_after = [],
   $systemd_before = [],
   Enum['manifests','concat'] $type = 'manifests',
+  $order,
 ){
   require ::kubernetes
   require ::kubernetes::kubectl
