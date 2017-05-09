@@ -91,6 +91,19 @@ foreman_admin_password = "secure123"
 puppet_deploy_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDncOnSrQmQ+xZ0MLEEiCubalsBrZmaztkeC1CjVzJMbxlNCab9vkTGgzBdC9VgBk/DBagUbMqcBHZvz98ESOtrab/m3WPreTy4vMPqBt1LBORq4n9enIh/DUZqY4H6sY0y1e2wwgHthsXer5XgqkD6KkRCvgCggPZARYKKhjRQkai2p08e0U2SBcA6IC7lrZWZQTC6RToqXvRtjMxpd5t94SilnFfA42KJvnvaajH3NQqgFNilY+5uVjkQL88wb5uP/L7NrkZpZ2meDR0El4pHaZVjIf6dzyUcYn2+FMP5ux9Vfoab0RgWgq5L+25T2nZho3gwGtWNYGatYtfXq7Jrk/iaWAEWliOquIdiAXo5JAyc4CXZVvR3aK98/iHf0KWH0nqZcA/1PA071GnbKkDgCrHHauRNNtEsnF9076nz2m1jPSwoivsFtXo0j9siFITGy6IiAgts0EzGtLj5/pNlsy9Jw8UYpUmaeRny8kCwc79ZnPDVn6fNKOG/yODkNq2CjVyxrle3NYus3rNMT45+WGV930RnYlvzuzLIrAVRMjZxKFTp8+mNoNTyMbTBit9lBX8JNh2OT56OCeUWnoLh+DRTZ0B1+CY3TniAZlT6IbhB0ZprVUVGibAPPkXCkWTMJkese76Fm12Do7RSP0rghiQBlkL3SZFQG44tfOWm2w== puppetmaster"
 ```
 
+#### `tfvars/${ENVIRONMENT}/hub/vault.tfvars`
+
+- `consul_encypt` is a secret that is used by the Consul instances to secure
+  communication within the cluster. Generate a unique secret for every
+  environment using `openssl rand -base64 16`
+- `consul_master_token` is the token to authorize Vault against the consul
+  cluster. Generate for every environment using `uuidgen`
+
+```
+consul_encypt = "<16bytes-in-base64>"
+consul_master_token = "<UUID>"
+```
+
 ### Setup state hub
 
 ```
@@ -204,6 +217,42 @@ export JENKINS_USER=admin
 export JENKINS_PASSWORD=admin
 make clean build jenkins_initialize
 ```
+
+### Setup Vault in the Hub using Jenkins job
+
+* Run job `${ENVIRONMENT}/hub/terraform/vault`
+
+### Build puppet_code
+
+* Run job `${ENVIRONMENT}/puppet_code`
+
+
+### Setup first Cluster `devcluster`
+
+#### Setup parameters in `tfvars`
+
+##### `tfvars/${ENVIRONMENT}/devcluster/network.tfvars`
+
+* `network` to use for the cluster's VPC. Should be unique and non overlapping with other VPCs
+* `vpc_peer_stack` this line just tells to peer with the `hub`
+
+```
+network = "10.61.16.0/20"
+vpc_peer_stack = "hub"
+```
+
+##### `tfvars/${ENVIRONMENT}/devcluster/kubernetes.tfvars`
+
+* Just create an empty file for now:
+
+```
+
+```
+
+#### Setup cluster `devcluster` using Jenkins
+
+* Run job `${ENVIRONMENT}/devcluster/terraform/network`
+* Run job `${ENVIRONMENT}/devcluster/terraform/kubernetes`
 
 ## Known issues
 
