@@ -32,7 +32,6 @@ describe 'kubernetes::apply', :type => :define do
   context ' on kubernetes master' do
     let(:pre_condition) {[
       '
-      class kubernetes::apiserver
       include kubernetes::apiserver
       '
     ]}
