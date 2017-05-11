@@ -81,5 +81,32 @@ class{'kubernetes::worker':
       shell("/opt/bin/kubectl kubectl expose --namespace=#{namespace} deployment nginx --port=80")
       shell("/opt/bin/kubectl delete ns #{namespace}")
     end
+
+    context 'test kubectl::apply manifest, no tls' do
+      let :manifest_apply_pp do
+"
+include kubernetes::apiserver
+
+kubernetes::apply { 'hello':
+  type      => 'manifests',
+  manifests => ['kind: Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing']
+}
+"
+      end
+
+      it 'should apply a manifest correctly' do
+        hosts_as('k8s-master').each do |host|
+          apply_manifest_on(host, manifest_apply_pp, :catch_failures => true)
+          expect(
+            apply_manifest_on(host, manifest_apply_pp, :catch_failures => true).exit_code
+          ).to be_zero
+        end
+      end
+    end
+
+    context 'test kubectl::apply_fragment manifest, no tls' do
+      let :fragment_apply_pp do
+      end
+    end
   end
 end
