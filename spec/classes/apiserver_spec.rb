@@ -98,4 +98,27 @@ describe 'kubernetes::apiserver' do
       it { should contain_file(service_file).with_content(/#{Regexp.escape('--storage-backend=etcd2')}/)}
     end
   end
+
+  context 'authorization_mode' do
+    let :policy_file do
+      '/etc/kubernetes/kube-apiserver-abac-policy.json'
+    end
+
+    context 'default' do
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=ABAC')}/)}
+      it { should contain_file(service_file).with_content(/#{Regexp.escape("--authorization-policy-file=#{policy_file}")}/)}
+      it 'contains rules for important subjects' do
+        should contain_file(policy_file).with_content(/#{Regexp.escape('"kubelet"')}/)
+        should contain_file(policy_file).with_content(/#{Regexp.escape('"kube-controller-manager"')}/)
+        should contain_file(policy_file).with_content(/#{Regexp.escape('"kube-scheduler"')}/)
+        should contain_file(policy_file).with_content(/#{Regexp.escape('"admin"')}/)
+      end
+
+    end
+
+    context 'allow all' do
+      let(:params) { {'authorization_mode' => ['AlwaysAllow'] } }
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=AlwaysAllow')}/)}
+    end
+  end
 end

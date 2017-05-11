@@ -1,0 +1,11 @@
+# generic endpoints
+{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"group":"system:authenticated",  "nonResourcePath": "*", "readonly": true}}
+{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"group":"system:unauthenticated", "nonResourcePath": "*", "readonly": true}}
+# allow full access
+<% @abac_full_access_users.each do |user| -%>
+{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user":"<%= user %>", "namespace": "*", "resource": "*", "apiGroup": "*"}}
+<% end -%>
+# allow read-only access
+<% @abac_read_only_access_users.each do |user| -%>
+{"apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": {"user":"<%= user %>", "namespace": "*", "resource": "*", "apiGroup": "*", "readonly": true }}
+<% end -%>
