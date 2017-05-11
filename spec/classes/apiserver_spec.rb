@@ -112,8 +112,18 @@ describe 'kubernetes::apiserver' do
         should contain_file(policy_file).with_content(/#{Regexp.escape('"kube-controller-manager"')}/)
         should contain_file(policy_file).with_content(/#{Regexp.escape('"kube-scheduler"')}/)
         should contain_file(policy_file).with_content(/#{Regexp.escape('"admin"')}/)
+        should contain_file(policy_file).with_content(/#{Regexp.escape('generic endpoint')}/)
       end
 
+    end
+
+    context 'default before 1.5' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.4.0'}
+        """
+      ]}
+      it { should_not contain_file(policy_file).with_content(/#{Regexp.escape('generic endpoint')}/) }
     end
 
     context 'allow all' do
