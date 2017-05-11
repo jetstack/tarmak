@@ -75,6 +75,12 @@ class kubernetes::apiserver(
   }
 
   if member($authorization_mode, 'ABAC'){
+    if versioncmp($::kubernetes::version, '1.5.0') >= 0 {
+      $before_1_5 = false
+    } else {
+      $before_1_5 = true
+    }
+
     $authorization_policy_file = "${::kubernetes::config_dir}/${service_name}-abac-policy.json"
     file{$authorization_policy_file:
       ensure  => file,
