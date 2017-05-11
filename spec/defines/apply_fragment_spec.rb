@@ -11,8 +11,8 @@ describe 'kubernetes::apply_fragment', :type => :define do
 
   let :params do
     {
-      :manifests => [""],
-      :order     => "2",
+      :content => "world",
+      :order   => "2",
     }
   end
 
@@ -29,7 +29,6 @@ describe 'kubernetes::apply_fragment', :type => :define do
     it do
       should contain_concat__fragment("kubectl-apply-test1")
         #.with_content(/^Description=kubectl apply #{service_name}$/)
-      should contain_service(service_name)
     end
   end
 end
