@@ -102,6 +102,14 @@ kubernetes::apply { 'hello':
           ).to be_zero
         end
       end
+
+      it 'should have a testing namespace' do
+        result = shell('/opt/bin/kubectl get namespace testing')
+        logger.notify "kubectl get namespace testing:\n#{result.stdout}"
+        expect(result.exit_code).to eq(0)
+        expect(result.stdout.scan(/Active/m).size).to eq(1)
+        shell("/opt/bin/kubectl delete namespace testing")
+      end
     end
 
     context 'test kubectl::apply_fragment manifest, no tls' do
