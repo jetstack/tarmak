@@ -7,15 +7,14 @@ define kubernetes::apply_fragment(
   $systemd_requires = [],
   $systemd_after = [],
   $systemd_before = [],
-  Enum['manifests','concat'] $type = 'manifests',
   $order,
 ){
   require ::kubernetes
   require ::kubernetes::kubectl
 
-  if ! defined(Class['kubernetes::apiserver']) {
-    fail('This defined type can only be used on the kubernetes master')
-  }
+  #if ! defined(Class['kubernetes::apiserver']) {
+  #  fail('This defined type can only be used on the kubernetes master')
+  #}
 
   $service_apiserver = 'kube-apiserver.service'
 
@@ -30,31 +29,10 @@ define kubernetes::apply_fragment(
   $kubectl_path = "${::kubernetes::bin_dir}/kubectl"
   $curl_path = $::kubernetes::curl_path
 
-  case $type {
-    'manifests': {
-      file{$apply_file:
-        ensure  => file,
-        mode    => '0640',
-        owner   => 'root',
-        group   => $kubernetes::group,
-        content => $manifests_content,
-        notify  => Service["${service_name}.service"],
-      }
-    }
-    'concat': {
-      include concat
-      concat{$apply_file:
-        ensure  => present,
-        mode    => '0640',
-        owner   => 'root',
-        group   => $kubernetes::group,
-        content => $manifests_content,
-        notify  => Service["${service_name}.service"],
-      }
-    }
-    default: {
-      fail("Unknown type parameter: '${type}'")
-    }
+  concat::fragment { 'kubectl-apply-${name}':
+     target  => $apply_file,
+     content => $manifests_content,
+     order   => $order,
   }
 
   file{"${::kubernetes::systemd_dir}/${service_name}.service":
