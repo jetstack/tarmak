@@ -51,20 +51,20 @@ beaker::centos-7-k8s-1.6:
   <<: *beaker_definition
   only: []
   variables:
-    KUBERNETES_VERSION: 1.6.1
+    KUBERNETES_VERSION: 1.6.3
     TASK: beaker
 
 beaker::centos-7-k8s-1.5:
   <<: *beaker_definition
   only: []
   variables:
-    KUBERNETES_VERSION: 1.5.4
+    KUBERNETES_VERSION: 1.5.7
     TASK: beaker
 
 beaker::centos-7-k8s-1.4:
   <<: *beaker_definition
   variables:
-    KUBERNETES_VERSION: 1.4.9
+    KUBERNETES_VERSION: 1.4.12
     TASK: beaker
 
 beaker::centos-7-k8s-1.3:
