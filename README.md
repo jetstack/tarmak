@@ -248,6 +248,22 @@ class kubernetes::master
 * Type: `Any`
 * Default: `undef`
 
+##### `authorization_mode`
+
+* Type: `Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']]`
+* Default: `['ABAC']`
+
+##### `abac_full_access_users`
+
+* Type: `Array[String]`
+* Default: `['system:serviceaccount:kube-system:default', 'admin', 'kubelet',
+  'kube-scheduler', 'kube-controller-manager', 'kube-proxy', 'kube-apiserver']`
+
+##### `abac_read_only_access_users`
+
+* Type: `Array[String]`
+* Default: `['system:serviceaccount:monitoring:default']`
+
 
 ### `kubernetes::controller_manager`
 
@@ -447,6 +463,11 @@ class kubernetes::kubelet
 * Default: `undef`
 
 ##### `pod_cidr`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `hostname_override`
 
 * Type: `Any`
 * Default: `undef`

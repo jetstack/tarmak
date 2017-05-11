@@ -54,6 +54,12 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if @_storage_backend -%>
   --storage-backend=<%= @_storage_backend %> \
 <% end -%>
+<% if @authorization_mode.length > 0 -%>
+  --authorization-mode=<%= @authorization_mode.join(',') %> \
+<% end -%>
+<% if @authorization_policy_file -%>
+  --authorization-policy-file=<%= @authorization_policy_file %> \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure

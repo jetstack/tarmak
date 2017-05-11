@@ -18,6 +18,12 @@ class kubernetes::apiserver(
   $systemd_after = [],
   $systemd_before = [],
   $insecure_bind_address = undef,
+  Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $authorization_mode = ['ABAC'],
+  Array[String] $abac_full_access_users =
+  ['system:serviceaccount:kube-system:default', 'admin', 'kubelet',
+  'kube-scheduler', 'kube-controller-manager', 'kube-proxy', 'kube-apiserver'],
+  Array[String] $abac_read_only_access_users =
+  ['system:serviceaccount:monitoring:default'],
 )  {
   require ::kubernetes
 
@@ -66,6 +72,19 @@ class kubernetes::apiserver(
     $etcd_servers_overrides = [
       "/events#${etcd_events_servers}",
     ]
+  }
+
+  if member($authorization_mode, 'ABAC'){
+    $authorization_policy_file = "${::kubernetes::config_dir}/${service_name}-abac-policy.json"
+    file{$authorization_policy_file:
+      ensure  => file,
+      mode    => '0640',
+      owner   => 'root',
+      group   => $::kubernetes::params::group,
+      content => template("kubernetes/${service_name}-policy.json.erb"),
+      require => Kubernetes::Symlink['apiserver'],
+      notify  => Service["${service_name}.service"],
+    }
   }
 
   kubernetes::symlink{'apiserver':} ->
