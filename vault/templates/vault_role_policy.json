@@ -53,7 +53,7 @@
         "s3:PutObjectAcl"
       ],
       "Effect": "Allow",
-      "Resource":["arn:aws:s3:::${backup_bucket}/*"]
+      "Resource":["arn:aws:s3:::${backup_bucket_prefix}/*"]
     },
     {
       "Action": [

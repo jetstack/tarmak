@@ -28,7 +28,9 @@ data "template_file" "vault_policy" {
     volume_id   = "${element(aws_ebs_volume.vault.*.id, count.index)}"
     instance_id = "${element(aws_instance.vault.*.id, count.index)}"
 
-    backup_bucket         = "${aws_s3_bucket.vault-backup.bucket}"
+    backup_bucket_prefix = "${data.terraform_remote_state.state.backups_bucket}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
+    backup_bucket        = "${data.terraform_remote_state.state.backups_bucket}"
+
     secrets_bucket_prefix = "${data.terraform_remote_state.state.secrets_bucket}/vault-${var.environment}"
     kms_arn               = "${data.terraform_remote_state.state.secrets_kms_arn}"
     vault_unseal_key_name = "${data.template_file.vault_unseal_key_name.rendered}"
