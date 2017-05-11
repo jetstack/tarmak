@@ -11,8 +11,8 @@ describe 'kubernetes::apply_fragment', :type => :define do
 
   let :params do
     {
-      :manifests => ["asdf"],
-      :order     => "1",
+      :manifests => [""],
+      :order     => "2",
     }
   end
 
@@ -26,18 +26,10 @@ describe 'kubernetes::apply_fragment', :type => :define do
   end
 
   context 'running on kubernetes master' do
-    context 'type == concat' do
-      it do
-        should contain_service(service_name)
-        should contain_concat__fragment("/etc/systemd/system/#{service_name}")
-	    .with_content(/^Description=kubectl apply #{service_name}$/)
-        should contain_file("/etc/kubernetes/apply/#{title}.yaml")
-      end
-    end
-  end
-  context 'running on kubernetes master' do
-    context 'type == unknown' do
-      it { should compile.and_raise_error(/Unknown type parameter: 'unknown'/) }
+    it do
+      should contain_concat__fragment("kubectl-apply-test1")
+        #.with_content(/^Description=kubectl apply #{service_name}$/)
+      should contain_service(service_name)
     end
   end
 end
