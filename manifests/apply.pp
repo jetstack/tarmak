@@ -42,13 +42,19 @@ define kubernetes::apply(
     }
     'concat': {
       include concat
-      concat{$apply_file:
+      concat { $apply_file:
         ensure  => present,
         mode    => '0640',
         owner   => 'root',
         group   => $kubernetes::group,
         content => $manifests_content,
         notify  => Service["${service_name}.service"],
+      }
+
+      concat::fragment { "kubectl-apply-header":
+        target => $apply_file,
+        source => template("kubernetes/kube-fragment-header.erb"),
+        order  => '01',
       }
     }
     default: {
