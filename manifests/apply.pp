@@ -46,7 +46,6 @@ define kubernetes::apply(
         mode    => '0640',
         owner   => 'root',
         group   => $kubernetes::group,
-        content => $manifests_content,
         notify  => Service["${service_name}.service"],
       }
     }
