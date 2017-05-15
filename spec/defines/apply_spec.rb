@@ -21,10 +21,27 @@ describe 'kubernetes::apply', :type => :define do
 
   context 'running on kubernetes master' do
     context 'type == manifests' do
+      let :params do
+        {
+          :type => 'manifests',
+        }
+      end
       it do
         should contain_service(service_name)
         should contain_file("/etc/systemd/system/#{service_name}")
         should contain_file("/etc/kubernetes/apply/#{title}.yaml")
+      end
+    end
+    context 'type == concat' do
+      let :params do
+        {
+          :type => 'concat',
+        }
+      end
+      it do
+        should contain_service(service_name)
+        should contain_file("/etc/systemd/system/#{service_name}")
+        should contain_concat("/etc/kubernetes/apply/#{title}.yaml")
       end
     end
   end
