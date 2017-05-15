@@ -114,7 +114,54 @@ kubernetes::apply { 'hello':
 
     context 'test kubectl::apply_fragment manifest, no tls' do
       let :fragment_apply_pp do
+"
+include kubernetes::apiserver
+
+kubernetes::apply { 'hello':
+  type      => 'concat',
+}
+
+kubernetes::apply_fragment { 'hello-world-kind':
+  content => ['kind: Namespace'],
+  order   => '00',
+}
+
+kubernetes::apply_fragment { 'hello-world-apiVersion':
+  content => 'apiVersion: v1',
+  order   => '01',
+}
+
+kubernetes::apply_fragment { 'hello-world-metadata':
+  content => 'metadata:',
+  order   => '02',
+}
+
+kubernetes::apply_fragment { 'hello-world-metadata-name':
+  content => '  name: testing2',
+  order   => '03',
+}
+
+kubernetes::apply_fragment { 'hello-world-metadata-label':
+  content => '  labels:',
+  order   => '04',
+}
+
+kubernetes::apply_fragment { 'hello-world-metadata-labelname':
+  content => '    name: testing2',
+  order   => '05',
+}
+"
       end
+
+      it 'should apply a fragment manifest correctly' do
+        hosts_as('k8s-master').each do |host|
+          apply_manifest_on(host, fragment_apply_pp, :catch_failures => true)
+          expect(
+            apply_manifest_on(host, fragment_apply_pp, :catch_failures => true).exit_code
+          ).to be_zero
+        end
+      end
+
     end
   end
 end
