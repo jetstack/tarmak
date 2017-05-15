@@ -30,6 +30,7 @@ describe 'kubernetes::apply', :type => :define do
         should contain_service(service_name)
         should contain_file("/etc/systemd/system/#{service_name}")
         should contain_file("/etc/kubernetes/apply/#{title}.yaml")
+        should_not contain_concat("/etc/kubernetes/apply/#{title}.yaml")
       end
     end
     context 'type == concat' do
@@ -42,6 +43,7 @@ describe 'kubernetes::apply', :type => :define do
         should contain_service(service_name)
         should contain_file("/etc/systemd/system/#{service_name}")
         should contain_concat("/etc/kubernetes/apply/#{title}.yaml")
+        should_not contain_file("/etc/kubernetes/apply/#{title}.yaml")
       end
     end
   end
