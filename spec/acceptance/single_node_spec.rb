@@ -122,7 +122,7 @@ kubernetes::apply { 'hello':
 }
 
 kubernetes::apply_fragment { 'hello-world-kind':
-  content => ['kind: Namespace'],
+  content => 'kind: Namespace',
   order   => '00',
 }
 
