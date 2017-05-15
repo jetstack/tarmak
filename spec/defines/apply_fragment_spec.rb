@@ -27,7 +27,7 @@ describe 'kubernetes::apply_fragment', :type => :define do
 
   context 'running on kubernetes master' do
     it do
-      should contain_concat__fragment("kubectl-apply-#{title}")
+      should contain_concat__fragment("kubectl-apply-test1")
         .with_content(/^world$/)
     end
   end
