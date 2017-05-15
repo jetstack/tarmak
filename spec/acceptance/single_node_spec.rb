@@ -103,6 +103,8 @@ kubernetes::apply { 'hello':
         end
       end
 
+      # TODO: Test kubectl apply with file
+
       it 'should have a testing namespace' do
         result = shell('/opt/bin/kubectl get namespace testing')
         logger.notify "kubectl get namespace testing:\n#{result.stdout}"
@@ -159,6 +161,8 @@ kubernetes::apply_fragment { 'hello-world-metadata-labelname':
           expect(
             apply_manifest_on(host, fragment_apply_pp, :catch_failures => true).exit_code
           ).to be_zero
+
+          # TODO: Make sure the fragment is availale using kubectl get 
         end
       end
 
