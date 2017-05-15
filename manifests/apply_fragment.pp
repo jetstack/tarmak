@@ -13,7 +13,7 @@ define kubernetes::apply_fragment(
 
   $apply_file = "${::kubernetes::apply_dir}/${name}.${format}"
 
-  concat::fragment { "kubectl-apply-${title}":
+  concat::fragment { "kubectl-apply-${name}":
     target  => $apply_file,
     content => $content,
     order   => $order,
