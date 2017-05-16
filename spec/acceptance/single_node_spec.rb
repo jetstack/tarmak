@@ -117,7 +117,7 @@ kubernetes::apply { 'hello':
 "
 include kubernetes::apiserver
 
-kubernetes::apply { 'good-bye':
+kubernetes::apply { 'hello-invalid-namespace':
   type      => 'manifests',
   manifests => ['kind; Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing']
 }
@@ -128,6 +128,36 @@ kubernetes::apply { 'good-bye':
         hosts_as('k8s-master').each do |host|
           apply_manifest_on(host, invalid_manifest_apply_pp, :expect_failures => true)
         end
+      end
+    end
+
+    context 'test configmap kubectl::apply manifest, no tls' do
+      let :configmap_manifest_apply_pp do
+"
+include kubernetes::apiserver
+
+kubernetes::apply { 'configmap':
+  type      => 'manifests',
+  manifests => ['kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: configmap-test\n  labels:\n    name: configmap-test\ndata:\n  example.hello: world']
+}
+"
+      end
+
+      it 'should successfully apply configmap' do
+        hosts_as('k8s-master').each do |host|
+          apply_manifest_on(host, configmap_manifest_apply_pp, :catch_failures => true)
+          expect(
+            apply_manifest_on(host, configmap_manifest_apply_pp, :catch_failures => true).exit_code
+          ).to be_zero
+        end
+      end
+
+      it 'should have configured a configmap correctly' do
+        result = shell('/opt/bin/kubectl -n kube-system get configmap')
+        logger.notify "kubectl -n kube-system get configmap:\n#{result.stdout}"
+        expect(result.exit_code).to eq(0)
+        expect(result.stdout.scan(/configmap-test/m).size).to eq(1)
+        shell("/opt/bin/kubectl -n kube-system delete configmap configmap-test")
       end
     end
 
