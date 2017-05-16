@@ -161,9 +161,13 @@ kubernetes::apply_fragment { 'hello-world-metadata-labelname':
           expect(
             apply_manifest_on(host, fragment_apply_pp, :catch_failures => true).exit_code
           ).to be_zero
-
-          # TODO: Make sure the fragment is availale using kubectl get 
         end
+
+        result = shell('/opt/bin/kubectl get namespace testing2')
+        logger.notify "kubectl get namespace testing2:\n#{result.stdout}"
+        expect(result.exit_code).to eq(0)
+        expect(result.stdout.scan(/Active/m).size).to eq(1)
+        shell("/opt/bin/kubectl delete namespace testing2")
       end
 
     end
