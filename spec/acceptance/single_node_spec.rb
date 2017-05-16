@@ -103,14 +103,31 @@ kubernetes::apply { 'hello':
         end
       end
 
-      # TODO: Test kubectl apply with file
-
       it 'should have a testing namespace' do
         result = shell('/opt/bin/kubectl get namespace testing')
         logger.notify "kubectl get namespace testing:\n#{result.stdout}"
         expect(result.exit_code).to eq(0)
         expect(result.stdout.scan(/Active/m).size).to eq(1)
         shell("/opt/bin/kubectl delete namespace testing")
+      end
+    end
+
+    context 'test invalid kubectl::apply manifest, no tls' do
+      let :invalid_manifest_apply_pp do
+"
+include kubernetes::apiserver
+
+kubernetes::apply { 'good-bye':
+  type      => 'manifests',
+  manifests => ['kind; Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing']
+}
+"
+      end
+
+      it 'should error when it applies a manifest with a syntax error' do
+        hosts_as('k8s-master').each do |host|
+          apply_manifest_on(host, invalid_manifest_apply_pp, :expect_failures => true)
+        end
       end
     end
 
