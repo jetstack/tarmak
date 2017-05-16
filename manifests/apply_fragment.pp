@@ -2,8 +2,8 @@
 define kubernetes::apply_fragment(
   $content,
   $order,
-  $format = 'yaml',
   $target,
+  $format = 'yaml',
 ){
   require ::kubernetes
   require ::kubernetes::kubectl
