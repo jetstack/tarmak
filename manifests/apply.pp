@@ -42,12 +42,12 @@ define kubernetes::apply(
     }
     'concat': {
       concat { $apply_file:
-        ensure => present,
-        mode   => '0640',
-        owner  => 'root',
-        group  => $kubernetes::group,
-        path   => $apply_file,
-        notify => Service["${service_name}.service"],
+        ensure         => present,
+        ensure_newline => true,
+        mode           => '0640',
+        owner          => 'root',
+        group          => $kubernetes::group,
+        notify         => Service["${service_name}.service"],
       }
     }
     default: {
