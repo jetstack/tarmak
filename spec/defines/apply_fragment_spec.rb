@@ -13,6 +13,7 @@ describe 'kubernetes::apply_fragment', :type => :define do
     {
       :content => "world",
       :order   => "2",
+      :target  => "test1",
     }
   end
 
