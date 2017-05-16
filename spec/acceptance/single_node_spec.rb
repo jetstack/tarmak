@@ -119,38 +119,44 @@ kubernetes::apply { 'hello':
 "
 include kubernetes::apiserver
 
-kubernetes::apply { 'hello':
+kubernetes::apply { 'hello2':
   type      => 'concat',
 }
 
-kubernetes::apply_fragment { 'hello-world-kind':
+kubernetes::apply_fragment { 'hello2-kind':
   content => 'kind: Namespace',
   order   => '00',
+  target  => '/etc/kubernetes/apply/hello2.yaml',
 }
 
-kubernetes::apply_fragment { 'hello-world-apiVersion':
+kubernetes::apply_fragment { 'hello2-apiVersion':
   content => 'apiVersion: v1',
   order   => '01',
+  target  => '/etc/kubernetes/apply/hello2.yaml',
 }
 
-kubernetes::apply_fragment { 'hello-world-metadata':
+kubernetes::apply_fragment { 'hello2-metadata':
   content => 'metadata:',
   order   => '02',
+  target  => '/etc/kubernetes/apply/hello2.yaml',
 }
 
-kubernetes::apply_fragment { 'hello-world-metadata-name':
+kubernetes::apply_fragment { 'hello2-metadata-name':
   content => '  name: testing2',
   order   => '03',
+  target  => '/etc/kubernetes/apply/hello2.yaml',
 }
 
-kubernetes::apply_fragment { 'hello-world-metadata-label':
+kubernetes::apply_fragment { 'hello2-metadata-label':
   content => '  labels:',
   order   => '04',
+  target  => '/etc/kubernetes/apply/hello2.yaml',
 }
 
-kubernetes::apply_fragment { 'hello-world-metadata-labelname':
+kubernetes::apply_fragment { 'hello2-metadata-labelname':
   content => '    name: testing2',
   order   => '05',
+  target  => '/etc/kubernetes/apply/hello2.yaml',
 }
 "
       end
@@ -162,14 +168,15 @@ kubernetes::apply_fragment { 'hello-world-metadata-labelname':
             apply_manifest_on(host, fragment_apply_pp, :catch_failures => true).exit_code
           ).to be_zero
         end
+      end
 
+      it 'should have configured a namespace from fragments correctly' do
         result = shell('/opt/bin/kubectl get namespace testing2')
         logger.notify "kubectl get namespace testing2:\n#{result.stdout}"
         expect(result.exit_code).to eq(0)
         expect(result.stdout.scan(/Active/m).size).to eq(1)
         shell("/opt/bin/kubectl delete namespace testing2")
       end
-
     end
   end
 end
