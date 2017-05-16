@@ -3,6 +3,7 @@ define kubernetes::apply_fragment(
   $content,
   $order,
   $format = 'yaml',
+  $target,
 ){
   require ::kubernetes
   require ::kubernetes::kubectl
@@ -14,7 +15,7 @@ define kubernetes::apply_fragment(
   $apply_file = "${::kubernetes::apply_dir}/${name}.${format}"
 
   concat::fragment { "kubectl-apply-${name}":
-    target  => $apply_file,
+    target  => $target,
     content => $content,
     order   => $order,
   }
