@@ -621,6 +621,35 @@ adds resources to a kubernetes master
 * Type: `Any`
 * Default: `[]`
 
+##### `type`
+
+* Type: `Enum['manifests','concat']`
+* Default: `'manifests'`
+
+
+### `kubernetes::apply_fragment`
+
+Concat fragment for apply
+
+#### Parameters
+
+##### `content`
+
+* Type: `Any`
+
+##### `order`
+
+* Type: `Any`
+
+##### `target`
+
+* Type: `Any`
+
+##### `format`
+
+* Type: `Any`
+* Default: `'yaml'`
+
 
 ### `kubernetes::symlink`
 
