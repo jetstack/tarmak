@@ -7,6 +7,7 @@ define kubernetes::apply(
   $systemd_requires = [],
   $systemd_after = [],
   $systemd_before = [],
+  Enum['manifests','concat'] $type = 'manifests',
 ){
   require ::kubernetes
   require ::kubernetes::kubectl
@@ -28,13 +29,30 @@ define kubernetes::apply(
   $kubectl_path = "${::kubernetes::bin_dir}/kubectl"
   $curl_path = $::kubernetes::curl_path
 
-  file{$apply_file:
-    ensure  => file,
-    mode    => '0640',
-    owner   => 'root',
-    group   => $kubernetes::group,
-    content => $manifests_content,
-    notify  => Service["${service_name}.service"],
+  case $type {
+    'manifests': {
+      file{$apply_file:
+        ensure  => file,
+        mode    => '0640',
+        owner   => 'root',
+        group   => $kubernetes::group,
+        content => $manifests_content,
+        notify  => Service["${service_name}.service"],
+      }
+    }
+    'concat': {
+      concat { $apply_file:
+        ensure         => present,
+        ensure_newline => true,
+        mode           => '0640',
+        owner          => 'root',
+        group          => $kubernetes::group,
+        notify         => Service["${service_name}.service"],
+      }
+    }
+    default: {
+      fail("Unknown type parameter: '${type}'")
+    }
   }
 
   file{"${::kubernetes::systemd_dir}/${service_name}.service":
