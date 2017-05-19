@@ -18,7 +18,6 @@ class kubernetes::apiserver(
   $systemd_after = [],
   $systemd_before = [],
   $insecure_bind_address = undef,
-  Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $authorization_mode = ['ABAC'],
   Array[String] $abac_full_access_users =
   ['system:serviceaccount:kube-system:default', 'admin', 'kubelet',
   'kube-scheduler', 'kube-controller-manager', 'kube-proxy', 'kube-apiserver'],
@@ -74,6 +73,7 @@ class kubernetes::apiserver(
     ]
   }
 
+  $authorization_mode = $kubernetes::_authorization_mode
   if member($authorization_mode, 'ABAC'){
     if versioncmp($::kubernetes::version, '1.5.0') >= 0 {
       $before_1_5 = false

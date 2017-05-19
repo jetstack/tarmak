@@ -100,11 +100,35 @@ describe 'kubernetes::apiserver' do
   end
 
   context 'authorization_mode' do
+    let :kubernetes_version do
+      '1.6.2'
+    end
+
+    let :authorization_mode do
+      '[]'
+    end
+
+    let(:pre_condition) {[
+      """
+        class{'kubernetes':
+          version => '#{kubernetes_version}',
+          authorization_mode => #{authorization_mode},
+        }
+      """
+    ]}
+
     let :policy_file do
       '/etc/kubernetes/kube-apiserver-abac-policy.json'
     end
 
-    context 'default' do
+    context 'default k8s version 1.6+' do
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=RBAC')}/)}
+      it { should_not contain_file(service_file).with_content(/#{Regexp.escape("--authorization-policy-file=#{policy_file}")}/)}
+      it { should_not contain_file(policy_file) }
+    end
+
+    context 'default k8s version 1.5.x' do
+      let(:kubernetes_version) { '1.5.7' }
       it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=ABAC')}/)}
       it { should contain_file(service_file).with_content(/#{Regexp.escape("--authorization-policy-file=#{policy_file}")}/)}
       it 'contains rules for important subjects' do
@@ -114,20 +138,15 @@ describe 'kubernetes::apiserver' do
         should contain_file(policy_file).with_content(/#{Regexp.escape('"admin"')}/)
         should contain_file(policy_file).with_content(/#{Regexp.escape('generic endpoint')}/)
       end
-
     end
 
-    context 'default before 1.5' do
-      let(:pre_condition) {[
-        """
-        class{'kubernetes': version => '1.4.0'}
-        """
-      ]}
+    context 'default k8s version before 1.5' do
+      let(:kubernetes_version) { '1.4.3' }
       it { should_not contain_file(policy_file).with_content(/#{Regexp.escape('generic endpoint')}/) }
     end
 
     context 'allow all' do
-      let(:params) { {'authorization_mode' => ['AlwaysAllow'] } }
+      let(:authorization_mode) { '[\'AlwaysAllow\']' }
       it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=AlwaysAllow')}/)}
     end
   end

@@ -27,8 +27,22 @@ class kubernetes (
   $allow_privileged = true,
   $service_account_key_file = undef,
   $service_account_key_generate = false,
+  Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $authorization_mode = [],
 ) inherits ::kubernetes::params
 {
+
+  # detect authorization mode
+  if $authorization_mode == [] {
+    # enable RBAC after 1.6+
+    if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+      $_authorization_mode = ['RBAC']
+    } else {
+      $_authorization_mode = ['ABAC']
+    }
+  } else {
+    $_authorization_mode = $authorization_mode
+  }
+
   $download_url = regsubst(
     $::kubernetes::params::download_url,
     '#VERSION#',

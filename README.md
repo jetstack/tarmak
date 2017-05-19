@@ -151,6 +151,11 @@ Class: kubernetes
 * Type: `Any`
 * Default: `false`
 
+##### `authorization_mode`
+
+* Type: `Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']]`
+* Default: `[]`
+
 
 ### `kubernetes::apiserver`
 
@@ -247,11 +252,6 @@ class kubernetes::master
 
 * Type: `Any`
 * Default: `undef`
-
-##### `authorization_mode`
-
-* Type: `Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']]`
-* Default: `['ABAC']`
 
 ##### `abac_full_access_users`
 
