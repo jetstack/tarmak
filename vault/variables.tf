@@ -40,11 +40,11 @@ variable "region" {
 }
 
 variable "consul_version" {
-  default = "0.7.5"
+  default = "0.8.3"
 }
 
 variable "vault_version" {
-  default = "0.6.5"
+  default = "0.7.2"
 }
 
 variable "vault_root_size" {
