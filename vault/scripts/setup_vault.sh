@@ -46,9 +46,18 @@ for component in ${COMPONENTS}; do
   fi
   # if it's k8s
   if [[ "${component}" == "k8s" ]]; then
-    for role in admin kube-scheduler kube-controller-manager kube-proxy; do
+    vault write "${path}/roles/admin" \
+      allowed_domains="admin" \
+      allow_bare_domains=true \
+      allow_localhost=false \
+      allow_subdomains=false \
+      allow_ip_sans=false \
+      server_flag=false \
+      client_flag=true \
+      max_ttl="720h"
+    for role in kube-scheduler kube-controller-manager kube-proxy; do
       vault write "${path}/roles/${role}" \
-        allowed_domains="${role}" \
+        allowed_domains="${role},system:${role}" \
         allow_bare_domains=true \
         allow_localhost=false \
         allow_subdomains=false \
@@ -58,8 +67,9 @@ for component in ${COMPONENTS}; do
         max_ttl="720h"
     done
       vault write "${path}/roles/kubelet" \
-        allowed_domains="kubelet" \
+        allowed_domains="kubelet,system:node:*" \
         allow_bare_domains=true \
+        allow_glob_domains=true \
         allow_localhost=false \
         allow_subdomains=false \
         allow_ip_sans=true \
