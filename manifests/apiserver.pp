@@ -17,6 +17,7 @@ class kubernetes::apiserver(
   $systemd_requires = [],
   $systemd_after = [],
   $systemd_before = [],
+  $runtime_config = [],
   $insecure_bind_address = undef,
   Array[String] $abac_full_access_users = [],
   Array[String] $abac_read_only_access_users = [],
@@ -68,6 +69,18 @@ class kubernetes::apiserver(
     $etcd_servers_overrides = [
       "/events#${etcd_events_servers}",
     ]
+  }
+
+  if $runtime_config != [] {
+    if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+      $_runtime_config = [
+        'api/rbac.authorization.k8s.io/v1alpha1=true'
+      ]
+    } else {
+      $_runtime_config = []
+    }
+  } else {
+    $_runtime_config = $runtime_config
   }
 
   $authorization_mode = $kubernetes::_authorization_mode

@@ -99,6 +99,41 @@ describe 'kubernetes::apiserver' do
     end
   end
 
+  context 'runtime_config' do
+    let :kubernetes_version do
+      '1.6.2'
+    end
+
+    let :authorization_mode do
+      '[\'RBAC\']'
+    end
+
+    let(:pre_condition) {[
+      """
+        class{'kubernetes':
+          version => '#{kubernetes_version}',
+          authorization_mode => #{authorization_mode},
+        }
+      """
+    ]}
+
+    context 'default' do
+      it 'should not set a runtime config' do
+        should_not contain_file(service_file).with_content(/#{Regexp.escape('--runtime-config=')}/)
+      end
+    end
+
+    context 'RBAC before 1.6.0' do
+      let :kubernetes_version do
+        '1.5.7'
+      end
+
+      it 'should activate RBAC API via a runtime config' do
+        should_not contain_file(service_file).with_content(/#{Regexp.escape('--runtime-config=')}/)
+      end
+    end
+  end
+
   context 'authorization_mode' do
     let :kubernetes_version do
       '1.6.2'
