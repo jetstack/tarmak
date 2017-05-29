@@ -248,6 +248,11 @@ class kubernetes::master
 * Type: `Any`
 * Default: `[]`
 
+##### `runtime_config`
+
+* Type: `Any`
+* Default: `[]`
+
 ##### `insecure_bind_address`
 
 * Type: `Any`
@@ -256,13 +261,12 @@ class kubernetes::master
 ##### `abac_full_access_users`
 
 * Type: `Array[String]`
-* Default: `['system:serviceaccount:kube-system:default', 'admin', 'kubelet',
-  'kube-scheduler', 'kube-controller-manager', 'kube-proxy', 'kube-apiserver']`
+* Default: `[]`
 
 ##### `abac_read_only_access_users`
 
 * Type: `Array[String]`
-* Default: `['system:serviceaccount:monitoring:default']`
+* Default: `[]`
 
 
 ### `kubernetes::controller_manager`
@@ -316,42 +320,32 @@ class kubernetes::master
 ##### `image`
 
 * Type: `Any`
-* Default: `'gcr.io/google_containers/kubedns-amd64'`
+* Default: `'gcr.io/google_containers/k8s-dns-kube-dns-amd64'`
 
 ##### `version`
 
 * Type: `Any`
-* Default: `'1.9'`
+* Default: `'1.14.2'`
 
 ##### `dnsmasq_image`
 
 * Type: `Any`
-* Default: `'gcr.io/google_containers/kube-dnsmasq-amd64'`
+* Default: `'gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64'`
 
 ##### `dnsmasq_version`
 
 * Type: `Any`
-* Default: `'1.4'`
+* Default: `'1.14.2'`
 
-##### `dnsmasq_metrics_image`
-
-* Type: `Any`
-* Default: `'gcr.io/google_containers/dnsmasq-metrics-amd64'`
-
-##### `dnsmasq_metrics_version`
+##### `sidecar_image`
 
 * Type: `Any`
-* Default: `'1.0'`
+* Default: `'gcr.io/google_containers/k8s-dns-sidecar-amd64'`
 
-##### `exechealthz_image`
-
-* Type: `Any`
-* Default: `'gcr.io/google_containers/exechealthz-amd64'`
-
-##### `exechealthz_version`
+##### `sidecar_version`
 
 * Type: `Any`
-* Default: `'1.2'`
+* Default: `'1.14.2'`
 
 ##### `autoscaler_image`
 
@@ -361,7 +355,7 @@ class kubernetes::master
 ##### `autoscaler_version`
 
 * Type: `Any`
-* Default: `'1.0.0'`
+* Default: `'1.1.1-r2'`
 
 ##### `min_replicas`
 
@@ -525,6 +519,11 @@ class kubernetes::kubelet
 
 * Type: `Any`
 * Default: `undef`
+
+
+### `kubernetes::rbac`
+
+This class manages RBAC manifests
 
 
 ### `kubernetes::scheduler`
