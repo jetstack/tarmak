@@ -7,15 +7,13 @@ CONFIG_FILE=<%= scope['vault_client::config_path'] %>
 INIT_TOKEN_FILE=<%= scope['vault_client::init_token_path'] %>
 TOKEN_FILE=<%= scope['vault_client::token_path'] %>
 
-export VAULT_CAPATH=<%= @ca_cert_path %>
-
 VAULT_CERT_TYPE=${VAULT_CERT_TYPE:-rsa}
 VAULT_CERT_BITS=${VAULT_CERT_BITS:-2048}
 VAULT_CERT_OWNER=${VAULT_CERT_OWNER:-root:root}
 
 function config {
     source $CONFIG_FILE
-    export VAULT_ADDR
+    export VAULT_ADDR VAULT_CAPATH
     if [ ! -f ${TOKEN_FILE} ]; then
         token_new
     else
