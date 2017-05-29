@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'kubernetes::rbac' do
   let :crb_system_node_file do
-    '/etc/kubernetes/apply/puppernetes-rbac-system-node.yaml'
+    '/etc/kubernetes/apply/puppernetes-rbac.yaml'
   end
 
   context 'with RBAC' do
@@ -23,6 +23,7 @@ describe 'kubernetes::rbac' do
         class{'kubernetes::master':}
         """
       ]}
+      it { should contain_file(crb_system_node_file).with_content(%r{cluster-admin}) }
       it { should contain_file(crb_system_node_file).with_content(%r{system:node}) }
     end
   end
