@@ -56,6 +56,7 @@ for component in ${COMPONENTS}; do
     ${VAULT_CMD} write "${path}/roles/admin" \
       use_csr_common_name=false \
       enforce_hostnames=false \
+      organization=system:masters \
       allowed_domains="admin" \
       allow_bare_domains=true \
       allow_localhost=false \
@@ -81,6 +82,7 @@ for component in ${COMPONENTS}; do
         use_csr_common_name=false \
         use_csr_sans=false \
         enforce_hostnames=false \
+        organization=system:nodes \
         allowed_domains="kubelet,system:node,system:node:*" \
         allow_bare_domains=true \
         allow_glob_domains=true \
