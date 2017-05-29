@@ -44,8 +44,8 @@ RUN curl -sL  https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAUL
     chmod +x /usr/local/bin/vault
 
 # install kubectl
-ENV KUBECTL_VERSION 1.5.3
-ENV KUBECTL_HASH 9cfc6cfb959d934cc8080c2dea1e5a6490fd29e592718c5b2b2cfda5f92e787e
+ENV KUBECTL_VERSION 1.5.7
+ENV KUBECTL_HASH e417cc7a500a3a9162198b649dce115e0c84fde646e302e10cdac918acff18bc
 RUN curl -sL https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl > /usr/local/bin/kubectl && \
     echo "${KUBECTL_HASH}  /usr/local/bin/kubectl" | sha256sum  -c && \
     chmod +x /usr/local/bin/kubectl
