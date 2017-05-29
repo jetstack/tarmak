@@ -33,8 +33,8 @@ class puppernetes::etcd(
   vault_client::cert_service { 'etcd-k8s-main':
     base_path   => "${::puppernetes::etcd_ssl_dir}/${::puppernetes::etcd_k8s_main_ca_name}",
     common_name => 'etcd-server',
-    alt_names   => $alt_names.join(','),
-    ip_sans     => $ip_sans.join(','),
+    alt_names   => $alt_names,
+    ip_sans     => $ip_sans,
     role        => "${puppernetes::cluster_name}/pki/${::puppernetes::etcd_k8s_main_ca_name}/sign/server",
     user        => $::puppernetes::etcd_user,
     exec_post   => [
@@ -45,8 +45,8 @@ class puppernetes::etcd(
   vault_client::cert_service { 'etcd-k8s-overlay':
     base_path   => "${::puppernetes::etcd_ssl_dir}/${::puppernetes::etcd_overlay_ca_name}",
     common_name => 'etcd-server',
-    alt_names   => $alt_names.join(','),
-    ip_sans     => $ip_sans.join(','),
+    alt_names   => $alt_names,
+    ip_sans     => $ip_sans,
     role        => "${puppernetes::cluster_name}/pki/${::puppernetes::etcd_overlay_ca_name}/sign/server",
     user        => $::puppernetes::etcd_user,
     require     => [ User[$::puppernetes::etcd_user], File[$::puppernetes::etcd_ssl_dir] ],

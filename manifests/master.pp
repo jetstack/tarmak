@@ -57,8 +57,8 @@ class puppernetes::master(
     common_name => 'kube-apiserver',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-apiserver",
     user        => $::puppernetes::kubernetes_user,
-    ip_sans     => $apiserver_ip_sans.join(','),
-    alt_names   => $apiserver_alt_names.join(','),
+    ip_sans     => $apiserver_ip_sans,
+    alt_names   => $apiserver_alt_names,
     exec_post   => [
       "-${::puppernetes::systemctl_path} --no-block try-restart kube-apiserver.service"
     ],
@@ -78,8 +78,8 @@ class puppernetes::master(
     common_name => 'etcd-client',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::etcd_k8s_main_ca_name}/sign/client",
     user        => $::puppernetes::kubernetes_user,
-    ip_sans     => $::puppernetes::ipaddress,
-    alt_names   => "${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}",
+    ip_sans     => [$::puppernetes::ipaddress],
+    alt_names   => ["${::hostname}.${::puppernetes::cluster_name}.${::puppernetes::dns_root}"],
     exec_post   => [
       "-${::puppernetes::systemctl_path} --no-block try-restart kube-apiserver.service"
     ],

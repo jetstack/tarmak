@@ -13,7 +13,6 @@
 # @param dest_dir path to installation directory for components
 # @param bin_dir path to the binary directory for components
 # @param cluster_name a DNS compatible name for the cluster
-# @param vault_version vault version to use (deprecated)
 # @param systemctl_path absoulute path to systemctl binary
 # @param role which role to build
 # @param kubernetes_version Kubernetes version to install
