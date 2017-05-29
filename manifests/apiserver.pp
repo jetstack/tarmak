@@ -77,7 +77,7 @@ class kubernetes::apiserver(
   if $runtime_config == [] {
     if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') < 0 {
       $_runtime_config = [
-        'api/rbac.authorization.k8s.io/v1alpha1=true'
+        'rbac.authorization.k8s.io/v1alpha1=true'
       ]
     } else {
       $_runtime_config = []
