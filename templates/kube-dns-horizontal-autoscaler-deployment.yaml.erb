@@ -27,7 +27,9 @@ spec:
         k8s-app: kube-dns-autoscaler
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
+<%- if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+<%- end -%>
     spec:
       containers:
       - name: autoscaler
@@ -40,11 +42,18 @@ spec:
           - /cluster-proportional-autoscaler
           - --namespace=kube-system
           - --configmap=kube-dns-autoscaler
-          - --mode=linear
           # Should keep target in sync with cluster/addons/dns/kubedns-controller.yaml.base
           - --target=Deployment/kube-dns
           # When cluster is using large nodes(with more cores), "coresPerReplica" should dominate.
           # If using small nodes, "nodesPerReplica" should dominate.
-          - --default-params={"linear":{"coresPerReplica":256,"nodesPerReplica":16,"min":<%= @min_replicas %>}}
+          - --default-params={"linear":{"coresPerReplica":256,"nodesPerReplica":16,"min":<%= @min_replicas %>,"preventSinglePointFailure":true}}
           - --logtostderr=true
           - --v=2
+<%- unless @version_before_1_6 -%>
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+<%- end -%>
+<%- if @rbac_enabled -%>
+      serviceAccountName: kube-dns-autoscaler
+<%- end -%>
