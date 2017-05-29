@@ -32,7 +32,7 @@ class puppernetes::master(
   $controller_manager_base_path = "${::puppernetes::kubernetes_ssl_dir}/kube-controller-manager"
   vault_client::cert_service { 'kube-controller-manager':
     base_path   => $controller_manager_base_path,
-    common_name => 'kube-controller-manager',
+    common_name => 'system:kube-controller-manager',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-controller-manager",
     user        => $::puppernetes::kubernetes_user,
     exec_post   => [
@@ -43,7 +43,7 @@ class puppernetes::master(
   $scheduler_base_path = "${::puppernetes::kubernetes_ssl_dir}/kube-scheduler"
   vault_client::cert_service { 'kube-scheduler':
     base_path   => $scheduler_base_path,
-    common_name => 'kube-scheduler',
+    common_name => 'system:kube-scheduler',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-scheduler",
     user        => $::puppernetes::kubernetes_user,
     exec_post   => [
@@ -54,7 +54,7 @@ class puppernetes::master(
   $apiserver_base_path = "${::puppernetes::kubernetes_ssl_dir}/kube-apiserver"
   vault_client::cert_service { 'kube-apiserver':
     base_path   => $apiserver_base_path,
-    common_name => 'kube-apiserver',
+    common_name => 'system:kube-apiserver',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-apiserver",
     user        => $::puppernetes::kubernetes_user,
     ip_sans     => $apiserver_ip_sans,

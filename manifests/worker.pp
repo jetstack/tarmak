@@ -5,7 +5,7 @@ class puppernetes::worker {
   $proxy_base_path = "${::puppernetes::kubernetes_ssl_dir}/kube-proxy"
   vault_client::cert_service { 'kube-proxy':
     base_path   => $proxy_base_path,
-    common_name => 'kube-proxy',
+    common_name => 'system:kube-proxy',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-proxy",
     user        => $::puppernetes::kubernetes_user,
     require     => [
@@ -20,7 +20,7 @@ class puppernetes::worker {
   $kubelet_base_path = "${::puppernetes::kubernetes_ssl_dir}/kubelet"
   vault_client::cert_service { 'kubelet':
     base_path   => $kubelet_base_path,
-    common_name => 'kubelet',
+    common_name => "system:node:${::puppernetes::hostname}",
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kubelet",
     user        => $::puppernetes::kubernetes_user,
     require     => [
