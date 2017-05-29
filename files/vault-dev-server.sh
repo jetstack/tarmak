@@ -13,7 +13,7 @@ function server {
 
 function download {
     if [ ! -x /tmp/vault-dev-bin  ]; then
-        curl -sL -o /tmp/vault-dev.zip https://releases.hashicorp.com/vault/0.6.5/vault_0.6.5_linux_amd64.zip
+        curl -sL -o /tmp/vault-dev.zip https://releases.hashicorp.com/vault/0.7.2/vault_0.7.2_linux_amd64.zip
         unzip /tmp/vault-dev.zip -d /tmp
         mv /tmp/vault ${VAULT_CMD}
         chmod +x ${VAULT_CMD}
