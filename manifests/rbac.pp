@@ -4,9 +4,9 @@ class kubernetes::rbac{
 
   $authorization_mode = $kubernetes::_authorization_mode
   if member($authorization_mode, 'RBAC'){
-    kubernetes::apply{'puppernetes-rbac-system-node':
+    kubernetes::apply{'puppernetes-rbac':
       manifests => [
-        template('kubernetes/rbac-crb-system-node.yaml.erb'),
+        template('kubernetes/puppernetes-rbac.yaml.erb'),
       ],
     }
   }
