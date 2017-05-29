@@ -4,6 +4,7 @@ class puppernetes::single_node(
   String $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
   String $kubernetes_api_url = nil,
   String $kubernetes_version = $puppernetes::params::kubernetes_version,
+  Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $kubernetes_authorization_mode = [],
 ) inherits puppernetes::params{
   ensure_resource('class', '::puppernetes',{
     dns_root                      => $dns_root,
@@ -11,6 +12,7 @@ class puppernetes::single_node(
     etcd_advertise_client_network => $etcd_advertise_client_network,
     kubernetes_api_url            => $kubernetes_api_url,
     kubernetes_version            => $kubernetes_version,
+    kubernetes_authorization_mode => $kubernetes_authorization_mode,
     etcd_cluster                  => ["${::hostname}.${cluster_name}.${dns_root}"],
     etcd_instances                => 1,
   })

@@ -37,7 +37,7 @@ class{'puppernetes::single_node':
   etcd_advertise_client_network => '10.0.0.0/8',
   kubernetes_api_url            => 'https://#{$ip}:6443',
   kubernetes_version            => '#{kubernetes_version}',
-  kubernetes_authorization_mode => '#{kubernetes_authorization_mode}',
+  kubernetes_authorization_mode => #{kubernetes_authorization_mode},
 }
 
 
