@@ -122,9 +122,9 @@ describe 'kubernetes::apiserver' do
     end
 
     context 'default k8s version 1.6+' do
-      it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=RBAC')}/)}
-      it { should_not contain_file(service_file).with_content(/#{Regexp.escape("--authorization-policy-file=#{policy_file}")}/)}
-      it { should_not contain_file(policy_file) }
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=ABAC,RBAC')}/)}
+      it { should contain_file(service_file).with_content(/#{Regexp.escape("--authorization-policy-file=#{policy_file}")}/)}
+      it { should contain_file(policy_file).with_content(/#{Regexp.escape('"admin"')}/) }
     end
 
     context 'default k8s version 1.5.x' do
@@ -145,9 +145,16 @@ describe 'kubernetes::apiserver' do
       it { should_not contain_file(policy_file).with_content(/#{Regexp.escape('generic endpoint')}/) }
     end
 
-    context 'allow all' do
+    context 'set to AlwaysAllow' do
       let(:authorization_mode) { '[\'AlwaysAllow\']' }
       it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=AlwaysAllow')}/)}
+    end
+
+    context 'set to RBAC' do
+      let(:authorization_mode) { '[\'RBAC\']' }
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=RBAC ')}/)}
+      it { should_not contain_file(service_file).with_content(/#{Regexp.escape("--authorization-policy-file=#{policy_file}")}/)}
+      it { should_not contain_file(policy_file) }
     end
   end
 end

@@ -18,11 +18,8 @@ class kubernetes::apiserver(
   $systemd_after = [],
   $systemd_before = [],
   $insecure_bind_address = undef,
-  Array[String] $abac_full_access_users =
-  ['system:serviceaccount:kube-system:default', 'admin', 'kubelet',
-  'kube-scheduler', 'kube-controller-manager', 'kube-proxy', 'kube-apiserver'],
-  Array[String] $abac_read_only_access_users =
-  ['system:serviceaccount:monitoring:default'],
+  Array[String] $abac_full_access_users = [],
+  Array[String] $abac_read_only_access_users = [],
 )  {
   require ::kubernetes
 
@@ -74,11 +71,46 @@ class kubernetes::apiserver(
   }
 
   $authorization_mode = $kubernetes::_authorization_mode
+
+  # if ABAC is enabled
   if member($authorization_mode, 'ABAC'){
-    if versioncmp($::kubernetes::version, '1.5.0') >= 0 {
-      $before_1_5 = false
+
+    # if no full access users are set, set sensible defaults
+    if $abac_full_access_users == [] {
+      if member($authorization_mode, 'RBAC'){
+        $_abac_full_access_users = [
+          'admin',
+        ]
+      } else {
+        $_abac_full_access_users = [
+          'system:serviceaccount:kube-system:default',
+          'admin',
+          'kubelet',
+          'kube-scheduler',
+          'kube-controller-manager',
+          'kube-proxy',
+          'kube-apiserver'
+        ]
+      }
     } else {
-      $before_1_5 = true
+      $_abac_full_access_users = $abac_full_access_users
+    }
+
+    # if no read only users are set, set sensible defaults
+    if $abac_read_only_access_users == [] {
+      if member($authorization_mode, 'RBAC'){
+        $_abac_read_only_access_users = []
+      } else {
+        $_abac_read_only_access_users = ['system:serviceaccount:monitoring:default']
+      }
+    } else {
+      $_abac_read_only_access_users = $abac_read_only_access_users
+    }
+
+    if versioncmp($::kubernetes::version, '1.5.0') >= 0 {
+      $abac_supports_groups = true
+    } else {
+      $abac_supports_groups = false
     }
 
     $authorization_policy_file = "${::kubernetes::config_dir}/${service_name}-abac-policy.json"

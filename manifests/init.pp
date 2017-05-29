@@ -35,7 +35,7 @@ class kubernetes (
   if $authorization_mode == [] {
     # enable RBAC after 1.6+
     if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
-      $_authorization_mode = ['RBAC']
+      $_authorization_mode = ['ABAC','RBAC']
     } else {
       $_authorization_mode = ['ABAC']
     }
