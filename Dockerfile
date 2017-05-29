@@ -34,8 +34,8 @@ RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terr
     chmod +x /usr/local/bin/terraform
 
 # install vault
-ENV VAULT_VERSION 0.6.5
-ENV VAULT_HASH c9d414a63e9c4716bc9270d46f0a458f0e9660fd576efb150aede98eec16e23e
+ENV VAULT_VERSION 0.7.2
+ENV VAULT_HASH 22575dbb8b375ece395b58650b846761dffbf5a9dc5003669cafbb8731617c39
 RUN curl -sL  https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip > /tmp/vault.zip && \
     echo "${VAULT_HASH}  /tmp/vault.zip" | sha256sum  -c && \
     unzip /tmp/vault.zip && \
