@@ -85,7 +85,8 @@ class kubernetes::apiserver(
         $_abac_full_access_users = [
           'system:serviceaccount:kube-system:default',
           'admin',
-          'system:kubelet',
+          'system:node',
+          'system:node:*',
           'system:kube-scheduler',
           'system:kube-controller-manager',
           'system:kube-proxy',
