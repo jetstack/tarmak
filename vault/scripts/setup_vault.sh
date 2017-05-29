@@ -52,6 +52,7 @@ for component in ${COMPONENTS}; do
   if [[ "${component}" == "k8s" ]]; then
     ${VAULT_CMD} write "${path}/roles/admin" \
       use_csr_common_name=false \
+      enforce_hostnames=false \
       allowed_domains="admin" \
       allow_bare_domains=true \
       allow_localhost=false \
@@ -63,6 +64,7 @@ for component in ${COMPONENTS}; do
     for role in kube-scheduler kube-controller-manager kube-proxy; do
       ${VAULT_CMD} write "${path}/roles/${role}" \
         use_csr_common_name=false \
+        enforce_hostnames=false \
         allowed_domains="${role},system:${role}" \
         allow_bare_domains=true \
         allow_localhost=false \
@@ -75,6 +77,7 @@ for component in ${COMPONENTS}; do
       ${VAULT_CMD} write "${path}/roles/kubelet" \
         use_csr_common_name=false \
         use_csr_sans=false \
+        enforce_hostnames=false \
         allowed_domains="kubelet,system:node:*" \
         allow_bare_domains=true \
         allow_glob_domains=true \
@@ -86,6 +89,7 @@ for component in ${COMPONENTS}; do
       ${VAULT_CMD} write "${path}/roles/kube-apiserver" \
         use_csr_common_name=false \
         use_csr_sans=false \
+        enforce_hostnames=false \
         allow_localhost=true \
         allow_any_name=true \
         allow_bare_domains=true \
