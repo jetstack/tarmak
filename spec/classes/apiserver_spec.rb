@@ -129,7 +129,7 @@ describe 'kubernetes::apiserver' do
       end
 
       it 'should activate RBAC API via a runtime config' do
-        should_not contain_file(service_file).with_content(/#{Regexp.escape('--runtime-config=')}/)
+        should contain_file(service_file).with_content(/#{Regexp.escape('--runtime-config=')}/)
       end
     end
   end

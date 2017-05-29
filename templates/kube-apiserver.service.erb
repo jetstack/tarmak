@@ -61,7 +61,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --authorization-policy-file=<%= @authorization_policy_file %> \
 <% end -%>
 <% if @_runtime_config != [] -%>
-  --runtime-config=<%= @_runtime_config.join(',') %> \
+  "--runtime-config=<%= @_runtime_config.join(',') %>" \
 <% end -%>
   --logtostderr=true
 

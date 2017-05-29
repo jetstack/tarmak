@@ -71,8 +71,11 @@ class kubernetes::apiserver(
     ]
   }
 
-  if $runtime_config != [] {
-    if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+  $authorization_mode = $kubernetes::_authorization_mode
+
+  # enable alpha RBAC in kubernetes versions before 1.5
+  if $runtime_config == [] {
+    if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') < 0 {
       $_runtime_config = [
         'api/rbac.authorization.k8s.io/v1alpha1=true'
       ]
@@ -83,7 +86,6 @@ class kubernetes::apiserver(
     $_runtime_config = $runtime_config
   }
 
-  $authorization_mode = $kubernetes::_authorization_mode
 
   # if ABAC is enabled
   if member($authorization_mode, 'ABAC'){
