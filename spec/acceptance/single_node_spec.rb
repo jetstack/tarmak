@@ -13,7 +13,11 @@ describe '::pupperentes::single_node' do
   end
 
   let :kubernetes_version do
-    ENV['KUBERNETES_VERSION'] || '1.5.4'
+    ENV['KUBERNETES_VERSION'] || '1.5.7'
+  end
+
+  let :kubernetes_authorization_mode do
+    ENV['KUBERNETES_AUTHORIZATION_MODE'] || '[]'
   end
 
   context 'single node with master + worker components' do
@@ -33,6 +37,7 @@ class{'puppernetes::single_node':
   etcd_advertise_client_network => '10.0.0.0/8',
   kubernetes_api_url            => 'https://#{$ip}:6443',
   kubernetes_version            => '#{kubernetes_version}',
+  kubernetes_authorization_mode => '#{kubernetes_authorization_mode}',
 }
 
 

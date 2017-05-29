@@ -39,10 +39,6 @@ any component. It's just setting global variables for the cluster
 * Type: `String`
 * Default: `$puppernetes::params::cluster_name`
 
-##### `vault_version`
-
-* vault version to use (deprecated)
-
 ##### `systemctl_path`
 
 * absoulute path to systemctl binary
@@ -250,6 +246,11 @@ any component. It's just setting global variables for the cluster
 
 * Type: `String`
 * Default: `$puppernetes::params::helper_path`
+
+##### `systemd_dir`
+
+* Type: `String`
+* Default: `'/etc/systemd/system'`
 
 #### Examples
 

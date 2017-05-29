@@ -4,6 +4,8 @@ FORGE
     camptocamp-systemd (0.4.0)
     puppet-archive (1.1.2)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
+    puppetlabs-concat (2.2.1)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
     puppetlabs-stdlib (4.17.0)
 
 GIT
@@ -35,15 +37,16 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-kubernetes.git
   ref: master
-  sha: b2dd4065635025f7ce20c943291b8e1e0bd3eb80
+  sha: 5aceb082961b1c75228b8cbce94f0aadde6de1b7
   specs:
     jetstack-kubernetes (0.1.0)
+      puppetlabs-concat (< 3.0.0, >= 2.2.1)
       puppetlabs-stdlib (< 5.0.0, >= 4.16.0)
 
 GIT
   remote: git@git.jetstack.net:puppernetes/module-vault_client.git
   ref: master
-  sha: 58bed4d387e9e8f9f79b1ba906ae92e1e5d22169
+  sha: 3ed7f5f456d1d806515c8022440a4a4e59c52e84
   specs:
     jetstack-vault_client (0.1.0)
       puppet-archive (< 1.2.0, >= 1.1.2)
