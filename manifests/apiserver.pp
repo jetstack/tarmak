@@ -96,7 +96,7 @@ class kubernetes::apiserver(
   kubernetes::symlink{'apiserver':} ->
   file{"${::kubernetes::systemd_dir}/${service_name}.service":
     ensure  => file,
-    mode    => '0640',
+    mode    => '0644',
     owner   => 'root',
     group   => 'root',
     content => template("kubernetes/${service_name}.service.erb"),
