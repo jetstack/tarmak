@@ -32,12 +32,15 @@ for component in ${COMPONENTS}; do
   # if it's a etcd ca populate only a single role
   if [[ "${component}" == etcd-* ]]; then
     vault write "${path}/roles/client" \
+      use_csr_common_name=false \
       allow_any_name=true \
       max_ttl="720h" \
       allow_ip_sans=true \
       server_flag=true \
       client_flag=true
     vault write "${path}/roles/server" \
+      use_csr_common_name=false \
+      use_csr_sans=false \
       allow_any_name=true \
       max_ttl="720h" \
       allow_ip_sans=true \
@@ -47,6 +50,7 @@ for component in ${COMPONENTS}; do
   # if it's k8s
   if [[ "${component}" == "k8s" ]]; then
     vault write "${path}/roles/admin" \
+      use_csr_common_name=false \
       allowed_domains="admin" \
       allow_bare_domains=true \
       allow_localhost=false \
@@ -57,6 +61,7 @@ for component in ${COMPONENTS}; do
       max_ttl="720h"
     for role in kube-scheduler kube-controller-manager kube-proxy; do
       vault write "${path}/roles/${role}" \
+        use_csr_common_name=false \
         allowed_domains="${role},system:${role}" \
         allow_bare_domains=true \
         allow_localhost=false \
@@ -67,16 +72,19 @@ for component in ${COMPONENTS}; do
         max_ttl="720h"
     done
       vault write "${path}/roles/kubelet" \
+        use_csr_common_name=false \
+        use_csr_sans=false \
         allowed_domains="kubelet,system:node:*" \
         allow_bare_domains=true \
         allow_glob_domains=true \
         allow_localhost=false \
         allow_subdomains=false \
-        allow_ip_sans=true \
         server_flag=true \
         client_flag=true \
         max_ttl="720h"
       vault write "${path}/roles/kube-apiserver" \
+        use_csr_common_name=false \
+        use_csr_sans=false \
         allow_localhost=true \
         allow_any_name=true \
         allow_bare_domains=true \
