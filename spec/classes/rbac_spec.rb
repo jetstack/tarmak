@@ -6,20 +6,30 @@ describe 'kubernetes::rbac' do
   end
 
   context 'with RBAC' do
-    context 'disabled' do
+    context 'disabled in 1.6' do
       let(:pre_condition) {[
         """
-        class{'kubernetes': authorization_mode => ['ABAC']}
+        class{'kubernetes': authorization_mode => ['ABAC'], version => '1.6.4' }
         class{'kubernetes::master':}
         """
       ]}
       it { should_not contain_file(crb_system_node_file) }
     end
 
-    context 'enabled' do
+    context 'enabled in 1.6' do
       let(:pre_condition) {[
         """
-        class{'kubernetes': authorization_mode => ['RBAC']}
+        class{'kubernetes': authorization_mode => ['ABAC'], version => '1.6.4' }
+        class{'kubernetes::master':}
+        """
+      ]}
+      it { should_not contain_file(crb_system_node_file) }
+    end
+
+    context 'enabled in 1.5' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': authorization_mode => ['RBAC'], version => '1.5.7' }
         class{'kubernetes::master':}
         """
       ]}
