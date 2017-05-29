@@ -20,7 +20,7 @@ class puppernetes::worker {
   $kubelet_base_path = "${::puppernetes::kubernetes_ssl_dir}/kubelet"
   vault_client::cert_service { 'kubelet':
     base_path   => $kubelet_base_path,
-    common_name => "system:node:${::puppernetes::hostname}",
+    common_name => 'system:node',
     role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kubelet",
     user        => $::puppernetes::kubernetes_user,
     require     => [
