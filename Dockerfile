@@ -24,8 +24,8 @@ RUN curl -sL  https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${P
     chmod +x /usr/local/bin/packer
 
 # install terraform
-ENV TERRAFORM_VERSION 0.9.4
-ENV TERRAFORM_HASH cc1cffee3b82820b7f049bb290b841762ee920aef3cf4d95382cc7ea01135707
+ENV TERRAFORM_VERSION 0.9.6
+ENV TERRAFORM_HASH 7ec24a5d57da6ef7bdb5a3003791a4368489b32fa93be800655ccef0eceaf1ba
 RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > /tmp/terraform.zip && \
     echo "${TERRAFORM_HASH}  /tmp/terraform.zip" | sha256sum  -c && \
     unzip /tmp/terraform.zip && \
