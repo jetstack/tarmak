@@ -81,7 +81,7 @@ for component in ${COMPONENTS}; do
         use_csr_common_name=false \
         use_csr_sans=false \
         enforce_hostnames=false \
-        allowed_domains="kubelet,system:node:*" \
+        allowed_domains="kubelet,system:node,system:node:*" \
         allow_bare_domains=true \
         allow_glob_domains=true \
         allow_localhost=false \
