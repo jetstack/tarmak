@@ -14,7 +14,7 @@ class puppernetes::params{
   }
 
   ## Kubernetes
-  $kubernetes_version = '1.5.4'
+  $kubernetes_version = '1.5.7'
 
   ## etcd
   $etcd_advertise_client_network = '172.16.0.0/12'
