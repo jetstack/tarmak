@@ -37,7 +37,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-kubernetes.git
   ref: master
-  sha: b2979f26b0068f822000ab2ae31eade815d278bd
+  sha: 0ca4a2f440dd5189e2e3bd765e2b15612c24f143
   specs:
     jetstack-kubernetes (0.1.0)
       puppetlabs-concat (< 3.0.0, >= 2.2.1)
@@ -46,7 +46,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:puppernetes/module-vault_client.git
   ref: master
-  sha: 3ed7f5f456d1d806515c8022440a4a4e59c52e84
+  sha: 085241e1eed8fef1d0ca2170e3d9cc7b2f7e8ad9
   specs:
     jetstack-vault_client (0.1.0)
       puppet-archive (< 1.2.0, >= 1.1.2)
