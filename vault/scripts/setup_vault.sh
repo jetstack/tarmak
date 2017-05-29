@@ -7,6 +7,7 @@ echo "#### --- Setting up PKI --- ####"
 echo "################################"
 echo "Pointing at ${VAULT_ADDR}"
 
+VAULT_CMD=${VAULT_CMD:-vault}
 COMPONENTS="etcd-k8s etcd-overlay k8s"
 BASE_PATH="${CLUSTER_ID}/pki"
 
@@ -17,28 +18,28 @@ for component in ${COMPONENTS}; do
   description="Kubernetes ${CLUSTER_ID}/${component} CA"
 
   # test for existence of mount in list of mounts
-  if [[ "$(vault mounts | grep ^${path}\/ | wc -l)" -eq 0 ]]; then
+  if [[ "$(${VAULT_CMD} mounts | grep ^${path}\/ | wc -l)" -eq 0 ]]; then
     # mount component
-    vault mount -path "${path}" -description "${description}" pki
-    vault mount-tune -max-lease-ttl=87600h "${path}"
+    ${VAULT_CMD} mount -path "${path}" -description "${description}" pki
+    ${VAULT_CMD} mount-tune -max-lease-ttl=87600h "${path}"
   fi
   # test for existence of ca at path
-  if [[ "$(vault read ${path}/cert/ca | grep 'BEGIN CERTIFICATE' | wc -l)" -eq 0 ]]; then
+  if [[ "$(${VAULT_CMD} read ${path}/cert/ca | grep 'BEGIN CERTIFICATE' | wc -l)" -eq 0 ]]; then
     # generate a new CA
-    vault write "${path}/root/generate/internal" \
+    ${VAULT_CMD} write "${path}/root/generate/internal" \
       common_name="${description}" \
       ttl=87600h # 10 years
   fi
   # if it's a etcd ca populate only a single role
   if [[ "${component}" == etcd-* ]]; then
-    vault write "${path}/roles/client" \
+    ${VAULT_CMD} write "${path}/roles/client" \
       use_csr_common_name=false \
       allow_any_name=true \
       max_ttl="720h" \
       allow_ip_sans=true \
       server_flag=true \
       client_flag=true
-    vault write "${path}/roles/server" \
+    ${VAULT_CMD} write "${path}/roles/server" \
       use_csr_common_name=false \
       use_csr_sans=false \
       allow_any_name=true \
@@ -49,7 +50,7 @@ for component in ${COMPONENTS}; do
   fi
   # if it's k8s
   if [[ "${component}" == "k8s" ]]; then
-    vault write "${path}/roles/admin" \
+    ${VAULT_CMD} write "${path}/roles/admin" \
       use_csr_common_name=false \
       allowed_domains="admin" \
       allow_bare_domains=true \
@@ -60,7 +61,7 @@ for component in ${COMPONENTS}; do
       client_flag=true \
       max_ttl="720h"
     for role in kube-scheduler kube-controller-manager kube-proxy; do
-      vault write "${path}/roles/${role}" \
+      ${VAULT_CMD} write "${path}/roles/${role}" \
         use_csr_common_name=false \
         allowed_domains="${role},system:${role}" \
         allow_bare_domains=true \
@@ -71,7 +72,7 @@ for component in ${COMPONENTS}; do
         client_flag=true \
         max_ttl="720h"
     done
-      vault write "${path}/roles/kubelet" \
+      ${VAULT_CMD} write "${path}/roles/kubelet" \
         use_csr_common_name=false \
         use_csr_sans=false \
         allowed_domains="kubelet,system:node:*" \
@@ -82,7 +83,7 @@ for component in ${COMPONENTS}; do
         server_flag=true \
         client_flag=true \
         max_ttl="720h"
-      vault write "${path}/roles/kube-apiserver" \
+      ${VAULT_CMD} write "${path}/roles/kube-apiserver" \
         use_csr_common_name=false \
         use_csr_sans=false \
         allow_localhost=true \
@@ -98,10 +99,10 @@ done
 # Generic secrets mount
 secrets_path="${CLUSTER_ID}/secrets"
 # test for existence of secrets mount in list of mounts
-if [[ "$(vault mounts | grep ^${CLUSTER_ID}/secrets\/ | wc -l)" -eq 0 ]]; then
-  vault mount -path "${secrets_path}" -description="Kubernetes ${CLUSTER_ID} secrets" generic
+if [[ "$(${VAULT_CMD} mounts | grep ^${CLUSTER_ID}/secrets\/ | wc -l)" -eq 0 ]]; then
+  ${VAULT_CMD} mount -path "${secrets_path}" -description="Kubernetes ${CLUSTER_ID} secrets" generic
   # Generate a key for the service accounts
-  openssl genrsa 4096 | vault write "${secrets_path}/service-accounts" key=-
+  openssl genrsa 4096 | ${VAULT_CMD} write "${secrets_path}/service-accounts" key=-
 fi
 
 rm -f ${CLUSTER_ID}-token
@@ -156,13 +157,13 @@ path \"${BASE_PATH}/${cert_role}\" {
     fi
 
   # write out new policy idempotently
-  echo "${policy}" | vault policy-write "${policy_name}" -
+  echo "${policy}" | ${VAULT_CMD} policy-write "${policy_name}" -
 
   # test for existence of token role at specified path and grep for policy name (twice)
-  if [[ "$(vault read auth/token/roles/${CLUSTER_ID}-${role} | grep $policy_name | wc -l)" -lt 2 ]]; then
+  if [[ "$(${VAULT_CMD} read auth/token/roles/${CLUSTER_ID}-${role} | grep $policy_name | wc -l)" -lt 2 ]]; then
     # create token role
     token_role="auth/token/roles/${CLUSTER_ID}-${role}"
-    vault write "${token_role}" \
+    ${VAULT_CMD} write "${token_role}" \
       period="720h" \
       orphan=true \
       allowed_policies="default,${policy_name}" \
@@ -170,9 +171,9 @@ path \"${BASE_PATH}/${cert_role}\" {
   fi
 
   # test for existence of token creator policy in (same) list of policies
-  if [[ "$(vault policies | grep ^${policy_name}-creator\$ | wc -l)" -eq 0 ]]; then
+  if [[ "$(${VAULT_CMD} policies | grep ^${policy_name}-creator\$ | wc -l)" -eq 0 ]]; then
     # create token creator policy
-    vault policy-write "${policy_name}-creator" - <<EOF
+    ${VAULT_CMD} policy-write "${policy_name}-creator" - <<EOF
 path "auth/token/create/${CLUSTER_ID}-${role}" {
     capabilities = ["create","read","update"]
 }
@@ -180,11 +181,11 @@ EOF
   fi
 
   # test for existence of tokens (indicated by an entry in the secrets path)
-  if vault read -field init_token "${secrets_path}/init-token-${role}" 2>/dev/null > /dev/null; then
-    init_token="$(vault read -field init_token "${secrets_path}/init-token-${role}")"
+  if ${VAULT_CMD} read -field init_token "${secrets_path}/init-token-${role}" 2>/dev/null > /dev/null; then
+    init_token="$(${VAULT_CMD} read -field init_token "${secrets_path}/init-token-${role}")"
   else
     #echo "Token init-token-${role} is missing, generating a new one!"
-    init_token=$(vault token-create \
+    init_token=$(${VAULT_CMD} token-create \
       -display-name="${policy_name}-creator" \
       -format json \
       -orphan \
@@ -192,7 +193,7 @@ EOF
       -period="8760h" \
       -policy="${policy_name}-creator" | jq -r .auth.client_token
     )
-    vault write "${secrets_path}/init-token-${role}" "init_token=${init_token}" > /dev/null
+    ${VAULT_CMD} write "${secrets_path}/init-token-${role}" "init_token=${init_token}" > /dev/null
   fi
   # print out init tokens - format TBC
   if [[ "${role}" == "admin" ]]; then
