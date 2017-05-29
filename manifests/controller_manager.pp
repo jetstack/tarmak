@@ -19,6 +19,8 @@ class kubernetes::controller_manager(
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-controller-manager"
 
+  $authorization_mode = $kubernetes::_authorization_mode
+
   kubernetes::symlink{'controller-manager':} ->
   file{$kubeconfig_path:
     ensure  => file,

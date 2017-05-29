@@ -33,4 +33,24 @@ describe 'kubernetes::controller_manager' do
       it { should contain_file(service_file).with_content(%r{--cloud-provider=aws}) }
     end
   end
+
+  context 'with RBAC' do
+    context 'disabled' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': authorization_mode => ['ABAC']}
+        """
+      ]}
+      it { should_not contain_file(service_file).with_content(%r{--use-service-account-credentials}) }
+    end
+
+    context 'enabled' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': authorization_mode => ['RBAC']}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(%r{--use-service-account-credentials}) }
+    end
+  end
 end
