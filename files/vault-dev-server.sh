@@ -41,12 +41,16 @@ function config {
         allow_any_name=true \
         max_ttl="720h" \
         server_flag=true \
-        client_flag=true
+        client_flag=true \
+        use_csr_sans=false \
+        use_csr_common_name=false
     ${VAULT_CMD} write "${path}/roles/server" \
         allow_any_name=true \
         max_ttl="720h" \
         server_flag=false \
-        client_flag=true
+        client_flag=true \
+        use_csr_sans=false \
+        use_csr_common_name=false
 
     for role in client server; do
         ${VAULT_CMD} policy-write "${path}-${role}" - <<EOF

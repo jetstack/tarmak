@@ -5,7 +5,7 @@
 #
 class vault_client::params {
   $app_name = 'vault'
-  $version = '0.6.5'
+  $version = '0.7.2'
   $bin_dir = '/opt/bin'
   $dest_dir = '/opt'
   $config_dir = '/etc/vault'

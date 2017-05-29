@@ -21,7 +21,7 @@ describe '::vault_client' do
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.6.2',
+  version => '0.7.2',
   token => 'root-token'
 }
 EOS
@@ -35,7 +35,7 @@ EOS
 
     it 'runs the correct version of vault' do
       show_result = shell('vault version')
-      expect(show_result.stdout).to match(/Vault v0\.6\.2/)
+      expect(show_result.stdout).to match(/Vault v0\.7\.2/)
     end
 
     it 'runs token-renew without error' do
@@ -46,7 +46,7 @@ EOS
     it 'requests a client cert from test-ca' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.6.2',
+  version => '0.7.2',
   token => 'root-token'
 }
 
@@ -68,7 +68,7 @@ EOS
     it 'requests new cert for a changed common_name' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.6.2',
+  version => '0.7.2',
   token => 'root-token'
 }
 
@@ -119,7 +119,7 @@ EOS
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.6.2',
+  version => '0.7.2',
   init_token => 'init-token-client',
   init_role => 'test-ca-client',
   init_policies => ['default', 'test-ca-client'],

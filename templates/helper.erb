@@ -119,7 +119,7 @@ function cert_sign {
     if [ ! -z "${VAULT_CERT_IP_SANS}" ]; then
         ARGS="${ARGS} ip_sans=${VAULT_CERT_IP_SANS}"
     fi
-    RESPONSE=$(vault write -format=json "${VAULT_CERT_ROLE}" ${ARGS} "csr=@${VAULT_CERT_CSR_PATH}")
+    RESPONSE=$(vault write -format=json "${VAULT_CERT_ROLE}" ${ARGS} "csr=@${VAULT_CERT_CSR_PATH}" "common_name=${VAULT_CERT_CN}")
     echo "${RESPONSE}" | jq -r '.data.certificate' > "${VAULT_CERT_PATH}"
 
     CA_CERT=$(echo "${RESPONSE}" | jq -r '.data.ca_chain')
