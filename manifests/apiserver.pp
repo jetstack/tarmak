@@ -87,37 +87,28 @@ class kubernetes::apiserver(
 
   # if ABAC is enabled
   if member($authorization_mode, 'ABAC'){
-
     # if no full access users are set, set sensible defaults
     if $abac_full_access_users == [] {
-      if member($authorization_mode, 'RBAC'){
-        $_abac_full_access_users = [
-          'admin',
-        ]
-      } else {
-        $_abac_full_access_users = [
-          'system:serviceaccount:kube-system:default',
-          'admin',
-          'system:node',
-          'system:node:*',
-          'system:kube-scheduler',
-          'system:kube-controller-manager',
-          'system:kube-proxy',
-          'system:kube-apiserver'
-        ]
-      }
-    } else {
+      $_abac_full_access_users = [
+        'system:serviceaccount:kube-system:default',
+        'admin',
+        'system:node',
+        'system:node:*',
+        'system:kube-scheduler',
+        'system:kube-controller-manager',
+        'system:kube-proxy',
+        'system:kube-apiserver'
+      ]
+    }
+    else {
       $_abac_full_access_users = $abac_full_access_users
     }
 
     # if no read only users are set, set sensible defaults
-    if $abac_read_only_access_users == [] {
-      if member($authorization_mode, 'RBAC'){
-        $_abac_read_only_access_users = []
-      } else {
-        $_abac_read_only_access_users = ['system:serviceaccount:monitoring:default']
-      }
-    } else {
+    if $abac_read_only_access_users == [] and member($authorization_mode, 'ABAC'){
+      $_abac_read_only_access_users = ['system:serviceaccount:monitoring:default']
+    }
+    else {
       $_abac_read_only_access_users = $abac_read_only_access_users
     }
 
