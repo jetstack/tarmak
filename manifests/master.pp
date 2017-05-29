@@ -4,6 +4,7 @@ class kubernetes::master (
   $disable_proxy = false,
 ){
   include ::kubernetes::apiserver
+  include ::kubernetes::rbac
   include ::kubernetes::controller_manager
   include ::kubernetes::scheduler
   include ::kubernetes::dns
