@@ -85,6 +85,33 @@ EOS
       expect(result.exit_code).to eq(0)
       expect(result.stdout).to match(/CN=test-client-aa$/)
     end
+
+    it 'requests new cert for a added IP/DNS SANs' do
+      pp = <<-EOS
+class {'vault_client':
+  version => '0.7.2',
+  token => 'root-token'
+}
+
+vault_client::cert_service{ 'test-client':
+  common_name  => 'test-client-aa',
+  base_path    => '/tmp/test-cert-client',
+  role         => 'test-ca/sign/client',
+  ip_sans      => ['8.8.4.4','8.8.8.8'],
+  alt_names    => ['public-dns-4.google','public-dns-8.google'],
+}
+EOS
+      apply_manifest(pp, :catch_failures => true)
+      expect(apply_manifest(pp, :catch_failures => true).exit_code).to be_zero
+
+      result = shell('openssl x509 -noout -text -in /tmp/test-cert-client.pem')
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout).to match(/CN=test-client-aa/)
+      expect(result.stdout).to match(/DNS:public-dns-4\.google/)
+      expect(result.stdout).to match(/DNS:public-dns-8\.google/)
+      expect(result.stdout).to match(/IP Address:8\.8\.4\.4/)
+      expect(result.stdout).to match(/IP Address:8\.8\.8\.8/)
+    end
   end
 
   context 'vault with init_token' do
