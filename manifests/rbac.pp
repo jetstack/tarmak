@@ -9,11 +9,8 @@ class kubernetes::rbac{
         template('kubernetes/rbac-namespace-kube-public.yaml.erb'),
         template('kubernetes/rbac-cluster-roles.yaml.erb'),
         template('kubernetes/rbac-cluster-role-bindings.yaml.erb'),
-        template('kubernetes/rbac-controller-roles.yaml.erb'),
-        template('kubernetes/rbac-controller-role-bindings.yaml.erb'),
         template('kubernetes/rbac-namespace-roles.yaml.erb'),
         template('kubernetes/rbac-namespace-role-bindings.yaml.erb'),
-        template('kubernetes/rbac-namespace-service-accounts.yaml.erb'),
       ],
     }
   }

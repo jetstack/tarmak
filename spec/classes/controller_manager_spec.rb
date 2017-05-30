@@ -44,13 +44,22 @@ describe 'kubernetes::controller_manager' do
       it { should_not contain_file(service_file).with_content(%r{--use-service-account-credentials}) }
     end
 
-    context 'enabled' do
+    context 'enabled with kubernetes 1.6+' do
       let(:pre_condition) {[
         """
-        class{'kubernetes': authorization_mode => ['RBAC']}
+        class{'kubernetes': authorization_mode => ['RBAC'], version => '1.6.4'}
         """
       ]}
       it { should contain_file(service_file).with_content(%r{--use-service-account-credentials}) }
+    end
+
+    context 'enabled before kubernetes 1.6' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': authorization_mode => ['RBAC'], version => '1.5.7'}
+        """
+      ]}
+      it { should_not contain_file(service_file).with_content(%r{--use-service-account-credentials}) }
     end
   end
 end

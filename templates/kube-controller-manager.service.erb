@@ -21,7 +21,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/controller-manager \
 <%- if scope['kubernetes::_service_account_key_file'] -%>
   --service-account-private-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>
-<%- if @authorization_mode.include? 'RBAC' -%>
+<%- if @authorization_mode.include? 'RBAC' and not @version_before_1_6 -%>
   --use-service-account-credentials \
 <% end -%>
   --leader-elect=true \

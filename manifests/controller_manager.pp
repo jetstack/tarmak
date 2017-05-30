@@ -21,6 +21,12 @@ class kubernetes::controller_manager(
 
   $authorization_mode = $kubernetes::_authorization_mode
 
+  if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+    $version_before_1_6 = false
+  } else {
+    $version_before_1_6 = true
+  }
+
   kubernetes::symlink{'controller-manager':} ->
   file{$kubeconfig_path:
     ensure  => file,
