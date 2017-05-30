@@ -6,6 +6,7 @@ class kubernetes::rbac{
   if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') < 0 {
     kubernetes::apply{'puppernetes-rbac':
       manifests => [
+        template('kubernetes/rbac-namespace-kube-public.yaml.erb'),
         template('kubernetes/rbac-cluster-roles.yaml.erb'),
         template('kubernetes/rbac-cluster-role-bindings.yaml.erb'),
         template('kubernetes/rbac-controller-roles.yaml.erb'),
