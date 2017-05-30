@@ -74,7 +74,7 @@ beaker::centos-7-k8s-1.5-rbac:
   only: []
   variables:
     KUBERNETES_VERSION: 1.5.7
-    KUBERNETES_AUTHORIZATION_MODE: "['ABAC','RBAC']"
+    KUBERNETES_AUTHORIZATION_MODE: "['RBAC']"
     TASK: beaker
 
 beaker::centos-7-k8s-1.4:
