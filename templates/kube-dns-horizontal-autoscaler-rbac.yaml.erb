@@ -20,7 +20,11 @@ metadata:
   namespace: kube-system
 ---
 kind: ClusterRole
+<%- if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<%- else -%>
 apiVersion: rbac.authorization.k8s.io/v1beta1
+<%- end -%>
 metadata:
   name: system:kube-dns-autoscaler
 rules:
