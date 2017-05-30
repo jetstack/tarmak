@@ -13,7 +13,7 @@ class kubernetes::rbac{
         template('kubernetes/rbac-controller-role-bindings.yaml.erb'),
         template('kubernetes/rbac-namespace-roles.yaml.erb'),
         template('kubernetes/rbac-namespace-role-bindings.yaml.erb'),
-        tempalte('kubernetes/rbac-namespace-service-accounts.yaml.erb'),
+        template('kubernetes/rbac-namespace-service-accounts.yaml.erb'),
       ],
     }
   }
