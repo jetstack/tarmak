@@ -2,7 +2,10 @@ require 'spec_helper'
 describe 'kubernetes_addons::heapster' do
   let(:pre_condition) do
     "
-      class kubernetes{}
+      class kubernetes{
+        $_authorization_mode = ['RBAC']
+        $version = '1.6.4'
+      }
       define kubernetes::apply(
         $manifests,
       ){}
@@ -34,6 +37,29 @@ describe 'kubernetes_addons::heapster' do
       expect(manifests[1]).to match(%{^[-\s].*- --memory=[0-9]+})
       expect(manifests[1]).to match(%{^[-\s].*- --extra-cpu=[0-9]+})
       expect(manifests[1]).to match(%{^[-\s].*- --extra-memory=[0-9]+})
+    end
+    context 'minikube tests' do
+      after(:each) do
+          kubectl_delete(manifests) if @minikube_cleanup
+      end
+
+      it 'deploy healthy app', :minikube => true do
+        @minikube_cleanup = true
+        expect(
+          minikube_apply(manifests)
+        ).to eq(0)
+
+        retries = 10
+        begin
+          ready_replicas = kubectl_get('deployment','kube-system', 'heapster')['status']['readyReplicas']
+          raise "deployment not healthy" if ready_replicas != 1
+        rescue Exception => e
+          retries -= 1
+          raise e if retries == 0
+          sleep 5
+          retry
+        end
+      end
     end
   end
   context 'with sink' do

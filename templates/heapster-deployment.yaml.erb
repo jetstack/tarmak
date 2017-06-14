@@ -18,8 +18,18 @@ spec:
         k8s-app: heapster
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
+<%- if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+<%- end -%>
     spec:
+<%- unless @version_before_1_6 -%>
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+<%- end -%>
+<%- if @rbac_enabled -%>
+      serviceAccountName: heapster
+<%- end -%>
       containers:
         - image: <%= @image %>:<%= @version %>
           name: heapster

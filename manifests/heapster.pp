@@ -15,10 +15,24 @@ class kubernetes_addons::heapster(
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
+  $authorization_mode = $::kubernetes::_authorization_mode
+  if member($authorization_mode, 'RBAC'){
+    $rbac_enabled = true
+  } else {
+    $rbac_enabled = false
+  }
+
+  if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+    $version_before_1_6 = false
+  } else {
+    $version_before_1_6 = true
+  }
+
   kubernetes::apply{'heapster':
     manifests => [
       template('kubernetes_addons/heapster-svc.yaml.erb'),
       template('kubernetes_addons/heapster-deployment.yaml.erb'),
+      template('kubernetes_addons/heapster-rbac.yaml.erb'),
     ],
   }
 }
