@@ -2,7 +2,10 @@ require 'spec_helper'
 describe 'kubernetes_addons::dashboard' do
   let(:pre_condition) do
     "
-      class kubernetes{}
+      class kubernetes{
+        $_authorization_mode = ['RBAC']
+        $version = '1.6.4'
+      }
       define kubernetes::apply(
         $manifests,
       ){}
@@ -31,11 +34,11 @@ describe 'kubernetes_addons::dashboard' do
 
     context 'minikube tests' do
       after(:each) do
-          kubectl_delete(manifests) if ENV['MINIKUBE'] == 'true'
+          kubectl_delete(manifests) if @minikube_cleanup
       end
 
       it 'deploy healthy app', :minikube => true do
-        skip "Minikube tests disabled by default, pass MINIKUBE=true as env var" if ENV['MINIKUBE'] != 'true'
+        @minikube_cleanup = true
         expect(
           minikube_apply(manifests)
         ).to eq(0)

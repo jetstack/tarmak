@@ -2,6 +2,7 @@ require 'puppetlabs_spec_helper/rake_tasks'
 require 'puppet_blacksmith/rake_tasks'
 require 'puppet-lint/tasks/puppet-lint'
 require 'metadata-json-lint/rake_task'
+require 'rspec/core/rake_task'
 
 if RUBY_VERSION >= '1.9'
   require 'rubocop/rake_task'
@@ -44,4 +45,26 @@ task :test do
   [:metadata_lint, :lint, :validate, :spec].each do |test|
     Rake::Task[test].invoke
   end
+end
+
+desc 'Run minikube acceptance tests'
+task :minikube do
+  Rake::Task[:spec_prep].invoke
+  Rake::Task[:minikube_standalone].invoke
+  Rake::Task[:spec_clean].invoke
+end
+
+desc 'Run rspec against minikube only'
+RSpec::Core::RakeTask.new(:minikube_standalone) do |t|
+  t.pattern = 'spec/{aliases,classes,defines,unit,functions,hosts,integration,type_aliases,types}/**/*_spec.rb'
+  t.rspec_opts = ['--color','--tag','minikube']
+  t.rspec_opts << ENV['CI_SPEC_OPTIONS'] unless ENV['CI_SPEC_OPTIONS'].nil?
+end
+
+desc 'Redefine spec without minikube tests'
+Rake::Task[:spec_standalone].clear
+RSpec::Core::RakeTask.new(:spec_standalone) do |t|
+  t.pattern = 'spec/{aliases,classes,defines,unit,functions,hosts,integration,type_aliases,types}/**/*_spec.rb'
+  t.rspec_opts = ['--color','--tag','~minikube']
+  t.rspec_opts << ENV['CI_SPEC_OPTIONS'] unless ENV['CI_SPEC_OPTIONS'].nil?
 end
