@@ -23,6 +23,7 @@ task :librarian_clean do
   sh 'librarian-puppet clean'
 end
 task :spec => :librarian_prepare
+task :minikube => :librarian_prepare
 task :clean => :librarian_clean
 
 task :beaker => :librarian_prepare
