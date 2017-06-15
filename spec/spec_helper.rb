@@ -123,7 +123,7 @@ EOS
   end
 
   def minikube_prepare
-    @minikube_profile = "kubernetes-addons"
+    @minikube_profile = ENV['MINIKUBE_PROFILE'] || 'kubernetes-addons'
     @minikube_kubernetes_version = ENV['KUBERNETES_VERSION'] || '1.6.4'
     ENV['KUBECONFIG'] = "#{Dir.pwd}/kubeconfig"
     if ! minikube_status
@@ -131,7 +131,7 @@ EOS
     end
 
     # check kube-dns healthiness
-    retries = 10
+    retries = 24
     while true do
       begin
         ready_replicas = kubectl_get('deployment','kube-system', 'kube-dns')['status']['readyReplicas']

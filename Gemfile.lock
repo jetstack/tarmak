@@ -377,7 +377,7 @@ DEPENDENCIES
   facter (>= 1.7.0)
   librarian-puppet
   metadata-json-lint
-  puppet (>= 3.3)
+  puppet (>= 4.0)
   puppet-blacksmith
   puppet-lint (>= 1.0.0)
   puppetlabs_spec_helper (>= 1.0.0)
