@@ -57,6 +57,9 @@ end
 
 desc 'Run rspec against minikube only'
 RSpec::Core::RakeTask.new(:minikube_standalone) do |t|
+  at_exit do
+    `minikube delete --profile #{ENV['MINIKUBE_PROFILE']}` unless ENV['MINIKUBE_PROFILE'].nil?
+  end
   t.pattern = 'spec/{aliases,classes,defines,unit,functions,hosts,integration,type_aliases,types}/**/*_spec.rb'
   t.rspec_opts = ['--color','--tag','minikube']
   t.rspec_opts << ENV['CI_SPEC_OPTIONS'] unless ENV['CI_SPEC_OPTIONS'].nil?
