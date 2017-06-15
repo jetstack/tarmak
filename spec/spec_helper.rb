@@ -39,7 +39,10 @@ module MinikubeHelpers
   end
 
   def minikube_status
-    cmd(*minikube_cmd('status'))
+    stdout = cmd_stdout(*minikube_cmd('status'))
+    $logger.debug "minikube status  stdout=#{stdout}"
+    return true if stdout.scan(/Running/).count == 2
+    false
   end
 
   def kubectl_apply(manifests)
@@ -73,6 +76,47 @@ module MinikubeHelpers
     )
   end
 
+  def minikube_fix_kube_dns
+    cmd('kubectl', 'create', 'serviceaccount', '--namespace', 'kube-system', 'kube-dns')
+    fix_job_yaml = <<-EOS
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fix-kube-dns
+spec:
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      name: fix-kube-dns
+    spec:
+      containers:
+      - name: fix-kube-dns
+        image: ruby:alpine
+        command: [
+        "ruby",
+        "-r", "yaml",
+        "-e",
+        "\
+        path = '/ETC/kubernetes/addons/kube-dns-controller.yaml';\
+        d = YAML.load_file(path);\
+        d['spec']['template']['spec']['serviceAccountName'] = 'kube-dns';\
+        File.open(path, 'w') {|f| f << d.to_yaml }\
+        "
+        ]
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /ETC
+          name: host-etc
+      volumes:
+      - name: host-etc
+        hostPath:
+          path: /etc
+      restartPolicy: Never
+EOS
+    kubectl_apply([fix_job_yaml])
+  end
+
   def minikube_wait_deployment_ready(namespace, name, replicas)
     status = JSON.parse kubectl_get('deployment', namespace, name)
     return status
@@ -82,8 +126,24 @@ module MinikubeHelpers
     @minikube_profile = "kubernetes-addons"
     @minikube_kubernetes_version = ENV['KUBERNETES_VERSION'] || '1.6.4'
     ENV['KUBECONFIG'] = "#{Dir.pwd}/kubeconfig"
-    if minikube_status != 0
+    if ! minikube_status
       minikube_start
+    end
+
+    # check kube-dns healthiness
+    retries = 10
+    while true do
+      begin
+        ready_replicas = kubectl_get('deployment','kube-system', 'kube-dns')['status']['readyReplicas']
+        break if not ready_replicas.nil? and ready_replicas > 0
+      rescue Exception => e
+        $logger.warn "kube-dns: #{e}"
+      end
+      raise "kube-dns is not ready" if retries == 0
+      $logger.debug "kube-dns not ready yet, applying updates to support RBAC and retry"
+      minikube_fix_kube_dns
+      retries -= 1
+      sleep 10
     end
   end
 
