@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: nginx-ingress-lb
+  name: <%= @deployment_name %>
   namespace: <%= @namespace %>
 spec:
 <% if @replicas -%>
@@ -10,20 +10,28 @@ spec:
   template:
     metadata:
       labels:
-        name: nginx-ingress-lb
+        name: <%= @deployment_name %>
     spec:
       terminationGracePeriodSeconds: 60
+<%- if @rbac_enabled -%>
+      serviceAccountName: <%= @deployment_name %>
+<%- end -%>
       containers:
       - image: <%= @nginx_ingress_image %>:<%= @nginx_ingress_version %>
-        name: nginx-ingress-lb
+        name: <%= @deployment_name %>
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
             path: /healthz
             port: 10254
             scheme: HTTP
-          initialDelaySeconds: 30
+          initialDelaySeconds: 15
           timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
         # use downward API
         env:
           - name: POD_IP
