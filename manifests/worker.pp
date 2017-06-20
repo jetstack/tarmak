@@ -1,34 +1,34 @@
-class puppernetes::worker {
-  include ::puppernetes
+class tarmak::worker {
+  include ::tarmak
   require ::vault_client
 
-  $proxy_base_path = "${::puppernetes::kubernetes_ssl_dir}/kube-proxy"
+  $proxy_base_path = "${::tarmak::kubernetes_ssl_dir}/kube-proxy"
   vault_client::cert_service { 'kube-proxy':
     base_path   => $proxy_base_path,
     common_name => 'system:kube-proxy',
-    role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kube-proxy",
-    user        => $::puppernetes::kubernetes_user,
+    role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-proxy",
+    user        => $::tarmak::kubernetes_user,
     require     => [
-      User[$::puppernetes::kubernetes_user],
+      User[$::tarmak::kubernetes_user],
       Class['vault_client']
     ],
     exec_post   => [
-      "-${::puppernetes::systemctl_path} --no-block try-restart kube-proxy.service"
+      "-${::tarmak::systemctl_path} --no-block try-restart kube-proxy.service"
     ],
   }
 
-  $kubelet_base_path = "${::puppernetes::kubernetes_ssl_dir}/kubelet"
+  $kubelet_base_path = "${::tarmak::kubernetes_ssl_dir}/kubelet"
   vault_client::cert_service { 'kubelet':
     base_path   => $kubelet_base_path,
     common_name => 'system:node',
-    role        => "${::puppernetes::cluster_name}/pki/${::puppernetes::kubernetes_ca_name}/sign/kubelet",
-    user        => $::puppernetes::kubernetes_user,
+    role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kubelet",
+    user        => $::tarmak::kubernetes_user,
     require     => [
-      User[$::puppernetes::kubernetes_user],
+      User[$::tarmak::kubernetes_user],
       Class['vault_client']
     ],
     exec_post   => [
-      "-${::puppernetes::systemctl_path} --no-block try-restart kubelet.service"
+      "-${::tarmak::systemctl_path} --no-block try-restart kubelet.service"
     ],
   }
 

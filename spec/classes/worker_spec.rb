@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'puppernetes::worker' do
+describe 'tarmak::worker' do
   let(:pre_condition) {[
     """
 class{'vault_client': token => 'test-token'}

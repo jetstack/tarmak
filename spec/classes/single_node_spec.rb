@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'puppernetes::single_node' do
+describe 'tarmak::single_node' do
   let(:pre_condition) {[
     """
 class{'vault_client': token => 'test-token'}

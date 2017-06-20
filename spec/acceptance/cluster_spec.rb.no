@@ -1,6 +1,6 @@
 require 'spec_helper_acceptance'
 
-describe '::puppernetes' do
+describe '::tarmak' do
 
   context 'test one master, two worker cluster' do
     let :role do
@@ -21,7 +21,7 @@ describe '::puppernetes' do
 
     let :global_pp do
       "
-class{'puppernetes':
+class{'tarmak':
   cluster_name                  => '#{cluster_name}',
   etcd_instances                => 1,
   etcd_advertise_client_network => '10.0.0.0/8'
@@ -61,7 +61,7 @@ class{'vault_client':
       end
 
       let :pp do
-        global_pp + "\nclass{'puppernetes::etcd':}"
+        global_pp + "\nclass{'tarmak::etcd':}"
       end
 
       it 'should work with no errors based on the example' do
@@ -80,7 +80,7 @@ class{'vault_client':
       end
 
       let :pp do
-        global_pp + "\nclass{'puppernetes::master':}"
+        global_pp + "\nclass{'tarmak::master':}"
       end
 
       it 'should work with no errors based on the example' do

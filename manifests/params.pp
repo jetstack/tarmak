@@ -1,6 +1,6 @@
 # Defines parameters for other classes to reuse
 # @private
-class puppernetes::params{
+class tarmak::params{
   $cluster_name = 'cluster'
   $dns_root = 'jetstack.net'
   $hostname = $::hostname

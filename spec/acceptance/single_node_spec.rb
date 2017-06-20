@@ -32,7 +32,7 @@ class{'vault_client':
   server_url => 'http://127.0.0.1:8200',
 }
 
-class{'puppernetes::single_node':
+class{'tarmak::single_node':
   cluster_name                  => '#{cluster_name}',
   etcd_advertise_client_network => '10.0.0.0/8',
   kubernetes_api_url            => 'https://#{$ip}:6443',

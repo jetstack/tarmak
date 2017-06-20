@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'puppernetes' do
+describe 'tarmak' do
   context 'without params' do
     it do
       is_expected.to compile

@@ -1,5 +1,5 @@
 {
-  "name": "jetstack-puppernetes",
+  "name": "jetstack-tarmak",
   "version": "0.1.0",
   "author": "jetstack",
   "summary": "Install/configure a Kubernetes cluster",

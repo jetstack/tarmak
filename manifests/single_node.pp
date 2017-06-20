@@ -1,12 +1,12 @@
-class puppernetes::single_node(
-  String $dns_root = $puppernetes::params::dns_root,
-  String $cluster_name = $puppernetes::params::cluster_name,
-  String $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
+class tarmak::single_node(
+  String $dns_root = $tarmak::params::dns_root,
+  String $cluster_name = $tarmak::params::cluster_name,
+  String $etcd_advertise_client_network = $tarmak::params::etcd_advertise_client_network,
   String $kubernetes_api_url = nil,
-  String $kubernetes_version = $puppernetes::params::kubernetes_version,
+  String $kubernetes_version = $tarmak::params::kubernetes_version,
   Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $kubernetes_authorization_mode = [],
-) inherits puppernetes::params{
-  ensure_resource('class', '::puppernetes',{
+) inherits tarmak::params{
+  ensure_resource('class', '::tarmak',{
     dns_root                      => $dns_root,
     cluster_name                  => $cluster_name,
     etcd_advertise_client_network => $etcd_advertise_client_network,
@@ -17,15 +17,15 @@ class puppernetes::single_node(
     etcd_instances                => 1,
   })
 
-  include '::puppernetes::etcd'
+  include '::tarmak::etcd'
 
-  ensure_resource('class', '::puppernetes::master',{
+  ensure_resource('class', '::tarmak::master',{
     disable_kubelet => true,
     disable_proxy   => true,
   })
 
-  ensure_resource('class', '::puppernetes::worker',{})
+  ensure_resource('class', '::tarmak::worker',{})
 
-  Class['puppernetes::etcd'] ->
-  Class['puppernetes::master']
+  Class['tarmak::etcd'] ->
+  Class['tarmak::master']
 }

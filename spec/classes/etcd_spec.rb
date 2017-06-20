@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'puppernetes::etcd' do
+describe 'tarmak::etcd' do
   let(:pre_condition) {[
     """
 class{'vault_client': token => 'test-token'}
@@ -20,7 +20,7 @@ class{'vault_client': token => 'test-token'}
     let(:pre_condition) {[
       """
         class{'vault_client': token => 'test-token'}
-        class{'puppernetes': etcd_start_index => 0}
+        class{'tarmak': etcd_start_index => 0}
       """
     ]}
 
@@ -47,7 +47,7 @@ class{'vault_client': token => 'test-token'}
     let(:pre_condition) {[
       """
         class{'vault_client': token => 'test-token'}
-        class{'puppernetes':}
+        class{'tarmak':}
       """
     ]}
 

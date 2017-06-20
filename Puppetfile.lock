@@ -9,7 +9,7 @@ FORGE
     puppetlabs-stdlib (4.17.0)
 
 GIT
-  remote: git@git.jetstack.net:puppernetes/module-calico.git
+  remote: git@git.jetstack.net:tarmak/module-calico.git
   ref: master
   sha: 2f3b3b1aea4417ac0d2affff4517d4a664923e7f
   specs:
@@ -18,7 +18,7 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
-  remote: git@git.jetstack.net:puppernetes/module-etcd.git
+  remote: git@git.jetstack.net:tarmak/module-etcd.git
   ref: master
   sha: 6ba27f8298303c3192c86d4524ee20655c4854be
   specs:
@@ -26,7 +26,7 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
-  remote: git@git.jetstack.net:puppernetes/module-etcd_mount.git
+  remote: git@git.jetstack.net:tarmak/module-etcd_mount.git
   ref: master
   sha: d42cd978d014ea164cd2c681a4935bc4ca96e7aa
   specs:
@@ -35,7 +35,7 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
-  remote: git@git.jetstack.net:puppernetes/module-kubernetes.git
+  remote: git@git.jetstack.net:tarmak/module-kubernetes.git
   ref: master
   sha: 1c8e786c6e53c6c763006c489b07b0dcb68260cc
   specs:
@@ -44,7 +44,7 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.16.0)
 
 GIT
-  remote: git@git.jetstack.net:puppernetes/module-vault_client.git
+  remote: git@git.jetstack.net:tarmak/module-vault_client.git
   ref: master
   sha: 085241e1eed8fef1d0ca2170e3d9cc7b2f7e8ad9
   specs:

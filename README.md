@@ -1,22 +1,22 @@
-# puppernetes
+# tarmak
 
 #### Table of Contents
 
 1. [Description](#description)
 2. [Classes](#classes)
 ## Description
-Puppernetes
+Tarmak
 
-This is the top-level class for the puppernetes project. It's not including
+This is the top-level class for the tarmak project. It's not including
 any component. It's just setting global variables for the cluster
 
 ## Classes
 
-### `puppernetes`
+### `tarmak`
 
 Puppernetes
 
-This is the top-level class for the puppernetes project. It's not including
+This is the top-level class for the tarmak project. It's not including
 any component. It's just setting global variables for the cluster
 
 #### Parameters
@@ -37,13 +37,13 @@ any component. It's just setting global variables for the cluster
 
 * a DNS compatible name for the cluster
 * Type: `String`
-* Default: `$puppernetes::params::cluster_name`
+* Default: `$tarmak::params::cluster_name`
 
 ##### `systemctl_path`
 
 * absoulute path to systemctl binary
 * Type: `String`
-* Default: `$puppernetes::params::systemctl_path`
+* Default: `$tarmak::params::systemctl_path`
 
 ##### `role`
 
@@ -55,7 +55,7 @@ any component. It's just setting global variables for the cluster
 
 * Kubernetes version to install
 * Type: `String`
-* Default: `$puppernetes::params::kubernetes_version`
+* Default: `$tarmak::params::kubernetes_version`
 
 ##### `kubernetes_user`
 
@@ -117,15 +117,20 @@ any component. It's just setting global variables for the cluster
 * Type: `String`
 * Default: `'api'`
 
+##### `kubernetes_authorization_mode`
+
+* Type: `Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']]`
+* Default: `[]`
+
 ##### `dns_root`
 
 * Type: `String`
-* Default: `$puppernetes::params::dns_root`
+* Default: `$tarmak::params::dns_root`
 
 ##### `hostname`
 
 * Type: `String`
-* Default: `$puppernetes::params::hostname`
+* Default: `$tarmak::params::hostname`
 
 ##### `etcd_cluster`
 
@@ -175,7 +180,7 @@ any component. It's just setting global variables for the cluster
 ##### `etcd_advertise_client_network`
 
 * Type: `String`
-* Default: `$puppernetes::params::etcd_advertise_client_network`
+* Default: `$tarmak::params::etcd_advertise_client_network`
 
 ##### `etcd_overlay_client_port`
 
@@ -245,7 +250,7 @@ any component. It's just setting global variables for the cluster
 ##### `helper_path`
 
 * Type: `String`
-* Default: `$puppernetes::params::helper_path`
+* Default: `$tarmak::params::helper_path`
 
 ##### `systemd_dir`
 
@@ -257,22 +262,22 @@ any component. It's just setting global variables for the cluster
 ##### Declaring the class
 
 ```
-include ::puppernetes
+include ::tarmak
 ```
 ##### Overriding the kubernetes version
 
 ```
-class{'puppernetes':
+class{'tarmak':
   kubernetes_version => '1.5.4'
 }
 ```
 
-### `puppernetes::etcd`
+### `tarmak::etcd`
 
 
 
 
-### `puppernetes::master`
+### `tarmak::master`
 
 
 
@@ -289,17 +294,17 @@ class{'puppernetes':
 * Default: `true`
 
 
-### `puppernetes::overlay_calico`
+### `tarmak::overlay_calico`
 
 
 
 
-### `puppernetes::params`
+### `tarmak::params`
 
 Defines parameters for other classes to reuse
 
 
-### `puppernetes::single_node`
+### `tarmak::single_node`
 
 
 
@@ -308,17 +313,17 @@ Defines parameters for other classes to reuse
 ##### `dns_root`
 
 * Type: `String`
-* Default: `$puppernetes::params::dns_root`
+* Default: `$tarmak::params::dns_root`
 
 ##### `cluster_name`
 
 * Type: `String`
-* Default: `$puppernetes::params::cluster_name`
+* Default: `$tarmak::params::cluster_name`
 
 ##### `etcd_advertise_client_network`
 
 * Type: `String`
-* Default: `$puppernetes::params::etcd_advertise_client_network`
+* Default: `$tarmak::params::etcd_advertise_client_network`
 
 ##### `kubernetes_api_url`
 
@@ -328,9 +333,14 @@ Defines parameters for other classes to reuse
 ##### `kubernetes_version`
 
 * Type: `String`
-* Default: `$puppernetes::params::kubernetes_version`
+* Default: `$tarmak::params::kubernetes_version`
+
+##### `kubernetes_authorization_mode`
+
+* Type: `Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']]`
+* Default: `[]`
 
 
-### `puppernetes::worker`
+### `tarmak::worker`
 
 

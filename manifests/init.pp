@@ -1,12 +1,12 @@
-# Puppernetes
+# Tarmak
 #
-# This is the top-level class for the puppernetes project. It's not including
+# This is the top-level class for the tarmak project. It's not including
 # any component. It's just setting global variables for the cluster
 #
 # @example Declaring the class
-#   include ::puppernetes
+#   include ::tarmak
 # @example Overriding the kubernetes version
-#   class{'puppernetes':
+#   class{'tarmak':
 #     kubernetes_version => '1.5.4'
 #   }
 #
@@ -16,13 +16,13 @@
 # @param systemctl_path absoulute path to systemctl binary
 # @param role which role to build
 # @param kubernetes_version Kubernetes version to install
-class puppernetes (
+class tarmak (
   String $dest_dir = '/opt',
   String $bin_dir = '/opt/bin',
-  String $cluster_name = $puppernetes::params::cluster_name,
-  String $systemctl_path = $puppernetes::params::systemctl_path,
+  String $cluster_name = $tarmak::params::cluster_name,
+  String $systemctl_path = $tarmak::params::systemctl_path,
   Enum['etcd','master','worker', nil] $role = nil,
-  String $kubernetes_version = $puppernetes::params::kubernetes_version,
+  String $kubernetes_version = $tarmak::params::kubernetes_version,
   String $kubernetes_user = 'kubernetes',
   String $kubernetes_group = 'kubernetes',
   Integer $kubernetes_uid = 837,
@@ -36,8 +36,8 @@ class puppernetes (
   String $kubernetes_api_url = nil,
   String $kubernetes_api_prefix = 'api',
   Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $kubernetes_authorization_mode = [],
-  String $dns_root = $puppernetes::params::dns_root,
-  String $hostname = $puppernetes::params::hostname,
+  String $dns_root = $tarmak::params::dns_root,
+  String $hostname = $tarmak::params::hostname,
   Array[String] $etcd_cluster = [],
   Integer[0,1] $etcd_start_index = 1,
   String $etcd_user = 'etcd',
@@ -47,7 +47,7 @@ class puppernetes (
   String $etcd_home = '/etc/etcd',
   String $etcd_ssl_dir = '/etc/etcd/ssl',
   Integer $etcd_instances = 3,
-  String $etcd_advertise_client_network = $puppernetes::params::etcd_advertise_client_network,
+  String $etcd_advertise_client_network = $tarmak::params::etcd_advertise_client_network,
   Integer[1,65535] $etcd_overlay_client_port = 2359,
   Integer[1,65535] $etcd_overlay_peer_port = 2360,
   String $etcd_overlay_ca_name = 'etcd-overlay',
@@ -61,9 +61,9 @@ class puppernetes (
   String $etcd_k8s_events_ca_name = 'etcd-k8s',
   String $etcd_k8s_events_version = '3.0.15',
   Enum['aws', ''] $cloud_provider = '',
-  String $helper_path = $puppernetes::params::helper_path,
+  String $helper_path = $tarmak::params::helper_path,
   String $systemd_dir = '/etc/systemd/system',
-) inherits ::puppernetes::params {
+) inherits ::tarmak::params {
   $ipaddress = $::ipaddress
 
   if $kubernetes_api_url == nil {

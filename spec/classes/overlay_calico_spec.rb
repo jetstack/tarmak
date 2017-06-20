@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-describe 'puppernetes::overlay_calico' do
+describe 'tarmak::overlay_calico' do
   let(:pre_condition) {[
     """
 class{'vault_client': token => 'test-token'}
-class{'puppernetes': role => 'master'}
+class{'tarmak': role => 'master'}
 include kubernetes::master
 """
   ]}
