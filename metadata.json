@@ -4,7 +4,7 @@
   "author": "jetstack",
   "summary": "Installs calico components and sets up advanced overlay networking for kubernetes",
   "license": "Apache-2.0",
-  "source": "https://github.com/puppernetes/module-calico",
+  "source": "https://github.com/jetstack/module-calico",
   "project_page": null,
   "issues_url": null,
   "dependencies": [
