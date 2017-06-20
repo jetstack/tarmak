@@ -168,7 +168,7 @@ EOS
         },
         passphrase: '',
         id: name,
-        description: "puppernetes secret #{name}",
+        description: "tarmak secret #{name}",
         'stapler-class': 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey',
         '$class': 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey',
       },
@@ -194,7 +194,7 @@ EOS
       credentials: {
         file: 'file0',
         id: name,
-        description: "puppernetes file secret #{name}",
+        description: "tarmak file secret #{name}",
         'stapler-class': 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl',
         '$class': 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl'
       },

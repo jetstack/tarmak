@@ -9,18 +9,18 @@ write_files:
     encoding: b64
     content: ${vault_ca}
 
-  - path: /etc/sysconfig/puppernetes
+  - path: /etc/sysconfig/tarmak
     permissions: '0644'
     content: |
-      PUPPERNETES_ROLE=${puppernetes_role}
-      PUPPERNETES_CLUSTER=${puppernetes_cluster}
-      PUPPERNETES_DNS_ROOT=${puppernetes_dns_root}
-      PUPPERNETES_HOSTNAME=${puppernetes_hostname}
-      PUPPERNETES_ENVIRONMENT=${puppernetes_environment}
-      PUPPERNETES_DESIRED_COUNT=${puppernetes_desired_count}
-      PUPPERNETES_VOLUME_ID=${puppernetes_volume_id}
+      TARMAK_ROLE=${tarmak_role}
+      TARMAK_CLUSTER=${tarmak_cluster}
+      TARMAK_DNS_ROOT=${tarmak_dns_root}
+      TARMAK_HOSTNAME=${tarmak_hostname}
+      TARMAK_ENVIRONMENT=${tarmak_environment}
+      TARMAK_DESIRED_COUNT=${tarmak_desired_count}
+      TARMAK_VOLUME_ID=${tarmak_volume_id}
 
-  - path: /etc/profile.d/puppernetes.sh
+  - path: /etc/profile.d/tarmak.sh
     permissions: '0644'
     content: |
       # Add /opt/bin to the path
@@ -28,7 +28,7 @@ write_files:
         export PATH=$PATH:/opt/bin
       fi
 
-      export PS1="[\u@${puppernetes_cluster}|${puppernetes_hostname}|\h \W]\$ "
+      export PS1="[\u@${tarmak_cluster}|${tarmak_hostname}|\h \W]\$ "
 
   - path: /etc/puppetlabs/puppet/puppet.conf
     permissions: '0644'
@@ -45,11 +45,11 @@ write_files:
       #!/bin/bash
       echo VAULT_TOKEN=${vault_token}
 
-  - path: /etc/facter/facts.d/puppernetes
+  - path: /etc/facter/facts.d/tarmak
     permissions: '0700'
     content: |
       #!/bin/bash
-      cat /etc/sysconfig/puppernetes
+      cat /etc/sysconfig/tarmak
 
   - path: /etc/sudoers
     permissions: '0440'

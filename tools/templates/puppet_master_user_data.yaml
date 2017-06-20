@@ -78,8 +78,8 @@ write_files:
 
     :hierarchy:
       - "nodes/%{::trusted.certname}"
-      - "role/%{::puppernetes_role}"
-      - "environment/%{puppernetes_environment}"
+      - "role/%{::tarmak_role}"
+      - "environment/%{tarmak_environment}"
       - common
 
     :yaml:

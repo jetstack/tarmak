@@ -1,4 +1,4 @@
-IMAGE_NAME ?= puppernetes-terraform
+IMAGE_NAME ?= tarmak-terraform
 IMAGE_TAG ?= latest
 SSH_KEY_PATH ?= ~/.ssh/id_jenkins_p9s_nonprod
 

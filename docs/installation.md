@@ -148,7 +148,7 @@ public_zone_name_servers = [
 Test the delegation:
 
 ```
-$ dig -t txt +short _puppernetes.nonprod.p9s.jetstack.net
+$ dig -t txt +short _tarmak.nonprod.p9s.jetstack.net
 "delegation for nonprod-hub works"
 ```
 
