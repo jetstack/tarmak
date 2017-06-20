@@ -49,14 +49,22 @@ etcd::instance{'k8s-overlay':
 }
         EOS
 
+        threads = []
+
         hosts_as('etcd').each do |host|
-          apply_manifest_on(host, pp, :catch_failures => true)
-          expect(
-            apply_manifest_on(host, pp, :catch_failures => true).exit_code
-          ).to be_zero
+          # run apply in parallel
+          threads << Thread.new do
+            apply_manifest_on(host, pp, :catch_failures => true)
+            expect(
+              apply_manifest_on(host, pp, :catch_failures => true).exit_code
+            ).to be_zero
+          end
         end
 
-        sleep 5
+        # wait for all nodes to be applied
+        threads.each do |thr|
+          thr.join
+        end
       end
 
       [2379, 2389, 2399].each do |port|
