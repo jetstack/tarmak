@@ -4,7 +4,7 @@
   "author": "jetstack",
   "summary": "Jetstack module to configure prometheus",
   "license": "Apache-2.0",
-  "source": "https://github.com/puppernetes/module-prometheus",
+  "source": "https://github.com/jetstack/module-prometheus",
   "project_page": null,
   "issues_url": null,
    "dependencies" : [

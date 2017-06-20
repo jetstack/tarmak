@@ -283,11 +283,16 @@ GEM
       puppet (>= 2.7.16)
       rest-client
     puppet-lint (2.0.2)
+    puppet-strings (1.0.0)
+      yard (~> 0.9.5)
     puppet-syntax (2.1.1)
       rake
     puppet_forge (1.0.6)
       activesupport (~> 4.2)
       her (~> 0.6.8)
+    puppet_readme_generator (0.1.1)
+      puppet-strings (~> 1.0)
+      rake
     puppetlabs_spec_helper (1.2.2)
       mocha (~> 1.0)
       puppet-lint (~> 2.0)
@@ -366,6 +371,7 @@ GEM
     unicode-display_width (1.1.1)
     vagrant-wrapper (2.0.3)
     xml-simple (1.1.5)
+    yard (0.9.8)
 
 PLATFORMS
   ruby
@@ -380,6 +386,7 @@ DEPENDENCIES
   puppet (>= 3.3)
   puppet-blacksmith
   puppet-lint (>= 1.0.0)
+  puppet_readme_generator
   puppetlabs_spec_helper (>= 1.0.0)
   rspec-puppet
   rubocop

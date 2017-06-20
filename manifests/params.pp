@@ -19,11 +19,11 @@ class prometheus::params {
   $prometheus_install_state_metrics = true
   $prometheus_install_node_exporter = true
 
-  if defined('::puppernetes') {
-    $etcd_cluster = $::puppernetes::_etcd_cluster
-    $etcd_k8s_port = $::puppernetes::etcd_k8s_main_client_port
-    $etcd_events_port = $::puppernetes::etcd_k8s_events_client_port
-    $etcd_overlay_port = $::puppernetes::etcd_overlay_client_port
+  if defined('::tarmak') {
+    $etcd_cluster = $::tarmak::_etcd_cluster
+    $etcd_k8s_port = $::tarmak::etcd_k8s_main_client_port
+    $etcd_events_port = $::tarmak::etcd_k8s_events_client_port
+    $etcd_overlay_port = $::tarmak::etcd_overlay_client_port
   } else {
     $etcd_cluster = undef
     $etcd_k8s_port = 2379

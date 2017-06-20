@@ -1,83 +1,329 @@
-# Prometheus
+# prometheus
 
 #### Table of Contents
 
 1. [Description](#description)
-1. [Setup - The basics of getting started with prometheus](#setup)
-    * [What prometheus does](#what-prometheus-affects)
-    * [Setup requirements](#setup-requirements)
-    * [Beginning with prometheus](#beginning-with-prometheus)
-1. [Usage - Configuration options and additional functionality](#usage)
-1. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
-1. [Limitations - OS compatibility, etc.](#limitations)
-1. [Development - Guide for contributing to the module](#development)
-
+2. [Classes](#classes)
+3. [Defined Types](#defined-types)
 ## Description
 
-This module installs [Prometheus](https://www.prometheus.io/) on a
-Kubernetes cluster and was initially developed to do this on CentOS 7 on AWS EC2.
 
-## Setup
+## Classes
 
-### What prometheus does
+### `prometheus`
 
-On a master node:
-* Installs Prometheus with local storage via a deployment and exposes it on a nodePort
-* **Optionally** Installs Prometheus node-exporter as a daemonset
-* **Optionally** Installs kube-state-metrics as a deployment
-* **Optionally** adds a default configuration that will discover endpoints and integrate with puppernetes
-* **Optionally** adds some default rules to monitor the cluster
 
-On an etcd node:
-* **Can** be used to deploy node-exporter as a systemd service / docker container (requiring docker on the node)
-* **Can** be used to deploy a customised blackbox exporter as a systemd service, providing an authenticated metrics proxy to etcd
 
-### Setup Requirements
+#### Parameters
 
-A working Kubernetes cluster, and a list of etcd endpoints if wishing to monitor this
+##### `role`
 
-### Beginning with prometheus
+* Type: `Any`
+* Default: `''`
 
-```puppet
+##### `etcd_cluster`
 
-#master
-class { 'prometheus':
-  role         => 'master',
-  etcd_cluster => [ 'etcd1.mydomain', 'etcd3.mydomain', 'etcd3.mydomain' ]
-}
+* Type: `Any`
+* Default: `$::prometheus::params::etcd_cluster`
 
-#etcd
-class { 'prometheus':
-  role => 'etcd'
-}
+##### `etcd_k8s_port`
 
-```
+* Type: `Any`
+* Default: `$::prometheus::params::etcd_k8s_port`
 
-## Usage
+##### `etcd_events_port`
 
-This section is where you describe how to customize, configure, and do the
-fancy stuff with your module here. It's especially helpful if you include usage
-examples and code samples for doing things with your module.
+* Type: `Any`
+* Default: `$::prometheus::params::etcd_events_port`
 
-## Reference
+##### `etcd_overlay_port`
 
-Here, include a complete list of your module's classes, types, providers,
-facts, along with the parameters for each. Users refer to this section (thus
-the name "Reference") to find specific details; most users don't read it per
-se.
+* Type: `Any`
+* Default: `$::prometheus::params::etcd_overlay_port`
 
-## Limitations
+##### `blackbox_download_url`
 
-This is where you list OS compatibility, version compatibility, etc. If there
-are Known Issues, you might want to include them under their own heading here.
+* Type: `Any`
+* Default: `$::prometheus::params::blackbox_download_url`
 
-## Development
+##### `blackbox_dest_dir`
 
-Since your module is awesome, other users will want to play with it. Let them
-know what the ground rules for contributing are.
+* Type: `Any`
+* Default: `$::prometheus::params::blackbox_dest_dir`
 
-## Release Notes/Contributors/Etc. **Optional**
+##### `blackbox_config_dir`
 
-If you aren't using changelog, put your release notes here (though you should
-consider using changelog). You can also add any additional sections you feel
-are necessary or important to include here. Please use the `## ` header.
+* Type: `Any`
+* Default: `$::prometheus::params::blackbox_config_dir`
+
+##### `systemd_path`
+
+* Type: `Any`
+* Default: `$::prometheus::params::systemd_path`
+
+##### `node_exporter_image`
+
+* Type: `Any`
+* Default: `$::prometheus::params::node_exporter_image`
+
+##### `node_exporter_version`
+
+* Type: `Any`
+* Default: `$::prometheus::params::node_exporter_version`
+
+##### `node_exporter_port`
+
+* Type: `Any`
+* Default: `$::prometheus::params::node_exporter_port`
+
+##### `addon_dir`
+
+* Type: `Any`
+* Default: `$::prometheus::params::addon_dir`
+
+##### `helper_dir`
+
+* Type: `Any`
+* Default: `$::prometheus::params::helper_dir`
+
+##### `prometheus_namespace`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_namespace`
+
+##### `prometheus_image`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_image`
+
+##### `prometheus_version`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_version`
+
+##### `prometheus_storage_local_retention`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_storage_local_retention`
+
+##### `prometheus_storage_local_memchunks`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_storage_local_memchunks`
+
+##### `prometheus_port`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_port`
+
+##### `prometheus_use_module_config`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_use_module_config`
+
+##### `prometheus_use_module_rules`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_use_module_rules`
+
+##### `prometheus_install_state_metrics`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_install_state_metrics`
+
+##### `prometheus_install_node_exporter`
+
+* Type: `Any`
+* Default: `$::prometheus::params::prometheus_install_node_exporter`
+
+
+### `prometheus::blackbox_etcd`
+
+Get blackbox_exporter
+
+#### Parameters
+
+##### `download_url`
+
+* Type: `Any`
+* Default: `$::prometheus::blackbox_download_url`
+
+##### `config_dir`
+
+* Type: `Any`
+* Default: `$::prometheus::blackbox_config_dir`
+
+##### `dest_dir`
+
+* Type: `Any`
+* Default: `$::prometheus::blackbox_dest_dir`
+
+##### `systemd_path`
+
+* Type: `Any`
+* Default: `$::prometheus::systemd_path`
+
+
+### `prometheus::node_exporter_service`
+
+
+
+#### Parameters
+
+##### `systemd_path`
+
+* Type: `Any`
+* Default: `$::prometheus::systemd_path`
+
+##### `node_exporter_image`
+
+* Type: `Any`
+* Default: `$::prometheus::node_exporter_image`
+
+##### `node_exporter_version`
+
+* Type: `Any`
+* Default: `$::prometheus::node_exporter_version`
+
+##### `node_exporter_port`
+
+* Type: `Any`
+* Default: `$::prometheus::node_exporter_port`
+
+
+### `prometheus::params`
+
+
+
+
+### `prometheus::prometheus_deployment`
+
+
+
+#### Parameters
+
+##### `addon_dir`
+
+* Type: `Any`
+* Default: `$::prometheus::addon_dir`
+
+##### `helper_dir`
+
+* Type: `Any`
+* Default: `$::prometheus::helper_dir`
+
+##### `prometheus_namespace`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_namespace`
+
+##### `prometheus_image`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_image`
+
+##### `prometheus_version`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_version`
+
+##### `prometheus_storage_local_retention`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_storage_local_retention`
+
+##### `prometheus_storage_local_memchunks`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_storage_local_memchunks`
+
+##### `prometheus_port`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_port`
+
+##### `prometheus_use_module_config`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_use_module_config`
+
+##### `etcd_cluster`
+
+* Type: `Any`
+* Default: `$::prometheus::etcd_cluster`
+
+##### `etcd_k8s_port`
+
+* Type: `Any`
+* Default: `$::prometheus::etcd_k8s_port`
+
+##### `etcd_events_port`
+
+* Type: `Any`
+* Default: `$::prometheus::etcd_events_port`
+
+##### `etcd_overlay_port`
+
+* Type: `Any`
+* Default: `$::prometheus::etcd_overlay_port`
+
+##### `prometheus_use_module_rules`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_use_module_rules`
+
+##### `prometheus_install_state_metrics`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_install_state_metrics`
+
+##### `prometheus_install_node_exporter`
+
+* Type: `Any`
+* Default: `$::prometheus::prometheus_install_node_exporter`
+
+##### `node_exporter_image`
+
+* Type: `Any`
+* Default: `$::prometheus::node_exporter_image`
+
+##### `node_exporter_port`
+
+* Type: `Any`
+* Default: `$::prometheus::node_exporter_port`
+
+##### `node_exporter_version`
+
+* Type: `Any`
+* Default: `$::prometheus::node_exporter_version`
+
+## DefinedTypes
+
+### `prometheus::wget_file`
+
+
+
+#### Parameters
+
+##### `url`
+
+* Type: `String`
+
+##### `destination_dir`
+
+* Type: `String`
+
+##### `destination_file`
+
+* Type: `String`
+* Default: `''`
+
+##### `user`
+
+* Type: `String`
+* Default: `'root'`
+
+##### `umask`
+
+* Type: `String`
+* Default: `'022'`
