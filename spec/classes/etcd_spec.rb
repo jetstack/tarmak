@@ -16,6 +16,24 @@ class{'vault_client': token => 'test-token'}
     end
   end
 
+  context 'on aws' do
+    let(:facts) {{
+      :hostname         => 'etcd-1',
+      :tarmak_volume_id => 'vol-deadcafe',
+    }}
+
+    let(:pre_condition) {[
+      """
+        class{'vault_client': token => 'test-token'}
+        class{'tarmak': cloud_provider => 'aws'}
+      """
+    ]}
+
+    it do
+      is_expected.to compile
+    end
+  end
+
   context '3 node etcd cluster with start index 0' do
     let(:pre_condition) {[
       """

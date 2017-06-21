@@ -8,7 +8,7 @@ class tarmak::etcd(
     aws_ebs::mount{'etcd-data':
       volume_id => $::tarmak_volume_id,
       device    => '/dev/xvdd',
-      dest_dir  => '/var/lib/etcd',
+      dest_path => '/var/lib/etcd',
     }
   }
 
