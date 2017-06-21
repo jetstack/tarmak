@@ -10,7 +10,7 @@ FORGE
 GIT
   remote: git@git.jetstack.net:tarmak/module-aws_ebs.git
   ref: master
-  sha: 508f8291e488df07efe825ffbe33846f19cab9c3
+  sha: 26fb87b8dd26f1327bf6915b83b1a47ed3a2de2d
   specs:
     jetstack-aws_ebs (0.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
