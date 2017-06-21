@@ -1,17 +1,24 @@
 FORGE
   remote: https://forgeapi.puppetlabs.com
   specs:
-    camptocamp-systemd (0.4.0)
     puppet-archive (1.1.2)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
     puppetlabs-concat (2.2.1)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
-    puppetlabs-stdlib (4.17.0)
+    puppetlabs-stdlib (4.17.1)
+
+GIT
+  remote: git@git.jetstack.net:tarmak/module-aws_ebs.git
+  ref: master
+  sha: 508f8291e488df07efe825ffbe33846f19cab9c3
+  specs:
+    jetstack-aws_ebs (0.1.0)
+      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
   remote: git@git.jetstack.net:tarmak/module-calico.git
   ref: master
-  sha: 2f3b3b1aea4417ac0d2affff4517d4a664923e7f
+  sha: 5655c98ce43623450a591417e71e19a597e447ba
   specs:
     jetstack-calico (0.1.2)
       puppet-archive (< 1.2.0, >= 1.1.2)
@@ -20,18 +27,9 @@ GIT
 GIT
   remote: git@git.jetstack.net:tarmak/module-etcd.git
   ref: master
-  sha: 6ba27f8298303c3192c86d4524ee20655c4854be
+  sha: 889f4c635f9830734c1844307f097733ba8a31a0
   specs:
     jetstack-etcd (0.1.0)
-      puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
-
-GIT
-  remote: git@git.jetstack.net:tarmak/module-etcd_mount.git
-  ref: master
-  sha: d42cd978d014ea164cd2c681a4935bc4ca96e7aa
-  specs:
-    jetstack-etcd_mount (0.1.0)
-      camptocamp-systemd (< 0.5.0, >= 0.4.0)
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 GIT
@@ -53,9 +51,9 @@ GIT
       puppetlabs-stdlib (< 5.0.0, >= 4.2.0)
 
 DEPENDENCIES
+  jetstack-aws_ebs (>= 0)
   jetstack-calico (>= 0)
   jetstack-etcd (>= 0)
-  jetstack-etcd_mount (>= 0)
   jetstack-kubernetes (>= 0)
   jetstack-vault_client (>= 0)
 

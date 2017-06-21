@@ -14,7 +14,7 @@ any component. It's just setting global variables for the cluster
 
 ### `tarmak`
 
-Puppernetes
+Tarmak
 
 This is the top-level class for the tarmak project. It's not including
 any component. It's just setting global variables for the cluster
