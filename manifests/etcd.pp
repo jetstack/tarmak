@@ -4,7 +4,12 @@ class tarmak::etcd(
   include ::vault_client
 
   if $::tarmak::cloud_provider == 'aws' {
-    include ::etcd_mount
+    include ::aws_ebs
+    aws_ebs::mount{'etcd-data':
+      volume_id => $::tarmak_volume_id,
+      device    => '/dev/xvdd',
+      dest_dir  => '/var/lib/etcd',
+    }
   }
 
   file { $::tarmak::etcd_ssl_dir:
