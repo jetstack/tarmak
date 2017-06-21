@@ -22,19 +22,24 @@ class aws_ebs(
     true    => $::path,
   }
 
+  ensure_resource('file', [$bin_dir], {
+    ensure =>  directory,
+    mode =>  '0755',
+  })
+
   ensure_resource('package', ['curl', 'gawk', 'util-linux', 'awscli', 'xfsprogs'],{
     ensure => present
   })
 
   $attach_bin_path = "${bin_dir}/aws_ebs_attach_volume.sh"
-  file { $attach_bin_path:
+  File[$bin_dir] -> file { $attach_bin_path:
     ensure  => file,
     content => template('aws_ebs/attach_volume.sh.erb'),
     mode    => '0755',
   }
 
   $format_bin_path = "${bin_dir}/aws_ebs_ensure_volume_formatted.sh"
-  file {$format_bin_path:
+  File[$bin_dir] -> file { $format_bin_path:
     ensure  => file,
     content => template('aws_ebs/ensure_volume_formatted.sh.erb'),
     mode    => '0755',
