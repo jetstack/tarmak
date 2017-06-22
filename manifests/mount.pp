@@ -66,7 +66,6 @@ define aws_ebs::mount(
   } ~>
   service { $mount_service_name:
     ensure  => running,
-    enable  => true,
     require => Exec[$systemd_reload],
   }
 }
