@@ -127,4 +127,4 @@ calico params.pp
 ##### `version`
 
 * Type: `String`
-* Default: `'0.6.0'`
+* Default: `'0.5.4'`
