@@ -51,7 +51,7 @@ beaker::centos-7-k8s-1.7:
   <<: *beaker_definition
   only: []
   variables:
-    KUBERNETES_VERSION: 1.7.0-beta.3
+    KUBERNETES_VERSION: 1.7.0-rc.1
     TASK: beaker
 
 beaker::centos-7-k8s-1.6:
