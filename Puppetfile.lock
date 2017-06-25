@@ -18,7 +18,7 @@ GIT
 GIT
   remote: git@git.jetstack.net:tarmak/module-calico.git
   ref: master
-  sha: 5655c98ce43623450a591417e71e19a597e447ba
+  sha: 0f4e45130efeda6db7c02c6a0d81625ab5ee8038
   specs:
     jetstack-calico (0.1.2)
       puppet-archive (< 1.2.0, >= 1.1.2)
