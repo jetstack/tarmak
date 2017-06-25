@@ -18,10 +18,23 @@ spec:
         k8s-app: calico-node
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
+<%- if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: |
           [{"key": "dedicated", "value": "master", "effect": "NoSchedule" },
            {"key":"CriticalAddonsOnly", "operator":"Exists"}]
+<%- end -%>
     spec:
+<%- if @rbac_enabled -%>
+      serviceAccountName: calico-node
+<%- end -%>
+<%- unless @version_before_1_6 -%>
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+      - key: "dedicated"
+        value: "master"
+        effect: "NoSchedule"
+<%- end -%>
       hostNetwork: true
       containers:
         # Runs calico/node container on each Kubernetes node.  This

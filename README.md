@@ -85,7 +85,7 @@ This class disable the source/destination check on AWS instances
 ##### `node_version`
 
 * Type: `String`
-* Default: `'1.1.1'`
+* Default: `'1.3.0'`
 
 ##### `cni_image`
 
@@ -95,7 +95,7 @@ This class disable the source/destination check on AWS instances
 ##### `cni_version`
 
 * Type: `String`
-* Default: `'1.6.2'`
+* Default: `'1.9.1'`
 
 ##### `ipv4_pool_cidr`
 
@@ -127,4 +127,4 @@ calico params.pp
 ##### `version`
 
 * Type: `String`
-* Default: `'0.5.4'`
+* Default: `'0.6.0'`

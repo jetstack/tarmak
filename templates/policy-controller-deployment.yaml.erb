@@ -7,11 +7,6 @@ metadata:
   namespace: <%= @namespace %>
   labels:
     k8s-app: calico-policy
-  annotations:
-    scheduler.alpha.kubernetes.io/critical-pod: ''
-    scheduler.alpha.kubernetes.io/tolerations: |
-      [{"key": "dedicated", "value": "master", "effect": "NoSchedule" },
-       {"key":"CriticalAddonsOnly", "operator":"Exists"}]
 spec:
   # The policy controller can only have a single active instance.
   replicas: 1
@@ -22,7 +17,25 @@ spec:
       name: calico-policy-controller
       labels:
         k8s-app: calico-policy
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+<%- if @version_before_1_6 -%>
+        scheduler.alpha.kubernetes.io/tolerations: |
+          [{"key": "dedicated", "value": "master", "effect": "NoSchedule" },
+           {"key":"CriticalAddonsOnly", "operator":"Exists"}]
+<%- end -%>
     spec:
+<%- if @rbac_enabled -%>
+      serviceAccountName: calico-policy-controller
+<%- end -%>
+<%- unless @version_before_1_6 -%>
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+      - key: "dedicated"
+        value: "master"
+        effect: "NoSchedule"
+<%- end -%>
       # The policy controller must run in the host network namespace so that
       # it isn't governed by policy that would prevent it from working.
       hostNetwork: true

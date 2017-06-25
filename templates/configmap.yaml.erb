@@ -15,6 +15,7 @@ data:
   cni_network_config: |-
     {
         "name": "k8s-pod-network",
+        "cniVersion": "0.1.0",
         "type": "calico",
         "etcd_endpoints": "__ETCD_ENDPOINTS__",
         "etcd_key_file": "<%= @etcd_key_file %>",

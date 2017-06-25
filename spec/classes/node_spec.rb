@@ -1,11 +1,21 @@
 require 'spec_helper'
-
 require 'yaml'
 
 describe 'calico::node' do
+  let(:kubernetes_version) do
+    '1.6.1'
+  end
+
+  let(:authorization_mode) do
+    '[\'RBAC\']'
+  end
+
   let(:pre_condition) do
     "
-      class kubernetes{}
+      class kubernetes{
+        $_authorization_mode = #{authorization_mode}
+        $version = '#{kubernetes_version}'
+      }
       define kubernetes::apply(
         $manifests,
       ){}

@@ -1,10 +1,23 @@
 class calico::policy_controller (
   String $image = 'quay.io/calico/kube-policy-controller',
-  String $version = '0.5.4',
+  String $version = '0.6.0',
 )
 {
   include ::kubernetes
   include ::calico
+
+  $authorization_mode = $::kubernetes::_authorization_mode
+  if member($authorization_mode, 'RBAC'){
+    $rbac_enabled = true
+  } else {
+    $rbac_enabled = false
+  }
+
+  if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+    $version_before_1_6 = false
+  } else {
+    $version_before_1_6 = true
+  }
 
   if $::calico::backend == 'etcd' {
     $namespace = $::calico::namespace
