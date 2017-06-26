@@ -31,6 +31,7 @@ class calico::node (
   kubernetes::apply{'calico-node':
     manifests => [
       template('calico/node-daemonset.yaml.erb'),
+      template('calico/node-rbac.yaml.erb'),
     ],
   }
 
