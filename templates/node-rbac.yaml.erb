@@ -102,6 +102,44 @@ metadata:
   name: calico-node
   namespace: <%= @namespace %>
 ---
+kind: ClusterRole
+<%- if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<%- else -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<%- end -%>
+metadata:
+  name: calico-policy-controller
+  namespace: <%= @namespace %>
+rules:
+- apiGroups:
+  - ""
+  - extensions
+  resources:
+    - pods
+    - namespaces
+    - networkpolicies
+  verbs:
+    - watch
+    - list
+---
+<%- if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<%- else -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<%- end -%>
+kind: ClusterRoleBinding
+metadata:
+  name: calico-policy-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: calico-policy-controller
+subjects:
+- kind: ServiceAccount
+  name: calico-policy-controller
+  namespace: <%= @namespace %>
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
