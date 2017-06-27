@@ -1,0 +1,11 @@
+[Unit]
+Description=vault token renewal service
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/etc/vault/helper token-renew
+
+[Install]
+WantedBy=multi-user.target
