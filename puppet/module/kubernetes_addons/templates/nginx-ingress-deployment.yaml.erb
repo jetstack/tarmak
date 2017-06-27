@@ -1,0 +1,75 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: <%= @deployment_name %>
+  namespace: <%= @namespace %>
+spec:
+<% if @replicas -%>
+  replicas: <%= @replicas %>
+<% end -%>
+  template:
+    metadata:
+      labels:
+        name: <%= @deployment_name %>
+    spec:
+      terminationGracePeriodSeconds: 60
+<%- if @rbac_enabled -%>
+      serviceAccountName: <%= @deployment_name %>
+<%- end -%>
+      containers:
+      - image: <%= @nginx_ingress_image %>:<%= @nginx_ingress_version %>
+        name: <%= @deployment_name %>
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+        # use downward API
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        ports:
+        - containerPort: 80
+<% if @host_port -%>
+          hostPort: 80
+<% end -%>
+        - containerPort: 443
+<% if @host_port -%>
+          hostPort: 443
+<% end -%>
+        - containerPort: 3000
+<% if @host_port -%>
+          hostPort: 3000
+<% end -%>
+        - containerPort: 8080
+<% if @host_port -%>
+          hostPort: 8080
+<% end -%>
+        resources:
+          limits:
+            cpu: <%= @limit_cpu %>
+            memory: <%= @limit_mem %>
+          requests:
+            cpu: <%= @request_cpu %>
+            memory: <%= @request_mem %>
+        args:
+        - /nginx-ingress-controller
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
