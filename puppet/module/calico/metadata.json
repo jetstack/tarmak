@@ -1,0 +1,23 @@
+{
+  "name": "jetstack-calico",
+  "version": "0.1.2",
+  "author": "jetstack",
+  "summary": "Installs calico components and sets up advanced overlay networking for kubernetes",
+  "license": "Apache-2.0",
+  "source": "https://github.com/jetstack/module-calico",
+  "project_page": null,
+  "issues_url": null,
+  "dependencies": [
+    {"name":"puppetlabs-stdlib","version_requirement":">= 4.2.0 < 5.0.0"},
+    {"name":"puppet-archive","version_requirement":">= 1.1.2 < 1.2.0"}
+  ],
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    }
+  ],
+  "data_provider": null
+}
