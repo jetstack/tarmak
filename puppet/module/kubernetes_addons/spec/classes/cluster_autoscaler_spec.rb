@@ -10,9 +10,15 @@ describe 'kubernetes_addons::cluster_autoscaler' do
     }
   end
 
+  let(:kubernetes_version) do
+    '1.6.6'
+  end
+
   let(:pre_condition) do
     "
       class kubernetes{
+        $_authorization_mode = ['RBAC']
+        $version = '#{kubernetes_version}'
         $cloud_provider = 'aws'
         $cluster_name = 'cluster1'
       }
@@ -56,6 +62,33 @@ describe 'kubernetes_addons::cluster_autoscaler' do
 
     it 'has AWS_REGION set' do
       expect(manifests[0]).to match(%r{value: eu-west-1$})
+    end
+  end
+
+  context 'with kubernetes 1.5' do
+    let(:kubernetes_version) do
+      '1.5.6'
+    end
+    it 'uses correct image version' do
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:0.4.0})
+    end
+  end
+
+  context 'with kubernetes 1.6' do
+    let(:kubernetes_version) do
+      '1.6.6'
+    end
+    it 'uses correct image version' do
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:0.5.4})
+    end
+  end
+
+  context 'with kubernetes 1.7' do
+    let(:kubernetes_version) do
+      '1.7.1'
+    end
+    it 'uses correct image version' do
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:0.6.0})
     end
   end
 end

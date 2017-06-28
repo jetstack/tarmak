@@ -1,7 +1,6 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: helm
     name: tiller
@@ -9,10 +8,8 @@ metadata:
   namespace: kube-system
 spec:
   replicas: 1
-  strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: helm
         name: tiller
@@ -36,7 +33,3 @@ spec:
             port: 44135
           initialDelaySeconds: 1
           timeoutSeconds: 1
-        resources: {}
-      serviceAccountName: ""
-      volumes: null
-status: {}

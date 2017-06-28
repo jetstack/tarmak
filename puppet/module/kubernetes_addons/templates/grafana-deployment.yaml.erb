@@ -20,7 +20,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      creationTimestamp: null
       labels:
         k8s-app: grafana
         task: monitoring
@@ -45,15 +44,9 @@ spec:
         ports:
         - containerPort: 3000
           protocol: TCP
-        resources: {}
-        terminationMessagePath: /dev/termination-log
         volumeMounts:
         - mountPath: /var
           name: grafana-storage
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      securityContext: {}
-      terminationGracePeriodSeconds: 30
       volumes:
       - emptyDir: {}
         name: grafana-storage

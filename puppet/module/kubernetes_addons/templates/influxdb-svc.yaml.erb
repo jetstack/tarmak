@@ -8,7 +8,6 @@ metadata:
   name: monitoring-influxdb
   namespace: kube-system
 spec:
-  clusterIP:
   ports:
   - port: 8086
     protocol: TCP
@@ -17,5 +16,3 @@ spec:
     k8s-app: influxdb
   sessionAffinity: None
   type: ClusterIP
-status:
-  loadBalancer: {}
