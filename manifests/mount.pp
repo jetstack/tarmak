@@ -37,8 +37,7 @@ define aws_ebs::mount(
     mode    => '0644',
     content => template('aws_ebs/attach-volume.service.erb'),
     notify  => Exec[$systemd_reload],
-  } ~>
-  service { $attach_service_name:
+  } ~> service { $attach_service_name:
     ensure  => running,
     enable  => true,
     before  => Service[$format_service_name],
@@ -50,8 +49,7 @@ define aws_ebs::mount(
     mode    => '0644',
     content => template('aws_ebs/ensure-volume-formatted.service.erb'),
     notify  => Exec[$systemd_reload],
-  } ~>
-  service { $format_service_name:
+  } ~>  service { $format_service_name:
     ensure  => running,
     enable  => true,
     before  => Service[$mount_service_name],
@@ -63,8 +61,7 @@ define aws_ebs::mount(
     mode    => '0644',
     content => template('aws_ebs/volume.mount.erb'),
     notify  => Exec[$systemd_reload],
-  } ~>
-  service { $mount_service_name:
+  } ~> service { $mount_service_name:
     ensure  => running,
     require => Exec[$systemd_reload],
   }
