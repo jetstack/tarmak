@@ -1,0 +1,5 @@
+---
+classes:
+- tarmak::etcd
+
+tarmak::hostname: "%{::tarmak_hostname}"

@@ -1,0 +1,16 @@
+---
+version: 5
+defaults:
+  datadir: hieradata
+  data_hash: yaml_data
+hierarchy:
+- name: "Per-node data (yaml version)"
+  path: "node/%{trusted.certname}.yaml" # Add file extension.
+  # Omitting datadir and data_hash to use defaults.
+
+- name: "Other YAML hierarchy levels"
+  paths: # Can specify an array of paths instead of one.
+  - role/%{facts.tarmak_role}.yaml
+  - cloudprovider/%{facts.tarmak_cloudprovider}.yaml
+  - environment/%{facts.tarmak_environment}.yaml
+  - common.yaml
