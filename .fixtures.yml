@@ -1,0 +1,5 @@
+fixtures:
+  symlinks:
+    archive: "#{source_dir}/../archive"
+    concat: "#{source_dir}/../concat"
+    stdlib: "#{source_dir}/../stdlib"
