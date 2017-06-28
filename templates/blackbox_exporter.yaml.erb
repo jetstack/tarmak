@@ -1,0 +1,34 @@
+modules:
+  k8s_proxy:
+    prober: proxy
+    timeout: 5s
+    proxy:
+      valid_targets:
+      - https://127.0.0.1:2379/metrics
+      tls_config:
+        ca_file: /etc/etcd/ssl/etcd-k8s-ca.pem
+        key_file: /etc/etcd/ssl/etcd-k8s-key.pem
+        cert_file: /etc/etcd/ssl/etcd-k8s.pem
+        insecure_skip_verify: true
+  events_proxy:
+    prober: proxy
+    timeout: 5s
+    proxy:
+      valid_targets:
+      - https://127.0.0.1:2369/metrics
+      tls_config:
+        ca_file: /etc/etcd/ssl/etcd-k8s-ca.pem
+        key_file: /etc/etcd/ssl/etcd-k8s-key.pem
+        cert_file: /etc/etcd/ssl/etcd-k8s.pem
+        insecure_skip_verify: true
+  overlay_proxy:
+    prober: proxy
+    timeout: 5s
+    proxy:
+      valid_targets:
+      - https://127.0.0.1:2359/metrics
+      tls_config:
+        ca_file: /etc/etcd/ssl/etcd-overlay-ca.pem
+        key_file: /etc/etcd/ssl/etcd-overlay-key.pem
+        cert_file: /etc/etcd/ssl/etcd-overlay.pem
+        insecure_skip_verify: true
