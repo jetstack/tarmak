@@ -3,13 +3,12 @@
   tags:
   - docker
   script:
-  - cd puppet
+  - cd ${CI_PROJECT_DIR}/puppet
   - bundle install --path /cache
-  - cd puppet/modules/${MODULE_NAME}
+  - cd ${CI_PROJECT_DIR}/puppet/modules/${MODULE_NAME}
   - bundle exec rake test
 
-# Specs for puppet modules
-
+# run test for puppet modules
 test::puppet_module::aws_ebs:
   <<: *test_puppet_module
   variables:
