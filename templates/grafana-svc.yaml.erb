@@ -7,7 +7,6 @@ metadata:
   name: monitoring-grafana
   namespace: kube-system
 spec:
-  clusterIP:
   ports:
   - port: 80
     protocol: TCP
@@ -16,5 +15,3 @@ spec:
     k8s-app: grafana
   sessionAffinity: None
   type: ClusterIP
-status:
-  loadBalancer: {}
