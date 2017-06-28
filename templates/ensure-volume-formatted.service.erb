@@ -1,0 +1,12 @@
+[Unit]
+Description=Formats the ebs volume if needed
+Requires=<%= @attach_service_name %>
+After=<%= @attach_service_name %>
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=<%= scope['aws_ebs::format_bin_path'] %> <%= @device %>
+
+[Install]
+WantedBy=multiuser.target
