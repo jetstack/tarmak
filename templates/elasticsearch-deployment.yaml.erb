@@ -1,0 +1,65 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: elasticsearch-logging
+  namespace: <%= @namespace %>
+  labels:
+    k8s-app: elasticsearch-logging
+    kubernetes.io/cluster-service: "true"
+spec:
+  replicas: <%= @replicas %>
+  selector:
+    matchLabels:
+      k8s-app: elasticsearch-logging
+  template:
+    metadata:
+      labels:
+        k8s-app: elasticsearch-logging
+    spec:
+      containers:
+      - image: <%= @image %>:<%= @version %>
+        name: elasticsearch-logging
+        resources:
+          limits:
+            cpu: <%= @limit_cpu %>
+            memory: <%= @limit_mem %>
+          requests:
+            cpu: <%= @request_cpu %>
+            memory: <%= @request_mem %>
+        ports:
+        - containerPort: 9200
+          name: db
+          protocol: TCP
+        - containerPort: 9300
+          name: transport
+          protocol: TCP
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        env:
+        - name: "NAMESPACE"
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      volumes:
+      - name: data
+<% if @persistent_storage -%>
+        persistentVolumeClaim:
+          claimName: elasticsearch-logging
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: elasticsearch-logging
+  namespace: <%= @namespace %>
+  annotations:
+    volume.beta.kubernetes.io/storage-class: <%= @persistent_storage_class %>
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: <%= @persistent_storage_request %>
+<% else -%>
+        emptyDir: {}
+<% end -%>
