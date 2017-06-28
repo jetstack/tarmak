@@ -97,29 +97,29 @@ class kubernetes::kubelet(
       group   => 'root',
       seltype => $seltype,
       require => File["${kubelet_dir}/plugins"],
-    } ->
-    file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs":
+    }
+    -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs":
       ensure  => 'directory',
       mode    => '0750',
       owner   => 'root',
       group   => 'root',
       seltype => $seltype,
-    } ->
-    file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts":
+    }
+    -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts":
       ensure  => 'directory',
       mode    => '0750',
       owner   => 'root',
       group   => 'root',
       seltype => $seltype,
-    } ->
-    file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws":
+    }
+    -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws":
       ensure  => 'directory',
       mode    => '0750',
       owner   => 'root',
       group   => 'root',
       seltype => $seltype,
-    } ->
-    file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws/${availability_zone}":
+    }
+    -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws/${availability_zone}":
       ensure  => 'directory',
       mode    => '0750',
       owner   => 'root',
@@ -138,21 +138,21 @@ class kubernetes::kubelet(
     notify  => Service["${service_name}.service"],
   }
 
-  kubernetes::symlink{'kubelet':} ->
-  file{"${::kubernetes::systemd_dir}/${service_name}.service":
+  kubernetes::symlink{'kubelet':}
+  -> file{"${::kubernetes::systemd_dir}/${service_name}.service":
     ensure  => file,
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
     content => template("kubernetes/${service_name}.service.erb"),
     notify  => Service["${service_name}.service"],
-  } ~>
-  exec { "${service_name}-daemon-reload":
+  }
+  ~> exec { "${service_name}-daemon-reload":
     command     => 'systemctl daemon-reload',
     path        => $::kubernetes::path,
     refreshonly => true,
-  } ->
-  service{ "${service_name}.service":
+  }
+  -> service{ "${service_name}.service":
     ensure => running,
     enable => true,
   }

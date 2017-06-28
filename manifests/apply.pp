@@ -64,13 +64,13 @@ define kubernetes::apply(
     notify  => [
       Service["${service_name}.service"],
     ]
-  } ~>
-  exec { "${service_name}-daemon-reload":
+  }
+  ~> exec { "${service_name}-daemon-reload":
     command     => 'systemctl daemon-reload',
     path        => $::kubernetes::path,
     refreshonly => true,
-  } ->
-  service{ "${service_name}.service":
+  }
+  -> service{ "${service_name}.service":
     ensure  => 'running',
     enable  => true,
     require => [

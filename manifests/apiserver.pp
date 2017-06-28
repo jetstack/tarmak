@@ -132,21 +132,21 @@ class kubernetes::apiserver(
     }
   }
 
-  kubernetes::symlink{'apiserver':} ->
-  file{"${::kubernetes::systemd_dir}/${service_name}.service":
+  kubernetes::symlink{'apiserver':}
+  -> file{"${::kubernetes::systemd_dir}/${service_name}.service":
     ensure  => file,
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
     content => template("kubernetes/${service_name}.service.erb"),
     notify  => Service["${service_name}.service"],
-  } ~>
-  exec { "${service_name}-daemon-reload":
+  }
+  ~> exec { "${service_name}-daemon-reload":
     command     => 'systemctl daemon-reload',
     path        => $::kubernetes::path,
     refreshonly => true,
-  } ->
-  service{ "${service_name}.service":
+  }
+  -> service{ "${service_name}.service":
     ensure => running,
     enable => true,
   }
