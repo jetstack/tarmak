@@ -1,0 +1,19 @@
+[Unit]
+Description=Kubernetes Scheduler Plugin
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+<%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
+
+[Service]
+User=<%= scope['kubernetes::user'] %>
+Group=<%= scope['kubernetes::group'] %>
+ExecStart=<%= scope['kubernetes::_dest_dir'] %>/scheduler \
+  --v=<%= scope['kubernetes::log_level'] %> \
+  --kubeconfig=<%= @kubeconfig_path %> \
+  --leader-elect=true \
+  --logtostderr=true
+
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
