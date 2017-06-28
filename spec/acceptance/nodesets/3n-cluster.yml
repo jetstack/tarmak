@@ -1,0 +1,26 @@
+---
+HOSTS:
+  etcd1:
+    roles:
+      - etcd
+      - master
+    platform: el-7-x86_64
+    box: puppetlabs/centos-7.2-64-puppet
+    hypervisor: vagrant
+    ip: 10.123.0.11
+  etcd2:
+    roles:
+      - etcd
+    platform: el-7-x86_64
+    box: puppetlabs/centos-7.2-64-puppet
+    hypervisor: vagrant
+    ip: 10.123.0.12
+  etcd3:
+    roles:
+      - etcd
+    platform: el-7-x86_64
+    box: puppetlabs/centos-7.2-64-puppet
+    hypervisor: vagrant
+    ip: 10.123.0.13
+CONFIG:
+  type: foss

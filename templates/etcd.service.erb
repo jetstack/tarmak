@@ -1,0 +1,37 @@
+[Unit]
+Description=etcd server <%= @cluster_name %>
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+User=<%= @user %>
+Group=<%= @group %>
+Type=notify
+Environment=ETCD_NAME=<%= @nodename %>
+Environment=ETCD_DATA_DIR=<%= @data_dir %>
+Environment=ETCD_LISTEN_CLIENT_URLS=<%= @listen_client_urls %>
+<% if @advertise_client_urls -%>
+Environment=ETCD_ADVERTISE_CLIENT_URLS=<%= @advertise_client_urls %>
+<% end -%>
+Environment=ETCD_LISTEN_PEER_URLS=<%= @listen_peer_urls %>
+<% if @tls -%>
+Environment=ETCD_CERT_FILE=<%= @tls_cert_path %>
+Environment=ETCD_KEY_FILE=<%= @tls_key_path %>
+Environment=ETCD_TRUSTED_CA_FILE=<%= @tls_ca_path %>
+Environment=ETCD_PEER_CERT_FILE=<%= @tls_cert_path %>
+Environment=ETCD_PEER_KEY_FILE=<%= @tls_key_path %>
+Environment=ETCD_PEER_TRUSTED_CA_FILE=<%= @tls_ca_path %>
+Environment=ETCD_CLIENT_CERT_AUTH=true
+Environment=ETCD_PEER_CLIENT_CERT_AUTH=true
+<% end -%>
+<% if @members > 1 -%>
+Environment=ETCD_INITIAL_CLUSTER_TOKEN=<%= @initial_cluster_token %>
+Environment=ETCD_INITIAL_CLUSTER=<%= @_initial_cluster %>
+Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=<%= @initial_advertise_peer_urls %>
+<% end -%>
+ExecStart=/opt/etcd-<%= @version %>/etcd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
