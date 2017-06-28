@@ -41,34 +41,11 @@ var applyCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		hieraData := `---
-version: 5
-defaults:
-  datadir: data
-  data_hash: yaml_data
-
-hierarchy:
-- name: Per node data
-  path: "nodes/%{::trusted.certname}.yaml"
-- name: Per role data
-  path: "role/%{::tarmak_role}.yaml"
-- name: Per environment data
-  path: "environment/%{tarmak_environment}.yaml"
-- name: Default fallback
-  path: common.yaml
-`
-		err = ioutil.WriteFile(
-			filepath.Join(dir, "hiera.yaml"),
-			[]byte(hieraData),
-			0644,
-		)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		puppetCmd := exec.Command(
 			"puppet",
 			"apply",
+			"--environment",
+			"production",
 			"--hiera_config",
 			filepath.Join(dir, "hiera.yaml"),
 			"--modulepath",
