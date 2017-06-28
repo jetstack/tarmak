@@ -1,0 +1,54 @@
+.test::puppet_module: &test_puppet_module
+  stage: test
+  tags:
+  - docker
+  script:
+  - cd puppet
+  - bundle install --path /cache
+  - cd puppet/modules/${MODULE_NAME}
+  - bundle exec rake test
+
+# Specs for puppet modules
+
+test::puppet_module::aws_ebs:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: aws_ebs
+
+test::puppet_module::calico:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: calico
+
+test::puppet_module::etcd:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: etcd
+
+test::puppet_module::kubernetes:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: kubernetes
+
+test::puppet_module::kubernetes_addons:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: kubernetes_addons
+
+test::puppet_module::prometheus:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: prometheus
+
+test::puppet_module::tarmak:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+
+test::puppet_module::vault_client:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: vault_client
+
+stages:
+- test
