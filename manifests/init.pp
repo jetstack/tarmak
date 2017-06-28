@@ -41,8 +41,7 @@ class calico(
   exec {"systemctl stop ${node_service_name}":
     onlyif => "test -f ${calico::systemd_dir}/${node_service_name}",
     path   => $path,
-  } ->
-  file{"${calico::systemd_dir}/${node_service_name}":
+  } -> file{"${calico::systemd_dir}/${node_service_name}":
     ensure =>  absent,
   }
 }
