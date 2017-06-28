@@ -1,0 +1,4 @@
+fixtures:
+  symlinks:
+    stdlib: "#{source_dir}/../stdlib"
+    concat: "#{source_dir}/../concat"
