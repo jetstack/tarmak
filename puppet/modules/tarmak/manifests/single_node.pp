@@ -26,6 +26,5 @@ class tarmak::single_node(
 
   ensure_resource('class', '::tarmak::worker',{})
 
-  Class['tarmak::etcd'] ->
-  Class['tarmak::master']
+  Class['tarmak::etcd'] -> Class['tarmak::master']
 }

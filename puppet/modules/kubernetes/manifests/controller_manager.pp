@@ -27,8 +27,8 @@ class kubernetes::controller_manager(
     $version_before_1_6 = true
   }
 
-  kubernetes::symlink{'controller-manager':} ->
-  file{$kubeconfig_path:
+  kubernetes::symlink{'controller-manager':}
+  -> file{$kubeconfig_path:
     ensure  => file,
     mode    => '0640',
     owner   => 'root',
@@ -44,13 +44,13 @@ class kubernetes::controller_manager(
     group   => 'root',
     content => template("kubernetes/${service_name}.service.erb"),
     notify  => Service["${service_name}.service"],
-  } ~>
-  exec { "${service_name}-daemon-reload":
+  }
+  ~> exec { "${service_name}-daemon-reload":
     command     => 'systemctl daemon-reload',
     path        => $::kubernetes::path,
     refreshonly => true,
-  } ->
-  service{ "${service_name}.service":
+  }
+  -> service{ "${service_name}.service":
     ensure => running,
     enable => true,
   }

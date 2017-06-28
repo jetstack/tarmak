@@ -79,8 +79,8 @@ define etcd::instance (
       Class['etcd'],
     ],
     notify  => Exec["${cluster_name}-systemctl-daemon-reload"]
-  } ~>
-  service { "${service_name}.service":
+  }
+  ~> service { "${service_name}.service":
     ensure  => running,
     enable  => true,
     require => [

@@ -17,8 +17,8 @@ class etcd(
   group { $group:
     ensure => present,
     gid    => $gid,
-  } ->
-  user { $user:
+  }
+  -> user { $user:
     ensure => present,
     uid    => $uid,
     shell  => $nologin,

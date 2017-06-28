@@ -84,8 +84,8 @@ class kubernetes (
   group { $group:
     ensure => present,
     gid    => $gid,
-  } ->
-  user { $user:
+  }
+  -> user { $user:
     ensure => present,
     uid    => $uid,
     home   => $config_dir,
@@ -98,8 +98,8 @@ class kubernetes (
     group   => $group,
     mode    => '0750',
     require => User[$user],
-  } ->
-  file { $_ssl_dir:
+  }
+  -> file { $_ssl_dir:
     ensure => directory,
     owner  => $user,
     group  => $group,

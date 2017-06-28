@@ -70,7 +70,7 @@ describe 'kubernetes_addons::cluster_autoscaler' do
       '1.5.6'
     end
     it 'uses correct image version' do
-      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:0.4.0})
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v0.4.0})
     end
   end
 
@@ -79,7 +79,7 @@ describe 'kubernetes_addons::cluster_autoscaler' do
       '1.6.6'
     end
     it 'uses correct image version' do
-      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:0.5.4})
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v0.5.4})
     end
   end
 
@@ -88,7 +88,7 @@ describe 'kubernetes_addons::cluster_autoscaler' do
       '1.7.1'
     end
     it 'uses correct image version' do
-      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:0.6.0})
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v0.6.0})
     end
   end
 end
