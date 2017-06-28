@@ -1,0 +1,80 @@
+#cloud-config
+repo_update: true
+repo_upgrade: all
+
+write_files:
+
+  - path: /etc/vault/ca.pem
+    permissions: '0644'
+    encoding: b64
+    content: ${vault_ca}
+
+  - path: /etc/sysconfig/tarmak
+    permissions: '0644'
+    content: |
+      TARMAK_ROLE=${tarmak_role}
+      TARMAK_CLUSTER=${tarmak_cluster}
+      TARMAK_DNS_ROOT=${tarmak_dns_root}
+      TARMAK_HOSTNAME=${tarmak_hostname}
+      TARMAK_ENVIRONMENT=${tarmak_environment}
+      TARMAK_DESIRED_COUNT=${tarmak_desired_count}
+      TARMAK_VOLUME_ID=${tarmak_volume_id}
+
+  - path: /etc/profile.d/tarmak.sh
+    permissions: '0644'
+    content: |
+      # Add /opt/bin to the path
+      if ! echo $PATH | grep -q /opt/bin ; then
+        export PATH=$PATH:/opt/bin
+      fi
+
+      export PS1="[\u@${tarmak_cluster}|${tarmak_hostname}|\h \W]\$ "
+
+  - path: /etc/puppetlabs/puppet/puppet.conf
+    permissions: '0644'
+    content: |
+      [main]
+      server = ${puppet_fqdn}
+      environment = ${puppet_environment}
+      runinterval = ${puppet_runinterval}
+      certname = ##instance_id##
+
+  - path: /etc/facter/facts.d/vault_token
+    permissions: '0700'
+    content: |
+      #!/bin/bash
+      echo VAULT_TOKEN=${vault_token}
+
+  - path: /etc/facter/facts.d/tarmak
+    permissions: '0700'
+    content: |
+      #!/bin/bash
+      cat /etc/sysconfig/tarmak
+
+  - path: /etc/sudoers
+    permissions: '0440'
+    content: |
+      Defaults    always_set_home
+
+      Defaults    env_reset
+      Defaults    env_keep =  "COLORS DISPLAY HOSTNAME HISTSIZE INPUTRC KDEDIR LS_COLORS"
+      Defaults    env_keep += "MAIL PS1 PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE"
+      Defaults    env_keep += "LC_COLLATE LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES"
+      Defaults    env_keep += "LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE"
+      Defaults    env_keep += "LC_TIME LC_ALL LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY"
+      Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin
+
+      root    ALL=(ALL)       NOPASSWD:ALL
+      %wheel  ALL=(ALL)       NOPASSWD:ALL
+
+      #includedir /etc/sudoers.d
+
+  - path: /var/lib/puppet-deploy/.ssh/authorized_keys
+    permissions: '0600'
+    content: |
+      command="/bin/bash -c 'exec /opt/puppetlabs/bin/puppet agent --test'",no-port-forwarding,no-X11-forwarding,no-pty ${puppet_deploy_key}
+
+runcmd:
+- useradd -g 0 -u 0 -o -d /var/lib/puppet-deploy puppet-deploy
+- sed -i "s/##instance_id##/$(curl -s http://169.254.169.254/latest/meta-data/instance-id).$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}').compute.internal/g" /etc/puppetlabs/puppet/puppet.conf
+- service puppet restart

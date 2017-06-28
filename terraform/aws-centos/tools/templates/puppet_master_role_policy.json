@@ -1,0 +1,13 @@
+{
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*",
+        "autoscaling:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ],
+  "Version": "2012-10-17"
+}

@@ -1,0 +1,25 @@
+// vim: et:ts=2:sw=2:ft=groovy
+node {
+  try {
+    checkout scm
+
+    stage ('build docker image'){
+      sh "make build terraform_sync"
+    }
+
+    stage('validate terraform') {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+        sh "make terraform_validate"
+      }
+    }
+
+    stage('fmt terraform') {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
+        sh "make terraform_fmt"
+      }
+    }
+  }
+  finally {
+    sh "make clean"
+  }
+}

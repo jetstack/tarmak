@@ -1,0 +1,20 @@
+#cloud-config
+repo_update: true
+repo_upgrade: all
+
+preserve_hostname: true
+
+write_files:
+- path: /etc/hosts
+  permissions: '0644'
+  content: |
+    127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+    ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+    127.0.1.1   ${fqdn}
+
+runcmd:
+- hostnamectl set-hostname "${fqdn}"
+- yum -y update
+- yum -y install vim
+
+output : { all : '| tee -a /var/log/cloud-init-output.log' }

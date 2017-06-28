@@ -1,0 +1,46 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "region": "{{env `AWS_DEFAULT_REGION`}}"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "{{user `region`}}",
+      "source_ami_filter": {
+          "filters": {
+              "owner-alias": "aws-marketplace",
+              "product-code": "aw0evgkw8e5c1q413zgy5pjce",
+              "virtualization-type": "hvm"
+          },
+          "most_recent": true
+      },
+      "instance_type": "c4.xlarge",
+      "ssh_username": "centos",
+      "ssh_pty": "true",
+      "ami_name": "CentOS 7 x86_64 with puppet-agent and upstream kernel {{timestamp}}",
+      "associate_public_ip_address": true
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "sudo -E -S sh '{{ .Path }}'",
+      "inline": [
+        "rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm",
+        "yum update -y",
+        "yum install -y epel-release",
+        "yum install -y git puppet-agent vim socat python-pip at jq unzip",
+        "pip install awscli",
+        "rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org",
+        "rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm",
+        "yum --enablerepo=elrepo-kernel install -y kernel-ml",
+        "grub2-set-default 0",
+        "grub2-mkconfig -o /boot/grub2/grub.cfg"
+      ]
+    }
+  ]
+}
