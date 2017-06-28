@@ -22,7 +22,7 @@ spec:
     spec:
       hostNetwork: true
       containers:
-      - image: "<%= @image %>:<%= @version %>"
+      - image: "<%= @image %>:<%= @_version %>"
         name: cluster-autoscaler
         resources:
           limits:
