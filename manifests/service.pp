@@ -18,8 +18,8 @@ class vault_client::service {
     ensure  => file,
     content => template('vault_client/token-renewal.service.erb'),
     notify  => Exec["${module_name}-systemctl-daemon-reload"],
-  } ~>
-  exec { "${service_name}-trigger":
+  }
+  ~> exec { "${service_name}-trigger":
     command     => "systemctl start ${service_name}.service",
     path        => $path,
     refreshonly => true,
@@ -30,8 +30,8 @@ class vault_client::service {
     ensure  => file,
     content => template('vault_client/token-renewal.timer.erb'),
     notify  => Exec["${module_name}-systemctl-daemon-reload"],
-  } ~>
-  service { "${service_name}.timer":
+  }
+  ~> service { "${service_name}.timer":
     ensure => 'running',
     enable => true,
   }

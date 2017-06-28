@@ -13,13 +13,13 @@ define vault_client::secret_service (
     ensure  => file,
     content => template('vault_client/secret.service.erb'),
     notify  => Service["${service_name}.service"],
-  } ~>
-  exec { "${service_name}-systemctl-daemon-reload":
+  }
+  ~> exec { "${service_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
     path        => $::vault_client::path,
-  } ->
-  service { "${service_name}.service":
+  }
+  -> service { "${service_name}.service":
     ensure => 'running',
     enable => true,
   }

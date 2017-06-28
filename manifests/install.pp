@@ -29,9 +29,8 @@ class vault_client::install {
     cleanup      => true,
     creates      => $vault_bin,
     require      => Package['unzip'],
-  } ->
-
-  file { $vault_bin:
+  }
+  -> file { $vault_bin:
     ensure => file,
     mode   => '0755',
   }

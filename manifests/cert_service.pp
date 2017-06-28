@@ -26,14 +26,14 @@ define vault_client::cert_service (
     ensure  => file,
     content => template('vault_client/cert.service.erb'),
     notify  => Exec["${service_name}-systemctl-daemon-reload", "${service_name}-trigger"],
-  } ~>
-  exec { "${service_name}-remove-existing-certs":
+  }
+  ~> exec { "${service_name}-remove-existing-certs":
     command     => "rm -rf ${base_path}-key.pem ${base_path}-csr.pem",
     path        => $::vault_client::path,
     refreshonly => true,
     require     => Exec["${service_name}-systemctl-daemon-reload"],
-  } ~>
-  service { "${service_name}.service":
+  }
+  ~> service { "${service_name}.service":
     enable  => true,
     require => Exec["${service_name}-systemctl-daemon-reload"],
   }
@@ -45,8 +45,8 @@ define vault_client::cert_service (
     command     => $trigger_cmd,
     refreshonly => true,
     require     => Exec["${service_name}-systemctl-daemon-reload"],
-  } ->
-  exec { "${service_name}-create-if-missing":
+  }
+  -> exec { "${service_name}-create-if-missing":
     command => $trigger_cmd,
     creates => "${base_path}.pem",
     path    => $::vault_client::path,
@@ -57,8 +57,8 @@ define vault_client::cert_service (
     ensure  => file,
     content => template('vault_client/cert.timer.erb'),
     notify  => Exec["${service_name}-systemctl-daemon-reload"],
-  } ~>
-  service { "${service_name}.timer":
+  }
+  ~> service { "${service_name}.timer":
     ensure  => 'running',
     enable  => true,
     require => Exec["${service_name}-systemctl-daemon-reload"],
