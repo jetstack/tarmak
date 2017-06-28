@@ -8,4 +8,4 @@ fixtures:
     kubernetes: "#{source_dir}/../kubernetes"
     vault_client: "#{source_dir}/../vault_client"
     stdlib: "#{source_dir}/../stdlib"
-
+    tarmak: "#{source_dir}"
