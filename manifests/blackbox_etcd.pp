@@ -16,12 +16,12 @@ class prometheus::blackbox_etcd (
 
   file { [ $dest_dir, $config_dir ]:
     ensure => directory,
-  } ->
-  prometheus::wget_file { 'blackbox_exporter':
+  }
+  -> prometheus::wget_file { 'blackbox_exporter':
     url             => "${download_url}/blackbox_exporter",
     destination_dir => $dest_dir,
-  } ->
-  file { "${dest_dir}/blackbox_exporter":
+  }
+  -> file { "${dest_dir}/blackbox_exporter":
     ensure => file,
     mode   => '0755',
   }
@@ -34,8 +34,8 @@ class prometheus::blackbox_etcd (
   file { "${systemd_path}/blackbox_exporter.service":
     ensure  => file,
     content => template('prometheus/blackbox_exporter.service.erb'),
-  } ~>
-  exec { "${module_name}-systemctl-daemon-reload":
+  }
+  ~> exec { "${module_name}-systemctl-daemon-reload":
     command     => '/usr/bin/systemctl daemon-reload',
     refreshonly => true,
   }
@@ -44,6 +44,10 @@ class prometheus::blackbox_etcd (
   service { 'blackbox_exporter':
     ensure  => running,
     enable  => true,
-    require => [ File[ "${dest_dir}/blackbox_exporter"], File["${config_dir}/blackbox_exporter.yaml"], File["${systemd_path}/blackbox_exporter.service"]],
+    require => [
+      File[ "${dest_dir}/blackbox_exporter"],
+      File["${config_dir}/blackbox_exporter.yaml"],
+      File["${systemd_path}/blackbox_exporter.service"]
+    ],
   }
 }
