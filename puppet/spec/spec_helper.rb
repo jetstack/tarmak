@@ -2,8 +2,8 @@ require 'puppetlabs_spec_helper/module_spec_helper'
 
 RSpec.configure do |c|
   base_path = File.dirname(__FILE__)
-  c.hiera_config = File.join(base_path, 'fixtures/hiera.yaml')
-  c.module_path = "#{File.join(File.dirname(base_path), 'modules')}:#{File.join(File.dirname(base_path), 'spec/fixtures/modules')}"
+  c.hiera_config = File.join(File.dirname(base_path), 'hiera.yaml')
+  c.module_path = File.join(File.dirname(base_path), 'modules')
   c.manifest = File.join(File.dirname(base_path), 'manifests/site.pp')
   c.default_facts = {
     :tarmak_environment => 'nonprod',
