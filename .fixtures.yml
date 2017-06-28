@@ -1,5 +1,6 @@
 fixtures:
   symlinks:
+    vault_client: "#{source_dir}"
     archive: "#{source_dir}/../archive"
     concat: "#{source_dir}/../concat"
     stdlib: "#{source_dir}/../stdlib"
