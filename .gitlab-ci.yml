@@ -49,5 +49,23 @@ test::puppet_module::vault_client:
   variables:
     MODULE_NAME: vault_client
 
+# run test on golang code
+#
+test::tarmak::golang:
+  stage: test
+  tags:
+  - docker
+  image: golang:1.8.3
+  script:
+  - rm -rf /go/src/github.com/jetstack
+  - mkdir -p /go/src/github.com/jetstack
+  - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
+  - cd /go/src/github.com/jetstack/tarmak
+  - go get -u github.com/golang/dep/cmd/dep
+  - dep ensure
+  - go test ./pkg/...
+  - go build -o tarmak
+  - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
+
 stages:
 - test
