@@ -105,37 +105,10 @@ func (t *Terraform) DockerImage() (image *docker.Image, err error) {
 
 }
 
-func (t *Terraform) awsRemoteState(awsConfig *config.AWSConfig, stackName string) string {
-	bucketName := fmt.Sprintf(
-		"%s%s-%s-terraform-state",
-		t.context.StateBucketPrefix(),
-		t.context.Environment,
-		awsConfig.Region,
-	)
-	remoteStateTf := fmt.Sprintf(
-		`terraform {
-  backend "s3" {
-    bucket = "%s"
-    key = "%s"
-    region = "%s"
-    lock_table ="%s"
-  }
-}`,
-		bucketName,
-		fmt.Sprintf("%s/%s/%s.tfstate", t.context.Environment, t.context.Name, stackName),
-		awsConfig.Region,
-		bucketName,
-	)
-	return remoteStateTf
-}
-
 func (t *Terraform) prepareContainer(stack *config.Stack) error {
 	remoteState := ""
 
-	stackName, err := stack.StackName()
-	if err != nil {
-		return err
-	}
+	stackName := stack.StackName()
 
 	logger := t.log.WithField("stack", stackName)
 	logger.Debug("prepare new terraform container")
@@ -152,19 +125,10 @@ func (t *Terraform) prepareContainer(stack *config.Stack) error {
 
 	environment := []string{}
 
-	providerName, err := t.context.ProviderName()
-	if err != nil {
-		return err
-	}
-
-	if providerName == config.ProviderNameAWS {
-		environmentAWS, err := t.context.AWS.Environment()
-		if err != nil {
-			return err
-		}
-		environment = append(environment, environmentAWS...)
-
-		remoteState = t.awsRemoteState(t.context.AWS, stackName)
+	if environmentProvider, err := t.context.ProviderEnvironment(); err != nil {
+		return fmt.Errorf("error getting environment secrets from provider: %s", err)
+	} else {
+		environment = append(environment, environmentProvider...)
 	}
 
 	logger.WithField("environment", environment).Debug("")

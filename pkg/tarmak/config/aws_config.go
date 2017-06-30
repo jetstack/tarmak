@@ -118,3 +118,23 @@ func (a *AWSConfig) Environment() ([]string, error) {
 	return output, nil
 
 }
+
+func (a *AWSConfig) RemoteState(bucketName, environmentName, contextName, stackName string) string {
+	return fmt.Sprintf(`terraform {
+  backend "s3" {
+    bucket = "%s"
+    key = "%s"
+    region = "%s"
+    lock_table ="%s"
+  }
+}`,
+		bucketName,
+		fmt.Sprintf("%s/%s/%s.tfstate", environmentName, contextName, stackName),
+		a.Region,
+		bucketName,
+	)
+}
+
+func (a *AWSConfig) RemoteStateAvailable(bucketName string) bool {
+	return false
+}
