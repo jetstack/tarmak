@@ -20,8 +20,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/mholt/archiver"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
