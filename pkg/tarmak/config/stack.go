@@ -35,6 +35,31 @@ func (s *Stack) StackName() string {
 	return stackName
 }
 
+func (c *Stack) TerraformVars(input map[string]interface{}) map[string]interface{} {
+	// state stack
+	if c.StackName() == StackNameState {
+		if c.State.BucketPrefix != "" {
+			input["bucket_prefix"] = c.State.BucketPrefix
+		}
+		if c.State.PublicZone != "" {
+			input["public_zone"] = c.State.PublicZone
+		}
+	}
+	// network stack
+	if c.StackName() == StackNameNetwork {
+		if c.Network.NetworkCIDR != "" {
+			input["network"] = c.Network.NetworkCIDR
+		}
+		if c.Network.PeerContext != "" {
+			input["vpc_peer_stack"] = c.Network.PeerContext
+		}
+		if c.Network.PrivateZone != "" {
+			input["private_zone"] = c.Network.PrivateZone
+		}
+	}
+	return input
+}
+
 func (s *Stack) getStackName() (string, error) {
 	stacks := []string{}
 	if s.State != nil {

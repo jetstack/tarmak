@@ -20,6 +20,9 @@ const (
 type Config struct {
 	CurrentContext string        `yaml:"currentContext,omitempty"` // <environmentName>-<contextName>
 	Environments   []Environment `yaml:"environments,omitempty"`
+
+	Contact string `yaml:"contact,omitempty"`
+	Project string `yaml:"project,omitempty"`
 }
 
 func (c *Config) GetContext() (*Context, error) {
@@ -40,6 +43,10 @@ func (c *Config) Validate() error {
 	var result error
 
 	for posEnvironment, _ := range c.Environments {
+		// set my link onto environment
+		c.Environments[posEnvironment].config = c
+
+		// validate environment
 		if err := c.Environments[posEnvironment].Validate(); err != nil {
 			result = multierror.Append(result, err)
 		}
@@ -48,14 +55,24 @@ func (c *Config) Validate() error {
 	return result
 }
 
+func (c *Config) TerraformVars() map[string]interface{} {
+	return map[string]interface{}{
+		"project": c.Project,
+		"contact": c.Contact,
+	}
+}
+
 func DefaultConfigSingle() *Config {
 	return &Config{
 		CurrentContext: "devsingle-cluster",
+		Project:        "tarmak-dev",
+		Contact:        "tech@jetstack.io",
 		Environments: []Environment{
 			Environment{
 				AWS: &AWSConfig{
 					VaultPath: "jetstack/aws/jetstack-dev/sts/admin",
 					Region:    "eu-west-1",
+					KeyName:   "jetstack_nonprod",
 				},
 				Name: "devsingle",
 				Contexts: []Context{
@@ -97,11 +114,14 @@ func DefaultConfigSingle() *Config {
 func DefaultConfigHub() *Config {
 	return &Config{
 		CurrentContext: "devmulti-hub",
+		Project:        "tarmak-dev",
+		Contact:        "tech@jetstack.io",
 		Environments: []Environment{
 			Environment{
 				AWS: &AWSConfig{
 					VaultPath: "jetstack/aws/jetstack-dev/sts/admin",
 					Region:    "eu-west-1",
+					KeyName:   "jetstack_nonprod",
 				},
 				Name: "devmulti",
 				Contexts: []Context{

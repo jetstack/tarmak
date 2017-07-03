@@ -12,6 +12,9 @@ type Context struct {
 	Name   string  `yaml:"name,omitempty"` // only alphanumeric lowercase
 	Stacks []Stack `yaml:"stacks,omitempty"`
 
+	Contact string `yaml:"contact,omitempty"`
+	Project string `yaml:"project,omitempty"`
+
 	stackNetwork *StackNetwork
 
 	environment *Environment
@@ -75,7 +78,7 @@ func (c *Context) RemoteState(stackName string) string {
 	return c.environment.RemoteState(c.Name, stackName)
 }
 
-func (c *Context) RemoteStateAvailable() bool {
+func (c *Context) RemoteStateAvailable() (bool, error) {
 	return c.environment.RemoteStateAvailable()
 }
 
@@ -89,4 +92,19 @@ func (c *Context) GetName() string {
 
 func (c *Context) GetStateBucketPrefix() string {
 	return c.environment.stackState.BucketPrefix
+}
+
+func (c *Context) TerraformVars() map[string]interface{} {
+	output := c.environment.TerraformVars()
+
+	if c.Contact != "" {
+		output["contact"] = c.Contact
+	}
+	if c.Project != "" {
+		output["project"] = c.Project
+	}
+
+	output["name"] = c.Name
+
+	return output
 }

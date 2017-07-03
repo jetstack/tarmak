@@ -4,11 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/docker/docker/pkg/archive"
 	"github.com/fsouza/go-dockerclient"
 
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
@@ -34,9 +31,8 @@ RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terr
 `
 
 type Terraform struct {
-	dockerClient    *docker.Client
-	dockerImage     *docker.Image
-	dockerContainer *docker.Container
+	dockerClient *docker.Client
+	dockerImage  *docker.Image
 
 	rootPath string
 
@@ -105,142 +101,6 @@ func (t *Terraform) DockerImage() (image *docker.Image, err error) {
 
 }
 
-func (t *Terraform) prepareContainer(stack *config.Stack) error {
-	remoteState := ""
-
-	stackName := stack.StackName()
-
-	logger := t.log.WithField("stack", stackName)
-	logger.Debug("prepare new terraform container")
-
-	image, err := t.DockerImage()
-	if err != nil {
-		return fmt.Errorf("error building of docker image failed: %s", err)
-	}
-
-	if t.dockerContainer != nil {
-		t.cleanupContainer(t.dockerContainer)
-		logger.WithField("container", t.dockerContainer.ID).Warn("cleaning up of container failed")
-	}
-
-	environment := []string{}
-
-	if environmentProvider, err := t.context.ProviderEnvironment(); err != nil {
-		return fmt.Errorf("error getting environment secrets from provider: %s", err)
-	} else {
-		environment = append(environment, environmentProvider...)
-	}
-
-	logger.WithField("environment", environment).Debug("")
-	t.dockerContainer, err = t.dockerClient.CreateContainer(docker.CreateContainerOptions{
-		Config: &docker.Config{
-			Image: image.ID,
-			Cmd: []string{
-				"sleep",
-				"3600",
-			},
-			WorkingDir: "/terraform",
-			Env:        environment,
-		},
-	})
-	if err != nil {
-		return err
-	}
-	logger = logger.WithField("container", t.dockerContainer.ID)
-
-	tarOpts := &archive.TarOptions{
-		Compression:  archive.Uncompressed,
-		NoLchown:     true,
-		IncludeFiles: []string{"."},
-	}
-
-	terraformDir := filepath.Clean(filepath.Join(t.rootPath, "terraform/aws-centos", stackName))
-	logger = logger.WithField("terraform-dir", terraformDir)
-
-	terraformDirInfo, err := os.Stat(terraformDir)
-	if err != nil {
-		return err
-	}
-	if !terraformDirInfo.IsDir() {
-		return fmt.Errorf("path '%s' is not a directory", terraformDir)
-	}
-
-	terraformTar, err := archive.TarWithOptions(terraformDir, tarOpts)
-	if err != nil {
-		return err
-	}
-
-	err = t.dockerClient.UploadToContainer(t.dockerContainer.ID, docker.UploadToContainerOptions{
-		InputStream: terraformTar,
-		Path:        "/terraform",
-	})
-	if err != nil {
-		return err
-	}
-	logger.Debug("copied terraform manifests into container")
-
-	remoteStateTar, err := tarmakDocker.TarStreamFromFile("terraform_remote_state.tf", remoteState)
-	if err != nil {
-		return err
-	}
-
-	err = t.dockerClient.UploadToContainer(t.dockerContainer.ID, docker.UploadToContainerOptions{
-		InputStream: remoteStateTar,
-		Path:        "/terraform",
-	})
-	if err != nil {
-		return err
-	}
-	logger.Debug("copied remote state config into container")
-
-	logger.Info("initialising terraform")
-
-	err = t.dockerClient.StartContainer(t.dockerContainer.ID, &docker.HostConfig{})
-	if err != nil {
-		return fmt.Errorf("error starting container '%s': %s", t.dockerContainer.ID, err)
-	}
-
-	exec, err := t.dockerClient.CreateExec(docker.CreateExecOptions{
-		Cmd:          []string{"terraform", "init"},
-		AttachStdin:  false,
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    t.dockerContainer.ID,
-	})
-	if err != nil {
-		return err
-	}
-
-	stdoutReader, stdoutWriter := io.Pipe()
-	stdoutScanner := bufio.NewScanner(stdoutReader)
-	go func() {
-		for stdoutScanner.Scan() {
-			t.log.WithField("action", "terraform-init").Debug(stdoutScanner.Text())
-		}
-	}()
-
-	err = t.dockerClient.StartExec(exec.ID, docker.StartExecOptions{
-		ErrorStream:  stdoutWriter,
-		OutputStream: stdoutWriter,
-	})
-	stdoutReader.Close()
-	stdoutWriter.Close()
-	if err != nil {
-		return fmt.Errorf("error starting exec: %s", err)
-	}
-
-	execInspect, err := t.dockerClient.InspectExec(exec.ID)
-	if err != nil {
-		return fmt.Errorf("error inspecting exec: %s", err)
-	}
-
-	if execInspect.ExitCode != 0 {
-		return fmt.Errorf("error initializing terraform failed: exit_code=%d", execInspect.ExitCode)
-	}
-
-	return nil
-}
-
 func (t *Terraform) cleanupContainer(container *docker.Container) error {
 	return nil
 }
@@ -249,9 +109,94 @@ func (t *Terraform) Cleanup() error {
 	return nil
 }
 
-func (t *Terraform) Plan(stack *config.Stack) error {
+func (t *Terraform) NewContainer(stack *config.Stack) *TerraformContainer {
+	c := &TerraformContainer{
+		t:     t,
+		log:   t.log.WithField("stack", stack.StackName()),
+		stack: stack,
+	}
+	return c
+}
 
-	return t.prepareContainer(stack)
+func (t *Terraform) Apply(stack *config.Stack) error {
+	return t.planApply(stack, false)
+}
+
+func (t *Terraform) Destroy(stack *config.Stack) error {
+	return t.planApply(stack, true)
+}
+
+func (t *Terraform) planApply(stack *config.Stack, destroy bool) error {
+	c := t.NewContainer(stack)
+
+	if err := c.Prepare(); err != nil {
+		return fmt.Errorf("error preparing container: %s", err)
+	}
+
+	initialStateStack := false
+	// check for initial state run on first deployment
+	if !destroy && stack.StackName() == config.StackNameState {
+		remoteStateAvail, err := t.context.RemoteStateAvailable()
+		if err != nil {
+			return fmt.Errorf("error finding remote state: %s", err)
+		}
+		if !remoteStateAvail {
+			initialStateStack = true
+			c.log.Infof("running state stack for the first time, by passing remote state")
+		}
+	}
+
+	if !initialStateStack {
+		err := c.CopyRemoteState(t.context.RemoteState(stack.StackName()))
+
+		if err != nil {
+			return fmt.Errorf("error while copying remote state: %s", err)
+		}
+		c.log.Debug("copied remote state into container")
+	}
+
+	if err := c.Init(); err != nil {
+		return fmt.Errorf("error while terraform init: %s", err)
+	}
+
+	// check for destroying the state stack
+	if destroy && stack.StackName() == config.StackNameState {
+		c.log.Infof("moving remote state to local")
+
+		err := c.CopyRemoteState("")
+		if err != nil {
+			return fmt.Errorf("error while copying empty remote state: %s", err)
+		}
+		c.log.Debug("copied empty remote state into container")
+
+		if err := c.InitForceCopy(); err != nil {
+			return fmt.Errorf("error while terraform init -force-copy: %s", err)
+		}
+	}
+
+	changesNeeded, err := c.Plan(destroy)
+	if err != nil {
+		return fmt.Errorf("error while terraform plan: %s", err)
+	}
+
+	if changesNeeded {
+		if err := c.Apply(); err != nil {
+			return fmt.Errorf("error while terraform apply: %s", err)
+		}
+	}
+
+	// upload state if it was an inital state run
+	if initialStateStack {
+		err := c.CopyRemoteState(t.context.RemoteState(stack.StackName()))
+		if err != nil {
+			return fmt.Errorf("error while copying remote state: %s", err)
+		}
+		c.log.Debug("copied remote state into container")
+
+		if err := c.InitForceCopy(); err != nil {
+			return fmt.Errorf("error while terraform init -force-copy: %s", err)
+		}
+	}
 
 	return nil
 }

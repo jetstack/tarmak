@@ -14,10 +14,15 @@ type Environment struct {
 	AWS  *AWSConfig `yaml:"aws,omitempty"`
 	GCP  *GCPConfig `yaml:"gcp,omitempty"`
 
+	Contact string `yaml:"contact,omitempty"`
+	Project string `yaml:"project,omitempty"`
+
 	Contexts []Context `yaml:"contexts,omitempty"`
 
 	stackState *StackState
 	stackVault *StackVault
+
+	config *Config
 }
 
 func (e *Environment) Validate() error {
@@ -139,13 +144,12 @@ func (e *Environment) RemoteStateBucketName() string {
 	return ""
 }
 
-func (e *Environment) RemoteStateAvailable() bool {
+func (e *Environment) RemoteStateAvailable() (bool, error) {
 	if e.ProviderName() == ProviderNameAWS {
 		return e.AWS.RemoteStateAvailable(e.RemoteStateBucketName())
 	}
 
-	log.Fatalf("unsupported provider: '%s'", e.ProviderName())
-	return false
+	return false, fmt.Errorf("unsupported provider: '%s'", e.ProviderName())
 }
 
 func (e *Environment) ProviderEnvironment() ([]string, error) {
@@ -172,4 +176,29 @@ func (c *Environment) getProviderName() (string, error) {
 	}
 
 	return providers[0], nil
+}
+
+func (e *Environment) TerraformVars() map[string]interface{} {
+	output := e.config.TerraformVars()
+	output["environment"] = e.Name
+	if e.Contact != "" {
+		output["contact"] = e.Contact
+	}
+	if e.Project != "" {
+		output["project"] = e.Project
+	}
+
+	if e.ProviderName() == ProviderNameAWS {
+		if e.AWS.KeyName != "" {
+			output["key_name"] = e.AWS.KeyName
+		}
+		if len(e.AWS.AllowedAccountIDs) > 0 {
+			output["allowed_account_ids"] = e.AWS.AllowedAccountIDs
+		}
+		if len(e.AWS.AllowedAccountIDs) > 0 {
+			output["availability_zones"] = e.AWS.AvailabiltyZones
+		}
+		output["region"] = e.AWS.Region
+	}
+	return output
 }

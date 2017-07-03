@@ -21,20 +21,15 @@ import (
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
-// tfdeployCmd represents the tfdeploy command
-var tfdeployCmd = &cobra.Command{
-	Use:   "tfdeploy",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+// tfapplyCmd represents the tfapply command
+var tfapplyCmd = &cobra.Command{
+	Use:   "tfapply",
+	Short: "This applies the set of stacks in the current context",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Info("tfdeploy called")
+		log.Info("tfapply called")
 
 		myConfig := config.DefaultConfigSingle()
+
 		err := myConfig.Validate()
 		if err != nil {
 			log.Fatal(err)
@@ -48,14 +43,16 @@ to quickly create a Cobra application.`,
 
 		tf := terraform.New(nil, context)
 
-		err = tf.Plan(&context.Stacks[0])
-		if err != nil {
-			log.Fatal(err)
+		for posStack, _ := range context.Stacks {
+			err = tf.Apply(&context.Stacks[posStack])
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(tfdeployCmd)
+	RootCmd.AddCommand(tfapplyCmd)
 }
