@@ -199,6 +199,7 @@ func (e *Environment) TerraformVars() map[string]interface{} {
 			output["availability_zones"] = e.AWS.AvailabiltyZones
 		}
 		output["region"] = e.AWS.Region
+		output["state_bucket"] = e.RemoteStateBucketName()
 	}
 	return output
 }

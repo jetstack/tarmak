@@ -1,12 +1,9 @@
 package terraform
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/fsouza/go-dockerclient"
+	"github.com/Sirupsen/logrus"
 
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
@@ -31,89 +28,34 @@ RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terr
 `
 
 type Terraform struct {
-	dockerClient *docker.Client
-	dockerImage  *docker.Image
-
-	rootPath string
-
-	log *log.Entry
-
-	context *config.Context
+	*tarmakDocker.App
+	log    *logrus.Entry
+	tarmak config.Tarmak
 }
 
-func New(logger *log.Entry, context *config.Context) *Terraform {
-	if logger == nil {
-		myLog := log.New()
-		myLog.Level = log.DebugLevel
-		logger = myLog.WithField("module", "terraform")
-	}
+func New(tarmak config.Tarmak) *Terraform {
+	log := tarmak.Log().WithField("module", "terraform")
 
-	logger.Debug("initialising")
+	app := tarmakDocker.NewApp(
+		tarmak,
+		log,
+		"jetstack/tarmak-terraform",
+		"terraform",
+	)
 
 	return &Terraform{
-		rootPath: "/home/christian/.golang/packages/src/github.com/jetstack/tarmak",
-		log:      logger,
-		context:  context,
+		App:    app,
+		log:    log,
+		tarmak: tarmak,
 	}
-}
-
-func (t *Terraform) DockerImage() (image *docker.Image, err error) {
-	if t.dockerImage != nil {
-		return t.dockerImage, nil
-	}
-
-	t.log.Debug("building terraform image")
-	t.dockerClient, err = docker.NewClientFromEnv()
-	if err != nil {
-		return nil, err
-	}
-
-	dockerFile, err := tarmakDocker.TarStreamFromDockerfile(terraformDockerfile)
-	if err != nil {
-		return nil, err
-	}
-
-	stdoutReader, stdoutWriter := io.Pipe()
-	stdoutScanner := bufio.NewScanner(stdoutReader)
-	go func() {
-		for stdoutScanner.Scan() {
-			t.log.WithField("action", "docker-build").Debug(stdoutScanner.Text())
-		}
-	}()
-
-	err = t.dockerClient.BuildImage(docker.BuildImageOptions{
-		Name:         terraformDockerImageName,
-		OutputStream: stdoutWriter,
-		InputStream:  dockerFile,
-	})
-	stdoutReader.Close()
-	stdoutWriter.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	image, err = t.dockerClient.InspectImage(terraformDockerImageName)
-	if err != nil {
-		return nil, err
-	}
-
-	return image, nil
-
-}
-
-func (t *Terraform) cleanupContainer(container *docker.Container) error {
-	return nil
-}
-
-func (t *Terraform) Cleanup() error {
-	return nil
 }
 
 func (t *Terraform) NewContainer(stack *config.Stack) *TerraformContainer {
 	c := &TerraformContainer{
-		t:     t,
-		log:   t.log.WithField("stack", stack.StackName()),
-		stack: stack,
+		AppContainer: t.Container(),
+		t:            t,
+		log:          t.log.WithField("stack", stack.StackName()),
+		stack:        stack,
 	}
 	return c
 }
@@ -129,14 +71,14 @@ func (t *Terraform) Destroy(stack *config.Stack) error {
 func (t *Terraform) planApply(stack *config.Stack, destroy bool) error {
 	c := t.NewContainer(stack)
 
-	if err := c.Prepare(); err != nil {
+	if err := c.prepare(); err != nil {
 		return fmt.Errorf("error preparing container: %s", err)
 	}
 
 	initialStateStack := false
 	// check for initial state run on first deployment
 	if !destroy && stack.StackName() == config.StackNameState {
-		remoteStateAvail, err := t.context.RemoteStateAvailable()
+		remoteStateAvail, err := t.tarmak.Context().RemoteStateAvailable()
 		if err != nil {
 			return fmt.Errorf("error finding remote state: %s", err)
 		}
@@ -147,7 +89,7 @@ func (t *Terraform) planApply(stack *config.Stack, destroy bool) error {
 	}
 
 	if !initialStateStack {
-		err := c.CopyRemoteState(t.context.RemoteState(stack.StackName()))
+		err := c.CopyRemoteState(t.tarmak.Context().RemoteState(stack.StackName()))
 
 		if err != nil {
 			return fmt.Errorf("error while copying remote state: %s", err)
@@ -187,7 +129,7 @@ func (t *Terraform) planApply(stack *config.Stack, destroy bool) error {
 
 	// upload state if it was an inital state run
 	if initialStateStack {
-		err := c.CopyRemoteState(t.context.RemoteState(stack.StackName()))
+		err := c.CopyRemoteState(t.tarmak.Context().RemoteState(stack.StackName()))
 		if err != nil {
 			return fmt.Errorf("error while copying remote state: %s", err)
 		}
