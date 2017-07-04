@@ -20,6 +20,12 @@ type Context struct {
 	stackNetwork *StackNetwork
 
 	environment *Environment
+
+	imageID *string
+}
+
+func (c *Context) SetImageID(imageID string) {
+	c.imageID = &imageID
 }
 
 func (c *Context) Validate() error {
@@ -108,6 +114,12 @@ func (c *Context) TerraformVars() map[string]interface{} {
 	}
 	if c.Project != "" {
 		output["project"] = c.Project
+	}
+
+	if c.imageID != nil {
+		output["centos_ami"] = map[string]string{
+			c.environment.AWS.Region: *c.imageID,
+		}
 	}
 
 	output["name"] = c.Name

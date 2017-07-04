@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -161,9 +162,9 @@ func (a *AWSConfig) RemoteStateAvailable(bucketName string) (bool, error) {
 	})
 	if err == nil {
 		return true, nil
-	} else if err.Error() == s3.ErrCodeNoSuchBucket {
+	} else if strings.HasPrefix(err.Error(), "NotFound:") {
 		return false, nil
 	} else {
-		return false, err
+		return false, fmt.Errorf("error while checking if remote state is available: %s", err)
 	}
 }

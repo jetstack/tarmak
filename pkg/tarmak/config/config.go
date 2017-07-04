@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	logrus "github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -26,12 +25,6 @@ type Config struct {
 
 	Contact string `yaml:"contact,omitempty"`
 	Project string `yaml:"project,omitempty"`
-}
-
-type Tarmak interface {
-	Log() *logrus.Entry
-	RootPath() string
-	Context() *Context
 }
 
 type File interface {

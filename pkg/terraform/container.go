@@ -30,6 +30,14 @@ func (tc *TerraformContainer) Plan(destroy bool) (changesNeeded bool, err error)
 	// adds parameters as CLI args
 	for key, value := range tc.stack.TerraformVars(tc.t.tarmak.Context().TerraformVars()) {
 		switch v := value.(type) {
+		case map[string]string:
+			val := "{"
+			for mkey, mval := range v {
+				val += fmt.Sprintf(" %s = \"%s\",", mkey, mval)
+			}
+			val = val[:len(val)-1]
+			val += "}"
+			args = append(args, "-var", fmt.Sprintf("%s=%s", key, val))
 		case string:
 			args = append(args, "-var", fmt.Sprintf("%s=%s", key, v))
 		default:

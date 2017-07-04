@@ -21,6 +21,8 @@ type Packer struct {
 	*tarmakDocker.App
 	log    *logrus.Entry
 	tarmak config.Tarmak
+
+	imageID *string
 }
 
 func New(tarmak config.Tarmak) *Packer {
@@ -53,6 +55,10 @@ func (p *Packer) tags() map[string]string {
 }
 
 func (p *Packer) QueryAMIID() (amiID string, err error) {
+	if p.imageID != nil {
+		return *p.imageID, nil
+	}
+
 	env := p.tarmak.Context().Environment()
 	providerName := env.ProviderName()
 
@@ -103,6 +109,7 @@ func (p *Packer) QueryAMIID() (amiID string, err error) {
 
 		p.log.Infof("found %d matching images, using latest: '%s'", len(images.Images), *latest.ImageId)
 
+		p.imageID = latest.ImageId
 		return *latest.ImageId, nil
 	}
 

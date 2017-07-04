@@ -9,9 +9,11 @@ import (
 )
 
 type Tarmak struct {
-	rootPath string
-	log      *logrus.Logger
-	context  *config.Context
+	rootPath  string
+	log       *logrus.Logger
+	context   *config.Context
+	terraform *terraform.Terraform
+	packer    *packer.Packer
 }
 
 var _ config.Tarmak = &Tarmak{}
@@ -33,11 +35,22 @@ func New() *Tarmak {
 		log.Fatal(err)
 	}
 
-	return &Tarmak{
+	t := &Tarmak{
 		rootPath: "/home/christian/.golang/packages/src/github.com/jetstack/tarmak", // TODO: this should come from a go-bindata tree that is exported into tmp
 		log:      log,
 		context:  context,
 	}
+	t.terraform = terraform.New(t)
+	t.packer = packer.New(t)
+	return t
+}
+
+func (t *Tarmak) Terraform() config.Terraform {
+	return t.packer
+}
+
+func (t *Tarmak) Packer() config.Packer {
+	return t.packer
 }
 
 func (t *Tarmak) Context() *config.Context {
@@ -52,10 +65,18 @@ func (t *Tarmak) Log() *logrus.Entry {
 	return t.log.WithField("app", "tarmak")
 }
 
+func (t *Tarmak) discoverAMIID() {
+	amiID, err := t.packer.QueryAMIID()
+	if err != nil {
+		t.log.Fatal("could not find a matching ami: ", err)
+	}
+	t.Context().SetImageID(amiID)
+}
+
 func (t *Tarmak) TerraformApply() {
-	tf := terraform.New(t)
+	t.discoverAMIID()
 	for posStack, _ := range t.context.Stacks {
-		err := tf.Apply(&t.context.Stacks[posStack])
+		err := t.terraform.Apply(&t.context.Stacks[posStack])
 		if err != nil {
 			t.log.Fatal(err)
 		}
@@ -63,10 +84,10 @@ func (t *Tarmak) TerraformApply() {
 }
 
 func (t *Tarmak) TerraformDestroy() {
-	tf := terraform.New(t)
+	t.discoverAMIID()
 	stacks := t.context.Stacks[0:2]
 	for posStack, _ := range stacks {
-		err := tf.Destroy(&stacks[len(stacks)-posStack-1])
+		err := t.terraform.Destroy(&stacks[len(stacks)-posStack-1])
 		if err != nil {
 			t.log.Fatal(err)
 		}
@@ -74,17 +95,14 @@ func (t *Tarmak) TerraformDestroy() {
 }
 
 func (t *Tarmak) PackerBuild() {
-	p := packer.New(t)
-	_, err := p.Build()
-	//_, err := p.Build()
+	_, err := t.packer.Build()
 	if err != nil {
 		t.log.Fatalf("failed to query ami id: %s", err)
 	}
 }
 
 func (t *Tarmak) PackerQuery() {
-	p := packer.New(t)
-	_, err := p.QueryAMIID()
+	_, err := t.packer.QueryAMIID()
 	if err != nil {
 		t.log.Fatalf("failed to query ami id: %s", err)
 	}
