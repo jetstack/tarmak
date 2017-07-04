@@ -2,7 +2,9 @@
   "variables": {
     "aws_access_key": "",
     "aws_secret_key": "",
-    "region": "{{env `AWS_DEFAULT_REGION`}}"
+    "region": "{{env `AWS_DEFAULT_REGION`}}",
+    "tarmak_environment": "{{env `TARMAK_ENVIRONMENT`}}",
+    "tarmak_base_image_name": "{{env `TARMAK_BASE_IMAGE_NAME`}}"
   },
   "builders": [
     {
@@ -22,6 +24,10 @@
       "ssh_username": "centos",
       "ssh_pty": "true",
       "ami_name": "CentOS 7 x86_64 with puppet-agent {{timestamp}}",
+      "tags": {
+          "tarmak_environment": "{{user `tarmak_environment`}}",
+          "tarmak_base_image_name": "{{user `tarmak_base_image_name`}}"
+      },
       "associate_public_ip_address": true
     }
   ],

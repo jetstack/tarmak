@@ -15,6 +15,8 @@ type Context struct {
 	Contact string `yaml:"contact,omitempty"`
 	Project string `yaml:"project,omitempty"`
 
+	BaseImage string `yaml:"baseImage,omitempty"`
+
 	stackNetwork *StackNetwork
 
 	environment *Environment
@@ -92,6 +94,10 @@ func (c *Context) GetName() string {
 
 func (c *Context) GetStateBucketPrefix() string {
 	return c.environment.stackState.BucketPrefix
+}
+
+func (c *Context) Environment() *Environment {
+	return c.environment
 }
 
 func (c *Context) TerraformVars() map[string]interface{} {

@@ -3,6 +3,7 @@ package tarmak
 import (
 	"github.com/Sirupsen/logrus"
 
+	"github.com/jetstack/tarmak/pkg/packer"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
@@ -69,5 +70,22 @@ func (t *Tarmak) TerraformDestroy() {
 		if err != nil {
 			t.log.Fatal(err)
 		}
+	}
+}
+
+func (t *Tarmak) PackerBuild() {
+	p := packer.New(t)
+	_, err := p.Build()
+	//_, err := p.Build()
+	if err != nil {
+		t.log.Fatalf("failed to query ami id: %s", err)
+	}
+}
+
+func (t *Tarmak) PackerQuery() {
+	p := packer.New(t)
+	_, err := p.QueryAMIID()
+	if err != nil {
+		t.log.Fatalf("failed to query ami id: %s", err)
 	}
 }

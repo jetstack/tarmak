@@ -94,7 +94,8 @@ func DefaultConfigSingle() *Config {
 				Name: "devsingle",
 				Contexts: []Context{
 					Context{
-						Name: "cluster",
+						Name:      "cluster",
+						BaseImage: "centos-puppet-agent",
 						Stacks: []Stack{
 							Stack{
 								State: &StackState{
@@ -143,7 +144,8 @@ func DefaultConfigHub() *Config {
 				Name: "devmulti",
 				Contexts: []Context{
 					Context{
-						Name: "hub",
+						Name:      "hub",
+						BaseImage: "centos-puppet-agent",
 						Stacks: []Stack{
 							Stack{
 								State: &StackState{
@@ -166,7 +168,8 @@ func DefaultConfigHub() *Config {
 						},
 					},
 					Context{
-						Name: "cluster",
+						Name:      "cluster",
+						BaseImage: "centos-puppet-agent",
 						Stacks: []Stack{
 							Stack{
 								Network: &StackNetwork{
