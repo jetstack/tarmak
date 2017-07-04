@@ -56,8 +56,30 @@ func (ac *AppContainer) Prepare() error {
 
 }
 
+func (ac *AppContainer) CleanUpSilent(log *logrus.Entry) {
+	err := ac.CleanUp()
+	if err != nil && log != nil {
+		log.Warn("error cleaning up container: %s", err)
+	}
+}
+
 func (ac *AppContainer) CleanUp() error {
-	return fmt.Errorf("not implemented: %s", "AppContainer.CleanUp()")
+	info, err := ac.app.dockerClient.InspectContainer(ac.dockerContainer.ID)
+	if err != nil {
+		return fmt.Errorf("error getting status of container %s: %s", ac.dockerContainer.ID, err)
+	}
+
+	if info.State.Running {
+		err := ac.app.dockerClient.KillContainer(docker.KillContainerOptions{
+			ID:     ac.dockerContainer.ID,
+			Signal: docker.SIGKILL,
+		})
+		if err != nil {
+			return fmt.Errorf("error sending KILL signal to container %s: %s", ac.dockerContainer.ID, err)
+		}
+	}
+
+	return ac.app.dockerClient.RemoveContainer(docker.RemoveContainerOptions{ID: ac.dockerContainer.ID})
 }
 
 func (ac *AppContainer) Execute(cmd string, args []string) (returnCode int, err error) {

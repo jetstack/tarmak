@@ -9,24 +9,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 )
 
-var terraformDockerImageName = "jetstack/tarmak-terraform"
-
-var terraformDockerfile = `
-FROM alpine:3.6
-
-RUN apk add --no-cache unzip curl
-
-# install terraform
-ENV TERRAFORM_VERSION 0.9.8
-ENV TERRAFORM_HASH f951885f4e15deb4cf66f3b199964e3e74a0298bb46c9fe42e105df2ebcf3d16
-RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > /tmp/terraform.zip && \
-    echo "${TERRAFORM_HASH}  /tmp/terraform.zip" | sha256sum  -c && \
-    unzip /tmp/terraform.zip && \
-    rm /tmp/terraform.zip && \
-    mv terraform /usr/local/bin/terraform && \
-    chmod +x /usr/local/bin/terraform
-`
-
 type Terraform struct {
 	*tarmakDocker.App
 	log    *logrus.Entry
@@ -74,6 +56,7 @@ func (t *Terraform) planApply(stack *config.Stack, destroy bool) error {
 	if err := c.prepare(); err != nil {
 		return fmt.Errorf("error preparing container: %s", err)
 	}
+	defer c.CleanUpSilent(t.log)
 
 	initialStateStack := false
 	// check for initial state run on first deployment

@@ -132,6 +132,9 @@ func (p *Packer) Build() (amiID string, err error) {
 		return "", err
 	}
 
+	// make sure container get's cleaned up
+	defer c.CleanUpSilent(p.log)
+
 	buildSourcePath := filepath.Join(
 		p.tarmak.RootPath(),
 		"packer",
