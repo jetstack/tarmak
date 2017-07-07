@@ -17,7 +17,7 @@ type Context struct {
 
 	BaseImage string `yaml:"baseImage,omitempty"`
 
-	stackNetwork *StackNetwork
+	stackNetwork *Stack
 
 	environment *Environment
 
@@ -43,11 +43,13 @@ func (c *Context) Validate() error {
 		// ensure there is only a single network stack
 		if stack.StackName() == StackNameNetwork {
 			if c.stackNetwork == nil {
-				c.stackNetwork = stack.Network
+				c.stackNetwork = stack
 			} else {
 				result = multierror.Append(result, fmt.Errorf("context '%s' has multiple network stacks", c.GetName()))
 			}
 		}
+
+		stack.context = c
 
 	}
 
@@ -70,7 +72,7 @@ func (c *Context) getNetworkCIDR() (*net.IPNet, error) {
 		return nil, errors.New("no network stack found")
 	}
 
-	_, net, err := net.ParseCIDR(c.stackNetwork.NetworkCIDR)
+	_, net, err := net.ParseCIDR(c.stackNetwork.Network.NetworkCIDR)
 	return net, err
 }
 
@@ -99,7 +101,7 @@ func (c *Context) GetName() string {
 }
 
 func (c *Context) GetStateBucketPrefix() string {
-	return c.environment.stackState.BucketPrefix
+	return c.environment.stackState.State.BucketPrefix
 }
 
 func (c *Context) Environment() *Environment {

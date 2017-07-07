@@ -14,6 +14,7 @@ type Stack struct {
 	Vault      *StackVault      `yaml:"vault,omitempty"`
 	Kubernetes *StackKubernetes `yaml:"kubernetes,omitempty"`
 	Custom     *StackCustom     `yaml:"custom,omitempty"`
+	context    *Context
 }
 
 func (s *Stack) Validate() error {
@@ -25,6 +26,10 @@ func (s *Stack) Validate() error {
 	}
 
 	return result
+}
+
+func (s *Stack) Context() *Context {
+	return s.context
 }
 
 func (s *Stack) StackName() string {
@@ -56,6 +61,12 @@ func (c *Stack) TerraformVars(input map[string]interface{}) map[string]interface
 		if c.Network.PrivateZone != "" {
 			input["private_zone"] = c.Network.PrivateZone
 		}
+	}
+	// tools stack
+	if c.StackName() == StackNameTools {
+		// TODO: This is for deprecated puppet master as part of tools (get rid of that soon)
+		input["puppet_deploy_key"] = "fake-ssh-key"
+		input["foreman_admin_password"] = "fake-foreman-admin-password"
 	}
 	return input
 }

@@ -19,8 +19,9 @@ type Environment struct {
 
 	Contexts []Context `yaml:"contexts,omitempty"`
 
-	stackState *StackState
-	stackVault *StackVault
+	stackState *Stack
+	stackVault *Stack
+	stackTools *Stack
 
 	config *Config
 }
@@ -54,16 +55,25 @@ func (e *Environment) Validate() error {
 			// ensure no multiple state stacks
 			if stack.StackName() == StackNameState {
 				if e.stackState == nil {
-					e.stackState = stack.State
+					e.stackState = &stack
 				} else {
 					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple state stacks", e.Name))
+				}
+			}
+
+			// ensure no multiple tools stacks
+			if stack.StackName() == StackNameTools {
+				if e.stackTools == nil {
+					e.stackTools = &stack
+				} else {
+					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple tools stacks", e.Name))
 				}
 			}
 
 			// ensure no multiple vault stacks
 			if stack.StackName() == StackNameVault {
 				if e.stackVault == nil {
-					e.stackVault = stack.Vault
+					e.stackVault = &stack
 				} else {
 					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple vault stacks", e.Name))
 				}
@@ -75,6 +85,11 @@ func (e *Environment) Validate() error {
 	// ensure there is a state stack
 	if e.stackState == nil {
 		result = multierror.Append(result, fmt.Errorf("environment '%s' has no state stack", e.Name))
+	}
+
+	// ensure there is a vault stack
+	if e.stackTools == nil {
+		result = multierror.Append(result, fmt.Errorf("environment '%s' has no tools stack", e.Name))
 	}
 
 	// ensure there is a vault stack
@@ -134,7 +149,7 @@ func (e *Environment) RemoteStateBucketName() string {
 	if e.ProviderName() == ProviderNameAWS {
 		return fmt.Sprintf(
 			"%s%s-%s-terraform-state",
-			e.stackState.BucketPrefix,
+			e.stackState.State.BucketPrefix,
 			e.Name,
 			e.AWS.Region,
 		)
@@ -200,6 +215,9 @@ func (e *Environment) TerraformVars() map[string]interface{} {
 		}
 		output["region"] = e.AWS.Region
 		output["state_bucket"] = e.RemoteStateBucketName()
+		output["state_context_name"] = e.stackState.Context().Name
+		output["tools_context_name"] = e.stackTools.Context().Name
+		output["vault_context_name"] = e.stackVault.Context().Name
 	}
 	return output
 }
