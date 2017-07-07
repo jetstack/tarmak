@@ -20,6 +20,10 @@ type AppContainer struct {
 	Cmd        []string
 }
 
+func (ac *AppContainer) SetLog(log *logrus.Entry) {
+	ac.log = log
+}
+
 func (ac *AppContainer) UploadToContainer(tarStream io.Reader, destPath string) error {
 	return ac.app.dockerClient.UploadToContainer(ac.dockerContainer.ID, docker.UploadToContainerOptions{
 		InputStream: tarStream,

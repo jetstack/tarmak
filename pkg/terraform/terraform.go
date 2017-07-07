@@ -39,18 +39,19 @@ func (t *Terraform) NewContainer(stack *config.Stack) *TerraformContainer {
 		log:          t.log.WithField("stack", stack.StackName()),
 		stack:        stack,
 	}
+	c.AppContainer.SetLog(t.log.WithField("stack", stack.StackName()))
 	return c
 }
 
-func (t *Terraform) Apply(stack *config.Stack) error {
-	return t.planApply(stack, false)
+func (t *Terraform) Apply(stack *config.Stack, args []string) error {
+	return t.planApply(stack, args, false)
 }
 
-func (t *Terraform) Destroy(stack *config.Stack) error {
-	return t.planApply(stack, true)
+func (t *Terraform) Destroy(stack *config.Stack, args []string) error {
+	return t.planApply(stack, args, true)
 }
 
-func (t *Terraform) planApply(stack *config.Stack, destroy bool) error {
+func (t *Terraform) planApply(stack *config.Stack, args []string, destroy bool) error {
 	c := t.NewContainer(stack)
 
 	if err := c.prepare(); err != nil {
@@ -99,7 +100,7 @@ func (t *Terraform) planApply(stack *config.Stack, destroy bool) error {
 		}
 	}
 
-	changesNeeded, err := c.Plan(destroy)
+	changesNeeded, err := c.Plan(args, destroy)
 	if err != nil {
 		return fmt.Errorf("error while terraform plan: %s", err)
 	}

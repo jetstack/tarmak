@@ -11,7 +11,7 @@ var imageBuildCmd = &cobra.Command{
 	Use:   "image-build",
 	Short: "This builds an image for an environment using packer",
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New()
+		t := tarmak.New(cmd)
 		t.PackerBuild()
 	},
 }

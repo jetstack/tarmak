@@ -19,7 +19,7 @@ type TerraformContainer struct {
 	log   *log.Entry
 }
 
-func (tc *TerraformContainer) Plan(destroy bool) (changesNeeded bool, err error) {
+func (tc *TerraformContainer) Plan(additionalArgs []string, destroy bool) (changesNeeded bool, err error) {
 
 	args := []string{"plan", "-out=terraform.plan", "-detailed-exitcode", "-input=false"}
 
@@ -44,6 +44,8 @@ func (tc *TerraformContainer) Plan(destroy bool) (changesNeeded bool, err error)
 			tc.log.Warnf("ignoring unknown var type %t", v)
 		}
 	}
+
+	args = append(args, additionalArgs...)
 
 	returnCode, err := tc.Execute("terraform", args)
 	if err != nil {

@@ -2,6 +2,7 @@ package tarmak
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/packer"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
@@ -14,11 +15,12 @@ type Tarmak struct {
 	context   *config.Context
 	terraform *terraform.Terraform
 	packer    *packer.Packer
+	cmd       *cobra.Command
 }
 
 var _ config.Tarmak = &Tarmak{}
 
-func New() *Tarmak {
+func New(cmd *cobra.Command) *Tarmak {
 
 	log := logrus.New()
 	log.Level = logrus.DebugLevel
@@ -39,6 +41,7 @@ func New() *Tarmak {
 		rootPath: "/home/christian/.golang/packages/src/github.com/jetstack/tarmak", // TODO: this should come from a go-bindata tree that is exported into tmp
 		log:      log,
 		context:  context,
+		cmd:      cmd,
 	}
 	t.terraform = terraform.New(t)
 	t.packer = packer.New(t)
@@ -73,21 +76,58 @@ func (t *Tarmak) discoverAMIID() {
 	t.Context().SetImageID(amiID)
 }
 
-func (t *Tarmak) TerraformApply() {
+func (t *Tarmak) TerraformApply(args []string) {
+	selectStacks, err := t.cmd.Flags().GetStringSlice("terraform-stacks")
+	if err != nil {
+		t.log.Fatal("could not find flag terraform-stacks: ", err)
+	}
+
 	t.discoverAMIID()
 	for posStack, _ := range t.context.Stacks {
-		err := t.terraform.Apply(&t.context.Stacks[posStack])
+		if len(selectStacks) > 0 {
+			found := false
+			for _, selectStack := range selectStacks {
+				if selectStack == t.context.Stacks[posStack].StackName() {
+					found = true
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+
+		err := t.terraform.Apply(&t.context.Stacks[posStack], args)
 		if err != nil {
 			t.log.Fatal(err)
 		}
 	}
 }
 
-func (t *Tarmak) TerraformDestroy() {
+func (t *Tarmak) TerraformDestroy(args []string) {
+	selectStacks, err := t.cmd.Flags().GetStringSlice("terraform-stacks")
+	if err != nil {
+		t.log.Fatal("could not find flag terraform-stacks: ", err)
+	}
+
 	t.discoverAMIID()
-	stacks := t.context.Stacks[0:2]
-	for posStack, _ := range stacks {
-		err := t.terraform.Destroy(&stacks[len(stacks)-posStack-1])
+	for posStack, _ := range t.context.Stacks {
+		if t.context.Stacks[posStack].StackName() == config.StackNameState {
+			continue
+		}
+
+		if len(selectStacks) > 0 {
+			found := false
+			for _, selectStack := range selectStacks {
+				if selectStack == t.context.Stacks[posStack].StackName() {
+					found = true
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+
+		err := t.terraform.Destroy(&t.context.Stacks[len(t.context.Stacks)-posStack-1], args)
 		if err != nil {
 			t.log.Fatal(err)
 		}
