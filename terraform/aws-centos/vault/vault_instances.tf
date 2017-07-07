@@ -11,13 +11,16 @@ data "template_file" "vault" {
     private_ip     = "${cidrhost(element(data.terraform_remote_state.network.private_subnets, count.index % length(data.terraform_remote_state.network.availability_zones)),(10 + (count.index/length(data.terraform_remote_state.network.availability_zones))))}"
 
     consul_version      = "${var.consul_version}"
-    consul_master_token = "${var.consul_master_token}"
-    consul_encrypt      = "${var.consul_encrypt}"
+    consul_master_token = "${random_id.consul_master_token.hex}"
 
-    vault_version         = "${var.vault_version}"
-    vault_tls_cert_path   = "s3://${data.terraform_remote_state.state.secrets_bucket}/vault-${var.environment}/cert.pem"
-    vault_tls_key_path    = "s3://${data.terraform_remote_state.state.secrets_bucket}/vault-${var.environment}/cert-key.pem"
-    vault_tls_ca_path     = "s3://${data.terraform_remote_state.state.secrets_bucket}/vault-${var.environment}/ca.pem"
+    # We need to convert to the default base64 alphabet
+    consul_encrypt = "${replace(replace(random_id.consul_encrypt.b64,"-","+"),"_","/")}=="
+
+    vault_version       = "${var.vault_version}"
+    vault_tls_cert_path = "s3://${data.terraform_remote_state.state.secrets_bucket}/${element(aws_s3_bucket_object.node-certs.*.key, count.index)}"
+    vault_tls_key_path  = "s3://${data.terraform_remote_state.state.secrets_bucket}/${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
+    vault_tls_ca_path   = "s3://${data.terraform_remote_state.state.secrets_bucket}/${aws_s3_bucket_object.ca-cert.key}"
+
     vault_unseal_key_name = "${data.template_file.vault_unseal_key_name.rendered}"
 
     backup_bucket_prefix = "${data.terraform_remote_state.state.backups_bucket}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"

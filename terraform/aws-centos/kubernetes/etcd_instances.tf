@@ -41,7 +41,8 @@ data "template_file" "etcd_user_data" {
 
   vars {
     vault_token = "${var.vault_init_token_etcd}"
-    vault_ca    = "${base64encode(data.aws_s3_bucket_object.vault_ca.body)}"
+    vault_ca    = "${base64encode(data.terraform_remote_state.hub_vault.vault_ca)}"
+    vault_url   = "${data.terraform_remote_state.hub_vault.vault_url}"
 
     tarmak_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
     tarmak_role          = "etcd"

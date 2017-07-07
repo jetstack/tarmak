@@ -34,5 +34,8 @@ data "template_file" "vault_policy" {
     secrets_bucket_prefix = "${data.terraform_remote_state.state.secrets_bucket}/vault-${var.environment}"
     kms_arn               = "${data.terraform_remote_state.state.secrets_kms_arn}"
     vault_unseal_key_name = "${data.template_file.vault_unseal_key_name.rendered}"
+    vault_tls_cert_path           = "${element(aws_s3_bucket_object.node-certs.*.key, count.index)}"
+    vault_tls_key_path            = "${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
+    vault_tls_ca_path             = "${aws_s3_bucket_object.ca-cert.key}"
   }
 }

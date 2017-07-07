@@ -63,12 +63,16 @@ variable "vault_instance_type" {
   default = "t2.nano"
 }
 
-variable "consul_master_token" {}
-
-variable "consul_encrypt" {}
-
 data "template_file" "vault_unseal_key_name" {
   template = "vault-${var.environment}-unseal-key"
+}
+
+output "vault_ca" {
+  value = "${tls_self_signed_cert.ca.cert_pem}"
+}
+
+output "vault_url" {
+  value = "https://${aws_route53_record.endpoint.fqdn}:8200"
 }
 
 output "vault_kms_key_id" {

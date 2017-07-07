@@ -32,9 +32,9 @@
         "s3:GetObject"
       ],
       "Resource": [
-          "arn:aws:s3:::${secrets_bucket_prefix}/ca.pem",
-          "arn:aws:s3:::${secrets_bucket_prefix}/cert-key.pem",
-          "arn:aws:s3:::${secrets_bucket_prefix}/cert.pem"
+          "arn:aws:s3:::${secrets_bucket_prefix}/${vault_tls_key_path}",
+          "arn:aws:s3:::${secrets_bucket_prefix}/${vault_tls_cert_path}",
+          "arn:aws:s3:::${secrets_bucket_prefix}/${vault_tls_ca_path}"
       ]
     },
     {

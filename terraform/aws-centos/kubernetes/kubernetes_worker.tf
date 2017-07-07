@@ -34,7 +34,8 @@ data "template_file" "kubernetes_worker_user_data" {
 
   vars {
     vault_token = "${var.vault_init_token_worker}"
-    vault_ca    = "${base64encode(data.aws_s3_bucket_object.vault_ca.body)}"
+    vault_ca    = "${base64encode(data.terraform_remote_state.hub_vault.vault_ca)}"
+    vault_url   = "${data.terraform_remote_state.hub_vault.vault_url}"
 
     tarmak_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
     tarmak_role          = "worker"
