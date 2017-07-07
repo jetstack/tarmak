@@ -22,10 +22,6 @@ output "jenkins_data_volume_id" {
   value = "${aws_ebs_volume.jenkins.id}"
 }
 
-output "puppet_master_data_volume_id" {
-  value = "${aws_ebs_volume.puppet_master.id}"
-}
-
 output "bucket_prefix" {
   value = "${var.bucket_prefix}"
 }
