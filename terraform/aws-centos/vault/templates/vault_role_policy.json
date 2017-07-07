@@ -44,7 +44,7 @@
         "kms:Decrypt"
       ],
       "Resource": [
-          "${kms_arn}"
+          "${vault_unsealer_kms_key_id}"
       ]
     },
     {
@@ -68,7 +68,7 @@
         "ssm:GetParameters"
       ],
       "Effect": "Allow",
-      "Resource":["arn:aws:ssm:${region}:${account_id}:parameter/${vault_unseal_key_name}"]
+      "Resource":["arn:aws:ssm:${region}:${account_id}:parameter/${vault_unsealer_ssm_key_prefix}*"]
     }
   ]
 }

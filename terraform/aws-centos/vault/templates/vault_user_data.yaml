@@ -137,6 +137,28 @@ write_files:
     [Install]
     WantedBy=multi-user.target
 
+- path: /etc/systemd/system/vault-unsealer.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Vault unsealer service
+    Requires=vault-assets.service
+    After=vault-assets.service
+
+    [Service]
+    Restart=always
+    RestartSec=5
+    Environment=AWS_REGION=${region}
+    Environment=VAULT_CACERT=/etc/vault/tls/ca.pem
+    Environment=VAULT_ADDR=https://localhost:8200
+    Environment=VAULT_UNSEALER_MODE=aws-kms-ssm
+    Environment=VAULT_UNSEALER_AWS_KMS_KEY_ID=${vault_unsealer_kms_key_id}
+    Environment=VAULT_UNSEALER_AWS_SSM_KEY_PREFIX=${vault_unsealer_ssm_key_prefix}
+    Environment=VAULT_UNSEALER_STORE_ROOT_TOKEN=false
+
+    [Install]
+    WantedBy=multi-user.target
+
 - path: /etc/systemd/system/vault.service
   permissions: '0644'
   content: |
@@ -150,12 +172,12 @@ write_files:
     Environment=UNSEAL_KEY_NAME=${vault_unseal_key_name}
     ExecStart=/usr/local/bin/vault server \
       -config=/etc/vault/vault.hcl
-    ExecStartPost=-/usr/local/bin/vault-unseal.sh
     Restart=on-failure
     RestartSec=10
 
     [Install]
     WantedBy=multi-user.target
+
 
 - path: "/etc/consul/consul.json"
   permissions: "0600"
@@ -195,6 +217,8 @@ write_files:
     default_lease_ttl = "168h"
     max_lease_ttl = "720h"
     disable_mlock = false
+
+    cluster_name = "vault-${environment}"
 
 - path: /usr/local/bin/download-vault-consul.sh
   permissions: "0755"
@@ -277,6 +301,22 @@ write_files:
     download_app "vault" "$${VAULT_VERSION}"
     download_app "consul" "$${CONSUL_VERSION}"
 
+- path: /usr/local/bin/download-vault-unsealer.sh
+  permissions: "0755"
+  content: |
+    #!/bin/bash
+
+    set -euo pipefail
+
+    VAULT_UNSEALER_VERSION=0.1.2
+    VAULT_UNSEALER_HASH=17349aa02c274d2293cd7fc2c600863f9f020b5f23f6603f0360a6a9acc300a7
+    DEST_DIR=$${DEST_DIR:-/usr/local/bin}
+
+    curl -sL https://github.com/jetstack-experimental/vault-unsealer/releases/download/$${VAULT_UNSEALER_VERSION}/vault-unsealer_linux_amd64 > $${DEST_DIR}/vault-unsealer
+
+    echo "$${CONSUL_BACKINATOR_HASH}  $${DEST_DIR}/vault-unsealer" | sha256sum -c
+    chmod +x $${DEST_DIR}/vault-unsealer
+
 - path: /usr/local/bin/download-consul-backinator.sh
   permissions: "0755"
   content: |
@@ -320,34 +360,6 @@ write_files:
 
     rm -rf "$${backup_local_path}" "$${backup_local_path}.sig" "$${backup_local_acls_path}" "$${backup_local_acls_path}.sig"
 
-- path: /usr/local/bin/vault-unseal.sh
-  permissions: "0755"
-  content: |
-    #!/bin/bash
-
-    set -e
-
-    while true; do
-      # exit right away if already unsealed
-      if [ "$(curl -s -k https://localhost:8200/v1/sys/health | jq -r .sealed)" == "false" ]; then exit 0; fi
-
-      # try to unseal if initialized
-      if [ "$(curl -s -k https://localhost:8200/v1/sys/init | jq -r .initialized)" == "true" ]; then
-        echo "get unseal key"
-        SEAL_KEY=$(aws ssm get-parameters --region $${AWS_REGION} --names $${UNSEAL_KEY_NAME} --with-decryption |  grep -o '"Value": ".*"' | cut -d '"' -f 4)
-        curl -s -k -X PUT -d "{\"key\": \"$${SEAL_KEY}\"}" https://localhost:8200/v1/sys/unseal
-        # check status
-        if [ "$(curl -s -k https://localhost:8200/v1/sys/health | jq -r .sealed)" == "false" ]; then
-          echo "vault unsealed"
-          exit 0
-        fi
-      else
-        echo "vault uninitialized"
-      fi
-
-      sleep 5
-    done
-
 - path: /etc/profile.d/vault.sh
   permissions: "0644"
   content: |
@@ -362,6 +374,7 @@ runcmd:
 - yum -y install epel-release
 - yum -y install unzip jq curl gpg awscli
 - /usr/local/bin/download-vault-consul.sh
+- /usr/local/bin/download-vault-unsealer.sh
 - /usr/local/bin/download-consul-backinator.sh
-- systemctl enable consul.service vault.service consul-backup.timer
-- systemctl start consul.service vault.service consul-backup.timer
+- systemctl enable consul.service vault.service vault-unsealer.service consul-backup.timer
+- systemctl start consul.service vault.service vault-unsealer.service consul-backup.timer
