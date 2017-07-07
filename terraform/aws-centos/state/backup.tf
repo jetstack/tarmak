@@ -15,6 +15,8 @@ resource "aws_s3_bucket" "backups" {
     Description = "Backups for environment ${var.environment}"
   }
 
+  force_destroy = "true"
+
   lifecycle_rule {
     prefix  = ""
     enabled = true

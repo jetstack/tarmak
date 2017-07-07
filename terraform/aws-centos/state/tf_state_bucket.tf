@@ -10,6 +10,8 @@ resource "aws_s3_bucket" "terraform_state" {
     Contact     = "${var.contact}"
   }
 
+  force_destroy = true
+
   versioning {
     enabled = true
   }
