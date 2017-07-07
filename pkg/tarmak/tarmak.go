@@ -84,10 +84,12 @@ func (t *Tarmak) TerraformApply(args []string) {
 
 	t.discoverAMIID()
 	for posStack, _ := range t.context.Stacks {
+		stack := &t.context.Stacks[posStack]
+
 		if len(selectStacks) > 0 {
 			found := false
 			for _, selectStack := range selectStacks {
-				if selectStack == t.context.Stacks[posStack].StackName() {
+				if selectStack == stack.StackName() {
 					found = true
 				}
 			}
@@ -96,7 +98,7 @@ func (t *Tarmak) TerraformApply(args []string) {
 			}
 		}
 
-		err := t.terraform.Apply(&t.context.Stacks[posStack], args)
+		err := t.terraform.Apply(stack, args)
 		if err != nil {
 			t.log.Fatal(err)
 		}
@@ -111,14 +113,16 @@ func (t *Tarmak) TerraformDestroy(args []string) {
 
 	t.discoverAMIID()
 	for posStack, _ := range t.context.Stacks {
-		if t.context.Stacks[posStack].StackName() == config.StackNameState {
+		stack := &t.context.Stacks[len(t.context.Stacks)-posStack-1]
+		if stack.StackName() == config.StackNameState {
+			t.log.Debugf("ignoring stack '%s'", stack.StackName())
 			continue
 		}
 
 		if len(selectStacks) > 0 {
 			found := false
 			for _, selectStack := range selectStacks {
-				if selectStack == t.context.Stacks[posStack].StackName() {
+				if selectStack == stack.StackName() {
 					found = true
 				}
 			}
@@ -127,7 +131,10 @@ func (t *Tarmak) TerraformDestroy(args []string) {
 			}
 		}
 
-		err := t.terraform.Destroy(&t.context.Stacks[len(t.context.Stacks)-posStack-1], args)
+		err := t.terraform.Destroy(stack, args)
+		if err != nil {
+			t.log.Fatal(err)
+		}
 		if err != nil {
 			t.log.Fatal(err)
 		}
