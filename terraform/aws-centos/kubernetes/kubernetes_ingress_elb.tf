@@ -6,10 +6,10 @@ output "ingress_wildcard_fqdn" {
   value = "${aws_route53_record.ingress_wildcard.fqdn}"
 }
 
-data "aws_acm_certificate" "wildcard" {
-  domain   = "*.${var.name}.${data.terraform_remote_state.hub_state.public_zone}"
-  statuses = ["ISSUED"]
-}
+#data "aws_acm_certificate" "wildcard" {
+#  domain   = "*.${var.name}.${data.terraform_remote_state.hub_state.public_zone}"
+#  statuses = ["ISSUED"]
+#}
 
 data "aws_elb_hosted_zone_id" "main" {}
 
@@ -41,13 +41,13 @@ resource "aws_elb" "ingress_controller" {
     lb_protocol       = "http"
   }
 
-  listener {
-    instance_port      = "${var.ingress_elb_nodeport_http}"
-    instance_protocol  = "http"
-    lb_port            = 443
-    lb_protocol        = "https"
-    ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
-  }
+  #listener {
+  #  instance_port      = "${var.ingress_elb_nodeport_http}"
+  #  instance_protocol  = "http"
+  #  lb_port            = 443
+  #  lb_protocol        = "https"
+  #  ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
+  #}
 
   health_check {
     healthy_threshold   = 2
@@ -56,7 +56,6 @@ resource "aws_elb" "ingress_controller" {
     target              = "TCP:${var.ingress_elb_nodeport_http}"
     interval            = 10
   }
-
   tags {
     Name        = "${data.template_file.stack_name.rendered}-k8s-ingress"
     Environment = "${var.environment}"

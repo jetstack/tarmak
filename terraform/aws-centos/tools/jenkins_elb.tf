@@ -4,11 +4,12 @@ resource "aws_elb" "jenkins" {
   security_groups = ["${aws_security_group.jenkins_elb.id}"]
 
   listener {
-    instance_port      = 8080
-    instance_protocol  = "http"
-    lb_port            = 443
-    lb_protocol        = "https"
-    ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
+    instance_port     = 8080
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+
+    #  ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
   }
 
   health_check {
