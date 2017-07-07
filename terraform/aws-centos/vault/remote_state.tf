@@ -4,7 +4,7 @@ data "terraform_remote_state" "state" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "state_${var.environment}_${var.name}.tfstate"
+    key    = "${var.environment}/${var.state_context_name}/state.tfstate"
   }
 }
 
@@ -14,7 +14,7 @@ data "terraform_remote_state" "network" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "network_${var.environment}_${var.name}.tfstate"
+    key    = "${var.environment}/${var.name}/network.tfstate"
   }
 }
 
@@ -24,6 +24,6 @@ data "terraform_remote_state" "tools" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "tools_${var.environment}_${var.name}.tfstate"
+    key    = "${var.environment}/${var.name}/tools.tfstate"
   }
 }

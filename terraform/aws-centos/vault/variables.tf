@@ -78,3 +78,7 @@ output "vault_kms_key_id" {
 output "vault_unseal_key_name" {
   value = "${data.template_file.vault_unseal_key_name.rendered}"
 }
+
+variable "state_context_name" {
+  default = "hub"
+}

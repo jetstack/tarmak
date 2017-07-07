@@ -105,3 +105,15 @@ variable "kubernetes_worker_docker_volume_size" {
 variable "kubernetes_worker_spot_price" {
   default = ""
 }
+
+variable "state_context_name" {
+  default = "hub"
+}
+
+variable "vault_context_name" {
+  default = "hub"
+}
+
+variable "tools_context_name" {
+  default = "hub"
+}

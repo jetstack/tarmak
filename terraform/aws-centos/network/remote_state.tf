@@ -4,6 +4,6 @@ data "terraform_remote_state" "hub_state" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "state_${var.environment}_hub.tfstate"
+    key    = "${var.environment}/${var.state_context_name}/state.tfstate"
   }
 }

@@ -4,7 +4,7 @@ data "terraform_remote_state" "hub_state" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "state_${var.environment}_hub.tfstate"
+    key    = "${var.environment}/${var.state_context_name}/state.tfstate"
   }
 }
 
@@ -14,7 +14,7 @@ data "terraform_remote_state" "hub_network" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "network_${var.environment}_hub.tfstate"
+    key    = "${var.environment}/${var.tools_context_name}/network.tfstate"
   }
 }
 
@@ -24,7 +24,7 @@ data "terraform_remote_state" "hub_tools" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "tools_${var.environment}_hub.tfstate"
+    key    = "${var.environment}/${var.tools_context_name}/tools.tfstate"
   }
 }
 
@@ -34,7 +34,7 @@ data "terraform_remote_state" "hub_vault" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "vault_${var.environment}_hub.tfstate"
+    key    = "${var.environment}/${var.vault_context_name}/vault.tfstate"
   }
 }
 
@@ -44,6 +44,6 @@ data "terraform_remote_state" "network" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "network_${var.environment}_${var.name}.tfstate"
+    key    = "${var.environment}/${var.name}/network.tfstate"
   }
 }

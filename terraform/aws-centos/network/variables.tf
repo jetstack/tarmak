@@ -46,3 +46,7 @@ variable "availability_zones" {
 variable "private_zone" {
   default = ""
 }
+
+variable "state_context_name" {
+  default = "hub"
+}

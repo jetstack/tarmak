@@ -44,3 +44,7 @@ variable "environment" {
 variable "region" {
   default = "eu-west-1"
 }
+
+variable "state_context_name" {
+  default = "hub"
+}
