@@ -68,6 +68,7 @@ resource "aws_instance" "jenkins" {
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
+    tarmak_role = "jenkins"
   }
 
   user_data = "${data.template_file.jenkins_user_data.rendered}"

@@ -76,6 +76,7 @@ resource "aws_instance" "vault" {
     Project      = "${var.project}"
     Contact      = "${var.contact}"
     VaultCluster = "${var.environment}"
+    tarmak_role  = "vault-${count.index+1}"
   }
 
   lifecycle {

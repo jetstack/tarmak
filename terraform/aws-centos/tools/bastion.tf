@@ -67,6 +67,7 @@ resource "aws_instance" "bastion" {
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
+    tarmak_role = "bastion"
   }
 
   user_data = "${data.template_file.bastion_user_data.rendered}"
