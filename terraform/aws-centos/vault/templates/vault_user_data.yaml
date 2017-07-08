@@ -155,6 +155,7 @@ write_files:
     Environment=VAULT_UNSEALER_AWS_KMS_KEY_ID=${vault_unsealer_kms_key_id}
     Environment=VAULT_UNSEALER_AWS_SSM_KEY_PREFIX=${vault_unsealer_ssm_key_prefix}
     Environment=VAULT_UNSEALER_STORE_ROOT_TOKEN=false
+    ExecStart=/usr/local/bin/vault-unsealer unseal
 
     [Install]
     WantedBy=multi-user.target
@@ -314,8 +315,8 @@ write_files:
 
     curl -sL https://github.com/jetstack-experimental/vault-unsealer/releases/download/$${VAULT_UNSEALER_VERSION}/vault-unsealer_linux_amd64 > $${DEST_DIR}/vault-unsealer
 
-    echo "$${CONSUL_BACKINATOR_HASH}  $${DEST_DIR}/vault-unsealer" | sha256sum -c
-    chmod +x $${DEST_DIR}/vault-unsealer
+    echo "$${VAULT_UNSEALER_HASH}  $${DEST_DIR}/vault-unsealer" | sha256sum -c
+    chmod +x "$${DEST_DIR}/vault-unsealer"
 
 - path: /usr/local/bin/download-consul-backinator.sh
   permissions: "0755"
