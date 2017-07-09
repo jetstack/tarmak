@@ -1,5 +1,5 @@
 resource "aws_elb" "jenkins" {
-  name            = "${replace(data.template_file.stack_name.rendered,"_","-")}-jenkins"
+  name            = "${format("%.24s-jenkins", data.template_file.stack_name.rendered)}"
   subnets         = ["${data.terraform_remote_state.network.public_subnet_ids}"]
   security_groups = ["${aws_security_group.jenkins_elb.id}"]
 
