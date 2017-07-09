@@ -38,12 +38,12 @@ resource "tls_cert_request" "vault" {
   private_key_pem = "${element(tls_private_key.vault.*.private_key_pem, count.index)}"
 
   subject {
-    common_name = "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zone_id}"
+    common_name = "vault-${count.index + 1}.${var.environment}"
   }
 
   dns_names = [
-    "vault.${data.terraform_remote_state.network.private_zone_id}",
-    "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zone_id}",
+    "vault.${data.terraform_remote_state.network.private_zone}",
+    "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zone}",
     "localhost",
   ]
 
