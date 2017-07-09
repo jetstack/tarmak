@@ -8,9 +8,12 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/mitchellh/go-homedir"
 )
@@ -40,6 +43,77 @@ func readVaultToken() (string, error) {
 	}
 
 	return string(vaultToken), nil
+}
+
+func (a *AWSConfig) Validate() error {
+	sess, err := a.Session()
+	if err != nil {
+		return fmt.Errorf("error getting AWS session: %s", err)
+	}
+
+	svc := ec2.New(sess)
+
+	err = a.validateAvailabilityZones(svc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (a *AWSConfig) validateAvailabilityZones(svc *ec2.EC2) error {
+	var result error
+
+	zones, err := svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
+		Filters: []*ec2.Filter{
+			&ec2.Filter{
+				Name:   aws.String("state"),
+				Values: []*string{aws.String("available")},
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(zones.AvailabilityZones) == 0 {
+		return fmt.Errorf(
+			"no availability zone found for region '%s'",
+			a.Region,
+		)
+	}
+
+	for _, zoneConfigured := range a.AvailabiltyZones {
+		found := false
+		for _, zone := range zones.AvailabilityZones {
+			if zone.ZoneName != nil && *zone.ZoneName == zoneConfigured {
+				found = true
+				break
+			}
+		}
+		if !found {
+			result = multierror.Append(result, fmt.Errorf(
+				"specified invalid availability zone '%s' for region '%s'",
+				zoneConfigured,
+				a.Region,
+			))
+		}
+	}
+	if result != nil {
+		return result
+	}
+
+	if len(a.AvailabiltyZones) == 0 {
+		zone := zones.AvailabilityZones[0].ZoneName
+		if zone == nil {
+			return fmt.Errorf("error determining availabilty zone")
+		}
+		log.Debugf("No availability zones specified selecting zone: %s", zone)
+		a.AvailabiltyZones = []string{*zone}
+	}
+
+	return nil
 }
 
 func (a *AWSConfig) Session() (*session.Session, error) {
@@ -148,6 +222,20 @@ func (a *AWSConfig) RemoteState(bucketName, environmentName, contextName, stackN
 		a.Region,
 		bucketName,
 	)
+}
+
+func (a *AWSConfig) TerraformVars() map[string]interface{} {
+	output := map[string]interface{}{}
+	if a.KeyName != "" {
+		output["key_name"] = a.KeyName
+	}
+	if len(a.AllowedAccountIDs) > 0 {
+		output["allowed_account_ids"] = a.AllowedAccountIDs
+	}
+	output["availability_zones"] = a.AvailabiltyZones
+	output["region"] = a.Region
+
+	return output
 }
 
 func (a *AWSConfig) RemoteStateAvailable(bucketName string) (bool, error) {

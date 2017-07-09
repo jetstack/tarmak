@@ -1,9 +1,12 @@
 package terraform
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/archive"
@@ -19,6 +22,56 @@ type TerraformContainer struct {
 	log   *log.Entry
 }
 
+func MapToTerraformTfvars(input map[string]interface{}) (output string, err error) {
+	var buf bytes.Buffer
+
+	for key, value := range input {
+		switch v := value.(type) {
+		case map[string]string:
+			_, err := buf.WriteString(fmt.Sprintf("%s = {\n", key))
+			if err != nil {
+				return "", err
+			}
+
+			keys := make([]string, len(v))
+			pos := 0
+			for key, _ := range v {
+				keys[pos] = key
+				pos++
+			}
+			sort.Strings(keys)
+			for _, key := range keys {
+				_, err := buf.WriteString(fmt.Sprintf("  %s = \"%s\"\n", key, v[key]))
+				if err != nil {
+					return "", err
+				}
+			}
+
+			_, err = buf.WriteString("}\n")
+			if err != nil {
+				return "", err
+			}
+		case []string:
+			values := make([]string, len(v))
+			for pos, _ := range v {
+				values[pos] = fmt.Sprintf(`"%s"`, v[pos])
+			}
+			_, err := buf.WriteString(fmt.Sprintf("%s = [%s]\n", key, strings.Join(values, ", ")))
+			if err != nil {
+				return "", err
+			}
+		case string:
+			_, err := buf.WriteString(fmt.Sprintf("%s = \"%s\"\n", key, v))
+			if err != nil {
+				return "", err
+			}
+		default:
+			return "", fmt.Errorf("ignoring unknown var type %#+v", v)
+		}
+	}
+	return buf.String(), nil
+}
+
 func (tc *TerraformContainer) Plan(additionalArgs []string, destroy bool) (changesNeeded bool, err error) {
 
 	args := []string{"plan", "-out=terraform.plan", "-detailed-exitcode", "-input=false"}
@@ -28,21 +81,22 @@ func (tc *TerraformContainer) Plan(additionalArgs []string, destroy bool) (chang
 	}
 
 	// adds parameters as CLI args
-	for key, value := range tc.stack.TerraformVars(tc.t.tarmak.Context().TerraformVars()) {
-		switch v := value.(type) {
-		case map[string]string:
-			val := "{"
-			for mkey, mval := range v {
-				val += fmt.Sprintf(" %s = \"%s\",", mkey, mval)
-			}
-			val = val[:len(val)-1]
-			val += "}"
-			args = append(args, "-var", fmt.Sprintf("%s=%s", key, val))
-		case string:
-			args = append(args, "-var", fmt.Sprintf("%s=%s", key, v))
-		default:
-			tc.log.Warnf("ignoring unknown var type %t", v)
-		}
+	terraformVars := tc.stack.TerraformVars(tc.t.tarmak.Context().TerraformVars())
+	tc.log.WithFields(terraformVars).Debug()
+
+	terraformVarsFile, err := MapToTerraformTfvars(terraformVars)
+	if err != nil {
+		return false, err
+	}
+
+	remoteStateTar, err := tarmakDocker.TarStreamFromFile("terraform.tfvars", terraformVarsFile)
+	if err != nil {
+		return false, err
+	}
+
+	err = tc.UploadToContainer(remoteStateTar, "/terraform")
+	if err != nil {
+		return false, err
 	}
 
 	args = append(args, additionalArgs...)

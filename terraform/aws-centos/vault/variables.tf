@@ -14,6 +14,8 @@ variable "contact" {}
 
 variable "key_name" {}
 
+variable "region" {}
+
 variable "state_bucket" {
   default = ""
 }
@@ -33,10 +35,6 @@ variable "allowed_account_ids" {
 
 variable "environment" {
   default = "nonprod"
-}
-
-variable "region" {
-  default = "eu-west-1"
 }
 
 variable "consul_version" {

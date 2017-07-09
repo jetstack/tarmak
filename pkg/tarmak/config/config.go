@@ -72,6 +72,57 @@ func (c *Config) TerraformVars() map[string]interface{} {
 	}
 }
 
+func DefaultConfigSingleEnvSingleZoneAWSEUCentral() *Config {
+	return &Config{
+		CurrentContext: "devsingleeucentral-cluster",
+		Project:        "tarmak-dev",
+		Contact:        "tech@jetstack.io",
+		Environments: []Environment{
+			Environment{
+				AWS: &AWSConfig{
+					VaultPath: "jetstack/aws/jetstack-dev/sts/admin",
+					Region:    "eu-central-1",
+					KeyName:   "jetstack_nonprod",
+				},
+				SSHKeyPath: "~/.ssh/id_jetstack_nonprod",
+				Name:       "devsingleeucentral",
+				Contexts: []Context{
+					Context{
+						Name:      "cluster",
+						BaseImage: "centos-puppet-agent",
+						Stacks: []Stack{
+							Stack{
+								State: &StackState{
+									BucketPrefix: "jetstack-tarmak-",
+									PublicZone:   "devsingleeucentral.dev.tarmak.io",
+								},
+							},
+							Stack{
+								Network: &StackNetwork{
+									NetworkCIDR: "10.98.0.0/20",
+									PrivateZone: "devsingleeucentral.dev.tarmak.local",
+								},
+							},
+							Stack{
+								Tools: &StackTools{},
+							},
+							Stack{
+								Vault: &StackVault{},
+							},
+							Stack{
+								Kubernetes: &StackKubernetes{
+									EtcdCount:       3,
+									WorkerSpotPrice: 0.035,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func DefaultConfigSingle() *Config {
 	return &Config{
 		CurrentContext: "devsingle-cluster",
@@ -80,11 +131,13 @@ func DefaultConfigSingle() *Config {
 		Environments: []Environment{
 			Environment{
 				AWS: &AWSConfig{
-					VaultPath: "jetstack/aws/jetstack-dev/sts/admin",
-					Region:    "eu-west-1",
-					KeyName:   "jetstack_nonprod",
+					VaultPath:        "jetstack/aws/jetstack-dev/sts/admin",
+					Region:           "eu-west-1",
+					AvailabiltyZones: []string{"eu-west-1a", "eu-west-1b", "eu-west-1c"},
+					KeyName:          "jetstack_nonprod",
 				},
-				Name: "devsingle",
+				SSHKeyPath: "~/.ssh/id_jetstack_nonprod",
+				Name:       "devsingle",
 				Contexts: []Context{
 					Context{
 						Name:      "cluster",
@@ -130,11 +183,13 @@ func DefaultConfigHub() *Config {
 		Environments: []Environment{
 			Environment{
 				AWS: &AWSConfig{
-					VaultPath: "jetstack/aws/jetstack-dev/sts/admin",
-					Region:    "eu-west-1",
-					KeyName:   "jetstack_nonprod",
+					VaultPath:        "jetstack/aws/jetstack-dev/sts/admin",
+					Region:           "eu-west-1",
+					AvailabiltyZones: []string{"eu-west-1a", "eu-west-1b", "eu-west-1c"},
+					KeyName:          "jetstack_nonprod",
 				},
-				Name: "devmulti",
+				SSHKeyPath: "~/.ssh/id_jetstack_nonprod",
+				Name:       "devmulti",
 				Contexts: []Context{
 					Context{
 						Name:      "hub",

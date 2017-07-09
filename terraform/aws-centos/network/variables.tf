@@ -6,6 +6,12 @@ variable "project" {}
 
 variable "contact" {}
 
+variable "region" {}
+
+variable "availability_zones" {
+  type = "list"
+}
+
 variable "stack" {
   default = ""
 }
@@ -33,14 +39,6 @@ variable "vpc_peer_stack" {
 
 variable "environment" {
   default = "nonprod"
-}
-
-variable "region" {
-  default = "eu-west-1"
-}
-
-variable "availability_zones" {
-  default = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
 }
 
 variable "private_zone" {

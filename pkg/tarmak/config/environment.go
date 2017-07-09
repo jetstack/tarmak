@@ -29,6 +29,12 @@ type Environment struct {
 func (e *Environment) Validate() error {
 	var result error
 
+	if e.ProviderName() == ProviderNameAWS {
+		if err := e.AWS.Validate(); err != nil {
+			return err
+		}
+	}
+
 	networkCIDRs := []*net.IPNet{}
 	e.stackState = nil
 	e.stackVault = nil
@@ -204,20 +210,14 @@ func (e *Environment) TerraformVars() map[string]interface{} {
 	}
 
 	if e.ProviderName() == ProviderNameAWS {
-		if e.AWS.KeyName != "" {
-			output["key_name"] = e.AWS.KeyName
+		for key, value := range e.AWS.TerraformVars() {
+			output[key] = value
 		}
-		if len(e.AWS.AllowedAccountIDs) > 0 {
-			output["allowed_account_ids"] = e.AWS.AllowedAccountIDs
-		}
-		if len(e.AWS.AllowedAccountIDs) > 0 {
-			output["availability_zones"] = e.AWS.AvailabiltyZones
-		}
-		output["region"] = e.AWS.Region
-		output["state_bucket"] = e.RemoteStateBucketName()
-		output["state_context_name"] = e.stackState.Context().Name
-		output["tools_context_name"] = e.stackTools.Context().Name
-		output["vault_context_name"] = e.stackVault.Context().Name
 	}
+
+	output["state_bucket"] = e.RemoteStateBucketName()
+	output["state_context_name"] = e.stackState.Context().Name
+	output["tools_context_name"] = e.stackTools.Context().Name
+	output["vault_context_name"] = e.stackVault.Context().Name
 	return output
 }

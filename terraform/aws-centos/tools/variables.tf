@@ -14,6 +14,8 @@ variable "project" {}
 
 variable "contact" {}
 
+variable "region" {}
+
 variable "state_bucket" {
   default = ""
 }
@@ -39,10 +41,6 @@ variable "admin_ips" {
 
 variable "environment" {
   default = "nonprod"
-}
-
-variable "region" {
-  default = "eu-west-1"
 }
 
 variable "state_context_name" {
