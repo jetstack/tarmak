@@ -1,11 +1,7 @@
 package tarmak
 
 import (
-	"os"
-	"os/exec"
-
 	"github.com/Sirupsen/logrus"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/packer"
@@ -143,45 +139,6 @@ func (t *Tarmak) TerraformDestroy(args []string) {
 			t.log.Fatal(err)
 		}
 	}
-}
-
-func (t *Tarmak) SSH(argsAdditional []string) {
-	args := []string{
-		"ssh",
-	}
-	args = append(args, argsAdditional...)
-
-	sess, err := t.Context().Environment().AWS.Session()
-	if err != nil {
-		t.log.Fatal(err)
-	}
-	svc := ec2.New(sess)
-	_, err = svc.DescribeInstances(&ec2.DescribeInstancesInput{})
-	if err != nil {
-		t.log.Fatal(err)
-	}
-
-	/*for _, reservation := range instances.Reservations {
-		for _, instance := range reservation.Instances {
-			t.log.Infof(*instance.PrivateIpAddress, *instance.InstanceId)
-		}
-	}*/
-
-	cmd := exec.Command(args[0], args[1:len(args)]...)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-
-	err = cmd.Start()
-	if err != nil {
-		t.log.Fatal(err)
-	}
-
-	err = cmd.Wait()
-	if err != nil {
-		t.log.Fatal(err)
-	}
-
 }
 
 func (t *Tarmak) PackerBuild() {

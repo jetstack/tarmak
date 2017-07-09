@@ -17,6 +17,8 @@ type Environment struct {
 	Contact string `yaml:"contact,omitempty"`
 	Project string `yaml:"project,omitempty"`
 
+	SSHKeyPath string `yaml:"sshKeyPath,omitempty"`
+
 	Contexts []Context `yaml:"contexts,omitempty"`
 
 	stackState *Stack
