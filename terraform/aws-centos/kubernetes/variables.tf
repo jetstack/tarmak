@@ -59,7 +59,7 @@ variable "etcd_instance_type" {
 }
 
 variable "etcd_instance_count" {
-  default = "5"
+  default = "3"
 }
 
 variable "etcd_root_volume_size" {
