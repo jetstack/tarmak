@@ -37,6 +37,7 @@
       "type": "shell",
       "execute_command": "sudo -E -S sh '{{ .Path }}'",
       "inline": [
+        "rm -f /etc/ssh/ssh_host_*",
         "rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm",
         "yum update -y",
         "yum install -y epel-release",
