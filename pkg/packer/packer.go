@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"time"
 
 	logrus "github.com/Sirupsen/logrus"
@@ -121,7 +122,7 @@ func (p *Packer) Build() (amiID string, err error) {
 
 	// set tarmak environment vars vars
 	for key, value := range p.tags() {
-		c.Env = append(c.Env, fmt.Sprintf("%s=%s", key, value))
+		c.Env = append(c.Env, fmt.Sprintf("%s=%s", strings.ToUpper(key), value))
 	}
 
 	// get aws secrets
