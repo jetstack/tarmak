@@ -28,7 +28,12 @@ type AWS struct {
 
 	session *session.Session
 	ec2     EC2
+	s3      S3
 	log     *logrus.Entry
+}
+
+type S3 interface {
+	HeadBucket(input *s3.HeadBucketInput) (*s3.HeadBucketOutput, error)
 }
 
 type EC2 interface {
@@ -68,6 +73,17 @@ func (a *AWS) EC2() (EC2, error) {
 	return a.ec2, nil
 }
 
+func (a *AWS) S3() (S3, error) {
+	if a.s3 == nil {
+		sess, err := a.Session()
+		if err != nil {
+			return nil, fmt.Errorf("error getting AWS session: %s", err)
+		}
+		a.s3 = s3.New(sess)
+	}
+	return a.s3, nil
+}
+
 func (a *AWS) RemoteStateBucketName() string {
 	return fmt.Sprintf(
 		"%s%s-%s-terraform-state",
@@ -94,6 +110,22 @@ func (a *AWS) RemoteState(contextName, stackName string) string {
 }
 
 func (a *AWS) RemoteStateBucketAvailable() (bool, error) {
+	svc, err := a.S3()
+	if err != nil {
+		return false, err
+	}
+
+	_, err = svc.HeadBucket(&s3.HeadBucketInput{
+		Bucket: aws.String(a.RemoteStateBucketName()),
+	})
+	if err == nil {
+		return true, nil
+	} else if strings.HasPrefix(err.Error(), "NotFound:") {
+		return false, nil
+	} else {
+		return false, fmt.Errorf("error while checking if remote state is available: %s", err)
+	}
+
 	return false, nil
 }
 
@@ -212,7 +244,7 @@ func (a *AWS) validateAvailabilityZones(svc *ec2.EC2) error {
 		if zone == nil {
 			return fmt.Errorf("error determining availabilty zone")
 		}
-		a.log.Debugf("No availability zones specified selecting zone: %s", zone)
+		a.log.Debugf("no availability zones specified selecting zone: %s", *zone)
 		a.conf.AvailabiltyZones = []string{*zone}
 	}
 
