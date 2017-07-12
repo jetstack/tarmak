@@ -3,6 +3,7 @@ package terraform
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"sort"
@@ -63,6 +64,11 @@ func MapToTerraformTfvars(input map[string]interface{}) (output string, err erro
 			}
 		case string:
 			_, err := buf.WriteString(fmt.Sprintf("%s = \"%s\"\n", key, v))
+			if err != nil {
+				return "", err
+			}
+		case *net.IPNet:
+			_, err := buf.WriteString(fmt.Sprintf("%s = \"%s\"\n", key, v.String()))
 			if err != nil {
 				return "", err
 			}
