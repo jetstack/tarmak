@@ -8,12 +8,12 @@ import (
 	logrus "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
 type App struct {
 	log    *logrus.Entry
-	tarmak config.Tarmak
+	tarmak interfaces.Tarmak
 
 	dockerClient *docker.Client
 	dockerImage  *docker.Image
@@ -24,7 +24,7 @@ type App struct {
 	DockerfilePath string
 }
 
-func NewApp(t config.Tarmak, log *logrus.Entry, imageName, imagePath string) *App {
+func NewApp(t interfaces.Tarmak, log *logrus.Entry, imageName, imagePath string) *App {
 	return &App{
 		imagePath: imagePath,
 		imageName: imageName,

@@ -1,13 +1,6 @@
 package config
 
-import (
-	"fmt"
-	"io"
-	"os"
-	"strings"
-
-	"github.com/hashicorp/go-multierror"
-)
+import ()
 
 const (
 	StackNameState      = "state"
@@ -25,51 +18,6 @@ type Config struct {
 
 	Contact string `yaml:"contact,omitempty"`
 	Project string `yaml:"project,omitempty"`
-}
-
-type File interface {
-	io.Closer
-	io.Reader
-	io.Seeker
-	Readdir(count int) ([]os.FileInfo, error)
-	Stat() (os.FileInfo, error)
-}
-
-func (c *Config) GetContext() (*Context, error) {
-	for _, environment := range c.Environments {
-		if !strings.HasPrefix(c.CurrentContext, fmt.Sprintf("%s-", environment.Name)) {
-			continue
-		}
-		for _, context := range environment.Contexts {
-			if context.GetName() == c.CurrentContext {
-				return &context, nil
-			}
-		}
-	}
-	return nil, fmt.Errorf("context '%s' not found", c.CurrentContext)
-}
-
-func (c *Config) Validate() error {
-	var result error
-
-	for posEnvironment, _ := range c.Environments {
-		// set my link onto environment
-		c.Environments[posEnvironment].config = c
-
-		// validate environment
-		if err := c.Environments[posEnvironment].Validate(); err != nil {
-			result = multierror.Append(result, err)
-		}
-	}
-
-	return result
-}
-
-func (c *Config) TerraformVars() map[string]interface{} {
-	return map[string]interface{}{
-		"project": c.Project,
-		"contact": c.Contact,
-	}
 }
 
 func DefaultConfigSingleEnvSingleZoneAWSEUCentral() *Config {

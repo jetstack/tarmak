@@ -12,13 +12,14 @@ import (
 	"github.com/docker/docker/pkg/archive"
 
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type TerraformContainer struct {
 	*tarmakDocker.AppContainer
 	t     *Terraform
-	stack *config.Stack
+	stack interfaces.Stack
 	log   *log.Entry
 }
 
@@ -66,7 +67,7 @@ func MapToTerraformTfvars(input map[string]interface{}) (output string, err erro
 				return "", err
 			}
 		default:
-			return "", fmt.Errorf("ignoring unknown var type %#+v", v)
+			return "", fmt.Errorf("ignoring unknown var key='%s' type='%#+v'", key, v)
 		}
 	}
 	return buf.String(), nil
@@ -81,8 +82,13 @@ func (tc *TerraformContainer) Plan(additionalArgs []string, destroy bool) (chang
 	}
 
 	// adds parameters as CLI args
-	terraformVars := tc.stack.TerraformVars(tc.t.tarmak.Context().TerraformVars())
-	tc.log.WithFields(terraformVars).Debug()
+	terraformVars := utils.MergeMaps(
+		tc.stack.Context().Environment().Tarmak().Variables(),
+		tc.stack.Context().Environment().Variables(),
+		tc.stack.Context().Variables(),
+		tc.stack.Variables(),
+	)
+	tc.log.WithFields(terraformVars).Debug("terraform vars generated")
 
 	terraformVarsFile, err := MapToTerraformTfvars(terraformVars)
 	if err != nil {
@@ -165,7 +171,7 @@ func (tc *TerraformContainer) CopyRemoteState(content string) error {
 
 func (tc *TerraformContainer) prepare() error {
 	// get aws secrets
-	if environmentProvider, err := tc.t.tarmak.Context().ProviderEnvironment(); err != nil {
+	if environmentProvider, err := tc.t.tarmak.Context().Environment().Provider().Environment(); err != nil {
 		return fmt.Errorf("error getting environment secrets from provider: %s", err)
 	} else {
 		tc.Env = append(tc.Env, environmentProvider...)
@@ -191,7 +197,7 @@ func (tc *TerraformContainer) prepare() error {
 		IncludeFiles: []string{"."},
 	}
 
-	terraformDir := filepath.Clean(filepath.Join(tc.t.tarmak.RootPath(), "terraform/aws-centos", tc.stack.StackName()))
+	terraformDir := filepath.Clean(filepath.Join(tc.t.tarmak.RootPath(), "terraform/aws-centos", tc.stack.Name()))
 	tc.log = tc.log.WithField("terraform-dir", terraformDir)
 
 	terraformDirInfo, err := os.Stat(terraformDir)

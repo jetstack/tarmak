@@ -7,15 +7,16 @@ import (
 
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
 type Terraform struct {
 	*tarmakDocker.App
 	log    *logrus.Entry
-	tarmak config.Tarmak
+	tarmak interfaces.Tarmak
 }
 
-func New(tarmak config.Tarmak) *Terraform {
+func New(tarmak interfaces.Tarmak) *Terraform {
 	log := tarmak.Log().WithField("module", "terraform")
 
 	app := tarmakDocker.NewApp(
@@ -32,26 +33,26 @@ func New(tarmak config.Tarmak) *Terraform {
 	}
 }
 
-func (t *Terraform) NewContainer(stack *config.Stack) *TerraformContainer {
+func (t *Terraform) NewContainer(stack interfaces.Stack) *TerraformContainer {
 	c := &TerraformContainer{
 		AppContainer: t.Container(),
 		t:            t,
-		log:          t.log.WithField("stack", stack.StackName()),
+		log:          t.log.WithField("stack", stack.Name()),
 		stack:        stack,
 	}
-	c.AppContainer.SetLog(t.log.WithField("stack", stack.StackName()))
+	c.AppContainer.SetLog(t.log.WithField("stack", stack.Name()))
 	return c
 }
 
-func (t *Terraform) Apply(stack *config.Stack, args []string) error {
+func (t *Terraform) Apply(stack interfaces.Stack, args []string) error {
 	return t.planApply(stack, args, false)
 }
 
-func (t *Terraform) Destroy(stack *config.Stack, args []string) error {
+func (t *Terraform) Destroy(stack interfaces.Stack, args []string) error {
 	return t.planApply(stack, args, true)
 }
 
-func (t *Terraform) planApply(stack *config.Stack, args []string, destroy bool) error {
+func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy bool) error {
 	c := t.NewContainer(stack)
 
 	if err := c.prepare(); err != nil {
@@ -61,8 +62,8 @@ func (t *Terraform) planApply(stack *config.Stack, args []string, destroy bool) 
 
 	initialStateStack := false
 	// check for initial state run on first deployment
-	if !destroy && stack.StackName() == config.StackNameState {
-		remoteStateAvail, err := t.tarmak.Context().RemoteStateAvailable()
+	if !destroy && stack.Name() == config.StackNameState {
+		remoteStateAvail, err := t.tarmak.Context().Environment().Provider().RemoteStateBucketAvailable()
 		if err != nil {
 			return fmt.Errorf("error finding remote state: %s", err)
 		}
@@ -73,7 +74,7 @@ func (t *Terraform) planApply(stack *config.Stack, args []string, destroy bool) 
 	}
 
 	if !initialStateStack {
-		err := c.CopyRemoteState(t.tarmak.Context().RemoteState(stack.StackName()))
+		err := c.CopyRemoteState(stack.RemoteState())
 
 		if err != nil {
 			return fmt.Errorf("error while copying remote state: %s", err)
@@ -86,7 +87,7 @@ func (t *Terraform) planApply(stack *config.Stack, args []string, destroy bool) 
 	}
 
 	// check for destroying the state stack
-	if destroy && stack.StackName() == config.StackNameState {
+	if destroy && stack.Name() == config.StackNameState {
 		c.log.Infof("moving remote state to local")
 
 		err := c.CopyRemoteState("")
@@ -113,7 +114,7 @@ func (t *Terraform) planApply(stack *config.Stack, args []string, destroy bool) 
 
 	// upload state if it was an inital state run
 	if initialStateStack {
-		err := c.CopyRemoteState(t.tarmak.Context().RemoteState(stack.StackName()))
+		err := c.CopyRemoteState(stack.RemoteState())
 		if err != nil {
 			return fmt.Errorf("error while copying remote state: %s", err)
 		}
