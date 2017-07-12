@@ -19,6 +19,7 @@ type Context interface {
 	SSHConfigPath() string
 	SSHHostKeysPath() string
 	SetImageID(string)
+	ContextName() string
 }
 
 type Environment interface {

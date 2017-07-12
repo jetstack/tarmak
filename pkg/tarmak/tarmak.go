@@ -92,7 +92,7 @@ func (t *Tarmak) findContext() error {
 			continue
 		}
 		for _, context := range environment.Contexts() {
-			if context.Name() == t.conf.CurrentContext {
+			if context.ContextName() == t.conf.CurrentContext {
 				t.context = context
 				return nil
 			}

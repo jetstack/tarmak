@@ -111,8 +111,12 @@ func (c *Context) Environment() interfaces.Environment {
 	return c.environment
 }
 
-func (c *Context) Name() string {
+func (c *Context) ContextName() string {
 	return fmt.Sprintf("%s-%s", c.environment.Name(), c.conf.Name)
+}
+
+func (c *Context) Name() string {
+	return c.conf.Name
 }
 
 func (c *Context) ConfigPath() string {
@@ -143,7 +147,7 @@ func (c *Context) Variables() map[string]interface{} {
 		}
 	}
 
-	output["name"] = c.conf.Name
+	output["name"] = c.Name()
 
 	return output
 }
