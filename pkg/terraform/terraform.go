@@ -125,5 +125,10 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 		}
 	}
 
+	// verify that state has been run successfully
+	if err := stack.VerifyPost(); err != nil {
+		return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
+	}
+
 	return nil
 }

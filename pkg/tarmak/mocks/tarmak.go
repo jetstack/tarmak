@@ -187,6 +187,18 @@ func (_mr *MockContextMockRecorder) ContextName() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "ContextName")
 }
 
+// Log mocks base method
+func (_m *MockContext) Log() *logrus.Entry {
+	ret := _m.ctrl.Call(_m, "Log")
+	ret0, _ := ret[0].(*logrus.Entry)
+	return ret0
+}
+
+// Log indicates an expected call of Log
+func (_mr *MockContextMockRecorder) Log() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Log")
+}
+
 // MockEnvironment is a mock of Environment interface
 type MockEnvironment struct {
 	ctrl     *gomock.Controller
@@ -316,6 +328,18 @@ func (_m *MockEnvironment) SSHPrivateKey() interface{} {
 // SSHPrivateKey indicates an expected call of SSHPrivateKey
 func (_mr *MockEnvironmentMockRecorder) SSHPrivateKey() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SSHPrivateKey")
+}
+
+// Log mocks base method
+func (_m *MockEnvironment) Log() *logrus.Entry {
+	ret := _m.ctrl.Call(_m, "Log")
+	ret0, _ := ret[0].(*logrus.Entry)
+	return ret0
+}
+
+// Log indicates an expected call of Log
+func (_mr *MockEnvironmentMockRecorder) Log() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Log")
 }
 
 // MockProvider is a mock of Provider interface
@@ -548,6 +572,30 @@ func (_mr *MockStackMockRecorder) RemoteState() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoteState")
 }
 
+// Log mocks base method
+func (_m *MockStack) Log() *logrus.Entry {
+	ret := _m.ctrl.Call(_m, "Log")
+	ret0, _ := ret[0].(*logrus.Entry)
+	return ret0
+}
+
+// Log indicates an expected call of Log
+func (_mr *MockStackMockRecorder) Log() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Log")
+}
+
+// VerifyPost mocks base method
+func (_m *MockStack) VerifyPost() error {
+	ret := _m.ctrl.Call(_m, "VerifyPost")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// VerifyPost indicates an expected call of VerifyPost
+func (_mr *MockStackMockRecorder) VerifyPost() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "VerifyPost")
+}
+
 // MockTarmak is a mock of Tarmak interface
 type MockTarmak struct {
 	ctrl     *gomock.Controller
@@ -734,6 +782,54 @@ func NewMockHost(ctrl *gomock.Controller) *MockHost {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (_m *MockHost) EXPECT() *MockHostMockRecorder {
 	return _m.recorder
+}
+
+// ID mocks base method
+func (_m *MockHost) ID() string {
+	ret := _m.ctrl.Call(_m, "ID")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// ID indicates an expected call of ID
+func (_mr *MockHostMockRecorder) ID() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "ID")
+}
+
+// Hostname mocks base method
+func (_m *MockHost) Hostname() string {
+	ret := _m.ctrl.Call(_m, "Hostname")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Hostname indicates an expected call of Hostname
+func (_mr *MockHostMockRecorder) Hostname() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Hostname")
+}
+
+// User mocks base method
+func (_m *MockHost) User() string {
+	ret := _m.ctrl.Call(_m, "User")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// User indicates an expected call of User
+func (_mr *MockHostMockRecorder) User() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "User")
+}
+
+// Roles mocks base method
+func (_m *MockHost) Roles() []string {
+	ret := _m.ctrl.Call(_m, "Roles")
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// Roles indicates an expected call of Roles
+func (_mr *MockHostMockRecorder) Roles() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Roles")
 }
 
 // SSHConfig mocks base method

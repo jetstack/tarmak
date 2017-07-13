@@ -11,10 +11,10 @@ resource "aws_route53_zone" "public" {
   }
 }
 
-resource "aws_route53_record" "www" {
+resource "aws_route53_record" "star-txt" {
   zone_id = "${aws_route53_zone.public.zone_id}"
-  name    = "_tarmak"
+  name    = "*._tarmak"
   type    = "TXT"
   ttl     = "300"
-  records = ["delegation for ${data.template_file.stack_name.rendered} works"]
+  records = ["tarmak delegation works"]
 }

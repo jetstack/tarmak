@@ -11,15 +11,41 @@ import (
 )
 
 type host struct {
-	ID             string
-	Host           string
-	HostnamePublic bool
-	Hostname       string
-	Aliases        []string
-	Roles          []string
-	User           string
+	id             string
+	host           string
+	hostnamePublic bool
+	hostname       string
+	aliases        []string
+	roles          []string
+	user           string
 
 	context interfaces.Context
+}
+
+var _ interfaces.Host = &host{}
+
+func (h *host) ID() string {
+	return h.id
+}
+
+func (h *host) Roles() []string {
+	return h.roles
+}
+
+func (h *host) Aliases() []string {
+	return h.aliases
+}
+
+func (h *host) Hostname() string {
+	return h.hostname
+}
+
+func (h *host) HostnamePublic() bool {
+	return h.hostnamePublic
+}
+
+func (h *host) User() string {
+	return h.user
 }
 
 func (h *host) SSHConfig() string {
@@ -32,14 +58,14 @@ func (h *host) SSHConfig() string {
     IdentitiesOnly yes
     IdentityFile %s
 `,
-		strings.Join(append(h.Aliases, h.ID), " "),
-		h.User,
+		strings.Join(append(h.Aliases(), h.ID()), " "),
+		h.User(),
 		h.context.SSHHostKeysPath(),
-		h.Hostname,
+		h.Hostname(),
 		h.context.Environment().SSHPrivateKeyPath(),
 	)
 
-	if !h.HostnamePublic {
+	if !h.HostnamePublic() {
 		config += fmt.Sprintf(
 			"    ProxyCommand ssh -F %s -W %%h:%%p bastion\n",
 			h.context.SSHConfigPath(),
@@ -76,19 +102,19 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 			}
 
 			host := &host{
-				ID:             *instance.InstanceId,
-				Hostname:       *instance.PrivateIpAddress,
-				HostnamePublic: false,
-				User:           "centos",
+				id:             *instance.InstanceId,
+				hostname:       *instance.PrivateIpAddress,
+				hostnamePublic: false,
+				user:           "centos",
 			}
 			if instance.PublicIpAddress != nil {
-				host.Hostname = *instance.PublicIpAddress
-				host.HostnamePublic = true
+				host.hostname = *instance.PublicIpAddress
+				host.hostnamePublic = true
 			}
 
 			for _, tag := range instance.Tags {
 				if *tag.Key == "tarmak_role" {
-					host.Roles = strings.Split(*tag.Value, ",")
+					host.roles = strings.Split(*tag.Value, ",")
 				}
 			}
 
@@ -98,13 +124,13 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 
 	hostsByRole := map[string][]*host{}
 	for _, h := range hosts {
-		for _, role := range h.Roles {
+		for _, role := range h.roles {
 			if _, ok := hostsByRole[role]; !ok {
 				hostsByRole[role] = []*host{h}
 			} else {
 				hostsByRole[role] = append(hostsByRole[role], h)
 			}
-			h.Aliases = append(h.Aliases, fmt.Sprintf("%s-%d", role, len(hostsByRole[role])))
+			h.aliases = append(h.aliases, fmt.Sprintf("%s-%d", role, len(hostsByRole[role])))
 		}
 	}
 
@@ -113,9 +139,9 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 		if len(hosts) != 1 {
 			continue
 		}
-		for pos, _ := range hosts[0].Aliases {
-			if hosts[0].Aliases[pos] == fmt.Sprintf("%s-1", role) {
-				hosts[0].Aliases[pos] = role
+		for pos, _ := range hosts[0].aliases {
+			if hosts[0].aliases[pos] == fmt.Sprintf("%s-1", role) {
+				hosts[0].aliases[pos] = role
 			}
 		}
 	}

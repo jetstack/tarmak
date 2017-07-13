@@ -4,9 +4,19 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Sirupsen/logrus"
+
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
+
+type Stack struct {
+	conf *config.Stack
+
+	name    string
+	context interfaces.Context
+	log     *logrus.Entry
+}
 
 func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.Stack, error) {
 	stacks := []interfaces.Stack{}
@@ -14,6 +24,7 @@ func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.S
 	s := &Stack{
 		conf:    conf,
 		context: context,
+		log:     context.Log(),
 	}
 
 	if conf.State != nil {
@@ -68,13 +79,6 @@ func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.S
 
 	return stacks[0], nil
 
-}
-
-type Stack struct {
-	conf *config.Stack
-
-	name    string
-	context interfaces.Context
 }
 
 func (s *Stack) Context() interfaces.Context {

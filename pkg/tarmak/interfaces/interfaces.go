@@ -56,6 +56,7 @@ type Stack interface {
 	Context() Context
 	RemoteState() string
 	Log() *logrus.Entry
+	VerifyPost() error
 }
 
 type Tarmak interface {
@@ -76,5 +77,9 @@ type Terraform interface {
 }
 
 type Host interface {
+	ID() string
+	Hostname() string
+	User() string
+	Roles() []string
 	SSHConfig() string
 }

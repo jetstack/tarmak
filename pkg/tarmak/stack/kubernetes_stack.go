@@ -21,3 +21,7 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 func (s *KubernetesStack) Variables() map[string]interface{} {
 	return map[string]interface{}{}
 }
+
+func (s *KubernetesStack) VerifyPost() error {
+	return nil
+}

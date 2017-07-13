@@ -21,3 +21,7 @@ func newVaultStack(s *Stack, conf *config.StackVault) (*VaultStack, error) {
 func (s *VaultStack) Variables() map[string]interface{} {
 	return map[string]interface{}{}
 }
+
+func (s *VaultStack) VerifyPost() error {
+	return nil
+}

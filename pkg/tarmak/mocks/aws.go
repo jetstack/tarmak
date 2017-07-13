@@ -81,19 +81,6 @@ func (_mr *MockEC2MockRecorder) DescribeInstances(arg0 interface{}) *gomock.Call
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DescribeInstances", arg0)
 }
 
-// CreateKeyPair mocks base method
-func (_m *MockEC2) CreateKeyPair(input *ec2.CreateKeyPairInput) (*ec2.CreateKeyPairOutput, error) {
-	ret := _m.ctrl.Call(_m, "CreateKeyPair", input)
-	ret0, _ := ret[0].(*ec2.CreateKeyPairOutput)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateKeyPair indicates an expected call of CreateKeyPair
-func (_mr *MockEC2MockRecorder) CreateKeyPair(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateKeyPair", arg0)
-}
-
 // ImportKeyPair mocks base method
 func (_m *MockEC2) ImportKeyPair(input *ec2.ImportKeyPairInput) (*ec2.ImportKeyPairOutput, error) {
 	ret := _m.ctrl.Call(_m, "ImportKeyPair", input)
