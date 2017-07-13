@@ -1,6 +1,7 @@
 package environment
 
 import (
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -8,10 +9,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os"
 	"path/filepath"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 	"github.com/mitchellh/go-homedir"
+	"golang.org/x/crypto/ssh"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/context"
@@ -25,7 +29,7 @@ type Environment struct {
 
 	contexts []interfaces.Context
 
-	sshKeyPrivate *rsa.PrivateKey
+	sshKeyPrivate interface{}
 
 	stackState interfaces.Stack
 	stackVault interfaces.Stack
@@ -34,6 +38,8 @@ type Environment struct {
 	provider interfaces.Provider
 
 	tarmak interfaces.Tarmak
+
+	log *logrus.Entry
 }
 
 var _ interfaces.Environment = &Environment{}
@@ -42,6 +48,7 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *config.Environment) (*Environ
 	e := &Environment{
 		conf:   conf,
 		tarmak: tarmak,
+		log:    tarmak.Log().WithField("environment", conf.Name),
 	}
 
 	var result error
@@ -191,6 +198,78 @@ func (e *Environment) Variables() map[string]interface{} {
 
 func (e *Environment) ConfigPath() string {
 	return filepath.Join(e.tarmak.ConfigPath(), e.Name())
+}
+
+func generateRSAKey(bitSize int, filePath string) (*rsa.PrivateKey, error) {
+	reader := rand.Reader
+
+	key, err := rsa.GenerateKey(reader, bitSize)
+	if err != nil {
+		return nil, err
+	}
+
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer outFile.Close()
+
+	if err := os.Chmod(filePath, 0600); err != nil {
+		return nil, err
+	}
+
+	var privateKey = &pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(key),
+	}
+
+	if err := pem.Encode(outFile, privateKey); err != nil {
+		return nil, err
+	}
+
+	return key, nil
+
+}
+
+func (e *Environment) SSHPrivateKey() interface{} {
+	if e.sshKeyPrivate == nil {
+		key, err := e.getSSHPrivateKey()
+		if err != nil {
+			e.log.Fatal(err)
+		}
+		e.sshKeyPrivate = key
+	}
+	return e.sshKeyPrivate
+}
+
+func (e *Environment) getSSHPrivateKey() (interface{}, error) {
+	path := e.SSHPrivateKeyPath()
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := utils.EnsureDirectory(filepath.Dir(path), 0700); err != nil {
+			return nil, fmt.Errorf("error creating directory: %s", err)
+		}
+
+		sshKey, err := generateRSAKey(4096, path)
+		if err != nil {
+			return nil, fmt.Errorf("error generating ssh key: %s", err)
+		}
+		return sshKey, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("unable to find ssh key in %s: %s", path, err)
+	}
+
+	sshKeyBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read ssh key %s: %s", path, err)
+	}
+
+	sshKey, err := ssh.ParseRawPrivateKey(sshKeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse ssh key %s: %s", path, err)
+	}
+
+	return sshKey, nil
 }
 
 func (e *Environment) SSHPrivateKeyPath() string {
