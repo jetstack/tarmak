@@ -29,8 +29,9 @@ type Environment interface {
 	Validate() error
 	Name() string
 	BucketPrefix() string
-	SSHPrivateKeyPath() string
 	Contexts() []Context
+	SSHPrivateKeyPath() string
+	SSHPrivateKey() (signer interface{})
 }
 
 type Provider interface {

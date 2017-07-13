@@ -21,7 +21,7 @@
 
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
-  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/xml/xmlutil","service/sts"]
+  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/ec2","service/s3","service/sts"]
   revision = "f9684fc1d5bd49f51bf61afe6fb4059fbb9060d1"
   version = "v1.10.5"
 
@@ -72,6 +72,12 @@
   packages = ["."]
   revision = "d3de07a94d22b4a0972deb4b96d790c2c0ce8333"
   version = "v1.28.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/golang/mock"
+  packages = ["gomock"]
+  revision = "93f6609a15b7de76bd49259f1f9a6b58df358936"
 
 [[projects]]
   branch = "master"
@@ -225,6 +231,12 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","ssh"]
+  revision = "dd85ac7e6a88fc6ca420478e934de5f1a42dd3c6"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","http2","http2/hpack","idna","lex/httplex"]
   revision = "1f9224279e98554b6a6432d4dd998a739f8b2b7c"
@@ -250,6 +262,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "178b8c04dfee95a567b35e2972b411cd21a7a5f6b99f7a1e8c20cb684c1c969c"
+  inputs-digest = "1661f3c6a22b306fb4b695dae25b1558ee08ab00510d292c7da9cbba25b4d2be"
   solver-name = "gps-cdcl"
   solver-version = 1

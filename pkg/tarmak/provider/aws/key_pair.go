@@ -1,0 +1,88 @@
+package aws
+
+import (
+	"crypto/md5"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/hex"
+	"fmt"
+	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"golang.org/x/crypto/ssh"
+)
+
+func (a *AWS) KeyName() string {
+	if a.conf.KeyName == "" {
+		return fmt.Sprintf("tarmak_%s", a.environment.Name())
+	}
+	return a.conf.KeyName
+}
+
+func fingerprintAWSStyle(signer interface{}) (string, error) {
+	switch v := signer.(type) {
+	case *rsa.PrivateKey:
+		pubKeyBytes, err := x509.MarshalPKIXPublicKey(v.Public())
+		if err != nil {
+			return "", err
+		}
+		md5sum := md5.Sum(pubKeyBytes)
+		hexarray := make([]string, len(md5sum))
+		for i, c := range md5sum {
+			hexarray[i] = hex.EncodeToString([]byte{c})
+		}
+		return strings.Join(hexarray, ":"), nil
+	default:
+		return "", fmt.Errorf("unsupported key type %t", v)
+	}
+}
+
+func (a *AWS) validateAWSKeyPair() error {
+	svc, err := a.EC2()
+	if err != nil {
+		return err
+	}
+
+	keypairs, err := svc.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
+		KeyNames: []*string{aws.String(a.KeyName())},
+	})
+	if err != nil {
+		return err
+	}
+
+	var awsKeyPair *ec2.KeyPairInfo
+	if len(keypairs.KeyPairs) == 0 {
+		signer, err := ssh.NewSignerFromKey(a.environment.SSHPrivateKey())
+		if err != nil {
+			return fmt.Errorf("unable to generate public key from private key: ", err)
+		}
+		_, err = svc.ImportKeyPair(&ec2.ImportKeyPairInput{
+			KeyName:           aws.String(a.KeyName()),
+			PublicKeyMaterial: []byte(ssh.MarshalAuthorizedKey(signer.PublicKey())),
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	} else if len(keypairs.KeyPairs) != 1 {
+		return fmt.Errorf("unexpected number of keypairs found: %d", len(keypairs.KeyPairs))
+	} else {
+		awsKeyPair = keypairs.KeyPairs[0]
+	}
+
+	if err != nil {
+		fmt.Errorf("failed to parse private key: ", err)
+
+	}
+
+	// warn if cannot generate fingerprint, fail if fingerprints are not matching
+	fingerprintExpected, err := fingerprintAWSStyle(a.environment.SSHPrivateKey())
+	if err != nil {
+		a.log.Warn("failed to generate local fingerprint: ", err)
+	} else if act, exp := *awsKeyPair.KeyFingerprint, fingerprintExpected; act != exp {
+		return fmt.Errorf("aws key pair is not matching the local one, aws_fingerprint=%s local_fingerprint=%s", act, exp)
+	}
+
+	return nil
+}

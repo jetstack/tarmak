@@ -38,6 +38,7 @@ type S3 interface {
 
 type EC2 interface {
 	DescribeInstances(input *ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error)
+	ImportKeyPair(input *ec2.ImportKeyPairInput) (*ec2.ImportKeyPairOutput, error)
 	DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error)
 	DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (*ec2.DescribeAvailabilityZonesOutput, error)
 }
@@ -132,7 +133,7 @@ func (a *AWS) RemoteStateBucketAvailable() (bool, error) {
 func (a *AWS) Variables() map[string]interface{} {
 	output := map[string]interface{}{}
 	if a.conf.KeyName != "" {
-		output["key_name"] = a.conf.KeyName
+		output["key_name"] = a.KeyName()
 	}
 	if len(a.conf.AllowedAccountIDs) > 0 {
 		output["allowed_account_ids"] = a.conf.AllowedAccountIDs
@@ -181,13 +182,12 @@ func readVaultToken() (string, error) {
 }
 
 func (a *AWS) Validate() error {
-	sess, err := a.Session()
+	err := a.validateAvailabilityZones()
 	if err != nil {
-		return fmt.Errorf("error getting AWS session: %s", err)
+		return err
 	}
 
-	svc := ec2.New(sess)
-	err = a.validateAvailabilityZones(svc)
+	err = a.validateAWSKeyPair()
 	if err != nil {
 		return err
 	}
@@ -196,8 +196,13 @@ func (a *AWS) Validate() error {
 
 }
 
-func (a *AWS) validateAvailabilityZones(svc *ec2.EC2) error {
+func (a *AWS) validateAvailabilityZones() error {
 	var result error
+
+	svc, err := a.EC2()
+	if err != nil {
+		return fmt.Errorf("error getting AWS EC2 session: %s", err)
+	}
 
 	zones, err := svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
 		Filters: []*ec2.Filter{
@@ -231,7 +236,7 @@ func (a *AWS) validateAvailabilityZones(svc *ec2.EC2) error {
 			result = multierror.Append(result, fmt.Errorf(
 				"specified invalid availability zone '%s' for region '%s'",
 				zoneConfigured,
-				a.Region,
+				a.Region(),
 			))
 		}
 	}
@@ -323,44 +328,8 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 	return sess, nil
 }
 
-func (a *AWS) validateAWSKeyPair(svc *ec2.EC2) error {
-	if a.conf.KeyName == "" {
-		a.conf.KeyName = fmt.Sprintf("tarmak_%s", a.environment.Name())
-	}
-
-	keypairs, err := svc.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
-		KeyNames: []*string{aws.String(a.conf.KeyName)},
-	})
-	if err != nil {
-		return err
-	}
-
-	var awsKeyPair *ec2.KeyPairInfo
-	if len(keypairs.KeyPairs) == 0 {
-		// TODO create me
-	}
-	if len(keypairs.KeyPairs) != 1 {
-		return fmt.Errorf("unexpected number of keypairs found: %d", len(keypairs.KeyPairs))
-	} else {
-		awsKeyPair = keypairs.KeyPairs[0]
-	}
-
-	// TODO implement me properly
-	if *awsKeyPair.KeyFingerprint != "" {
-		return fmt.Errorf("aws key pair is not matching the local one")
-	}
-
-	// read private key from disk
-
-	// if local key path + pub key is given => use that
-	// maybe check if the two keys match (opt)
-
-	// if local private key path given, make sure its unencrypted and upload to tarmak_<context_name>
-
-	// if nothing of the two is there generate key pair in the well know path (if not exist and upload that if not exsist then verify as before:w
-
-	return nil
-
+func (a *AWS) AvailabilityZones() []string {
+	return a.conf.AvailabiltyZones
 }
 
 func (a *AWS) RemoteStateAvailable(bucketName string) (bool, error) {
