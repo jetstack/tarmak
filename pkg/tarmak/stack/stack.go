@@ -92,3 +92,7 @@ func (s *Stack) Name() string {
 func (s *Stack) Validate() error {
 	return nil
 }
+
+func (s *Stack) Log() *logrus.Entry {
+	return s.log
+}

@@ -20,6 +20,7 @@ type Context interface {
 	SSHHostKeysPath() string
 	SetImageID(string)
 	ContextName() string
+	Log() *logrus.Entry
 }
 
 type Environment interface {
@@ -32,6 +33,7 @@ type Environment interface {
 	Contexts() []Context
 	SSHPrivateKeyPath() string
 	SSHPrivateKey() (signer interface{})
+	Log() *logrus.Entry
 }
 
 type Provider interface {
@@ -53,6 +55,7 @@ type Stack interface {
 	Validate() error
 	Context() Context
 	RemoteState() string
+	Log() *logrus.Entry
 }
 
 type Tarmak interface {

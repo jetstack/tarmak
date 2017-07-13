@@ -6,6 +6,7 @@ import (
 	"net"
 	"path/filepath"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
@@ -22,6 +23,7 @@ type Context struct {
 	environment  interfaces.Environment
 	imageID      *string
 	networkCIDR  *net.IPNet
+	log          *logrus.Entry
 }
 
 var _ interfaces.Context = &Context{}
@@ -30,6 +32,7 @@ func NewFromConfig(environment interfaces.Environment, conf *config.Context) (*C
 	context := &Context{
 		conf:        conf,
 		environment: environment,
+		log:         environment.Log().WithField("context", conf.Name),
 	}
 
 	var result error
@@ -129,6 +132,10 @@ func (c *Context) SSHConfigPath() string {
 
 func (c *Context) SSHHostKeysPath() string {
 	return filepath.Join(c.ConfigPath(), "ssh_known_hosts")
+}
+
+func (c *Context) Log() *logrus.Entry {
+	return c.log
 }
 
 func (c *Context) Variables() map[string]interface{} {

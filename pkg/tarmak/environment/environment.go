@@ -288,6 +288,10 @@ func (e *Environment) Contexts() []interfaces.Context {
 	return e.contexts
 }
 
+func (e *Environment) Log() *logrus.Entry {
+	return e.log
+}
+
 func (e *Environment) Validate() error {
 	var result error
 
