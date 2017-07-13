@@ -42,7 +42,7 @@ func DefaultConfigSingleEnvSingleZoneAWSEUCentral() *Config {
 							Stack{
 								State: &StackState{
 									BucketPrefix: "jetstack-tarmak-",
-									PublicZone:   "devsingleeucentral.dev.tarmak.io",
+									PublicZone:   "devsingleeucentral.dev.tarmak.org",
 								},
 							},
 							Stack{
@@ -94,7 +94,7 @@ func DefaultConfigSingle() *Config {
 							Stack{
 								State: &StackState{
 									BucketPrefix: "jetstack-tarmak-",
-									PublicZone:   "devsingle.dev.tarmak.io",
+									PublicZone:   "devsingle.dev.tarmak.org",
 								},
 							},
 							Stack{
@@ -146,7 +146,7 @@ func DefaultConfigHub() *Config {
 							Stack{
 								State: &StackState{
 									BucketPrefix: "jetstack-tarmak-",
-									PublicZone:   "devmulti.dev.tarmak.io",
+									PublicZone:   "devmulti.dev.tarmak.org",
 								},
 							},
 							Stack{
