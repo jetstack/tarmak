@@ -132,14 +132,12 @@ func (a *AWS) RemoteStateBucketAvailable() (bool, error) {
 
 func (a *AWS) Variables() map[string]interface{} {
 	output := map[string]interface{}{}
-	if a.conf.KeyName != "" {
-		output["key_name"] = a.KeyName()
-	}
+	output["key_name"] = a.KeyName()
 	if len(a.conf.AllowedAccountIDs) > 0 {
 		output["allowed_account_ids"] = a.conf.AllowedAccountIDs
 	}
-	output["availability_zones"] = a.conf.AvailabiltyZones
-	output["region"] = a.conf.Region
+	output["availability_zones"] = a.AvailabilityZones()
+	output["region"] = a.Region()
 
 	return output
 }

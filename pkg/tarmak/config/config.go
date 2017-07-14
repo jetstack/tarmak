@@ -30,10 +30,8 @@ func DefaultConfigSingleEnvSingleZoneAWSEUCentral() *Config {
 				AWS: &AWSConfig{
 					VaultPath: "jetstack/aws/jetstack-dev/sts/admin",
 					Region:    "eu-central-1",
-					KeyName:   "jetstack_nonprod",
 				},
-				SSHKeyPath: "~/.ssh/id_jetstack_nonprod",
-				Name:       "devsingleeucentral",
+				Name: "devsingleeucentral",
 				Contexts: []Context{
 					Context{
 						Name:      "cluster",
@@ -82,10 +80,8 @@ func DefaultConfigSingle() *Config {
 					VaultPath:        "jetstack/aws/jetstack-dev/sts/admin",
 					Region:           "eu-west-1",
 					AvailabiltyZones: []string{"eu-west-1a", "eu-west-1b", "eu-west-1c"},
-					KeyName:          "jetstack_nonprod",
 				},
-				SSHKeyPath: "~/.ssh/id_jetstack_nonprod",
-				Name:       "devsingle",
+				Name: "devsingle",
 				Contexts: []Context{
 					Context{
 						Name:      "cluster",
@@ -134,10 +130,8 @@ func DefaultConfigHub() *Config {
 					VaultPath:        "jetstack/aws/jetstack-dev/sts/admin",
 					Region:           "eu-west-1",
 					AvailabiltyZones: []string{"eu-west-1a", "eu-west-1b", "eu-west-1c"},
-					KeyName:          "jetstack_nonprod",
 				},
-				SSHKeyPath: "~/.ssh/id_jetstack_nonprod",
-				Name:       "devmulti",
+				Name: "devmulti",
 				Contexts: []Context{
 					Context{
 						Name:      "hub",

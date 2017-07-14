@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"golang.org/x/crypto/ssh"
 )
@@ -48,7 +49,9 @@ func (a *AWS) validateAWSKeyPair() error {
 		KeyNames: []*string{aws.String(a.KeyName())},
 	})
 	if err != nil {
-		return err
+		if aerr, ok := err.(awserr.Error); !ok || aerr.Code() != "InvalidKeyPair.NotFound" {
+			return err
+		}
 	}
 
 	var awsKeyPair *ec2.KeyPairInfo

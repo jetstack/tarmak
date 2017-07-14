@@ -219,7 +219,7 @@ func generateRSAKey(bitSize int, filePath string) (*rsa.PrivateKey, error) {
 	}
 
 	var privateKey = &pem.Block{
-		Type:  "PRIVATE KEY",
+		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}
 

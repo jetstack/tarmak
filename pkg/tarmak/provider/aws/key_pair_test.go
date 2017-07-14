@@ -1,10 +1,12 @@
 package aws
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/golang/mock/gomock"
 	"golang.org/x/crypto/ssh"
@@ -115,7 +117,7 @@ func TestAWS_validateAWSKeyPairNotExisting(t *testing.T) {
 		&ec2.DescribeKeyPairsOutput{
 			KeyPairs: []*ec2.KeyPairInfo{},
 		},
-		nil,
+		awserr.New("InvalidKeyPair.NotFound", "keypair not found", errors.New("not found")),
 	)
 
 	// aws get the import command
