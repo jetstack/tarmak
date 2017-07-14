@@ -57,6 +57,7 @@ type Stack interface {
 	RemoteState() string
 	Log() *logrus.Entry
 	VerifyPost() error
+	SetOutput(map[string]interface{})
 }
 
 type Tarmak interface {

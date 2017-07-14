@@ -16,6 +16,8 @@ type Stack struct {
 	name    string
 	context interfaces.Context
 	log     *logrus.Entry
+
+	output map[string]interface{}
 }
 
 func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.Stack, error) {
@@ -79,6 +81,10 @@ func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.S
 
 	return stacks[0], nil
 
+}
+
+func (s *Stack) SetOutput(in map[string]interface{}) {
+	s.output = in
 }
 
 func (s *Stack) Context() interfaces.Context {

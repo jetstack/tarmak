@@ -2,6 +2,7 @@ package docker
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 
@@ -126,6 +127,51 @@ func (ac *AppContainer) Execute(cmd string, args []string) (returnCode int, err 
 	}
 
 	return execInspect.ExitCode, nil
+}
+
+func (ac *AppContainer) Capture(cmd string, args []string) (stdOut string, stdErr string, returnCode int, err error) {
+	command := []string{cmd}
+	command = append(command, args...)
+	ac.log.WithField("command", command).Debug()
+	exec, err := ac.app.dockerClient.CreateExec(docker.CreateExecOptions{
+		Cmd:          command,
+		AttachStdin:  false,
+		AttachStdout: true,
+		AttachStderr: true,
+		Container:    ac.dockerContainer.ID,
+	})
+	if err != nil {
+		return "", "", -1, err
+	}
+
+	var stdOutBuf bytes.Buffer
+	var stdErrBuf bytes.Buffer
+	stdOutWriter := bufio.NewWriter(&stdOutBuf)
+	stdErrWriter := bufio.NewWriter(&stdErrBuf)
+
+	err = ac.app.dockerClient.StartExec(exec.ID, docker.StartExecOptions{
+		ErrorStream:  stdErrWriter,
+		OutputStream: stdOutWriter,
+	})
+	if err != nil {
+		return "", "", -1, fmt.Errorf("error starting exec: %s", err)
+	}
+
+	err = stdOutWriter.Flush()
+	if err != nil {
+		return "", "", -1, fmt.Errorf("error flushing stdout: %s", err)
+	}
+	err = stdErrWriter.Flush()
+	if err != nil {
+		return "", "", -1, fmt.Errorf("error flushing stdout: %s", err)
+	}
+
+	execInspect, err := ac.app.dockerClient.InspectExec(exec.ID)
+	if err != nil {
+		return "", "", -1, fmt.Errorf("error inspecting exec: %s", err)
+	}
+
+	return stdOutBuf.String(), stdErrBuf.String(), execInspect.ExitCode, nil
 }
 
 func (ac *AppContainer) Start() error {

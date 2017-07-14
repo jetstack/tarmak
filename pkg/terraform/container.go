@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -22,6 +23,12 @@ type TerraformContainer struct {
 	t     *Terraform
 	stack interfaces.Stack
 	log   *log.Entry
+}
+
+type terraformOutputValue struct {
+	Sensitive bool        `json="sensitive,omitifempty"`
+	Type      string      `json="type,omitifempty"`
+	Value     interface{} `value="type,omitifempty"`
 }
 
 func MapToTerraformTfvars(input map[string]interface{}) (output string, err error) {
@@ -158,6 +165,28 @@ func (tc *TerraformContainer) InitForceCopy() error {
 		return fmt.Errorf("unexpected return code: exp=%d, act=%d", exp, act)
 	}
 	return nil
+}
+
+func (tc *TerraformContainer) Output() (map[string]interface{}, error) {
+	stdOut, stdErr, returnCode, err := tc.Capture("terraform", []string{"output", "-json"})
+	if err != nil {
+		return nil, err
+	}
+	if exp, act := 0, returnCode; exp != act {
+		return nil, fmt.Errorf("unexpected return code: exp=%d, act=%d: %s", exp, act, stdErr)
+	}
+
+	var values map[string]terraformOutputValue
+	if err := json.Unmarshal([]byte(stdOut), &values); err != nil {
+		return nil, fmt.Errorf("error parsing JSON: %s", err)
+	}
+
+	variables := make(map[string]interface{})
+	for key, value := range values {
+		variables[key] = value.Value
+	}
+
+	return variables, nil
 }
 
 func (tc *TerraformContainer) CopyRemoteState(content string) error {
