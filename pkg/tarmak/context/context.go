@@ -123,7 +123,7 @@ func (c *Context) Name() string {
 }
 
 func (c *Context) ConfigPath() string {
-	return filepath.Join(c.Environment().Tarmak().ConfigPath(), c.Name())
+	return filepath.Join(c.Environment().Tarmak().ConfigPath(), c.ContextName())
 }
 
 func (c *Context) SSHConfigPath() string {
