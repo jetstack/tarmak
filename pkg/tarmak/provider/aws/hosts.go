@@ -106,6 +106,7 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 				hostname:       *instance.PrivateIpAddress,
 				hostnamePublic: false,
 				user:           "centos",
+				context:        a.environment.Tarmak().Context(),
 			}
 			if instance.PublicIpAddress != nil {
 				host.hostname = *instance.PublicIpAddress
