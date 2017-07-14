@@ -51,17 +51,27 @@ func (h *host) User() string {
 func (h *host) SSHConfig() string {
 	config := fmt.Sprintf(`host %s
     User %s
-    UserKnownHostsFile %s
     Hostname %s
+
+    # use custom host key file per context
+    UserKnownHostsFile %s
     StrictHostKeyChecking no
+
+    # enable connection multiplexing
+    ControlPath %s/ssh-control-%%r@%%h:%%p
+    ControlMaster auto
+    ControlPersist 10m
+
+    # keep connections alive
     ServerAliveInterval 60
     IdentitiesOnly yes
     IdentityFile %s
 `,
 		strings.Join(append(h.Aliases(), h.ID()), " "),
 		h.User(),
-		h.context.SSHHostKeysPath(),
 		h.Hostname(),
+		h.context.SSHHostKeysPath(),
+		h.context.ConfigPath(),
 		h.context.Environment().SSHPrivateKeyPath(),
 	)
 
