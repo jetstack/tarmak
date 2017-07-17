@@ -158,7 +158,7 @@ func (a *AWS) Environment() ([]string, error) {
 		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", creds.AccessKeyID),
 		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", creds.SecretAccessKey),
 		fmt.Sprintf("AWS_SESSION_TOKEN=%s", creds.SessionToken),
-		fmt.Sprintf("AWS_DEFAULT_REGION=%s", a.Region),
+		fmt.Sprintf("AWS_DEFAULT_REGION=%s", a.Region()),
 	}, nil
 }
 
