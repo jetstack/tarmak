@@ -82,6 +82,7 @@ type SSH interface {
 	WriteConfig() error
 	PassThrough([]string)
 	Tunnel(hostname string, destination string, destinationPort int) Tunnel
+	Execute(host string, cmd string, args []string) (returnCode int, err error)
 }
 
 type Tunnel interface {

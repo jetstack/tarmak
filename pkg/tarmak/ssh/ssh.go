@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"syscall"
 
 	"github.com/Sirupsen/logrus"
 
@@ -87,4 +88,30 @@ func (s *SSH) PassThrough(argsAdditional []string) {
 	if err != nil {
 		s.log.Fatal(err)
 	}
+}
+
+func (s *SSH) Execute(host string, command string, argsAdditional []string) (returnCode int, err error) {
+	args := append(s.args(), host, "--", command)
+	args = append(args, argsAdditional...)
+
+	cmd := exec.Command(args[0], args[1:len(args)]...)
+
+	err = cmd.Start()
+	if err != nil {
+		return -1, err
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		perr, ok := err.(*exec.ExitError)
+		if ok {
+			if status, ok := perr.Sys().(syscall.WaitStatus); ok {
+				return status.ExitStatus(), nil
+			}
+		}
+		return -1, err
+	}
+
+	return 0, nil
+
 }

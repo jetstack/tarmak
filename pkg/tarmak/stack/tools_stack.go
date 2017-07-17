@@ -2,9 +2,6 @@ package stack
 
 import (
 	"fmt"
-	"time"
-
-	"golang.org/x/crypto/ssh"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -33,44 +30,26 @@ func (s *ToolsStack) VerifyPost() error {
 
 func (s *ToolsStack) verifyBastionAvailable() error {
 
-	hosts, err := s.Context().Environment().Provider().ListHosts()
-	if err != nil {
+	ssh := s.Context().Environment().Tarmak().SSH()
+
+	if err := ssh.WriteConfig(); err != nil {
 		return err
 	}
 
-	var bastionHost interfaces.Host
-	for _, host := range hosts {
-		for _, role := range host.Roles() {
-			if role == "bastion" {
-				bastionHost = host
-			}
-		}
-	}
+	retCode, err := ssh.Execute(
+		"bastion",
+		"/bin/true",
+		[]string{},
+	)
 
-	signer, err := ssh.NewSignerFromKey(s.Context().Environment().SSHPrivateKey())
+	msg := "error while connectioning to bastion host"
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %s", msg, err)
 	}
-
-	sshConfig := &ssh.ClientConfig{
-		User: bastionHost.User(),
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		Timeout: 10 * time.Second,
-		// TODO: Do this properly
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	_, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", bastionHost.Hostname(), 22), sshConfig)
-	if err != nil {
-		return fmt.Errorf("failed to connect to bastion: %s", err)
+	if retCode != 0 {
+		return fmt.Errorf("%s unexpected return code: %d", msg, retCode)
 	}
 
 	return nil
 
-	/*
-		key := s.Context().Environment().SSHPrivateKey()
-		return nil
-	*/
 }
