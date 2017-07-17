@@ -87,6 +87,10 @@ func (s *Stack) SetOutput(in map[string]interface{}) {
 	s.output = in
 }
 
+func (s *Stack) Output() map[string]interface{} {
+	return s.output
+}
+
 func (s *Stack) Context() interfaces.Context {
 	return s.context
 }

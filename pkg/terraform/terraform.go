@@ -52,6 +52,38 @@ func (t *Terraform) Destroy(stack interfaces.Stack, args []string) error {
 	return t.planApply(stack, args, true)
 }
 
+func (t *Terraform) Output(stack interfaces.Stack) (map[string]interface{}, error) {
+	if output := stack.Output(); output != nil {
+		return output, nil
+	}
+
+	c := t.NewContainer(stack)
+
+	if err := c.prepare(); err != nil {
+		return nil, fmt.Errorf("error preparing container: %s", err)
+	}
+	defer c.CleanUpSilent(t.log)
+
+	err := c.CopyRemoteState(stack.RemoteState())
+	if err != nil {
+		return nil, fmt.Errorf("error while copying remote state: %s", err)
+	}
+	c.log.Debug("copied remote state into container")
+
+	if err := c.Init(); err != nil {
+		return nil, fmt.Errorf("error while terraform init: %s", err)
+	}
+
+	output, err := c.Output()
+	stack.SetOutput(output)
+	if err != nil {
+		return nil, fmt.Errorf("error while getting terraform output: %s", err)
+	}
+
+	return output, nil
+
+}
+
 func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy bool) error {
 	c := t.NewContainer(stack)
 

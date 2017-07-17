@@ -34,6 +34,8 @@ type Environment interface {
 	SSHPrivateKeyPath() string
 	SSHPrivateKey() (signer interface{})
 	Log() *logrus.Entry
+	StateStack() Stack
+	VaultStack() Stack
 }
 
 type Provider interface {
@@ -58,6 +60,7 @@ type Stack interface {
 	Log() *logrus.Entry
 	VerifyPost() error
 	SetOutput(map[string]interface{})
+	Output() map[string]interface{}
 }
 
 type Tarmak interface {
@@ -76,6 +79,7 @@ type Packer interface {
 }
 
 type Terraform interface {
+	Output(stack Stack) (map[string]interface{}, error)
 }
 
 type SSH interface {

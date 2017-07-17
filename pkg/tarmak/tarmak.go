@@ -78,7 +78,7 @@ func New(cmd *cobra.Command) *Tarmak {
 }
 
 func (t *Tarmak) Terraform() interfaces.Terraform {
-	return t.packer
+	return t.terraform
 }
 
 func (t *Tarmak) Packer() interfaces.Packer {

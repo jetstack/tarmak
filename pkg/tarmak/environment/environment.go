@@ -314,3 +314,11 @@ func (e *Environment) BucketPrefix() string {
 	}
 	return bucketPrefixString
 }
+
+func (e *Environment) StateStack() interfaces.Stack {
+	return e.stackState
+}
+
+func (e *Environment) VaultStack() interfaces.Stack {
+	return e.stackState
+}
