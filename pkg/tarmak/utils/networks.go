@@ -7,6 +7,18 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+func UnusedPort() int {
+	l, err := net.ListenTCP("tcp", &net.TCPAddr{
+		IP:   net.ParseIP("127.0.0.1"),
+		Port: 0,
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port
+}
+
 func NetworkOverlap(netCIDRs []*net.IPNet) error {
 	var result error
 	for i, _ := range netCIDRs {

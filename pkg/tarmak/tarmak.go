@@ -14,6 +14,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/environment"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
@@ -25,6 +26,7 @@ type Tarmak struct {
 	log       *logrus.Logger
 	terraform *terraform.Terraform
 	packer    *packer.Packer
+	ssh       interfaces.SSH
 	cmd       *cobra.Command
 
 	context      interfaces.Context
@@ -70,6 +72,7 @@ func New(cmd *cobra.Command) *Tarmak {
 
 	t.terraform = terraform.New(t)
 	t.packer = packer.New(t)
+	t.ssh = ssh.New(t)
 
 	return t
 }

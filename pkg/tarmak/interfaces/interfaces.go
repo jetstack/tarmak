@@ -69,12 +69,25 @@ type Tarmak interface {
 	Environments() []Environment
 	Terraform() Terraform
 	Packer() Packer
+	SSH() SSH
 }
 
 type Packer interface {
 }
 
 type Terraform interface {
+}
+
+type SSH interface {
+	WriteConfig() error
+	PassThrough([]string)
+	Tunnel(hostname string, destination string, destinationPort int) Tunnel
+}
+
+type Tunnel interface {
+	Start() error
+	Stop() error
+	Port() int
 }
 
 type Host interface {

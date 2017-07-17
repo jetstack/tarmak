@@ -11,7 +11,7 @@ var sshCmd = &cobra.Command{
 	Short: "ssh into instance",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
-		t.SSH(args)
+		t.SSHPassThrough(args)
 	},
 }
 

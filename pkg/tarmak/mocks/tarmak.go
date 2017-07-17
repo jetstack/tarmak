@@ -596,6 +596,16 @@ func (_mr *MockStackMockRecorder) VerifyPost() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "VerifyPost")
 }
 
+// SetOutput mocks base method
+func (_m *MockStack) SetOutput(_param0 map[string]interface{}) {
+	_m.ctrl.Call(_m, "SetOutput", _param0)
+}
+
+// SetOutput indicates an expected call of SetOutput
+func (_mr *MockStackMockRecorder) SetOutput(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetOutput", arg0)
+}
+
 // MockTarmak is a mock of Tarmak interface
 type MockTarmak struct {
 	ctrl     *gomock.Controller
@@ -715,6 +725,18 @@ func (_mr *MockTarmakMockRecorder) Packer() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Packer")
 }
 
+// SSH mocks base method
+func (_m *MockTarmak) SSH() SSH {
+	ret := _m.ctrl.Call(_m, "SSH")
+	ret0, _ := ret[0].(SSH)
+	return ret0
+}
+
+// SSH indicates an expected call of SSH
+func (_mr *MockTarmakMockRecorder) SSH() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SSH")
+}
+
 // MockPacker is a mock of Packer interface
 type MockPacker struct {
 	ctrl     *gomock.Controller
@@ -759,6 +781,122 @@ func NewMockTerraform(ctrl *gomock.Controller) *MockTerraform {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (_m *MockTerraform) EXPECT() *MockTerraformMockRecorder {
 	return _m.recorder
+}
+
+// MockSSH is a mock of SSH interface
+type MockSSH struct {
+	ctrl     *gomock.Controller
+	recorder *MockSSHMockRecorder
+}
+
+// MockSSHMockRecorder is the mock recorder for MockSSH
+type MockSSHMockRecorder struct {
+	mock *MockSSH
+}
+
+// NewMockSSH creates a new mock instance
+func NewMockSSH(ctrl *gomock.Controller) *MockSSH {
+	mock := &MockSSH{ctrl: ctrl}
+	mock.recorder = &MockSSHMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockSSH) EXPECT() *MockSSHMockRecorder {
+	return _m.recorder
+}
+
+// WriteConfig mocks base method
+func (_m *MockSSH) WriteConfig() error {
+	ret := _m.ctrl.Call(_m, "WriteConfig")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteConfig indicates an expected call of WriteConfig
+func (_mr *MockSSHMockRecorder) WriteConfig() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "WriteConfig")
+}
+
+// PassThrough mocks base method
+func (_m *MockSSH) PassThrough(_param0 []string) {
+	_m.ctrl.Call(_m, "PassThrough", _param0)
+}
+
+// PassThrough indicates an expected call of PassThrough
+func (_mr *MockSSHMockRecorder) PassThrough(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "PassThrough", arg0)
+}
+
+// Tunnel mocks base method
+func (_m *MockSSH) Tunnel(hostname string, destination string, destinationPort int) Tunnel {
+	ret := _m.ctrl.Call(_m, "Tunnel", hostname, destination, destinationPort)
+	ret0, _ := ret[0].(Tunnel)
+	return ret0
+}
+
+// Tunnel indicates an expected call of Tunnel
+func (_mr *MockSSHMockRecorder) Tunnel(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Tunnel", arg0, arg1, arg2)
+}
+
+// MockTunnel is a mock of Tunnel interface
+type MockTunnel struct {
+	ctrl     *gomock.Controller
+	recorder *MockTunnelMockRecorder
+}
+
+// MockTunnelMockRecorder is the mock recorder for MockTunnel
+type MockTunnelMockRecorder struct {
+	mock *MockTunnel
+}
+
+// NewMockTunnel creates a new mock instance
+func NewMockTunnel(ctrl *gomock.Controller) *MockTunnel {
+	mock := &MockTunnel{ctrl: ctrl}
+	mock.recorder = &MockTunnelMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockTunnel) EXPECT() *MockTunnelMockRecorder {
+	return _m.recorder
+}
+
+// Start mocks base method
+func (_m *MockTunnel) Start() error {
+	ret := _m.ctrl.Call(_m, "Start")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Start indicates an expected call of Start
+func (_mr *MockTunnelMockRecorder) Start() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Start")
+}
+
+// Stop mocks base method
+func (_m *MockTunnel) Stop() error {
+	ret := _m.ctrl.Call(_m, "Stop")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Stop indicates an expected call of Stop
+func (_mr *MockTunnelMockRecorder) Stop() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Stop")
+}
+
+// Port mocks base method
+func (_m *MockTunnel) Port() int {
+	ret := _m.ctrl.Call(_m, "Port")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Port indicates an expected call of Port
+func (_mr *MockTunnelMockRecorder) Port() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Port")
 }
 
 // MockHost is a mock of Host interface
