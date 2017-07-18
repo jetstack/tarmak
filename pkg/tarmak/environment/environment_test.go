@@ -45,6 +45,54 @@ NE5OgEXk2wVfZczCZpigBKbKZHNYcelXtTt/nP3rsCuGcM4h53s=
 -----END RSA PRIVATE KEY-----
 `
 
+func testDefaultEnvironmentConfig() *config.Environment {
+	return &config.Environment{
+		AWS:  &config.AWSConfig{},
+		Name: "correct",
+		Contexts: []config.Context{
+			config.Context{
+				Name: "cluster1",
+				Stacks: []config.Stack{
+					config.Stack{
+						State: &config.StackState{},
+					},
+					config.Stack{
+						Network: &config.StackNetwork{
+							NetworkCIDR: "1.2.0.0/20",
+						},
+					},
+					config.Stack{
+						Tools: &config.StackTools{},
+					},
+					config.Stack{
+						Vault: &config.StackVault{},
+					},
+				},
+			},
+			config.Context{
+				Name: "cluster2",
+				Stacks: []config.Stack{
+					config.Stack{
+						Network: &config.StackNetwork{
+							NetworkCIDR: "1.2.16.0/20",
+						},
+					},
+				},
+			},
+			config.Context{
+				Name: "cluster3",
+				Stacks: []config.Stack{
+					config.Stack{
+						Network: &config.StackNetwork{
+							NetworkCIDR: "1.2.32.0/20",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 type fakeEnvironment struct {
 	*Environment
 	ctrl *gomock.Controller
@@ -80,7 +128,142 @@ func newFakeEnvironment(t *testing.T) *fakeEnvironment {
 	}
 	e.fakeTarmak.EXPECT().ConfigPath().AnyTimes().Return(e.configPath)
 
+	// setup custom logger
+	logger := logrus.New()
+	if testing.Verbose() {
+		logger.Level = logrus.DebugLevel
+	} else {
+		logger.Out = ioutil.Discard
+	}
+	e.fakeTarmak.EXPECT().Log().AnyTimes().Return(logger.WithField("app", "tarmak"))
+
 	return e
+}
+
+func TestNewFromConfigValid(t *testing.T) {
+	fakes := newFakeEnvironment(t)
+	defer fakes.Finish()
+	_, err := NewFromConfig(fakes.fakeTarmak, testDefaultEnvironmentConfig())
+
+	if err != nil {
+		t.Error("unexpected error: ", err)
+	}
+}
+
+func TestNewFromConfigNetworkClash(t *testing.T) {
+	fakes := newFakeEnvironment(t)
+	defer fakes.Finish()
+
+	cfg := testDefaultEnvironmentConfig()
+	cfg.Contexts[1].Stacks[0].Network.NetworkCIDR = "1.2.4.0/24"
+
+	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
+
+	if err == nil {
+		t.Error("expect error")
+	} else if contain := "network '1.2.0.0/20' overlaps with '1.2.4.0/24'"; !strings.Contains(err.Error(), contain) {
+		t.Errorf("expect error message '%s' to contain: '%s'", err.Error(), contain)
+	}
+}
+
+func TestNewFromConfigMissingState(t *testing.T) {
+	fakes := newFakeEnvironment(t)
+	defer fakes.Finish()
+
+	cfg := testDefaultEnvironmentConfig()
+	cfg.Contexts[0].Stacks = cfg.Contexts[0].Stacks[1:]
+
+	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
+
+	if err == nil {
+		t.Error("expect error")
+	} else if contain := "has no state stack"; !strings.Contains(err.Error(), contain) {
+		t.Errorf("expect error message '%s' to contain: '%s'", err.Error(), contain)
+	}
+}
+
+func TestNewFromConfigDuplicateState(t *testing.T) {
+	fakes := newFakeEnvironment(t)
+	defer fakes.Finish()
+
+	cfg := testDefaultEnvironmentConfig()
+	cfg.Contexts[0].Stacks = append(cfg.Contexts[0].Stacks, config.Stack{State: &config.StackState{}})
+
+	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
+
+	if err == nil {
+		t.Error("expect error")
+	} else if contain := "has multiple state stacks"; !strings.Contains(err.Error(), contain) {
+		t.Errorf("expect error message '%s' to contain: '%s'", err.Error(), contain)
+	}
+}
+
+func TestNewFromConfigMissingTools(t *testing.T) {
+	fakes := newFakeEnvironment(t)
+	defer fakes.Finish()
+
+	cfg := testDefaultEnvironmentConfig()
+	stacks := cfg.Contexts[0].Stacks[0:2]
+	stacks = append(stacks, cfg.Contexts[0].Stacks[3:]...)
+	cfg.Contexts[0].Stacks = stacks
+
+	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
+
+	if err == nil {
+		t.Error("expect error")
+	} else if contain := "has no tools stack"; !strings.Contains(err.Error(), contain) {
+		t.Errorf("expect error message '%s' to contain: '%s'", err.Error(), contain)
+	}
+}
+
+func TestNewFromConfigDuplicateTools(t *testing.T) {
+	fakes := newFakeEnvironment(t)
+	defer fakes.Finish()
+
+	cfg := testDefaultEnvironmentConfig()
+	cfg.Contexts[0].Stacks = append(cfg.Contexts[0].Stacks, config.Stack{Tools: &config.StackTools{}})
+
+	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
+
+	if err == nil {
+		t.Error("expect error")
+	} else if contain := "has multiple tools stacks"; !strings.Contains(err.Error(), contain) {
+		t.Errorf("expect error message '%s' to contain: '%s'", err.Error(), contain)
+	}
+}
+
+func TestNewFromConfigMissingVault(t *testing.T) {
+	fakes := newFakeEnvironment(t)
+	defer fakes.Finish()
+
+	cfg := testDefaultEnvironmentConfig()
+	stacks := cfg.Contexts[0].Stacks[0:3]
+	stacks = append(stacks, cfg.Contexts[0].Stacks[4:]...)
+	cfg.Contexts[0].Stacks = stacks
+
+	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
+
+	if err == nil {
+		t.Error("expect error")
+	} else if contain := "has no vault stack"; !strings.Contains(err.Error(), contain) {
+		t.Errorf("expect error message '%s' to contain: '%s'", err.Error(), contain)
+	}
+}
+
+func TestNewFromConfigDuplicateVault(t *testing.T) {
+	fakes := newFakeEnvironment(t)
+	defer fakes.Finish()
+
+	cfg := testDefaultEnvironmentConfig()
+	cfg.Contexts[0].Stacks = append(cfg.Contexts[0].Stacks, config.Stack{Vault: &config.StackVault{}})
+
+	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
+
+	if err == nil {
+		t.Error("expect error")
+	} else if contain := "has multiple vault stacks"; !strings.Contains(err.Error(), contain) {
+		t.Errorf("expect error message '%s' to contain: '%s'", err.Error(), contain)
+	}
 }
 
 func TestEnvironment_SSHPrivateKeyNotExisting(t *testing.T) {

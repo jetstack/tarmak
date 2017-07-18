@@ -45,29 +45,15 @@ func New(cmd *cobra.Command) *Tarmak {
 	// detect home directory
 	homeDir, err := homedir.Dir()
 	if err != nil {
-		t.log.Fatal("unabled to detect home directory: %s", err)
+		t.log.Fatal("unabled to detect home directory: ", err)
 	}
 	t.homeDir = homeDir
 
 	t.log.Level = logrus.DebugLevel
 
 	// TODO: read real config
-	t.conf = config.DefaultConfigSingle()
-	t.conf = config.DefaultConfigSingleEnvSingleZoneAWSEUCentral()
-
-	// init environments
-	for posEnvironment, _ := range t.conf.Environments {
-		env, err := environment.NewFromConfig(t, &t.conf.Environments[posEnvironment])
-		if err != nil {
-			t.log.Fatal(err)
-		}
-		t.environments = append(t.environments, env)
-	}
-
-	// find context
-	err = t.findContext()
-	if err != nil {
-		t.log.Fatal(err)
+	if err := t.initFromConfig(config.DefaultConfigSingle()); err != nil {
+		t.log.Fatal("unabled to validate config: ", err)
 	}
 
 	t.terraform = terraform.New(t)
@@ -75,6 +61,29 @@ func New(cmd *cobra.Command) *Tarmak {
 	t.ssh = ssh.New(t)
 
 	return t
+}
+
+func (t *Tarmak) initFromConfig(cfg *config.Config) error {
+	var result error
+
+	// init environments
+	for posEnvironment, _ := range cfg.Environments {
+		env, err := environment.NewFromConfig(t, &cfg.Environments[posEnvironment])
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+		t.environments = append(t.environments, env)
+	}
+	if result != nil {
+		return result
+	}
+	t.conf = cfg
+
+	// find context
+	if err := t.findContext(); err != nil {
+		result = multierror.Append(result, err)
+	}
+	return result
 }
 
 func (t *Tarmak) Terraform() interfaces.Terraform {

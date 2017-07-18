@@ -320,5 +320,5 @@ func (e *Environment) StateStack() interfaces.Stack {
 }
 
 func (e *Environment) VaultStack() interfaces.Stack {
-	return e.stackState
+	return e.stackVault
 }

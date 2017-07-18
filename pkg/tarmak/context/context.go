@@ -58,11 +58,15 @@ func NewFromConfig(environment interfaces.Environment, conf *config.Context) (*C
 	if context.stackNetwork == nil {
 		result = multierror.Append(result, fmt.Errorf("context '%s' has no network stack", context.Name()))
 	} else {
-		_, err := context.getNetworkCIDR()
+		networkCidr, err := context.getNetworkCIDR()
 		if err != nil {
 			result = multierror.Append(result, fmt.Errorf("context '%s' has an incorrect network CIDR: %s", context.Name(), err))
 		}
+		context.networkCIDR = networkCidr
+	}
 
+	if result != nil {
+		return nil, result
 	}
 
 	return context, nil

@@ -30,19 +30,3 @@ func TestDefaultConfigOmitEmpty(t *testing.T) {
 		t.Error("yaml contains empty values, probably forgot omitempty")
 	}
 }
-
-func TestDefaultConfig_Validate(t *testing.T) {
-	c := DefaultConfigHub()
-
-	err := c.Validate()
-	if err != nil {
-		t.Error("unexpected error: ", err)
-	}
-
-	c = DefaultConfigSingle()
-	err = c.Validate()
-	if err != nil {
-		t.Error("unexpected error: ", err)
-	}
-
-}
