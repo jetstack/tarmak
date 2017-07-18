@@ -6,6 +6,7 @@ package mocks
 import (
 	logrus "github.com/Sirupsen/logrus"
 	gomock "github.com/golang/mock/gomock"
+	kv "github.com/jetstack-experimental/vault-unsealer/pkg/kv"
 	. "github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	net "net"
 )
@@ -342,6 +343,30 @@ func (_mr *MockEnvironmentMockRecorder) Log() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Log")
 }
 
+// StateStack mocks base method
+func (_m *MockEnvironment) StateStack() Stack {
+	ret := _m.ctrl.Call(_m, "StateStack")
+	ret0, _ := ret[0].(Stack)
+	return ret0
+}
+
+// StateStack indicates an expected call of StateStack
+func (_mr *MockEnvironmentMockRecorder) StateStack() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "StateStack")
+}
+
+// VaultStack mocks base method
+func (_m *MockEnvironment) VaultStack() Stack {
+	ret := _m.ctrl.Call(_m, "VaultStack")
+	ret0, _ := ret[0].(Stack)
+	return ret0
+}
+
+// VaultStack indicates an expected call of VaultStack
+func (_mr *MockEnvironmentMockRecorder) VaultStack() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "VaultStack")
+}
+
 // MockProvider is a mock of Provider interface
 type MockProvider struct {
 	ctrl     *gomock.Controller
@@ -476,6 +501,19 @@ func (_mr *MockProviderMockRecorder) QueryImage(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "QueryImage", arg0)
 }
 
+// VaultKV mocks base method
+func (_m *MockProvider) VaultKV() (kv.Service, error) {
+	ret := _m.ctrl.Call(_m, "VaultKV")
+	ret0, _ := ret[0].(kv.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VaultKV indicates an expected call of VaultKV
+func (_mr *MockProviderMockRecorder) VaultKV() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "VaultKV")
+}
+
 // ListHosts mocks base method
 func (_m *MockProvider) ListHosts() ([]Host, error) {
 	ret := _m.ctrl.Call(_m, "ListHosts")
@@ -604,6 +642,18 @@ func (_m *MockStack) SetOutput(_param0 map[string]interface{}) {
 // SetOutput indicates an expected call of SetOutput
 func (_mr *MockStackMockRecorder) SetOutput(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetOutput", arg0)
+}
+
+// Output mocks base method
+func (_m *MockStack) Output() map[string]interface{} {
+	ret := _m.ctrl.Call(_m, "Output")
+	ret0, _ := ret[0].(map[string]interface{})
+	return ret0
+}
+
+// Output indicates an expected call of Output
+func (_mr *MockStackMockRecorder) Output() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Output")
 }
 
 // MockTarmak is a mock of Tarmak interface
@@ -783,6 +833,19 @@ func (_m *MockTerraform) EXPECT() *MockTerraformMockRecorder {
 	return _m.recorder
 }
 
+// Output mocks base method
+func (_m *MockTerraform) Output(stack Stack) (map[string]interface{}, error) {
+	ret := _m.ctrl.Call(_m, "Output", stack)
+	ret0, _ := ret[0].(map[string]interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Output indicates an expected call of Output
+func (_mr *MockTerraformMockRecorder) Output(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Output", arg0)
+}
+
 // MockSSH is a mock of SSH interface
 type MockSSH struct {
 	ctrl     *gomock.Controller
@@ -838,6 +901,19 @@ func (_m *MockSSH) Tunnel(hostname string, destination string, destinationPort i
 // Tunnel indicates an expected call of Tunnel
 func (_mr *MockSSHMockRecorder) Tunnel(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Tunnel", arg0, arg1, arg2)
+}
+
+// Execute mocks base method
+func (_m *MockSSH) Execute(host string, cmd string, args []string) (int, error) {
+	ret := _m.ctrl.Call(_m, "Execute", host, cmd, args)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Execute indicates an expected call of Execute
+func (_mr *MockSSHMockRecorder) Execute(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Execute", arg0, arg1, arg2)
 }
 
 // MockTunnel is a mock of Tunnel interface

@@ -21,7 +21,7 @@
 
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
-  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/ec2","service/s3","service/sts"]
+  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/ec2","service/kms","service/s3","service/ssm","service/sts"]
   revision = "f9684fc1d5bd49f51bf61afe6fb4059fbb9060d1"
   version = "v1.10.5"
 
@@ -120,6 +120,11 @@
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+
+[[projects]]
+  name = "github.com/jetstack-experimental/vault-unsealer"
+  packages = ["pkg/kv","pkg/kv/aws_kms","pkg/kv/aws_ssm","pkg/vault"]
+  revision = "2e5855c864d94235eff892017a10f6e49c46ca74"
 
 [[projects]]
   name = "github.com/jmespath/go-jmespath"
@@ -262,6 +267,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1661f3c6a22b306fb4b695dae25b1558ee08ab00510d292c7da9cbba25b4d2be"
+  inputs-digest = "4118e3fc69153c0b0183a72b2dc03c6cf75907136d4e3f4dc4a7ff25a71e312a"
   solver-name = "gps-cdcl"
   solver-version = 1

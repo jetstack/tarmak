@@ -4,6 +4,7 @@ import (
 	"net"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/jetstack-experimental/vault-unsealer/pkg/kv"
 )
 
 type Context interface {
@@ -48,6 +49,7 @@ type Provider interface {
 	Environment() ([]string, error)
 	Variables() map[string]interface{}
 	QueryImage(tags map[string]string) (string, error)
+	VaultKV() (kv.Service, error)
 	ListHosts() ([]Host, error)
 }
 

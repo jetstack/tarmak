@@ -97,7 +97,6 @@ func (t *Tunnel) Start() error {
 }
 
 func (t *Tunnel) Stop() error {
-	t.log.Warn("stop()")
 	t.stdin.Close()
 
 	<-t.running
