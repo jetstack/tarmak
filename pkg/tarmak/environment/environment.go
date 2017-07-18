@@ -14,7 +14,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
-	"github.com/mitchellh/go-homedir"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
@@ -277,7 +276,7 @@ func (e *Environment) SSHPrivateKeyPath() string {
 		return filepath.Join(e.ConfigPath(), "id_rsa")
 	}
 
-	dir, err := homedir.Expand(e.conf.SSHKeyPath)
+	dir, err := e.Tarmak().HomeDirExpand(e.conf.SSHKeyPath)
 	if err != nil {
 		return e.conf.SSHKeyPath
 	}

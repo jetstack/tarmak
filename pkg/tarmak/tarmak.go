@@ -203,6 +203,10 @@ func (t *Tarmak) HomeDir() string {
 	return t.homeDir
 }
 
+func (t *Tarmak) HomeDirExpand(in string) (string, error) {
+	return homedir.Expand(in)
+}
+
 func (t *Tarmak) Environments() []interfaces.Environment {
 	return t.environments
 }

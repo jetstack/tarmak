@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
-	"github.com/mitchellh/go-homedir"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -163,11 +162,8 @@ func (a *AWS) Environment() ([]string, error) {
 }
 
 // This reads the vault token from ~/.vault-token
-func readVaultToken() (string, error) {
-	homeDir, err := homedir.Dir()
-	if err != nil {
-		return "", err
-	}
+func (a *AWS) readVaultToken() (string, error) {
+	homeDir := a.environment.Tarmak().HomeDir()
 
 	filePath := filepath.Join(homeDir, ".vault-token")
 
@@ -287,7 +283,7 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 
 	// without vault token lookup vault token file
 	if os.Getenv("VAULT_TOKEN") == "" {
-		vaultToken, err := readVaultToken()
+		vaultToken, err := a.readVaultToken()
 		if err != nil {
 			a.log.Debug("failed to read vault token file: ", err)
 		} else {

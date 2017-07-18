@@ -75,6 +75,8 @@ type Tarmak interface {
 	Terraform() Terraform
 	Packer() Packer
 	SSH() SSH
+	HomeDirExpand(in string) (string, error)
+	HomeDir() string
 }
 
 type Packer interface {

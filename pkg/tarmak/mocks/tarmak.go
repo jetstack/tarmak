@@ -787,6 +787,31 @@ func (_mr *MockTarmakMockRecorder) SSH() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SSH")
 }
 
+// HomeDirExpand mocks base method
+func (_m *MockTarmak) HomeDirExpand(in string) (string, error) {
+	ret := _m.ctrl.Call(_m, "HomeDirExpand", in)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HomeDirExpand indicates an expected call of HomeDirExpand
+func (_mr *MockTarmakMockRecorder) HomeDirExpand(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "HomeDirExpand", arg0)
+}
+
+// HomeDir mocks base method
+func (_m *MockTarmak) HomeDir() string {
+	ret := _m.ctrl.Call(_m, "HomeDir")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// HomeDir indicates an expected call of HomeDir
+func (_mr *MockTarmakMockRecorder) HomeDir() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "HomeDir")
+}
+
 // MockPacker is a mock of Packer interface
 type MockPacker struct {
 	ctrl     *gomock.Controller
