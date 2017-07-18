@@ -22,9 +22,7 @@ data "template_file" "vault" {
     vault_tls_ca_path   = "s3://${data.terraform_remote_state.state.secrets_bucket}/${aws_s3_bucket_object.ca-cert.key}"
 
     vault_unsealer_kms_key_id     = "${data.terraform_remote_state.state.secrets_kms_arn}"
-    vault_unsealer_ssm_key_prefix = "vault-${var.environment}-"
-
-    vault_unseal_key_name = "${data.template_file.vault_unseal_key_name.rendered}"
+    vault_unsealer_ssm_key_prefix = "${data.template_file.vault_unseal_key_name.rendered}"
 
     backup_bucket_prefix = "${data.terraform_remote_state.state.backups_bucket}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
 

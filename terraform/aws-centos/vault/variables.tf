@@ -62,7 +62,7 @@ variable "vault_instance_type" {
 }
 
 data "template_file" "vault_unseal_key_name" {
-  template = "vault-${var.environment}-unseal-key"
+  template = "vault-${var.environment}-"
 }
 
 output "vault_ca" {

@@ -170,7 +170,6 @@ write_files:
 
     [Service]
     Environment=AWS_REGION=${region}
-    Environment=UNSEAL_KEY_NAME=${vault_unseal_key_name}
     ExecStart=/usr/local/bin/vault server \
       -config=/etc/vault/vault.hcl
     Restart=on-failure
