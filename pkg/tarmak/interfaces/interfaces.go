@@ -37,6 +37,7 @@ type Environment interface {
 	Log() *logrus.Entry
 	StateStack() Stack
 	VaultStack() Stack
+	VaultRootToken() (string, error)
 }
 
 type Provider interface {

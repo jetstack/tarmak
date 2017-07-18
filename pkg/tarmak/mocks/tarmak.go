@@ -367,6 +367,19 @@ func (_mr *MockEnvironmentMockRecorder) VaultStack() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "VaultStack")
 }
 
+// VaultRootToken mocks base method
+func (_m *MockEnvironment) VaultRootToken() (string, error) {
+	ret := _m.ctrl.Call(_m, "VaultRootToken")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VaultRootToken indicates an expected call of VaultRootToken
+func (_mr *MockEnvironmentMockRecorder) VaultRootToken() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "VaultRootToken")
+}
+
 // MockProvider is a mock of Provider interface
 type MockProvider struct {
 	ctrl     *gomock.Controller

@@ -11,8 +11,10 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/crypto/ssh"
 
@@ -320,4 +322,34 @@ func (e *Environment) StateStack() interfaces.Stack {
 
 func (e *Environment) VaultStack() interfaces.Stack {
 	return e.stackVault
+}
+
+func (e *Environment) vaultRootTokenPath() string {
+	return filepath.Join(e.ConfigPath(), "vault_root_token")
+}
+
+func (e *Environment) VaultRootToken() (string, error) {
+	path := e.vaultRootTokenPath()
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := utils.EnsureDirectory(filepath.Dir(path), 0700); err != nil {
+			return "", fmt.Errorf("error creating directory: %s", err)
+		}
+
+		uuidValue := uuid.New()
+
+		err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%s\n", uuidValue.String())), 0600)
+		if err != nil {
+			return "", err
+		}
+
+		return uuidValue.String(), nil
+	}
+
+	uuidBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("unable to read vault root token %s: %s", path, err)
+	}
+
+	return strings.TrimSpace(string(uuidBytes)), nil
 }

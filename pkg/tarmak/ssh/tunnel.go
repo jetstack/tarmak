@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"os/exec"
+	"syscall"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -61,6 +62,15 @@ func (t *Tunnel) Start() error {
 	go func() {
 		err := t.cmd.Wait()
 		if err != nil {
+			perr, ok := err.(*exec.ExitError)
+			if ok {
+				if status, ok := perr.Sys().(syscall.WaitStatus); ok && status.ExitStatus() == 255 {
+					err = nil
+				}
+			}
+		}
+
+		if err != nil {
 			t.log.Warn("ssh tunnel stopped with error: ", err)
 		} else {
 			t.log.Debug("tunnel stopped")
@@ -97,6 +107,9 @@ func (t *Tunnel) Start() error {
 }
 
 func (t *Tunnel) Stop() error {
+	if err := t.cmd.Process.Signal(syscall.SIGTERM); err != nil {
+		t.log.Warnf("error sending signal to process failed: %s", err)
+	}
 	t.stdin.Close()
 
 	<-t.running

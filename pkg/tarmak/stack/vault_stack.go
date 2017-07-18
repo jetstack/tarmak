@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack-experimental/vault-unsealer/pkg/vault"
@@ -101,7 +102,10 @@ func (s *VaultStack) vaultTunnels() ([]*vaultTunnel, error) {
 		TLSClientConfig: tlsConfig,
 	}
 
-	httpClient := &http.Client{Transport: tr}
+	httpClient := &http.Client{
+		Transport: tr,
+		Timeout:   10 * time.Second,
+	}
 
 	vaultClient, err := vault.NewClient(&vault.Config{
 		HttpClient: httpClient,
@@ -184,6 +188,27 @@ func (v *vaultTunnel) Status() int {
 	return VaultStateUnsealed
 }
 
+func (s *VaultStack) vaultInstanceState(tunnels []*vaultTunnel) (state int, instances []*vaultTunnel) {
+	instanceState := map[int][]*vaultTunnel{}
+	for pos, _ := range tunnels {
+		state := tunnels[pos].Status()
+		if _, ok := instanceState[state]; !ok {
+			instanceState[state] = []*vaultTunnel{tunnels[pos]}
+		} else {
+			instanceState[state] = append(instanceState[state], tunnels[pos])
+		}
+		s.log.Debugf("vault %s status: %d", tunnels[pos].FQDN(), tunnels[pos].Status())
+	}
+
+	// get state that has quorum
+	for state, instances := range instanceState {
+		if len(instances) > len(tunnels)/2 {
+			return state, instances
+		}
+	}
+	return VaultStateErr, []*vaultTunnel{}
+}
+
 func (s *VaultStack) VerifyPost() error {
 
 	tunnels, err := s.vaultTunnels()
@@ -206,59 +231,6 @@ func (s *VaultStack) VerifyPost() error {
 	// wait for all tunnel attempts
 	wg.Wait()
 
-	// get state of all instances
-	instanceState := map[int][]*vaultTunnel{}
-	for pos, _ := range tunnels {
-		state := tunnels[pos].Status()
-		if _, ok := instanceState[state]; !ok {
-			instanceState[state] = []*vaultTunnel{tunnels[pos]}
-		} else {
-			instanceState[state] = append(instanceState[state], tunnels[pos])
-		}
-		s.log.Debugf("vault %s status: %d", tunnels[pos].FQDN(), tunnels[pos].Status())
-	}
-
-	// get state that has quorum
-	for state, instances := range instanceState {
-		if len(instances) > len(tunnels)/2 {
-			if state == VaultStateUnsealed {
-				return nil
-			} else if state == VaultStateUnintialised {
-				kv, err := s.Context().Environment().Provider().VaultKV()
-				if err != nil {
-					return err
-				}
-
-				vaultClientLock.Lock()
-				defer vaultClientLock.Unlock()
-
-				cl := instances[0].VaultClient()
-
-				v, err := vaultUnsealer.New(kv, cl, vaultUnsealer.Config{
-					KeyPrefix: "vault",
-
-					SecretShares:    1,
-					SecretThreshold: 1,
-
-					// TODO: use random UUID here
-					InitRootToken:  "root-token",
-					StoreRootToken: false,
-
-					OverwriteExisting: true,
-				})
-
-				err = v.Init()
-				if err != nil {
-					return fmt.Errorf("error initialising vault: %s", err)
-				}
-
-			} else if state == VaultStateSealed {
-				return fmt.Errorf("a quorum of vault instances is sealed")
-			}
-			return fmt.Errorf("a quorum of vault instances is in unknown state")
-		}
-	}
-
 	defer func() {
 		var wg sync.WaitGroup
 		for pos, _ := range tunnels {
@@ -273,6 +245,61 @@ func (s *VaultStack) VerifyPost() error {
 		}
 		wg.Wait()
 	}()
+
+	// get state of all instances
+	retries := 60
+	for {
+		clusterState, instances := s.vaultInstanceState(tunnels)
+
+		if clusterState == VaultStateUnsealed {
+			// quorum of vaults is unsealed
+			return nil
+		} else if clusterState == VaultStateUnintialised {
+			rootToken, err := s.Context().Environment().VaultRootToken()
+			if err != nil {
+				return err
+			}
+
+			kv, err := s.Context().Environment().Provider().VaultKV()
+			if err != nil {
+				return err
+			}
+
+			vaultClientLock.Lock()
+			defer vaultClientLock.Unlock()
+
+			cl := instances[0].VaultClient()
+
+			v, err := vaultUnsealer.New(kv, cl, vaultUnsealer.Config{
+				KeyPrefix: "vault",
+
+				SecretShares:    1,
+				SecretThreshold: 1,
+
+				InitRootToken:  rootToken,
+				StoreRootToken: false,
+
+				OverwriteExisting: true,
+			})
+
+			err = v.Init()
+			if err != nil {
+				return fmt.Errorf("error initialising vault: %s", err)
+			}
+			s.log.Info("vault succesfully initialised")
+			return nil
+
+		} else if clusterState == VaultStateSealed {
+			s.log.Debug("a quorum of vault instances is sealed, retrying")
+		} else {
+			s.log.Debug("a quorum of vault instances is in unknown state, retrying")
+		}
+		retries -= 1
+		if retries == 0 {
+			return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed")
+		}
+		time.Sleep(time.Second * 10)
+	}
 
 	return nil
 }

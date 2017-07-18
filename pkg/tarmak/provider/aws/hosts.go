@@ -97,10 +97,13 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 		},
 	}
 	svc, err := a.EC2()
+	if err != nil {
+		return []interfaces.Host{}, err
+	}
 
 	instances, err := svc.DescribeInstances(&ec2.DescribeInstancesInput{Filters: filters})
 	if err != nil {
-		a.log.Fatal(err)
+		return []interfaces.Host{}, err
 	}
 
 	hosts := []*host{}
