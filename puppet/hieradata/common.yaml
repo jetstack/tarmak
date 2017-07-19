@@ -11,7 +11,7 @@ tarmak::dns_root: "%{::tarmak_dns_root}"
 tarmak::etcd_advertise_client_network: 10.0.0.0/8
 tarmak::cloud_provider: aws
 tarmak::kubernetes_api_url: "https://api.%{::tarmak_cluster}.%{::tarmak_dns_root}:6443"
-tarmak::kubernetes_version: 1.6.6
+tarmak::kubernetes_version: 1.7.1
 
 # TODO: This should come from terraform
 tarmak::etcd_instances: 3
