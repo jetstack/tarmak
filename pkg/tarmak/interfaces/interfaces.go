@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"io"
 	"net"
 
 	"github.com/Sirupsen/logrus"
@@ -76,6 +77,7 @@ type Tarmak interface {
 	Environments() []Environment
 	Terraform() Terraform
 	Packer() Packer
+	Puppet() Puppet
 	SSH() SSH
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
@@ -107,4 +109,8 @@ type Host interface {
 	User() string
 	Roles() []string
 	SSHConfig() string
+}
+
+type Puppet interface {
+	TarGz(io.Writer) error
 }

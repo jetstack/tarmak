@@ -25,6 +25,7 @@ type Tarmak struct {
 	rootPath  string
 	log       *logrus.Logger
 	terraform *terraform.Terraform
+	puppet    *puppet.Puppet
 	packer    *packer.Packer
 	ssh       interfaces.SSH
 	cmd       *cobra.Command
@@ -59,6 +60,7 @@ func New(cmd *cobra.Command) *Tarmak {
 	t.terraform = terraform.New(t)
 	t.packer = packer.New(t)
 	t.ssh = ssh.New(t)
+	t.puppet = puppet.New(t)
 
 	return t
 }
@@ -84,6 +86,10 @@ func (t *Tarmak) initFromConfig(cfg *config.Config) error {
 		result = multierror.Append(result, err)
 	}
 	return result
+}
+
+func (t *Tarmak) Puppet() interfaces.Puppet {
+	return t.puppet
 }
 
 func (t *Tarmak) Terraform() interfaces.Terraform {

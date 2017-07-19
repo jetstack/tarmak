@@ -2,6 +2,8 @@ package stack
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/jetstack-experimental/vault-helper/pkg/kubernetes"
 
@@ -23,6 +25,7 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 
 	s.name = config.StackNameKubernetes
 	s.verifyPre = append(s.verifyPre, k.ensureVaultSetup)
+	s.verifyPre = append(s.verifyPre, k.ensurePuppetTarGz)
 
 	return k, nil
 }
@@ -32,6 +35,33 @@ func (s *KubernetesStack) Variables() map[string]interface{} {
 		return s.initTokens
 	}
 	return map[string]interface{}{}
+}
+
+func (s *KubernetesStack) ensurePuppetTarGz() error {
+	t := s.Context().Environment().Tarmak()
+
+	rootPath, err := t.RootPath()
+	if err != nil {
+		return fmt.Errorf("error getting rootPath: %s", err)
+	}
+
+	path := filepath.Join(rootPath, "terraform", "aws-centos", "kubernetes", "puppet.tar.gz")
+
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return fmt.Errorf("error creating %s: %s", path, err)
+	}
+
+	if err = t.Puppet().TarGz(file); err != nil {
+		return fmt.Errorf("error writing to %s: %s", path, err)
+	}
+
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("error closing %s: %s", path, err)
+	}
+
+	return nil
+
 }
 
 func (s *KubernetesStack) ensureVaultSetup() error {
