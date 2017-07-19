@@ -17,40 +17,35 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/mholt/archiver"
 	"github.com/spf13/cobra"
+
+	"github.com/jetstack/tarmak/pkg/tarmak"
 )
 
 // distCmd represents the dist command
-var distCmd = &cobra.Command{
-	Use:   "dist",
+var puppetDistCmd = &cobra.Command{
+	Use:   "puppet-dist",
 	Short: "Build a puppet.tar.gz",
 	Run: func(cmd *cobra.Command, args []string) {
+		t := tarmak.New(cmd)
 
-		oldPwd, err := os.Getwd()
+		path := "puppet.tar.gz"
+
+		file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0600)
 		if err != nil {
-			log.Fatal("error getting pwd: ", err)
+			log.Fatalf("error creating %s: %s", path, err)
 		}
 
-		puppetDir := "./puppet"
-		err = os.Chdir("puppet")
-		if err != nil {
-			log.Fatal("Error changing directory to '%s': %s", puppetDir, err)
+		if err = t.Puppet().TarGz(file); err != nil {
+			log.Fatalf("error writing to %s: %s", path, err)
 		}
 
-		err = archiver.TarGz.Make("../puppet.tar.gz", []string{"manifests", "modules", "hieradata", "hiera.yaml"})
-		if err != nil {
-			log.Fatal("Error creating puppet.tar.gz: ", err)
-		}
-		log.Info("created puppet.tar.gz")
-
-		err = os.Chdir(oldPwd)
-		if err != nil {
-			log.Fatal("Error changing directory to '%s': %s", puppetDir, err)
+		if err := file.Close(); err != nil {
+			log.Fatalf("error closing %s: %s", path, err)
 		}
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(distCmd)
+	RootCmd.AddCommand(puppetDistCmd)
 }

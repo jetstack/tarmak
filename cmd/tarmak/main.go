@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jetstack/tarmak/cmd"
+	"github.com/jetstack/tarmak/cmd/tarmak/cmd"
 )
 
 var (
