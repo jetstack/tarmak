@@ -87,6 +87,12 @@ resource "aws_autoscaling_group" "kubernetes_worker" {
     propagate_at_launch = true
   }
 
+  tag {
+    key                 = "tarmak_role"
+    value               = "worker"
+    propagate_at_launch = true
+  }
+
   # Required for AWS cloud provider
   tag {
     key                 = "KubernetesCluster"

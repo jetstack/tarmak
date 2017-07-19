@@ -26,6 +26,7 @@ resource "aws_instance" "etcd" {
     Etcd_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
     Role               = "etcd"
     KubernetesCluster  = "${data.template_file.stack_name.rendered}"
+    tarmak_role        = "etcd-${count.index+1}"
   }
 
   user_data = "${element(data.template_file.etcd_user_data.*.rendered, count.index)}"
