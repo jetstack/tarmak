@@ -26,9 +26,9 @@ type TerraformContainer struct {
 }
 
 type terraformOutputValue struct {
-	Sensitive bool        `json="sensitive,omitifempty"`
-	Type      string      `json="type,omitifempty"`
-	Value     interface{} `value="type,omitifempty"`
+	Sensitive bool        `json:"sensitive,omitifempty"`
+	Type      string      `json:"type,omitifempty"`
+	Value     interface{} `value:"type,omitifempty"`
 }
 
 func MapToTerraformTfvars(input map[string]interface{}) (output string, err error) {

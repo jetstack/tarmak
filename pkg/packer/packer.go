@@ -101,7 +101,7 @@ func (p *Packer) Build() (amiID string, err error) {
 	buildSourcePath := filepath.Join(
 		rootPath,
 		"packer",
-		fmt.Sprintf("%s.json", p.tarmak.Context().BaseImage),
+		fmt.Sprintf("%s.json", p.tarmak.Context().BaseImage()),
 	)
 
 	buildContent, err := ioutil.ReadFile(buildSourcePath)

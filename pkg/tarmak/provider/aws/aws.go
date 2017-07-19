@@ -122,11 +122,9 @@ func (a *AWS) RemoteStateBucketAvailable() (bool, error) {
 		return true, nil
 	} else if strings.HasPrefix(err.Error(), "NotFound:") {
 		return false, nil
-	} else {
-		return false, fmt.Errorf("error while checking if remote state is available: %s", err)
 	}
 
-	return false, nil
+	return false, fmt.Errorf("error while checking if remote state is available: %s", err)
 }
 
 func (a *AWS) Variables() map[string]interface{} {
@@ -214,7 +212,7 @@ func (a *AWS) validateAvailabilityZones() error {
 	if len(zones.AvailabilityZones) == 0 {
 		return fmt.Errorf(
 			"no availability zone found for region '%s'",
-			a.Region,
+			a.Region(),
 		)
 	}
 

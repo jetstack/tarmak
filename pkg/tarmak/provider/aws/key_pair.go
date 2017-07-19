@@ -58,7 +58,7 @@ func (a *AWS) validateAWSKeyPair() error {
 	if len(keypairs.KeyPairs) == 0 {
 		signer, err := ssh.NewSignerFromKey(a.environment.SSHPrivateKey())
 		if err != nil {
-			return fmt.Errorf("unable to generate public key from private key: ", err)
+			return fmt.Errorf("unable to generate public key from private key: %s", err)
 		}
 		_, err = svc.ImportKeyPair(&ec2.ImportKeyPairInput{
 			KeyName:           aws.String(a.KeyName()),
@@ -75,8 +75,7 @@ func (a *AWS) validateAWSKeyPair() error {
 	}
 
 	if err != nil {
-		fmt.Errorf("failed to parse private key: ", err)
-
+		return fmt.Errorf("failed to parse private key: %s", err)
 	}
 
 	// warn if cannot generate fingerprint, fail if fingerprints are not matching

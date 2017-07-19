@@ -337,10 +337,10 @@ func (s *VaultStack) verifyVaultInit() error {
 		}
 		retries -= 1
 		if retries == 0 {
-			return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed")
+			break
 		}
 		time.Sleep(time.Second * 10)
 	}
 
-	return nil
+	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed")
 }
