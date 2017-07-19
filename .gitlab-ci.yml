@@ -64,5 +64,25 @@ test::tarmak::golang:
   - make all
   - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
 
+release::tarmak::golang:
+  stage: release
+  tags:
+  - docker
+  image: golang:1.8.3
+  only:
+  - tags
+  script:
+  - curl -sL https://github.com/goreleaser/goreleaser/releases/download/v0.24.0/goreleaser_Linux_x86_64.tar.gz > /tmp/goreleaser.tar.gz
+  - echo "8d494e03d6ab6e2e1bcbb795859f3618454078eaeb21906437958b32b332cee4  /tmp/goreleaser.tar.gz" | sha256sum -c
+  - cd /usr/local/bin && tar xvfz /tmp/goreleaser.tar.gz goreleaser
+  - rm -rf /go/src/github.com/jetstack
+  - mkdir -p /go/src/github.com/jetstack
+  - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
+  - cd /go/src/github.com/jetstack/tarmak
+  - make all
+  - goreleaser
+  - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
+
 stages:
 - test
+- release

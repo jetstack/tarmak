@@ -1,5 +1,6 @@
 builds:
-  -
+  - main: ./cmd/wing/main.go
+    binary: wing
     env:
       - CGO_ENABLED=0
     goos:
@@ -7,5 +8,20 @@ builds:
       - darwin
     goarch:
       - amd64
+    flags: -tags netgo
+  - main: ./cmd/tarmak/main.go
+    binary: tarmak
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+    flags: -tags netgo
 archive:
   format: binary
+release:
+  github:
+    owner: jetstack
+    name: tarmak
