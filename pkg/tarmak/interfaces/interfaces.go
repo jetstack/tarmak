@@ -71,7 +71,7 @@ type Stack interface {
 type Tarmak interface {
 	Variables() map[string]interface{}
 	Log() *logrus.Entry
-	RootPath() string
+	RootPath() (string, error)
 	ConfigPath() string
 	Context() Context
 	Environments() []Environment

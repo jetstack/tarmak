@@ -2,6 +2,7 @@ package tarmak
 
 import (
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/packer"
+	"github.com/jetstack/tarmak/pkg/puppet"
+	"github.com/jetstack/tarmak/pkg/tarmak/assets"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/environment"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -22,7 +25,7 @@ type Tarmak struct {
 	conf *config.Config
 
 	homeDir   string
-	rootPath  string
+	rootPath  *string
 	log       *logrus.Logger
 	terraform *terraform.Terraform
 	puppet    *puppet.Puppet
@@ -38,9 +41,8 @@ var _ interfaces.Tarmak = &Tarmak{}
 
 func New(cmd *cobra.Command) *Tarmak {
 	t := &Tarmak{
-		rootPath: "/home/christian/.golang/packages/src/github.com/jetstack/tarmak", // TODO: this should come from a go-bindata tree that is exported into tmp
-		log:      logrus.New(),
-		cmd:      cmd,
+		log: logrus.New(),
+		cmd: cmd,
 	}
 
 	// detect home directory
@@ -119,8 +121,28 @@ func (t *Tarmak) findContext() error {
 	return fmt.Errorf("context '%s' not found", t.conf.CurrentContext)
 }
 
-func (t *Tarmak) RootPath() string {
-	return t.rootPath
+// this builds a temporary directory with the needed assets that are built into the go binary
+func (t *Tarmak) RootPath() (string, error) {
+	if t.rootPath != nil {
+		return *t.rootPath, nil
+	}
+
+	dir, err := ioutil.TempDir("", "tarmak-assets")
+	if err != nil {
+		return "", err
+	}
+
+	t.log.Debugf("created temporary directory: %s", dir)
+
+	err = assets.RestoreAssets(dir, "")
+	if err != nil {
+		return "", err
+	}
+
+	t.log.Debugf("restored assets into directory: %s", dir)
+
+	t.rootPath = &dir
+	return *t.rootPath, nil
 }
 
 func (t *Tarmak) Log() *logrus.Entry {

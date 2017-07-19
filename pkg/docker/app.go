@@ -33,13 +33,22 @@ func NewApp(t interfaces.Tarmak, log *logrus.Entry, imageName, imagePath string)
 	}
 }
 
-func (a *App) buildContextPath() string {
-	return filepath.Join(a.tarmak.RootPath(), a.imagePath)
+func (a *App) buildContextPath() (string, error) {
+	rootPath, err := a.tarmak.RootPath()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(rootPath, a.imagePath), nil
 }
 
 func (a *App) ImageID() (str string, err error) {
 	if a.dockerImage != nil {
 		return a.dockerImage.ID, nil
+	}
+	contextDir, err := a.buildContextPath()
+	if err != nil {
+		return "", fmt.Errorf("error building context path: %s", err)
 	}
 
 	a.log.Debugf("building image %s", a.imageName)
@@ -59,7 +68,7 @@ func (a *App) ImageID() (str string, err error) {
 	err = a.dockerClient.BuildImage(docker.BuildImageOptions{
 		Name:         a.imageName,
 		OutputStream: stdoutWriter,
-		ContextDir:   a.buildContextPath(),
+		ContextDir:   contextDir,
 	})
 	stdoutReader.Close()
 	stdoutWriter.Close()

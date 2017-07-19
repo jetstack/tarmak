@@ -205,6 +205,12 @@ func (tc *TerraformContainer) CopyRemoteState(content string) error {
 }
 
 func (tc *TerraformContainer) prepare() error {
+	// rootDir
+	rootPath, err := tc.t.tarmak.RootPath()
+	if err != nil {
+		return fmt.Errorf("error getting rootPath: %s", err)
+	}
+
 	// get aws secrets
 	if environmentProvider, err := tc.t.tarmak.Context().Environment().Provider().Environment(); err != nil {
 		return fmt.Errorf("error getting environment secrets from provider: %s", err)
@@ -220,7 +226,7 @@ func (tc *TerraformContainer) prepare() error {
 	// build terraform image if needed
 	tc.log.Debug("prepare container")
 
-	err := tc.AppContainer.Prepare()
+	err = tc.AppContainer.Prepare()
 	if err != nil {
 		return err
 	}
@@ -232,7 +238,7 @@ func (tc *TerraformContainer) prepare() error {
 		IncludeFiles: []string{"."},
 	}
 
-	terraformDir := filepath.Clean(filepath.Join(tc.t.tarmak.RootPath(), "terraform/aws-centos", tc.stack.Name()))
+	terraformDir := filepath.Clean(filepath.Join(rootPath, "terraform/aws-centos", tc.stack.Name()))
 	tc.log = tc.log.WithField("terraform-dir", terraformDir)
 
 	terraformDirInfo, err := os.Stat(terraformDir)

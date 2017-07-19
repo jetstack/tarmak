@@ -70,6 +70,11 @@ func (p *Packer) QueryAMIID() (amiID string, err error) {
 func (p *Packer) Build() (amiID string, err error) {
 	c := p.Container()
 
+	rootPath, err := p.tarmak.RootPath()
+	if err != nil {
+		return "", fmt.Errorf("error getting rootPath: %s", err)
+	}
+
 	// set tarmak environment vars vars
 	for key, value := range p.tags() {
 		c.Env = append(c.Env, fmt.Sprintf("%s=%s", strings.ToUpper(key), value))
@@ -94,7 +99,7 @@ func (p *Packer) Build() (amiID string, err error) {
 	defer c.CleanUpSilent(p.log)
 
 	buildSourcePath := filepath.Join(
-		p.tarmak.RootPath(),
+		rootPath,
 		"packer",
 		fmt.Sprintf("%s.json", p.tarmak.Context().BaseImage),
 	)
