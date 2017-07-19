@@ -2,6 +2,7 @@ package docker
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"path/filepath"
 
