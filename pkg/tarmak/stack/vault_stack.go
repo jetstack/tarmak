@@ -31,7 +31,7 @@ func newVaultStack(s *Stack, conf *config.StackVault) (*VaultStack, error) {
 	}
 
 	s.name = config.StackNameVault
-	s.verifyPost = append(s.verifyPost, v.verifyVaultInit)
+	s.verifyPostDeploy = append(s.verifyPostDeploy, v.verifyVaultInit)
 	return v, nil
 }
 

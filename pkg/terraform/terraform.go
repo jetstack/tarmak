@@ -87,8 +87,12 @@ func (t *Terraform) Output(stack interfaces.Stack) (map[string]interface{}, erro
 func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy bool) error {
 	c := t.NewContainer(stack)
 
-	if !destroy {
-		if err := stack.VerifyPre(); err != nil {
+	if destroy {
+		if err := stack.VerifyPreDestroy(); err != nil {
+			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
+		}
+	} else {
+		if err := stack.VerifyPreDeploy(); err != nil {
 			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
 		}
 	}
@@ -172,9 +176,14 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 		}
 		t.log.WithFields(output).Debug("terraform output")
 
-		if err := stack.VerifyPost(); err != nil {
+		if err := stack.VerifyPostDeploy(); err != nil {
 			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
 		}
+	} else {
+		if err := stack.VerifyPostDestroy(); err != nil {
+			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
+		}
+
 	}
 
 	return nil

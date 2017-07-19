@@ -24,8 +24,9 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 	}
 
 	s.name = config.StackNameKubernetes
-	s.verifyPre = append(s.verifyPre, k.ensureVaultSetup)
-	s.verifyPre = append(s.verifyPre, k.ensurePuppetTarGz)
+	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
+	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensurePuppetTarGz)
+	s.verifyPreDestroy = append(s.verifyPreDestroy, k.emptyPuppetTarGz)
 
 	return k, nil
 }
@@ -37,22 +38,48 @@ func (s *KubernetesStack) Variables() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-func (s *KubernetesStack) ensurePuppetTarGz() error {
-	t := s.Context().Environment().Tarmak()
-
-	rootPath, err := t.RootPath()
+func (s *KubernetesStack) puppetTarGzPath() (string, error) {
+	rootPath, err := s.Context().Environment().Tarmak().RootPath()
 	if err != nil {
-		return fmt.Errorf("error getting rootPath: %s", err)
+		return "", fmt.Errorf("error getting rootPath: %s", err)
 	}
 
 	path := filepath.Join(rootPath, "terraform", "aws-centos", "kubernetes", "puppet.tar.gz")
+
+	return path, nil
+}
+
+func (s *KubernetesStack) emptyPuppetTarGz() error {
+	path, err := s.puppetTarGzPath()
+	if err != nil {
+		return err
+	}
 
 	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return fmt.Errorf("error creating %s: %s", path, err)
 	}
 
-	if err = t.Puppet().TarGz(file); err != nil {
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("error closing %s: %s", path, err)
+	}
+
+	return nil
+
+}
+
+func (s *KubernetesStack) ensurePuppetTarGz() error {
+	path, err := s.puppetTarGzPath()
+	if err != nil {
+		return err
+	}
+
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return fmt.Errorf("error creating %s: %s", path, err)
+	}
+
+	if err = s.Context().Environment().Tarmak().Puppet().TarGz(file); err != nil {
 		return fmt.Errorf("error writing to %s: %s", path, err)
 	}
 

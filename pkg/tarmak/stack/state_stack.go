@@ -24,7 +24,7 @@ func newStateStack(s *Stack, conf *config.StackState) (*StateStack, error) {
 	}
 
 	s.name = config.StackNameState
-	s.verifyPost = append(s.verifyPost, ss.verifyDNSDelegation)
+	s.verifyPostDeploy = append(s.verifyPostDeploy, ss.verifyDNSDelegation)
 	return ss, nil
 }
 

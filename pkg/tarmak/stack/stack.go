@@ -18,8 +18,10 @@ type Stack struct {
 	context interfaces.Context
 	log     *logrus.Entry
 
-	verifyPre  []func() error
-	verifyPost []func() error
+	verifyPreDeploy   []func() error
+	verifyPreDestroy  []func() error
+	verifyPostDeploy  []func() error
+	verifyPostDestroy []func() error
 
 	output map[string]interface{}
 }
@@ -111,9 +113,9 @@ func (s *Stack) Validate() error {
 	return nil
 }
 
-func (s *Stack) VerifyPre() error {
+func (s *Stack) VerifyPreDeploy() error {
 	var result error
-	for _, f := range s.verifyPre {
+	for _, f := range s.verifyPreDeploy {
 		err := f()
 		if err != nil {
 			result = multierror.Append(result, err)
@@ -122,9 +124,31 @@ func (s *Stack) VerifyPre() error {
 	return result
 }
 
-func (s *Stack) VerifyPost() error {
+func (s *Stack) VerifyPreDestroy() error {
 	var result error
-	for _, f := range s.verifyPost {
+	for _, f := range s.verifyPreDestroy {
+		err := f()
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+	return result
+}
+
+func (s *Stack) VerifyPostDeploy() error {
+	var result error
+	for _, f := range s.verifyPostDeploy {
+		err := f()
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+	return result
+}
+
+func (s *Stack) VerifyPostDestroy() error {
+	var result error
+	for _, f := range s.verifyPostDestroy {
 		err := f()
 		if err != nil {
 			result = multierror.Append(result, err)

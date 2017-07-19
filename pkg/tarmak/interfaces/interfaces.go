@@ -62,8 +62,10 @@ type Stack interface {
 	Context() Context
 	RemoteState() string
 	Log() *logrus.Entry
-	VerifyPre() error
-	VerifyPost() error
+	VerifyPreDeploy() error
+	VerifyPreDestroy() error
+	VerifyPostDeploy() error
+	VerifyPostDestroy() error
 	SetOutput(map[string]interface{})
 	Output() map[string]interface{}
 }

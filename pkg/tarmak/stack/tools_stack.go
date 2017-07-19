@@ -19,7 +19,7 @@ func newToolsStack(s *Stack, conf *config.StackTools) (*ToolsStack, error) {
 	}
 
 	s.name = config.StackNameTools
-	s.verifyPost = append(s.verifyPost, t.verifyBastionAvailable)
+	s.verifyPostDeploy = append(s.verifyPostDeploy, t.verifyBastionAvailable)
 	return t, nil
 }
 
