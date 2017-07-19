@@ -61,10 +61,7 @@ test::tarmak::golang:
   - mkdir -p /go/src/github.com/jetstack
   - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
   - cd /go/src/github.com/jetstack/tarmak
-  - go get -u github.com/golang/dep/cmd/dep
-  - dep ensure
-  - go test ./pkg/...
-  - go build -o tarmak
+  - make all
   - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
 
 stages:
