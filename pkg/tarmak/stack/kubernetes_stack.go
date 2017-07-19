@@ -73,7 +73,7 @@ func (s *KubernetesStack) ensureVaultSetup() error {
 
 	s.initTokens = map[string]interface{}{}
 	for role, token := range k.InitTokens() {
-		s.initTokens[fmt.Sprintf("init_token_%s", role)] = token
+		s.initTokens[fmt.Sprintf("vault_init_token_%s", role)] = token
 	}
 
 	return nil
