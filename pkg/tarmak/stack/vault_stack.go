@@ -5,6 +5,8 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -65,6 +67,26 @@ func (s *VaultStack) vaultCA() ([]byte, error) {
 	return []byte(vaultCA), nil
 }
 
+func (s *VaultStack) vaultURL() (*url.URL, error) {
+	key := "vault_url"
+	vaultURLIntf, ok := s.output[key]
+	if !ok {
+		return nil, fmt.Errorf("unable to find terraform output '%s'", key)
+	}
+
+	vaultURL, ok := vaultURLIntf.(string)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type for '%s': %T", key, vaultURLIntf)
+	}
+
+	url, err := url.Parse(vaultURL)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing vault url '%s': %s", vaultURL, err)
+	}
+	return url, nil
+
+}
+
 func (s *VaultStack) vaultInstanceFQDNs() ([]string, error) {
 	instanceFQDNsIntf, ok := s.output["instance_fqdns"]
 	if !ok {
@@ -88,7 +110,28 @@ func (s *VaultStack) vaultInstanceFQDNs() ([]string, error) {
 	return instanceFQDNs, nil
 }
 
-func (s *VaultStack) vaultTunnels() ([]*vaultTunnel, error) {
+// This returns a vault tunnel for the whole cluster (using DNS RR)
+func (s *VaultStack) VaultTunnel() (*vaultTunnel, error) {
+	instance, err := s.vaultURL()
+	if err != nil {
+		return nil, err
+	}
+
+	tunnels, err := s.createVaultTunnels([]string{strings.Split(instance.Host, ":")[0]})
+	return tunnels[0], err
+}
+
+// This returns a vault tunnel per instance
+func (s *VaultStack) VaultTunnels() ([]*vaultTunnel, error) {
+	vaultInstances, err := s.vaultInstanceFQDNs()
+	if err != nil {
+		return []*vaultTunnel{}, fmt.Errorf("couldn't load vault instance fqdns from terraform: %s", err)
+	}
+
+	return s.createVaultTunnels(vaultInstances)
+}
+
+func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, error) {
 	vaultCA, err := s.vaultCA()
 	if err != nil {
 		return []*vaultTunnel{}, fmt.Errorf("couldn't load vault CA from terraform: %s", err)
@@ -117,14 +160,9 @@ func (s *VaultStack) vaultTunnels() ([]*vaultTunnel, error) {
 		return []*vaultTunnel{}, fmt.Errorf("couldn't init vault client: %s:", err)
 	}
 
-	vaultInstances, err := s.vaultInstanceFQDNs()
-	if err != nil {
-		return []*vaultTunnel{}, fmt.Errorf("couldn't load vault instance fqdns from terraform: %s", err)
-	}
-
-	output := make([]*vaultTunnel, len(vaultInstances))
-	for pos, _ := range vaultInstances {
-		output[pos] = s.newVaultTunnel(vaultInstances[pos], vaultClient)
+	output := make([]*vaultTunnel, len(instances))
+	for pos, _ := range instances {
+		output[pos] = s.newVaultTunnel(instances[pos], vaultClient)
 	}
 
 	return output, nil
@@ -212,9 +250,9 @@ func (s *VaultStack) vaultInstanceState(tunnels []*vaultTunnel) (state int, inst
 	return VaultStateErr, []*vaultTunnel{}
 }
 
-func (s *VaultStack) VerifyPost() error {
+func (s *VaultStack) verifyVaultInit() error {
 
-	tunnels, err := s.vaultTunnels()
+	tunnels, err := s.VaultTunnels()
 	if err != nil {
 		return err
 	}

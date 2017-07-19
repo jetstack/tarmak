@@ -80,6 +80,12 @@
   revision = "93f6609a15b7de76bd49259f1f9a6b58df358936"
 
 [[projects]]
+  name = "github.com/google/uuid"
+  packages = ["."]
+  revision = "064e2069ce9c359c118179501254f67d7d37ba24"
+  version = "0.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/hashicorp/errwrap"
   packages = ["."]
@@ -120,6 +126,11 @@
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+
+[[projects]]
+  name = "github.com/jetstack-experimental/vault-helper"
+  packages = ["pkg/kubernetes"]
+  revision = "77718e54eb3d048356ce9fd9d5ff9caaa57c5eac"
 
 [[projects]]
   name = "github.com/jetstack-experimental/vault-unsealer"
@@ -267,6 +278,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "aed9838770d50547d1e9f58e90f5ac816d62ea1ad3a26cb80ceaede70dbb7454"
+  inputs-digest = "e1369d560ea4956bb66a4fd04fe80843189ee96c9eba10e51d6812e2d8ea9ceb"
   solver-name = "gps-cdcl"
   solver-version = 1
