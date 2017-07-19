@@ -4,6 +4,28 @@ repo_upgrade: all
 
 write_files:
 
+  - path: /etc/systemd/system/wing.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=wing the tarmak node agent
+      Wants=network-online.target
+      After=network.target network-online.target
+
+      [Service]
+      Environment=AWS_REGION=${region}
+      Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
+      ExecStartPre=/bin/mkdir -p /opt/bin
+      ExecStartPre=/bin/curl -sL -o /opt/bin/wing https://storage.googleapis.com/tarmak-io/prerelease/0.1/wing
+      ExecStartPre=/bin/chmod +x /opt/bin/wing
+      ExecStart=/opt/bin/wing -- s3://${puppet_tar_gz_bucket_path}
+
+      Restart=on-failure
+      RestartSec=60
+
+      [Install]
+      WantedBy=multi-user.target
+
   - path: /etc/vault/ca.pem
     permissions: '0644'
     encoding: b64
@@ -59,3 +81,7 @@ write_files:
       %wheel  ALL=(ALL)       NOPASSWD:ALL
 
       #includedir /etc/sudoers.d
+
+runcmd:
+  - systemctl enable wing
+  - systemctl start wing

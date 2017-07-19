@@ -58,6 +58,10 @@ data "template_file" "kubernetes_master_user_data" {
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
   vars {
+    region = "${var.region}"
+
+    puppet_tar_gz_bucket_path = "${data.terraform_remote_state.hub_state.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+
     vault_token = "${var.vault_init_token_master}"
     vault_ca    = "${base64encode(data.terraform_remote_state.hub_vault.vault_ca)}"
     vault_url   = "${data.terraform_remote_state.hub_vault.vault_url}"

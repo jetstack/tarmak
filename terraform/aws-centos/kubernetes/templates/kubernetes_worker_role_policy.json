@@ -2,10 +2,17 @@
   "Statement": [
     {
       "Action": [
+        "s3:GetObject",
+        "s3:HeadObjectAcl"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::${puppet_tar_gz_bucket_path}"
+      ]
+    },
+    {
+      "Action": [
         "ec2:Describe*",
-        "autoscaling:Describe*",
-	"autoscaling:SetDesiredCapacity",
-	"autoscaling:TerminateInstanceInAutoScalingGroup",
         "ec2:AttachVolume",
         "ec2:DetachVolume",
         "ec2:ModifyInstanceAttribute"
@@ -21,13 +28,7 @@
         "ecr:GetRepositoryPolicy",
         "ecr:DescribeRepositories",
         "ecr:ListImages",
-        "ecr:BatchGetImage",
-        "ecr:PutImage",
-        "ecr:InitiateLayerUpload",
-        "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload",
-	"ecr:InitiateLayerUpload",
-        "ecr:CreateRepository"
+        "ecr:BatchGetImage"
       ],
       "Effect": "Allow",
       "Resource": "*"
