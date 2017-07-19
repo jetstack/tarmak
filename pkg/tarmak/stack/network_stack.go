@@ -46,7 +46,3 @@ func (s *NetworkStack) Variables() map[string]interface{} {
 
 	return output
 }
-
-func (s *NetworkStack) VerifyPost() error {
-	return nil
-}

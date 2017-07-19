@@ -24,10 +24,13 @@ type VaultStack struct {
 var _ interfaces.Stack = &VaultStack{}
 
 func newVaultStack(s *Stack, conf *config.StackVault) (*VaultStack, error) {
-	s.name = config.StackNameVault
-	return &VaultStack{
+	v := &VaultStack{
 		Stack: s,
-	}, nil
+	}
+
+	s.name = config.StackNameVault
+	s.verifyPost = append(s.verifyPost, v.verifyVaultInit)
+	return v, nil
 }
 
 func (s *VaultStack) Variables() map[string]interface{} {

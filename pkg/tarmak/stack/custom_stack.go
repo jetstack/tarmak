@@ -21,7 +21,3 @@ func newCustomStack(s *Stack, conf *config.StackCustom) (*CustomStack, error) {
 func (s *CustomStack) Variables() map[string]interface{} {
 	return map[string]interface{}{}
 }
-
-func (s *CustomStack) VerifyPost() error {
-	return nil
-}

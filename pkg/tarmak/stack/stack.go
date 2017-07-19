@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -16,6 +17,9 @@ type Stack struct {
 	name    string
 	context interfaces.Context
 	log     *logrus.Entry
+
+	verifyPre  []func() error
+	verifyPost []func() error
 
 	output map[string]interface{}
 }
@@ -105,6 +109,28 @@ func (s *Stack) Name() string {
 
 func (s *Stack) Validate() error {
 	return nil
+}
+
+func (s *Stack) VerifyPre() error {
+	var result error
+	for _, f := range s.verifyPre {
+		err := f()
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+	return result
+}
+
+func (s *Stack) VerifyPost() error {
+	var result error
+	for _, f := range s.verifyPost {
+		err := f()
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+	return result
 }
 
 func (s *Stack) Log() *logrus.Entry {

@@ -87,6 +87,12 @@ func (t *Terraform) Output(stack interfaces.Stack) (map[string]interface{}, erro
 func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy bool) error {
 	c := t.NewContainer(stack)
 
+	if !destroy {
+		if err := stack.VerifyPre(); err != nil {
+			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
+		}
+	}
+
 	if err := c.prepare(); err != nil {
 		return fmt.Errorf("error preparing container: %s", err)
 	}

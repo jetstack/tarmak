@@ -14,18 +14,17 @@ type ToolsStack struct {
 var _ interfaces.Stack = &ToolsStack{}
 
 func newToolsStack(s *Stack, conf *config.StackTools) (*ToolsStack, error) {
-	s.name = config.StackNameTools
-	return &ToolsStack{
+	t := &ToolsStack{
 		Stack: s,
-	}, nil
+	}
+
+	s.name = config.StackNameTools
+	s.verifyPost = append(s.verifyPost, t.verifyBastionAvailable)
+	return t, nil
 }
 
 func (s *ToolsStack) Variables() map[string]interface{} {
 	return map[string]interface{}{}
-}
-
-func (s *ToolsStack) VerifyPost() error {
-	return s.verifyBastionAvailable()
 }
 
 func (s *ToolsStack) verifyBastionAvailable() error {

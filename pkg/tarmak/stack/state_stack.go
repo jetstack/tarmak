@@ -19,10 +19,13 @@ type StateStack struct {
 var _ interfaces.Stack = &StateStack{}
 
 func newStateStack(s *Stack, conf *config.StackState) (*StateStack, error) {
-	s.name = config.StackNameState
-	return &StateStack{
+	ss := &StateStack{
 		Stack: s,
-	}, nil
+	}
+
+	s.name = config.StackNameState
+	s.verifyPost = append(s.verifyPost, ss.verifyDNSDelegation)
+	return ss, nil
 }
 
 func (s *StateStack) Variables() map[string]interface{} {
