@@ -16,6 +16,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/assets"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/environment"
+	"github.com/jetstack/tarmak/pkg/tarmak/initialize"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
 	"github.com/jetstack/tarmak/pkg/terraform"
@@ -24,20 +25,34 @@ import (
 type Tarmak struct {
 	conf *config.Config
 
-	homeDir   string
-	rootPath  *string
-	log       *logrus.Logger
-	terraform *terraform.Terraform
-	puppet    *puppet.Puppet
-	packer    *packer.Packer
-	ssh       interfaces.SSH
-	cmd       *cobra.Command
+	homeDir    string
+	rootPath   *string
+	log        *logrus.Logger
+	terraform  *terraform.Terraform
+	puppet     *puppet.Puppet
+	packer     *packer.Packer
+	ssh        interfaces.SSH
+	cmd        *cobra.Command
+	initialize *initialize.Init
 
 	context      interfaces.Context
 	environments []interfaces.Environment
 }
 
 var _ interfaces.Tarmak = &Tarmak{}
+
+func (t *Tarmak) MergeEnvironment(inInterface interface{}) error {
+	switch in := inInterface.(type) {
+	case config.Environment:
+		return config.MergeEnvironment(t, in)
+	}
+
+	return fmt.Errorf("unexpected type %T for parameter", inInterface)
+}
+
+func (t *Tarmak) Init() error {
+	return t.initialize.Run()
+}
 
 func New(cmd *cobra.Command) *Tarmak {
 	t := &Tarmak{
@@ -54,6 +69,12 @@ func New(cmd *cobra.Command) *Tarmak {
 
 	t.log.Level = logrus.DebugLevel
 
+	// return early for init
+	if cmd.Name() == "init" {
+		t.initialize = initialize.New(t)
+		return t
+	}
+
 	// read config, unless we are initialising the config
 	conf, err := config.ReadConfig(t)
 	if err != nil {
@@ -68,6 +89,7 @@ func New(cmd *cobra.Command) *Tarmak {
 	t.packer = packer.New(t)
 	t.ssh = ssh.New(t)
 	t.puppet = puppet.New(t)
+	t.initialize = initialize.New(t)
 
 	return t
 }

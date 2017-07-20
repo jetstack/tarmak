@@ -223,8 +223,14 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/tcnksm/go-input"
+  packages = ["."]
+  revision = "bbe13e92fa7dda71a4e012e3f427df11866c7651"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","ssh"]
+  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","ssh","ssh/terminal"]
   revision = "dd85ac7e6a88fc6ca420478e934de5f1a42dd3c6"
 
 [[projects]]
@@ -254,6 +260,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c0cd9f9a0429e3702920d5ea3a615debacf36eac4f90822210ca8cd5808a66c8"
+  inputs-digest = "a9f4346caeff4d864fc3d88646394ba816472ba4ea5a00db8e979822ce4446c6"
   solver-name = "gps-cdcl"
   solver-version = 1
