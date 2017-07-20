@@ -10,11 +10,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/cenkalti/backoff"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/spf13/cobra"
 )
@@ -53,6 +56,63 @@ func getReader(input string) (io.ReadCloser, error) {
 	return f, nil
 }
 
+func puppetApply(dir string) (int, error) {
+	puppetCmd := exec.Command(
+		"puppet",
+		"apply",
+		"--detailed-exitcodes",
+		"--environment",
+		"production",
+		"--hiera_config",
+		filepath.Join(dir, "hiera.yaml"),
+		"--modulepath",
+		filepath.Join(dir, "modules"),
+		filepath.Join(dir, "manifests/site.pp"),
+	)
+
+	stdoutPipe, err := puppetCmd.StdoutPipe()
+	if err != nil {
+		return 0, err
+	}
+
+	stderrPipe, err := puppetCmd.StderrPipe()
+	if err != nil {
+		return 0, err
+	}
+
+	stdoutScanner := bufio.NewScanner(stdoutPipe)
+	go func() {
+		for stdoutScanner.Scan() {
+			log.WithField("cmd", "puppet").Debug(stdoutScanner.Text())
+		}
+	}()
+
+	stderrScanner := bufio.NewScanner(stderrPipe)
+	go func() {
+		for stderrScanner.Scan() {
+			log.WithField("cmd", "puppet").Debug(stderrScanner.Text())
+		}
+	}()
+
+	err = puppetCmd.Start()
+	if err != nil {
+		return 0, err
+	}
+
+	log.Printf("Waiting for command to finish...")
+	err = puppetCmd.Wait()
+	if err != nil {
+		perr, ok := err.(*exec.ExitError)
+		if ok {
+			if status, ok := perr.Sys().(syscall.WaitStatus); ok {
+				return status.ExitStatus(), nil
+			}
+		}
+		return 0, err
+	}
+	return 0, nil
+}
+
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "wing",
@@ -88,50 +148,27 @@ var RootCmd = &cobra.Command{
 		tarReader.Close()
 		reader.Close()
 
-		puppetCmd := exec.Command(
-			"puppet",
-			"apply",
-			"--environment",
-			"production",
-			"--hiera_config",
-			filepath.Join(dir, "hiera.yaml"),
-			"--modulepath",
-			filepath.Join(dir, "modules"),
-			filepath.Join(dir, "manifests/site.pp"),
-		)
-
-		stdoutPipe, err := puppetCmd.StdoutPipe()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		stderrPipe, err := puppetCmd.StderrPipe()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		stdoutScanner := bufio.NewScanner(stdoutPipe)
-		go func() {
-			for stdoutScanner.Scan() {
-				log.WithField("cmd", "puppet").Debug(stdoutScanner.Text())
+		puppetApplyCmd := func() error {
+			retCode, err := puppetApply(dir)
+			if err != nil {
+				return err
 			}
-		}()
-
-		stderrScanner := bufio.NewScanner(stderrPipe)
-		go func() {
-			for stderrScanner.Scan() {
-				log.WithField("cmd", "puppet").Debug(stderrScanner.Text())
+			if retCode != 0 {
+				return fmt.Errorf("puppet apply has not converged yet (return code %d)", retCode)
 			}
-		}()
+			return nil
+		}
 
-		err = puppetCmd.Start()
+		b := backoff.NewExponentialBackOff()
+		b.InitialInterval = time.Second * 30
+		b.MaxElapsedTime = time.Minute * 30
+
+		err = backoff.Retry(puppetApplyCmd, b)
+
+		b.GetElapsedTime()
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		log.Printf("Waiting for command to finish...")
-		err = puppetCmd.Wait()
-		log.Printf("Command finished with error: %v", err)
 
 	},
 }
