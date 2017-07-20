@@ -22,6 +22,9 @@ import (
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
+const FlagTerraformStacks = "terraform-stacks"
+const FlagForceDestroyStateStack = "force-destroy-state"
+
 type Tarmak struct {
 	conf *config.Config
 
@@ -189,9 +192,9 @@ func (t *Tarmak) TerraformApply(args []string) {
 		t.log.Fatal("could not validate config: ", err)
 	}
 
-	selectStacks, err := t.cmd.Flags().GetStringSlice("terraform-stacks")
+	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
-		t.log.Fatal("could not find flag terraform-stacks: ", err)
+		t.log.Fatalf("could not find flag %s: ", FlagTerraformStacks, err)
 	}
 
 	t.discoverAMIID()
@@ -218,16 +221,21 @@ func (t *Tarmak) TerraformApply(args []string) {
 }
 
 func (t *Tarmak) TerraformDestroy(args []string) {
-	selectStacks, err := t.cmd.Flags().GetStringSlice("terraform-stacks")
+	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
-		t.log.Fatal("could not find flag terraform-stacks: ", err)
+		t.log.Fatalf("could not find flag %s: ", FlagTerraformStacks, err)
+	}
+
+	forceDestroyStateStack, err := t.cmd.Flags().GetBool(FlagForceDestroyStateStack)
+	if err != nil {
+		t.log.Fatalf("could not find flag %s: ", FlagForceDestroyStateStack, err)
 	}
 
 	t.discoverAMIID()
 	stacks := t.Context().Stacks()
 	for posStack, _ := range stacks {
 		stack := stacks[len(stacks)-posStack-1]
-		if stack.Name() == config.StackNameState {
+		if !forceDestroyStateStack && stack.Name() == config.StackNameState {
 			t.log.Debugf("ignoring stack '%s'", stack.Name())
 			continue
 		}

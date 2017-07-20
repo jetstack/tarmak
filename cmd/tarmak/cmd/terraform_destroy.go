@@ -19,5 +19,6 @@ var terraformDestroyCmd = &cobra.Command{
 
 func init() {
 	terraformPFlags(terraformDestroyCmd.PersistentFlags())
+	terraformDestroyCmd.PersistentFlags().Bool(tarmak.FlagForceDestroyStateStack, false, "destroy the state stack as well, possibly dangerous")
 	RootCmd.AddCommand(terraformDestroyCmd)
 }
