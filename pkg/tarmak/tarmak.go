@@ -194,7 +194,7 @@ func (t *Tarmak) TerraformApply(args []string) {
 
 	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
-		t.log.Fatalf("could not find flag %s: ", FlagTerraformStacks, err)
+		t.log.Fatalf("could not find flag %s: %s", FlagTerraformStacks, err)
 	}
 
 	t.discoverAMIID()
@@ -223,12 +223,12 @@ func (t *Tarmak) TerraformApply(args []string) {
 func (t *Tarmak) TerraformDestroy(args []string) {
 	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
-		t.log.Fatalf("could not find flag %s: ", FlagTerraformStacks, err)
+		t.log.Fatalf("could not find flag %s: %s", FlagTerraformStacks, err)
 	}
 
 	forceDestroyStateStack, err := t.cmd.Flags().GetBool(FlagForceDestroyStateStack)
 	if err != nil {
-		t.log.Fatalf("could not find flag %s: ", FlagForceDestroyStateStack, err)
+		t.log.Fatalf("could not find flag %s: %s", FlagForceDestroyStateStack, err)
 	}
 
 	t.discoverAMIID()
