@@ -26,6 +26,12 @@
   version = "v1.10.5"
 
 [[projects]]
+  name = "github.com/cenkalti/backoff"
+  packages = ["."]
+  revision = "32cd0c5b3aef12c76ed64aaf678f6c79736be7dc"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/docker/docker"
   packages = ["api/types","api/types/blkiodev","api/types/container","api/types/filters","api/types/mount","api/types/network","api/types/registry","api/types/strslice","api/types/swarm","api/types/versions","opts","pkg/archive","pkg/fileutils","pkg/homedir","pkg/idtools","pkg/ioutils","pkg/jsonlog","pkg/jsonmessage","pkg/longpath","pkg/pools","pkg/promise","pkg/stdcopy","pkg/system","pkg/term","pkg/term/windows"]
   revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
@@ -260,6 +266,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a9f4346caeff4d864fc3d88646394ba816472ba4ea5a00db8e979822ce4446c6"
+  inputs-digest = "3cfb0373f2e639d7a51ccd7f63e5e822fa8676d2a7d1294609a471d48b562a90"
   solver-name = "gps-cdcl"
   solver-version = 1
