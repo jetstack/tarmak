@@ -1,23 +1,21 @@
 # Tarmak
 
 ```
-A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.
+Tarmak is a Toolkit to spin up kubernetes clusters
 
 Usage:
   tarmak [command]
 
 Available Commands:
-  apply             Apply a puppet.tar.gz locally
-  dist              Build a puppet.tar.gz
   help              Help about any command
   image-build       This builds an image for an environment using packer
+  init              init a cluster configuration
+  list              list nodes of the context
+  puppet-dist       Build a puppet.tar.gz
+  ssh               ssh into instance
   terraform-apply   This applies the set of stacks in the current context
   terraform-destroy This applies the set of stacks in the current context
+  version           Print the version number of tarmak
 
 Flags:
       --config string   config file (default is $HOME/.tarmak.yaml)
