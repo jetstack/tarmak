@@ -60,6 +60,9 @@ func (p *Packer) QueryAMIID() (amiID string, err error) {
 	imageID, err := p.tarmak.Context().Environment().Provider().QueryImage(
 		p.tags(),
 	)
+	if err != nil {
+		return "", err
+	}
 
 	p.imageID = &imageID
 
