@@ -1,6 +1,7 @@
 package stack
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"reflect"
@@ -63,7 +64,13 @@ func (s *StateStack) verifyDNSDelegation() error {
 		}
 
 		if tries == 0 {
-			return fmt.Errorf("Failed 5 times")
+			nameservers, ok := s.Output()["public_zone_name_servers"]
+			msg := "failed verifying delegation of public zone 5 times"
+			if ok {
+				msg = fmt.Sprintf("%s, make sure the zone %s is delegated to nameservers %s", msg, s.conf.State.PublicZone, nameservers)
+			}
+
+			return errors.New(msg)
 		}
 		tries -= 1
 		time.Sleep(2 * time.Second)
