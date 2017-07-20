@@ -16,7 +16,7 @@ write_files:
       Environment=AWS_REGION=${region}
       Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
       ExecStartPre=/bin/mkdir -p /opt/bin
-      ExecStartPre=/bin/curl -sL -o /opt/bin/wing https://storage.googleapis.com/tarmak-io/prerelease/0.1/wing
+      ExecStartPre=/bin/curl -sL -o /opt/bin/wing https://storage.googleapis.com/tarmak-io/prerelease/0.1.0/wing_linux_amd64
       ExecStartPre=/bin/chmod +x /opt/bin/wing
       ExecStart=/opt/bin/wing -- s3://${puppet_tar_gz_bucket_path}
 
