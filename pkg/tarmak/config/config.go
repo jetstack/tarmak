@@ -1,6 +1,16 @@
 package config
 
-import ()
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
+	"gopkg.in/yaml.v2"
+
+	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+)
 
 const (
 	StackNameState      = "state"
@@ -18,6 +28,69 @@ type Config struct {
 
 	Contact string `yaml:"contact,omitempty"`
 	Project string `yaml:"project,omitempty"`
+}
+
+func configPath(t interfaces.Tarmak) string {
+	return filepath.Join(t.ConfigPath(), "tarmak.yaml")
+}
+
+func ReadConfig(t interfaces.Tarmak) (*Config, error) {
+	path := configPath(t)
+
+	configBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var config Config
+	err = yaml.Unmarshal(configBytes, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func MergeEnvironment(t interfaces.Tarmak, in Environment) error {
+	contextName := fmt.Sprintf("%s-%s", in.Name, in.Contexts[0].Name)
+
+	path := configPath(t)
+	var config *Config
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		config = &Config{
+			CurrentContext: contextName,
+			Project:        in.Project,
+			Contact:        in.Contact,
+			Environments:   []Environment{in},
+		}
+	} else if err != nil {
+		return err
+	} else {
+		// existing config
+		config, err := ReadConfig(t)
+		if err != nil {
+			return err
+		}
+
+		// overwrite current context
+		config.CurrentContext = contextName
+
+		// add environment
+		config.Environments = append(config.Environments, in)
+	}
+
+	configBytes, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	err = utils.EnsureDirectory(t.ConfigPath(), 0700)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(path, configBytes, 0600)
 }
 
 func DefaultConfigSingleEnvSingleZoneAWSEUCentral() *Config {

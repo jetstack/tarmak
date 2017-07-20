@@ -54,8 +54,13 @@ func New(cmd *cobra.Command) *Tarmak {
 
 	t.log.Level = logrus.DebugLevel
 
-	// TODO: read real config
-	if err := t.initFromConfig(config.DefaultConfigSingle()); err != nil {
+	// read config, unless we are initialising the config
+	conf, err := config.ReadConfig(t)
+	if err != nil {
+		t.log.Fatal("unabled to read config: ", err)
+	}
+
+	if err := t.initFromConfig(conf); err != nil {
 		t.log.Fatal("unabled to validate config: ", err)
 	}
 

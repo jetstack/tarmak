@@ -83,6 +83,7 @@ type Tarmak interface {
 	SSH() SSH
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
+	MergeEnvironment(interface{}) error
 }
 
 type Packer interface {
