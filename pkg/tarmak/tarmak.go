@@ -221,6 +221,10 @@ func (t *Tarmak) TerraformApply(args []string) {
 }
 
 func (t *Tarmak) TerraformDestroy(args []string) {
+	if err := t.Validate(); err != nil {
+		t.log.Fatal("could not validate config: ", err)
+	}
+
 	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
 		t.log.Fatalf("could not find flag %s: %s", FlagTerraformStacks, err)
