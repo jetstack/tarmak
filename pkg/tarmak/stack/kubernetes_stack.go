@@ -106,6 +106,7 @@ func (s *KubernetesStack) ensureVaultSetup() error {
 	if err != nil {
 		return err
 	}
+	defer vaultTunnel.Stop()
 
 	vaultClient := vaultTunnel.VaultClient()
 
@@ -118,11 +119,6 @@ func (s *KubernetesStack) ensureVaultSetup() error {
 
 	k := kubernetes.New(vaultClient)
 	k.SetClusterID(s.Context().ContextName())
-
-	if err := vaultTunnel.Start(); err != nil {
-		return err
-	}
-	defer vaultTunnel.Stop()
 
 	if err := k.Ensure(); err != nil {
 		return err
