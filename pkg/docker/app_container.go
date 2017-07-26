@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 
 	logrus "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
@@ -87,35 +88,29 @@ func (ac *AppContainer) CleanUp() error {
 	return ac.app.dockerClient.RemoveContainer(docker.RemoveContainerOptions{ID: ac.dockerContainer.ID})
 }
 
-func (ac *AppContainer) Execute(cmd string, args []string) (returnCode int, err error) {
+func (ac *AppContainer) execute(cmd string, args []string, stdOut io.Writer, stdErr io.Writer, stdIn io.Reader, tty bool) (returnCode int, err error) {
 	command := []string{cmd}
 	command = append(command, args...)
 	ac.log.WithField("command", command).Debug()
 	exec, err := ac.app.dockerClient.CreateExec(docker.CreateExecOptions{
 		Cmd:          command,
-		AttachStdin:  false,
-		AttachStdout: true,
-		AttachStderr: true,
+		AttachStdin:  stdIn != nil,
+		AttachStdout: stdOut != nil,
+		AttachStderr: stdErr != nil,
 		Container:    ac.dockerContainer.ID,
+		Tty:          tty,
 	})
 	if err != nil {
 		return -1, err
 	}
 
-	stdoutReader, stdoutWriter := io.Pipe()
-	stdoutScanner := bufio.NewScanner(stdoutReader)
-	go func() {
-		for stdoutScanner.Scan() {
-			ac.log.WithField("command", cmd).Debug(stdoutScanner.Text())
-		}
-	}()
-
 	err = ac.app.dockerClient.StartExec(exec.ID, docker.StartExecOptions{
-		ErrorStream:  stdoutWriter,
-		OutputStream: stdoutWriter,
+		InputStream:  stdIn,
+		ErrorStream:  stdErr,
+		OutputStream: stdOut,
+		Tty:          tty,
+		RawTerminal:  tty,
 	})
-	stdoutReader.Close()
-	stdoutWriter.Close()
 
 	if err != nil {
 		return -1, fmt.Errorf("error starting exec: %s", err)
@@ -127,6 +122,24 @@ func (ac *AppContainer) Execute(cmd string, args []string) (returnCode int, err 
 	}
 
 	return execInspect.ExitCode, nil
+}
+
+func (ac *AppContainer) Attach(cmd string, args []string) (returnCode int, err error) {
+	return ac.execute(cmd, args, os.Stdout, os.Stderr, os.Stdin, true)
+}
+
+func (ac *AppContainer) Execute(cmd string, args []string) (returnCode int, err error) {
+	stdoutReader, stdoutWriter := io.Pipe()
+	stdoutScanner := bufio.NewScanner(stdoutReader)
+	go func() {
+		for stdoutScanner.Scan() {
+			ac.log.WithField("command", cmd).Debug(stdoutScanner.Text())
+		}
+	}()
+	returnCode, err = ac.execute(cmd, args, stdoutWriter, stdoutWriter, nil, false)
+	stdoutReader.Close()
+	stdoutWriter.Close()
+	return returnCode, err
 }
 
 func (ac *AppContainer) Capture(cmd string, args []string) (stdOut string, stdErr string, returnCode int, err error) {

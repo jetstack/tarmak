@@ -84,6 +84,26 @@ func (t *Terraform) Output(stack interfaces.Stack) (map[string]interface{}, erro
 
 }
 
+func (t *Terraform) Shell(stack interfaces.Stack, args []string) error {
+	c := t.NewContainer(stack)
+
+	if err := c.prepare(); err != nil {
+		return fmt.Errorf("error preparing container: %s", err)
+	}
+	defer c.CleanUpSilent(t.log)
+
+	if err := c.CopyRemoteState(stack.RemoteState()); err != nil {
+		return fmt.Errorf("error while copying remote state: %s", err)
+	}
+	c.log.Debug("copied remote state into container")
+
+	if err := c.Init(); err != nil {
+		return fmt.Errorf("error while terraform init: %s", err)
+	}
+
+	return c.Shell()
+}
+
 func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy bool) error {
 	c := t.NewContainer(stack)
 

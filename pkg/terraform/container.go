@@ -86,14 +86,16 @@ func MapToTerraformTfvars(input map[string]interface{}) (output string, err erro
 	return buf.String(), nil
 }
 
-func (tc *TerraformContainer) Plan(additionalArgs []string, destroy bool) (changesNeeded bool, err error) {
-
-	args := []string{"plan", "-out=terraform.plan", "-detailed-exitcode", "-input=false"}
-
-	if destroy {
-		args = append(args, "-destroy")
+func (tc *TerraformContainer) Shell() (err error) {
+	if err := tc.writeTfvars(); err != nil {
+		return err
 	}
 
+	_, err = tc.Attach("/bin/sh", []string{})
+	return err
+}
+
+func (tc *TerraformContainer) writeTfvars() (err error) {
 	// adds parameters as CLI args
 	terraformVars := utils.MergeMaps(
 		tc.stack.Context().Environment().Tarmak().Variables(),
@@ -105,16 +107,31 @@ func (tc *TerraformContainer) Plan(additionalArgs []string, destroy bool) (chang
 
 	terraformVarsFile, err := MapToTerraformTfvars(terraformVars)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	remoteStateTar, err := tarmakDocker.TarStreamFromFile("terraform.tfvars", terraformVarsFile)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	err = tc.UploadToContainer(remoteStateTar, "/terraform")
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (tc *TerraformContainer) Plan(additionalArgs []string, destroy bool) (changesNeeded bool, err error) {
+
+	args := []string{"plan", "-out=terraform.plan", "-detailed-exitcode", "-input=false"}
+
+	if destroy {
+		args = append(args, "-destroy")
+	}
+
+	if err := tc.writeTfvars(); err != nil {
 		return false, err
 	}
 
@@ -205,6 +222,12 @@ func (tc *TerraformContainer) CopyRemoteState(content string) error {
 }
 
 func (tc *TerraformContainer) prepare() error {
+	// validate environment
+	err := tc.t.tarmak.Context().Environment().Validate()
+	if err != nil {
+		return fmt.Errorf("error validating environment: %s", err)
+	}
+
 	// rootDir
 	rootPath, err := tc.t.tarmak.RootPath()
 	if err != nil {
