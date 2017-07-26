@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -208,11 +209,16 @@ func (k *Kubectl) ensureConfig() error {
 		}
 
 		version, err := k.verifyAPIVersion(*c)
-		if err != nil {
-			k.log.Debugf("error connecting to cluster: %s", err)
-		} else {
+		if err == nil {
 			k.log.Debugf("connected to kubernetes api %s", version)
 			break
+		} else if strings.Contains(err.Error(), "certificate signed by unknown authority") {
+			// TODO: this not really clean, if CA mismatched request new certificate
+			if err := k.requestNewAdminCert(cluster, authInfo); err != nil {
+				return err
+			}
+		} else {
+			k.log.Debugf("error connecting to cluster: %s", err)
 		}
 
 		retries -= 1
