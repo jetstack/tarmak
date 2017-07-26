@@ -13,7 +13,7 @@ var terraformDestroyCmd = &cobra.Command{
 	Short:   "This applies the set of stacks in the current context",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
-		t.TerraformDestroy(args)
+		t.Must(t.CmdTerraformDestroy(args))
 	},
 }
 

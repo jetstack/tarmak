@@ -12,7 +12,7 @@ var terraformApplyCmd = &cobra.Command{
 	Short:   "This applies the set of stacks in the current context",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
-		t.TerraformApply(args)
+		t.Must(t.CmdTerraformApply(args))
 	},
 }
 

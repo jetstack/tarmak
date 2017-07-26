@@ -23,9 +23,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
-const FlagTerraformStacks = "terraform-stacks"
-const FlagForceDestroyStateStack = "force-destroy-state"
-
 type Tarmak struct {
 	conf *config.Config
 
@@ -127,10 +124,6 @@ func (t *Tarmak) Puppet() interfaces.Puppet {
 	return t.puppet
 }
 
-func (t *Tarmak) Terraform() interfaces.Terraform {
-	return t.terraform
-}
-
 func (t *Tarmak) Packer() interfaces.Packer {
 	return t.packer
 }
@@ -188,85 +181,6 @@ func (t *Tarmak) discoverAMIID() {
 		t.log.Fatal("could not find a matching ami: ", err)
 	}
 	t.Context().SetImageID(amiID)
-}
-
-func (t *Tarmak) TerraformApply(args []string) {
-	if err := t.Validate(); err != nil {
-		t.log.Fatal("could not validate config: ", err)
-	}
-
-	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
-	if err != nil {
-		t.log.Fatalf("could not find flag %s: %s", FlagTerraformStacks, err)
-	}
-
-	t.discoverAMIID()
-	stacks := t.Context().Stacks()
-	for _, stack := range stacks {
-
-		if len(selectStacks) > 0 {
-			found := false
-			for _, selectStack := range selectStacks {
-				if selectStack == stack.Name() {
-					found = true
-				}
-			}
-			if !found {
-				continue
-			}
-		}
-
-		err := t.terraform.Apply(stack, args)
-		if err != nil {
-			t.log.Fatal(err)
-		}
-	}
-}
-
-func (t *Tarmak) TerraformDestroy(args []string) {
-	if err := t.Validate(); err != nil {
-		t.log.Fatal("could not validate config: ", err)
-	}
-
-	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
-	if err != nil {
-		t.log.Fatalf("could not find flag %s: %s", FlagTerraformStacks, err)
-	}
-
-	forceDestroyStateStack, err := t.cmd.Flags().GetBool(FlagForceDestroyStateStack)
-	if err != nil {
-		t.log.Fatalf("could not find flag %s: %s", FlagForceDestroyStateStack, err)
-	}
-
-	t.discoverAMIID()
-	stacks := t.Context().Stacks()
-	for posStack, _ := range stacks {
-		stack := stacks[len(stacks)-posStack-1]
-		if !forceDestroyStateStack && stack.Name() == config.StackNameState {
-			t.log.Debugf("ignoring stack '%s'", stack.Name())
-			continue
-		}
-
-		if len(selectStacks) > 0 {
-			found := false
-			for _, selectStack := range selectStacks {
-				if selectStack == stack.Name() {
-					found = true
-				}
-			}
-			if !found {
-				continue
-			}
-		}
-
-		err := t.terraform.Destroy(stack, args)
-		if err != nil {
-			t.log.Fatal(err)
-		}
-		if err != nil {
-			t.log.Fatal(err)
-		}
-	}
 }
 
 func (t *Tarmak) HomeDir() string {
