@@ -1,15 +1,15 @@
-BINDIR        ?= $(PWD)/bin
+BINDIR ?= $(PWD)/bin
+PATH   := $(BINDIR):$(PATH)
 
 CI_COMMIT_TAG ?= unknown
 CI_COMMIT_SHA ?= unknown
 
-
 help:
-	# all 		- runs verify, build targets
-	# test 		- runs go_test target
-	# build 	- runs generate, and then go_build targets
-	# generate 	- generates mocks and assets files
-	# verify 	- verifies generated files & scripts
+	# all       - runs verify, build targets
+	# test      - runs go_test target
+	# build     - runs generate, and then go_build targets
+	# generate  - generates mocks and assets files
+	# verify    - verifies generated files & scripts
 
 .PHONY: all test verify
 
@@ -19,7 +19,7 @@ all: verify build
 
 build: generate go_build
 
-generate: .generate_files
+generate: go_generate
 
 go_verify: go_fmt go_vet go_test
 
@@ -47,14 +47,18 @@ go_codegen:
 	mockgen -imports .=github.com/jetstack/tarmak/pkg/tarmak/interfaces -package=mocks -source=pkg/tarmak/interfaces/interfaces.go > pkg/tarmak/mocks/tarmak.go
 	mockgen -package=mocks -source=pkg/tarmak/provider/aws/aws.go > pkg/tarmak/mocks/aws.go
 
-.generate_exes:
-	@echo "Grabbing dependencies..."
-	go get -u github.com/golang/mock/mockgen
-	go get -u github.com/jteeuwen/go-bindata/...
-	go get -u github.com/golang/dep/cmd/dep
-	@touch $@
+.exes_prepare:
+	mkdir -p $(BINDIR)
 
-.generate_files: .generate_exes
-	dep ensure
+bin/mockgen:
+	mkdir -p $(BINDIR)
+	go build -o $(BINDIR)/mockgen ./vendor/github.com/golang/mock/mockgen
+
+bin/go-bindata:
+	mkdir -p $(BINDIR)
+	go build -o $(BINDIR)/go-bindata ./vendor/github.com/jteeuwen/go-bindata/go-bindata
+
+depend: bin/go-bindata bin/mockgen
+
+go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
-	@touch $@

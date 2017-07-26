@@ -1,7 +1,7 @@
 /.generate_exes
 /.generate_files
-/vendor/
 /tarmak_linux_amd64
 /tarmak_darwin_amd64
 /wing_linux_amd64
 /dist/
+/bin/
