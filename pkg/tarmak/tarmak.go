@@ -3,6 +3,7 @@ package tarmak
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -70,6 +71,7 @@ func New(cmd *cobra.Command) *Tarmak {
 	t.homeDir = homeDir
 
 	t.log.Level = logrus.DebugLevel
+	t.log.Out = os.Stderr
 
 	// return early for init
 	if cmd.Name() == "init" {
