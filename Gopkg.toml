@@ -1,25 +1,5 @@
-
-# Gopkg.toml example
-#
-# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
-# for detailed Gopkg.toml documentation.
-#
-# required = ["github.com/user/thing/cmd/thing"]
-# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
-#
-# [[constraint]]
-#   name = "github.com/user/project"
-#   version = "1.0.0"
-#
-# [[constraint]]
-#   name = "github.com/user/project2"
-#   branch = "dev"
-#   source = "github.com/myfork/project2"
-#
-# [[override]]
-#  name = "github.com/x/y"
-#  version = "2.4.0"
-
+# vendor in code gen tools
+required = ["github.com/golang/mock/mockgen", "github.com/jteeuwen/go-bindata/go-bindata"]
 
 [[constraint]]
   branch = "master"
@@ -52,3 +32,21 @@
 [[constraint]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/client-go"
+
+[[constraint]]
+  name = "github.com/jteeuwen/go-bindata"
+  revision = "a0ff2567cfb70903282db057e799fd826784d41d"
+
+# TODO: Update once changes are released
+[[constraint]]
+  name = "github.com/jetstack-experimental/vault-unsealer"
+  revision = "cea1258b2833b938e168e86dffaa980bd89f74c3"
+
+# TODO: Update once changes are released
+[[constraint]]
+  name = "github.com/jetstack-experimental/vault-helper"
+  revision = "f7506c9c9ab6cb68dfbb3be12161cae30336875c"

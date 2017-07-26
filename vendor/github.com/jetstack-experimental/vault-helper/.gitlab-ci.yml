@@ -1,0 +1,68 @@
+variables:
+  DOCKER_DRIVER: overlay
+  VAULT_VERSION: 0.7.3
+  VAULT_HASH: 2822164d5dd347debae8b3370f73f9564a037fc18e9adcabca5907201e5aab45
+
+stages:
+- build
+- docker
+
+build:golang:
+  tags:
+  - docker
+  image: golang:1.8
+  script:
+  - rm -rf /go/src/github.com/jetstack-experimental/vault-helper
+  - mkdir -p /go/src/github.com/jetstack-experimental
+  - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack-experimental
+  - cd /go/src/github.com/jetstack-experimental/vault-helper
+  - go get -u github.com/golang/dep/cmd/dep
+  - dep ensure
+  - go build -o vault-helper-golang
+  # Install unzip
+  - curl -sL https://oss.oracle.com/el4/unzip/unzip.tar > /tmp/unzip.tar
+  - tar -xf /tmp/unzip.tar
+  - mv unzip /tmp
+  # Installs vault version as specified
+  - curl -sL  https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip > /tmp/vault.zip
+  - echo "${VAULT_HASH}  /tmp/vault.zip" | sha256sum  -c
+  - /tmp/unzip /tmp/vault.zip
+  - rm /tmp/vault.zip
+  - mv vault /usr/local/bin/vault
+  - chmod +x /usr/local/bin/vault
+  # Testing golang code
+  - go test -v ./pkg/...
+  - mv /go/src/github.com/jetstack-experimental/vault-helper ${CI_PROJECT_DIR}
+  stage: build
+
+docker:image:
+  image: docker:latest
+  stage: docker
+  tags:
+  - docker
+  script:
+  - apk --update add make
+  - mkdir -p ~/.docker && echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json && chmod 600 ~/.docker/config.json
+  - make image test push IMAGE_TAGS="${CI_BUILD_REF_SLUG}-${CI_PIPELINE_ID} canary"
+  only:
+  - master
+  except:
+  - tags
+  services:
+  - docker:dind
+
+docker:image_tagged:
+  image: docker:latest
+  stage: docker
+  tags:
+  - docker
+  script:
+  - apk --update add make
+  - mkdir -p ~/.docker && echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json && chmod 600 ~/.docker/config.json
+  - make image test push IMAGE_TAGS="${CI_BUILD_TAG} latest"
+  only:
+  - tags
+  except:
+  - master
+  services:
+  - docker:dind
