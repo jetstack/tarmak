@@ -13,6 +13,7 @@ var kubectlCmd = &cobra.Command{
 		t := tarmak.New(cmd)
 		t.Must(t.CmdKubectl(args))
 	},
+	DisableFlagParsing: true,
 }
 
 func init() {
