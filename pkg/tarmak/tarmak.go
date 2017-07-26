@@ -18,6 +18,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/environment"
 	"github.com/jetstack/tarmak/pkg/tarmak/initialize"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
@@ -36,6 +37,7 @@ type Tarmak struct {
 	packer     *packer.Packer
 	ssh        interfaces.SSH
 	cmd        *cobra.Command
+	kubectl    *kubectl.Kubectl
 	initialize *initialize.Init
 
 	context      interfaces.Context
@@ -93,6 +95,7 @@ func New(cmd *cobra.Command) *Tarmak {
 	t.ssh = ssh.New(t)
 	t.puppet = puppet.New(t)
 	t.initialize = initialize.New(t)
+	t.kubectl = kubectl.New(t)
 
 	return t
 }
@@ -322,4 +325,14 @@ func (t *Tarmak) Variables() map[string]interface{} {
 		output["project"] = t.conf.Project
 	}
 	return output
+}
+
+func (t *Tarmak) Must(err error) {
+	if err != nil {
+		t.log.Fatal(err)
+	}
+}
+
+func (t *Tarmak) CmdKubectl(args []string) error {
+	return t.kubectl.Kubectl(args)
 }

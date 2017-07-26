@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 
@@ -110,15 +109,58 @@ func (s *VaultStack) vaultInstanceFQDNs() ([]string, error) {
 	return instanceFQDNs, nil
 }
 
-// This returns a vault tunnel for the whole cluster (using DNS RR)
+// This returns the active vault tunnel for the whole cluster
 func (s *VaultStack) VaultTunnel() (*vaultTunnel, error) {
-	instance, err := s.vaultURL()
+
+	tunnels, err := s.VaultTunnels()
 	if err != nil {
 		return nil, err
 	}
 
-	tunnels, err := s.createVaultTunnels([]string{strings.Split(instance.Host, ":")[0]})
-	return tunnels[0], err
+	activeNode := make(chan int, 0)
+
+	var wg sync.WaitGroup
+	for pos, _ := range tunnels {
+		wg.Add(1)
+		go func(pos int) {
+			defer wg.Done()
+			err := tunnels[pos].Start()
+			if err != nil {
+				s.log.Warn(err)
+				return
+			}
+			health, err := tunnels[pos].VaultClient().Sys().Health()
+			if err != nil {
+				s.log.Warn(err)
+				return
+			}
+
+			if health.Standby == false && health.Sealed == false {
+				activeNode <- pos
+
+			}
+
+		}(pos)
+	}
+
+	activePos := <-activeNode
+
+	go func(activePos int) {
+
+		// wait for all tunnel attempts
+		wg.Wait()
+
+		// stop tunnels
+		for pos, _ := range tunnels {
+			if pos == activePos {
+				continue
+			}
+			tunnels[pos].Stop()
+		}
+
+	}(activePos)
+
+	return tunnels[activePos], nil
 }
 
 // This returns a vault tunnel per instance
@@ -192,6 +234,10 @@ func (v *vaultTunnel) Start() error {
 
 func (v *vaultTunnel) Stop() error {
 	return v.tunnel.Stop()
+}
+
+func (v *vaultTunnel) Port() int {
+	return v.tunnel.Port()
 }
 
 func (v *vaultTunnel) VaultClient() *vault.Client {

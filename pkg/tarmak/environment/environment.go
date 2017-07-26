@@ -22,6 +22,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/context"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/aws"
+	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
@@ -352,4 +353,14 @@ func (e *Environment) VaultRootToken() (string, error) {
 	}
 
 	return strings.TrimSpace(string(uuidBytes)), nil
+}
+
+func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
+	vaultStack, ok := e.stackVault.(*stack.VaultStack)
+	if !ok {
+		return nil, fmt.Errorf("could convert to VaultStack: %T", e.stackVault)
+	}
+
+	return vaultStack.VaultTunnel()
+
 }

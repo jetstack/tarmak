@@ -102,6 +102,15 @@ func (c *Context) NetworkCIDR() *net.IPNet {
 	return c.networkCIDR
 }
 
+func (c *Context) APITunnel() interfaces.Tunnel {
+	return c.Environment().Tarmak().SSH().Tunnel(
+		"bastion",
+		fmt.Sprintf("api.%s.%s", c.ContextName(), c.stackNetwork.Variables()["private_zone"]),
+		6443,
+	)
+
+}
+
 func (c *Context) SetImageID(imageID string) {
 	c.imageID = &imageID
 }
