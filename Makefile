@@ -1,8 +1,15 @@
+PACKAGE_NAME ?= github.com/jetstack/tarmak
+
 BINDIR ?= $(PWD)/bin
 PATH   := $(BINDIR):$(PATH)
 
 CI_COMMIT_TAG ?= unknown
 CI_COMMIT_SHA ?= unknown
+
+# A list of all types.go files in pkg/apis
+TYPES_FILES = $(shell find pkg/apis -name types.go)
+
+HACK_DIR     ?= hack
 
 help:
 	# all       - runs verify, build targets
@@ -52,9 +59,6 @@ go_codegen:
 	mockgen -imports .=github.com/jetstack/tarmak/pkg/tarmak/interfaces -package=mocks -source=pkg/tarmak/interfaces/interfaces.go > pkg/tarmak/mocks/tarmak.go
 	mockgen -package=mocks -source=pkg/tarmak/provider/aws/aws.go > pkg/tarmak/mocks/aws.go
 
-.exes_prepare:
-	mkdir -p $(BINDIR)
-
 $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
 	go build -o $(BINDIR)/mockgen ./vendor/github.com/golang/mock/mockgen
@@ -91,3 +95,30 @@ depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
+
+go_generate_types: depend $(TYPES_FILES)
+	# generate types
+	defaulter-gen \
+	  --v 1 --logtostderr \
+	  --input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak" \
+	  --input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
+	  --extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak" \
+	  --extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
+	  --output-file-base "zz_generated.defaults"
+
+	# generate deep copies
+	deepcopy-gen \
+		--v 1 --logtostderr \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
+		--output-file-base zz_generated.deepcopy
+
+	# generate conversions
+	conversion-gen \
+		--v 1 --logtostderr \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
+		--output-file-base zz_generated.conversion
+
+	# generate all pkg/client contents
+	$(HACK_DIR)/update-client-gen.sh
