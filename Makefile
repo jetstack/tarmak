@@ -37,6 +37,9 @@ go_fmt:
 		exit 1; \
 	fi
 
+clean:
+	rm -rf $(BINDIR)
+
 go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...)
 
@@ -52,15 +55,39 @@ go_codegen:
 .exes_prepare:
 	mkdir -p $(BINDIR)
 
-bin/mockgen:
+$(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
 	go build -o $(BINDIR)/mockgen ./vendor/github.com/golang/mock/mockgen
 
-bin/go-bindata:
+$(BINDIR)/go-bindata:
 	mkdir -p $(BINDIR)
 	go build -o $(BINDIR)/go-bindata ./vendor/github.com/jteeuwen/go-bindata/go-bindata
 
-depend: bin/go-bindata bin/mockgen
+$(BINDIR)/defaulter-gen:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/defaulter-gen
+
+$(BINDIR)/deepcopy-gen:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/deepcopy-gen
+
+$(BINDIR)/conversion-gen:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/conversion-gen
+
+$(BINDIR)/client-gen:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/client-gen
+
+$(BINDIR)/lister-gen:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/lister-gen
+
+$(BINDIR)/informer-gen:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/informer-gen
+
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)

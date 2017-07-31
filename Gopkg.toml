@@ -1,5 +1,5 @@
 # vendor in code gen tools
-required = ["github.com/golang/mock/mockgen", "github.com/jteeuwen/go-bindata/go-bindata"]
+required = ["github.com/golang/mock/mockgen", "github.com/jteeuwen/go-bindata/go-bindata", "k8s.io/kubernetes/cmd/libs/go2idl/defaulter-gen"]
 
 [[constraint]]
   branch = "master"
@@ -36,6 +36,10 @@ required = ["github.com/golang/mock/mockgen", "github.com/jteeuwen/go-bindata/go
 [[constraint]]
   branch = "master"
   name = "k8s.io/client-go"
+
+[[constraint]]
+  revision = "25d3523359ff17dda6deb867a7c3dd6c8b7ea705"
+  name = "k8s.io/kubernetes"
 
 [[constraint]]
   name = "github.com/jteeuwen/go-bindata"
