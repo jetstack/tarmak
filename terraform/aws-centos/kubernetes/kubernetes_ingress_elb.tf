@@ -1,30 +1,3 @@
-variable "ingress_elb_nodeport_http" {
-  default = 32080
-}
-
-output "ingress_wildcard_fqdn" {
-  value = "${aws_route53_record.ingress_wildcard.fqdn}"
-}
-
-#data "aws_acm_certificate" "wildcard" {
-#  domain   = "*.${var.name}.${data.terraform_remote_state.hub_state.public_zone}"
-#  statuses = ["ISSUED"]
-#}
-
-data "aws_elb_hosted_zone_id" "main" {}
-
-resource "aws_route53_record" "ingress_wildcard" {
-  zone_id = "${data.terraform_remote_state.hub_state.public_zone_id}"
-  name    = "*.${var.name}"
-  type    = "A"
-
-  alias {
-    name                   = "${aws_elb.ingress_controller.dns_name}"
-    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
-    evaluate_target_health = true
-  }
-}
-
 resource "aws_elb" "ingress_controller" {
   name         = "${format("%.20s-k8s-ingress", data.template_file.stack_name.rendered)}"
   subnets      = ["${data.terraform_remote_state.network.public_subnet_ids}"]

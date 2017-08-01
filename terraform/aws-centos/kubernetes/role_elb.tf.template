@@ -1,0 +1,110 @@
+{{/* vim: set ft=tf: */}}
+{{if .ELBAPI}}
+resource "aws_elb" "{{.TFName}}" {
+  name         = "${data.template_file.stack_name.rendered}-{{.Name}}"
+  subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
+  idle_timeout = 3600
+  internal     = true
+
+  security_groups = [
+    "${aws_security_group.{{.TFName}}_elb.id}",
+  ]
+
+  listener {
+    instance_port     = 6443
+    instance_protocol = "tcp"
+    lb_port           = 6443
+    lb_protocol       = "tcp"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "TCP:6443"
+    interval            = 30
+  }
+
+  tags {
+    Name        = "${data.template_file.stack_name.rendered}-{{.Name}}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+{{end}}
+
+{{if .ELBIngress}}
+variable "ingress_elb_nodeport_http" {
+  default = 32080
+}
+
+output "ingress_wildcard_fqdn" {
+  value = "${aws_route53_record.ingress_wildcard.fqdn}"
+}
+
+# TODO: Enable me again
+#data "aws_acm_certificate" "wildcard" {
+#  domain   = "*.${var.name}.${data.terraform_remote_state.hub_state.public_zone}"
+#  statuses = ["ISSUED"]
+#}
+
+resource "aws_route53_record" "{{.TFName}}" {
+  zone_id = "${data.terraform_remote_state.hub_state.public_zone_id}"
+  name    = "*.${var.name}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.{{.TFName}}.dns_name}"
+    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_elb" "{{.TFName}}" {
+  name         = "${data.template_file.stack_name.rendered}-{{.ELBIngressName}}"
+  subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
+  idle_timeout = 3600
+  internal     = true
+
+  security_groups = [
+    "${aws_security_group.{{.TFName}}_elb.id}",
+  ]
+
+  listener {
+    instance_port     = 6443
+    instance_protocol = "tcp"
+    lb_port           = 6443
+    lb_protocol       = "tcp"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "TCP:6443"
+    interval            = 30
+  }
+
+  tags {
+    Name        = "${data.template_file.stack_name.rendered}-{{.Name}}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+{{end}}
+
+{{if .HasELB}}
+resource "aws_security_group" "{{.TFName}}_elb" {
+  name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
+  vpc_id = "${data.terraform_remote_state.network.vpc_id}"
+
+  tags {
+    Name        = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+{{end}}

@@ -10,18 +10,6 @@ resource "aws_security_group" "kubernetes_master" {
   }
 }
 
-resource "aws_security_group" "kubernetes_master_elb" {
-  name   = "${data.template_file.stack_name.rendered}-k8s-master-elb"
-  vpc_id = "${data.terraform_remote_state.network.vpc_id}"
-
-  tags {
-    Name        = "${data.template_file.stack_name.rendered}-k8s-master-elb"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
-  }
-}
-
 resource "aws_security_group_rule" "kubernetes_master_allow_ssh_CI" {
   type                     = "ingress"
   from_port                = 22

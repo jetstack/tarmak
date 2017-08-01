@@ -1,0 +1,19 @@
+{{range .Roles}}
+## TODO: Role definitions for {{.TFName}}
+
+# Security Groups for {{.TFName}}
+{{template "role_security_group.tf.template" .}}
+
+# ELB for {{.TFName}}
+{{template "role_elb.tf.template" .}}
+
+{{end}}
+
+{{range .NodeGroups}}
+## {{.TFName}}
+# Variables for {{.TFName}}
+{{template "node_group_variables.tf.template" .}}
+
+# Instance for {{.TFName}}
+{{template "node_group_instance.tf.template" .}}
+{{end}}

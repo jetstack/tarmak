@@ -1,0 +1,16 @@
+{{/* vim: set ft=tf: */}}
+variable "{{.TFName}}_instance_type" {
+  default = "c4.large"
+}
+
+variable "{{.TFName}}_count" {
+  default = 3
+}
+
+variable "{{.TFName}}_root_volume_size" {
+  default = 32
+}
+
+variable "{{.TFName}}_spot_price" {
+  default = ""
+}
