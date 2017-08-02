@@ -54,54 +54,12 @@ variable "puppet_runinterval" {
 }
 
 # etcd
-variable "etcd_instance_type" {
-  default = "m3.medium"
-}
-
-variable "etcd_instance_count" {
-  default = "3"
-}
-
-variable "etcd_root_volume_size" {
-  default = 32
-}
-
 variable "etcd_ebs_volume_size" {
   default = 20
 }
 
-# kubernetes master
-variable "kubernetes_master_instance_type" {
-  default = "c4.large"
-}
-
-variable "kubernetes_master_count" {
-  default = 3
-}
-
-variable "kubernetes_master_root_volume_size" {
-  default = 32
-}
-
-# kebernetes worker
-variable "kubernetes_worker_instance_type" {
-  default = "c4.large"
-}
-
-variable "kubernetes_worker_count" {
-  default = 3
-}
-
-variable "kubernetes_worker_root_volume_size" {
-  default = 32
-}
-
 variable "kubernetes_worker_docker_volume_size" {
   default = 50
-}
-
-variable "kubernetes_worker_spot_price" {
-  default = ""
 }
 
 variable "state_context_name" {
