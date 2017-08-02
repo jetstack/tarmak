@@ -62,32 +62,37 @@ resource "aws_route53_record" "{{.TFName}}" {
 }
 
 resource "aws_elb" "{{.TFName}}" {
-  name         = "${data.template_file.stack_name.rendered}-{{.ELBIngressName}}"
-  subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
-  idle_timeout = 3600
-  internal     = true
+  name         = "${format("%.20s-ingress", data.template_file.stack_name.rendered)}"
+  subnets      = ["${data.terraform_remote_state.network.public_subnet_ids}"]
+  idle_timeout = 600
 
   security_groups = [
-    "${aws_security_group.{{.TFName}}_elb.id}",
+    "${aws_security_group.kubernetes_ingress_controller_elb.id}",
   ]
 
   listener {
-    instance_port     = 6443
-    instance_protocol = "tcp"
-    lb_port           = 6443
-    lb_protocol       = "tcp"
+    instance_port     = "${var.ingress_elb_nodeport_http}"
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
+
+  #listener {
+  #  instance_port      = "${var.ingress_elb_nodeport_http}"
+  #  instance_protocol  = "http"
+  #  lb_port            = 443
+  #  lb_protocol        = "https"
+  #  ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
+  #}
 
   health_check {
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 5
     timeout             = 3
-    target              = "TCP:6443"
-    interval            = 30
+    target              = "TCP:${var.ingress_elb_nodeport_http}"
+    interval            = 10
   }
-
   tags {
-    Name        = "${data.template_file.stack_name.rendered}-{{.Name}}"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"

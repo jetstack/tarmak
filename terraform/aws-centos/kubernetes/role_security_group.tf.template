@@ -1,4 +1,7 @@
 {{/* vim: set ft=tf: */}}
+
+
+# This is the security group for the role
 resource "aws_security_group" "{{.TFName}}" {
   name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}"
   vpc_id = "${data.terraform_remote_state.network.vpc_id}"
@@ -11,6 +14,8 @@ resource "aws_security_group" "{{.TFName}}" {
   }
 }
 
+{{ if .HasELB }}
+# This is the security group for the ELB of the role
 resource "aws_security_group" "{{.TFName}}_elb" {
   name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
   vpc_id = "${data.terraform_remote_state.network.vpc_id}"
@@ -21,18 +26,13 @@ resource "aws_security_group" "{{.TFName}}_elb" {
     Project     = "${var.project}"
     Contact     = "${var.contact}"
   }
-}
+} 
+{{ end }}
 
-resource "aws_security_group_rule" "{{.TFName}}_allow_ssh_CI" {
-  type                     = "ingress"
-  from_port                = 22
-  to_port                  = 22
-  protocol                 = "tcp"
-  source_security_group_id = "${data.terraform_remote_state.hub_tools.jenkins_security_group_id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-resource "aws_security_group_rule" "{{.TFName}}_allow_bgp_{{.TFName}}" {
+{{/* Rules for master role */}}
+{{ if .HasMaster }}
+# All nodes of a role should be able to communicate with each other
+resource "aws_security_group_rule" "{{.TFName}}_allow_all_from_{{.TFName}}" {
   type                     = "ingress"
   from_port                = 0
   to_port                  = 0
@@ -41,52 +41,38 @@ resource "aws_security_group_rule" "{{.TFName}}_allow_bgp_{{.TFName}}" {
   security_group_id        = "${aws_security_group.{{.TFName}}.id}"
 }
 
-resource "aws_security_group_rule" "{{.TFName}}_allow_bgp_kubernetes_worker" {
+# allow incoming bgp from workers to masters
+resource "aws_security_group_rule" "{{.TFName}}_allow_bgp_from_kubernetes_worker" {
   type                     = "ingress"
-  from_port                = 0
-  to_port                  = 0
-  protocol                 = "-1"
+  from_port                = 179
+  to_port                  = 179
+  protocol                 = "tcp"
   source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
   security_group_id        = "${aws_security_group.{{.TFName}}.id}"
 }
 
-resource "aws_security_group_rule" "{{.TFName}}_elb_allow_6443_worker" {
+# allow incoming IP-in-IP from workers to masters
+resource "aws_security_group_rule" "{{.TFName}}_allow_ipip_from_kubernetes_worker" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "94"
+  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
+}
+
+# allow incoming API from workers to masters
+resource "aws_security_group_rule" "{{.TFName}}_allow_api_from_kubernetes_worker" {
   type                     = "ingress"
   from_port                = 6443
   to_port                  = 6443
   protocol                 = "tcp"
   source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
 }
 
-resource "aws_security_group_rule" "{{.TFName}}_elb_allow_6443_master" {
-  type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.{{.TFName}}.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
-}
-
-resource "aws_security_group_rule" "{{.TFName}}_elb_allow_6443_bastion" {
-  type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
-}
-
-resource "aws_security_group_rule" "{{.TFName}}_elb_allow_6443_CI" {
-  type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${data.terraform_remote_state.hub_tools.jenkins_security_group_id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
-}
-
-resource "aws_security_group_rule" "{{.TFName}}_allow_6443_{{.TFName}}_elb" {
+# allow incoming API from its ELBs to masters
+resource "aws_security_group_rule" "{{.TFName}}_allow_api_from_its_elb" {
   type                     = "ingress"
   from_port                = 6443
   to_port                  = 6443
@@ -95,7 +81,48 @@ resource "aws_security_group_rule" "{{.TFName}}_allow_6443_{{.TFName}}_elb" {
   security_group_id        = "${aws_security_group.{{.TFName}}.id}"
 }
 
-resource "aws_security_group_rule" "{{.TFName}}_allow_6443_egress_{{.TFName}}_elb" {
+# allow incoming API from workers to ELB
+resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_from_kubernetes_worker" {
+  type                     = "ingress"
+  from_port                = 6443
+  to_port                  = 6443
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
+}
+
+# allow incoming API from bastion to ELB
+resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_from_bastion" {
+  type                     = "ingress"
+  from_port                = 6443
+  to_port                  = 6443
+  protocol                 = "tcp"
+  source_security_group_id = "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
+}
+
+# allow incoming API from jenkins to ELB
+resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_from_jenkins" {
+  type                     = "ingress"
+  from_port                = 6443
+  to_port                  = 6443
+  protocol                 = "tcp"
+  source_security_group_id = "${data.terraform_remote_state.hub_tools.jenkins_security_group_id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
+}
+
+# allow incoming API from masters to ELB
+resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_from_{{.TFName}}" {
+  type                     = "ingress"
+  from_port                = 6443
+  to_port                  = 6443
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.{{.TFName}}.id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
+}
+
+# allow outgoing API from ELBs to masters
+resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_to_{{.TFName}}" {
   type                     = "egress"
   from_port                = 6443
   to_port                  = 6443
@@ -104,6 +131,7 @@ resource "aws_security_group_rule" "{{.TFName}}_allow_6443_egress_{{.TFName}}_el
   security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
 }
 
+# Always allow egress to all destinations
 resource "aws_security_group_rule" "{{.TFName}}_allow_egress" {
   type              = "egress"
   from_port         = 0
@@ -112,3 +140,4 @@ resource "aws_security_group_rule" "{{.TFName}}_allow_egress" {
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = "${aws_security_group.{{.TFName}}.id}"
 }
+{{ end }}

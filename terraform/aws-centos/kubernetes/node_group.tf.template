@@ -1,6 +1,9 @@
 {{range .Roles}}
 ## TODO: Role definitions for {{.TFName}}
 
+# Variables for {{.TFName}}
+{{template "role_variables.tf.template" .}}
+
 # Security Groups for {{.TFName}}
 {{template "role_security_group.tf.template" .}}
 

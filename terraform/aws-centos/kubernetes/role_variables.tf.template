@@ -1,0 +1,9 @@
+{{/* vim: set ft=tf: */}}
+{{if .ELBAPI}}
+{{end}}
+
+{{if .ELBIngress}}
+variable "ingress_elb_nodeport_http" {
+  default = 32080
+}}
+{{end}}
