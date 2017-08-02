@@ -89,7 +89,8 @@ var defaultRoles = map[string]*Role{
 		},
 		IAMEC2EBSFull:            true,
 		IAMEC2InstanceAttributes: true,
-		ASG: true,
+		ASG:    true,
+		ELBAPI: true,
 	},
 	"worker": &Role{
 		terraformBase: terraformBase{
@@ -97,7 +98,8 @@ var defaultRoles = map[string]*Role{
 			prefix: "kubernetes",
 		},
 		IAMEC2InstanceAttributes: true,
-		ASG: true,
+		ASG:        true,
+		ELBIngress: true,
 	},
 }
 

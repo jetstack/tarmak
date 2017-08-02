@@ -35,10 +35,6 @@ resource "aws_elb" "{{.TFName}}" {
 {{end}}
 
 {{if .ELBIngress}}
-variable "ingress_elb_nodeport_http" {
-  default = 32080
-}
-
 output "ingress_wildcard_fqdn" {
   value = "${aws_route53_record.ingress_wildcard.fqdn}"
 }
@@ -93,20 +89,6 @@ resource "aws_elb" "{{.TFName}}" {
     interval            = 10
   }
   tags {
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
-  }
-}
-{{end}}
-
-{{if .HasELB}}
-resource "aws_security_group" "{{.TFName}}_elb" {
-  name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
-  vpc_id = "${data.terraform_remote_state.network.vpc_id}"
-
-  tags {
-    Name        = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
