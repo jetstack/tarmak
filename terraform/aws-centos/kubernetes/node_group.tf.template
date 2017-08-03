@@ -19,4 +19,8 @@
 
 # Instance for {{.TFName}}
 {{template "node_group_instance.tf.template" .}}
+
+# IAM role for {{.TFName}}
+{{template "node_group_iam.tf.template" .}}
+
 {{end}}
