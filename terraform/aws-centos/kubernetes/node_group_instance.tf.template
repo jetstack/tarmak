@@ -1,6 +1,9 @@
 {{/* vim: set ft=tf: */}}
 
 data "template_file" "{{.TFName}}_user_data" {
+{{if not .Role.ASG}}
+  count    = "${var.{{.TFName}}_count}"
+{{end}}
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
   vars {
@@ -8,17 +11,23 @@ data "template_file" "{{.TFName}}_user_data" {
 
     puppet_tar_gz_bucket_path = "${data.terraform_remote_state.hub_state.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
 
-    vault_token = "${var.vault_init_token_{{.Role.Name}}}"
+    vault_token = "${var.vault_init_token_etcd}"
     vault_ca    = "${base64encode(data.terraform_remote_state.hub_vault.vault_ca)}"
     vault_url   = "${data.terraform_remote_state.hub_vault.vault_url}"
 
     tarmak_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
     tarmak_role          = "{{.Role.Name}}"
-    tarmak_hostname      = "{{.Role.Name}}"
     tarmak_cluster       = "${data.template_file.stack_name.rendered}"
     tarmak_environment   = "${var.environment}"
+{{if .Role.ASG}}
+    tarmak_hostname      = "{{.Role.Name}}"
     tarmak_desired_count = "${var.{{.TFName}}_count}"
     tarmak_volume_id     = ""
+{{else}}
+    tarmak_hostname      = "{{.Role.Name}}-${count.index+1}"
+    tarmak_desired_count = "${var.{{.TFName}}_count}"
+    tarmak_volume_id     = "${element(aws_ebs_volume.{{.TFName}}.*.id, count.index)}"
+{{end}}
   }
 }
 
@@ -35,7 +44,7 @@ resource "aws_launch_configuration" "{{.TFName}}" {
   iam_instance_profile = "${aws_iam_role.{{.TFName}}.name}"
 
   security_groups = [
-    "${aws_security_group.{{.TFName}}.id}",
+    "${aws_security_group.{{.Role.TFName}}.id}",
   ]
 
   root_block_device {
@@ -56,7 +65,7 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
   desired_capacity          = "${var.{{.TFName}}_count}"
   vpc_zone_identifier       = ["${data.terraform_remote_state.network.private_subnet_ids}"]
   launch_configuration      = "${aws_launch_configuration.{{.TFName}}.name}"
-  load_balancers            = ["${aws_elb.{{.TFName}}.name}"]
+  load_balancers            = ["${aws_elb.{{.Role.TFName}}.name}"]
 
   tag {
     key                 = "Name"
@@ -106,18 +115,18 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
 
 {{if not .Role.ASG}}
 resource "aws_instance" "etcd" {
-  depends_on           = ["aws_ebs_volume.etcd"]
+  depends_on           = ["aws_ebs_volume.{{.TFName}}"]
   count                = "${var.{{.TFName}}_count}"
   availability_zone    = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
   ami                  = "${lookup(var.centos_ami, var.region)}"
   instance_type        = "${var.{{.TFName}}_instance_type}"
   key_name             = "${var.key_name}"
   subnet_id            = "${element(data.terraform_remote_state.network.private_subnet_ids, count.index)}"
-  iam_instance_profile = "${aws_iam_role.etcd.name}"
+  iam_instance_profile = "${aws_iam_role.{{.TFName}}.name}"
   monitoring           = true
 
   vpc_security_group_ids = [
-    "${aws_security_group.etcd.id}",
+    "${aws_security_group.{{.TFName}}.id}",
   ]
 
   root_block_device {
@@ -136,42 +145,20 @@ resource "aws_instance" "etcd" {
     tarmak_role        = "etcd-${count.index+1}"
   }
 
-  user_data = "${element(data.template_file.etcd_user_data.*.rendered, count.index)}"
+  user_data = "${element(data.template_file.{{.TFName}}_user_data.*.rendered, count.index)}"
 
   lifecycle {
     ignore_changes = ["volume_tags"]
   }
 }
 
-data "template_file" "etcd_user_data" {
-  count    = "${var.{{.TFName}}_count}"
-  template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
-  vars {
-    region = "${var.region}"
-
-    puppet_tar_gz_bucket_path = "${data.terraform_remote_state.hub_state.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
-
-    vault_token = "${var.vault_init_token_etcd}"
-    vault_ca    = "${base64encode(data.terraform_remote_state.hub_vault.vault_ca)}"
-    vault_url   = "${data.terraform_remote_state.hub_vault.vault_url}"
-
-    tarmak_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
-    tarmak_role          = "etcd"
-    tarmak_hostname      = "etcd-${count.index+1}"
-    tarmak_cluster       = "${data.template_file.stack_name.rendered}"
-    tarmak_environment   = "${var.environment}"
-    tarmak_desired_count = "${var.{{.TFName}}_count}"
-    tarmak_volume_id     = "${element(aws_ebs_volume.etcd.*.id, count.index)}"
-  }
-}
-
-resource "aws_route53_record" "etcd" {
+resource "aws_route53_record" "{{.TFName}}" {
   zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
   name    = "etcd-${count.index+1}.${data.template_file.stack_name.rendered}"
   type    = "A"
   ttl     = "300"
-  records = ["${element(aws_instance.etcd.*.private_ip, count.index)}"]
+  records = ["${element(aws_instance.{{.TFName}}.*.private_ip, count.index)}"]
   count   = "${var.{{.TFName}}_count}"
 }
 
