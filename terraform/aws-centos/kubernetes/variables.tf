@@ -49,19 +49,6 @@ variable "vault_init_token_etcd" {
   default = ""
 }
 
-variable "puppet_runinterval" {
-  default = "10m"
-}
-
-# etcd
-variable "etcd_ebs_volume_size" {
-  default = 20
-}
-
-variable "kubernetes_worker_docker_volume_size" {
-  default = 50
-}
-
 variable "state_context_name" {
   default = "hub"
 }

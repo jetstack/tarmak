@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"text/template"
 
@@ -103,12 +104,45 @@ var defaultRoles = map[string]*Role{
 	},
 }
 
+// This represents an additional (EBS/GCPPD) volume
+
+type Volume struct {
+	Name   string
+	Size   int // Size in GB
+	aws    *VolumeAWS
+	device string
+}
+
+func (v *Volume) Device() string {
+	// TODO: Support multiple device names
+	return "/dev/sda"
+
+	if v.aws != nil {
+		return v.aws.Type
+	}
+	panic("no type specified")
+}
+
+func (v *Volume) Type() string {
+	if v.aws != nil {
+		return v.aws.Type
+	}
+	panic("no type specified")
+}
+
+type VolumeAWS struct {
+	Type string // gp2/st1
+	// TODO: io1 (*needs more arguments) but would be good for at least etcd data dir
+}
+
 // This represents a seperate node group
 type nodeGroup struct {
 	terraformBase
 
 	name string
 	role *Role
+
+	volumes []Volume
 
 	AWS *nodeGroupAWS
 }
@@ -118,6 +152,17 @@ type nodeGroupAWS struct {
 
 func (n *nodeGroup) Role() *Role {
 	return n.role
+}
+
+func (n *nodeGroup) Volumes() []Volume {
+	letters := "defghijklmnop"
+	if len(n.volumes) >= 10 {
+		panic("Max 10 volumes are currently supported")
+	}
+	for pos, _ := range n.volumes {
+		n.volumes[pos].device = fmt.Sprintf("/dev/sd%r", letters[pos])
+	}
+	return n.volumes
 }
 
 // This returns the unprefixed name
@@ -174,9 +219,27 @@ func renderTemplates() error {
 	nodeGroups := []nodeGroup{
 		nodeGroup{
 			role: defaultRoles["master"],
+			volumes: []Volume{
+				Volume{
+					Name: "docker",
+					Size: 20,
+					aws: &VolumeAWS{
+						Type: "gp2",
+					},
+				},
+			},
 		},
 		nodeGroup{
 			role: defaultRoles["worker"],
+			volumes: []Volume{
+				Volume{
+					Name: "docker",
+					Size: 50,
+					aws: &VolumeAWS{
+						Type: "gp2",
+					},
+				},
+			},
 		},
 		nodeGroup{
 			role: defaultRoles["worker"],
@@ -184,6 +247,15 @@ func renderTemplates() error {
 		},
 		nodeGroup{
 			role: defaultRoles["etcd"],
+			volumes: []Volume{
+				Volume{
+					Name: "data",
+					Size: 20,
+					aws: &VolumeAWS{
+						Type: "gp2",
+					},
+				},
+			},
 		},
 	}
 

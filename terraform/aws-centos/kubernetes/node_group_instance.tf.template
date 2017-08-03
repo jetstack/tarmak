@@ -1,4 +1,5 @@
 {{/* vim: set ft=tf: */}}
+{{ $nodeGroup := . }}
 
 data "template_file" "{{.TFName}}_user_data" {
 {{if not .Role.ASG}}
@@ -26,7 +27,9 @@ data "template_file" "{{.TFName}}_user_data" {
 {{else}}
     tarmak_hostname      = "{{.Role.Name}}-${count.index+1}"
     tarmak_desired_count = "${var.{{.TFName}}_count}"
-    tarmak_volume_id     = "${element(aws_ebs_volume.{{.TFName}}.*.id, count.index)}"
+{{ if gt (len .Volumes) 0 }}
+    tarmak_volume_id    = "${element(aws_ebs_volume.{{.TFName}}_{{(index .Volumes 0).Name}}.*.id, count.index)}"
+{{end}}
 {{end}}
   }
 }
@@ -48,9 +51,17 @@ resource "aws_launch_configuration" "{{.TFName}}" {
   ]
 
   root_block_device {
-    volume_type = "gp2"
+    volume_type = "${var.{{.TFName}}_root_volume_type}"
     volume_size = "${var.{{.TFName}}_root_volume_size}"
   }
+
+{{ range .Volumes }}
+  ebs_block_device {
+    device_name = "{{.Device}}"
+    volume_size = {{.Size}}
+    volume_type = "{{.Type}}"
+  }
+{{ end }}
 
   user_data = "${data.template_file.{{.TFName}}_user_data.rendered}"
 }
@@ -114,8 +125,12 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
 {{end}}
 
 {{if not .Role.ASG}}
-resource "aws_instance" "etcd" {
-  depends_on           = ["aws_ebs_volume.{{.TFName}}"]
+resource "aws_instance" "{{.TFName}}" {
+  depends_on           = [
+{{ range .Volumes }}
+    "aws_ebs_volume.{{$nodeGroup.TFName}}_{{.Name}}",
+{{ end }}
+  ]
   count                = "${var.{{.TFName}}_count}"
   availability_zone    = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
   ami                  = "${lookup(var.centos_ami, var.region)}"
@@ -151,6 +166,42 @@ resource "aws_instance" "etcd" {
     ignore_changes = ["volume_tags"]
   }
 }
+
+# This cloudwatch alarm sets up an autorecovery of the instance in case it fails the checks
+resource "aws_cloudwatch_metric_alarm" "autorecover_{{.TFName}}" {
+  count               = "${var.{{.TFName}}_count}"
+  alarm_name          = "${data.template_file.stack_name.rendered}-{{.TFName}}-autorecover-${count.index}"
+  namespace           = "AWS/EC2"
+  evaluation_periods  = "5"
+  period              = "60"
+  alarm_description   = "This metric auto recovers EC2 instances"
+  alarm_actions       = ["arn:aws:automate:${var.region}:ec2:recover"]
+  statistic           = "Minimum"
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = "1"
+  metric_name         = "StatusCheckFailed_System"
+
+  dimensions {
+    InstanceId = "${element(aws_instance.{{.TFName}}.*.id, count.index)}"
+  }
+}
+
+# This sets up persistent volumes per count
+{{ range .Volumes }}
+resource "aws_ebs_volume" "{{$nodeGroup.TFName}}_{{.Name}}" {
+  count             = "${var.{{$nodeGroup.TFName}}_count}"
+  availability_zone = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
+  size              = "${var.{{$nodeGroup.TFName}}_{{.Name}}_volume_size}"
+  type              = "${var.{{$nodeGroup.TFName}}_{{.Name}}_volume_type}"
+
+  tags {
+    Name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.TFName}}-{{.Name}}-${count.index+1}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+{{ end }}
 
 
 resource "aws_route53_record" "{{.TFName}}" {
