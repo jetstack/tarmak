@@ -242,10 +242,6 @@ func renderTemplates() error {
 			},
 		},
 		nodeGroup{
-			role: defaultRoles["worker"],
-			name: "workercheap",
-		},
-		nodeGroup{
 			role: defaultRoles["etcd"],
 			volumes: []Volume{
 				Volume{
@@ -258,6 +254,13 @@ func renderTemplates() error {
 			},
 		},
 	}
+
+	/**
+	nodeGroup{
+			role: defaultRoles["worker"],
+			name: "workercheap",
+	},
+	**/
 
 	if err := tpl.Execute(
 		f,
