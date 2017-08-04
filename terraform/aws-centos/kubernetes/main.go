@@ -115,7 +115,7 @@ type Volume struct {
 
 func (v *Volume) Device() string {
 	// TODO: Support multiple device names
-	return "/dev/sda"
+	return "/dev/sdd"
 
 	if v.aws != nil {
 		return v.aws.Type
