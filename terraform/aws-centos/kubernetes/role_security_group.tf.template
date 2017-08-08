@@ -33,6 +33,16 @@ resource "aws_security_group_rule" "{{.TFName}}_allow_ssh_from_bastion" {
   security_group_id        = "${aws_security_group.{{.TFName}}.id}"
 }
 
+# Always allow egress to all destinations
+resource "aws_security_group_rule" "{{.TFName}}_allow_egress" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = "${aws_security_group.{{.TFName}}.id}"
+}
+
 {{ if .HasELB }}
 # This is the security group for the ELB of the role
 resource "aws_security_group" "{{.TFName}}_elb" {
@@ -90,15 +100,6 @@ resource "aws_security_group_rule" "{{.TFName}}_allow_api_from_kubernetes_worker
   security_group_id        = "${aws_security_group.{{.TFName}}.id}"
 }
 
-# Always allow egress to all destinations
-resource "aws_security_group_rule" "{{.TFName}}_allow_egress" {
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.{{.TFName}}.id}"
-}
 
 {{ if .HasELB }}
 # allow incoming API from its ELBs to masters
