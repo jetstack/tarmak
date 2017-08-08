@@ -36,7 +36,7 @@ resource "aws_elb" "{{.TFName}}" {
 
 {{if .ELBIngress}}
 output "ingress_wildcard_fqdn" {
-  value = "${aws_route53_record.ingress_wildcard.fqdn}"
+  value = "${aws_route53_record.{{.TFName}}.fqdn}"
 }
 
 # TODO: Enable me again
@@ -63,7 +63,7 @@ resource "aws_elb" "{{.TFName}}" {
   idle_timeout = 600
 
   security_groups = [
-    "${aws_security_group.kubernetes_ingress_controller_elb.id}",
+    "${aws_security_group.{{.TFName}}_elb.id}",
   ]
 
   listener {
