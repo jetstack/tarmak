@@ -1,4 +1,5 @@
 {{/* vim: set ft=tf: */}}
+{{ $nodeGroup := . -}}
 
 resource "aws_iam_role" "{{.TFName}}" {
   name               = "kubernetes.${data.template_file.stack_name.rendered}.{{.TFName}}"
@@ -6,27 +7,84 @@ resource "aws_iam_role" "{{.TFName}}" {
   assume_role_policy = "${file("${path.module}/templates/role.json")}"
 }
 
-# TODO: test which policies should be attached
-
 resource "aws_iam_instance_profile" "{{.TFName}}" {
   name = "kubernetes.${data.template_file.stack_name.rendered}.{{.TFName}}"
   role = "${aws_iam_role.{{.TFName}}.name}"
 }
 
+{{ if .Role.IAMEC2Full -}}
 resource "aws_iam_role_policy_attachment" "{{.TFName}}_ec2_full" {
   role       = "${aws_iam_role.{{.TFName}}.name}"
   policy_arn = "${aws_iam_policy.ec2_full.arn}"
 }
 
+{{ end -}}
+{{ if .Role.IAMEC2Read -}}
 resource "aws_iam_role_policy_attachment" "{{.TFName}}_ec2_read" {
   role       = "${aws_iam_role.{{.TFName}}.name}"
   policy_arn = "${aws_iam_policy.ec2_read.arn}"
 }
 
+{{ end -}}
+{{ if .Role.IAMELBFull -}}
+resource "aws_iam_role_policy_attachment" "{{.TFName}}_elb_full" {
+  role       = "${aws_iam_role.{{.TFName}}.name}"
+  policy_arn = "${aws_iam_policy.elb_full.arn}"
+}
+{{ end -}}
+
+{{ if .Role.IAMEC2ModifyInstanceAttributes -}}
 resource "aws_iam_role_policy_attachment" "{{.TFName}}_ec2_modify_instance_attribute" {
   role       = "${aws_iam_role.{{.TFName}}.name}"
   policy_arn = "${aws_iam_policy.ec2_modify_instance_attribute.arn}"
 }
+{{ end }}
+
+{{ if not .Role.ASG -}}
+# Allow attachment/detachment of volumes
+{{ range .Volumes -}}
+
+resource "aws_iam_policy" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
+  count       = "${var.{{$nodeGroup.TFName}}_count}"
+  name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.DNSName}}-${count.index+1}"
+  description = "Allows etcd nodes to attach/detach EBS volumes"
+
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AttachVolume",
+        "ec2:DetachVolume"
+      ],
+      "Resource": [
+        "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:volume/${element(aws_ebs_volume.{{$nodeGroup.TFName}}_{{.Name}}.*.id, count.index)}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeVolumes"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
+  count      = "${var.{{$nodeGroup.TFName}}_count}"
+  role       = "${aws_iam_role.{{$nodeGroup.TFName}}.name}"
+  policy_arn = "${element(aws_iam_policy.{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}.*.arn, count.index)}"
+}
+{{ end -}}
+{{ end -}}
 
 resource "aws_iam_role_policy_attachment" "{{.TFName}}_ecr_read" {
   role       = "${aws_iam_role.{{.TFName}}.name}"

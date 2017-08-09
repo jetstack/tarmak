@@ -40,9 +40,11 @@ type Role struct {
 	// enable ELB ingress external
 	ELBIngress bool
 
-	IAMELBFull               bool
-	IAMEC2EBSFull            bool
-	IAMEC2InstanceAttributes bool
+	// IAM Permissions
+	IAMELBFull                     bool // Full access to ELB loadbalancer config
+	IAMEC2Full                     bool // Full access to all EC2 resources
+	IAMEC2Read                     bool // Read access to all EC2 resources
+	IAMEC2ModifyInstanceAttributes bool // Allow Instance to modify all instances parameters, TODO: This should be done on the masters
 }
 
 func (r *Role) Name() string {
@@ -92,17 +94,18 @@ var defaultRoles = map[string]*Role{
 			name:   "master",
 			prefix: "kubernetes",
 		},
-		IAMEC2EBSFull:            true,
-		IAMEC2InstanceAttributes: true,
-		ASG:    true,
-		ELBAPI: true,
+		IAMEC2Full: true,
+		IAMELBFull: true,
+		ASG:        true,
+		ELBAPI:     true,
 	},
 	"worker": &Role{
 		terraformBase: terraformBase{
 			name:   "worker",
 			prefix: "kubernetes",
 		},
-		IAMEC2InstanceAttributes: true,
+		IAMEC2Read:                     true,
+		IAMEC2ModifyInstanceAttributes: true,
 		ASG:        true,
 		ELBIngress: true,
 	},

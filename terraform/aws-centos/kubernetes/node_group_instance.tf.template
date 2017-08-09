@@ -1,10 +1,10 @@
-{{/* vim: set ft=tf: */}}
-{{ $nodeGroup := . }}
+{{/* vim: set ft=tf: */ -}}
+{{ $nodeGroup := . -}}
 
 data "template_file" "{{.TFName}}_user_data" {
-{{if not .Role.ASG}}
+{{ if not .Role.ASG -}}
   count    = "${var.{{.TFName}}_count}"
-{{end}}
+{{ end -}}
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
   vars {
