@@ -42,9 +42,9 @@ class kubernetes::apiserver(
     $_admission_control = $admission_control
   }
 
-  # Default to etcd2 for versions bigger than 1.5
+  # Default to etcd3 for versions bigger than 1.5
   if $storage_backend == undef and versioncmp($::kubernetes::version, '1.5.0') >= 0 {
-    $_storage_backend = 'etcd2'
+    $_storage_backend = 'etcd3'
   } else {
     $_storage_backend = $storage_backend
   }
