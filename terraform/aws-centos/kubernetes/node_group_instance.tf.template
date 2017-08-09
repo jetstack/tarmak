@@ -34,7 +34,7 @@ data "template_file" "{{.TFName}}_user_data" {
   }
 }
 
-{{if .Role.ASG}}
+{{if .Role.ASG -}}
 resource "aws_launch_configuration" "{{.TFName}}" {
   lifecycle {
     create_before_destroy = true
@@ -55,17 +55,16 @@ resource "aws_launch_configuration" "{{.TFName}}" {
     volume_size = "${var.{{.TFName}}_root_volume_size}"
   }
 
-{{ range .Volumes }}
+{{ range .Volumes -}}
   ebs_block_device {
     device_name = "{{.Device}}"
     volume_size = {{.Size}}
     volume_type = "{{.Type}}"
   }
-{{ end }}
+{{ end -}}
 
   user_data = "${data.template_file.{{.TFName}}_user_data.rendered}"
 }
-
 
 resource "aws_autoscaling_group" "{{.TFName}}" {
   name                      = "kubernetes-${data.template_file.stack_name.rendered}-{{.Role.Name}}"
@@ -122,9 +121,9 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
     propagate_at_launch = true
   }
 }
-{{end}}
+{{ end -}}
 
-{{if not .Role.ASG}}
+{{ if not .Role.ASG -}}
 resource "aws_instance" "{{.TFName}}" {
   depends_on = [
 {{ range .Volumes -}}
@@ -187,7 +186,7 @@ resource "aws_cloudwatch_metric_alarm" "autorecover_{{.TFName}}" {
 }
 
 # This sets up persistent volumes per count
-{{ range .Volumes }}
+{{ range .Volumes -}}
 resource "aws_ebs_volume" "{{$nodeGroup.TFName}}_{{.Name}}" {
   count             = "${var.{{$nodeGroup.TFName}}_count}"
   availability_zone = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
@@ -201,9 +200,8 @@ resource "aws_ebs_volume" "{{$nodeGroup.TFName}}_{{.Name}}" {
     Contact     = "${var.contact}"
   }
 }
-{{ end }}
 
-
+{{ end -}}
 resource "aws_route53_record" "{{.TFName}}" {
   zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
   name    = "etcd-${count.index+1}.${data.template_file.stack_name.rendered}"
@@ -213,4 +211,4 @@ resource "aws_route53_record" "{{.TFName}}" {
   count   = "${var.{{.TFName}}_count}"
 }
 
-{{end}}
+{{ end -}}

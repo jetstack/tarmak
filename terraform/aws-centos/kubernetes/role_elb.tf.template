@@ -1,9 +1,8 @@
 {{/* vim: set ft=tf: */}}
-{{if .ELBAPI}}
+{{ if .ELBAPI -}}
 resource "aws_elb" "{{.TFName}}" {
-  name         = "${data.template_file.stack_name.rendered}-{{.Name}}"
+  name         = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
   subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
-  idle_timeout = 3600
   internal     = true
 
   security_groups = [
@@ -26,15 +25,27 @@ resource "aws_elb" "{{.TFName}}" {
   }
 
   tags {
-    Name        = "${data.template_file.stack_name.rendered}-{{.Name}}"
+    Name        = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
   }
 }
-{{end}}
 
-{{if .ELBIngress}}
+resource "aws_route53_record" "{{.TFName}}_api" {
+  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
+  name    = "api.${data.template_file.stack_name.rendered}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.{{.TFName}}.dns_name}"
+    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    evaluate_target_health = true
+  }
+}
+
+{{ end -}}
+{{ if .ELBIngress -}}
 output "ingress_wildcard_fqdn" {
   value = "${aws_route53_record.{{.TFName}}.fqdn}"
 }
@@ -94,4 +105,5 @@ resource "aws_elb" "{{.TFName}}" {
     Contact     = "${var.contact}"
   }
 }
-{{end}}
+
+{{ end -}}
