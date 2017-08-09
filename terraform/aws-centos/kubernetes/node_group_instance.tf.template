@@ -20,17 +20,17 @@ data "template_file" "{{.TFName}}_user_data" {
     tarmak_role          = "{{.Role.Name}}"
     tarmak_cluster       = "${data.template_file.stack_name.rendered}"
     tarmak_environment   = "${var.environment}"
-{{if .Role.ASG}}
+{{ if .Role.ASG -}}
     tarmak_hostname      = "{{.Role.Name}}"
     tarmak_desired_count = "${var.{{.TFName}}_count}"
     tarmak_volume_id     = ""
-{{else}}
+{{ else -}}
     tarmak_hostname      = "{{.Role.Name}}-${count.index+1}"
     tarmak_desired_count = "${var.{{.TFName}}_count}"
-{{ if gt (len .Volumes) 0 }}
-    tarmak_volume_id    = "${element(aws_ebs_volume.{{.TFName}}_{{(index .Volumes 0).Name}}.*.id, count.index)}"
-{{end}}
-{{end}}
+{{if gt (len .Volumes) 0 -}}
+    tarmak_volume_id     = "${element(aws_ebs_volume.{{.TFName}}_{{(index .Volumes 0).Name}}.*.id, count.index)}"
+{{ end -}}
+{{ end -}}
   }
 }
 
@@ -126,10 +126,10 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
 
 {{if not .Role.ASG}}
 resource "aws_instance" "{{.TFName}}" {
-  depends_on           = [
-{{ range .Volumes }}
+  depends_on = [
+{{ range .Volumes -}}
     "aws_ebs_volume.{{$nodeGroup.TFName}}_{{.Name}}",
-{{ end }}
+{{ end -}}
   ]
   count                = "${var.{{.TFName}}_count}"
   availability_zone    = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
