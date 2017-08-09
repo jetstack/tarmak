@@ -44,9 +44,17 @@ resource "aws_iam_role_policy_attachment" "{{.TFName}}_ec2_modify_instance_attri
 # Allow attachment/detachment of volumes
 {{ range .Volumes -}}
 
+data "template_file" "iam_{{$nodeGroup.TFName}}_ebs_attach_{{.Name}}" {
+  template = "$${ebs_volume_arns}"
+
+  vars {
+    ebs_volume_arns = "${jsonencode(formatlist("arn:aws:ec2:%s:%s:%s", var.region, data.aws_caller_identity.current.account_id, concat(formatlist("volume/%s", aws_ebs_volume.{{$nodeGroup.TFName}}_{{.Name}}.*.id), list("instance/*"))))}"
+  }
+}
+
+
 resource "aws_iam_policy" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
-  count       = "${var.{{$nodeGroup.TFName}}_count}"
-  name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.DNSName}}-${count.index+1}"
+  name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.DNSName}}"
   description = "Allows etcd nodes to attach/detach EBS volumes"
 
   policy      = <<EOF
@@ -59,9 +67,7 @@ resource "aws_iam_policy" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
         "ec2:AttachVolume",
         "ec2:DetachVolume"
       ],
-      "Resource": [
-        "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:volume/${element(aws_ebs_volume.{{$nodeGroup.TFName}}_{{.Name}}.*.id, count.index)}"
-      ]
+      "Resource": ${data.template_file.iam_{{$nodeGroup.TFName}}_ebs_attach_{{.Name}}.rendered}
     },
     {
       "Effect": "Allow",
@@ -79,9 +85,8 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
-  count      = "${var.{{$nodeGroup.TFName}}_count}"
   role       = "${aws_iam_role.{{$nodeGroup.TFName}}.name}"
-  policy_arn = "${element(aws_iam_policy.{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}.*.arn, count.index)}"
+  policy_arn = "${aws_iam_policy.{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}.arn}"
 }
 {{ end -}}
 {{ end -}}

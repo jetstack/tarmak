@@ -195,7 +195,7 @@ resource "aws_ebs_volume" "{{$nodeGroup.TFName}}_{{.Name}}" {
   type              = "${var.{{$nodeGroup.TFName}}_{{.Name}}_volume_type}"
 
   tags {
-    Name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.TFName}}-{{.Name}}-${count.index+1}"
+    Name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.DNSName}}-{{.Name}}-${count.index+1}"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
