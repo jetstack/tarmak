@@ -58,17 +58,51 @@ resource "aws_security_group" "{{.TFName}}_elb" {
 } 
 {{ end }}
 
-{{/* Rules for master role */}}
-{{ if .HasMaster }}
-# All nodes of a role should be able to communicate with each other
-resource "aws_security_group_rule" "{{.TFName}}_allow_all_from_{{.TFName}}" {
+{{/* Rules for etcd roles */}}
+{{ if .HasEtcd }}
+# allow etcd connections to overlay etcd
+resource "aws_security_group_rule" "{{.TFName}}_allow_etcd_overlay_from_kubernetes_worker" {
   type                     = "ingress"
-  from_port                = 0
-  to_port                  = 0
-  protocol                 = "-1"
-  source_security_group_id = "${aws_security_group.{{.TFName}}.id}"
+  from_port                = 2359
+  to_port                  = 2359
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
   security_group_id        = "${aws_security_group.{{.TFName}}.id}"
 }
+
+resource "aws_security_group_rule" "{{.TFName}}_allow_etcd_overlay_from_kubernetes_master" {
+  type                     = "ingress"
+  from_port                = 2359
+  to_port                  = 2359
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.kubernetes_master.id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
+}
+
+# allow etcd connections to k8s etcd
+resource "aws_security_group_rule" "{{.TFName}}_allow_etcd_k8s_from_kubernetes_master" {
+  type                     = "ingress"
+  from_port                = 2379
+  to_port                  = 2379
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.kubernetes_master.id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
+}
+
+# allow etcd connections to k8s-events etcd
+resource "aws_security_group_rule" "{{.TFName}}_allow_etcd_k8sevents_from_kubernetes_master" {
+  type                     = "ingress"
+  from_port                = 2369
+  to_port                  = 2369
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.kubernetes_master.id}"
+  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
+}
+{{ end }}
+
+{{/* Rules for master roles */}}
+{{ if .HasMaster }}
+
 
 # allow incoming bgp from workers to masters
 resource "aws_security_group_rule" "{{.TFName}}_allow_bgp_from_kubernetes_worker" {

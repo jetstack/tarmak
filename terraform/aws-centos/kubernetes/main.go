@@ -61,6 +61,10 @@ func (r *Role) HasELB() bool {
 	return r.ELBIngress || r.ELBAPI
 }
 
+func (r *Role) HasEtcd() bool {
+	return (r.Name() == "etcd" || r.Name() == "etcd-master")
+}
+
 func (r *Role) HasMaster() bool {
 	return (r.Name() == "master" || r.Name() == "etcd-master")
 }
