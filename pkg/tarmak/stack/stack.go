@@ -9,6 +9,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type Stack struct {
@@ -24,6 +25,8 @@ type Stack struct {
 	verifyPostDestroy []func() error
 
 	output map[string]interface{}
+
+	roles map[string]*role.Role
 }
 
 func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.Stack, error) {
@@ -159,4 +162,13 @@ func (s *Stack) VerifyPostDestroy() error {
 
 func (s *Stack) Log() *logrus.Entry {
 	return s.log
+}
+
+func (s *Stack) Role(roleName string) *role.Role {
+	if s.roles != nil {
+		if role, ok := s.roles[roleName]; ok {
+			return role
+		}
+	}
+	return nil
 }
