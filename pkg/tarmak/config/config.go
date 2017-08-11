@@ -177,69 +177,7 @@ func DefaultConfigSingle() *Config {
 							},
 							Stack{
 								Kubernetes: &StackKubernetes{},
-								NodeGroups: []NodeGroup{
-									NodeGroup{
-										Count: 3,
-										Role:  "etcd",
-										AWS: &NodeGroupAWS{
-											InstanceType: "m4.large",
-											SpotPrice:    0.15,
-										},
-										Volumes: []Volume{
-											Volume{
-												AWS:  &VolumeAWS{Type: "gp2"},
-												Name: "data",
-												Size: 5,
-											},
-										},
-									},
-									NodeGroup{
-										Count: 1,
-										Role:  "master",
-										AWS: &NodeGroupAWS{
-											InstanceType: "m4.large",
-											SpotPrice:    0.15,
-										},
-										Volumes: []Volume{
-											Volume{
-												AWS:  &VolumeAWS{Type: "gp2"},
-												Name: "docker",
-												Size: 10,
-											},
-										},
-									},
-									NodeGroup{
-										Count: 3,
-										Role:  "worker",
-										AWS: &NodeGroupAWS{
-											InstanceType: "m4.large",
-											SpotPrice:    0.15,
-										},
-										Volumes: []Volume{
-											Volume{
-												AWS:  &VolumeAWS{Type: "gp2"},
-												Name: "docker",
-												Size: 50,
-											},
-										},
-									},
-									NodeGroup{
-										Count: 1,
-										Role:  "worker",
-										Name:  "workert2",
-										AWS: &NodeGroupAWS{
-											InstanceType: "t2.large",
-											SpotPrice:    0.15,
-										},
-										Volumes: []Volume{
-											Volume{
-												AWS:  &VolumeAWS{Type: "gp2"},
-												Name: "docker",
-												Size: 50,
-											},
-										},
-									},
-								},
+								NodeGroups: DefaultKubernetesNodeGroupAWSOneMasterThreeEtcdThreeWorker(),
 							},
 						},
 					},
@@ -299,72 +237,76 @@ func DefaultConfigHub() *Config {
 							},
 							Stack{
 								Kubernetes: &StackKubernetes{},
-								NodeGroups: []NodeGroup{
-									NodeGroup{
-										Count: 3,
-										Role:  "etcd",
-										AWS: &NodeGroupAWS{
-											InstanceType: "m4.large",
-											SpotPrice:    0.15,
-										},
-										Volumes: []Volume{
-											Volume{
-												AWS:  &VolumeAWS{Type: "gp2"},
-												Name: "data",
-												Size: 5,
-											},
-										},
-									},
-									NodeGroup{
-										Count: 1,
-										Role:  "master",
-										AWS: &NodeGroupAWS{
-											InstanceType: "m4.large",
-											SpotPrice:    0.15,
-										},
-										Volumes: []Volume{
-											Volume{
-												AWS:  &VolumeAWS{Type: "gp2"},
-												Name: "docker",
-												Size: 10,
-											},
-										},
-									},
-									NodeGroup{
-										Count: 3,
-										Role:  "worker",
-										AWS: &NodeGroupAWS{
-											InstanceType: "m4.large",
-											SpotPrice:    0.15,
-										},
-										Volumes: []Volume{
-											Volume{
-												AWS:  &VolumeAWS{Type: "gp2"},
-												Name: "docker",
-												Size: 50,
-											},
-										},
-									},
-									NodeGroup{
-										Count: 1,
-										Role:  "worker",
-										Name:  "workert2",
-										AWS: &NodeGroupAWS{
-											InstanceType: "t2.large",
-											SpotPrice:    0.15,
-										},
-										Volumes: []Volume{
-											Volume{
-												AWS:  &VolumeAWS{Type: "gp2"},
-												Name: "docker",
-												Size: 50,
-											},
-										},
-									},
-								},
+								NodeGroups: DefaultKubernetesNodeGroupAWSOneMasterThreeEtcdThreeWorker(),
 							},
 						},
 					},
+				},
+			},
+		},
+	}
+}
+
+func DefaultKubernetesNodeGroupAWSOneMasterThreeEtcdThreeWorker() []NodeGroup {
+	return []NodeGroup{
+		NodeGroup{
+			Count: 3,
+			Role:  "etcd",
+			AWS: &NodeGroupAWS{
+				InstanceType: "m4.large",
+				SpotPrice:    0.15,
+			},
+			Volumes: []Volume{
+				Volume{
+					AWS:  &VolumeAWS{Type: "gp2"},
+					Name: "data",
+					Size: 5,
+				},
+			},
+		},
+		NodeGroup{
+			Count: 1,
+			Role:  "master",
+			AWS: &NodeGroupAWS{
+				InstanceType: "m4.large",
+				SpotPrice:    0.15,
+			},
+			Volumes: []Volume{
+				Volume{
+					AWS:  &VolumeAWS{Type: "gp2"},
+					Name: "docker",
+					Size: 10,
+				},
+			},
+		},
+		NodeGroup{
+			Count: 3,
+			Role:  "worker",
+			AWS: &NodeGroupAWS{
+				InstanceType: "m4.large",
+				SpotPrice:    0.15,
+			},
+			Volumes: []Volume{
+				Volume{
+					AWS:  &VolumeAWS{Type: "gp2"},
+					Name: "docker",
+					Size: 50,
+				},
+			},
+		},
+		NodeGroup{
+			Count: 1,
+			Role:  "worker",
+			Name:  "workert2",
+			AWS: &NodeGroupAWS{
+				InstanceType: "t2.large",
+				SpotPrice:    0.15,
+			},
+			Volumes: []Volume{
+				Volume{
+					AWS:  &VolumeAWS{Type: "gp2"},
+					Name: "docker",
+					Size: 50,
 				},
 			},
 		},

@@ -1,6 +1,8 @@
 package node_group
 
 import (
+	"fmt"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 
@@ -28,6 +30,11 @@ func NewFromConfig(stack interfaces.Stack, conf *config.NodeGroup) (*NodeGroup, 
 		log:   stack.Log().WithField("nodeGroup", conf.Name),
 	}
 
+	nodeGroup.role = stack.Role(conf.Role)
+	if nodeGroup.role == nil {
+		return nil, fmt.Errorf("role '%s' is not valid for this stack", conf.Role)
+	}
+
 	var result error
 
 	for pos, _ := range conf.Volumes {
@@ -43,12 +50,12 @@ func NewFromConfig(stack interfaces.Stack, conf *config.NodeGroup) (*NodeGroup, 
 }
 
 func (n *NodeGroup) Role() *role.Role {
-	return nil
+	return n.role
 }
 
 func (n *NodeGroup) Name() string {
 	if n.conf.Name == "" {
-		return n.Name()
+		return n.Role().Name()
 	}
 	return n.conf.Name
 }
@@ -68,4 +75,22 @@ func (n *NodeGroup) Volumes() (volumes []interfaces.Volume) {
 		volumes = append(volumes, volume)
 	}
 	return volumes
+}
+
+func (n *NodeGroup) Count() int {
+	return n.conf.Count
+}
+
+func (n *NodeGroup) AWSInstanceType() string {
+	if n.conf.AWS != nil {
+		return n.conf.AWS.InstanceType
+	}
+	return ""
+}
+
+func (n *NodeGroup) AWSSpotPrice() string {
+	if n.conf.AWS != nil && n.conf.AWS.SpotPrice > 0 {
+		return fmt.Sprintf("%f", n.conf.AWS.SpotPrice)
+	}
+	return ""
 }

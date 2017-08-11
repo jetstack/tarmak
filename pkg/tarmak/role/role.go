@@ -52,3 +52,23 @@ func (r *Role) TFName() string {
 func (r *Role) DNSName() string {
 	return r.Prefix("-") + r.Name()
 }
+
+func (r *Role) HasELB() bool {
+	return r.AWS.ELBIngress || r.AWS.ELBAPI
+}
+
+func (r *Role) HasEtcd() bool {
+	return (r.Name() == "etcd" || r.Name() == "etcd-master")
+}
+
+func (r *Role) HasMaster() bool {
+	return (r.Name() == "master" || r.Name() == "etcd-master")
+}
+
+func (r *Role) ELBIngressExternalName() string {
+	return r.Name() + "-ingress"
+}
+
+func (r *Role) ELBAPIName() string {
+	return r.Name() + "-api"
+}

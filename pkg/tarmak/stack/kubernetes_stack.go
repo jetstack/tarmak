@@ -38,6 +38,7 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 		Stateful: false,
 		AWS: &role.RoleAWS{
 			ELBIngress:                     true,
+			IAMEC2Read:                     true,
 			IAMEC2ModifyInstanceAttributes: true,
 		},
 	}
@@ -57,7 +58,7 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 			IAMELBFull: true,
 		},
 	}
-	masterEtcdRole.WithName("master-etcd").WithPrefix("kubernetes")
+	masterEtcdRole.WithName("etcd-master").WithPrefix("kubernetes")
 
 	s.roles = map[string]*role.Role{
 		"master":      masterRole,
@@ -67,9 +68,6 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 		"master-etcd": masterEtcdRole,
 	}
 
-	s.roles = map[string]*role.Role{
-		"master": masterRole,
-	}
 	s.name = config.StackNameKubernetes
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensurePuppetTarGz)

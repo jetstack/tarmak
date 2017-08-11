@@ -225,6 +225,7 @@ func (i *Init) Run() error {
 					},
 					config.Stack{
 						Kubernetes: &config.StackKubernetes{},
+						NodeGroups: config.DefaultKubernetesNodeGroupAWSOneMasterThreeEtcdThreeWorker(),
 					},
 				},
 			},

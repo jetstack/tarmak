@@ -22,10 +22,14 @@ func NewVolumeFromConfig(pos int, conf *config.Volume) (*Volume, error) {
 
 	if conf.AWS != nil && pos < 10 {
 		letters := "defghijklmnop"
-		volume.device = fmt.Sprintf("/dev/sd%r", letters[pos])
+		volume.device = fmt.Sprintf("/dev/sd%c", letters[pos])
 	}
 
 	return volume, nil
+}
+
+func (v *Volume) Device() string {
+	return v.device
 }
 
 func (v *Volume) Name() string {

@@ -73,6 +73,8 @@ type Stack interface {
 	SetOutput(map[string]interface{})
 	Output() map[string]interface{}
 	Role(string) *role.Role
+	Roles() []*role.Role
+	NodeGroups() []NodeGroup
 }
 
 type Tarmak interface {
@@ -141,4 +143,5 @@ type Volume interface {
 	Name() string
 	Size() int
 	Type() string
+	Device() string
 }

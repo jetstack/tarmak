@@ -1,10 +1,10 @@
 {{/* vim: set ft=tf: */}}
 variable "{{.TFName}}_instance_type" {
-  default = "c4.large"
+  default = "{{.AWSInstanceType}}"
 }
 
 variable "{{.TFName}}_count" {
-  default = 3
+  default = {{.Count}}
 }
 
 variable "{{.TFName}}_root_volume_size" {
@@ -16,7 +16,7 @@ variable "{{.TFName}}_root_volume_type" {
 }
 
 variable "{{.TFName}}_spot_price" {
-  default = ""
+  default = "{{.AWSSpotPrice}}"
 }
 
 {{ $nodeGroup := . }}

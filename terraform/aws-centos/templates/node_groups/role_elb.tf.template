@@ -1,5 +1,5 @@
 {{/* vim: set ft=tf: */}}
-{{ if .ELBAPI -}}
+{{ if .AWS.ELBAPI -}}
 resource "aws_elb" "{{.TFName}}" {
   name         = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
   subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
@@ -45,7 +45,7 @@ resource "aws_route53_record" "{{.TFName}}_api" {
 }
 
 {{ end -}}
-{{ if .ELBIngress -}}
+{{ if .AWS.ELBIngress -}}
 output "ingress_wildcard_fqdn" {
   value = "${aws_route53_record.{{.TFName}}.fqdn}"
 }
