@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/template"
 
+	"github.com/Masterminds/sprig"
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/archive"
 
@@ -282,6 +284,39 @@ func (tc *TerraformContainer) prepare() error {
 		return err
 	}
 	tc.log.Debug("copied terraform manifests into container")
+
+	// if node groups exist, execute template
+	nodeGroups := tc.stack.NodeGroups()
+	if len(nodeGroups) > 0 {
+		tc.log.Debug("generating node groups templates")
+		templatesGlob := filepath.Clean(filepath.Join(rootPath, "terraform/aws-centos/templates/node_groups/*.tf.template"))
+		templates := template.Must(template.New("node_groups").Funcs(sprig.TxtFuncMap()).ParseGlob(templatesGlob))
+
+		baseTemplate := "node_group.tf.template"
+		tpl := templates.Lookup(baseTemplate)
+
+		buf := new(bytes.Buffer)
+
+		if err := tpl.Execute(
+			buf,
+			map[string]interface{}{
+				"NodeGroups": nodeGroups,
+				"Roles":      tc.stack.Roles(),
+			},
+		); err != nil {
+			return err
+		}
+
+		templateTfTar, err := tarmakDocker.TarStreamFromFile("node_groups.tf", buf.String())
+		if err != nil {
+			return err
+		}
+
+		err = tc.UploadToContainer(templateTfTar, "/terraform")
+		if err != nil {
+			return err
+		}
+	}
 
 	err = tc.Start()
 	if err != nil {

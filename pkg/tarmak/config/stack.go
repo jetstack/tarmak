@@ -10,6 +10,8 @@ type Stack struct {
 	Kubernetes *StackKubernetes `yaml:"kubernetes,omitempty"`
 	Custom     *StackCustom     `yaml:"custom,omitempty"`
 	context    *Context
+
+	NodeGroups []NodeGroup `yaml:"nodeGroups,omitempty"`
 }
 
 type StackTools struct {
@@ -30,17 +32,6 @@ type StackState struct {
 }
 
 type StackKubernetes struct {
-	EtcdCount     int     `yaml:"etcdCount,omitempty"`
-	EtcdType      string  `yaml:"etcdType,omitempty"`
-	EtcdSpotPrice float32 `yaml:"etcdSpotPrice,omitempty"`
-
-	WorkerCount     int     `yaml:"workerCount,omitempty"`
-	WorkerType      string  `yaml:"workerType,omitempty"`
-	WorkerSpotPrice float32 `yaml:"workerSpotPrice,omitempty"`
-
-	MasterCount     int     `yaml:"masterCount,omitempty"`
-	MasterType      string  `yaml:"masterType,omitempty"`
-	MasterSpotPrice float32 `yaml:"masterSpotPrice,omitempty"`
 }
 
 type StackCustom struct {

@@ -7,6 +7,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack-experimental/vault-unsealer/pkg/kv"
+	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type Context interface {
@@ -71,6 +72,9 @@ type Stack interface {
 	VerifyPostDestroy() error
 	SetOutput(map[string]interface{})
 	Output() map[string]interface{}
+	Role(string) *role.Role
+	Roles() []*role.Role
+	NodeGroups() []NodeGroup
 }
 
 type Tarmak interface {
@@ -127,4 +131,17 @@ type Puppet interface {
 }
 
 type Kubectl interface {
+}
+
+type NodeGroup interface {
+	Name() string
+	Role() *role.Role
+	Volumes() []Volume
+}
+
+type Volume interface {
+	Name() string
+	Size() int
+	Type() string
+	Device() string
 }

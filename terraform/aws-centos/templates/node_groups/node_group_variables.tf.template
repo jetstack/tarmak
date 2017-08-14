@@ -1,0 +1,30 @@
+{{/* vim: set ft=tf: */}}
+variable "{{.TFName}}_instance_type" {
+  default = "{{.AWSInstanceType}}"
+}
+
+variable "{{.TFName}}_count" {
+  default = {{.Count}}
+}
+
+variable "{{.TFName}}_root_volume_size" {
+  default = 32
+}
+
+variable "{{.TFName}}_root_volume_type" {
+  default = "gp2"
+}
+
+variable "{{.TFName}}_spot_price" {
+  default = "{{.AWSSpotPrice}}"
+}
+
+{{ $nodeGroup := . }}
+{{ range .Volumes }}
+variable "{{$nodeGroup.TFName}}_{{.Name}}_volume_size" {
+  default = {{.Size}}
+}
+variable "{{$nodeGroup.TFName}}_{{.Name}}_volume_type" {
+  default = "{{.Type}}"
+}
+{{ end }}

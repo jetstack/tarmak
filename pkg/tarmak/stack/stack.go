@@ -9,6 +9,8 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
+	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type Stack struct {
@@ -24,6 +26,10 @@ type Stack struct {
 	verifyPostDestroy []func() error
 
 	output map[string]interface{}
+
+	roles map[string]*role.Role
+
+	nodeGroups []interfaces.NodeGroup
 }
 
 func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.Stack, error) {
@@ -85,7 +91,18 @@ func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.S
 		return nil, fmt.Errorf("more than one stack given: %+v", stacks)
 	}
 
-	return stacks[0], nil
+	// initialiase node groups
+	var result error
+	for pos, _ := range conf.NodeGroups {
+		nodeGroup, err := node_group.NewFromConfig(stacks[0], &conf.NodeGroups[pos])
+		if err != nil {
+			result = multierror.Append(result, err)
+			continue
+		}
+		s.nodeGroups = append(s.nodeGroups, nodeGroup)
+	}
+
+	return stacks[0], result
 
 }
 
@@ -159,4 +176,29 @@ func (s *Stack) VerifyPostDestroy() error {
 
 func (s *Stack) Log() *logrus.Entry {
 	return s.log
+}
+
+func (s *Stack) Role(roleName string) *role.Role {
+	if s.roles != nil {
+		if role, ok := s.roles[roleName]; ok {
+			return role
+		}
+	}
+	return nil
+}
+
+func (s *Stack) Roles() (roles []*role.Role) {
+	roleMap := map[string]bool{}
+	for _, nodeGroup := range s.NodeGroups() {
+		r := nodeGroup.Role()
+		if _, ok := roleMap[r.Name()]; !ok {
+			roles = append(roles, r)
+			roleMap[r.Name()] = true
+		}
+	}
+	return roles
+}
+
+func (s *Stack) NodeGroups() (nodeGroups []interfaces.NodeGroup) {
+	return s.nodeGroups
 }

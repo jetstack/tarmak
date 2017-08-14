@@ -1,0 +1,216 @@
+{{/* vim: set ft=tf: */ -}}
+{{ $nodeGroup := . -}}
+
+data "template_file" "{{.TFName}}_user_data" {
+{{ if .Role.Stateful -}}
+  count    = "${var.{{.TFName}}_count}"
+{{ end -}}
+  template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
+
+  vars {
+    region = "${var.region}"
+
+    puppet_tar_gz_bucket_path = "${data.terraform_remote_state.hub_state.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+
+    vault_token = "${var.vault_init_token_{{.Role.Name}}}"
+    vault_ca    = "${base64encode(data.terraform_remote_state.hub_vault.vault_ca)}"
+    vault_url   = "${data.terraform_remote_state.hub_vault.vault_url}"
+
+    tarmak_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
+    tarmak_role          = "{{.Role.Name}}"
+    tarmak_cluster       = "${data.template_file.stack_name.rendered}"
+    tarmak_environment   = "${var.environment}"
+{{ if not .Role.Stateful -}}
+    tarmak_hostname      = "{{.Role.Name}}"
+    tarmak_desired_count = "${var.{{.TFName}}_count}"
+    tarmak_volume_id     = ""
+{{ else -}}
+    tarmak_hostname      = "{{.Role.Name}}-${count.index+1}"
+    tarmak_desired_count = "${var.{{.TFName}}_count}"
+{{if gt (len .Volumes) 0 -}}
+    tarmak_volume_id     = "${element(aws_ebs_volume.{{.TFName}}_{{(index .Volumes 0).Name}}.*.id, count.index)}"
+{{ end -}}
+{{ end -}}
+  }
+}
+
+{{if not .Role.Stateful -}}
+resource "aws_launch_configuration" "{{.TFName}}" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  spot_price = "${var.{{.TFName}}_spot_price}"
+
+  image_id             = "${lookup(var.centos_ami, var.region)}"
+  instance_type        = "${var.{{.TFName}}_instance_type}"
+  name_prefix          = "${data.template_file.stack_name.rendered}-{{.DNSName}}-"
+  key_name             = "${var.key_name}"
+  iam_instance_profile = "${aws_iam_role.{{.TFName}}.name}"
+
+  security_groups = [
+    "${aws_security_group.{{.Role.TFName}}.id}",
+  ]
+
+  root_block_device {
+    volume_type = "${var.{{.TFName}}_root_volume_type}"
+    volume_size = "${var.{{.TFName}}_root_volume_size}"
+  }
+
+{{ range .Volumes -}}
+  ebs_block_device {
+    device_name = "{{.Device}}"
+    volume_size = {{.Size}}
+    volume_type = "{{.Type}}"
+  }
+{{ end -}}
+
+  user_data = "${data.template_file.{{.TFName}}_user_data.rendered}"
+}
+
+resource "aws_autoscaling_group" "{{.TFName}}" {
+  name                      = "${data.template_file.stack_name.rendered}-{{.DNSName}}"
+  max_size                  = "${var.{{.TFName}}_count}"
+  min_size                  = "${var.{{.TFName}}_count}"
+  health_check_grace_period = 600
+  health_check_type         = "EC2"
+  desired_capacity          = "${var.{{.TFName}}_count}"
+  vpc_zone_identifier       = ["${data.terraform_remote_state.network.private_subnet_ids}"]
+  launch_configuration      = "${aws_launch_configuration.{{.TFName}}.name}"
+  load_balancers            = ["${aws_elb.{{.Role.TFName}}.name}"]
+
+  tag {
+    key                 = "Name"
+    value               = "${data.template_file.stack_name.rendered}-{{.DNSName}}"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Environment"
+    value               = "${var.environment}"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Project"
+    value               = "${var.project}"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Contact"
+    value               = "${var.contact}"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Role"
+    value               = "{{.Role.Name}}"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "tarmak_role"
+    value               = "{{.Role.Name}}"
+    propagate_at_launch = true
+  }
+
+
+  # Required for AWS cloud provider
+  tag {
+    key                 = "KubernetesCluster"
+    value               = "${data.template_file.stack_name.rendered}"
+    propagate_at_launch = true
+  }
+}
+{{ end -}}
+
+{{ if .Role.Stateful -}}
+resource "aws_instance" "{{.TFName}}" {
+  depends_on = [
+{{ range .Volumes -}}
+    "aws_ebs_volume.{{$nodeGroup.TFName}}_{{.Name}}",
+{{ end -}}
+  ]
+  count                = "${var.{{.TFName}}_count}"
+  availability_zone    = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
+  ami                  = "${lookup(var.centos_ami, var.region)}"
+  instance_type        = "${var.{{.TFName}}_instance_type}"
+  key_name             = "${var.key_name}"
+  subnet_id            = "${element(data.terraform_remote_state.network.private_subnet_ids, count.index)}"
+  iam_instance_profile = "${aws_iam_role.{{.TFName}}.name}"
+  monitoring           = true
+
+  vpc_security_group_ids = [
+    "${aws_security_group.{{.TFName}}.id}",
+  ]
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = "${var.{{.TFName}}_root_volume_size}"
+  }
+
+  tags {
+    Name               = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
+    Environment        = "${var.environment}"
+    Project            = "${var.project}"
+    Contact            = "${var.contact}"
+    Etcd_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
+    Role               = "etcd"
+    KubernetesCluster  = "${data.template_file.stack_name.rendered}"
+    tarmak_role        = "etcd-${count.index+1}"
+  }
+
+  user_data = "${element(data.template_file.{{.TFName}}_user_data.*.rendered, count.index)}"
+
+  lifecycle {
+    ignore_changes = ["volume_tags"]
+  }
+}
+
+# This cloudwatch alarm sets up an autorecovery of the instance in case it fails the checks
+resource "aws_cloudwatch_metric_alarm" "autorecover_{{.TFName}}" {
+  count               = "${var.{{.TFName}}_count}"
+  alarm_name          = "${data.template_file.stack_name.rendered}-{{.TFName}}-autorecover-${count.index}"
+  namespace           = "AWS/EC2"
+  evaluation_periods  = "5"
+  period              = "60"
+  alarm_description   = "This metric auto recovers EC2 instances"
+  alarm_actions       = ["arn:aws:automate:${var.region}:ec2:recover"]
+  statistic           = "Minimum"
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = "1"
+  metric_name         = "StatusCheckFailed_System"
+
+  dimensions {
+    InstanceId = "${element(aws_instance.{{.TFName}}.*.id, count.index)}"
+  }
+}
+
+# This sets up persistent volumes per count
+{{ range .Volumes -}}
+resource "aws_ebs_volume" "{{$nodeGroup.TFName}}_{{.Name}}" {
+  count             = "${var.{{$nodeGroup.TFName}}_count}"
+  availability_zone = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
+  size              = "${var.{{$nodeGroup.TFName}}_{{.Name}}_volume_size}"
+  type              = "${var.{{$nodeGroup.TFName}}_{{.Name}}_volume_type}"
+
+  tags {
+    Name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.DNSName}}-{{.Name}}-${count.index+1}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+
+{{ end -}}
+resource "aws_route53_record" "{{.TFName}}" {
+  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
+  name    = "etcd-${count.index+1}.${data.template_file.stack_name.rendered}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${element(aws_instance.{{.TFName}}.*.private_ip, count.index)}"]
+  count   = "${var.{{.TFName}}_count}"
+}
+
+{{ end -}}

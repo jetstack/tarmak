@@ -9,6 +9,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type KubernetesStack struct {
@@ -21,6 +22,50 @@ var _ interfaces.Stack = &KubernetesStack{}
 func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStack, error) {
 	k := &KubernetesStack{
 		Stack: s,
+	}
+
+	masterRole := &role.Role{
+		Stateful: false,
+		AWS: &role.RoleAWS{
+			ELBAPI:     true,
+			IAMEC2Full: true,
+			IAMELBFull: true,
+		},
+	}
+	masterRole.WithName("master").WithPrefix("kubernetes")
+
+	workerRole := &role.Role{
+		Stateful: false,
+		AWS: &role.RoleAWS{
+			ELBIngress:                     true,
+			IAMEC2Read:                     true,
+			IAMEC2ModifyInstanceAttributes: true,
+		},
+	}
+	workerRole.WithName("worker").WithPrefix("kubernetes")
+
+	etcdRole := &role.Role{
+		Stateful: true,
+		AWS:      &role.RoleAWS{},
+	}
+	etcdRole.WithName("etcd").WithPrefix("kubernetes")
+
+	masterEtcdRole := &role.Role{
+		Stateful: false,
+		AWS: &role.RoleAWS{
+			ELBAPI:     true,
+			IAMEC2Full: true,
+			IAMELBFull: true,
+		},
+	}
+	masterEtcdRole.WithName("etcd-master").WithPrefix("kubernetes")
+
+	s.roles = map[string]*role.Role{
+		"master":      masterRole,
+		"worker":      workerRole,
+		"etcd":        etcdRole,
+		"etcd-master": masterEtcdRole,
+		"master-etcd": masterEtcdRole,
 	}
 
 	s.name = config.StackNameKubernetes

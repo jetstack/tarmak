@@ -1,0 +1,109 @@
+{{/* vim: set ft=tf: */}}
+{{ if .AWS.ELBAPI -}}
+resource "aws_elb" "{{.TFName}}" {
+  name         = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
+  subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
+  internal     = true
+
+  security_groups = [
+    "${aws_security_group.{{.TFName}}_elb.id}",
+  ]
+
+  listener {
+    instance_port     = 6443
+    instance_protocol = "tcp"
+    lb_port           = 6443
+    lb_protocol       = "tcp"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "TCP:6443"
+    interval            = 30
+  }
+
+  tags {
+    Name        = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+
+resource "aws_route53_record" "{{.TFName}}_api" {
+  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
+  name    = "api.${data.template_file.stack_name.rendered}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.{{.TFName}}.dns_name}"
+    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    evaluate_target_health = true
+  }
+}
+
+{{ end -}}
+{{ if .AWS.ELBIngress -}}
+output "ingress_wildcard_fqdn" {
+  value = "${aws_route53_record.{{.TFName}}.fqdn}"
+}
+
+# TODO: Enable me again
+#data "aws_acm_certificate" "wildcard" {
+#  domain   = "*.${var.name}.${data.terraform_remote_state.hub_state.public_zone}"
+#  statuses = ["ISSUED"]
+#}
+
+resource "aws_route53_record" "{{.TFName}}" {
+  zone_id = "${data.terraform_remote_state.hub_state.public_zone_id}"
+  name    = "*.${var.name}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.{{.TFName}}.dns_name}"
+    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_elb" "{{.TFName}}" {
+  name         = "${format("%.20s-ingress", data.template_file.stack_name.rendered)}"
+  subnets      = ["${data.terraform_remote_state.network.public_subnet_ids}"]
+  idle_timeout = 600
+
+  security_groups = [
+    "${aws_security_group.{{.TFName}}_elb.id}",
+  ]
+
+  listener {
+    instance_port     = "${var.ingress_elb_nodeport_http}"
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  #listener {
+  #  instance_port      = "${var.ingress_elb_nodeport_http}"
+  #  instance_protocol  = "http"
+  #  lb_port            = 443
+  #  lb_protocol        = "https"
+  #  ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
+  #}
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
+    timeout             = 3
+    target              = "TCP:${var.ingress_elb_nodeport_http}"
+    interval            = 10
+  }
+  tags {
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+
+{{ end -}}
