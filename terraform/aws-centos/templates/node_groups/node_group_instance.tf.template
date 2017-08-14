@@ -40,6 +40,8 @@ resource "aws_launch_configuration" "{{.TFName}}" {
     create_before_destroy = true
   }
 
+  spot_price = "${var.{{.TFName}}_spot_price}"
+
   image_id             = "${lookup(var.centos_ami, var.region)}"
   instance_type        = "${var.{{.TFName}}_instance_type}"
   name_prefix          = "${data.template_file.stack_name.rendered}-{{.DNSName}}-"
