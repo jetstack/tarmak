@@ -95,7 +95,7 @@ describe 'kubernetes::apiserver' do
         class{'kubernetes': version => '1.5.0'}
         """
       ]}
-      it { should contain_file(service_file).with_content(/#{Regexp.escape('--storage-backend=etcd2')}/)}
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--storage-backend=etcd3')}/)}
     end
   end
 
