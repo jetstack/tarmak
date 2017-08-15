@@ -1,106 +1,152 @@
 package tarmak
 
 import (
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +genclient=true
-// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +resource:path=contexts
+
+type Config struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+
+	CurrentContext string
+	Environments   []Environment
+
+	Contact string
+	Project string
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ConfigList struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+
+	Items []Config
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Environment struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+
+	AWS *AWSConfig
+	GCP *GCPConfig
+
+	Contact string
+	Project string
+
+	SSHKeyPath string
+
+	Contexts []Context
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AWSConfig struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+
+	VaultPath         string
+	AllowedAccountIDs []string
+	AvailabiltyZones  []string
+	Region            string
+	KeyName           string
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type GCPConfig struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+
+	Zones   []string
+	Region  string
+	Project string
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type Context struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
 
-	Spec   ContextSpec
-	Status ContextStatus
+	Stacks []Stack
+
+	Contact string
+	Project string
+
+	BaseImage string
+}
+
+type Stack struct {
+	metav1.TypeMeta
+
+	State      *StackState
+	Network    *StackNetwork
+	Tools      *StackTools
+	Vault      *StackVault
+	Kubernetes *StackKubernetes
+	Custom     *StackCustom
+
+	NodeGroups []NodeGroup
+}
+
+type StackTools struct {
+}
+
+type StackNetwork struct {
+	PeerContext string
+	NetworkCIDR string
+	PrivateZone string
+}
+
+type StackVault struct {
+}
+
+type StackState struct {
+	BucketPrefix string
+	PublicZone   string
+}
+
+type StackKubernetes struct {
+}
+
+type StackCustom struct {
+	Name string
+	Path string
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// ContextList is a list of Contexts
-type ContextList struct {
-	metav1.TypeMeta
-	metav1.ListMeta
-
-	BaseParams
-
-	Items []Context
-}
-
-type ContextSpec struct {
-	NodeGroups []NodeGroup
-	Version    string
-}
-
-type ContextStatus struct {
-	Fine    bool
-	Version string
-}
 
 type NodeGroup struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
 
-	RootDiskSize resource.Quantity
+	Role string
 
-	NodeGroupDisk []NodeGroupDisk
-
-	Role string // vault/etcd/master/worker/all
-}
-
-type NodeGroupDisk struct {
-	Name     string
-	DiskSize resource.Quantity
-}
-
-// this represents single instances
-type NodeGroupTypeOrderedInstances struct {
 	Count int
-}
 
-type NodeGroupTypeScalingGroup struct {
-	MinCount     int
-	MaxCount     int
-	DesiredCount int // 0 == do not change set count
+	Volumes []Volume
+
+	AWS *NodeGroupAWS
 }
 
 type NodeGroupAWS struct {
-	AdditionalIAMPolicy string
-	SpotPrice           float64
-	InstanceType        string
+	InstanceType string
+	SpotPrice    float64
 }
 
-// +genclient=true
-// +k8s:openapi-gen=true
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +resource:path=environments
+type Volume struct {
+	Name string
+	Size int
 
-// Environment is at exactly one provider and region and could contain multiple (cluster-) contexts
-type Environment struct {
-	metav1.TypeMeta
-	metav1.ObjectMeta
-
-	BaseParams
-
-	Spec   ContextSpec
-	Status ContextStatus
+	AWS *VolumeAWS
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// EnvironmentList is a list of Environments
-type EnvironmentList struct {
-	metav1.TypeMeta
-	metav1.ListMeta
-
-	Items []Environment
-}
-
-type BaseParams struct {
-	Contact        string
-	Project        string
-	TrustedIPRange []string
+type VolumeAWS struct {
+	Type string
+	// TODO: io1 (*needs more arguments) but would be good for at least etcd data dir
 }

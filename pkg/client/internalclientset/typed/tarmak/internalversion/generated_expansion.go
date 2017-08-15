@@ -15,7 +15,3 @@ limitations under the License.
 */
 
 package internalversion
-
-type ContextExpansion interface{}
-
-type EnvironmentExpansion interface{}

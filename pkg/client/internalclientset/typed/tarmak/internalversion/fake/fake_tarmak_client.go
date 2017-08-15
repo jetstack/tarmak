@@ -18,25 +18,4 @@ package fake
 
 import (
 	internalversion "github.com/jetstack/tarmak/pkg/client/internalclientset/typed/tarmak/internalversion"
-	rest "k8s.io/client-go/rest"
-	testing "k8s.io/client-go/testing"
 )
-
-type FakeTarmak struct {
-	*testing.Fake
-}
-
-func (c *FakeTarmak) Contexts(namespace string) internalversion.ContextInterface {
-	return &FakeContexts{c, namespace}
-}
-
-func (c *FakeTarmak) Environments(namespace string) internalversion.EnvironmentInterface {
-	return &FakeEnvironments{c, namespace}
-}
-
-// RESTClient returns a RESTClient that is used to communicate
-// with API server by this client implementation.
-func (c *FakeTarmak) RESTClient() rest.Interface {
-	var ret *rest.RESTClient
-	return ret
-}

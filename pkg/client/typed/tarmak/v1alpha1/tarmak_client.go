@@ -25,8 +25,7 @@ import (
 
 type TarmakV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	ContextsGetter
-	EnvironmentsGetter
+	ConfigsGetter
 }
 
 // TarmakV1alpha1Client is used to interact with features provided by the tarmak group.
@@ -34,12 +33,8 @@ type TarmakV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *TarmakV1alpha1Client) Contexts(namespace string) ContextInterface {
-	return newContexts(c, namespace)
-}
-
-func (c *TarmakV1alpha1Client) Environments(namespace string) EnvironmentInterface {
-	return newEnvironments(c, namespace)
+func (c *TarmakV1alpha1Client) Configs(namespace string) ConfigInterface {
+	return newConfigs(c, namespace)
 }
 
 // NewForConfig creates a new TarmakV1alpha1Client for the given config.

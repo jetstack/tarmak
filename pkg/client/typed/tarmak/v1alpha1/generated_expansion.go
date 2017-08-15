@@ -16,6 +16,4 @@ limitations under the License.
 
 package v1alpha1
 
-type ContextExpansion interface{}
-
-type EnvironmentExpansion interface{}
+type ConfigExpansion interface{}

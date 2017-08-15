@@ -21,6 +21,7 @@ package externalversions
 import (
 	client "github.com/jetstack/tarmak/pkg/client"
 	internalinterfaces "github.com/jetstack/tarmak/pkg/informers/externalversions/internalinterfaces"
+	tarmak "github.com/jetstack/tarmak/pkg/informers/externalversions/tarmak"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -108,4 +109,10 @@ type SharedInformerFactory interface {
 	internalinterfaces.SharedInformerFactory
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
+
+	Tarmak() tarmak.Interface
+}
+
+func (f *sharedInformerFactory) Tarmak() tarmak.Interface {
+	return tarmak.New(f)
 }

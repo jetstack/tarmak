@@ -20,8 +20,6 @@ package internalversion
 
 import (
 	"fmt"
-	tarmak "github.com/jetstack/tarmak/pkg/apis/tarmak"
-	v1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -52,18 +50,6 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=Tarmak, Version=InternalVersion
-	case tarmak.SchemeGroupVersion.WithResource("contexts"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Tarmak().InternalVersion().Contexts().Informer()}, nil
-	case tarmak.SchemeGroupVersion.WithResource("environments"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Tarmak().InternalVersion().Environments().Informer()}, nil
-
-		// Group=V1alpha1, Version=InternalVersion
-	case v1alpha1.SchemeGroupVersion.WithResource("contexts"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.V1alpha1().InternalVersion().Contexts().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("environments"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.V1alpha1().InternalVersion().Environments().Informer()}, nil
-
 	}
 
 	return nil, fmt.Errorf("no informer found for %v", resource)

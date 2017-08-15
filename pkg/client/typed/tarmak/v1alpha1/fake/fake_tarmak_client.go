@@ -26,12 +26,8 @@ type FakeTarmakV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeTarmakV1alpha1) Contexts(namespace string) v1alpha1.ContextInterface {
-	return &FakeContexts{c, namespace}
-}
-
-func (c *FakeTarmakV1alpha1) Environments(namespace string) v1alpha1.EnvironmentInterface {
-	return &FakeEnvironments{c, namespace}
+func (c *FakeTarmakV1alpha1) Configs(namespace string) v1alpha1.ConfigInterface {
+	return &FakeConfigs{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
