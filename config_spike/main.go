@@ -1,21 +1,97 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"reflect"
 
-	"github.com/ghodss/yaml"
 	"k8s.io/apimachinery/pkg/runtime"
-	yamlUtil "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
+	"github.com/jetstack/tarmak/pkg/apis/tarmak"
 	"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	//"github.com/jetstack/tarmak/pkg/client"
-	"github.com/jetstack/tarmak/pkg/client/scheme"
 )
 
+type Config struct {
+	scheme *runtime.Scheme
+	codecs serializer.CodecFactory
+}
+
+func NewConfig() (*Config, error) {
+	c := &Config{}
+
+	c.scheme = runtime.NewScheme()
+	c.codecs = serializer.NewCodecFactory(c.scheme)
+
+	if err := tarmak.AddToScheme(c.scheme); err != nil {
+		return nil, err
+	}
+
+	if err := v1alpha1.AddToScheme(c.scheme); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+
+}
+
+func (c *Config) WriteYAML(conf *v1alpha1.Config) error {
+	var encoder runtime.Encoder
+	mediaTypes := c.codecs.SupportedMediaTypes()
+	for _, info := range mediaTypes {
+		if info.MediaType == "application/yaml" {
+			encoder = info.Serializer
+			break
+		}
+	}
+	if encoder == nil {
+		return errors.New("unable to locate yaml encoder")
+	}
+	encoder = json.NewYAMLSerializer(json.DefaultMetaFactory, c.scheme, c.scheme)
+	encoder = c.codecs.EncoderForVersion(encoder, v1alpha1.SchemeGroupVersion)
+
+	configTo := "test.yaml"
+	configFile, err := os.Create(configTo)
+	if err != nil {
+		return err
+	}
+	defer configFile.Close()
+
+	if err := encoder.Encode(conf, configFile); err != nil {
+		return err
+	}
+
+	fmt.Printf("Wrote configuration to: %s\n", configTo)
+
+	return nil
+}
+
+func (c *Config) ReadFile(configPath string) (*v1alpha1.Config, error) {
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	configObj, gvk, err := c.codecs.UniversalDecoder(v1alpha1.SchemeGroupVersion).Decode(data, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	config, ok := configObj.(*v1alpha1.Config)
+	if !ok {
+		return nil, fmt.Errorf("got unexpected config type: %v", gvk)
+	}
+
+	return config, nil
+
+}
+
+/*
 func convert(obj runtime.Object) (runtime.Object, error) {
+
 	data, err := runtime.Encode(scheme.Codecs.LegacyCodec(v1alpha1.SchemeGroupVersion), obj)
 	if err != nil {
 		return nil, fmt.Errorf("%v\n %#v", err, obj)
@@ -31,33 +107,22 @@ func convert(obj runtime.Object) (runtime.Object, error) {
 	}
 	return obj3, nil
 }
+*/
 
 func main() {
-	configPath := "/home/christian/.tarmak/tarmak.yaml"
-
-	file, err := os.Open(configPath)
+	c, err := NewConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error init config: ", err)
 	}
 
-	decoder := yamlUtil.NewYAMLOrJSONDecoder(file, 1024*1024)
-
-	conf := v1alpha1.Config{}
-
-	err = decoder.Decode(&conf)
+	//conf := &v1alpha1.Config{}
+	conf, err := c.ReadFile("/home/christian/.tarmak/tarmak.yaml")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error reading config: ", err)
 	}
 
-	confObjNew, err := convert(runtime.Object(&conf))
+	err = c.WriteYAML(conf)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error writing config: ", err)
 	}
-	confNew := confObjNew.(*v1alpha1.Config)
-
-	output, err := yaml.Marshal(*confNew)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("config:\n%s\n", string(output))
 }
