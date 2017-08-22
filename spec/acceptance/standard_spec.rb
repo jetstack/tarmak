@@ -39,7 +39,7 @@ EOS
     end
 
     it 'runs token-renew without error' do
-      result = shell('/etc/vault/helper token-renew')
+      result = shell('/etc/vault/vault-helper token-renew')
       expect(result.exit_code).to eq(0)
     end
 
