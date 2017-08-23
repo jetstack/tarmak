@@ -9,6 +9,6 @@ Environment=VAULT_DEV_ROOT_TOKEN_ID=root-token
 Environment=VAULT_TOKEN=root-token
 Environment=CLUSTER_ID=test
 Environment=VAULT_HELPER_VERSION=0.8
-ExecStart=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-helper dev-server test
+ExecStart=/bin/bash /opt/bin/vault-helper dev-server test
 RestartSec=5
 Restart=on-failure
