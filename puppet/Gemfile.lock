@@ -331,6 +331,8 @@ GEM
       rspec-support (~> 3.6.0)
     rspec-puppet (2.5.0)
       rspec
+    rspec-retry (0.5.5)
+      rspec-core (> 3.3, < 3.7)
     rspec-support (3.6.0)
     rsync (1.0.9)
     rubocop (0.49.1)
@@ -390,6 +392,7 @@ DEPENDENCIES
   puppet_readme_generator
   puppetlabs_spec_helper (>= 1.0.0)
   rspec-puppet
+  rspec-retry
   rubocop
   vagrant-wrapper
 

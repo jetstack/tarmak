@@ -50,10 +50,23 @@ test::puppet_module::prometheus:
   variables:
     MODULE_NAME: prometheus
 
+##tarmak
 test::puppet_module::tarmak:
   <<: *test_puppet_module
   variables:
     MODULE_NAME: tarmak
+acceptance::puppet_module::tarmak::centos-7-k8s-1.7:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+    KUBERNETES_VERSION: 1.7.4
+    BEAKER_TARGET: default
+acceptance::puppet_module::tarmak::centos-7-k8s-1.6:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+    KUBERNETES_VERSION: 1.6.8
+    BEAKER_TARGET: default
 
 ##vault_client
 test::puppet_module::vault_client:
