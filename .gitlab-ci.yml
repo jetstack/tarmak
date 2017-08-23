@@ -8,6 +8,17 @@
   - cd ${CI_PROJECT_DIR}/puppet/modules/${MODULE_NAME}
   - bundle exec rake test
 
+.acceptance::puppet_module: &acceptance_puppet_module
+  stage: acceptance
+  tags:
+  - ruby-2.3
+  - vagrant
+  when: manual
+  script:
+  - cd ${CI_PROJECT_DIR}/puppet/modules/${MODULE_NAME}
+  - bundle install
+  - bundle exec rake beaker:${BEAKER_TARGET}
+
 # run test for puppet modules
 test::puppet_module::aws_ebs:
   <<: *test_puppet_module
@@ -44,10 +55,21 @@ test::puppet_module::tarmak:
   variables:
     MODULE_NAME: tarmak
 
+##vault_client
 test::puppet_module::vault_client:
   <<: *test_puppet_module
   variables:
     MODULE_NAME: vault_client
+acceptance::puppet_module::vault_client::centos:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: vault_client
+    BEAKER_TARGET: default
+acceptance::puppet_module::vault_client::ubuntu:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: vault_client
+    BEAKER_TARGET: ubuntu_1604_single_node
 
 # run test on golang code
 #
@@ -85,4 +107,5 @@ release::tarmak::golang:
 
 stages:
 - test
+- acceptance
 - release
