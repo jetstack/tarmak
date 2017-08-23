@@ -5,7 +5,7 @@ After=network.target network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/vault-helper renew-token <%= @ec2_tag_cluster %>
+ExecStart=/opt/bin/vault-helper renew-token <%= @ec2_tag_cluster %>
 
 [Install]
 WantedBy=multi-user.target

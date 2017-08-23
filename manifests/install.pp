@@ -21,6 +21,12 @@ class vault_client::install {
         owner  => 'root',
         group  => 'root',
     }
+    -> file { '/opt/bin':
+        ensure => 'directory',
+        mode   => '0755',
+        owner  => 'root',
+        group  => 'root',
+    }
     -> file { $vault_helper_bin:
         ensure => 'link',
         mode   => '0755',
