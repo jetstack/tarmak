@@ -2,7 +2,9 @@
 Description=vault dev server for acceptance tests
 
 [Service]
+Enviroment=DOWNLOAD_URL=https://github.com/jetstack-experimental/vault-helper/releases/download
 Environment=VAULT_CMD=/tmp/vault-helper
+Environment=VAULT_HELPER_VERSION=0.8
 ExecStart=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-helper dev-server test
 RestartSec=5
 Restart=on-failure

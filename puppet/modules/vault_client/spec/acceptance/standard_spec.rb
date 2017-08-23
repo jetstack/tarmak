@@ -21,7 +21,7 @@ describe '::vault_client' do
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
+  version => '0.8',
   token => 'root-token'
 }
 EOS
@@ -33,13 +33,13 @@ EOS
       expect(apply_manifest(pp, :catch_failures => true).exit_code).to be_zero
     end
 
-    it 'runs the correct version of vault' do
+    it 'runs the correct version of vault-helper' do
       show_result = shell('vault version')
       expect(show_result.stdout).to match(/Vault v0\.7\.2/)
     end
 
     it 'runs token-renew without error' do
-      result = shell('/etc/vault/vault-helper token-renew')
+      result = shell('/opt/vault-helper token-renew')
       expect(result.exit_code).to eq(0)
     end
 

@@ -37,7 +37,7 @@ class{'vault_client':
     it do
       should contain_service(service_name)
       should contain_file(service_file).with_content(/Environment=VAULT_CERT_OWNER=user1:group1/)
-      should contain_file(service_file).with_content(%r{/etc/vault/vault-helper read /my/secret1 -f field1 -d /tmp/dest_path1})
+      should contain_file(service_file).with_content(%r{/opt/vault-helper read /my/secret1 -f field1 -d /tmp/dest_path1})
     end
   end
 end
