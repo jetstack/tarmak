@@ -16,7 +16,7 @@ Environment=VAULT_CERT_ALT_NAMES=<%= @alt_names.join(',') %>
 <% if @ip_sans.length > 0 -%>
 Environment=VAULT_CERT_IP_SANS=<%= @ip_sans.join(',') %>
 <% end -%>
-ExecStart=/opt/vault-helper cert <%= @role %> <%= @common_name %> <%= @base_path %>
+ExecStart=/opt/bin/vault-helper cert <%= @role %> <%= @common_name %> <%= @base_path %>
 <% @exec_post.each do |val| -%>
 ExecStartPost=<%= val %>
 <% end -%>
