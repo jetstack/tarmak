@@ -5,7 +5,10 @@ After=network.target network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/bin/vault-helper renew-token <%= @ec2_tag_cluster %>
+Environment=VAULT_ADDR=http://127.0.0.1:8200
+Environment=VAULT_DEV_ROOT_TOKEN_ID=root-token
+Environment=VAULT_TOKEN=root-token
+ExecStart=/opt/bin/vault-helper renew-token test --role=admin
 
 [Install]
 WantedBy=multi-user.target

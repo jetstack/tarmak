@@ -3,8 +3,11 @@ Description=vault dev server for acceptance tests
 
 [Service]
 Enviroment=DOWNLOAD_URL=https://github.com/jetstack-experimental/vault-helper/releases/download
-Environment=VAULT_CMD=/tmp/vault-helper
+Environment=VAULT_CMD=/opt/bin/vault-helper
 Environment=VAULT_HELPER_VERSION=0.8
-ExecStart=/bin/bash /opt/bin/vault-helper dev-server test
+Environment=VAULT_ADDR=http://127.0.0.1:8200
+Environment=VAULT_DEV_ROOT_TOKEN_ID=root-token
+Environment=VAULT_TOKEN=root-token
+ExecStart=/opt/bin/vault-helper dev-server test
 RestartSec=5
 Restart=on-failure
