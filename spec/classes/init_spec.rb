@@ -60,11 +60,11 @@ describe 'vault_client' do
     context 'with custom version 0.8' do
         let(:params) { {:version => '0.8', :token => 'ab'} }
 
-        #it do
-        #    is_expected.to contain_archive('/opt/bin/vault-helper').with(
-        #        'source' => 'https://github.com/jetstack-experimental/vault-helper/releases/download/0.8/vault-helper_0.8_linux_amd64'
-        #    )
-        #end
+        it do
+            is_expected.to contain_file('/opt/bin/vault-helper').with(
+                'target' => '/opt/vault-helper-0.8/vault-helper'
+            )
+        end
 
         it do
             is_expected.to contain_file('/opt/bin/vault-helper').with(
