@@ -46,7 +46,7 @@ EOS
     it 'requests a client cert from test-ca' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
+  version => '0.8',
   token => 'root-token'
 }
 
@@ -68,7 +68,7 @@ EOS
     it 'requests new cert for a changed common_name' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
+  version => '0.8',
   token => 'root-token'
 }
 
@@ -89,7 +89,7 @@ EOS
     it 'requests new cert for a added IP/DNS SANs' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
+  version => '0.8',
   token => 'root-token'
 }
 
@@ -119,7 +119,7 @@ EOS
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
+  version => '0.8',
   init_token => 'init-token-client',
   init_role => 'test-ca-client',
   init_policies => ['default', 'test-ca-client'],
