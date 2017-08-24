@@ -8,7 +8,10 @@ Environment=VAULT_ADDR=http://127.0.0.1:8200
 Environment=VAULT_DEV_ROOT_TOKEN_ID=root-token
 Environment=VAULT_TOKEN=root-token
 Environment=CLUSTER_ID=test
+Environment=VAULT_ADDR=http://127.0.0.1:8200
+Environment=VAULT_DEV_ROOT_TOKEN_ID=root-token
+Environment=VAULT_TOKEN=root-token
 Environment=VAULT_HELPER_VERSION=0.8
-ExecStart=/bin/bash /opt/bin/vault-helper dev-server test
+ExecStart=/opt/bin/vault-helper dev-server test
 RestartSec=5
 Restart=on-failure

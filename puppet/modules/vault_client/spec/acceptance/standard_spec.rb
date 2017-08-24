@@ -38,8 +38,8 @@ EOS
       expect(show_result.stdout).to match(/vault-helper 0\.8\.2/)
     end
 
-    it 'runs token-renew without error' do
-      result = shell('/opt/bin/vault-helper token-renew')
+    it 'runs renew-token without error' do
+      result = shell('/opt/bin/vault-helper renew-token test --role=admin')
       expect(result.exit_code).to eq(0)
     end
 
