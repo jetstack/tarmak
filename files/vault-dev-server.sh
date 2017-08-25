@@ -16,10 +16,7 @@ if [ ! -x /bin/vault  ]; then
     rm -f /tmp/vault-dev.zip
 fi
 
-if [ ! -x /bin/jq  ]; then
-    curl -sL https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -o /bin/jq
-    chmod +x /bin/jq
-fi
+printf "init-token-client" > /etc/vault/init-token
 
 
-vault server -dev -dev-root-token-id="init-token-client"
+exec /opt/bin/vault-helper dev-server test --init-token-etcd=init-token-etcd --init-token-master=init-token-master --init-token-worker=init-token-worker --init-token-all=init-token-client
