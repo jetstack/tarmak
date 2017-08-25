@@ -53,7 +53,7 @@ class {'vault_client':
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client',
   base_path    => '/tmp/test-cert-client',
-  role         => 'master'
+  role         => 'master',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -134,14 +134,8 @@ EOS
     end
 
     it 'renews tokens without error' do
-      renewal_before = shell('/etc/vault/helper exec token-lookup -format=json | jq .data.last_renewal_time')
-      expect(renewal_before.exit_code).to eq(0)
-
       result = shell('systemctl start vault-token-renewal.service')
       expect(result.exit_code).to eq(0)
-
-      renewal_after = shell('/etc/vault/helper exec token-lookup -format=json | jq .data.last_renewal_time')
-      expect(renewal_after.exit_code).to eq(0)
 
       expect(renewal_after.stdout.to_i).to be > renewal_before.stdout.to_i
     end

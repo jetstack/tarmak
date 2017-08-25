@@ -44,10 +44,4 @@ class vault_client::config {
     ensure  => file,
     content => template('vault_client/config.erb'),
   }
-
-  file { $::vault_client::helper_path:
-    ensure  => file,
-    mode    => '0755',
-    content => template('vault_client/helper.erb'),
-  }
 }

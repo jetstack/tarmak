@@ -20,7 +20,6 @@ Environment=VAULT_CERT_ALT_NAMES=<%= @alt_names.join(',') %>
 <% if @ip_sans.length > 0 -%>
 Environment=VAULT_CERT_IP_SANS=<%= @ip_sans.join(',') %>
 <% end -%>
-ExecStartPre=/opt/bin/vault-helper setup $VAULT_CLUSTER_ID
 ExecStart=/opt/bin/vault-helper cert test/pki/k8s/sign/<%= @role %> <%= @common_name %> <%= @base_path %> --owner=0 --group=0
 <% @exec_post.each do |val| -%>
 ExecStartPost=<%= val %>
