@@ -30,10 +30,21 @@ test::puppet_module::calico:
   variables:
     MODULE_NAME: calico
 
+##etcd
 test::puppet_module::etcd:
   <<: *test_puppet_module
   variables:
     MODULE_NAME: etcd
+acceptance::puppet_module::etcd::single-node:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: etcd
+    BEAKER_TARGET: default
+acceptance::puppet_module::etcd::three-node:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: etcd
+    BEAKER_TARGET: 3n-cluster
 
 test::puppet_module::kubernetes:
   <<: *test_puppet_module
