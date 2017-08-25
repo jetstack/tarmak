@@ -10,7 +10,7 @@ Environment=VAULT_DEV_ROOT_TOKEN_ID=init-token-client
 Environment=VAULT_TOKEN=init-token-client
 Environment=VAULT_CLUSTER_ID=test
 ExecStartPre=/opt/bin/vault-helper setup $VAULT_CLUSTER_ID
-ExecStart=/opt/bin/vault-helper renew-token $VAULT_CLUSTER_ID --role=<%= @role %>
+ExecStart=/opt/bin/vault-helper renew-token $VAULT_CLUSTER_ID --role=master
 
 [Install]
 WantedBy=multi-user.target

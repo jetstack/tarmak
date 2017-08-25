@@ -134,8 +134,8 @@ EOS
     end
 
     it 'renews tokens without error' do
-      #renewal_before = shell('/etc/vault/helper exec token-lookup -format=json | jq .data.last_renewal_time')
-      #expect(renewal_before.exit_code).to eq(0)
+      renewal_before = shell('/etc/vault/helper exec token-lookup -format=json | jq .data.last_renewal_time')
+      expect(renewal_before.exit_code).to eq(0)
 
       result = shell('systemctl start vault-token-renewal.service')
       expect(result.exit_code).to eq(0)
