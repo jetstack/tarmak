@@ -6,9 +6,11 @@ After=network.target network-online.target
 [Service]
 Type=oneshot
 Environment=VAULT_ADDR=http://127.0.0.1:8200
-Environment=VAULT_DEV_ROOT_TOKEN_ID=root-token
-Environment=VAULT_TOKEN=root-token
-ExecStart=/opt/bin/vault-helper renew-token test --role=admin
+Environment=VAULT_DEV_ROOT_TOKEN_ID=init-token-client
+Environment=VAULT_TOKEN=init-token-client
+Environment=VAULT_CLUSTER_ID=test
+ExecStartPre=/opt/bin/vault-helper setup $VAULT_CLUSTER_ID
+ExecStart=/opt/bin/vault-helper renew-token $VAULT_CLUSTER_ID --role=<%= @role %>
 
 [Install]
 WantedBy=multi-user.target
