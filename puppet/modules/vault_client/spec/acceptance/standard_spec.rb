@@ -22,7 +22,7 @@ describe '::vault_client' do
       pp = <<-EOS
 class {'vault_client':
   version => '0.8',
-  token => 'root-token'
+  token => 'init-token-client'
 }
 EOS
       # cleanup existing config
@@ -47,13 +47,13 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '0.8',
-  token => 'root-token'
+  token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client',
   base_path    => '/tmp/test-cert-client',
-  role         => 'test-ca/sign/client'
+  role         => 'master'
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -69,13 +69,13 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '0.8',
-  token => 'root-token'
+  token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
-  role         => 'test-ca/sign/client'
+  role         => 'master'
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -90,13 +90,13 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '0.8',
-  token => 'root-token'
+  token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
-  role         => 'test-ca/sign/client',
+  role         => 'master',
   ip_sans      => ['8.8.4.4','8.8.8.8'],
   alt_names    => ['public-dns-4.google','public-dns-8.google'],
 }
@@ -121,7 +121,7 @@ EOS
 class {'vault_client':
   version => '0.8',
   init_token => 'init-token-client',
-  init_role => 'test-ca-client',
+  init_role => 'master',
   init_policies => ['default', 'test-ca-client'],
 }
 EOS
