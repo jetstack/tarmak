@@ -78,12 +78,34 @@ acceptance::puppet_module::tarmak::centos-7-k8s-1.7:
     MODULE_NAME: tarmak
     KUBERNETES_VERSION: 1.7.4
     BEAKER_TARGET: default
-acceptance::puppet_module::tarmak::centos-7-k8s-1.6:
+acceptance::puppet_module::tarmak::centos-7-k8s-1.6-rbac:
   <<: *acceptance_puppet_module
   variables:
     MODULE_NAME: tarmak
     KUBERNETES_VERSION: 1.6.8
     BEAKER_TARGET: default
+    KUBERNETES_AUTHORIZATION_MODE: "['RBAC']"
+acceptance::puppet_module::tarmak::centos-7-k8s-1.5-rbac:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+    KUBERNETES_VERSION: 1.5.6
+    BEAKER_TARGET: default
+    KUBERNETES_AUTHORIZATION_MODE: "['RBAC']"
+acceptance::puppet_module::tarmak::centos-7-k8s-1.6-no-rbac:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+    KUBERNETES_VERSION: 1.6.8
+    BEAKER_TARGET: default
+    KUBERNETES_AUTHORIZATION_MODE: "['ABAC']"
+acceptance::puppet_module::tarmak::centos-7-k8s-1.5-no-rbac:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+    KUBERNETES_VERSION: 1.5.6
+    BEAKER_TARGET: default
+    KUBERNETES_AUTHORIZATION_MODE: "['ABAC']"
 
 ##vault_client
 test::puppet_module::vault_client:
