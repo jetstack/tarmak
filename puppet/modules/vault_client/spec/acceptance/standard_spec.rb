@@ -21,12 +21,13 @@ describe '::vault_client' do
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8',
+  version => '0.8.1',
   token => 'init-token-client'
 }
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
+      shell('echo "init-token-client" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
@@ -46,14 +47,14 @@ EOS
     it 'requests a client cert from test-ca' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8',
+  version => '0.8.1',
   token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
-  common_name  => 'test-client',
+  common_name  => 'k8s',
   base_path    => '/tmp/test-cert-client',
-  role         => 'master',
+  role         => 'test/pki/k8s/sign/kube-apiserver',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -68,14 +69,14 @@ EOS
     it 'requests new cert for a changed common_name' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8',
+  version => '0.8.1',
   token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
-  common_name  => 'test-client-aa',
+  common_name  => 'k8s',
   base_path    => '/tmp/test-cert-client',
-  role         => 'master'
+  role         => 'test/pki/k8s/sign/kube-apiserver',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -89,14 +90,14 @@ EOS
     it 'requests new cert for a added IP/DNS SANs' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8',
+  version => '0.8.1',
   token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
-  common_name  => 'test-client-aa',
+  common_name  => 'k8s',
   base_path    => '/tmp/test-cert-client',
-  role         => 'master',
+  role         => 'test/pki/k8s/sign/kube-apiserver',
   ip_sans      => ['8.8.4.4','8.8.8.8'],
   alt_names    => ['public-dns-4.google','public-dns-8.google'],
 }
@@ -119,7 +120,7 @@ EOS
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8',
+  version => '0.8.1',
   init_token => 'init-token-client',
   init_role => 'master',
   init_policies => ['default', 'test-ca-client'],
@@ -127,6 +128,7 @@ class {'vault_client':
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
+      shell('echo "init-token-client" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
