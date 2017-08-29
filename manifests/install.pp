@@ -12,6 +12,7 @@ class vault_client::install {
     }
     -> exec {"vault-helper-${vault_client::version}-download":
         command => "curl -sL ${::vault_client::download_url} -o ${vault_helper_path}/vault-helper",
+        creates => "${vault_helper_path}/vault-helper",
         path    => ['/usr/bin', '/bin'],
     }
     -> file {"${vault_helper_path}/vault-helper":
