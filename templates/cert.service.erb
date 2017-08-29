@@ -6,8 +6,8 @@ After=network.target network-online.target
 [Service]
 Type=oneshot
 Environment=VAULT_ADDR=http://127.0.0.1:8200
-Environment=VAULT_DEV_ROOT_TOKEN_ID=init-token-client
-Environment=VAULT_TOKEN=init-token-client
+Environment=VAULT_DEV_ROOT_TOKEN_ID=root-token
+Environment=VAULT_TOKEN=root-token
 Environment=VAULT_CLUSTER_ID=test
 Environment=VAULT_CERT_TYPE=<%= @key_type %>
 Environment=VAULT_CERT_BITS=<%= @key_bits %>

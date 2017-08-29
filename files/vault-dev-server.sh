@@ -3,8 +3,8 @@
 set -e
 
 export VAULT_ADDR=http://127.0.0.1:8200
-export VAULT_DEV_ROOT_TOKEN_ID=init-token-client
-export VAULT_TOKEN=init-token-client
+export VAULT_DEV_ROOT_TOKEN_ID=root-token
+export VAULT_TOKEN=root-token
 
 
 #Download vault binary
@@ -16,7 +16,7 @@ if [ ! -x /bin/vault  ]; then
     rm -f /tmp/vault-dev.zip
 fi
 
+mkdir -p /etc/vault
 printf "init-token-client" > /etc/vault/init-token
-
 
 exec /opt/bin/vault-helper dev-server test --init-token-etcd=init-token-etcd --init-token-master=init-token-master --init-token-worker=init-token-worker --init-token-all=init-token-client
