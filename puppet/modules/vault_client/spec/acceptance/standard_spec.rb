@@ -27,6 +27,7 @@ class {'vault_client':
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
+      shell('mkdir -p /etc/vault')
       shell('echo "init-token-client" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
@@ -35,12 +36,12 @@ EOS
     end
 
     it 'runs the correct version of vault-helper' do
-      show_result = shell('vault-helper version')
-      expect(show_result.stdout).to match(/vault-helper 0\.8\.2/)
+      show_result = shell('/opt/bin/vault-helper version')
+      expect(show_result.stdout).to match('vault-helper version: 0.8.1 builddate: 2017-08-29T09:04:37Z commit: 7ed5a17f120d0a4537b777c6c88942b49be1f487')
     end
 
     it 'runs renew-token without error' do
-      result = shell('/opt/bin/vault-helper renew-token test --role=admin')
+      result = shell('/opt/bin/vault-helper renew-token test --role=master')
       expect(result.exit_code).to eq(0)
     end
 
@@ -128,6 +129,7 @@ class {'vault_client':
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
+      shell('mkdir -p /etc/vault')
       shell('echo "init-token-client" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
@@ -138,8 +140,6 @@ EOS
     it 'renews tokens without error' do
       result = shell('systemctl start vault-token-renewal.service')
       expect(result.exit_code).to eq(0)
-
-      expect(renewal_after.stdout.to_i).to be > renewal_before.stdout.to_i
     end
   end
 end
