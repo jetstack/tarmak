@@ -57,12 +57,12 @@ describe 'vault_client' do
         end
     end
 
-    context 'with custom version 0.8.1' do
-        let(:params) { {:version => '0.8.1', :token => 'ab'} }
+    context 'with custom version 0.8.2' do
+        let(:params) { {:version => '0.8.2', :token => 'ab'} }
 
         it do
             is_expected.to contain_file('/opt/bin/vault-helper').with(
-                'target' => '/opt/vault-helper-0.8.1/vault-helper'
+                'target' => '/opt/vault-helper-0.8.2/vault-helper'
             )
         end
 

@@ -8,19 +8,24 @@ Type=oneshot
 Environment=VAULT_ADDR=http://127.0.0.1:8200
 Environment=VAULT_DEV_ROOT_TOKEN_ID=root-token
 Environment=VAULT_TOKEN=root-token
-Environment=VAULT_CLUSTER_ID=test
 Environment=VAULT_CERT_TYPE=<%= @key_type %>
 Environment=VAULT_CERT_BITS=<%= @key_bits %>
-Environment=VAULT_CERT_CN=<%= @common_name %>
-Environment=VAULT_CERT_ROLE=<%= @role %>
-Environment=VAULT_CERT_OWNER=<%= @user %>:<%= @group %>
-<% if @alt_names.length > 0 -%>
-Environment=VAULT_CERT_ALT_NAMES=<%= @alt_names.join(',') %>
-<% end -%>
 <% if @ip_sans.length > 0 -%>
 Environment=VAULT_CERT_IP_SANS=<%= @ip_sans.join(',') %>
 <% end -%>
-ExecStart=/opt/bin/vault-helper cert <%= @role %> <%= @common_name %> <%= @base_path %> --owner=0 --group=0
+ExecStart=/opt/bin/vault-helper cert \
+  <%= @role %> \
+  <%= @common_name %> \
+  <%= @base_path %> \
+<% if @alt_names.length > 0 -%>
+  '--san-hosts=<%= @alt_names.join(',') %>' \
+<% end -%>
+<% if @ip_sans.length > 0 -%>
+  '--ip-sans=<%= @ip_sans.join(',') %>' \
+<% end -%>
+  --owner=0 --group=0
+
+
 <% @exec_post.each do |val| -%>
 ExecStartPost=<%= val %>
 <% end -%>
