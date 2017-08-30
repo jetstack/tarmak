@@ -21,7 +21,7 @@ describe '::vault_client' do
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.1',
+  version => '0.8.2',
   token => 'init-token-client'
 }
 EOS
@@ -37,23 +37,23 @@ EOS
 
     it 'runs the correct version of vault-helper' do
       show_result = shell('/opt/bin/vault-helper version')
-      expect(show_result.stdout).to match('vault-helper version: 0.8.1 builddate: 2017-08-29T09:04:37Z commit: 7ed5a17f120d0a4537b777c6c88942b49be1f487')
+      expect(show_result.stdout).to match(/0\.8\.2/)
     end
 
     it 'runs renew-token without error' do
-      result = shell('/opt/bin/vault-helper renew-token test --role=master')
+        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; /opt/bin/vault-helper renew-token test --role=all')
       expect(result.exit_code).to eq(0)
     end
 
     it 'requests a client cert from test-ca' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.1',
+  version => '0.8.2',
   token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
-  common_name  => 'k8s',
+  common_name  => 'test-client',
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
 }
@@ -70,12 +70,12 @@ EOS
     it 'requests new cert for a changed common_name' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.1',
+  version => '0.8.2',
   token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
-  common_name  => 'k8s',
+  common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
 }
@@ -91,12 +91,12 @@ EOS
     it 'requests new cert for a added IP/DNS SANs' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.1',
+  version => '0.8.2',
   token => 'init-token-client'
 }
 
 vault_client::cert_service{ 'test-client':
-  common_name  => 'k8s',
+  common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
   ip_sans      => ['8.8.4.4','8.8.8.8'],
@@ -121,7 +121,7 @@ EOS
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.1',
+  version => '0.8.2',
   init_token => 'init-token-client',
   init_role => 'master',
   init_policies => ['default', 'test-ca-client'],
