@@ -41,7 +41,7 @@ EOS
     end
 
     it 'runs renew-token without error' do
-        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; /opt/bin/vault-helper renew-token test --role=all')
+        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; export VAULT_TOKEN=root-token; /opt/bin/vault-helper renew-token test --role=master')
       expect(result.exit_code).to eq(0)
     end
 
