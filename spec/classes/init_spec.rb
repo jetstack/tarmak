@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 describe 'vault_client' do
+    version = "0.8.4"
     context 'with none of init_token and token specified' do
         it do
             is_expected.to compile.and_raise_error(/provide at least one of/)
@@ -57,12 +58,12 @@ describe 'vault_client' do
         end
     end
 
-    context 'with custom version 0.8.2' do
-        let(:params) { {:version => '0.8.2', :token => 'ab'} }
+    context "with custom version #{version}" do
+        let(:params) { {:version => version, :token => 'ab'} }
 
         it do
             is_expected.to contain_file('/opt/bin/vault-helper').with(
-                'target' => '/opt/vault-helper-0.8.2/vault-helper'
+                'target' => "/opt/vault-helper-#{version}/vault-helper"
             )
         end
 
