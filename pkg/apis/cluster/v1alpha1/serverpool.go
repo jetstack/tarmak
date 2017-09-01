@@ -19,9 +19,14 @@ import (
 )
 
 const (
-	ServerPoolTypeMaster = "master"
-	ServerPoolTypeNode   = "node"
-	ServerPoolTypeHybrid = "hybrid"
+	ServerPoolTypeMaster     = "master"
+	ServerPoolTypeNode       = "node"
+	ServerPoolTypeEtcd       = "etcd"
+	ServerPoolTypeBastion    = "bastion" // bastion node with public IP
+	ServerPoolTypeVault      = "vault"
+	ServerPoolTypeAll        = "all"         // master + node + etcd
+	ServerPoolTypeMasterEtcd = "master-etcd" // master + etcd
+	ServerPoolTypeHybrid     = "hybrid"      // master + node
 )
 
 type ServerPool struct {
