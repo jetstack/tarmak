@@ -1,6 +1,7 @@
 require 'spec_helper_acceptance'
 
 describe '::vault_client' do
+  version = '0.8.4'
 
   before(:all) do
     hosts.each do |host|
@@ -21,14 +22,14 @@ describe '::vault_client' do
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.2',
-  token => 'init-token-client'
+  version => '#{version}',
+  token => 'init-client-token'
 }
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
       shell('mkdir -p /etc/vault')
-      shell('echo "init-token-client" > /etc/vault/init-token')
+      shell('echo "init-client-token" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
@@ -37,19 +38,19 @@ EOS
 
     it 'runs the correct version of vault-helper' do
       show_result = shell('/opt/bin/vault-helper version')
-      expect(show_result.stdout).to match(/0\.8\.2/)
+      expect(show_result.stdout).to match(/#{version}/)
     end
 
     it 'runs renew-token without error' do
-        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; export VAULT_TOKEN=root-token; /opt/bin/vault-helper renew-token test --role=master')
+        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; /opt/bin/vault-helper renew-token --role=master')
       expect(result.exit_code).to eq(0)
     end
 
     it 'requests a client cert from test-ca' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.2',
-  token => 'init-token-client'
+  version => '#{version}',
+  token => 'init-client-token'
 }
 
 vault_client::cert_service{ 'test-client':
@@ -70,8 +71,8 @@ EOS
     it 'requests new cert for a changed common_name' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.2',
-  token => 'init-token-client'
+  version => '#{version}',
+  token => 'init-client-token'
 }
 
 vault_client::cert_service{ 'test-client':
@@ -91,8 +92,8 @@ EOS
     it 'requests new cert for a added IP/DNS SANs' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.2',
-  token => 'init-token-client'
+  version => '#{version}',
+  token => 'init-client-token'
 }
 
 vault_client::cert_service{ 'test-client':
@@ -121,8 +122,8 @@ EOS
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.8.2',
-  init_token => 'init-token-client',
+  version => '#{version}',
+  init_token => 'init-client-token',
   init_role => 'master',
   init_policies => ['default', 'test-ca-client'],
 }
@@ -130,7 +131,7 @@ EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
       shell('mkdir -p /etc/vault')
-      shell('echo "init-token-client" > /etc/vault/init-token')
+      shell('echo "init-client-token" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)

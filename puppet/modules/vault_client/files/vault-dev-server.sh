@@ -3,8 +3,7 @@
 set -e
 
 export VAULT_ADDR=http://127.0.0.1:8200
-export VAULT_DEV_ROOT_TOKEN_ID=root-token
-export VAULT_TOKEN=root-token
+export VAULT_DEV_ROOT_TOKEN_ID=init-client-token
 
 
 #Download vault binary
@@ -18,7 +17,7 @@ fi
 
 #Download vault-helper binary
 if [ ! -x /tmp/vault-helper  ]; then
-    curl -sL https://github.com/jetstack-experimental/vault-helper/releases/download/0.8.2/vault-helper_0.8.2_linux_amd64 -o /tmp/vault-helper
+    curl -sL https://github.com/jetstack-experimental/vault-helper/releases/download/${VAULT_HELPER_VERSION}/vault-helper_${VAULT_HELPER_VERSION}_linux_amd64 -o /tmp/vault-helper
     chmod +x /tmp/vault-helper
 fi
 
