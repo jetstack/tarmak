@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -17,6 +18,8 @@ type Config struct {
 
 	Contact string `json:"contact,omitempty"`
 	Project string `json:"project,omitempty"`
+
+	Clusters []*clusterv1alpha1.Cluster `json:"project,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

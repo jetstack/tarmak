@@ -11,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
-	"github.com/jetstack/tarmak/pkg/apis/tarmak"
 	"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	//"github.com/jetstack/tarmak/pkg/client"
 )
@@ -26,10 +25,6 @@ func NewConfig() (*Config, error) {
 
 	c.scheme = runtime.NewScheme()
 	c.codecs = serializer.NewCodecFactory(c.scheme)
-
-	if err := tarmak.AddToScheme(c.scheme); err != nil {
-		return nil, err
-	}
 
 	if err := v1alpha1.AddToScheme(c.scheme); err != nil {
 		return nil, err

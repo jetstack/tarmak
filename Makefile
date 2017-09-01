@@ -100,25 +100,15 @@ go_generate_types: depend $(TYPES_FILES)
 	# generate types
 	defaulter-gen \
 	  --v 1 --logtostderr \
-	  --input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak" \
 	  --input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
-	  --extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak" \
+	  --input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
+	  --extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
 	  --extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
 	  --output-file-base "zz_generated.defaults"
 
 	# generate deep copies
 	deepcopy-gen \
 		--v 1 --logtostderr \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
 		--output-file-base zz_generated.deepcopy
-
-	# generate conversions
-	conversion-gen \
-		--v 1 --logtostderr \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
-		--output-file-base zz_generated.conversion
-
-	# generate all pkg/client contents
-	$(HACK_DIR)/update-client-gen.sh
