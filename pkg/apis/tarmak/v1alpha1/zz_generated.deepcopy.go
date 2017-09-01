@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	cluster_v1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	reflect "reflect"
@@ -154,6 +155,18 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = make([]Environment, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.Clusters != nil {
+		in, out := &in.Clusters, &out.Clusters
+		*out = make([]*cluster_v1alpha1.Cluster, len(*in))
+		for i := range *in {
+			if (*in)[i] == nil {
+				(*out)[i] = nil
+			} else {
+				(*out)[i] = new(cluster_v1alpha1.Cluster)
+				(*in)[i].DeepCopyInto((*out)[i])
+			}
 		}
 	}
 	return
