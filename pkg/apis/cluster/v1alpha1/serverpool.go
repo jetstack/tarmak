@@ -44,5 +44,5 @@ type ServerPool struct {
 	BootstrapScripts  []string    `json:"bootstrapScripts,omitempty"`
 	Subnets           []*Subnet   `json:"subnets,omitempty"`
 	Firewalls         []*Firewall `json:"firewalls,omitempty"`
-	Volumes           []*Volume   `json:"volumes,omitempty"`
+	Volumes           []Volume    `json:"volumes,omitempty"`
 }

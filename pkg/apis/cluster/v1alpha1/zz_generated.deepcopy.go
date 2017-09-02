@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	reflect "reflect"
@@ -397,14 +398,9 @@ func (in *ServerPool) DeepCopyInto(out *ServerPool) {
 	}
 	if in.Volumes != nil {
 		in, out := &in.Volumes, &out.Volumes
-		*out = make([]*Volume, len(*in))
+		*out = make([]Volume, len(*in))
 		for i := range *in {
-			if (*in)[i] == nil {
-				(*out)[i] = nil
-			} else {
-				(*out)[i] = new(Volume)
-				(*in)[i].DeepCopyInto((*out)[i])
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	return
@@ -495,6 +491,15 @@ func (in *Volume) DeepCopyInto(out *Volume) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	if in.Size != nil {
+		in, out := &in.Size, &out.Size
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(resource.Quantity)
+			**out = (*in).DeepCopy()
+		}
+	}
 	return
 }
 

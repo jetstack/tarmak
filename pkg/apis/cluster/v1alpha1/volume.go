@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,6 +28,6 @@ type Volume struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Size int    `json:"size,omitempty"` // Size in GB
-	Type string `json:"type,omitempty"` // Volume Type
+	Size *resource.Quantity `json:"size,omitempty"` // Volume Size
+	Type string             `json:"type,omitempty"` // Volume Type
 }
