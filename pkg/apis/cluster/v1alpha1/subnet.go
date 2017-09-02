@@ -25,5 +25,4 @@ type Subnet struct {
 	CIDR              string `json:"cidr,omitempty"`
 	Location          string `json:"location,omitempty"`
 	Zone              string `json:"zone,omitempty"`
-	Name              string `json:"name,omitempty"`
 }

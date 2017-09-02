@@ -32,9 +32,8 @@ const (
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Name              string         `json:"name,omitempty"`
 	CloudId           string         `json:"cloudId,omitempty"`
-	ServerPools       []*ServerPool  `json:"serverPools,omitempty"`
+	ServerPools       []ServerPool   `json:"serverPools,omitempty"`
 	Cloud             string         `json:"cloud,omitempty"`
 	Location          string         `json:"location,omitempty"`
 	SSH               *SSH           `json:"SSH,omitempty"`
@@ -43,6 +42,8 @@ type Cluster struct {
 	KubernetesAPI     *KubernetesAPI `json:"kubernetesAPI,omitempty"`
 	GroupIdentifier   string         `json:"groupIdentifier,omitempty"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ClusterList struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -53,6 +54,8 @@ type ClusterList struct {
 
 func NewCluster(name string) *Cluster {
 	return &Cluster{
-		Name: name,
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
 	}
 }

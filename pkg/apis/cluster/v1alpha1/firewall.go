@@ -25,7 +25,6 @@ type Firewall struct {
 	Identifier        string         `json:"identifier,omitempty"`
 	IngressRules      []*IngressRule `json:"ingressRules,omitempty"`
 	EgressRules       []*EgressRule  `json:"egressRules,omitempty"`
-	Name              string         `json:"name,omitempty"`
 }
 
 // Shared object infor among rules.

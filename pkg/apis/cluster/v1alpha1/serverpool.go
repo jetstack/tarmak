@@ -29,6 +29,8 @@ const (
 	ServerPoolTypeHybrid     = "hybrid"      // master + node
 )
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 type ServerPool struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -36,7 +38,6 @@ type ServerPool struct {
 	MinCount          int         `json:"minCount,omitempty"`
 	MaxCount          int         `json:"maxCount,omitempty"`
 	Type              string      `json:"type,omitempty"`
-	Name              string      `json:"name,omitempty"`
 	Image             string      `json:"image,omitempty"`
 	Size              string      `json:"size,omitempty"`
 	SpotPrice         string      `json:"spotPrice,omitempty"`

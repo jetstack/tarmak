@@ -21,6 +21,5 @@ import (
 type InternetGW struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Name              string `json:"name,omitempty"`
 	Identifier        string `json:"identifier,omitempty"`
 }

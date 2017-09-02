@@ -28,5 +28,27 @@ import (
 // Public to allow building arbitrary schemes.
 // All generated defaulters are covering - they call all nested defaulters.
 func RegisterDefaults(scheme *runtime.Scheme) error {
+	scheme.AddTypeDefaultingFunc(&Cluster{}, func(obj interface{}) { SetObjectDefaults_Cluster(obj.(*Cluster)) })
+	scheme.AddTypeDefaultingFunc(&ClusterList{}, func(obj interface{}) { SetObjectDefaults_ClusterList(obj.(*ClusterList)) })
+	scheme.AddTypeDefaultingFunc(&ServerPool{}, func(obj interface{}) { SetObjectDefaults_ServerPool(obj.(*ServerPool)) })
 	return nil
+}
+
+func SetObjectDefaults_Cluster(in *Cluster) {
+	SetDefaults_Cluster(in)
+	for i := range in.ServerPools {
+		a := &in.ServerPools[i]
+		SetObjectDefaults_ServerPool(a)
+	}
+}
+
+func SetObjectDefaults_ClusterList(in *ClusterList) {
+	for i := range in.Items {
+		a := &in.Items[i]
+		SetObjectDefaults_Cluster(a)
+	}
+}
+
+func SetObjectDefaults_ServerPool(in *ServerPool) {
+	SetDefaults_ServerPool(in)
 }

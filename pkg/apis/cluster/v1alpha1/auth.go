@@ -21,7 +21,6 @@ import (
 type SSH struct {
 	metav1.TypeMeta      `json:",inline"`
 	metav1.ObjectMeta    `json:"metadata,omitempty"`
-	Name                 string `json:"name,omitempty"`
 	User                 string `json:"user,omitempty"`
 	Identifier           string `json:"identifier,omitempty"`
 	PublicKeyPath        string `json:"publicKeyPath,omitempty"`
