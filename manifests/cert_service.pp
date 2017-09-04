@@ -1,3 +1,4 @@
+include ::tarmak
 define vault_client::cert_service (
   String $base_path,
   String $common_name,
@@ -9,6 +10,8 @@ define vault_client::cert_service (
   Integer $frequency = 86400,
   String $user = 'root',
   String $group = 'root',
+  Integer $uid = $::tarmak::etcd_uid,
+  Integer $gid = $::tarmak::etcd_gid,
   Array $exec_post = [],
 )
 {

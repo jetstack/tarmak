@@ -35,8 +35,8 @@ class{'vault_client':
       :common_name => 'commonname1',
       :role => 'role1',
       :base_path => '/tmp/test',
-      :user => 'user1',
-      :group => 'group1',
+      :uid => 0,
+      :gid => 0,
     }
   end
 
