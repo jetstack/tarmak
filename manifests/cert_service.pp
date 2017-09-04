@@ -3,15 +3,13 @@ define vault_client::cert_service (
   String $base_path,
   String $common_name,
   String $role,
+  Integer $uid,
+  Integer $gid,
   Array[String] $alt_names = [],
   Array[String] $ip_sans = [],
   String $key_type = 'rsa',
   Integer $key_bits = 2048,
   Integer $frequency = 86400,
-  String $user = 'root',
-  String $group = 'root',
-  Integer $uid = $::tarmak::etcd_uid,
-  Integer $gid = $::tarmak::etcd_gid,
   Array $exec_post = [],
 )
 {
