@@ -22,7 +22,7 @@ ExecStart=/opt/bin/vault-helper cert \
 <% if @ip_sans.length > 0 -%>
   '--ip-sans=<%= @ip_sans.join(',') %>' \
 <% end -%>
-  --owner=0 --group=0
+  --owner=<%= @uid %> --group=<%= @gid %>
 
 
 <% @exec_post.each do |val| -%>
