@@ -12,6 +12,8 @@ class tarmak::overlay_calico {
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::etcd_overlay_ca_name}/sign/client",
     ip_sans     => [$::tarmak::ipaddress],
     alt_names   => ["${::hostname}.${::tarmak::cluster_name}.${::tarmak::dns_root}"],
+    uid         => $::tarmak::etcd_uid,
+    gid         => $::tarmak::etcd_gid,
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart calico-node.service",
       "-/bin/bash -c 'docker ps -q --filter=label=io.kubernetes.container.name=calico-policy-controller | xargs docker kill'",

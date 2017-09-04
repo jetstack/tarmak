@@ -25,8 +25,9 @@ class tarmak::master(
   vault_client::secret_service { 'kube-service-account-key':
     field       => 'key',
     secret_path => "${::tarmak::cluster_name}/secrets/service-accounts",
-    user        => $::tarmak::kubernetes_user,
     dest_path   => $service_account_key_path,
+    uid         => $::tarmak::kubernetes_uid,
+    gid         => $::tarmak::kubernetes_gid,
   }
 
   $controller_manager_base_path = "${::tarmak::kubernetes_ssl_dir}/kube-controller-manager"
@@ -34,7 +35,8 @@ class tarmak::master(
     base_path   => $controller_manager_base_path,
     common_name => 'system:kube-controller-manager',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-controller-manager",
-    user        => $::tarmak::kubernetes_user,
+    uid         => $::tarmak::kubernetes_uid,
+    gid         => $::tarmak::kubernetes_gid,
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart kube-controller-manager.service"
     ],
@@ -45,7 +47,8 @@ class tarmak::master(
     base_path   => $scheduler_base_path,
     common_name => 'system:kube-scheduler',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-scheduler",
-    user        => $::tarmak::kubernetes_user,
+    uid         => $::tarmak::kubernetes_uid,
+    gid         => $::tarmak::kubernetes_gid,
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart kube-scheduler.service"
     ],
@@ -56,7 +59,8 @@ class tarmak::master(
     base_path   => $apiserver_base_path,
     common_name => 'system:kube-apiserver',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-apiserver",
-    user        => $::tarmak::kubernetes_user,
+    uid         => $::tarmak::kubernetes_uid,
+    gid         => $::tarmak::kubernetes_gid,
     ip_sans     => $apiserver_ip_sans,
     alt_names   => $apiserver_alt_names,
     exec_post   => [
@@ -69,7 +73,8 @@ class tarmak::master(
     base_path   => $admin_base_path,
     common_name => 'admin',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/admin",
-    user        => $::tarmak::kubernetes_user,
+    uid         => $::tarmak::kubernetes_uid,
+    gid         => $::tarmak::kubernetes_gid,
   }
 
   $etcd_apiserver_base_path = "${::tarmak::kubernetes_ssl_dir}/${::tarmak::etcd_k8s_main_ca_name}"
@@ -77,9 +82,10 @@ class tarmak::master(
     base_path   => $etcd_apiserver_base_path,
     common_name => 'etcd-client',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::etcd_k8s_main_ca_name}/sign/client",
-    user        => $::tarmak::kubernetes_user,
     ip_sans     => [$::tarmak::ipaddress],
     alt_names   => ["${::hostname}.${::tarmak::cluster_name}.${::tarmak::dns_root}"],
+    uid         => $::tarmak::kubernetes_uid,
+    gid         => $::tarmak::kubernetes_gid,
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart kube-apiserver.service"
     ],

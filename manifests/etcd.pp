@@ -44,7 +44,8 @@ class tarmak::etcd(
     alt_names   => $alt_names,
     ip_sans     => $ip_sans,
     role        => "${tarmak::cluster_name}/pki/${::tarmak::etcd_k8s_main_ca_name}/sign/server",
-    user        => $::tarmak::etcd_user,
+    uid         => $::tarmak::etcd_uid,
+    gid         => $::tarmak::etcd_gid,
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart etcd-k8s-main.service etcd-k8s-events.service"
     ],
@@ -56,7 +57,8 @@ class tarmak::etcd(
     alt_names   => $alt_names,
     ip_sans     => $ip_sans,
     role        => "${tarmak::cluster_name}/pki/${::tarmak::etcd_overlay_ca_name}/sign/server",
-    user        => $::tarmak::etcd_user,
+    uid         => $::tarmak::etcd_uid,
+    gid         => $::tarmak::etcd_gid,
     require     => [ User[$::tarmak::etcd_user], File[$::tarmak::etcd_ssl_dir] ],
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart etcd-overlay.service"
