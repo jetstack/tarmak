@@ -1,32 +1,22 @@
 package config
 
 import (
-	"strings"
+	"io/ioutil"
 	"testing"
-
-	"gopkg.in/yaml.v2"
 )
 
-func TestDefaultConfigOmitEmpty(t *testing.T) {
-	c := DefaultConfigHub()
+func TestNewAWSConfigClusterSingle(t *testing.T) {
+	c := NewAWSConfigClusterSingle()
 
-	y, err := yaml.Marshal(c)
+	tmpfile, err := ioutil.TempFile("", "tarmak.yaml")
+	if err != nil {
+		t.Fatal("unexpected error creating temp file: ", err)
+	}
+
+	err = writeYAML(c, tmpfile)
 	if err != nil {
 		t.Error("unexpected error: ", err)
 	}
 
-	if strings.Contains(string(y), "null") || strings.Contains(string(y), "\"\"") {
-		t.Error("yaml contains empty values, probably forgot omitempty")
-	}
-
-	c = DefaultConfigSingle()
-
-	y, err = yaml.Marshal(c)
-	if err != nil {
-		t.Error("unexpected error: ", err)
-	}
-
-	if strings.Contains(string(y), "null") || strings.Contains(string(y), "\"\"") {
-		t.Error("yaml contains empty values, probably forgot omitempty")
-	}
+	log.Infof("wrote configuration to: %s\n", tmpfile.Name())
 }

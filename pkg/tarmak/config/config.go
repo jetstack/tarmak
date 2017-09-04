@@ -1,314 +1,74 @@
 package config
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
+	"errors"
+	"io"
 
-	"gopkg.in/yaml.v2"
+	"github.com/Sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
 
-const (
-	StackNameState      = "state"
-	StackNameNetwork    = "network"
-	StackNameTools      = "tools"
-	StackNameVault      = "vault"
-	StackNameKubernetes = "kubernetes"
-	ProviderNameAWS     = "aws"
-	ProviderNameGCP     = "gcp"
-)
+var scheme *runtime.Scheme
+var codecs serializer.CodecFactory
+var log *logrus.Entry
 
-type Config struct {
-	CurrentContext string        `yaml:"currentContext,omitempty"` // <environmentName>-<contextName>
-	Environments   []Environment `yaml:"environments,omitempty"`
+func init() {
+	log = logrus.New().WithField("module", "config")
 
-	Contact string `yaml:"contact,omitempty"`
-	Project string `yaml:"project,omitempty"`
-}
+	scheme = runtime.NewScheme()
+	codecs = serializer.NewCodecFactory(scheme)
 
-func configPath(t interfaces.Tarmak) string {
-	return filepath.Join(t.ConfigPath(), "tarmak.yaml")
-}
-
-func ReadConfig(t interfaces.Tarmak) (*Config, error) {
-	path := configPath(t)
-
-	configBytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
+	if err := clusterv1alpha1.AddToScheme(scheme); err != nil {
+		panic(err)
 	}
 
-	var config Config
-	err = yaml.Unmarshal(configBytes, &config)
-	if err != nil {
-		return nil, err
+	if err := tarmakv1alpha1.AddToScheme(scheme); err != nil {
+		panic(err)
 	}
-
-	return &config, nil
 }
 
-func MergeEnvironment(t interfaces.Tarmak, in Environment) error {
-	contextName := fmt.Sprintf("%s-%s", in.Name, in.Contexts[0].Name)
+func newConfig() *tarmakv1alpha1.Config {
+	c := &tarmakv1alpha1.Config{}
+	return c
+}
 
-	path := configPath(t)
-	var config *Config
+func NewAWSConfigClusterSingle() *tarmakv1alpha1.Config {
+	c := newConfig()
+	c.Clusters = []clusterv1alpha1.Cluster{
+		*NewClusterSingle("dev", "cluster"),
+	}
+	provider := NewAWSProfileProvider("dev", "jetstack-dev")
+	cluster := NewClusterSingle("dev", "cluster")
+	cluster.CloudId = provider.ObjectMeta.Name
+	c.Providers = []tarmakv1alpha1.Provider{*provider}
+	c.Clusters = []clusterv1alpha1.Cluster{*cluster}
+	scheme.Default(c)
+	return c
+}
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		config = &Config{
-			CurrentContext: contextName,
-			Project:        in.Project,
-			Contact:        in.Contact,
-			Environments:   []Environment{in},
+func writeYAML(config *tarmakv1alpha1.Config, destination io.Writer) error {
+	var encoder runtime.Encoder
+	mediaTypes := codecs.SupportedMediaTypes()
+	for _, info := range mediaTypes {
+		if info.MediaType == "application/yaml" {
+			encoder = info.Serializer
+			break
 		}
-	} else if err != nil {
-		return err
-	} else {
-		// existing config
-		config, err = ReadConfig(t)
-		if err != nil {
-			return err
-		}
-
-		// overwrite current context
-		config.CurrentContext = contextName
-
-		// add environment
-		config.Environments = append(config.Environments, in)
 	}
+	if encoder == nil {
+		return errors.New("unable to locate yaml encoder")
+	}
+	encoder = json.NewYAMLSerializer(json.DefaultMetaFactory, scheme, scheme)
+	encoder = codecs.EncoderForVersion(encoder, tarmakv1alpha1.SchemeGroupVersion)
 
-	configBytes, err := yaml.Marshal(config)
-	if err != nil {
+	if err := encoder.Encode(config, destination); err != nil {
 		return err
 	}
 
-	err = utils.EnsureDirectory(t.ConfigPath(), 0700)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(path, configBytes, 0600)
-}
-
-func DefaultConfigSingleEnvSingleZoneAWSEUCentral() *Config {
-	return &Config{
-		CurrentContext: "devsingleeucentral-cluster",
-		Project:        "tarmak-dev",
-		Contact:        "tech@jetstack.io",
-		Environments: []Environment{
-			Environment{
-				AWS: &AWSConfig{
-					VaultPath: "jetstack/aws/jetstack-dev/sts/admin",
-					Region:    "eu-central-1",
-				},
-				Name: "devsingleeucentral",
-				Contexts: []Context{
-					Context{
-						Name:      "cluster",
-						BaseImage: "centos-puppet-agent",
-						Stacks: []Stack{
-							Stack{
-								State: &StackState{
-									BucketPrefix: "jetstack-tarmak-",
-									PublicZone:   "devsingleeucentral.dev.tarmak.org",
-								},
-							},
-							Stack{
-								Network: &StackNetwork{
-									NetworkCIDR: "10.98.0.0/20",
-									PrivateZone: "devsingleeucentral.dev.tarmak.local",
-								},
-							},
-							Stack{
-								Tools: &StackTools{},
-							},
-							Stack{
-								Vault: &StackVault{},
-							},
-							Stack{
-								Kubernetes: &StackKubernetes{},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func DefaultConfigSingle() *Config {
-	return &Config{
-		CurrentContext: "devsingle-cluster",
-		Project:        "tarmak-dev",
-		Contact:        "tech@jetstack.io",
-		Environments: []Environment{
-			Environment{
-				AWS: &AWSConfig{
-					VaultPath:        "jetstack/aws/jetstack-dev/sts/admin",
-					Region:           "eu-west-1",
-					AvailabiltyZones: []string{"eu-west-1a", "eu-west-1b", "eu-west-1c"},
-				},
-				Name: "devsingle",
-				Contexts: []Context{
-					Context{
-						Name:      "cluster",
-						BaseImage: "centos-puppet-agent",
-						Stacks: []Stack{
-							Stack{
-								State: &StackState{
-									BucketPrefix: "jetstack-tarmak-",
-									PublicZone:   "devsingle.dev.tarmak.org",
-								},
-							},
-							Stack{
-								Network: &StackNetwork{
-									NetworkCIDR: "10.98.0.0/20",
-									PrivateZone: "devsingle.dev.tarmak.local",
-								},
-							},
-							Stack{
-								Tools: &StackTools{},
-							},
-							Stack{
-								Vault: &StackVault{},
-							},
-							Stack{
-								Kubernetes: &StackKubernetes{},
-								NodeGroups: DefaultKubernetesNodeGroupAWSOneMasterThreeEtcdThreeWorker(),
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func DefaultConfigHub() *Config {
-	return &Config{
-		CurrentContext: "devmulti-hub",
-		Project:        "tarmak-dev",
-		Contact:        "tech@jetstack.io",
-		Environments: []Environment{
-			Environment{
-				AWS: &AWSConfig{
-					VaultPath:        "jetstack/aws/jetstack-dev/sts/admin",
-					Region:           "eu-west-1",
-					AvailabiltyZones: []string{"eu-west-1a", "eu-west-1b", "eu-west-1c"},
-				},
-				Name: "devmulti",
-				Contexts: []Context{
-					Context{
-						Name:      "hub",
-						BaseImage: "centos-puppet-agent",
-						Stacks: []Stack{
-							Stack{
-								State: &StackState{
-									BucketPrefix: "jetstack-tarmak-",
-									PublicZone:   "devmulti.dev.tarmak.org",
-								},
-							},
-							Stack{
-								Network: &StackNetwork{
-									NetworkCIDR: "10.99.0.0/20",
-									PrivateZone: "devmulti.dev.tarmak.local",
-								},
-							},
-							Stack{
-								Tools: &StackTools{},
-							},
-							Stack{
-								Vault: &StackVault{},
-							},
-						},
-					},
-					Context{
-						Name:      "cluster",
-						BaseImage: "centos-puppet-agent",
-						Stacks: []Stack{
-							Stack{
-								Network: &StackNetwork{
-									NetworkCIDR: "10.99.16.0/20",
-									PeerContext: "hub",
-								},
-							},
-							Stack{
-								Kubernetes: &StackKubernetes{},
-								NodeGroups: DefaultKubernetesNodeGroupAWSOneMasterThreeEtcdThreeWorker(),
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func DefaultKubernetesNodeGroupAWSOneMasterThreeEtcdThreeWorker() []NodeGroup {
-	return []NodeGroup{
-		NodeGroup{
-			Count: 3,
-			Role:  "etcd",
-			AWS: &NodeGroupAWS{
-				InstanceType: "m4.large",
-				SpotPrice:    0.15,
-			},
-			Volumes: []Volume{
-				Volume{
-					AWS:  &VolumeAWS{Type: "gp2"},
-					Name: "data",
-					Size: 5,
-				},
-			},
-		},
-		NodeGroup{
-			Count: 1,
-			Role:  "master",
-			AWS: &NodeGroupAWS{
-				InstanceType: "m4.large",
-				SpotPrice:    0.15,
-			},
-			Volumes: []Volume{
-				Volume{
-					AWS:  &VolumeAWS{Type: "gp2"},
-					Name: "docker",
-					Size: 10,
-				},
-			},
-		},
-		NodeGroup{
-			Count: 3,
-			Role:  "worker",
-			AWS: &NodeGroupAWS{
-				InstanceType: "m4.large",
-				SpotPrice:    0.15,
-			},
-			Volumes: []Volume{
-				Volume{
-					AWS:  &VolumeAWS{Type: "gp2"},
-					Name: "docker",
-					Size: 50,
-				},
-			},
-		},
-		NodeGroup{
-			Count: 1,
-			Role:  "worker",
-			Name:  "workert2",
-			AWS: &NodeGroupAWS{
-				InstanceType: "t2.large",
-				SpotPrice:    0.15,
-			},
-			Volumes: []Volume{
-				Volume{
-					AWS:  &VolumeAWS{Type: "gp2"},
-					Name: "docker",
-					Size: 50,
-				},
-			},
-		},
-	}
+	return nil
 }
