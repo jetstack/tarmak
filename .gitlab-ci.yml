@@ -138,6 +138,18 @@ test::tarmak::golang:
   - make all
   - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
 
+# generate sphinx documentation
+generate::docs:
+  stage: test
+  tags:
+  - docker
+  image: python:3
+  script:
+  - virtualenv -q /cache/venv
+  - source /cache/venv/bin/activate
+  - pip install -r docs/requirements.txt
+  - make -C docs html
+
 release::tarmak::golang:
   stage: release
   tags:
