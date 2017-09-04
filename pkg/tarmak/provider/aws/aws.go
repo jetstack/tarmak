@@ -16,14 +16,17 @@ import (
 	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
 type AWS struct {
-	conf *config.AWSConfig
+	conf *tarmakv1alpha1.Provider
 
-	environment interfaces.Environment
+	tarmak interfaces.Tarmak
+
+	availabilityZones *[]string
 
 	session *session.Session
 	ec2     EC2
@@ -40,26 +43,69 @@ type EC2 interface {
 	ImportKeyPair(input *ec2.ImportKeyPairInput) (*ec2.ImportKeyPairOutput, error)
 	DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error)
 	DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (*ec2.DescribeAvailabilityZonesOutput, error)
+	DescribeRegions(input *ec2.DescribeRegionsInput) (*ec2.DescribeRegionsOutput, error)
 }
 
 var _ interfaces.Provider = &AWS{}
 
-func NewFromConfig(environment interfaces.Environment, conf *config.AWSConfig) (*AWS, error) {
+func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Provider) (*AWS, error) {
+
 	a := &AWS{
-		conf:        conf,
-		environment: environment,
-		log:         environment.Tarmak().Log(),
+		conf:   conf,
+		log:    tarmak.Log().WithField("provider_name", conf.ObjectMeta.Name),
+		tarmak: tarmak,
 	}
 
 	return a, nil
 }
 
 func (a *AWS) Name() string {
-	return config.ProviderNameAWS
+	return clusterv1alpha1.CloudAmazon
+}
+
+func (a *AWS) ListRegions() (regions []string, err error) {
+	svc, err := a.EC2()
+	if err != nil {
+		return regions, err
+	}
+
+	regionsOutput, err := svc.DescribeRegions(&ec2.DescribeRegionsInput{})
+	if err != nil {
+		return regions, err
+	}
+
+	for _, region := range regionsOutput.Regions {
+		regions = append(regions, *region.RegionName)
+	}
+
+	return regions, nil
+
 }
 
 func (a *AWS) Region() string {
-	return a.conf.Region
+	return a.tarmak.Context().Region()
+}
+
+// This return the availabililty zones that are used for a cluster
+func (a *AWS) AvailabilityZones() (availabiltyZones []string) {
+	if a.availabilityZones != nil {
+		return *a.availabilityZones
+	}
+
+	subnets := a.tarmak.Context().Subnets()
+	zones := make(map[string]bool)
+
+	for _, subnet := range subnets {
+		zones[subnet.Zone] = true
+	}
+
+	a.availabilityZones = &availabiltyZones
+
+	for zone, _ := range zones {
+		availabiltyZones = append(availabiltyZones, zone)
+	}
+
+	return availabiltyZones
 }
 
 func (a *AWS) EC2() (EC2, error) {
@@ -86,14 +132,13 @@ func (a *AWS) S3() (S3, error) {
 
 func (a *AWS) RemoteStateBucketName() string {
 	return fmt.Sprintf(
-		"%s%s-%s-terraform-state",
-		a.environment.BucketPrefix(),
-		a.environment.Name(),
+		"%s-%s-terraform-state",
+		a.conf.AWS.BucketPrefix,
 		a.Region(),
 	)
 }
 
-func (a *AWS) RemoteState(contextName, stackName string) string {
+func (a *AWS) RemoteState(namespace string, clusterName string, stackName string) string {
 	return fmt.Sprintf(`terraform {
   backend "s3" {
     bucket = "%s"
@@ -103,7 +148,7 @@ func (a *AWS) RemoteState(contextName, stackName string) string {
   }
 }`,
 		a.RemoteStateBucketName(),
-		fmt.Sprintf("%s/%s/%s.tfstate", a.environment.Name(), contextName, stackName),
+		fmt.Sprintf("%s/%s/%s.tfstate", namespace, clusterName, stackName),
 		a.Region(),
 		a.RemoteStateBucketName(),
 	)
@@ -130,8 +175,8 @@ func (a *AWS) RemoteStateBucketAvailable() (bool, error) {
 func (a *AWS) Variables() map[string]interface{} {
 	output := map[string]interface{}{}
 	output["key_name"] = a.KeyName()
-	if len(a.conf.AllowedAccountIDs) > 0 {
-		output["allowed_account_ids"] = a.conf.AllowedAccountIDs
+	if len(a.conf.AWS.AllowedAccountIDs) > 0 {
+		output["allowed_account_ids"] = a.conf.AWS.AllowedAccountIDs
 	}
 	output["availability_zones"] = a.AvailabilityZones()
 	output["region"] = a.Region()
@@ -161,7 +206,7 @@ func (a *AWS) Environment() ([]string, error) {
 
 // This reads the vault token from ~/.vault-token
 func (a *AWS) readVaultToken() (string, error) {
-	homeDir := a.environment.Tarmak().HomeDir()
+	homeDir := a.tarmak.HomeDir()
 
 	filePath := filepath.Join(homeDir, ".vault-token")
 
@@ -216,7 +261,9 @@ func (a *AWS) validateAvailabilityZones() error {
 		)
 	}
 
-	for _, zoneConfigured := range a.conf.AvailabiltyZones {
+	availabilityZones := a.AvailabilityZones()
+
+	for _, zoneConfigured := range availabilityZones {
 		found := false
 		for _, zone := range zones.AvailabilityZones {
 			if zone.ZoneName != nil && *zone.ZoneName == zoneConfigured {
@@ -236,13 +283,14 @@ func (a *AWS) validateAvailabilityZones() error {
 		return result
 	}
 
-	if len(a.conf.AvailabiltyZones) == 0 {
+	if len(availabilityZones) == 0 {
 		zone := zones.AvailabilityZones[0].ZoneName
 		if zone == nil {
 			return fmt.Errorf("error determining availabilty zone")
 		}
 		a.log.Debugf("no availability zones specified selecting zone: %s", *zone)
-		a.conf.AvailabiltyZones = []string{*zone}
+		availabilityZones = []string{*zone}
+		a.availabilityZones = &availabilityZones
 	}
 
 	return nil
@@ -256,7 +304,7 @@ func (a *AWS) Session() (*session.Session, error) {
 	}
 
 	// use default config, if vault disabled
-	if a.conf.VaultPath != "" {
+	if a.conf.AWS.VaultPath != "" {
 		sess, err := a.vaultSession()
 		if err != nil {
 			return nil, err
@@ -289,12 +337,12 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 		}
 	}
 
-	awsSecret, err := vaultClient.Logical().Read(a.conf.VaultPath)
+	awsSecret, err := vaultClient.Logical().Read(a.conf.AWS.VaultPath)
 	if err != nil {
 		return nil, err
 	}
 	if awsSecret == nil || awsSecret.Data == nil {
-		return nil, fmt.Errorf("vault did not return data at path '%s'", a.conf.VaultPath)
+		return nil, fmt.Errorf("vault did not return data at path '%s'", a.conf.AWS.VaultPath)
 	}
 
 	values := []string{}
@@ -318,10 +366,6 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 	sess.Config.Credentials = creds
 
 	return sess, nil
-}
-
-func (a *AWS) AvailabilityZones() []string {
-	return a.conf.AvailabiltyZones
 }
 
 func (a *AWS) RemoteStateAvailable(bucketName string) (bool, error) {
