@@ -8,6 +8,8 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack-experimental/vault-unsealer/pkg/kv"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
+
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 )
 
 type Context interface {
@@ -26,6 +28,8 @@ type Context interface {
 	ContextName() string
 	Log() *logrus.Entry
 	APITunnel() Tunnel
+	Region() string
+	Subnets() []clusterv1alpha1.Subnet
 }
 
 type Environment interface {
@@ -36,6 +40,7 @@ type Environment interface {
 	Name() string
 	BucketPrefix() string
 	Contexts() []Context
+	CurrentContext() Context
 	SSHPrivateKeyPath() string
 	SSHPrivateKey() (signer interface{})
 	Log() *logrus.Entry
@@ -51,7 +56,7 @@ type Provider interface {
 	Validate() error
 	RemoteStateBucketName() string
 	RemoteStateBucketAvailable() (bool, error)
-	RemoteState(contextName, stackName string) string
+	RemoteState(namespace, clusterName, stackName string) string
 	Environment() ([]string, error)
 	Variables() map[string]interface{}
 	QueryImage(tags map[string]string) (string, error)

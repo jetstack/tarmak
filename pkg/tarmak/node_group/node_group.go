@@ -6,7 +6,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
@@ -14,7 +14,7 @@ import (
 var _ interfaces.NodeGroup = &NodeGroup{}
 
 type NodeGroup struct {
-	conf  *config.NodeGroup
+	conf  *clusterv1alpha1.ServerPool
 	log   *logrus.Entry
 	stack interfaces.Stack
 
@@ -23,7 +23,7 @@ type NodeGroup struct {
 	role *role.Role
 }
 
-func NewFromConfig(stack interfaces.Stack, conf *config.NodeGroup) (*NodeGroup, error) {
+func NewFromConfig(stack interfaces.Stack, conf *clusterv1alpha1.ServerPool) (*NodeGroup, error) {
 	nodeGroup := &NodeGroup{
 		conf:  conf,
 		stack: stack,

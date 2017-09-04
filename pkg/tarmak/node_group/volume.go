@@ -3,14 +3,14 @@ package node_group
 import (
 	"fmt"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
 var _ interfaces.Volume = &Volume{}
 
 type Volume struct {
-	conf *config.Volume
+	conf *clusterv1alpha1.Volume
 
 	device string
 }
