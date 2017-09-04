@@ -18,8 +18,8 @@ type Config struct {
 	Contact string `json:"contact,omitempty"`
 	Project string `json:"project,omitempty"`
 
-	Clusters  []*clusterv1alpha1.Cluster `json:"clusters,omitempty"`
-	Providers []*Provider                `json:"providers,omitempty"`
+	Clusters  []clusterv1alpha1.Cluster `json:"clusters,omitempty"`
+	Providers []Provider                `json:"providers,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -47,7 +47,10 @@ type Provider struct {
 type ProviderAWS struct {
 	VaultPath         string   `json:"vaultPath,omitempty"`
 	AllowedAccountIDs []string `json:"allowedAccountIDs,omitempty"`
-	Profile           string   `json:"profile",omitempty`
+	Profile           string   `json:"profile,omitempty"`
+	BucketPrefix      string   `json:"bucketPrefix,omitempty"`
+	PublicZone        string   `json:"publicZone,omitempty"`
+	KeyName           string   `json:"keyName,omitempty"`
 }
 
 type ProviderGCP struct {

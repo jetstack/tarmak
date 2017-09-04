@@ -12,5 +12,9 @@ func addDefaultingFuncs(scheme *runtime.Scheme) error {
 }
 
 func SetDefaults_Config(obj *Config) {
-	obj.CreationTimestamp = metav1.Time{time.Now()}
+	obj.CreationTimestamp = metav1.Time{Time: time.Now()}
+}
+
+func SetDefaults_Provider(obj *Provider) {
+	obj.CreationTimestamp = metav1.Time{Time: time.Now()}
 }

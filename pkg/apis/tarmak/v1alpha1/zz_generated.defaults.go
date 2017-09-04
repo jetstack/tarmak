@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	cluster_v1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -30,16 +31,45 @@ import (
 func RegisterDefaults(scheme *runtime.Scheme) error {
 	scheme.AddTypeDefaultingFunc(&Config{}, func(obj interface{}) { SetObjectDefaults_Config(obj.(*Config)) })
 	scheme.AddTypeDefaultingFunc(&ConfigList{}, func(obj interface{}) { SetObjectDefaults_ConfigList(obj.(*ConfigList)) })
+	scheme.AddTypeDefaultingFunc(&Provider{}, func(obj interface{}) { SetObjectDefaults_Provider(obj.(*Provider)) })
+	scheme.AddTypeDefaultingFunc(&ProviderList{}, func(obj interface{}) { SetObjectDefaults_ProviderList(obj.(*ProviderList)) })
 	return nil
 }
 
 func SetObjectDefaults_Config(in *Config) {
 	SetDefaults_Config(in)
+	for i := range in.Clusters {
+		a := &in.Clusters[i]
+		cluster_v1alpha1.SetDefaults_Cluster(a)
+		for j := range a.ServerPools {
+			b := &a.ServerPools[j]
+			cluster_v1alpha1.SetDefaults_ServerPool(b)
+			for k := range b.Volumes {
+				c := &b.Volumes[k]
+				cluster_v1alpha1.SetDefaults_Volume(c)
+			}
+		}
+	}
+	for i := range in.Providers {
+		a := &in.Providers[i]
+		SetObjectDefaults_Provider(a)
+	}
 }
 
 func SetObjectDefaults_ConfigList(in *ConfigList) {
 	for i := range in.Items {
 		a := &in.Items[i]
 		SetObjectDefaults_Config(a)
+	}
+}
+
+func SetObjectDefaults_Provider(in *Provider) {
+	SetDefaults_Provider(in)
+}
+
+func SetObjectDefaults_ProviderList(in *ProviderList) {
+	for i := range in.Items {
+		a := &in.Items[i]
+		SetObjectDefaults_Provider(a)
 	}
 }

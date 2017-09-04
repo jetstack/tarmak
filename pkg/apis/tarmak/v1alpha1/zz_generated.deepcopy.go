@@ -75,26 +75,16 @@ func (in *Config) DeepCopyInto(out *Config) {
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
 	if in.Clusters != nil {
 		in, out := &in.Clusters, &out.Clusters
-		*out = make([]*cluster_v1alpha1.Cluster, len(*in))
+		*out = make([]cluster_v1alpha1.Cluster, len(*in))
 		for i := range *in {
-			if (*in)[i] == nil {
-				(*out)[i] = nil
-			} else {
-				(*out)[i] = new(cluster_v1alpha1.Cluster)
-				(*in)[i].DeepCopyInto((*out)[i])
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.Providers != nil {
 		in, out := &in.Providers, &out.Providers
-		*out = make([]*Provider, len(*in))
+		*out = make([]Provider, len(*in))
 		for i := range *in {
-			if (*in)[i] == nil {
-				(*out)[i] = nil
-			} else {
-				(*out)[i] = new(Provider)
-				(*in)[i].DeepCopyInto((*out)[i])
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	return

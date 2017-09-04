@@ -31,6 +31,7 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 	scheme.AddTypeDefaultingFunc(&Cluster{}, func(obj interface{}) { SetObjectDefaults_Cluster(obj.(*Cluster)) })
 	scheme.AddTypeDefaultingFunc(&ClusterList{}, func(obj interface{}) { SetObjectDefaults_ClusterList(obj.(*ClusterList)) })
 	scheme.AddTypeDefaultingFunc(&ServerPool{}, func(obj interface{}) { SetObjectDefaults_ServerPool(obj.(*ServerPool)) })
+	scheme.AddTypeDefaultingFunc(&Volume{}, func(obj interface{}) { SetObjectDefaults_Volume(obj.(*Volume)) })
 	return nil
 }
 
@@ -51,4 +52,12 @@ func SetObjectDefaults_ClusterList(in *ClusterList) {
 
 func SetObjectDefaults_ServerPool(in *ServerPool) {
 	SetDefaults_ServerPool(in)
+	for i := range in.Volumes {
+		a := &in.Volumes[i]
+		SetObjectDefaults_Volume(a)
+	}
+}
+
+func SetObjectDefaults_Volume(in *Volume) {
+	SetDefaults_Volume(in)
 }
