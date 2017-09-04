@@ -28,8 +28,6 @@ class{'vault_client':
       :dest_path => '/tmp/dest_path1',
       :secret_path => '/my/secret1',
       :field => 'field1',
-      :uid => 0,
-      :gid => 0,
       :user => 'user1',
       :group => 'group1',
     }
