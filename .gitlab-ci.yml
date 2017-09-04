@@ -143,7 +143,7 @@ generate::docs:
   stage: test
   tags:
   - docker
-  image: python:3
+  image: python:2.7
   script:
   - virtualenv -q /cache/venv
   - source /cache/venv/bin/activate
