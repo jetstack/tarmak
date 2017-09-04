@@ -57,6 +57,8 @@ vault_client::cert_service{ 'test-client':
   common_name  => 'test-client',
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
+  uid          => 0,
+  gid          => 0,
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -79,6 +81,8 @@ vault_client::cert_service{ 'test-client':
   common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
+  uid          => 0,
+  gid          => 0,
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -102,6 +106,8 @@ vault_client::cert_service{ 'test-client':
   role         => 'test/pki/k8s/sign/kube-apiserver',
   ip_sans      => ['8.8.4.4','8.8.8.8'],
   alt_names    => ['public-dns-4.google','public-dns-8.google'],
+  uid          => 0,
+  gid          => 0,
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -126,6 +132,8 @@ class {'vault_client':
   init_token => 'init-client-token',
   init_role => 'master',
   init_policies => ['default', 'test-ca-client'],
+  uid          => 0,
+  gid          => 0,
 }
 EOS
       # cleanup existing config

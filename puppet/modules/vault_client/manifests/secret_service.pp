@@ -2,6 +2,8 @@ define vault_client::secret_service (
   String $secret_path,
   String $field,
   String $dest_path,
+  Integer $uid,
+  Integer $gid,
   String $user = 'root',
   String $group = 'root',
   Array $exec_post = [],
