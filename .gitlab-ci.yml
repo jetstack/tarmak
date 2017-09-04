@@ -149,6 +149,10 @@ generate::docs:
   - source /cache/venv/bin/activate
   - pip install -r docs/requirements.txt
   - make -C docs html
+  artifacts:
+    paths:
+    - docs/_build/html
+    expire_in: 4 weeks
 
 release::tarmak::golang:
   stage: release
