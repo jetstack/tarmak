@@ -92,13 +92,13 @@ func (s *VaultStack) vaultInstanceFQDNs() ([]string, error) {
 		return []string{}, fmt.Errorf("unable to find terraform output 'instance_fqdns'")
 	}
 
-	instanceFQDNsInftSlice, ok := instanceFQDNsIntf.([]interface{})
+	instanceFQDNsIntfSlice, ok := instanceFQDNsIntf.([]interface{})
 	if !ok {
 		return []string{}, fmt.Errorf("unexpected type for 'instance_fqdns': %T", instanceFQDNsIntf)
 	}
 
-	instanceFQDNs := make([]string, len(instanceFQDNsInftSlice))
-	for pos, value := range instanceFQDNsInftSlice {
+	instanceFQDNs := make([]string, len(instanceFQDNsIntfSlice))
+	for pos, value := range instanceFQDNsIntfSlice {
 		var ok bool
 		instanceFQDNs[pos], ok = value.(string)
 		if !ok {

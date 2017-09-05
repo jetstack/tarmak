@@ -103,7 +103,7 @@ func (t *Tunnel) Start() error {
 		time.Sleep(t.retryWait)
 	}
 
-	return fmt.Errorf("could not establish a connection to destion via tunnel after %d tries", t.retryCount)
+	return fmt.Errorf("could not establish a connection to destination via tunnel after %d tries", t.retryCount)
 }
 
 func (t *Tunnel) Stop() error {

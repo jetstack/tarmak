@@ -105,7 +105,7 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *config.Environment) (*Environ
 		result = multierror.Append(result, fmt.Errorf("environment '%s' has no state stack", e.Name()))
 	}
 
-	// ensure there is a vault stack
+	// ensure there is a tools stack
 	if e.stackTools == nil {
 		result = multierror.Append(result, fmt.Errorf("environment '%s' has no tools stack", e.Name()))
 	}
