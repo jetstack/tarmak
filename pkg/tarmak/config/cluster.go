@@ -7,12 +7,6 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 )
 
-const (
-	ServerPoolSizeTiny   = "tiny"
-	ServerPoolSizeSmall  = "small"
-	ServerPoolSizeMedium = "medium"
-)
-
 func newCluster(namespace string, name string) *clusterv1alpha1.Cluster {
 	c := &clusterv1alpha1.Cluster{}
 	c.SetName(name)
@@ -65,7 +59,7 @@ func newServerPoolBastion() *clusterv1alpha1.ServerPool {
 	sp.Type = clusterv1alpha1.ServerPoolTypeBastion
 	sp.MinCount = 1
 	sp.MaxCount = 1
-	sp.Size = ServerPoolSizeTiny
+	sp.Size = clusterv1alpha1.ServerPoolSizeTiny
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},
@@ -81,7 +75,7 @@ func newServerPoolEtcd() *clusterv1alpha1.ServerPool {
 	sp.Type = clusterv1alpha1.ServerPoolTypeEtcd
 	sp.MinCount = 3
 	sp.MaxCount = 3
-	sp.Size = ServerPoolSizeSmall
+	sp.Size = clusterv1alpha1.ServerPoolSizeSmall
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},
@@ -102,7 +96,7 @@ func newServerPoolVault() *clusterv1alpha1.ServerPool {
 	sp.Type = clusterv1alpha1.ServerPoolTypeVault
 	sp.MinCount = 3
 	sp.MaxCount = 3
-	sp.Size = ServerPoolSizeTiny
+	sp.Size = clusterv1alpha1.ServerPoolSizeTiny
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},
@@ -123,7 +117,7 @@ func newServerPoolMaster() *clusterv1alpha1.ServerPool {
 	sp.Type = clusterv1alpha1.ServerPoolTypeMaster
 	sp.MinCount = 1
 	sp.MaxCount = 1
-	sp.Size = ServerPoolSizeMedium
+	sp.Size = clusterv1alpha1.ServerPoolSizeMedium
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},
@@ -144,7 +138,7 @@ func newServerPoolNode() *clusterv1alpha1.ServerPool {
 	sp.Type = clusterv1alpha1.ServerPoolTypeNode
 	sp.MinCount = 3
 	sp.MaxCount = 3
-	sp.Size = ServerPoolSizeMedium
+	sp.Size = clusterv1alpha1.ServerPoolSizeMedium
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},

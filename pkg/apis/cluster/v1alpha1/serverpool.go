@@ -19,6 +19,13 @@ import (
 )
 
 const (
+	ServerPoolSizeTiny   = "tiny"
+	ServerPoolSizeSmall  = "small"
+	ServerPoolSizeMedium = "medium"
+	ServerPoolSizeLarge  = "large"
+)
+
+const (
 	ServerPoolTypeMaster     = "master"
 	ServerPoolTypeNode       = "node"
 	ServerPoolTypeEtcd       = "etcd"
