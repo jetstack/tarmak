@@ -1,14 +1,15 @@
 package stack
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 
+	//clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	//"github.com/jetstack/tarmak/pkg/tarmak/node_group"
+	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
@@ -37,65 +38,95 @@ type Stack struct {
 	nodeGroups []interfaces.NodeGroup
 }
 
-func NewFromConfig(context interfaces.Context) (interfaces.Stack, error) {
-	stacks := []interfaces.Stack{}
+func New(context interfaces.Context, name string) (interfaces.Stack, error) {
+	var stack interfaces.Stack
+	var err error
+	s := &Stack{
+		context: context,
+		log:     context.Log(),
+	}
 
-	/*
-		s := &Stack{
-			context: context,
-			log:     context.Log(),
+	// init stack
+	switch name {
+	case StackNameState:
+		stack, err = newStateStack(s)
+	case StackNameNetwork:
+		stack, err = newNetworkStack(s)
+	case StackNameTools:
+		stack, err = newToolsStack(s)
+	case StackNameVault:
+		stack, err = newVaultStack(s)
+	case StackNameKubernetes:
+		stack, err = newKubernetesStack(s)
+	default:
+		return nil, fmt.Errorf("unmatched state name: %s", name)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("error initialising %s stack: %s", name, err)
+	}
+
+	// init node groups
+	var result error
+	for _, serverPool := range context.ServerPools() {
+		// see if type is handled by that stack
+		if _, ok := s.roles[serverPool.Type]; !ok {
+			continue
 		}
 
-			if conf.State != nil {
-				stack, err := newStateStack(s, conf.State)
-				if err != nil {
-					return nil, fmt.Errorf("error initialising state stack: %s", err)
-				}
-				stacks = append(stacks, stack)
-			}
-			if conf.Network != nil {
-				stack, err := newNetworkStack(s, conf.Network)
-				if err != nil {
-					return nil, fmt.Errorf("error initialising network stack: %s", err)
-				}
-				stacks = append(stacks, stack)
-			}
-			if conf.Tools != nil {
-				stack, err := newToolsStack(s, conf.Tools)
-				if err != nil {
-					return nil, fmt.Errorf("error initialising tools stack: %s", err)
-				}
-				stacks = append(stacks, stack)
-			}
-			if conf.Vault != nil {
-				stack, err := newVaultStack(s, conf.Vault)
-				if err != nil {
-					return nil, fmt.Errorf("error initialising vault stack: %s", err)
-				}
-				stacks = append(stacks, stack)
-			}
-			if conf.Kubernetes != nil {
-				stack, err := newKubernetesStack(s, conf.Kubernetes)
-				if err != nil {
-					return nil, fmt.Errorf("error initialising kubernetes stack: %s", err)
-				}
-				stacks = append(stacks, stack)
-			}
-			if conf.Custom != nil {
-				stack, err := newCustomStack(s, conf.Custom)
-				if err != nil {
-					return nil, fmt.Errorf("error initialising custom stack: %s", err)
-				}
-				stacks = append(stacks, stack)
-			}
-	*/
+		// create node groups
+		nodeGroup, err := node_group.NewFromConfig(stack, &serverPool)
+		if err != nil {
+			result = multierror.Append(result, err)
+			continue
+		}
+		s.nodeGroups = append(s.nodeGroups, nodeGroup)
+	}
 
-	if len(stacks) < 1 {
-		return nil, errors.New("please specify exactly a single stack")
-	}
-	if len(stacks) > 1 {
-		return nil, fmt.Errorf("more than one stack given: %+v", stacks)
-	}
+	return stack, result
+
+	/*
+		if name == StackNameStatel {
+			stacks = append(stacks, stack)
+		}
+		if conf.Network != nil {
+			stack, err := newNetworkStack(s, conf.Network)
+			if err != nil {
+				return nil, fmt.Errorf("error initialising network stack: %s", err)
+			}
+			stacks = append(stacks, stack)
+		}
+		if conf.Tools != nil {
+			stacks = append(stacks, stack)
+		}
+		if conf.Vault != nil {
+			stack, err := newVaultStack(s, conf.Vault)
+			if err != nil {
+				return nil, fmt.Errorf("error initialising vault stack: %s", err)
+			}
+			stacks = append(stacks, stack)
+		}
+		if conf.Kubernetes != nil {
+			stack, err := newKubernetesStack(s, conf.Kubernetes)
+			if err != nil {
+				return nil, fmt.Errorf("error initialising kubernetes stack: %s", err)
+			}
+			stacks = append(stacks, stack)
+		}
+		if conf.Custom != nil {
+			stack, err := newCustomStack(s, conf.Custom)
+			if err != nil {
+				return nil, fmt.Errorf("error initialising custom stack: %s", err)
+			}
+			stacks = append(stacks, stack)
+		}
+
+		if len(stacks) < 1 {
+			return nil, errors.New("please specify exactly a single stack")
+		}
+		if len(stacks) > 1 {
+			return nil, fmt.Errorf("more than one stack given: %+v", stacks)
+		}
+	*/
 
 	// initialiase node groups
 	/*

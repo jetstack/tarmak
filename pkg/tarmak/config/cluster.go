@@ -29,7 +29,7 @@ func NewClusterSingle(namespace string, name string) *clusterv1alpha1.Cluster {
 
 // This creates a new cluster for a multi cluster namespace
 func NewClusterMulti(namespace string, name string) *clusterv1alpha1.Cluster {
-	c := newCluster(namespace, "hub")
+	c := newCluster(namespace, name)
 	c.ServerPools = []clusterv1alpha1.ServerPool{
 		*newServerPoolEtcd(),
 		*newServerPoolMaster(),

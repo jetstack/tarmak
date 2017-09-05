@@ -30,6 +30,7 @@ const (
 	ServerPoolTypeNode       = "node"
 	ServerPoolTypeEtcd       = "etcd"
 	ServerPoolTypeBastion    = "bastion" // bastion node with public IP
+	ServerPoolTypeJenkins    = "jenkins" // jenkins CI/CD node
 	ServerPoolTypeVault      = "vault"
 	ServerPoolTypeAll        = "all"         // master + node + etcd
 	ServerPoolTypeMasterEtcd = "master-etcd" // master + etcd

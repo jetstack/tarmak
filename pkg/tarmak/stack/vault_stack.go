@@ -12,7 +12,9 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack-experimental/vault-unsealer/pkg/vault"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type VaultStack struct {
@@ -24,6 +26,16 @@ var _ interfaces.Stack = &VaultStack{}
 func newVaultStack(s *Stack) (*VaultStack, error) {
 	v := &VaultStack{
 		Stack: s,
+	}
+
+	vaultRole := &role.Role{
+		Stateful: true,
+		AWS:      &role.RoleAWS{},
+	}
+	vaultRole.WithName("vault")
+
+	s.roles = map[string]*role.Role{
+		clusterv1alpha1.ServerPoolTypeVault: vaultRole,
 	}
 
 	s.name = StackNameVault

@@ -21,7 +21,7 @@ type Context interface {
 	NetworkCIDR() *net.IPNet
 	RemoteState(stackName string) string
 	ConfigPath() string
-	BaseImage() string
+	Images() []string // This returns all neccessary base images
 	SSHConfigPath() string
 	SSHHostKeysPath() string
 	SetImageID(string)
@@ -29,7 +29,8 @@ type Context interface {
 	Log() *logrus.Entry
 	APITunnel() Tunnel
 	Region() string
-	Subnets() []clusterv1alpha1.Subnet
+	Subnets() []clusterv1alpha1.Subnet         // Return subnets per AZ
+	ServerPools() []clusterv1alpha1.ServerPool // Return server pools
 }
 
 type Environment interface {

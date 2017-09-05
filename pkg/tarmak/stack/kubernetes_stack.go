@@ -7,6 +7,7 @@ import (
 
 	"github.com/jetstack-experimental/vault-helper/pkg/kubernetes"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
@@ -33,7 +34,7 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	}
 	masterRole.WithName("master").WithPrefix("kubernetes")
 
-	workerRole := &role.Role{
+	nodeRole := &role.Role{
 		Stateful: false,
 		AWS: &role.RoleAWS{
 			ELBIngress:                     true,
@@ -41,7 +42,7 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 			IAMEC2ModifyInstanceAttributes: true,
 		},
 	}
-	workerRole.WithName("worker").WithPrefix("kubernetes")
+	nodeRole.WithName("worker").WithPrefix("kubernetes")
 
 	etcdRole := &role.Role{
 		Stateful: true,
@@ -60,11 +61,9 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	masterEtcdRole.WithName("etcd-master").WithPrefix("kubernetes")
 
 	s.roles = map[string]*role.Role{
-		"master":      masterRole,
-		"worker":      workerRole,
-		"etcd":        etcdRole,
-		"etcd-master": masterEtcdRole,
-		"master-etcd": masterEtcdRole,
+		clusterv1alpha1.ServerPoolTypeEtcd:   etcdRole,
+		clusterv1alpha1.ServerPoolTypeMaster: masterRole,
+		clusterv1alpha1.ServerPoolTypeNode:   nodeRole,
 	}
 
 	s.name = StackNameKubernetes
