@@ -3,7 +3,6 @@ package stack
 import (
 	"fmt"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -13,12 +12,12 @@ type ToolsStack struct {
 
 var _ interfaces.Stack = &ToolsStack{}
 
-func newToolsStack(s *Stack, conf *config.StackTools) (*ToolsStack, error) {
+func newToolsStack(s *Stack) (*ToolsStack, error) {
 	t := &ToolsStack{
 		Stack: s,
 	}
 
-	s.name = config.StackNameTools
+	s.name = StackNameTools
 	s.verifyPostDeploy = append(s.verifyPostDeploy, t.verifyBastionAvailable)
 	return t, nil
 }

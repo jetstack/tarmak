@@ -7,15 +7,20 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
+	//"github.com/jetstack/tarmak/pkg/tarmak/node_group"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
-type Stack struct {
-	conf *config.Stack
+const (
+	StackNameState      = "state"
+	StackNameNetwork    = "network"
+	StackNameTools      = "tools"
+	StackNameVault      = "vault"
+	StackNameKubernetes = "kubernetes"
+)
 
+type Stack struct {
 	name    string
 	context interfaces.Context
 	log     *logrus.Entry
@@ -32,57 +37,58 @@ type Stack struct {
 	nodeGroups []interfaces.NodeGroup
 }
 
-func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.Stack, error) {
+func NewFromConfig(context interfaces.Context) (interfaces.Stack, error) {
 	stacks := []interfaces.Stack{}
 
-	s := &Stack{
-		conf:    conf,
-		context: context,
-		log:     context.Log(),
-	}
+	/*
+		s := &Stack{
+			context: context,
+			log:     context.Log(),
+		}
 
-	if conf.State != nil {
-		stack, err := newStateStack(s, conf.State)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising state stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Network != nil {
-		stack, err := newNetworkStack(s, conf.Network)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising network stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Tools != nil {
-		stack, err := newToolsStack(s, conf.Tools)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising tools stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Vault != nil {
-		stack, err := newVaultStack(s, conf.Vault)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising vault stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Kubernetes != nil {
-		stack, err := newKubernetesStack(s, conf.Kubernetes)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising kubernetes stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Custom != nil {
-		stack, err := newCustomStack(s, conf.Custom)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising custom stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
+			if conf.State != nil {
+				stack, err := newStateStack(s, conf.State)
+				if err != nil {
+					return nil, fmt.Errorf("error initialising state stack: %s", err)
+				}
+				stacks = append(stacks, stack)
+			}
+			if conf.Network != nil {
+				stack, err := newNetworkStack(s, conf.Network)
+				if err != nil {
+					return nil, fmt.Errorf("error initialising network stack: %s", err)
+				}
+				stacks = append(stacks, stack)
+			}
+			if conf.Tools != nil {
+				stack, err := newToolsStack(s, conf.Tools)
+				if err != nil {
+					return nil, fmt.Errorf("error initialising tools stack: %s", err)
+				}
+				stacks = append(stacks, stack)
+			}
+			if conf.Vault != nil {
+				stack, err := newVaultStack(s, conf.Vault)
+				if err != nil {
+					return nil, fmt.Errorf("error initialising vault stack: %s", err)
+				}
+				stacks = append(stacks, stack)
+			}
+			if conf.Kubernetes != nil {
+				stack, err := newKubernetesStack(s, conf.Kubernetes)
+				if err != nil {
+					return nil, fmt.Errorf("error initialising kubernetes stack: %s", err)
+				}
+				stacks = append(stacks, stack)
+			}
+			if conf.Custom != nil {
+				stack, err := newCustomStack(s, conf.Custom)
+				if err != nil {
+					return nil, fmt.Errorf("error initialising custom stack: %s", err)
+				}
+				stacks = append(stacks, stack)
+			}
+	*/
 
 	if len(stacks) < 1 {
 		return nil, errors.New("please specify exactly a single stack")
@@ -92,17 +98,20 @@ func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.S
 	}
 
 	// initialiase node groups
-	var result error
-	for pos, _ := range conf.NodeGroups {
-		nodeGroup, err := node_group.NewFromConfig(stacks[0], &conf.NodeGroups[pos])
-		if err != nil {
-			result = multierror.Append(result, err)
-			continue
-		}
-		s.nodeGroups = append(s.nodeGroups, nodeGroup)
-	}
+	/*
+			var result error
+			for pos, _ := range conf.NodeGroups {
+				nodeGroup, err := node_group.NewFromConfig(stacks[0], &conf.NodeGroups[pos])
+				if err != nil {
+					result = multierror.Append(result, err)
+					continue
+				}
+				s.nodeGroups = append(s.nodeGroups, nodeGroup)
+			}
+		return stacks[0], result
+	*/
 
-	return stacks[0], result
+	return nil, fmt.Errorf("refactor me: %s", "pkg/stacks")
 
 }
 

@@ -12,7 +12,6 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack-experimental/vault-unsealer/pkg/vault"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -22,12 +21,12 @@ type VaultStack struct {
 
 var _ interfaces.Stack = &VaultStack{}
 
-func newVaultStack(s *Stack, conf *config.StackVault) (*VaultStack, error) {
+func newVaultStack(s *Stack) (*VaultStack, error) {
 	v := &VaultStack{
 		Stack: s,
 	}
 
-	s.name = config.StackNameVault
+	s.name = StackNameVault
 	s.verifyPostDeploy = append(s.verifyPostDeploy, v.verifyVaultInit)
 	return v, nil
 }

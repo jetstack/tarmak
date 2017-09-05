@@ -7,7 +7,6 @@ import (
 
 	"github.com/jetstack-experimental/vault-helper/pkg/kubernetes"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
@@ -19,7 +18,7 @@ type KubernetesStack struct {
 
 var _ interfaces.Stack = &KubernetesStack{}
 
-func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStack, error) {
+func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	k := &KubernetesStack{
 		Stack: s,
 	}
@@ -68,7 +67,7 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 		"master-etcd": masterEtcdRole,
 	}
 
-	s.name = config.StackNameKubernetes
+	s.name = StackNameKubernetes
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensurePuppetTarGz)
 	s.verifyPreDestroy = append(s.verifyPreDestroy, k.emptyPuppetTarGz)
