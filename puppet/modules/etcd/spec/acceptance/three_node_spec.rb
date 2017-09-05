@@ -8,6 +8,7 @@ if hosts.length == 3
         # assign private ip addresses
         hosts_as('etcd').each do |host|
           ip = host.host_hash[:ip]
+          on host, "ip addr flush dev eth1"
           on host, "ip addr add #{ip}/16 dev eth1"
           on host, "iptables -F INPUT"
         end
