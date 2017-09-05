@@ -62,6 +62,7 @@ type Provider interface {
 	QueryImage(tags map[string]string) (string, error)
 	VaultKV() (kv.Service, error)
 	ListHosts() ([]Host, error)
+	InstanceType(string) (string, error)
 }
 
 type Stack interface {

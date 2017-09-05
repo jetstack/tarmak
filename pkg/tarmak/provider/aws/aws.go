@@ -368,6 +368,26 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 	return sess, nil
 }
 
+// This methods convert and possibly validates a generic instance type to a
+// provider specifc
+func (a *AWS) InstanceType(typeIn string) (typeOut string, err error) {
+	if typeIn == clusterv1alpha1.ServerPoolSizeTiny {
+		return "t2.nano", nil
+	}
+	if typeIn == clusterv1alpha1.ServerPoolSizeSmall {
+		return "m3.medium", nil
+	}
+	if typeIn == clusterv1alpha1.ServerPoolSizeMedium {
+		return "m4.large", nil
+	}
+	if typeIn == clusterv1alpha1.ServerPoolSizeLarge {
+		return "m4.xlarge", nil
+	}
+
+	// TODO: Validate custom instance type here
+	return typeIn, nil
+}
+
 func (a *AWS) RemoteStateAvailable(bucketName string) (bool, error) {
 	sess, err := a.Session()
 	if err != nil {
