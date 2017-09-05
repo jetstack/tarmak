@@ -27,7 +27,6 @@ class tarmak::master(
     secret_path => "${::tarmak::cluster_name}/secrets/service-accounts",
     dest_path   => $service_account_key_path,
     uid         => $::tarmak::kubernetes_uid,
-    gid         => $::tarmak::kubernetes_gid,
   }
 
   $controller_manager_base_path = "${::tarmak::kubernetes_ssl_dir}/kube-controller-manager"
@@ -36,7 +35,6 @@ class tarmak::master(
     common_name => 'system:kube-controller-manager',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-controller-manager",
     uid         => $::tarmak::kubernetes_uid,
-    gid         => $::tarmak::kubernetes_gid,
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart kube-controller-manager.service"
     ],
@@ -48,7 +46,6 @@ class tarmak::master(
     common_name => 'system:kube-scheduler',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-scheduler",
     uid         => $::tarmak::kubernetes_uid,
-    gid         => $::tarmak::kubernetes_gid,
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart kube-scheduler.service"
     ],
@@ -60,7 +57,6 @@ class tarmak::master(
     common_name => 'system:kube-apiserver',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-apiserver",
     uid         => $::tarmak::kubernetes_uid,
-    gid         => $::tarmak::kubernetes_gid,
     ip_sans     => $apiserver_ip_sans,
     alt_names   => $apiserver_alt_names,
     exec_post   => [
@@ -74,7 +70,6 @@ class tarmak::master(
     common_name => 'admin',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/admin",
     uid         => $::tarmak::kubernetes_uid,
-    gid         => $::tarmak::kubernetes_gid,
   }
 
   $etcd_apiserver_base_path = "${::tarmak::kubernetes_ssl_dir}/${::tarmak::etcd_k8s_main_ca_name}"
@@ -85,7 +80,6 @@ class tarmak::master(
     ip_sans     => [$::tarmak::ipaddress],
     alt_names   => ["${::hostname}.${::tarmak::cluster_name}.${::tarmak::dns_root}"],
     uid         => $::tarmak::kubernetes_uid,
-    gid         => $::tarmak::kubernetes_gid,
     exec_post   => [
       "-${::tarmak::systemctl_path} --no-block try-restart kube-apiserver.service"
     ],
