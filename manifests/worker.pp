@@ -8,7 +8,6 @@ class tarmak::worker {
     common_name => 'system:kube-proxy',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-proxy",
     uid         => $::tarmak::kubernetes_uid,
-    gid         => $::tarmak::kubernetes_gid,
     require     => [
       User[$::tarmak::kubernetes_user],
       Class['vault_client']
@@ -24,7 +23,6 @@ class tarmak::worker {
     common_name => 'system:node',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kubelet",
     uid         => $::tarmak::kubernetes_uid,
-    gid         => $::tarmak::kubernetes_gid,
     require     => [
       User[$::tarmak::kubernetes_user],
       Class['vault_client']
