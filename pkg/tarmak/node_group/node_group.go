@@ -20,6 +20,8 @@ type NodeGroup struct {
 
 	volumes []*Volume
 
+	instanceType string
+
 	role *role.Role
 }
 
@@ -30,15 +32,23 @@ func NewFromConfig(stack interfaces.Stack, conf *clusterv1alpha1.ServerPool) (*N
 		log:   stack.Log().WithField("nodeGroup", conf.Name),
 	}
 
-	nodeGroup.role = stack.Role(conf.Role)
+	nodeGroup.role = stack.Role(conf.Type)
 	if nodeGroup.role == nil {
-		return nil, fmt.Errorf("role '%s' is not valid for this stack", conf.Role)
+		return nil, fmt.Errorf("role '%s' is not valid for this stack", conf.Type)
 	}
+
+	// validate instance size with cloud provider
+	provider := stack.Context().Environment().Provider()
+	instanceType, err := provider.InstanceType(conf.Size)
+	if err != nil {
+		return nil, fmt.Errorf("instanceType '%s' is not valid for this provier", conf.Size)
+	}
+	nodeGroup.instanceType = instanceType
 
 	var result error
 
 	for pos, _ := range conf.Volumes {
-		volume, err := NewVolumeFromConfig(pos, &conf.Volumes[pos])
+		volume, err := NewVolumeFromConfig(pos, provider, &conf.Volumes[pos])
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
@@ -78,19 +88,14 @@ func (n *NodeGroup) Volumes() (volumes []interfaces.Volume) {
 }
 
 func (n *NodeGroup) Count() int {
-	return n.conf.Count
+	// TODO: this needs to be replaced by Max/Min
+	return n.conf.MaxCount
 }
 
-func (n *NodeGroup) AWSInstanceType() string {
-	if n.conf.AWS != nil {
-		return n.conf.AWS.InstanceType
-	}
-	return ""
+func (n *NodeGroup) InstanceType() string {
+	return n.instanceType
 }
 
-func (n *NodeGroup) AWSSpotPrice() string {
-	if n.conf.AWS != nil && n.conf.AWS.SpotPrice > 0 {
-		return fmt.Sprintf("%f", n.conf.AWS.SpotPrice)
-	}
-	return ""
+func (n *NodeGroup) SpotPrice() string {
+	return n.conf.SpotPrice
 }
