@@ -63,6 +63,7 @@ type Provider interface {
 	VaultKV() (kv.Service, error)
 	ListHosts() ([]Host, error)
 	InstanceType(string) (string, error)
+	VolumeType(string) (string, error)
 }
 
 type Stack interface {

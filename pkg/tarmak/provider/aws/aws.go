@@ -368,7 +368,7 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 	return sess, nil
 }
 
-// This methods convert and possibly validates a generic instance type to a
+// This methods converts and possibly validates a generic instance type to a
 // provider specifc
 func (a *AWS) InstanceType(typeIn string) (typeOut string, err error) {
 	if typeIn == clusterv1alpha1.ServerPoolSizeTiny {
@@ -384,6 +384,19 @@ func (a *AWS) InstanceType(typeIn string) (typeOut string, err error) {
 		return "m4.xlarge", nil
 	}
 
+	// TODO: Validate custom instance type here
+	return typeIn, nil
+}
+
+// This methods converts and possibly validates a generic volume type to a
+// provider specifc
+func (a *AWS) VolumeType(typeIn string) (typeOut string, err error) {
+	if typeIn == clusterv1alpha1.VolumeTypeHDD {
+		return "st2", nil
+	}
+	if typeIn == clusterv1alpha1.VolumeTypeSSD {
+		return "gp2", nil
+	}
 	// TODO: Validate custom instance type here
 	return typeIn, nil
 }
