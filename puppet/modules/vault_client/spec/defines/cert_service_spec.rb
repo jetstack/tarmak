@@ -41,7 +41,7 @@ class{'vault_client':
   context 'should create a vault cert service' do
     it do
       should contain_service(timer_name)
-      should contain_file(service_file).with_content(/Environment=VAULT_CERT_OWNER=user1:group1/)
+      should contain_file(service_file).with_content(/EnvironmentFile=\/etc\/vault\/config/)
       should contain_file(timer_file)
     end
   end
