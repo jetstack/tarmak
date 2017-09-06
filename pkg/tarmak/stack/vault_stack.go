@@ -16,8 +16,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
-var vaultClientLock sync.Mutex
-
 type VaultStack struct {
 	*Stack
 }
@@ -274,11 +272,6 @@ func (v *vaultTunnel) Status() int {
 		return VaultStateErr
 	}
 
-	vaultClientLock.Lock()
-	defer vaultClientLock.Unlock()
-
-	v.VaultClient()
-
 	initStatus, err := v.client.Sys().InitStatus()
 	if err != nil {
 		return VaultStateErr
@@ -375,9 +368,6 @@ func (s *VaultStack) verifyVaultInit() error {
 			if err != nil {
 				return err
 			}
-
-			vaultClientLock.Lock()
-			defer vaultClientLock.Unlock()
 
 			cl := instances[0].VaultClient()
 
