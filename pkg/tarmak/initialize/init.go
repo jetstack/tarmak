@@ -130,6 +130,9 @@ func (i *Init) Run() error {
 			Required: true,
 			Default:  "jetstack/aws/jetstack-dev/sts/admin",
 		})
+		if err != nil {
+			return err
+		}
 	}
 
 	query = "Which region should be used?"
