@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
@@ -36,7 +37,7 @@ func newToolsStack(s *Stack) (*ToolsStack, error) {
 		clusterv1alpha1.ServerPoolTypeBastion: bastionRole,
 	}
 
-	s.name = StackNameTools
+	s.name = tarmakv1alpha1.StackNameTools
 	s.verifyPostDeploy = append(s.verifyPostDeploy, t.verifyBastionAvailable)
 	return t, nil
 }

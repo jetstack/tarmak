@@ -5,8 +5,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -124,7 +124,7 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 
 	initialStateStack := false
 	// check for initial state run on first deployment
-	if !destroy && stack.Name() == config.StackNameState {
+	if !destroy && stack.Name() == tarmakv1alpha1.StackNameState {
 		remoteStateAvail, err := t.tarmak.Context().Environment().Provider().RemoteStateBucketAvailable()
 		if err != nil {
 			return fmt.Errorf("error finding remote state: %s", err)
@@ -149,7 +149,7 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 	}
 
 	// check for destroying the state stack
-	if destroy && stack.Name() == config.StackNameState {
+	if destroy && stack.Name() == tarmakv1alpha1.StackNameState {
 		c.log.Infof("moving remote state to local")
 
 		err := c.CopyRemoteState("")

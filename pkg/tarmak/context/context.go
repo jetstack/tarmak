@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
@@ -111,25 +112,25 @@ func (c *Context) validateServerPools() (result error) {
 		allowedTypes[clusterv1alpha1.ServerPoolTypeBastion] = true
 		allowedTypes[clusterv1alpha1.ServerPoolTypeVault] = true
 
-		if s, err := stack.New(c, stack.StackNameState); err != nil {
+		if s, err := stack.New(c, tarmakv1alpha1.StackNameState); err != nil {
 			result = multierror.Append(result, err)
 		} else {
 			c.stacks = append(c.stacks, s)
 		}
 
-		if s, err := stack.New(c, stack.StackNameNetwork); err != nil {
+		if s, err := stack.New(c, tarmakv1alpha1.StackNameNetwork); err != nil {
 			result = multierror.Append(result, err)
 		} else {
 			c.stacks = append(c.stacks, s)
 		}
 
-		if s, err := stack.New(c, stack.StackNameTools); err != nil {
+		if s, err := stack.New(c, tarmakv1alpha1.StackNameTools); err != nil {
 			result = multierror.Append(result, err)
 		} else {
 			c.stacks = append(c.stacks, s)
 		}
 
-		if s, err := stack.New(c, stack.StackNameVault); err != nil {
+		if s, err := stack.New(c, tarmakv1alpha1.StackNameVault); err != nil {
 			result = multierror.Append(result, err)
 		} else {
 			c.stacks = append(c.stacks, s)
@@ -146,7 +147,7 @@ func (c *Context) validateServerPools() (result error) {
 		allowedTypes[clusterv1alpha1.ServerPoolTypeMaster] = true
 		allowedTypes[clusterv1alpha1.ServerPoolTypeNode] = true
 
-		if s, err := stack.New(c, stack.StackNameKubernetes); err != nil {
+		if s, err := stack.New(c, tarmakv1alpha1.StackNameKubernetes); err != nil {
 			result = multierror.Append(result, err)
 		} else {
 			c.stacks = append(c.stacks, s)

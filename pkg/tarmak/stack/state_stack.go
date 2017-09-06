@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"time"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -21,7 +22,7 @@ func newStateStack(s *Stack) (*StateStack, error) {
 		Stack: s,
 	}
 
-	s.name = StackNameState
+	s.name = tarmakv1alpha1.StackNameState
 	s.verifyPostDeploy = append(s.verifyPostDeploy, ss.verifyDNSDelegation)
 	return ss, nil
 }

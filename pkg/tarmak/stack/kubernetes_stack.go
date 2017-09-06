@@ -8,6 +8,7 @@ import (
 	"github.com/jetstack-experimental/vault-helper/pkg/kubernetes"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
@@ -66,7 +67,7 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 		clusterv1alpha1.ServerPoolTypeNode:   nodeRole,
 	}
 
-	s.name = StackNameKubernetes
+	s.name = tarmakv1alpha1.StackNameKubernetes
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensurePuppetTarGz)
 	s.verifyPreDestroy = append(s.verifyPreDestroy, k.emptyPuppetTarGz)

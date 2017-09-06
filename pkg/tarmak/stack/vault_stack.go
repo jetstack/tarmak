@@ -13,6 +13,7 @@ import (
 	vaultUnsealer "github.com/jetstack-experimental/vault-unsealer/pkg/vault"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
@@ -38,7 +39,7 @@ func newVaultStack(s *Stack) (*VaultStack, error) {
 		clusterv1alpha1.ServerPoolTypeVault: vaultRole,
 	}
 
-	s.name = StackNameVault
+	s.name = tarmakv1alpha1.StackNameVault
 	s.verifyPostDeploy = append(s.verifyPostDeploy, v.verifyVaultInit)
 	return v, nil
 }

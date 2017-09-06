@@ -7,18 +7,10 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 
-	//clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
-)
-
-const (
-	StackNameState      = "state"
-	StackNameNetwork    = "network"
-	StackNameTools      = "tools"
-	StackNameVault      = "vault"
-	StackNameKubernetes = "kubernetes"
 )
 
 type Stack struct {
@@ -48,15 +40,15 @@ func New(context interfaces.Context, name string) (interfaces.Stack, error) {
 
 	// init stack
 	switch name {
-	case StackNameState:
+	case tarmakv1alpha1.StackNameState:
 		stack, err = newStateStack(s)
-	case StackNameNetwork:
+	case tarmakv1alpha1.StackNameNetwork:
 		stack, err = newNetworkStack(s)
-	case StackNameTools:
+	case tarmakv1alpha1.StackNameTools:
 		stack, err = newToolsStack(s)
-	case StackNameVault:
+	case tarmakv1alpha1.StackNameVault:
 		stack, err = newVaultStack(s)
-	case StackNameKubernetes:
+	case tarmakv1alpha1.StackNameKubernetes:
 		stack, err = newKubernetesStack(s)
 	default:
 		return nil, fmt.Errorf("unmatched state name: %s", name)
@@ -83,67 +75,6 @@ func New(context interfaces.Context, name string) (interfaces.Stack, error) {
 	}
 
 	return stack, result
-
-	/*
-		if name == StackNameStatel {
-			stacks = append(stacks, stack)
-		}
-		if conf.Network != nil {
-			stack, err := newNetworkStack(s, conf.Network)
-			if err != nil {
-				return nil, fmt.Errorf("error initialising network stack: %s", err)
-			}
-			stacks = append(stacks, stack)
-		}
-		if conf.Tools != nil {
-			stacks = append(stacks, stack)
-		}
-		if conf.Vault != nil {
-			stack, err := newVaultStack(s, conf.Vault)
-			if err != nil {
-				return nil, fmt.Errorf("error initialising vault stack: %s", err)
-			}
-			stacks = append(stacks, stack)
-		}
-		if conf.Kubernetes != nil {
-			stack, err := newKubernetesStack(s, conf.Kubernetes)
-			if err != nil {
-				return nil, fmt.Errorf("error initialising kubernetes stack: %s", err)
-			}
-			stacks = append(stacks, stack)
-		}
-		if conf.Custom != nil {
-			stack, err := newCustomStack(s, conf.Custom)
-			if err != nil {
-				return nil, fmt.Errorf("error initialising custom stack: %s", err)
-			}
-			stacks = append(stacks, stack)
-		}
-
-		if len(stacks) < 1 {
-			return nil, errors.New("please specify exactly a single stack")
-		}
-		if len(stacks) > 1 {
-			return nil, fmt.Errorf("more than one stack given: %+v", stacks)
-		}
-	*/
-
-	// initialiase node groups
-	/*
-			var result error
-			for pos, _ := range conf.NodeGroups {
-				nodeGroup, err := node_group.NewFromConfig(stacks[0], &conf.NodeGroups[pos])
-				if err != nil {
-					result = multierror.Append(result, err)
-					continue
-				}
-				s.nodeGroups = append(s.nodeGroups, nodeGroup)
-			}
-		return stacks[0], result
-	*/
-
-	return nil, fmt.Errorf("refactor me: %s", "pkg/stacks")
-
 }
 
 func (s *Stack) SetOutput(in map[string]interface{}) {
