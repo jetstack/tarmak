@@ -13,15 +13,17 @@ help:
 
 .PHONY: all test verify
 
+test: go_test
+
 verify: generate go_verify
 
-all: verify build
+all: verify test build
 
 build: generate go_build
 
 generate: go_generate
 
-go_verify: go_fmt go_vet go_test
+go_verify: go_fmt go_vet
 
 go_test:
 	go test $$(go list ./pkg/... ./cmd/...)
