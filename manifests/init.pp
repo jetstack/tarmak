@@ -78,6 +78,5 @@ class vault_client (
 
   class { '::vault_client::install': }
   -> class { '::vault_client::config': }
-  ->  class { '::vault_client::service': }
   -> Class['::vault_client']
 }

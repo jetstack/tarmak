@@ -1,4 +1,9 @@
-class vault_client::service {
+define vault_client::service (
+    String $role,
+)
+{
+  require vault_client
+
   $systemd_dir = '/etc/systemd/system'
   $service_name = $::vault_client::token_service_name
   $frequency = 86400

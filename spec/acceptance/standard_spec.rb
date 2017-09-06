@@ -58,6 +58,10 @@ vault_client::cert_service{ 'test-client':
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
 }
+
+vault_client::service{ 'test-renew':
+  role => 'master',
+}
 EOS
       apply_manifest(pp, :catch_failures => true)
       expect(apply_manifest(pp, :catch_failures => true).exit_code).to be_zero
@@ -79,6 +83,10 @@ vault_client::cert_service{ 'test-client':
   common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
+}
+
+vault_client::service{ 'test-renew':
+  role => 'master',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -102,6 +110,10 @@ vault_client::cert_service{ 'test-client':
   role         => 'test/pki/k8s/sign/kube-apiserver',
   ip_sans      => ['8.8.4.4','8.8.8.8'],
   alt_names    => ['public-dns-4.google','public-dns-8.google'],
+}
+
+vault_client::service{ 'test-renew':
+  role => 'master',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
