@@ -5,8 +5,7 @@ After=network.target network-online.target
 
 [Service]
 Type=oneshot
-Environment=VAULT_ADDR=http://127.0.0.1:8200
-Environment=VAULT_CERT_OWNER=user1:group1
+EnvironmentFile=/etc/vault/config
 Environment=VAULT_CERT_TYPE=<%= @key_type %>
 Environment=VAULT_CERT_BITS=<%= @key_bits %>
 <% if @ip_sans.length > 0 -%>
@@ -22,6 +21,8 @@ ExecStart=/opt/bin/vault-helper cert \
 <% if @ip_sans.length > 0 -%>
   '--ip-sans=<%= @ip_sans.join(',') %>' \
 <% end -%>
+  --key-type=<%= @key_type %> \
+  --key-bit-size=<%= @key_bits %> \
   --owner=<%= @uid %> --group=<%= @gid %>
 
 

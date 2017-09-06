@@ -5,7 +5,6 @@ After=network.target network-online.target
 
 [Service]
 Type=oneshot
-Environment=VAULT_ADDR=http://127.0.0.1:8200
 EnvironmentFile=/etc/vault/config
 ExecStart=/opt/bin/vault-helper renew-token --role=master
 
