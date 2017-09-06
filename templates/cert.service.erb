@@ -6,11 +6,6 @@ After=network.target network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/vault/config
-Environment=VAULT_CERT_TYPE=<%= @key_type %>
-Environment=VAULT_CERT_BITS=<%= @key_bits %>
-<% if @ip_sans.length > 0 -%>
-Environment=VAULT_CERT_IP_SANS=<%= @ip_sans.join(',') %>
-<% end -%>
 ExecStart=/opt/bin/vault-helper cert \
   <%= @role %> \
   <%= @common_name %> \
