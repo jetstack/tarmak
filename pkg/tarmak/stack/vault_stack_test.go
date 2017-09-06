@@ -39,8 +39,33 @@ func (ft *FakeTunnel) Stop() error {
 
 var _ interfaces.Tunnel = &FakeTunnel{}
 
+func ServerAndClientForTest(
+	t *testing.T, handler http.Handler,
+) (*httptest.Server, *http.Client) {
+	ts := httptest.NewTLSServer(handler)
+	// XXX: More verbose than it needs to be.
+	// See https://github.com/golang/go/issues/18411
+	cert, err := x509.ParseCertificate(ts.TLS.Certificates[0].Certificate[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	certpool := x509.NewCertPool()
+	certpool.AddCert(cert)
+
+	tc := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: certpool,
+			},
+		},
+	}
+	return ts, tc
+}
+
 func TestVaultTunnel(t *testing.T) {
-	ts := httptest.NewTLSServer(
+	ts, tc := ServerAndClientForTest(
+		t,
 		http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -57,24 +82,6 @@ func TestVaultTunnel(t *testing.T) {
 			},
 		),
 	)
-	defer ts.Close()
-	// XXX: More verbose than it needs to be.
-	// See https://github.com/golang/go/issues/18411
-	cert, err := x509.ParseCertificate(ts.TLS.Certificates[0].Certificate[0])
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	certpool := x509.NewCertPool()
-	certpool.AddCert(cert)
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: certpool,
-			},
-		},
-	}
 
 	u, err := url.Parse(ts.URL)
 	if err != nil {
@@ -90,7 +97,7 @@ func TestVaultTunnel(t *testing.T) {
 	}
 	vaultClient, err := vault.NewClient(
 		&vault.Config{
-			HttpClient: httpClient,
+			HttpClient: tc,
 		},
 	)
 	if err != nil {
