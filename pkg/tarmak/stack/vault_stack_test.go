@@ -1,32 +1,78 @@
 package stack_test
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"testing"
 
-	"github.com/hashicorp/vault/http"
-	"github.com/hashicorp/vault/vault"
+	vault "github.com/hashicorp/vault/api"
+
+	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
 
+type FakeTunnel struct {
+	port int
+}
+
+func (ft *FakeTunnel) Port() int {
+	return ft.port
+}
+
+func (ft *FakeTunnel) Start() error {
+	return nil
+}
+
+func (ft *FakeTunnel) Stop() error {
+	return nil
+}
+
+var _ interfaces.Tunnel = &FakeTunnel{}
+
 func TestVaultTunnel(t *testing.T) {
-	core, _, _ := vault.TestCoreUnsealed(t)
-	ln1, addr1 := http.TestServer(t, core)
-	defer ln1.Close()
-	ln2, addr2 := http.TestServer(t, core)
-	defer ln2.Close()
-	st := &stack.Stack{}
-	st.SetOutput(
-		map[string]interface{}{
-			"instance_fqdns": []interface{}{addr1, addr2},
-			"vault_ca":       "",
-		},
+	s := httptest.NewTLSServer(
+		http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusTooManyRequests)
+				fmt.Fprintln(
+					w,
+					`{"initialized":true,
+					  "sealed":false,
+					  "standby":true,
+					  "server_time_utc":1504683364,
+					  "version":"0.7.3",
+					  "cluster_name":"vault-test",
+					  "cluster_id":"test"}`,
+				)
+			},
+		),
 	)
-	vs := &stack.VaultStack{
-		Stack: st,
-	}
-	tunnel, err := vs.VaultTunnel()
+	defer s.Close()
+	u, err := url.Parse(s.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(tunnel)
+	port, err := strconv.Atoi(u.Port())
+	if err != nil {
+		t.Fatal(err)
+	}
+	tunnel := &FakeTunnel{port: port}
+	client, err := vault.NewClient(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fqdn := "host1.example.com"
+	tun := stack.NewVaultTunnel(tunnel, client, fqdn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := tun.VaultClient()
+	l, err := c.Sys().Leader()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(l)
 }

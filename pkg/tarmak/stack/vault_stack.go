@@ -212,8 +212,13 @@ func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, err
 }
 
 func (s *VaultStack) newVaultTunnel(fqdn string, client *vault.Client) *vaultTunnel {
+	tunnel := s.Context().Environment().Tarmak().SSH().Tunnel("bastion", fqdn, 8200)
+	return NewVaultTunnel(tunnel, client, fqdn)
+}
+
+func NewVaultTunnel(tunnel interfaces.Tunnel, client *vault.Client, fqdn string) *vaultTunnel {
 	return &vaultTunnel{
-		tunnel: s.Context().Environment().Tarmak().SSH().Tunnel("bastion", fqdn, 8200),
+		tunnel: tunnel,
 		client: client,
 		fqdn:   fqdn,
 	}
