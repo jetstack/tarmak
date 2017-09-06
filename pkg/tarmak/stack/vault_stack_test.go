@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"testing"
 
-	vault "github.com/hashicorp/vault/api"
-
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
@@ -95,16 +93,8 @@ func TestVaultTunnel(t *testing.T) {
 		bindAddress: u.Hostname(),
 		port:        port,
 	}
-	vaultClient, err := vault.NewClient(
-		&vault.Config{
-			HttpClient: tc,
-		},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
 	fqdn := "host1.example.com"
-	tun := stack.NewVaultTunnel(tunnel, vaultClient, fqdn)
+	tun, err := stack.NewVaultTunnel(tunnel, tc, fqdn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,6 +103,11 @@ func TestVaultTunnel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(l.Standby)
-	t.Log(l.Sealed)
+	t.Log(l)
+	if !l.Standby {
+		t.Error("'Standby' unexpectedly false")
+	}
+	if l.Sealed {
+		t.Error("'Sealed' unexpectedly true")
+	}
 }

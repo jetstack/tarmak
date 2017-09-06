@@ -197,33 +197,47 @@ func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, err
 		Timeout:   10 * time.Second,
 	}
 
-	vaultClient, err := vault.NewClient(&vault.Config{
-		HttpClient: httpClient,
-	})
-	if err != nil {
-		return []*vaultTunnel{}, fmt.Errorf("couldn't init vault client: %s:", err)
-	}
-
 	output := make([]*vaultTunnel, len(instances))
-	for pos, _ := range instances {
-		output[pos] = s.newVaultTunnel(instances[pos], vaultClient)
+	for pos := range instances {
+		fqdn := instances[pos]
+		sshTunnel := s.Context().Environment().Tarmak().SSH().Tunnel(
+			"bastion", fqdn, 8200,
+		)
+		vaultTunnel, err := NewVaultTunnel(
+			sshTunnel,
+			httpClient,
+			fqdn,
+		)
+		if err != nil {
+			return output, err
+		}
+		output[pos] = vaultTunnel
 	}
 
 	return output, nil
 
 }
 
-func (s *VaultStack) newVaultTunnel(fqdn string, client *vault.Client) *vaultTunnel {
-	tunnel := s.Context().Environment().Tarmak().SSH().Tunnel("bastion", fqdn, 8200)
-	return NewVaultTunnel(tunnel, client, fqdn)
-}
+func NewVaultTunnel(
+	tunnel interfaces.Tunnel, httpClient *http.Client, fqdn string,
+) (*vaultTunnel, error) {
+	vaultClient, err := vault.NewClient(
+		&vault.Config{
+			HttpClient: httpClient,
+			Address: fmt.Sprintf(
+				"https://%s:%d", tunnel.BindAddress(), tunnel.Port(),
+			),
+		},
+	)
+	if err != nil {
+		return &vaultTunnel{}, fmt.Errorf("couldn't init vault client: %s:", err)
+	}
 
-func NewVaultTunnel(tunnel interfaces.Tunnel, client *vault.Client, fqdn string) *vaultTunnel {
 	return &vaultTunnel{
 		tunnel: tunnel,
-		client: client,
+		client: vaultClient,
 		fqdn:   fqdn,
-	}
+	}, nil
 }
 
 func (v *vaultTunnel) FQDN() string {
@@ -252,13 +266,6 @@ func (v *vaultTunnel) BindAddress() string {
 }
 
 func (v *vaultTunnel) VaultClient() *vault.Client {
-	v.client.SetAddress(
-		fmt.Sprintf(
-			"https://%s:%d",
-			v.tunnel.BindAddress(),
-			v.tunnel.Port(),
-		),
-	)
 	return v.client
 }
 
