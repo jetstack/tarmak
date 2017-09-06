@@ -111,6 +111,7 @@ type Tunnel interface {
 	Start() error
 	Stop() error
 	Port() int
+	BindAddress() string
 }
 
 type VaultTunnel interface {

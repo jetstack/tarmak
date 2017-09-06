@@ -52,6 +52,8 @@ type vaultTunnel struct {
 	fqdn        string
 }
 
+var _ interfaces.Tunnel = &vaultTunnel{}
+
 func (s *VaultStack) vaultCA() ([]byte, error) {
 	vaultCAIntf, ok := s.output["vault_ca"]
 	if !ok {
@@ -245,8 +247,18 @@ func (v *vaultTunnel) Port() int {
 	return v.tunnel.Port()
 }
 
+func (v *vaultTunnel) BindAddress() string {
+	return v.tunnel.BindAddress()
+}
+
 func (v *vaultTunnel) VaultClient() *vault.Client {
-	v.client.SetAddress(fmt.Sprintf("https://localhost:%d", v.tunnel.Port()))
+	v.client.SetAddress(
+		fmt.Sprintf(
+			"https://%s:%d",
+			v.tunnel.BindAddress(),
+			v.tunnel.Port(),
+		),
+	)
 	return v.client
 }
 

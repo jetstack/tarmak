@@ -1,6 +1,8 @@
 package stack_test
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -15,11 +17,16 @@ import (
 )
 
 type FakeTunnel struct {
-	port int
+	bindAddress string
+	port        int
 }
 
 func (ft *FakeTunnel) Port() int {
 	return ft.port
+}
+
+func (ft *FakeTunnel) BindAddress() string {
+	return ft.bindAddress
 }
 
 func (ft *FakeTunnel) Start() error {
@@ -33,10 +40,10 @@ func (ft *FakeTunnel) Stop() error {
 var _ interfaces.Tunnel = &FakeTunnel{}
 
 func TestVaultTunnel(t *testing.T) {
-	s := httptest.NewTLSServer(
+	ts := httptest.NewTLSServer(
 		http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusTooManyRequests)
+				w.WriteHeader(http.StatusOK)
 				fmt.Fprintln(
 					w,
 					`{"initialized":true,
@@ -50,8 +57,26 @@ func TestVaultTunnel(t *testing.T) {
 			},
 		),
 	)
-	defer s.Close()
-	u, err := url.Parse(s.URL)
+	defer ts.Close()
+	// XXX: More verbose than it needs to be.
+	// See https://github.com/golang/go/issues/18411
+	cert, err := x509.ParseCertificate(ts.TLS.Certificates[0].Certificate[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	certpool := x509.NewCertPool()
+	certpool.AddCert(cert)
+
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: certpool,
+			},
+		},
+	}
+
+	u, err := url.Parse(ts.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,20 +84,28 @@ func TestVaultTunnel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tunnel := &FakeTunnel{port: port}
-	client, err := vault.NewClient(nil)
+	tunnel := &FakeTunnel{
+		bindAddress: u.Hostname(),
+		port:        port,
+	}
+	vaultClient, err := vault.NewClient(
+		&vault.Config{
+			HttpClient: httpClient,
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fqdn := "host1.example.com"
-	tun := stack.NewVaultTunnel(tunnel, client, fqdn)
+	tun := stack.NewVaultTunnel(tunnel, vaultClient, fqdn)
 	if err != nil {
 		t.Fatal(err)
 	}
 	c := tun.VaultClient()
-	l, err := c.Sys().Leader()
+	l, err := c.Sys().Health()
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(l)
+	t.Log(l.Standby)
+	t.Log(l.Sealed)
 }

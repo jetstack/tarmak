@@ -25,6 +25,8 @@ type Tunnel struct {
 	retryWait  time.Duration
 }
 
+var _ interfaces.Tunnel = &Tunnel{}
+
 // This opens a local tunnel through a SSH connection
 func (s *SSH) Tunnel(hostname string, destination string, destinationPort int) interfaces.Tunnel {
 	t := &Tunnel{
@@ -35,7 +37,7 @@ func (s *SSH) Tunnel(hostname string, destination string, destinationPort int) i
 		retryWait:  500 * time.Millisecond,
 	}
 
-	args := append(s.args(), "-N", fmt.Sprintf("-L%d:%s:%d", t.localPort, destination, destinationPort), "bastion")
+	args := append(s.args(), "-N", fmt.Sprintf("-L%s:%d:%s:%d", t.BindAddress(), t.localPort, destination, destinationPort), "bastion")
 
 	t.cmd = exec.Command(args[0], args[1:len(args)]...)
 
@@ -119,4 +121,8 @@ func (t *Tunnel) Stop() error {
 
 func (t *Tunnel) Port() int {
 	return t.localPort
+}
+
+func (t *Tunnel) BindAddress() string {
+	return "localhost"
 }
