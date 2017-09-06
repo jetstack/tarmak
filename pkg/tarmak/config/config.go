@@ -68,11 +68,11 @@ func MergeEnvironment(t interfaces.Tarmak, in Environment) error {
 		return err
 	} else {
 		// existing config
-		config, err := ReadConfig(t)
+		config, err = ReadConfig(t)
 		if err != nil {
 			return err
 		}
-
+		
 		// overwrite current context
 		config.CurrentContext = contextName
 
