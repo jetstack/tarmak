@@ -24,6 +24,7 @@ describe '::vault_client' do
 class {'vault_client':
   version => '#{version}',
   token => 'init-client-token'
+  init_role => 'master',
 }
 EOS
       # cleanup existing config
@@ -51,6 +52,7 @@ EOS
 class {'vault_client':
   version => '#{version}',
   token => 'init-client-token'
+  init_role => 'master',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -77,6 +79,7 @@ EOS
 class {'vault_client':
   version => '#{version}',
   token => 'init-client-token'
+  init_role => 'master',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -102,6 +105,7 @@ EOS
 class {'vault_client':
   version => '#{version}',
   token => 'init-client-token'
+  init_role => 'master',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -137,7 +141,6 @@ class {'vault_client':
   version => '#{version}',
   init_token => 'init-client-token',
   init_role => 'master',
-  init_policies => ['default', 'test-ca-client'],
 }
 EOS
       # cleanup existing config

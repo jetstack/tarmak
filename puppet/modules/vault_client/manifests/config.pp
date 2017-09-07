@@ -10,7 +10,6 @@ class vault_client::config {
   }
   $server_url = $::vault_client::server_url
   $init_role = $::vault_client::init_role
-  $init_policies = $::vault_client::init_policies
 
   if $::vault_client::ca_cert_path != undef {
     $ca_cert_path = $::vault_client::ca_cert_path
