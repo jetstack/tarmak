@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'vault_client' do
-    version = "0.8.5"
+    version = "0.8.6"
     context 'with none of init_token and token specified' do
         it do
             is_expected.to compile.and_raise_error(/provide at least one of/)
@@ -36,7 +36,7 @@ describe 'vault_client' do
     context "with init_token 'test-init-token'" do
         let(:params) do {
             :init_token => 'test-init-token',
-            :init_role => 'test-role',
+            :init_role => 'test-master',
         }
         end
         it do

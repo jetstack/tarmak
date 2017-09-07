@@ -1,7 +1,7 @@
 require 'spec_helper_acceptance'
 
 describe '::vault_client' do
-  version = '0.8.5'
+  version = '0.8.6'
 
   before(:all) do
     hosts.each do |host|
@@ -23,14 +23,14 @@ describe '::vault_client' do
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'init-client-token'
-  init_role => 'master',
+  token => 'init-token-master',
+  init_role => 'test-master',
 }
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
       shell('mkdir -p /etc/vault')
-      shell('echo "init-client-token" > /etc/vault/init-token')
+      shell('echo "init-token-master" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
@@ -51,8 +51,8 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'init-client-token'
-  init_role => 'master',
+  token => 'init-token-master',
+  init_role => 'test-master',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -78,8 +78,8 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'init-client-token'
-  init_role => 'master',
+  token => 'init-token-master',
+  init_role => 'test-master',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -104,8 +104,8 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'init-client-token'
-  init_role => 'master',
+  token => 'init-token-master',
+  init_role => 'test-master',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -139,14 +139,14 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  init_token => 'init-client-token',
-  init_role => 'master',
+  init_token => 'init-token-master',
+  init_role => 'test-master',
 }
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
       shell('mkdir -p /etc/vault')
-      shell('echo "init-client-token" > /etc/vault/init-token')
+      shell('echo "init-token-master" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)

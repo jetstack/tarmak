@@ -3,7 +3,6 @@
 set -e
 
 export VAULT_ADDR=http://127.0.0.1:8200
-export VAULT_DEV_ROOT_TOKEN_ID=init-client-token
 
 
 #Download vault binary
