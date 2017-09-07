@@ -49,7 +49,7 @@ describe 'vault_client' do
             is_expected.to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_ADDR=http://127.0.0.1:8200')}/)
         end
         it do
-            is_expected.to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_INIT_ROLE=test-role')}/)
+            is_expected.to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_INIT_ROLE=test-master')}/)
         end
         it do
         end
