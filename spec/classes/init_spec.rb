@@ -30,7 +30,6 @@ describe 'vault_client' do
             is_expected.not_to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_INIT_ROLE=')}/)
         end
         it do
-            is_expected.not_to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_INIT_POLICIES=')}/)
         end
     end
 
@@ -38,7 +37,6 @@ describe 'vault_client' do
         let(:params) do {
             :init_token => 'test-init-token',
             :init_role => 'test-role',
-            :init_policies => ['test-policy1', 'test-policy2'],
         }
         end
         it do
@@ -54,7 +52,6 @@ describe 'vault_client' do
             is_expected.to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_INIT_ROLE=test-role')}/)
         end
         it do
-            is_expected.to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_INIT_POLICIES=test-policy1,test-policy2')}/)
         end
     end
 

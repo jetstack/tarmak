@@ -6,7 +6,7 @@ After=network.target network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/vault/config
-ExecStart=/opt/bin/vault-helper renew-token --role=<%= @role %>
+ExecStart=/opt/bin/vault-helper renew-token --role=<%= @init_role %>
 
 [Install]
 WantedBy=multi-user.target

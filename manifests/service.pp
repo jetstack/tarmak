@@ -1,8 +1,4 @@
-define vault_client::service (
-    String $role,
-)
-{
-  require vault_client
+class vault_client::service {
 
   $systemd_dir = '/etc/systemd/system'
   $service_name = $::vault_client::token_service_name
