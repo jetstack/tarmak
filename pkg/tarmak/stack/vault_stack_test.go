@@ -50,7 +50,6 @@ func ServerAndClientForTest(
 
 	certpool := x509.NewCertPool()
 	certpool.AddCert(cert)
-
 	tc := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -62,7 +61,7 @@ func ServerAndClientForTest(
 }
 
 func TestVaultTunnel(t *testing.T) {
-	ts, tc := ServerAndClientForTest(
+	ts, _ := ServerAndClientForTest(
 		t,
 		http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +93,8 @@ func TestVaultTunnel(t *testing.T) {
 		port:        port,
 	}
 	fqdn := "host1.example.com"
-	tun, err := stack.NewVaultTunnel(tunnel, tc, fqdn)
+	vaultCA := ts.TLS.Certificates[0].Certificate[0]
+	tun, err := stack.NewVaultTunnel(tunnel, fqdn, vaultCA)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +103,7 @@ func TestVaultTunnel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(l)
+	t.Logf("%#v", l)
 	if !l.Standby {
 		t.Error("'Standby' unexpectedly false")
 	}

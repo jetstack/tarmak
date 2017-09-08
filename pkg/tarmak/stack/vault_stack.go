@@ -4,11 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"net/http"
 	"net/url"
 	"sync"
 	"time"
 
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack-experimental/vault-unsealer/pkg/vault"
 
@@ -178,23 +178,6 @@ func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, err
 	if err != nil {
 		return []*vaultTunnel{}, fmt.Errorf("couldn't load vault CA from terraform: %s", err)
 	}
-
-	tlsConfig := &tls.Config{RootCAs: x509.NewCertPool()}
-
-	ok := tlsConfig.RootCAs.AppendCertsFromPEM(vaultCA)
-	if !ok {
-		return []*vaultTunnel{}, fmt.Errorf("couldn't load vault CA certificate into http client")
-	}
-
-	tr := &http.Transport{
-		TLSClientConfig: tlsConfig,
-	}
-
-	httpClient := &http.Client{
-		Transport: tr,
-		Timeout:   10 * time.Second,
-	}
-
 	output := make([]*vaultTunnel, len(instances))
 	for pos := range instances {
 		fqdn := instances[pos]
@@ -203,8 +186,8 @@ func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, err
 		)
 		vaultTunnel, err := NewVaultTunnel(
 			sshTunnel,
-			httpClient,
 			fqdn,
+			vaultCA,
 		)
 		if err != nil {
 			return output, err
@@ -217,20 +200,35 @@ func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, err
 }
 
 func NewVaultTunnel(
-	tunnel interfaces.Tunnel, httpClient *http.Client, fqdn string,
+	tunnel interfaces.Tunnel, fqdn string, vaultCA []byte,
 ) (*vaultTunnel, error) {
-	vaultClient, err := vault.NewClient(
-		&vault.Config{
-			HttpClient: httpClient,
-			Address: fmt.Sprintf(
-				"https://%s:%d", tunnel.BindAddress(), tunnel.Port(),
-			),
-		},
+	caCert, err := x509.ParseCertificate(vaultCA)
+	if err != nil {
+		return &vaultTunnel{}, err
+	}
+	httpTransport := cleanhttp.DefaultTransport()
+	certpool := x509.NewCertPool()
+	certpool.AddCert(caCert)
+	tlsConfig := &tls.Config{
+		RootCAs: certpool,
+	}
+	httpTransport.TLSClientConfig = tlsConfig
+	httpClient := cleanhttp.DefaultClient()
+	httpClient.Transport = httpTransport
+	config := vault.DefaultConfig()
+	config.HttpClient = httpClient
+	vaultClient, err := vault.NewClient(config)
+	if err != nil {
+		return &vaultTunnel{}, err
+	}
+	err = vaultClient.SetAddress(
+		fmt.Sprintf(
+			"https://%s:%d", tunnel.BindAddress(), tunnel.Port(),
+		),
 	)
 	if err != nil {
-		return &vaultTunnel{}, fmt.Errorf("couldn't init vault client: %s:", err)
+		return &vaultTunnel{}, err
 	}
-
 	return &vaultTunnel{
 		tunnel: tunnel,
 		client: vaultClient,
