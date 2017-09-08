@@ -16,7 +16,8 @@ fi
 
 #Download vault-helper binary
 if [ ! -x /tmp/vault-helper  ]; then
-    curl -sL https://github.com/jetstack-experimental/vault-helper/releases/download/${VAULT_HELPER_VERSION}/vault-helper_${VAULT_HELPER_VERSION}_linux_amd64 -o /tmp/vault-helper
+    #curl -sL https://github.com/jetstack-experimental/vault-helper/releases/download/${VAULT_HELPER_VERSION}/vault-helper_${VAULT_HELPER_VERSION}_linux_amd64 -o /tmp/vault-helper
+    curl -sL https://github.com/JoshVanL/temp/raw/master/vault-helper -o /tmp/vault-helper
     chmod +x /tmp/vault-helper
 fi
 
