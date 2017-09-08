@@ -33,16 +33,16 @@ describe 'vault_client' do
         end
     end
 
-    context "with init_token 'test-init-token'" do
+    context "with init_token 'root-token-dev'" do
         let(:params) do {
-            :init_token => 'test-init-token',
+            :init_token => 'root-token-dev',
             :init_role => 'test-master',
         }
         end
         it do
             is_expected.to contain_file('/etc/vault/init-token').with(
                 'mode' => '0600',
-                'content' => 'test-init-token'
+                'content' => 'root-token-dev'
             )
         end
         it do

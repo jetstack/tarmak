@@ -23,14 +23,14 @@ describe '::vault_client' do
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'init-token-master',
+  token => 'root-token-dev',
   init_role => 'test-master',
 }
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
       shell('mkdir -p /etc/vault')
-      shell('echo "init-token-master" > /etc/vault/init-token')
+      shell('echo "root-token-dev" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
@@ -43,7 +43,7 @@ EOS
     end
 
     it 'runs renew-token without error' do
-        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; /opt/bin/vault-helper renew-token --role=master')
+        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; /opt/bin/vault-helper renew-token --init-role=test-master')
       expect(result.exit_code).to eq(0)
     end
 
@@ -51,7 +51,7 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'init-token-master',
+  token => 'root-token-dev',
   init_role => 'test-master',
 }
 
@@ -59,10 +59,6 @@ vault_client::cert_service{ 'test-client':
   common_name  => 'test-client',
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
-}
-
-vault_client::service{ 'test-renew':
-  role => 'master',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -78,7 +74,7 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'init-token-master',
+  token => 'root-token-dev',
   init_role => 'test-master',
 }
 
@@ -86,10 +82,6 @@ vault_client::cert_service{ 'test-client':
   common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
   role         => 'test/pki/k8s/sign/kube-apiserver',
-}
-
-vault_client::service{ 'test-renew':
-  role => 'master',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -104,7 +96,7 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'init-token-master',
+  token => 'root-token-dev',
   init_role => 'test-master',
 }
 
@@ -114,10 +106,6 @@ vault_client::cert_service{ 'test-client':
   role         => 'test/pki/k8s/sign/kube-apiserver',
   ip_sans      => ['8.8.4.4','8.8.8.8'],
   alt_names    => ['public-dns-4.google','public-dns-8.google'],
-}
-
-vault_client::service{ 'test-renew':
-  role => 'master',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -139,14 +127,14 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  init_token => 'init-token-master',
+  init_token => 'root-token-dev',
   init_role => 'test-master',
 }
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
       shell('mkdir -p /etc/vault')
-      shell('echo "init-token-master" > /etc/vault/init-token')
+      shell('echo "root-token-dev" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)

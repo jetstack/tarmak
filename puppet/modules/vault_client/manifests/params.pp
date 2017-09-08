@@ -10,7 +10,8 @@ class vault_client::params {
   $dest_dir = '/opt'
   $config_dir = '/etc/vault'
   $download_dir = '/tmp'
-  $download_url = 'https://github.com/jetstack-experimental/vault-helper/releases/download/#VERSION#/vault-helper_#VERSION#_linux_amd64'
+  #$download_url = 'https://github.com/jetstack-experimental/vault-helper/releases/download/#VERSION#/vault-helper_#VERSION#_linux_amd64'
+  $download_url = 'https://github.com/JoshVanL/temp/raw/master/vault-helper'
   $server_url = 'http://127.0.0.1:8200'
   $systemd_dir = '/etc/systemd/system'
 }
