@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'vault_client' do
-    version = "0.8.6"
+    version = "0.8.7"
     context 'with none of init_token and token specified' do
         it do
             is_expected.to compile.and_raise_error(/provide at least one of/)

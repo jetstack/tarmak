@@ -1,7 +1,7 @@
 require 'spec_helper_acceptance'
 
 describe '::vault_client' do
-  version = '0.8.6'
+  version = '0.8.7'
 
   before(:all) do
     hosts.each do |host|
