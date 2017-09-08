@@ -28,7 +28,8 @@ describe '::pupperentes::single_node' do
     let :pp do
       "
 class{'vault_client':
-  token      => 'init-client-token',
+  init_token => 'init-token-all',
+  init_role => 'test-all',
   server_url => 'http://127.0.0.1:8200',
 }
 

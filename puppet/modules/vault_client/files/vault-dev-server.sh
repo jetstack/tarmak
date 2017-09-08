@@ -21,6 +21,8 @@ if [ ! -x /tmp/vault-helper  ]; then
 fi
 
 mkdir -p /etc/vault
+printf "root-token-dev" > /etc/vault/init-token
+
 
 exec /tmp/vault-helper dev-server test \
     --init-token-etcd=init-token-etcd \
