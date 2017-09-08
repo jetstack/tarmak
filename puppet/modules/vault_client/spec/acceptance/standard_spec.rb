@@ -23,7 +23,7 @@ describe '::vault_client' do
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'root-token-dev',
+  init_token => 'init-token-all',
   init_role => 'test-master',
 }
 EOS
@@ -51,7 +51,7 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'root-token-dev',
+  init_token => 'init-token-all',
   init_role => 'test-master',
 }
 
@@ -74,7 +74,7 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'root-token-dev',
+  init_token => 'init-token-all',
   init_role => 'test-master',
 }
 
@@ -96,7 +96,7 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  token => 'root-token-dev',
+  init_token => 'init-token-all',
   init_role => 'test-master',
 }
 
@@ -127,7 +127,7 @@ EOS
       pp = <<-EOS
 class {'vault_client':
   version => '#{version}',
-  init_token => 'root-token-dev',
+  init_token => 'init-token-all',
   init_role => 'test-master',
 }
 EOS

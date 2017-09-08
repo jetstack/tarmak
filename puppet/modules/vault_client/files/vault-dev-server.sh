@@ -22,6 +22,10 @@ if [ ! -x /tmp/vault-helper  ]; then
 fi
 
 mkdir -p /etc/vault
-printf "init-token-client" > /etc/vault/init-token
+printf "root-dev-token" > /etc/vault/init-token
 
-exec /tmp/vault-helper dev-server test --init-token-etcd=init-token-etcd --init-token-master=init-token-master --init-token-worker=init-token-worker --init-token-all=init-token-client
+exec /tmp/vault-helper dev-server test \
+    --init-token-etcd=init-token-etcd \
+    --init-token-master=init-token-master \
+    --init-token-worker=init-token-worker \
+    --init-token-all=init-token-all
