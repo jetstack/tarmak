@@ -29,6 +29,8 @@ class {'vault_client':
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
+      shell('mkdir -p /etc/vault')
+      shell('echo "root-token-dev" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
