@@ -52,18 +52,22 @@ type vaultTunnel struct {
 
 var _ interfaces.Tunnel = &vaultTunnel{}
 
-func (s *VaultStack) vaultCA() ([]byte, error) {
+func (s *VaultStack) vaultCA() (*x509.CertPool, error) {
+	certpool := x509.NewCertPool()
 	vaultCAIntf, ok := s.output["vault_ca"]
 	if !ok {
-		return []byte{}, fmt.Errorf("unable to find terraform output 'vault_ca'")
+		return certpool, fmt.Errorf("unable to find terraform output 'vault_ca'")
 	}
-
 	vaultCA, ok := vaultCAIntf.(string)
 	if !ok {
-		return []byte{}, fmt.Errorf("unexpected type for 'vault_ca': %t", vaultCAIntf)
+		return certpool, fmt.Errorf("unexpected type for 'vault_ca': %t", vaultCAIntf)
+	}
+	ok = certpool.AppendCertsFromPEM([]byte(vaultCA))
+	if !ok {
+		return certpool, fmt.Errorf("failed to parse vault CA. %q", vaultCA)
 	}
 
-	return []byte(vaultCA), nil
+	return certpool, nil
 }
 
 func (s *VaultStack) vaultURL() (*url.URL, error) {
@@ -200,19 +204,12 @@ func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, err
 }
 
 func NewVaultTunnel(
-	tunnel interfaces.Tunnel, fqdn string, vaultCA []byte,
+	tunnel interfaces.Tunnel, fqdn string, vaultCA *x509.CertPool,
 ) (*vaultTunnel, error) {
-	caCert, err := x509.ParseCertificate(vaultCA)
-	if err != nil {
-		return &vaultTunnel{}, err
-	}
 	httpTransport := cleanhttp.DefaultTransport()
-	certpool := x509.NewCertPool()
-	certpool.AddCert(caCert)
-	tlsConfig := &tls.Config{
-		RootCAs: certpool,
+	httpTransport.TLSClientConfig = &tls.Config{
+		RootCAs: vaultCA,
 	}
-	httpTransport.TLSClientConfig = tlsConfig
 	httpClient := cleanhttp.DefaultClient()
 	httpClient.Transport = httpTransport
 	config := vault.DefaultConfig()

@@ -1,6 +1,7 @@
 package stack_test
 
 import (
+	"crypto/x509"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -67,7 +68,12 @@ func TestVaultTunnel(t *testing.T) {
 		port:        port,
 	}
 	fqdn := "host1.example.com"
-	vaultCA := ts.TLS.Certificates[0].Certificate[0]
+	vaultCA := x509.NewCertPool()
+	vaultCACert, err := x509.ParseCertificate(ts.TLS.Certificates[0].Certificate[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	vaultCA.AddCert(vaultCACert)
 	tun, err := stack.NewVaultTunnel(tunnel, fqdn, vaultCA)
 	if err != nil {
 		t.Fatal(err)
