@@ -2,7 +2,10 @@ package config
 
 import (
 	"errors"
-	"io"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -11,25 +14,36 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
-var scheme *runtime.Scheme
-var codecs serializer.CodecFactory
-var log *logrus.Entry
+type Config struct {
+	tarmak interfaces.Tarmak
 
-func init() {
-	log = logrus.New().WithField("module", "config")
+	conf *tarmakv1alpha1.Config
 
-	scheme = runtime.NewScheme()
-	codecs = serializer.NewCodecFactory(scheme)
+	scheme *runtime.Scheme
+	codecs serializer.CodecFactory
+	log    *logrus.Entry
+}
 
-	if err := clusterv1alpha1.AddToScheme(scheme); err != nil {
-		panic(err)
+func New(tarmak interfaces.Tarmak) (*Config, error) {
+	c := &Config{
+		tarmak: tarmak,
+		log:    tarmak.Log().WithField("module", "config"),
+		scheme: runtime.NewScheme(),
+	}
+	c.codecs = serializer.NewCodecFactory(c.scheme)
+
+	if err := clusterv1alpha1.AddToScheme(c.scheme); err != nil {
+		return nil, err
 	}
 
-	if err := tarmakv1alpha1.AddToScheme(scheme); err != nil {
-		panic(err)
+	if err := tarmakv1alpha1.AddToScheme(c.scheme); err != nil {
+		return nil, err
 	}
+
+	return c, nil
 }
 
 func newConfig() *tarmakv1alpha1.Config {
@@ -37,23 +51,23 @@ func newConfig() *tarmakv1alpha1.Config {
 	return c
 }
 
-func NewAWSConfigClusterSingle() *tarmakv1alpha1.Config {
-	c := newConfig()
-	c.Clusters = []clusterv1alpha1.Cluster{
+func (c *Config) NewAWSConfigClusterSingle() *tarmakv1alpha1.Config {
+	conf := newConfig()
+	conf.Clusters = []clusterv1alpha1.Cluster{
 		*NewClusterSingle("dev", "cluster"),
 	}
 	provider := NewAWSProfileProvider("dev", "jetstack-dev")
 	cluster := NewClusterSingle("dev", "cluster")
 	cluster.CloudId = provider.ObjectMeta.Name
-	c.Providers = []tarmakv1alpha1.Provider{*provider}
-	c.Clusters = []clusterv1alpha1.Cluster{*cluster}
-	scheme.Default(c)
-	return c
+	conf.Providers = []tarmakv1alpha1.Provider{*provider}
+	conf.Clusters = []clusterv1alpha1.Cluster{*cluster}
+	c.scheme.Default(conf)
+	return conf
 }
 
-func writeYAML(config *tarmakv1alpha1.Config, destination io.Writer) error {
+func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
 	var encoder runtime.Encoder
-	mediaTypes := codecs.SupportedMediaTypes()
+	mediaTypes := c.codecs.SupportedMediaTypes()
 	for _, info := range mediaTypes {
 		if info.MediaType == "application/yaml" {
 			encoder = info.Serializer
@@ -63,12 +77,63 @@ func writeYAML(config *tarmakv1alpha1.Config, destination io.Writer) error {
 	if encoder == nil {
 		return errors.New("unable to locate yaml encoder")
 	}
-	encoder = json.NewYAMLSerializer(json.DefaultMetaFactory, scheme, scheme)
-	encoder = codecs.EncoderForVersion(encoder, tarmakv1alpha1.SchemeGroupVersion)
+	encoder = json.NewYAMLSerializer(json.DefaultMetaFactory, c.scheme, c.scheme)
+	encoder = c.codecs.EncoderForVersion(encoder, tarmakv1alpha1.SchemeGroupVersion)
 
-	if err := encoder.Encode(config, destination); err != nil {
+	file, err := os.Create(c.configPath())
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	if err := encoder.Encode(config, file); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (c *Config) Context(environment string, name string) (context *clusterv1alpha1.Cluster, err error) {
+	for pos, _ := range c.conf.Clusters {
+		context := &c.conf.Clusters[pos]
+		if context.Environment == environment && context.Name == name {
+			return context, nil
+		}
+	}
+	return nil, fmt.Errorf("context '%s' in environment '%s' not found", name, environment)
+}
+
+func (c *Config) Contexts(environment string) (contexts []*clusterv1alpha1.Cluster) {
+	for pos, _ := range c.conf.Clusters {
+		context := &c.conf.Clusters[pos]
+		if context.Environment == environment {
+			contexts = append(contexts, context)
+		}
+	}
+	return contexts
+}
+
+func (c *Config) configPath() string {
+	return filepath.Join(c.tarmak.ConfigPath(), "tarmak.yaml")
+}
+
+func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
+	path := c.configPath()
+
+	configBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	configObj, gvk, err := c.codecs.UniversalDecoder(tarmakv1alpha1.SchemeGroupVersion).Decode(configBytes, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	config, ok := configObj.(*tarmakv1alpha1.Config)
+	if !ok {
+		return nil, fmt.Errorf("got unexpected config type: %v", gvk)
+	}
+
+	return config, nil
 }

@@ -7,16 +7,16 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 )
 
-func newCluster(namespace string, name string) *clusterv1alpha1.Cluster {
+func newCluster(environment string, name string) *clusterv1alpha1.Cluster {
 	c := &clusterv1alpha1.Cluster{}
 	c.SetName(name)
-	c.SetNamespace(namespace)
+	c.SetNamespace(environment)
 	return c
 }
 
-// This creates a new cluster for a single cluster namespace
-func NewClusterSingle(namespace string, name string) *clusterv1alpha1.Cluster {
-	c := newCluster(namespace, name)
+// This creates a new cluster for a single cluster environment
+func NewClusterSingle(environment string, name string) *clusterv1alpha1.Cluster {
+	c := newCluster(environment, name)
 	c.ServerPools = []clusterv1alpha1.ServerPool{
 		*newServerPoolBastion(),
 		*newServerPoolVault(),
@@ -27,9 +27,9 @@ func NewClusterSingle(namespace string, name string) *clusterv1alpha1.Cluster {
 	return c
 }
 
-// This creates a new cluster for a multi cluster namespace
-func NewClusterMulti(namespace string, name string) *clusterv1alpha1.Cluster {
-	c := newCluster(namespace, name)
+// This creates a new cluster for a multi cluster environment
+func NewClusterMulti(environment string, name string) *clusterv1alpha1.Cluster {
+	c := newCluster(environment, name)
 	c.ServerPools = []clusterv1alpha1.ServerPool{
 		*newServerPoolEtcd(),
 		*newServerPoolMaster(),
@@ -38,9 +38,9 @@ func NewClusterMulti(namespace string, name string) *clusterv1alpha1.Cluster {
 	return c
 }
 
-// This creates a new hub for a multi cluster namespace
-func NewHub(namespace string) *clusterv1alpha1.Cluster {
-	c := newCluster(namespace, "hub")
+// This creates a new hub for a multi cluster environment
+func NewHub(environment string) *clusterv1alpha1.Cluster {
+	c := newCluster(environment, "hub")
 	c.ServerPools = []clusterv1alpha1.ServerPool{
 		*newServerPoolBastion(),
 		*newServerPoolVault(),
