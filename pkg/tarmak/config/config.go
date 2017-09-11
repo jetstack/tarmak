@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,6 +27,8 @@ type Config struct {
 	codecs serializer.CodecFactory
 	log    *logrus.Entry
 }
+
+var _ interfaces.Config = &Config{}
 
 func New(tarmak interfaces.Tarmak) (*Config, error) {
 	c := &Config{
@@ -93,6 +96,19 @@ func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
 	return nil
 }
 
+func (c *Config) CurrentContextName() string {
+	split := strings.Split(c.conf.CurrentContext, "-")
+	if len(split) < 2 {
+		return ""
+	}
+	return split[1]
+}
+
+func (c *Config) CurrentEnvironmentName() string {
+	split := strings.Split(c.conf.CurrentContext, "-")
+	return split[0]
+}
+
 func (c *Config) Context(environment string, name string) (context *clusterv1alpha1.Cluster, err error) {
 	for pos, _ := range c.conf.Clusters {
 		context := &c.conf.Clusters[pos]
@@ -111,6 +127,40 @@ func (c *Config) Contexts(environment string) (contexts []*clusterv1alpha1.Clust
 		}
 	}
 	return contexts
+}
+
+func (c *Config) Environment(name string) (*tarmakv1alpha1.Environment, error) {
+	for pos, _ := range c.conf.Environments {
+		environment := &c.conf.Environments[pos]
+		if environment.Name == name {
+			return environment, nil
+		}
+	}
+	return nil, fmt.Errorf("environment '%s' not found", name)
+}
+
+func (c *Config) Environments() (environments []*tarmakv1alpha1.Environment) {
+	for pos, _ := range c.conf.Environments {
+		environments = append(environments, &c.conf.Environments[pos])
+	}
+	return environments
+}
+
+func (c *Config) Provider(name string) (context *tarmakv1alpha1.Provider, err error) {
+	for pos, _ := range c.conf.Providers {
+		provider := &c.conf.Providers[pos]
+		if provider.Name == name {
+			return provider, nil
+		}
+	}
+	return nil, fmt.Errorf("provider '%s' not found", name)
+}
+
+func (c *Config) Providers() (providers []*tarmakv1alpha1.Provider) {
+	for pos, _ := range c.conf.Providers {
+		providers = append(providers, &c.conf.Providers[pos])
+	}
+	return providers
 }
 
 func (c *Config) configPath() string {
