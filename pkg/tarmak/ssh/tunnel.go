@@ -124,5 +124,5 @@ func (t *Tunnel) Port() int {
 }
 
 func (t *Tunnel) BindAddress() string {
-	return "localhost"
+	return "127.0.0.1"
 }
