@@ -6,7 +6,8 @@ HOSTS:
       - k8s-master
       - k8s-worker
     platform: el-7-x86_64
-    box: puppetlabs/centos-7.2-64-puppet
+    box: centos/7
+    box_version: 1704.01
     hypervisor: vagrant
 CONFIG:
   type: foss

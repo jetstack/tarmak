@@ -1,14 +1,15 @@
+include ::tarmak
 define vault_client::cert_service (
   String $base_path,
   String $common_name,
   String $role,
   Array[String] $alt_names = [],
   Array[String] $ip_sans = [],
+  Integer $uid = 0,
+  Integer $gid = 0,
   String $key_type = 'rsa',
   Integer $key_bits = 2048,
   Integer $frequency = 86400,
-  String $user = 'root',
-  String $group = 'root',
   Array $exec_post = [],
 )
 {

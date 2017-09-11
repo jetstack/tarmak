@@ -28,7 +28,8 @@ describe '::pupperentes::single_node' do
     let :pp do
       "
 class{'vault_client':
-  token      => 'root-token',
+  init_token => 'init-token-all',
+  init_role => 'test-all',
   server_url => 'http://127.0.0.1:8200',
 }
 
@@ -65,9 +66,9 @@ class{'tarmak::single_node':
         end
 
         # setup develop vault server
-        on host, 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-k8s-server.service /etc/systemd/system/vault-k8s-server.service'
+        on host, 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.service /etc/systemd/system/vault-dev-server.service'
         on host, 'systemctl daemon-reload'
-        on host, 'systemctl start vault-k8s-server.service'
+        on host, 'systemctl start vault-dev-server.service'
 
         # start docker
         on host, 'systemctl start docker.service'

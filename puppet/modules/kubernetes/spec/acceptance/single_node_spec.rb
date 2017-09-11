@@ -29,10 +29,11 @@ class{'kubernetes::worker':
     end
 
     before(:all) do
+
       # assign private ip addresses
       hosts.each do |host|
         ip = host.host_hash[:ip]
-        on host, "ifconfig enp0s8 #{ip}/24"
+        on host, "ip addr add #{ip}/24 dev eth1"
         on host, "iptables -F INPUT"
       end
 

@@ -29,7 +29,6 @@ class vault_client (
   $server_url = $::vault_client::params::server_url,
   $systemd_dir = $::vault_client::params::systemd_dir,
   $init_token = undef,
-  $init_policies = [],
   $init_role = undef,
   $token = undef,
   $ca_cert_path = undef,
@@ -78,6 +77,6 @@ class vault_client (
 
   class { '::vault_client::install': }
   -> class { '::vault_client::config': }
-  ->  class { '::vault_client::service': }
+  -> class { '::vault_client::service': }
   -> Class['::vault_client']
 }

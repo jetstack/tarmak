@@ -10,7 +10,6 @@ class vault_client::config {
   }
   $server_url = $::vault_client::server_url
   $init_role = $::vault_client::init_role
-  $init_policies = $::vault_client::init_policies
 
   if $::vault_client::ca_cert_path != undef {
     $ca_cert_path = $::vault_client::ca_cert_path
@@ -43,11 +42,5 @@ class vault_client::config {
   file { $::vault_client::config_path:
     ensure  => file,
     content => template('vault_client/config.erb'),
-  }
-
-  file { $::vault_client::helper_path:
-    ensure  => file,
-    mode    => '0755',
-    content => template('vault_client/helper.erb'),
   }
 }

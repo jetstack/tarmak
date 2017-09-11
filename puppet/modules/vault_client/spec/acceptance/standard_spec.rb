@@ -1,6 +1,7 @@
 require 'spec_helper_acceptance'
 
 describe '::vault_client' do
+  version = '0.8.8'
 
   before(:all) do
     hosts.each do |host|
@@ -21,8 +22,9 @@ describe '::vault_client' do
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
-  token => 'root-token'
+  version => '#{version}',
+  init_token => 'init-token-all',
+  init_role => 'test-all',
 }
 EOS
       # cleanup existing config
@@ -33,27 +35,28 @@ EOS
       expect(apply_manifest(pp, :catch_failures => true).exit_code).to be_zero
     end
 
-    it 'runs the correct version of vault' do
-      show_result = shell('vault version')
-      expect(show_result.stdout).to match(/Vault v0\.7\.2/)
+    it 'runs the correct version of vault-helper' do
+      show_result = shell('/opt/bin/vault-helper version')
+      expect(show_result.stdout).to match(/#{version}/)
     end
 
-    it 'runs token-renew without error' do
-      result = shell('/etc/vault/helper token-renew')
+    it 'runs renew-token without error' do
+        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; export VAULT_INIT_ROLE=test-all; /opt/bin/vault-helper renew-token')
       expect(result.exit_code).to eq(0)
     end
 
     it 'requests a client cert from test-ca' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
-  token => 'root-token'
+  version => '#{version}',
+  init_token => 'init-token-all',
+  init_role => 'test-all',
 }
 
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client',
   base_path    => '/tmp/test-cert-client',
-  role         => 'test-ca/sign/client'
+  role         => 'test/pki/k8s/sign/kube-apiserver',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -68,14 +71,15 @@ EOS
     it 'requests new cert for a changed common_name' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
-  token => 'root-token'
+  version => '#{version}',
+  init_token => 'init-token-all',
+  init_role => 'test-all',
 }
 
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
-  role         => 'test-ca/sign/client'
+  role         => 'test/pki/k8s/sign/kube-apiserver',
 }
 EOS
       apply_manifest(pp, :catch_failures => true)
@@ -89,14 +93,15 @@ EOS
     it 'requests new cert for a added IP/DNS SANs' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
-  token => 'root-token'
+  version => '#{version}',
+  init_token => 'init-token-all',
+  init_role => 'test-all',
 }
 
 vault_client::cert_service{ 'test-client':
   common_name  => 'test-client-aa',
   base_path    => '/tmp/test-cert-client',
-  role         => 'test-ca/sign/client',
+  role         => 'test/pki/k8s/sign/kube-apiserver',
   ip_sans      => ['8.8.4.4','8.8.8.8'],
   alt_names    => ['public-dns-4.google','public-dns-8.google'],
 }
@@ -119,10 +124,9 @@ EOS
     it 'should work with no errors based on the example' do
       pp = <<-EOS
 class {'vault_client':
-  version => '0.7.2',
-  init_token => 'init-token-client',
-  init_role => 'test-ca-client',
-  init_policies => ['default', 'test-ca-client'],
+  version => '#{version}',
+  init_token => 'init-token-all',
+  init_role => 'test-all',
 }
 EOS
       # cleanup existing config
@@ -134,16 +138,8 @@ EOS
     end
 
     it 'renews tokens without error' do
-      renewal_before = shell('/etc/vault/helper exec token-lookup -format=json | jq .data.last_renewal_time')
-      expect(renewal_before.exit_code).to eq(0)
-
       result = shell('systemctl start vault-token-renewal.service')
       expect(result.exit_code).to eq(0)
-
-      renewal_after = shell('/etc/vault/helper exec token-lookup -format=json | jq .data.last_renewal_time')
-      expect(renewal_after.exit_code).to eq(0)
-
-      expect(renewal_after.stdout.to_i).to be > renewal_before.stdout.to_i
     end
   end
 end

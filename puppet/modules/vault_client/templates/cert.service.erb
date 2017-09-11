@@ -5,18 +5,22 @@ After=network.target network-online.target
 
 [Service]
 Type=oneshot
-Environment=VAULT_CERT_TYPE=<%= @key_type %>
-Environment=VAULT_CERT_BITS=<%= @key_bits %>
-Environment=VAULT_CERT_CN=<%= @common_name %>
-Environment=VAULT_CERT_ROLE=<%= @role %>
-Environment=VAULT_CERT_OWNER=<%= @user %>:<%= @group %>
+EnvironmentFile=/etc/vault/config
+ExecStart=/opt/bin/vault-helper cert \
+  <%= @role %> \
+  <%= @common_name %> \
+  <%= @base_path %> \
 <% if @alt_names.length > 0 -%>
-Environment=VAULT_CERT_ALT_NAMES=<%= @alt_names.join(',') %>
+  '--san-hosts=<%= @alt_names.join(',') %>' \
 <% end -%>
 <% if @ip_sans.length > 0 -%>
-Environment=VAULT_CERT_IP_SANS=<%= @ip_sans.join(',') %>
+  '--ip-sans=<%= @ip_sans.join(',') %>' \
 <% end -%>
-ExecStart=/etc/vault/helper cert <%= @base_path %>
+  --key-type=<%= @key_type %> \
+  --key-bit-size=<%= @key_bits %> \
+  --owner=<%= @uid %> --group=<%= @gid %>
+
+
 <% @exec_post.each do |val| -%>
 ExecStartPost=<%= val %>
 <% end -%>
