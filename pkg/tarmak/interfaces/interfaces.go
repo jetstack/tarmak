@@ -10,6 +10,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
 
 type Context interface {
@@ -95,10 +96,20 @@ type Tarmak interface {
 	Terraform() Terraform
 	Packer() Packer
 	Puppet() Puppet
+	Config() Config
 	SSH() SSH
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
 	MergeEnvironment(interface{}) error
+}
+
+type Config interface {
+	Context(environment string, name string) (context *clusterv1alpha1.Cluster, err error)
+	Contexts(environment string) (contexts []*clusterv1alpha1.Cluster)
+	Provider(name string) (provider *tarmakv1alpha1.Provider, err error)
+	Providers() (providers []*tarmakv1alpha1.Provider)
+	Environment(name string) (environment *tarmakv1alpha1.Environment, err error)
+	Environments() (environments []*tarmakv1alpha1.Environment)
 }
 
 type Packer interface {

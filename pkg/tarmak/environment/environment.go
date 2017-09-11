@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/context"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/aws"
@@ -27,7 +27,7 @@ import (
 )
 
 type Environment struct {
-	conf *config.Environment
+	conf *tarmakv1alpha1.Environment
 
 	contexts []interfaces.Context
 
@@ -46,7 +46,7 @@ type Environment struct {
 
 var _ interfaces.Environment = &Environment{}
 
-func NewFromConfig(tarmak interfaces.Tarmak, conf *config.Environment) (*Environment, error) {
+func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment) (*Environment, error) {
 	e := &Environment{
 		conf:   conf,
 		tarmak: tarmak,
@@ -57,46 +57,12 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *config.Environment) (*Environ
 
 	networkCIDRs := []*net.IPNet{}
 
-	for posContext, _ := range conf.Contexts {
-		contextConf := &conf.Contexts[posContext]
+	contexts := tarmak.Config().Contexts(conf.Name)
+	for posContext, _ := range contexts {
+		contextConf := contexts[posContext]
 		contextIntf, err := context.NewFromConfig(e, contextConf)
-
 		if err != nil {
 			result = multierror.Append(result, err)
-			continue
-		}
-		e.contexts = append(e.contexts, contextIntf)
-
-		networkCIDRs = append(networkCIDRs, contextIntf.NetworkCIDR())
-
-		// loop through stacks
-		for _, stack := range contextIntf.Stacks() {
-			// ensure no multiple state stacks
-			if stack.Name() == config.StackNameState {
-				if e.stackState == nil {
-					e.stackState = stack
-				} else {
-					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple state stacks", e.Name()))
-				}
-			}
-
-			// ensure no multiple tools stacks
-			if stack.Name() == config.StackNameTools {
-				if e.stackTools == nil {
-					e.stackTools = stack
-				} else {
-					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple tools stacks", e.Name()))
-				}
-			}
-
-			// ensure no multiple vault stacks
-			if stack.Name() == config.StackNameVault {
-				if e.stackVault == nil {
-					e.stackVault = stack
-				} else {
-					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple vault stacks", e.Name()))
-				}
-			}
 		}
 	}
 
@@ -115,33 +81,35 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *config.Environment) (*Environ
 		result = multierror.Append(result, fmt.Errorf("environment '%s' has no vault stack", e.Name()))
 	}
 
-	// validate network overlap
-	if err := utils.NetworkOverlap(networkCIDRs); err != nil {
-		result = multierror.Append(result, err)
+	// TODO renable validate network overlap
+	/*
+		if err := utils.NetworkOverlap(networkCIDRs); err != nil {
+			result = multierror.Append(result, err)
+		}
+	*/
+
+	if result != nil {
+		return nil, result
 	}
 
 	// init provider
-	providers := []interfaces.Provider{}
-	if conf.AWS != nil {
-		provider, err := aws.NewFromConfig(e, conf.AWS)
+	providerConf, err := tarmak.Config().Provider(conf.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	if providerConf.AWS != nil {
+		provider, err := aws.NewFromConfig(tarmak, providerConf)
 		if err != nil {
 			return nil, err
 		}
-		providers = append(providers, provider)
-	}
-	if conf.GCP != nil {
-		return nil, errors.New("GCP not yet implemented :(")
+		e.provider = provider
+
+	} else {
+		return nil, fmt.Errorf("Unsupported provider")
 	}
 
-	if len(providers) < 1 {
-		return nil, errors.New("please specify exactly one provider")
-	}
-	if len(providers) > 1 {
-		return nil, fmt.Errorf("more than one provider given: %+v", providers)
-	}
-	e.provider = providers[0]
-
-	return e, result
+	return e, nil
 
 }
 
