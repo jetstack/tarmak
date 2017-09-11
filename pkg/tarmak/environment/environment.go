@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/crypto/ssh"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/context"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -46,7 +46,7 @@ type Environment struct {
 
 var _ interfaces.Environment = &Environment{}
 
-func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment) (*Environment, error) {
+func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, contexts []*clusterv1alpha1.Cluster) (*Environment, error) {
 	e := &Environment{
 		conf:   conf,
 		tarmak: tarmak,
@@ -55,15 +55,17 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment) (
 
 	var result error
 
-	networkCIDRs := []*net.IPNet{}
+	// TODO RENABLE
+	//networkCIDRs := []*net.IPNet{}
 
-	contexts := tarmak.Config().Contexts(conf.Name)
 	for posContext, _ := range contexts {
 		contextConf := contexts[posContext]
 		contextIntf, err := context.NewFromConfig(e, contextConf)
 		if err != nil {
 			result = multierror.Append(result, err)
+			continue
 		}
+		e.contexts = append(e.contexts, contextIntf)
 	}
 
 	// ensure there is a state stack
@@ -125,8 +127,17 @@ func (e *Environment) Tarmak() interfaces.Tarmak {
 	return e.tarmak
 }
 
+func (e *Environment) Context(name string) (interfaces.Context, error) {
+	for pos, _ := range e.contexts {
+		if e.contexts[pos].Name() == name {
+			return e.contexts[pos], nil
+		}
+	}
+	return nil, fmt.Errorf("context '%s' in environment '%s' not found", name, e.Name())
+}
+
 func (e *Environment) validateSSHKey() error {
-	bytes, err := ioutil.ReadFile(e.conf.SSHKeyPath)
+	bytes, err := ioutil.ReadFile(e.SSHPrivateKeyPath())
 	if err != nil {
 		return fmt.Errorf("unable to read ssh private key: %s", err)
 	}
@@ -243,13 +254,13 @@ func (e *Environment) getSSHPrivateKey() (interface{}, error) {
 }
 
 func (e *Environment) SSHPrivateKeyPath() string {
-	if e.conf.SSHKeyPath == "" {
+	if e.conf.SSH != nil || e.conf.SSH.PrivateKeyPath == "" {
 		return filepath.Join(e.ConfigPath(), "id_rsa")
 	}
 
-	dir, err := e.Tarmak().HomeDirExpand(e.conf.SSHKeyPath)
+	dir, err := e.Tarmak().HomeDirExpand(e.conf.SSH.PrivateKeyPath)
 	if err != nil {
-		return e.conf.SSHKeyPath
+		return e.conf.SSH.PrivateKeyPath
 	}
 	return dir
 }
