@@ -24,13 +24,11 @@ describe '::vault_client' do
 class {'vault_client':
   version => '#{version}',
   init_token => 'init-token-all',
-  init_role => 'test-master',
+  init_role => 'test-all',
 }
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
-      shell('mkdir -p /etc/vault')
-      shell('echo "root-token-dev" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
@@ -43,7 +41,7 @@ EOS
     end
 
     it 'runs renew-token without error' do
-        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; /opt/bin/vault-helper renew-token --init-role=test-master')
+        result = shell('export VAULT_ADDR=http://127.0.0.1:8200; export VAULT_INIT_ROLE=test-all; /opt/bin/vault-helper renew-token')
       expect(result.exit_code).to eq(0)
     end
 
@@ -52,7 +50,7 @@ EOS
 class {'vault_client':
   version => '#{version}',
   init_token => 'init-token-all',
-  init_role => 'test-master',
+  init_role => 'test-all',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -75,7 +73,7 @@ EOS
 class {'vault_client':
   version => '#{version}',
   init_token => 'init-token-all',
-  init_role => 'test-master',
+  init_role => 'test-all',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -97,7 +95,7 @@ EOS
 class {'vault_client':
   version => '#{version}',
   init_token => 'init-token-all',
-  init_role => 'test-master',
+  init_role => 'test-all',
 }
 
 vault_client::cert_service{ 'test-client':
@@ -128,13 +126,11 @@ EOS
 class {'vault_client':
   version => '#{version}',
   init_token => 'init-token-all',
-  init_role => 'test-master',
+  init_role => 'test-all',
 }
 EOS
       # cleanup existing config
       shell('rm -rf /etc/vault/init-token /etc/vault/token')
-      shell('mkdir -p /etc/vault')
-      shell('echo "root-token-dev" > /etc/vault/init-token')
 
       # Run it twice and test for idempotency
       apply_manifest(pp, :catch_failures => true)
