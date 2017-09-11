@@ -41,6 +41,8 @@ type Cluster struct {
 	Values            *Values        `json:"values,omitempty"`
 	KubernetesAPI     *KubernetesAPI `json:"kubernetesAPI,omitempty"`
 	GroupIdentifier   string         `json:"groupIdentifier,omitempty"`
+
+	Environment string `json:"environment,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

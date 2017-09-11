@@ -18,8 +18,9 @@ type Config struct {
 	Contact string `json:"contact,omitempty"`
 	Project string `json:"project,omitempty"`
 
-	Clusters  []clusterv1alpha1.Cluster `json:"clusters,omitempty"`
-	Providers []Provider                `json:"providers,omitempty"`
+	Clusters     []clusterv1alpha1.Cluster `json:"clusters,omitempty"`
+	Providers    []Provider                `json:"providers,omitempty"`
+	Environments []Environment             `json:"environments,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -68,4 +69,27 @@ type ProviderList struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Items []Provider `json:"items"`
+}
+
+// +genclient=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +resource:path=environments
+
+type Environment struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Provider string `json:"provider,omitempty"`
+
+	Contact string `json:"contact,omitempty"`
+	Project string `json:"project,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type EnvironmentList struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Items []Environment `json:"items"`
 }
