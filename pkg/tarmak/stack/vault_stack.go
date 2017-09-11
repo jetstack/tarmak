@@ -4,19 +4,17 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"net/http"
 	"net/url"
 	"sync"
 	"time"
 
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack-experimental/vault-unsealer/pkg/vault"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
-
-var vaultClientLock sync.Mutex
 
 type VaultStack struct {
 	*Stack
@@ -52,18 +50,24 @@ type vaultTunnel struct {
 	fqdn        string
 }
 
-func (s *VaultStack) vaultCA() ([]byte, error) {
+var _ interfaces.Tunnel = &vaultTunnel{}
+
+func (s *VaultStack) vaultCA() (*x509.CertPool, error) {
+	certpool := x509.NewCertPool()
 	vaultCAIntf, ok := s.output["vault_ca"]
 	if !ok {
-		return []byte{}, fmt.Errorf("unable to find terraform output 'vault_ca'")
+		return certpool, fmt.Errorf("unable to find terraform output 'vault_ca'")
 	}
-
 	vaultCA, ok := vaultCAIntf.(string)
 	if !ok {
-		return []byte{}, fmt.Errorf("unexpected type for 'vault_ca': %t", vaultCAIntf)
+		return certpool, fmt.Errorf("unexpected type for 'vault_ca': %t", vaultCAIntf)
+	}
+	ok = certpool.AppendCertsFromPEM([]byte(vaultCA))
+	if !ok {
+		return certpool, fmt.Errorf("failed to parse vault CA. %q", vaultCA)
 	}
 
-	return []byte(vaultCA), nil
+	return certpool, nil
 }
 
 func (s *VaultStack) vaultURL() (*url.URL, error) {
@@ -92,13 +96,13 @@ func (s *VaultStack) vaultInstanceFQDNs() ([]string, error) {
 		return []string{}, fmt.Errorf("unable to find terraform output 'instance_fqdns'")
 	}
 
-	instanceFQDNsInftSlice, ok := instanceFQDNsIntf.([]interface{})
+	instanceFQDNsIntfSlice, ok := instanceFQDNsIntf.([]interface{})
 	if !ok {
 		return []string{}, fmt.Errorf("unexpected type for 'instance_fqdns': %T", instanceFQDNsIntf)
 	}
 
-	instanceFQDNs := make([]string, len(instanceFQDNsInftSlice))
-	for pos, value := range instanceFQDNsInftSlice {
+	instanceFQDNs := make([]string, len(instanceFQDNsIntfSlice))
+	for pos, value := range instanceFQDNsIntfSlice {
 		var ok bool
 		instanceFQDNs[pos], ok = value.(string)
 		if !ok {
@@ -178,45 +182,55 @@ func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, err
 	if err != nil {
 		return []*vaultTunnel{}, fmt.Errorf("couldn't load vault CA from terraform: %s", err)
 	}
-
-	tlsConfig := &tls.Config{RootCAs: x509.NewCertPool()}
-
-	ok := tlsConfig.RootCAs.AppendCertsFromPEM(vaultCA)
-	if !ok {
-		return []*vaultTunnel{}, fmt.Errorf("couldn't load vault CA certificate into http client")
-	}
-
-	tr := &http.Transport{
-		TLSClientConfig: tlsConfig,
-	}
-
-	httpClient := &http.Client{
-		Transport: tr,
-		Timeout:   10 * time.Second,
-	}
-
-	vaultClient, err := vault.NewClient(&vault.Config{
-		HttpClient: httpClient,
-	})
-	if err != nil {
-		return []*vaultTunnel{}, fmt.Errorf("couldn't init vault client: %s:", err)
-	}
-
 	output := make([]*vaultTunnel, len(instances))
-	for pos, _ := range instances {
-		output[pos] = s.newVaultTunnel(instances[pos], vaultClient)
+	for pos := range instances {
+		fqdn := instances[pos]
+		sshTunnel := s.Context().Environment().Tarmak().SSH().Tunnel(
+			"bastion", fqdn, 8200,
+		)
+		vaultTunnel, err := NewVaultTunnel(
+			sshTunnel,
+			fqdn,
+			vaultCA,
+		)
+		if err != nil {
+			return output, err
+		}
+		output[pos] = vaultTunnel
 	}
 
 	return output, nil
 
 }
 
-func (s *VaultStack) newVaultTunnel(fqdn string, client *vault.Client) *vaultTunnel {
-	return &vaultTunnel{
-		tunnel: s.Context().Environment().Tarmak().SSH().Tunnel("bastion", fqdn, 8200),
-		client: client,
-		fqdn:   fqdn,
+func NewVaultTunnel(
+	tunnel interfaces.Tunnel, fqdn string, vaultCA *x509.CertPool,
+) (*vaultTunnel, error) {
+	httpTransport := cleanhttp.DefaultTransport()
+	httpTransport.TLSClientConfig = &tls.Config{
+		RootCAs: vaultCA,
 	}
+	httpClient := cleanhttp.DefaultClient()
+	httpClient.Transport = httpTransport
+	config := vault.DefaultConfig()
+	config.HttpClient = httpClient
+	vaultClient, err := vault.NewClient(config)
+	if err != nil {
+		return &vaultTunnel{}, err
+	}
+	err = vaultClient.SetAddress(
+		fmt.Sprintf(
+			"https://%s:%d", tunnel.BindAddress(), tunnel.Port(),
+		),
+	)
+	if err != nil {
+		return &vaultTunnel{}, err
+	}
+	return &vaultTunnel{
+		tunnel: tunnel,
+		client: vaultClient,
+		fqdn:   fqdn,
+	}, nil
 }
 
 func (v *vaultTunnel) FQDN() string {
@@ -240,8 +254,11 @@ func (v *vaultTunnel) Port() int {
 	return v.tunnel.Port()
 }
 
+func (v *vaultTunnel) BindAddress() string {
+	return v.tunnel.BindAddress()
+}
+
 func (v *vaultTunnel) VaultClient() *vault.Client {
-	v.client.SetAddress(fmt.Sprintf("https://localhost:%d", v.tunnel.Port()))
 	return v.client
 }
 
@@ -249,11 +266,6 @@ func (v *vaultTunnel) Status() int {
 	if v.tunnelError != nil {
 		return VaultStateErr
 	}
-
-	vaultClientLock.Lock()
-	defer vaultClientLock.Unlock()
-
-	v.VaultClient()
 
 	initStatus, err := v.client.Sys().InitStatus()
 	if err != nil {
@@ -351,9 +363,6 @@ func (s *VaultStack) verifyVaultInit() error {
 			if err != nil {
 				return err
 			}
-
-			vaultClientLock.Lock()
-			defer vaultClientLock.Unlock()
 
 			cl := instances[0].VaultClient()
 
