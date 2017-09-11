@@ -26,4 +26,5 @@ type SSH struct {
 	PublicKeyPath        string `json:"publicKeyPath,omitempty"`
 	PublicKeyData        []byte `json:"publicKeyData,omitempty"`
 	PublicKeyFingerprint string `json:"publicKeyFingerprint,omitempty"`
+	PrivateKeyPath       string `json:"privateKeyPath,omitempty"`
 }

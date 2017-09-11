@@ -108,15 +108,6 @@ func (in *Cluster) DeepCopyInto(out *Cluster) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.SSH != nil {
-		in, out := &in.SSH, &out.SSH
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(SSH)
-			(*in).DeepCopyInto(*out)
-		}
-	}
 	if in.Network != nil {
 		in, out := &in.Network, &out.Network
 		if *in == nil {

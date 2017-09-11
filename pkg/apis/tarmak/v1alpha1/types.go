@@ -83,6 +83,9 @@ type Environment struct {
 
 	Contact string `json:"contact,omitempty"`
 	Project string `json:"project,omitempty"`
+
+	Location string               `json:"location,omitempty"`
+	SSH      *clusterv1alpha1.SSH `json:"ssh,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

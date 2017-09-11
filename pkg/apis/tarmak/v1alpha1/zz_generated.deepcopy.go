@@ -163,6 +163,15 @@ func (in *Environment) DeepCopyInto(out *Environment) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	if in.SSH != nil {
+		in, out := &in.SSH, &out.SSH
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(cluster_v1alpha1.SSH)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	return
 }
 

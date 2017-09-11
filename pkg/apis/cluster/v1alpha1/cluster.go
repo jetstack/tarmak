@@ -36,7 +36,6 @@ type Cluster struct {
 	ServerPools       []ServerPool   `json:"serverPools,omitempty"`
 	Cloud             string         `json:"cloud,omitempty"`
 	Location          string         `json:"location,omitempty"`
-	SSH               *SSH           `json:"SSH,omitempty"`
 	Network           *Network       `json:"network,omitempty"`
 	Values            *Values        `json:"values,omitempty"`
 	KubernetesAPI     *KubernetesAPI `json:"kubernetesAPI,omitempty"`
