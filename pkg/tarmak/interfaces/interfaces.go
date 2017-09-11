@@ -42,7 +42,7 @@ type Environment interface {
 	Name() string
 	BucketPrefix() string
 	Contexts() []Context
-	CurrentContext() Context
+	Context(name string) (context Context, err error)
 	SSHPrivateKeyPath() string
 	SSHPrivateKey() (signer interface{})
 	Log() *logrus.Entry
@@ -100,7 +100,6 @@ type Tarmak interface {
 	SSH() SSH
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
-	MergeEnvironment(interface{}) error
 }
 
 type Config interface {
@@ -110,6 +109,8 @@ type Config interface {
 	Providers() (providers []*tarmakv1alpha1.Provider)
 	Environment(name string) (environment *tarmakv1alpha1.Environment, err error)
 	Environments() (environments []*tarmakv1alpha1.Environment)
+	CurrentContextName() string
+	CurrentEnvironmentName() string
 }
 
 type Packer interface {
