@@ -1,5 +1,7 @@
 package environment
 
+// TODO this should be reimplemented
+/*
 import (
 	"io/ioutil"
 	"os"
@@ -321,3 +323,4 @@ func TestEnvironment_SSHPrivateKeyExistingGarbage(t *testing.T) {
 		t.Error("unexpected error message: ", err)
 	}
 }
+*/

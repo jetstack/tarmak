@@ -21,7 +21,7 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/context"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/provider/aws"
+	"github.com/jetstack/tarmak/pkg/tarmak/provider"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
@@ -55,6 +55,17 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 
 	var result error
 
+	providerConf, err := tarmak.Config().Provider(conf.Provider)
+	if err != nil {
+		return nil, fmt.Errorf("error finding provider '%s'", conf.Provider)
+	}
+
+	// init provider
+	e.provider, err = provider.NewProviderFromConfig(tarmak, providerConf)
+	if err != nil {
+		return nil, fmt.Errorf("error initializing provider '%s'", conf.Provider)
+	}
+
 	// TODO RENABLE
 	//networkCIDRs := []*net.IPNet{}
 
@@ -67,48 +78,8 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 		}
 		e.contexts = append(e.contexts, contextIntf)
 	}
-
-	// ensure there is a state stack
-	if e.stackState == nil {
-		result = multierror.Append(result, fmt.Errorf("environment '%s' has no state stack", e.Name()))
-	}
-
-	// ensure there is a tools stack
-	if e.stackTools == nil {
-		result = multierror.Append(result, fmt.Errorf("environment '%s' has no tools stack", e.Name()))
-	}
-
-	// ensure there is a vault stack
-	if e.stackVault == nil {
-		result = multierror.Append(result, fmt.Errorf("environment '%s' has no vault stack", e.Name()))
-	}
-
-	// TODO renable validate network overlap
-	/*
-		if err := utils.NetworkOverlap(networkCIDRs); err != nil {
-			result = multierror.Append(result, err)
-		}
-	*/
-
 	if result != nil {
 		return nil, result
-	}
-
-	// init provider
-	providerConf, err := tarmak.Config().Provider(conf.Provider)
-	if err != nil {
-		return nil, err
-	}
-
-	if providerConf.AWS != nil {
-		provider, err := aws.NewFromConfig(tarmak, providerConf)
-		if err != nil {
-			return nil, err
-		}
-		e.provider = provider
-
-	} else {
-		return nil, fmt.Errorf("Unsupported provider")
 	}
 
 	return e, nil
@@ -129,8 +100,9 @@ func (e *Environment) Tarmak() interfaces.Tarmak {
 
 func (e *Environment) Context(name string) (interfaces.Context, error) {
 	for pos, _ := range e.contexts {
-		if e.contexts[pos].Name() == name {
-			return e.contexts[pos], nil
+		context := e.contexts[pos]
+		if context.Name() == name {
+			return context, nil
 		}
 	}
 	return nil, fmt.Errorf("context '%s' in environment '%s' not found", name, e.Name())
@@ -263,6 +235,10 @@ func (e *Environment) SSHPrivateKeyPath() string {
 		return e.conf.SSH.PrivateKeyPath
 	}
 	return dir
+}
+
+func (e *Environment) Location() string {
+	return e.conf.Location
 }
 
 func (e *Environment) Contexts() []interfaces.Context {

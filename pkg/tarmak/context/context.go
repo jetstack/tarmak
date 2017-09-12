@@ -167,7 +167,7 @@ func (c *Context) validateServerPools() (result error) {
 
 // Determine if this Context is a cluster or hub, single or multi environment
 func (c *Context) Type() string {
-	if len(c.Environment().Contexts()) == 1 {
+	if len(c.Environment().Tarmak().Config().Contexts(c.Environment().Name())) == 1 {
 		return ContextTypeClusterSingle
 	}
 	if c.Name() == ContextTypeHub {

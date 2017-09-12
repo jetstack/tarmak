@@ -102,7 +102,7 @@ func (a *AWS) ListRegions() (regions []string, err error) {
 }
 
 func (a *AWS) Region() string {
-	return a.tarmak.Context().Region()
+	return a.tarmak.Environment().Location()
 }
 
 // This return the availabililty zones that are used for a cluster
@@ -335,6 +335,7 @@ func (a *AWS) Session() (*session.Session, error) {
 
 	a.session = session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
+		Profile:           a.conf.AWS.Profile,
 	}))
 	a.session.Config.Region = aws.String(a.Region())
 	return a.session, nil

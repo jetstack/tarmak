@@ -36,6 +36,7 @@ type Context interface {
 
 type Environment interface {
 	Tarmak() Tarmak
+	Location() string // this returns the location of the environment (e.g. the region)
 	Variables() map[string]interface{}
 	Provider() Provider
 	Validate() error
@@ -63,7 +64,7 @@ type Provider interface {
 	RemoteState(namespace, clusterName, stackName string) string
 	Environment() ([]string, error)
 	Variables() map[string]interface{}
-	QueryImage(tags map[string]string) (string, error)
+	QueryImages(tags map[string]string) ([]tarmakv1alpha1.Image, error)
 	VaultKV() (kv.Service, error)
 	ListHosts() ([]Host, error)
 	InstanceType(string) (string, error)
@@ -94,7 +95,7 @@ type Tarmak interface {
 	RootPath() (string, error)
 	ConfigPath() string
 	Context() Context
-	Environments() []Environment
+	Environment() Environment
 	Terraform() Terraform
 	Packer() Packer
 	Puppet() Puppet
@@ -113,9 +114,13 @@ type Config interface {
 	Environments() (environments []*tarmakv1alpha1.Environment)
 	CurrentContextName() string
 	CurrentEnvironmentName() string
+	Contact() string
+	Project() string
 }
 
 type Packer interface {
+	IDs() (map[string]string, error)
+	List() ([]tarmakv1alpha1.Image, error)
 }
 
 type Terraform interface {

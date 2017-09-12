@@ -8,6 +8,7 @@ import (
 
 	logrus "github.com/Sirupsen/logrus"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
@@ -24,27 +25,9 @@ type image struct {
 
 func (i *image) tags() map[string]string {
 	return map[string]string{
-		PackerTagEnvironment:   i.environment,
-		PackerTagBaseImageName: i.imageName,
+		tarmakv1alpha1.ImageTagEnvironment:   i.environment,
+		tarmakv1alpha1.ImageTagBaseImageName: i.imageName,
 	}
-}
-
-func (i *image) ImageID() (id string, err error) {
-	if i.id != nil {
-		return *i.id, nil
-	}
-
-	id, err = i.tarmak.Context().Environment().Provider().QueryImage(
-		i.tags(),
-	)
-	if err != nil {
-		return "", err
-	}
-
-	i.id = &id
-
-	return id, nil
-
 }
 
 func (i *image) Build() (amiID string, err error) {
