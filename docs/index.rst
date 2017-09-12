@@ -14,6 +14,7 @@ Tarmak is yet another zero to Kubernetes utility
 
 
    design
+   design_cli_ux
 
 
 Indices and tables
