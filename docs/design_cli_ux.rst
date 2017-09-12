@@ -164,51 +164,76 @@ instances [ list | ssh ]
 
 Instances on Cluster resource
 
-- list
+list
+^^^^^^^^^^^^^^^
 
- Lists nodes of the context.
+Lists nodes of the context.
 
-- ssh
+ssh
+^^^^^^^^^^^^^^^
 
- Alias for ``$ tarmak clusters ssh``
+Alias for ``$ tarmak clusters ssh``
 
 Usage:
   $ tarmak clusters instances [list | ssh]
 
 server-pools [ list ]
 *********************
-- list
+list
+^^^^^^^^^^^^^^^
 
- List server pools on Cluster resource
+List server pools on Cluster resource
 
 Usage:
   $ tarmak clusters server-pools list
 
 images [ list | build ]
 ***********************
-- list
+list
+^^^^^^^^^^^^^^^
 
- List images on Cluster resource
+List images on Cluster resource
 
-- build
+build
+^^^^^^^^^^^^^^^
 
- Build images of Cluster resource
+Build images of Cluster resource
 
 Usage:
   $ tarmak clusters images [list | build]
 
 debug [ terraform shell | puppet | etcd | vault ]
 *************************************************
-- terraform shell
 
-- puppet
+Used for debugging
 
-- etcd
-
-- vault
+terraform shell
+^^^^^^^^^^^^^^^
+Debug terraform via shell
 
 Usage:
-  $ tarmak clusters debug [terraform shell | puppet | etcd | vault]
+  $ tarmak clusters debug terraform shell
+
+puppet
+^^^^^^^^^^^^^^^
+Debug puppet
+
+Usage:
+  $ tarmak clusters debug puppet
+
+etcd
+^^^^^^^^^^^^^^^
+Debug etcd
+
+Usage:
+  $ tarmak clusters debug etcd
+
+vault
+^^^^^^^^^^^^^^^
+Debug vault
+
+Usage:
+  $ tarmak clusters debug vault
 
 ------------
 
