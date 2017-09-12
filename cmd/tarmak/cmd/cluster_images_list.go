@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"text/tabwriter"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -22,23 +23,26 @@ var clusterImagesListCmd = &cobra.Command{
 		images, err := t.Packer().List()
 		t.Must(err)
 
+		format := "%s\t%s\t%s\t%s\t%s\n"
 		fmt.Fprintf(
 			w,
-			"%s\t%s\t%s\t%s\n",
+			format,
 			"Image ID",
 			"Base Image",
 			"Location",
 			"Tags",
+			"Created",
 		)
 
 		for _, image := range images {
 			fmt.Fprintf(
 				w,
-				"%s\t%s\t%s\t%s\n",
+				format,
 				image.Name,
 				image.BaseImage,
 				image.Location,
 				image.Annotations,
+				image.CreationTimestamp.Format(time.RFC3339),
 			)
 		}
 		w.Flush()
