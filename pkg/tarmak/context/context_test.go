@@ -19,6 +19,8 @@ type fakeContext struct {
 
 	fakeEnvironment *mocks.MockEnvironment
 	fakeProvider    *mocks.MockProvider
+	fakeTarmak      *mocks.MockTarmak
+	fakeConfig      *mocks.MockConfig
 }
 
 func (f *fakeContext) Finish() {
@@ -35,6 +37,8 @@ func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext
 	}
 	c.fakeEnvironment = mocks.NewMockEnvironment(c.ctrl)
 	c.fakeProvider = mocks.NewMockProvider(c.ctrl)
+	c.fakeTarmak = mocks.NewMockTarmak(c.ctrl)
+	c.fakeConfig = mocks.NewMockConfig(c.ctrl)
 	c.Context.environment = c.fakeEnvironment
 
 	// setup custom logger
@@ -47,11 +51,14 @@ func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext
 	}
 	c.fakeEnvironment.EXPECT().Log().AnyTimes().Return(loggerCtx)
 	c.fakeEnvironment.EXPECT().Provider().AnyTimes().Return(c.fakeProvider)
+	c.fakeEnvironment.EXPECT().Tarmak().AnyTimes().Return(c.fakeTarmak)
 	c.Context.log = loggerCtx
 
 	c.fakeProvider.EXPECT().InstanceType(gomock.Any()).Do(func(in string) string { return "provider-" + in }).AnyTimes()
 	c.fakeProvider.EXPECT().VolumeType(gomock.Any()).Do(func(in string) string { return "provider-" + in }).AnyTimes()
 	c.fakeProvider.EXPECT().Name().Return("provider").AnyTimes()
+
+	c.fakeTarmak.EXPECT().Config().AnyTimes().Return(c.fakeConfig)
 
 	return c
 }
@@ -63,6 +70,7 @@ func TestContext_NewMinimalClusterMulti(t *testing.T) {
 
 	// fake two contexts
 	c.fakeEnvironment.EXPECT().Contexts().AnyTimes().Return([]interfaces.Context{mocks.NewMockContext(c.ctrl), mocks.NewMockContext(c.ctrl)})
+	c.fakeEnvironment.EXPECT().Name().Return("multi").AnyTimes()
 
 	var err error
 	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
