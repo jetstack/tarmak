@@ -45,6 +45,7 @@ func newFakeAWS(t *testing.T) *fakeAWS {
 	f.AWS.ec2 = f.fakeEC2
 	f.AWS.tarmak = f.fakeTarmak
 	f.fakeTarmak.EXPECT().Context().AnyTimes().Return(f.fakeContext)
+	f.fakeTarmak.EXPECT().Environment().AnyTimes().Return(f.fakeEnvironment)
 	f.fakeContext.EXPECT().Environment().AnyTimes().Return(f.fakeEnvironment)
 
 	return f
@@ -147,6 +148,7 @@ func TestAWS_validateAvailabilityZonesFalseGiven(t *testing.T) {
 		},
 	}).MinTimes(1)
 	a.fakeContext.EXPECT().Region().Return("london-north-1").AnyTimes()
+	a.fakeEnvironment.EXPECT().Location().Return("london-north-1").AnyTimes()
 
 	a.fakeEC2.EXPECT().DescribeAvailabilityZones(gomock.Any()).Return(&ec2.DescribeAvailabilityZonesOutput{
 		AvailabilityZones: []*ec2.AvailabilityZone{
