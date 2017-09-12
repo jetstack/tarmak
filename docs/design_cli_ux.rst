@@ -9,8 +9,6 @@ $ tarmak [environments|providers] [init|list]
 
 Clusters have a larger set of commands that can be applied:
 
------------
-
 ========
 clusters
 ========
@@ -101,7 +99,7 @@ server-pools [ list ]
 #####################
 - list
 
-  List server pools on Cluster resource
+ List server pools on Cluster resource
 
 ------------
 
