@@ -12,8 +12,11 @@ Tarmak is yet another zero to Kubernetes utility
    :maxdepth: 2
    :caption: Contents:
 
+   getting-started
 
    design
+
+   developer-guide
 
 
 Indices and tables
