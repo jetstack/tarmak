@@ -185,5 +185,14 @@ func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 		return nil, fmt.Errorf("got unexpected config type: %v", gvk)
 	}
 
+	c.conf = config
 	return config, nil
+}
+
+func (c *Config) Contact() string {
+	return c.conf.Contact
+}
+
+func (c *Config) Project() string {
+	return c.conf.Project
 }
