@@ -64,6 +64,7 @@ func (i *image) Build() (amiID string, err error) {
 	buildSourcePath := filepath.Join(
 		rootPath,
 		"packer",
+		i.tarmak.Context().Environment().Provider().Cloud(),
 		fmt.Sprintf("%s.json", i.imageName),
 	)
 

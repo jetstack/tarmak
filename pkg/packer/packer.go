@@ -44,6 +44,8 @@ func (p *Packer) images() (images []*image) {
 		image := &image{
 			environment: environment,
 			imageName:   imageName,
+			packer:      p,
+			tarmak:      p.tarmak,
 		}
 		image.log = p.log
 		for key, val := range image.tags() {
@@ -65,7 +67,14 @@ func (p *Packer) List() ([]tarmakv1alpha1.Image, error) {
 
 // Build all images
 func (p *Packer) Build() error {
-	return errors.New("unimplemented")
+	for _, image := range p.images() {
+		amiID, err := image.Build()
+		if err != nil {
+			return err
+		}
+		image.log.WithField("ami_id", amiID).Debugf("successfully built image")
+	}
+	return nil
 }
 
 // Query images
