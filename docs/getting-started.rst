@@ -8,65 +8,26 @@ Here we will walk through how to use Tarmak to spin up a Kubernetes cluster in A
 Prerequisites
 -------------
 
+* Docker
 * An AWS account
-* Go 
-* Python 2.x 
-* Docker 
-* A domain delegated to AWS
-* Vault with an AWS secret backend configured (optional)
+* A public zone that you can delegate to AWS
+* Vault with the `AWS secret backend <https://www.vaultproject.io/docs/secrets/aws/index.html>`_ configured (optional)
 
 Steps
 -----
 
-First we will clone the Tarmak repository and build the `tarmak` binary. Make sure you have your `$GOPATH` set correctly. The last line may change depending on your architecture.
+The plan will be to first initialise our cluster configuration for our environment, build an image for our configuration and then finally apply our configuration to create our cluster.
 
-:: 
+Run `tarmak init` to initialise our configuration.
 
-  mkdir -p $GOPATH/src/github.com/jetstack
-  cd $GOPATH/src/github.com/jetstack
-  git clone git@gitlab.jetstack.net:tarmak/tarmak.git
-  cd tarmak
-  make build
-  ln -s $PWD/tarmak_darwin_amd64 /usr/local/bin/tarmak
-
-You should now be able to run `tarmak` to view the available commands.
-
-::
-
-  % tarmak
-  Tarmak is a Toolkit to spin up kubernetes clusters
-
-  Usage:
-    tarmak [command]
-
-  Available Commands:
-    help              Help about any command
-    image-build       This builds an image for an environment using packer
-    init              init a cluster configuration
-    kubectl           kubectl against the current cluster
-    list              list nodes of the context
-    puppet-dist       Build a puppet.tar.gz
-    ssh               ssh into instance
-    terraform-apply   This applies the set of stacks in the current context
-    terraform-destroy This applies the set of stacks in the current context
-    terraform-shell   This prepare a terraform container and executes a shell in this context
-    version           Print the version number of tarmak
-
-  Flags:
-        --config string   config file (default is $HOME/.tarmak.yaml)
-    -h, --help            help for tarmak
-    -t, --toggle          Help message for toggle
-
-  Use "tarmak [command] --help" for more information about a command.
-
-The plan will be to first initialise our cluster configuration for our environment, then build an image for our environment and then finally apply our context to AWS. Run `tarmak init` to initialise out configuration.
+Note that if you are not using Vault's AWS secret backend you can authenticate with AWS in the same ways as the AWS CLI. More details can be found at `Configuring the AWS CLI <http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html>`_.
 
 :: 
 
   % tarmak init
   What should be the name of the cluster?
 
-  The name consists of two parts seperated by a dash. First part is the environment name, second part the cluster name. Both names should be matching [a-z0-9]+
+  The name consists of two parts seperated by a dash. The first part is the environment name, second part the cluster name. Both names should be matching [a-z0-9]+
 
   Enter a value: dev-cluster
 
@@ -86,7 +47,7 @@ The plan will be to first initialise our cluster configuration for our environme
 
   Please make sure you can delegate this zone to AWS!
 
-  Enter a value: jetstack.io
+  Enter a value: k8s.jetstack.io
 
   What private zone should be used?
   Enter a value (Default is tarmak.local): tarmak.local
@@ -99,11 +60,21 @@ The plan will be to first initialise our cluster configuration for our environme
 
   %
 
-By default the configuration will be created at $HOME/.tarmak/tarmak.yaml. Now we create an image for our environment by running `tarmak image-build` (this is the step that requires docker to be installed locally).
+By default the configuration will be created at $HOME/.tarmak/tarmak.yaml. 
+
+Now we create an image for our environment by running `tarmak image-build` (this is the step that requires docker to be installed locally).
 
 ::
 
   % tarmak image-build 
   <long output omitted>
 
-Finally, we can apply our context to AWS using `tarmak terraform-apply` which will spin up our cluster. If we want to tear down the cluster we can run `tarmak terraform-destroy`.
+We can now apply our configuration to AWS by running `tarmak terraform-apply`. Note that the first time you run this command Tarmak will create a `hosted zone <http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html>`_ for you and then fail with the following error. 
+
+::
+
+  * failed verifying delegation of public zone 5 times, make sure the zone k8s.jetstack.io is delegated to nameservers [ns-100.awsdns-12.com ns-1283.awsdns-32.org ns-1638.awsdns-12.co.uk ns-842.awsdns-41.net]
+
+To fix this, change the nameservers of your domain to the four listed in the error. If you only want to delegate a subdomain containing your zone to AWS without delegating the parent domain see `Creating a Subdomain That Uses Amazon Route 53 as the DNS Service without Migrating the Parent Domain <http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingNewSubdomain.html>`_. 
+
+We can now re-run `tarmak terraform-apply` to spin up our cluster. If we want to tear down the cluster at any point we can run `tarmak terraform-destroy`.
