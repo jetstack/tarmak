@@ -15,6 +15,7 @@ Tarmak is yet another zero to Kubernetes utility
    getting-started
 
    design
+   design_cli_ux
 
    developer-guide
 
