@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -21,7 +21,6 @@ func (t *Tarmak) CmdTerraformApply(args []string) error {
 		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)
 	}
 
-	t.discoverAMIID()
 	stacks := t.Context().Stacks()
 	for _, stack := range stacks {
 
@@ -56,11 +55,10 @@ func (t *Tarmak) CmdTerraformDestroy(args []string) error {
 		return fmt.Errorf("could not find flag %s: %s", FlagForceDestroyStateStack, err)
 	}
 
-	t.discoverAMIID()
 	stacks := t.Context().Stacks()
 	for posStack, _ := range stacks {
 		stack := stacks[len(stacks)-posStack-1]
-		if !forceDestroyStateStack && stack.Name() == config.StackNameState {
+		if !forceDestroyStateStack && stack.Name() == tarmakv1alpha1.StackNameState {
 			t.log.Debugf("ignoring stack '%s'", stack.Name())
 			continue
 		}
@@ -97,8 +95,6 @@ func (t *Tarmak) CmdTerraformShell(args []string) error {
 	for pos, stack := range stacks {
 		stackNames[pos] = stack.Name()
 		if stack.Name() == paramStackName {
-			// prepare stack's shell
-			t.discoverAMIID()
 			return t.terraform.Shell(stack, args)
 		}
 	}
