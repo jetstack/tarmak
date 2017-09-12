@@ -107,3 +107,6 @@ Systemd
 
 Systemd units are used to maintain the dependencies between services. It also
 ensures the certificate renewal is happening regularly using systemd timers
+
+CLI UX
+======
