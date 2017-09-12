@@ -8,44 +8,127 @@ Tarmak has 3 resources that can be acted upon - environments, providers and clus
 $ tarmak [environments|providers] [init|list]
 
 Clusters have a larger set of commands that can be applied:
-  clusters
-    - `list`
-    - `init`
-    - `kubectl`
-    - `ssh <instance_name>`
-    - `apply` (apply infrastructure changes only)
-    - `plan`  (dry run apply)
-    - `XX` (not run any infrastructure changes, reconfigure based on configuration changes)
-    - `YY` (reconfigure based on infrastructure+configuration changes)
-    - `YY-rolling-update`
 
-    - instances
+-----------
 
-      - `list` (list nodes of the context)
+========
+clusters
+========
 
-      - `ssh` (same as ``$ tarmak clusters ssh``)
-    - server-pools
+Clusters resource subcommand
 
-      - `list`
+------------
 
-    - images
+list
+####
 
-      - `list`
+List clusters resource
 
-      - `build`
+------------
 
-    - debug
+init
+####
 
-      - terraform
+Init cluster resource
 
-        - `shell`
+------------
 
-      - puppet
-      - etcd
-      - vault
+kubectl
+#######
+
+`kubectl` on clusters resource
+
+------------
+
+ssh <instance_name>
+###################
+
+Secure Shell into an instance on clusters
+
+------------
+
+apply
+#####
+
+Apply changes to cluster (apply infrastructure changes only)
+
+------------
+
+plan
+#####
+
+Dry run apply
+
+------------
+
+XX
+##
+
+Does not run any infrastructure changes. Reconfigure based on configuration changes.
+
+------------
+
+YY
+##
+
+Reconfigure based on infrastructure+configuration changes.
+
+------------
+
+YY-rolling-update
+#################
+
+YY with rolling update
+
+------------
+
+instances [ list | ssh ]
+########################
+
+Instances on Cluster resource
+
+- list
+
+ Lists nodes of the context.
+
+- ssh
+
+ Alias for ``$ tarmak clusters ssh``
+
+------------
+
+server-pools [ list ]
+#####################
+- list
+
+  List server pools on Cluster resource
+
+------------
+
+images [ list | build ]
+#######################
+- list
+
+ List images on Cluster resource
+
+- build
+
+ Build images of Cluster resource
+
+------------
+
+debug [ terraform shell | puppet | etcd | vault ]
+#################################################
+- terraform shell
+
+- puppet
+
+- etcd
+
+- vault
 
 Relationships
--------------
+#############
 
 The relationship between Providers, Environments and Clusters is as follows:
 
@@ -54,7 +137,7 @@ Provider (many) -> Environment (one)
 Environment (many) -> Cluster (one)
 
 Changed Names
--------------
+#############
 
 +-----------+-------------+
 | Old Names | New Names   |
