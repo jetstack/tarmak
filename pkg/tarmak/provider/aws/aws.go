@@ -60,7 +60,26 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Provider) (*AW
 }
 
 func (a *AWS) Name() string {
+	return a.conf.Name
+}
+
+func (a *AWS) Cloud() string {
 	return clusterv1alpha1.CloudAmazon
+}
+
+// This parameters should include non sensitive information to identify a provider
+func (a *AWS) Parameters() map[string]string {
+	p := map[string]string{
+		"public_zone":   a.conf.AWS.PublicZone,
+		"bucket_prefix": a.conf.AWS.BucketPrefix,
+	}
+	if a.conf.AWS.VaultPath != "" {
+		p["vault_path"] = a.conf.AWS.VaultPath
+	}
+	if a.conf.AWS.Profile != "" {
+		p["aws_profile"] = a.conf.AWS.Profile
+	}
+	return p
 }
 
 func (a *AWS) ListRegions() (regions []string, err error) {

@@ -53,7 +53,9 @@ type Environment interface {
 }
 
 type Provider interface {
+	Cloud() string
 	Name() string
+	Parameters() map[string]string
 	Region() string
 	Validate() error
 	RemoteStateBucketName() string

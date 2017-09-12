@@ -9,8 +9,19 @@ import (
 )
 
 func NewProviderFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Provider) (interfaces.Provider, error) {
+	var provider interfaces.Provider
+	var err error
+
 	if conf.AWS != nil {
-		return aws.NewFromConfig(tarmak, conf)
+		if provider != nil {
+			return nil, fmt.Errorf("provider '%s' has configuration options for to different clouds", conf.Name)
+		}
+		provider, err = aws.NewFromConfig(tarmak, conf)
 	}
-	return nil, fmt.Errorf("Unknown provider '%s'", conf.Name)
+
+	if provider == nil {
+		return nil, fmt.Errorf("Unknown provider '%s'", conf.Name)
+	}
+
+	return provider, err
 }
