@@ -9,7 +9,6 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
-	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
 )
 
@@ -35,6 +34,7 @@ func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext
 			conf: cluster,
 		},
 	}
+
 	c.fakeEnvironment = mocks.NewMockEnvironment(c.ctrl)
 	c.fakeProvider = mocks.NewMockProvider(c.ctrl)
 	c.fakeTarmak = mocks.NewMockTarmak(c.ctrl)
@@ -67,10 +67,14 @@ func TestContext_NewMinimalClusterMulti(t *testing.T) {
 	clusterConfig := config.NewClusterMulti("multi", "cluster")
 	clusterConfig.Location = "my-region"
 	c := newFakeContext(t, nil)
+	defer c.Finish()
 
 	// fake two contexts
-	c.fakeEnvironment.EXPECT().Contexts().AnyTimes().Return([]interfaces.Context{mocks.NewMockContext(c.ctrl), mocks.NewMockContext(c.ctrl)})
 	c.fakeEnvironment.EXPECT().Name().Return("multi").AnyTimes()
+	c.fakeConfig.EXPECT().Contexts("multi").Return([]*clusterv1alpha1.Cluster{
+		&clusterv1alpha1.Cluster{},
+		&clusterv1alpha1.Cluster{},
+	}).AnyTimes()
 
 	var err error
 	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
@@ -95,9 +99,13 @@ func TestContext_NewMinimalClusterSingle(t *testing.T) {
 	clusterConfig := config.NewClusterSingle("single", "cluster")
 	clusterConfig.Location = "my-region"
 	c := newFakeContext(t, nil)
+	defer c.Finish()
 
 	// fake single context
-	c.fakeEnvironment.EXPECT().Contexts().AnyTimes().Return([]interfaces.Context{mocks.NewMockContext(c.ctrl)})
+	c.fakeEnvironment.EXPECT().Name().Return("single").AnyTimes()
+	c.fakeConfig.EXPECT().Contexts("single").Return([]*clusterv1alpha1.Cluster{
+		&clusterv1alpha1.Cluster{},
+	}).AnyTimes()
 
 	var err error
 	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
@@ -122,9 +130,14 @@ func TestContext_NewMinimalHub(t *testing.T) {
 	clusterConfig := config.NewHub("multi")
 	clusterConfig.Location = "my-region"
 	c := newFakeContext(t, nil)
+	defer c.Finish()
 
 	// fake two contexts
-	c.fakeEnvironment.EXPECT().Contexts().AnyTimes().Return([]interfaces.Context{mocks.NewMockContext(c.ctrl), mocks.NewMockContext(c.ctrl)})
+	c.fakeEnvironment.EXPECT().Name().Return("single").AnyTimes()
+	c.fakeConfig.EXPECT().Contexts("single").Return([]*clusterv1alpha1.Cluster{
+		&clusterv1alpha1.Cluster{},
+		&clusterv1alpha1.Cluster{},
+	}).AnyTimes()
 
 	var err error
 	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
