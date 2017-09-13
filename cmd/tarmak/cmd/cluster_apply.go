@@ -6,8 +6,8 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak"
 )
 
-var terraformApplyCmd = &cobra.Command{
-	Use:     "terraform-apply",
+var clusterApplyCmd = &cobra.Command{
+	Use:     "apply",
 	Aliases: []string{"t-a"},
 	Short:   "This applies the set of stacks in the current context",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -17,6 +17,6 @@ var terraformApplyCmd = &cobra.Command{
 }
 
 func init() {
-	terraformPFlags(terraformApplyCmd.PersistentFlags())
-	RootCmd.AddCommand(terraformApplyCmd)
+	terraformPFlags(clusterApplyCmd.PersistentFlags())
+	clusterCmd.AddCommand(clusterApplyCmd)
 }
