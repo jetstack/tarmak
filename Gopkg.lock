@@ -8,6 +8,18 @@
   revision = "19f72df4d05d31cbe1c56bfc8045c96babff6c7e"
 
 [[projects]]
+  name = "github.com/Masterminds/semver"
+  packages = ["."]
+  revision = "517734cc7d6470c0d07130e40fd40bdeb9bcd3fd"
+  version = "v1.3.1"
+
+[[projects]]
+  name = "github.com/Masterminds/sprig"
+  packages = ["."]
+  revision = "9526be0327b26ad31aa70296a7b10704883976d5"
+  version = "2.12.0"
+
+[[projects]]
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
   revision = "c4dc1301f1dc0307acd38e611aa375a64dfe0642"
@@ -32,8 +44,14 @@
   version = "1.0.2"
 
 [[projects]]
+  name = "github.com/aokoli/goutils"
+  packages = ["."]
+  revision = "3391d3790d23d03408670993e957e8f408993c34"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/aws/aws-sdk-go"
-  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/ec2","service/kms","service/s3","service/ssm","service/sts"]
+  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/dynamodb","service/ec2","service/kms","service/route53","service/s3","service/ssm","service/sts"]
   revision = "6ff7be1a127941b8dc9a408ac9c2dd6eb2167a5d"
   version = "v1.10.15"
 
@@ -218,6 +236,12 @@
   revision = "bf9dde6d0d2c004a008c27aaee91170c786f6db8"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/huandu/xstrings"
+  packages = ["."]
+  revision = "d6590c0c31d16526217fa60fbd2067f7afcd78c5"
+
+[[projects]]
   name = "github.com/imdario/mergo"
   packages = ["."]
   revision = "3e95a51e0639b4cf372f2ccf74c86749d747fbdc"
@@ -299,6 +323,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/sethgrid/pester"
   packages = ["."]
@@ -348,12 +378,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/tcnksm/go-input"
-  packages = ["."]
-  revision = "bbe13e92fa7dda71a4e012e3f427df11866c7651"
-
-[[projects]]
-  branch = "master"
   name = "github.com/ugorji/go"
   packages = ["codec"]
   revision = "5efa3251c7f7d05e5d9704a69a984ec9f1386a40"
@@ -361,7 +385,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","ssh","ssh/terminal"]
+  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","pbkdf2","scrypt","ssh","ssh/terminal"]
   revision = "6914964337150723782436d56b3f21610a74ce7b"
 
 [[projects]]
@@ -426,6 +450,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e0d057a5a6ab555318610648a1c05688b47151778e6ad6f084c8869ef655fea6"
+  inputs-digest = "2f5611bd17e1c94b66dcb56b391af3da19ed58f1c8bfd20edb19cd9da30d0a47"
   solver-name = "gps-cdcl"
   solver-version = 1
