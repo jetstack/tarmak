@@ -7,15 +7,11 @@ output "environment" {
 }
 
 output "public_zone_id" {
-  value = "${aws_route53_zone.public.id}"
+  value = "${var.public_zone_id}"
 }
 
 output "public_zone" {
-  value = "${aws_route53_zone.public.name}"
-}
-
-output "public_zone_name_servers" {
-  value = "${aws_route53_zone.public.name_servers}"
+  value = "${var.public_zone}"
 }
 
 output "jenkins_data_volume_id" {

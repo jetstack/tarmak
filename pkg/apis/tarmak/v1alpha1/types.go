@@ -50,8 +50,10 @@ type ProviderAWS struct {
 	AllowedAccountIDs []string `json:"allowedAccountIDs,omitempty"`
 	Profile           string   `json:"profile,omitempty"`
 	BucketPrefix      string   `json:"bucketPrefix,omitempty"`
-	PublicZone        string   `json:"publicZone,omitempty"`
 	KeyName           string   `json:"keyName,omitempty"`
+
+	PublicZone         string `json:"publicZone,omitempty"`
+	PublicHostedZoneID string `json:"publicHostedZoneID, omitempty"`
 }
 
 type ProviderGCP struct {

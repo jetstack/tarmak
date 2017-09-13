@@ -16,6 +16,8 @@ variable "stack" {
 
 variable "public_zone" {}
 
+variable "public_zone_id" {}
+
 variable "state_bucket" {
   default = ""
 }

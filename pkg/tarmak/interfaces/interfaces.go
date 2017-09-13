@@ -63,6 +63,7 @@ type Provider interface {
 	RemoteStateBucketName() string
 	RemoteStateBucketAvailable() (bool, error)
 	RemoteState(namespace, clusterName, stackName string) string
+	PublicZone() string
 	Environment() ([]string, error)
 	Variables() map[string]interface{}
 	QueryImages(tags map[string]string) ([]tarmakv1alpha1.Image, error)

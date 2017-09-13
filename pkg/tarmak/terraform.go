@@ -16,6 +16,7 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 }
 
 func (t *Tarmak) CmdTerraformApply(args []string) error {
+
 	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
 		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)

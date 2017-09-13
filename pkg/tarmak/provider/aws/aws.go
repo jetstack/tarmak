@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
@@ -32,6 +33,7 @@ type AWS struct {
 	ec2      EC2
 	s3       S3
 	dynamodb DynamoDB
+	route53  Route53
 	log      *logrus.Entry
 }
 
@@ -54,6 +56,10 @@ type EC2 interface {
 type DynamoDB interface {
 	DescribeTable(input *dynamodb.DescribeTableInput) (*dynamodb.DescribeTableOutput, error)
 	CreateTable(input *dynamodb.CreateTableInput) (*dynamodb.CreateTableOutput, error)
+}
+
+type Route53 interface {
+	ListHostedZonesByName(input *route53.ListHostedZonesByNameInput) (*route53.ListHostedZonesByNameOutput, error)
 }
 
 var _ interfaces.Provider = &AWS{}
@@ -170,6 +176,17 @@ func (a *AWS) DynamoDB() (DynamoDB, error) {
 	return a.dynamodb, nil
 }
 
+func (a *AWS) Route53() (Route53, error) {
+	if a.route53 == nil {
+		sess, err := a.Session()
+		if err != nil {
+			return nil, fmt.Errorf("error getting AWS session: %s", err)
+		}
+		a.route53 = route53.New(sess)
+	}
+	return a.route53, nil
+}
+
 func (a *AWS) Variables() map[string]interface{} {
 	output := map[string]interface{}{}
 	output["key_name"] = a.KeyName()
@@ -180,6 +197,7 @@ func (a *AWS) Variables() map[string]interface{} {
 	output["region"] = a.Region()
 
 	output["public_zone"] = a.conf.AWS.PublicZone
+	output["public_zone_id"] = a.conf.AWS.PublicHostedZoneID
 	output["bucket_prefix"] = a.conf.AWS.BucketPrefix
 
 	return output
@@ -229,6 +247,11 @@ func (a *AWS) Validate() error {
 	}
 
 	err = a.validateRemoteStateDynamoDB()
+	if err != nil {
+		result = multierror.Append(err)
+	}
+
+	err = a.validatePublicZone()
 	if err != nil {
 		result = multierror.Append(err)
 	}

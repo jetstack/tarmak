@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"strings"
 	"time"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type StateStack struct {
@@ -51,9 +53,12 @@ func (s *StateStack) verifyDNSDelegation() error {
 
 	tries := 5
 	for {
-		// TODO: refactor me
-		//host := strings.Join([]string{utils.RandStringRunes(16), "_tarmak", s.conf.State.PublicZone}, ".")
-		host := "refactor.me"
+		host := strings.Join([]string{
+			utils.RandStringRunes(16),
+			"_tarmak",
+			s.context.Environment().Name(),
+			s.context.Environment().Provider().PublicZone(),
+		}, ".")
 
 		result, err := net.LookupTXT(host)
 		if err == nil {
