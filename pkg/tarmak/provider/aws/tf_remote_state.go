@@ -186,7 +186,7 @@ func (a *AWS) validateRemoteStateDynamoDB() error {
 		}
 	}
 	if !attributeFound {
-		return fmt.Errorf("the DynamoDB table '%s' doesn't contain a parameter named '%s'", a.RemoteStateName())
+		return fmt.Errorf("the DynamoDB table '%s' doesn't contain a parameter named '%s'", a.RemoteStateName(), DynamoDBKey)
 	}
 
 	return nil
