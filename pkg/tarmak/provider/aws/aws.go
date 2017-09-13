@@ -5,12 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/go-multierror"
@@ -28,14 +28,19 @@ type AWS struct {
 
 	availabilityZones *[]string
 
-	session *session.Session
-	ec2     EC2
-	s3      S3
-	log     *logrus.Entry
+	session  *session.Session
+	ec2      EC2
+	s3       S3
+	dynamodb DynamoDB
+	log      *logrus.Entry
 }
 
 type S3 interface {
 	HeadBucket(input *s3.HeadBucketInput) (*s3.HeadBucketOutput, error)
+	CreateBucket(input *s3.CreateBucketInput) (*s3.CreateBucketOutput, error)
+	GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error)
+	GetBucketLocation(input *s3.GetBucketLocationInput) (*s3.GetBucketLocationOutput, error)
+	PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error)
 }
 
 type EC2 interface {
@@ -44,6 +49,11 @@ type EC2 interface {
 	DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error)
 	DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (*ec2.DescribeAvailabilityZonesOutput, error)
 	DescribeRegions(input *ec2.DescribeRegionsInput) (*ec2.DescribeRegionsOutput, error)
+}
+
+type DynamoDB interface {
+	DescribeTable(input *dynamodb.DescribeTableInput) (*dynamodb.DescribeTableOutput, error)
+	CreateTable(input *dynamodb.CreateTableInput) (*dynamodb.CreateTableOutput, error)
 }
 
 var _ interfaces.Provider = &AWS{}
@@ -149,46 +159,15 @@ func (a *AWS) S3() (S3, error) {
 	return a.s3, nil
 }
 
-func (a *AWS) RemoteStateBucketName() string {
-	return fmt.Sprintf(
-		"%s-%s-terraform-state",
-		a.conf.AWS.BucketPrefix,
-		a.Region(),
-	)
-}
-
-func (a *AWS) RemoteState(namespace string, clusterName string, stackName string) string {
-	return fmt.Sprintf(`terraform {
-  backend "s3" {
-    bucket = "%s"
-    key = "%s"
-    region = "%s"
-    lock_table ="%s"
-  }
-}`,
-		a.RemoteStateBucketName(),
-		fmt.Sprintf("%s/%s/%s.tfstate", namespace, clusterName, stackName),
-		a.Region(),
-		a.RemoteStateBucketName(),
-	)
-}
-
-func (a *AWS) RemoteStateBucketAvailable() (bool, error) {
-	svc, err := a.S3()
-	if err != nil {
-		return false, err
+func (a *AWS) DynamoDB() (DynamoDB, error) {
+	if a.dynamodb == nil {
+		sess, err := a.Session()
+		if err != nil {
+			return nil, fmt.Errorf("error getting AWS session: %s", err)
+		}
+		a.dynamodb = dynamodb.New(sess)
 	}
-
-	_, err = svc.HeadBucket(&s3.HeadBucketInput{
-		Bucket: aws.String(a.RemoteStateBucketName()),
-	})
-	if err == nil {
-		return true, nil
-	} else if strings.HasPrefix(err.Error(), "NotFound:") {
-		return false, nil
-	}
-
-	return false, fmt.Errorf("error while checking if remote state is available: %s", err)
+	return a.dynamodb, nil
 }
 
 func (a *AWS) Variables() map[string]interface{} {
@@ -199,6 +178,9 @@ func (a *AWS) Variables() map[string]interface{} {
 	}
 	output["availability_zones"] = a.AvailabilityZones()
 	output["region"] = a.Region()
+
+	output["public_zone"] = a.conf.AWS.PublicZone
+	output["bucket_prefix"] = a.conf.AWS.BucketPrefix
 
 	return output
 }
@@ -238,16 +220,32 @@ func (a *AWS) readVaultToken() (string, error) {
 }
 
 func (a *AWS) Validate() error {
-	err := a.validateAvailabilityZones()
+	var result error
+	var err error
+
+	err = a.validateRemoteStateBucket()
 	if err != nil {
-		return err
+		result = multierror.Append(err)
+	}
+
+	err = a.validateRemoteStateDynamoDB()
+	if err != nil {
+		result = multierror.Append(err)
+	}
+
+	err = a.validateAvailabilityZones()
+	if err != nil {
+		result = multierror.Append(err)
 	}
 
 	err = a.validateAWSKeyPair()
 	if err != nil {
-		return err
+		result = multierror.Append(err)
 	}
 
+	if result != nil {
+		return result
+	}
 	return nil
 
 }
@@ -419,23 +417,4 @@ func (a *AWS) VolumeType(typeIn string) (typeOut string, err error) {
 	}
 	// TODO: Validate custom instance type here
 	return typeIn, nil
-}
-
-func (a *AWS) RemoteStateAvailable(bucketName string) (bool, error) {
-	sess, err := a.Session()
-	if err != nil {
-		return false, fmt.Errorf("error getting session: %s", err)
-	}
-
-	svc := s3.New(sess)
-	_, err = svc.HeadBucket(&s3.HeadBucketInput{
-		Bucket: &bucketName,
-	})
-	if err == nil {
-		return true, nil
-	} else if strings.HasPrefix(err.Error(), "NotFound:") {
-		return false, nil
-	} else {
-		return false, fmt.Errorf("error while checking if remote state is available: %s", err)
-	}
 }
