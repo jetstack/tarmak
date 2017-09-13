@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
@@ -139,6 +140,8 @@ func (a *AWS) AvailabilityZones() (availabiltyZones []string) {
 	for zone, _ := range zones {
 		availabiltyZones = append(availabiltyZones, zone)
 	}
+
+	sort.Strings(availabiltyZones)
 
 	return availabiltyZones
 }
