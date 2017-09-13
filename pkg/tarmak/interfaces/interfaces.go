@@ -19,6 +19,7 @@ type Context interface {
 	Name() string
 	Validate() error
 	Stacks() []Stack
+	Stack(name string) Stack
 	NetworkCIDR() *net.IPNet
 	RemoteState(stackName string) string
 	ConfigPath() string

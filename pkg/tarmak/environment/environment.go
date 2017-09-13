@@ -33,13 +33,9 @@ type Environment struct {
 
 	sshKeyPrivate interface{}
 
-	stackState interfaces.Stack
-	stackVault interfaces.Stack
-	stackTools interfaces.Stack
-
-	provider interfaces.Provider
-
-	tarmak interfaces.Tarmak
+	hubContext interfaces.Context // this is the context that contains state/vault/tools
+	provider   interfaces.Provider
+	tarmak     interfaces.Tarmak
 
 	log *logrus.Entry
 }
@@ -77,6 +73,9 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 			continue
 		}
 		e.contexts = append(e.contexts, contextIntf)
+		if len(contexts) == 1 || contextConf.Name == "hub" {
+			e.hubContext = contextIntf
+		}
 	}
 	if result != nil {
 		return nil, result
@@ -143,9 +142,9 @@ func (e *Environment) Variables() map[string]interface{} {
 	}
 
 	output["state_bucket"] = e.Provider().RemoteStateBucketName()
-	output["state_context_name"] = e.stackState.Context().Name()
-	output["tools_context_name"] = e.stackTools.Context().Name()
-	output["vault_context_name"] = e.stackVault.Context().Name()
+	output["state_context_name"] = e.hubContext.Name()
+	output["tools_context_name"] = e.hubContext.Name()
+	output["vault_context_name"] = e.hubContext.Name()
 	return output
 }
 
@@ -226,7 +225,7 @@ func (e *Environment) getSSHPrivateKey() (interface{}, error) {
 }
 
 func (e *Environment) SSHPrivateKeyPath() string {
-	if e.conf.SSH != nil || e.conf.SSH.PrivateKeyPath == "" {
+	if e.conf.SSH == nil || e.conf.SSH.PrivateKeyPath == "" {
 		return filepath.Join(e.ConfigPath(), "id_rsa")
 	}
 
@@ -261,7 +260,11 @@ func (e *Environment) Validate() error {
 }
 
 func (e *Environment) BucketPrefix() string {
-	bucketPrefix, ok := e.stackState.Variables()["bucket_prefix"]
+	stackState := e.hubContext.Stack(tarmakv1alpha1.StackNameState)
+	if stackState == nil {
+		return ""
+	}
+	bucketPrefix, ok := stackState.Variables()["bucket_prefix"]
 	if !ok {
 		return ""
 	}
@@ -273,11 +276,11 @@ func (e *Environment) BucketPrefix() string {
 }
 
 func (e *Environment) StateStack() interfaces.Stack {
-	return e.stackState
+	return e.hubContext.Stack(tarmakv1alpha1.StackNameState)
 }
 
 func (e *Environment) VaultStack() interfaces.Stack {
-	return e.stackVault
+	return e.hubContext.Stack(tarmakv1alpha1.StackNameVault)
 }
 
 func (e *Environment) vaultRootTokenPath() string {
@@ -311,9 +314,13 @@ func (e *Environment) VaultRootToken() (string, error) {
 }
 
 func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
-	vaultStack, ok := e.stackVault.(*stack.VaultStack)
+	stackVault := e.hubContext.Stack(tarmakv1alpha1.StackNameVault)
+	if stackVault == nil {
+		return nil, errors.New("could not find vault stack")
+	}
+	vaultStack, ok := stackVault.(*stack.VaultStack)
 	if !ok {
-		return nil, fmt.Errorf("could convert to VaultStack: %T", e.stackVault)
+		return nil, fmt.Errorf("could not convert stack to VaultStack: %T", stackVault)
 	}
 
 	return vaultStack.VaultTunnel()

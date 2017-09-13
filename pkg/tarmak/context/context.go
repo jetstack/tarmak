@@ -261,6 +261,15 @@ func (c *Context) Stacks() []interfaces.Stack {
 	return c.stacks
 }
 
+func (c *Context) Stack(name string) interfaces.Stack {
+	for _, stack := range c.stacks {
+		if stack.Name() == name {
+			return stack
+		}
+	}
+	return nil
+}
+
 func (c *Context) Environment() interfaces.Environment {
 	return c.environment
 }
