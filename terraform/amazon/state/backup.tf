@@ -38,6 +38,11 @@ resource "aws_kms_key" "backups" {
   deletion_window_in_days = 7
 }
 
+resource "aws_kms_alias" "backups" {
+  name          = "alias/tarmak/${var.environment}/backups"
+  target_key_id = "${aws_kms_key.backups.key_id}"
+}
+
 output "backups_bucket" {
   value = "${aws_s3_bucket.backups.bucket}"
 }

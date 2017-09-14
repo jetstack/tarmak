@@ -18,6 +18,11 @@ resource "aws_kms_key" "secrets" {
   deletion_window_in_days = 7
 }
 
+resource "aws_kms_alias" "secrets" {
+  name          = "alias/tarmak/${var.environment}/secrets"
+  target_key_id = "${aws_kms_key.secrets.key_id}"
+}
+
 output "secrets_bucket" {
   value = "${aws_s3_bucket.secrets.bucket}"
 }
