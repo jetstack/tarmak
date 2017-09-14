@@ -65,6 +65,10 @@ func (r *Role) HasMaster() bool {
 	return (r.Name() == "master" || r.Name() == "etcd-master")
 }
 
+func (r *Role) HasWorker() bool {
+	return (r.Name() == "worker")
+}
+
 func (r *Role) ELBIngressExternalName() string {
 	return r.Name() + "-ingress"
 }
