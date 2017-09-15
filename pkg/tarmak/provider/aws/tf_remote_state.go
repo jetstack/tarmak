@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -111,7 +112,12 @@ func (a *AWS) validateRemoteStateBucket() error {
 		Bucket: aws.String(a.RemoteStateName()),
 	})
 	if err != nil {
-		return err
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "NotFound" {
+				return a.initRemoteStateBucket()
+			}
+		}
+		return fmt.Errorf("error looking for terraform state bucket: %s", err)
 	}
 
 	location, err := svc.GetBucketLocation(&s3.GetBucketLocationInput{
@@ -176,7 +182,12 @@ func (a *AWS) validateRemoteStateDynamoDB() error {
 		TableName: aws.String(a.RemoteStateName()),
 	})
 	if err != nil {
-		return err
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "ResourceNotFoundException" {
+				return a.initRemoteStateDynamoDB()
+			}
+		}
+		return fmt.Errorf("error looking for terraform state dynamodb: %s", err)
 	}
 
 	attributeFound := false
