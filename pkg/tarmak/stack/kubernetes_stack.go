@@ -27,7 +27,7 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	s.roles = make(map[string]bool)
 	s.roles[clusterv1alpha1.ServerPoolTypeEtcd] = true
 	s.roles[clusterv1alpha1.ServerPoolTypeMaster] = true
-	s.roles[clusterv1alpha1.ServerPoolTypeNode] = true
+	s.roles[clusterv1alpha1.ServerPoolTypeWorker] = true
 
 	s.name = tarmakv1alpha1.StackNameKubernetes
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)

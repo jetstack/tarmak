@@ -168,7 +168,7 @@ func (c *Context) validateServerPools() (result error) {
 		}
 		allowedTypes[clusterv1alpha1.ServerPoolTypeEtcd] = true
 		allowedTypes[clusterv1alpha1.ServerPoolTypeMaster] = true
-		allowedTypes[clusterv1alpha1.ServerPoolTypeNode] = true
+		allowedTypes[clusterv1alpha1.ServerPoolTypeWorker] = true
 
 		if s, err := stack.New(c, tarmakv1alpha1.StackNameKubernetes); err != nil {
 			result = multierror.Append(result, err)

@@ -42,7 +42,7 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 	masterRole.WithName("master").WithPrefix("kubernetes")
 	roleMap[clusterv1alpha1.ServerPoolTypeMaster] = masterRole
 
-	nodeRole := &role.Role{
+	workerRole := &role.Role{
 		Stateful: false,
 		AWS: &role.RoleAWS{
 			ELBIngress:                     true,
@@ -50,8 +50,8 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 			IAMEC2ModifyInstanceAttributes: true,
 		},
 	}
-	nodeRole.WithName("worker").WithPrefix("kubernetes")
-	roleMap[clusterv1alpha1.ServerPoolTypeNode] = nodeRole
+	workerRole.WithName("worker").WithPrefix("kubernetes")
+	roleMap[clusterv1alpha1.ServerPoolTypeWorker] = workerRole
 
 	etcdRole := &role.Role{
 		Stateful: true,

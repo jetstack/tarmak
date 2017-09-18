@@ -27,14 +27,14 @@ const (
 
 const (
 	ServerPoolTypeMaster     = "master"
-	ServerPoolTypeNode       = "node"
+	ServerPoolTypeWorker     = "worker"
 	ServerPoolTypeEtcd       = "etcd"
 	ServerPoolTypeBastion    = "bastion" // bastion node with public IP
 	ServerPoolTypeJenkins    = "jenkins" // jenkins CI/CD node
 	ServerPoolTypeVault      = "vault"
-	ServerPoolTypeAll        = "all"         // master + node + etcd
+	ServerPoolTypeAll        = "all"         // master + worker + etcd
 	ServerPoolTypeMasterEtcd = "master-etcd" // master + etcd
-	ServerPoolTypeHybrid     = "hybrid"      // master + node
+	ServerPoolTypeHybrid     = "hybrid"      // master + worker
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

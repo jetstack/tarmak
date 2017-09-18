@@ -22,7 +22,7 @@ func NewClusterSingle(environment string, name string) *clusterv1alpha1.Cluster 
 		*newServerPoolVault(),
 		*newServerPoolEtcd(),
 		*newServerPoolMaster(),
-		*newServerPoolNode(),
+		*newServerPoolWorker(),
 	}
 	return c
 }
@@ -33,7 +33,7 @@ func NewClusterMulti(environment string, name string) *clusterv1alpha1.Cluster {
 	c.ServerPools = []clusterv1alpha1.ServerPool{
 		*newServerPoolEtcd(),
 		*newServerPoolMaster(),
-		*newServerPoolNode(),
+		*newServerPoolWorker(),
 	}
 	return c
 }
@@ -133,9 +133,9 @@ func newServerPoolMaster() *clusterv1alpha1.ServerPool {
 }
 
 // This creates a node serverPool
-func newServerPoolNode() *clusterv1alpha1.ServerPool {
+func newServerPoolWorker() *clusterv1alpha1.ServerPool {
 	sp := newServerPool()
-	sp.Type = clusterv1alpha1.ServerPoolTypeNode
+	sp.Type = clusterv1alpha1.ServerPoolTypeWorker
 	sp.MinCount = 3
 	sp.MaxCount = 3
 	sp.Size = clusterv1alpha1.ServerPoolSizeMedium
