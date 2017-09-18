@@ -423,6 +423,15 @@ func (in *ServerPool) DeepCopyInto(out *ServerPool) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Kubernetes != nil {
+		in, out := &in.Kubernetes, &out.Kubernetes
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(Kubernetes)
+			**out = **in
+		}
+	}
 	return
 }
 

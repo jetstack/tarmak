@@ -10,7 +10,9 @@ hierarchy:
 
 - name: "Other YAML hierarchy levels"
   paths: # Can specify an array of paths instead of one.
+  - instance_pools/%{facts.tarmak_instance_pool}.yaml
   - role/%{facts.tarmak_role}.yaml
   - cloudprovider/%{facts.tarmak_cloudprovider}.yaml
   - environment/%{facts.tarmak_environment}.yaml
+  - tarmak.yaml
   - common.yaml

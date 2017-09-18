@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
@@ -161,21 +160,6 @@ func (t *Tarmak) RootPath() (string, error) {
 	t.log.Debugf("created temporary directory: %s", dir)
 
 	err = assets.RestoreAssets(dir, "")
-	if err != nil {
-		return "", err
-	}
-
-	// use same creation directory for all folders
-	kubernetesEpoch := time.Unix(1437436800, 0)
-	err = filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
-		if f.IsDir() {
-			err = os.Chtimes(path, kubernetesEpoch, kubernetesEpoch)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 	if err != nil {
 		return "", err
 	}

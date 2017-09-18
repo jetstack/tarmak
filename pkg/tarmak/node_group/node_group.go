@@ -87,6 +87,10 @@ func (n *NodeGroup) Name() string {
 	return n.conf.Name
 }
 
+func (n *NodeGroup) Config() *clusterv1alpha1.ServerPool {
+	return n.conf.DeepCopy()
+}
+
 // This returns a DNS compatible name
 func (n *NodeGroup) DNSName() string {
 	return n.Role().Prefix("-") + n.Name()

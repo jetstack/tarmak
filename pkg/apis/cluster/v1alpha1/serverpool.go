@@ -53,4 +53,5 @@ type ServerPool struct {
 	Subnets           []*Subnet   `json:"subnets,omitempty"`
 	Firewalls         []*Firewall `json:"firewalls,omitempty"`
 	Volumes           []Volume    `json:"volumes,omitempty"`
+	Kubernetes        *Kubernetes `json:"kubernetes,omitempty"`
 }
