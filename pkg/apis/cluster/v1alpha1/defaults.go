@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -76,5 +77,15 @@ func SetDefaults_ServerPool(obj *ServerPool) {
 	// set image to default image
 	if obj.Image == "" {
 		obj.Image = "centos-puppet-agent-latest-kernel"
+	}
+
+	// set a default size for volumes
+	for pos, _ := range obj.Volumes {
+		if obj.Volumes[pos].Size == nil {
+			obj.Volumes[pos].Size = resource.NewQuantity(16*1024*1024*1024, resource.BinarySI)
+		}
+		if obj.Volumes[pos].Type == "" {
+			obj.Volumes[pos].Type = VolumeTypeSSD
+		}
 	}
 }
