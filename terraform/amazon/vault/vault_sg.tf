@@ -39,16 +39,6 @@ resource "aws_security_group_rule" "vault_in_allow_vault_bastion" {
   security_group_id        = "${aws_security_group.vault.id}"
 }
 
-resource "aws_security_group_rule" "vault_in_allow_vault_jenkins" {
-  type      = "ingress"
-  from_port = 8200
-  to_port   = 8200
-  protocol  = "tcp"
-
-  source_security_group_id = "${data.terraform_remote_state.tools.jenkins_security_group_id}"
-  security_group_id        = "${aws_security_group.vault.id}"
-}
-
 resource "aws_security_group_rule" "vault_in_allow_everything_inner_cluster" {
   type                     = "ingress"
   from_port                = 0

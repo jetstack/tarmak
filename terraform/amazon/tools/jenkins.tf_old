@@ -51,7 +51,7 @@ data "template_file" "jenkins_user_data" {
 }
 
 resource "aws_instance" "jenkins" {
-  ami                    = "${var.centos_ami[var.region]}"
+  ami                    = "${var.jenkins_ami}"
   instance_type          = "${var.jenkins_instance_type}"
   subnet_id              = "${data.terraform_remote_state.network.private_subnet_ids[0]}"
   key_name               = "${var.key_name}"
