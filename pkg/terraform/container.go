@@ -302,6 +302,7 @@ func (tc *TerraformContainer) prepare() error {
 			map[string]interface{}{
 				"NodeGroups": nodeGroups,
 				"Roles":      tc.stack.Roles(),
+				"Stack":      tc.stack.Name(),
 			},
 		); err != nil {
 			return err

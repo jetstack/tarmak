@@ -1,3 +1,4 @@
+{{ if eq .Stack "kubernetes"}}
 {{range .Roles}}
 ## TODO: Role definitions for {{.TFName}}
 
@@ -23,4 +24,5 @@
 # IAM role for {{.TFName}}
 {{template "node_group_iam.tf.template" .}}
 
+{{end}}
 {{end}}
