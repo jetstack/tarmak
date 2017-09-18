@@ -204,9 +204,6 @@ func (c *Context) Subnets() (subnets []clusterv1alpha1.Subnet) {
 func (c *Context) Images() []string {
 	images := make(map[string]bool)
 	for _, sp := range c.conf.ServerPools {
-		if sp.Image == "" {
-			sp.Image = "centos-puppet-agent"
-		}
 		images[sp.Image] = true
 	}
 
