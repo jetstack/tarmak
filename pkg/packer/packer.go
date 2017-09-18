@@ -1,7 +1,7 @@
 package packer
 
 import (
-	"errors"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 
@@ -79,5 +79,20 @@ func (p *Packer) Build() error {
 
 // Query images
 func (p *Packer) IDs() (map[string]string, error) {
-	return nil, errors.New("unimplemented")
+	images, err := p.List()
+	if err != nil {
+		return nil, err
+	}
+
+	imagesChangeTime := make(map[string]time.Time)
+	imageIDByName := make(map[string]string)
+
+	for _, image := range images {
+		if changeTime, ok := imagesChangeTime[image.BaseImage]; !ok || changeTime.Before(image.CreationTimestamp.Time) {
+			imagesChangeTime[image.BaseImage] = image.CreationTimestamp.Time
+			imageIDByName[image.BaseImage] = image.Name
+		}
+	}
+
+	return imageIDByName, nil
 }
