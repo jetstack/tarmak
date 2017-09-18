@@ -27,7 +27,7 @@ func NewVolumeFromConfig(pos int, provider interfaces.Provider, conf *clusterv1a
 	}
 	volume.volumeType = volumeType
 
-	if provider.Name() == clusterv1alpha1.CloudAmazon {
+	if provider.Cloud() == clusterv1alpha1.CloudAmazon {
 		letters := "defghijklmnop"
 		volume.device = fmt.Sprintf("/dev/sd%c", letters[pos])
 	}

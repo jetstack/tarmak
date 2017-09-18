@@ -56,7 +56,8 @@ func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext
 
 	c.fakeProvider.EXPECT().InstanceType(gomock.Any()).Do(func(in string) string { return "provider-" + in }).AnyTimes()
 	c.fakeProvider.EXPECT().VolumeType(gomock.Any()).Do(func(in string) string { return "provider-" + in }).AnyTimes()
-	c.fakeProvider.EXPECT().Name().Return("provider").AnyTimes()
+	c.fakeProvider.EXPECT().Cloud().Return("provider").AnyTimes()
+	c.fakeProvider.EXPECT().Name().Return("provider-name").AnyTimes()
 
 	c.fakeTarmak.EXPECT().Config().AnyTimes().Return(c.fakeConfig)
 

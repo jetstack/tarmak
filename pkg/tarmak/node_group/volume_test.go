@@ -46,7 +46,8 @@ func TestVolume_AWS_SSD(t *testing.T) {
 	defer v.ctrl.Finish()
 
 	v.fakeProvider.EXPECT().VolumeType("ssd").Return("gp2", nil)
-	v.fakeProvider.EXPECT().Name().Return(clusterv1alpha1.CloudAmazon).AnyTimes()
+	v.fakeProvider.EXPECT().Cloud().Return(clusterv1alpha1.CloudAmazon).AnyTimes()
+	v.fakeProvider.EXPECT().Name().Return("aws1").AnyTimes()
 	v.pos = 1
 
 	err := v.New()

@@ -50,8 +50,9 @@ func NewFromConfig(context interfaces.Context, conf *clusterv1alpha1.ServerPool)
 
 	var result error
 
+	count := 0
 	for pos, _ := range conf.Volumes {
-		volume, err := NewVolumeFromConfig(pos, provider, &conf.Volumes[pos])
+		volume, err := NewVolumeFromConfig(count, provider, &conf.Volumes[pos])
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
@@ -59,6 +60,7 @@ func NewFromConfig(context interfaces.Context, conf *clusterv1alpha1.ServerPool)
 		if volume.Name() == "root" {
 			nodeGroup.rootVolume = volume
 		} else {
+			count++
 			nodeGroup.volumes = append(nodeGroup.volumes, volume)
 		}
 	}
