@@ -77,7 +77,7 @@ resource "aws_instance" "bastion" {
 
 resource "aws_route53_record" "bastion" {
   zone_id = "${data.terraform_remote_state.state.public_zone_id}"
-  name    = "bastion"
+  name    = "bastion.${var.environment}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_eip.bastion.public_ip}"]
