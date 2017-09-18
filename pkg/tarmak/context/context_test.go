@@ -65,6 +65,7 @@ func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext
 
 func TestContext_NewMinimalClusterMulti(t *testing.T) {
 	clusterConfig := config.NewClusterMulti("multi", "cluster")
+	config.ApplyDefaults(clusterConfig)
 	clusterConfig.Location = "my-region"
 	c := newFakeContext(t, nil)
 	defer c.Finish()
@@ -97,6 +98,7 @@ func TestContext_NewMinimalClusterMulti(t *testing.T) {
 
 func TestContext_NewMinimalClusterSingle(t *testing.T) {
 	clusterConfig := config.NewClusterSingle("single", "cluster")
+	config.ApplyDefaults(clusterConfig)
 	clusterConfig.Location = "my-region"
 	c := newFakeContext(t, nil)
 	defer c.Finish()
@@ -128,6 +130,7 @@ func TestContext_NewMinimalClusterSingle(t *testing.T) {
 
 func TestContext_NewMinimalHub(t *testing.T) {
 	clusterConfig := config.NewHub("multi")
+	config.ApplyDefaults(clusterConfig)
 	clusterConfig.Location = "my-region"
 	c := newFakeContext(t, nil)
 	defer c.Finish()

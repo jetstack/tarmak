@@ -68,6 +68,21 @@ func (c *Config) NewAWSConfigClusterSingle() *tarmakv1alpha1.Config {
 	return conf
 }
 
+func ApplyDefaults(src runtime.Object) error {
+	scheme := runtime.NewScheme()
+
+	if err := clusterv1alpha1.AddToScheme(scheme); err != nil {
+		return err
+	}
+
+	if err := tarmakv1alpha1.AddToScheme(scheme); err != nil {
+		return err
+	}
+
+	scheme.Default(src)
+	return nil
+}
+
 func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
 	var encoder runtime.Encoder
 	mediaTypes := c.codecs.SupportedMediaTypes()
