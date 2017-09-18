@@ -3,24 +3,31 @@ package node_group
 import (
 	"fmt"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
 var _ interfaces.Volume = &Volume{}
 
 type Volume struct {
-	conf *config.Volume
+	conf *clusterv1alpha1.Volume
 
-	device string
+	volumeType string
+	device     string
 }
 
-func NewVolumeFromConfig(pos int, conf *config.Volume) (*Volume, error) {
+func NewVolumeFromConfig(pos int, provider interfaces.Provider, conf *clusterv1alpha1.Volume) (*Volume, error) {
 	volume := &Volume{
 		conf: conf,
 	}
 
-	if conf.AWS != nil && pos < 10 {
+	volumeType, err := provider.VolumeType(conf.Type)
+	if err != nil {
+		return nil, err
+	}
+	volume.volumeType = volumeType
+
+	if provider.Cloud() == clusterv1alpha1.CloudAmazon {
 		letters := "defghijklmnop"
 		volume.device = fmt.Sprintf("/dev/sd%c", letters[pos])
 	}
@@ -37,12 +44,9 @@ func (v *Volume) Name() string {
 }
 
 func (v *Volume) Size() int {
-	return v.conf.Size
+	return int(v.conf.Size.Value() / 1024 / 1024 / 1024)
 }
 
 func (v *Volume) Type() string {
-	if v.conf.AWS != nil {
-		return v.conf.AWS.Type
-	}
-	return ""
+	return v.volumeType
 }

@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/golang/mock/gomock"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
 )
 
@@ -20,6 +21,8 @@ type fakeAWS struct {
 
 	fakeEC2         *mocks.MockEC2
 	fakeEnvironment *mocks.MockEnvironment
+	fakeContext     *mocks.MockContext
+	fakeTarmak      *mocks.MockTarmak
 }
 
 func newFakeAWS(t *testing.T) *fakeAWS {
@@ -27,16 +30,23 @@ func newFakeAWS(t *testing.T) *fakeAWS {
 	f := &fakeAWS{
 		ctrl: gomock.NewController(t),
 		AWS: &AWS{
-			conf: &config.AWSConfig{
-				KeyName: "myfake_key",
+			conf: &tarmakv1alpha1.Provider{
+				AWS: &tarmakv1alpha1.ProviderAWS{
+					KeyName: "myfake_key",
+				},
 			},
 			log: logrus.WithField("test", true),
 		},
 	}
 	f.fakeEC2 = mocks.NewMockEC2(f.ctrl)
 	f.fakeEnvironment = mocks.NewMockEnvironment(f.ctrl)
+	f.fakeContext = mocks.NewMockContext(f.ctrl)
+	f.fakeTarmak = mocks.NewMockTarmak(f.ctrl)
 	f.AWS.ec2 = f.fakeEC2
-	f.AWS.environment = f.fakeEnvironment
+	f.AWS.tarmak = f.fakeTarmak
+	f.fakeTarmak.EXPECT().Context().AnyTimes().Return(f.fakeContext)
+	f.fakeTarmak.EXPECT().Environment().AnyTimes().Return(f.fakeEnvironment)
+	f.fakeContext.EXPECT().Environment().AnyTimes().Return(f.fakeEnvironment)
 
 	return f
 }
@@ -45,6 +55,9 @@ func TestAWS_validateAvailabilityZonesNoneGiven(t *testing.T) {
 	a := newFakeAWS(t)
 	defer a.ctrl.Finish()
 
+	a.fakeContext.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{}).MinTimes(1)
+	a.fakeContext.EXPECT().Region().Return("london-north-1").AnyTimes()
+
 	a.fakeEC2.EXPECT().DescribeAvailabilityZones(gomock.Any()).Return(&ec2.DescribeAvailabilityZonesOutput{
 		AvailabilityZones: []*ec2.AvailabilityZone{
 			&ec2.AvailabilityZone{
@@ -70,7 +83,7 @@ func TestAWS_validateAvailabilityZonesNoneGiven(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 	}
 
-	if exp, act := a.AvailabilityZones(), []string{"london-north-1a"}; !reflect.DeepEqual(act, exp) {
+	if act, exp := a.AvailabilityZones(), []string{"london-north-1a"}; !reflect.DeepEqual(act, exp) {
 		t.Errorf("unexpected availability zones: act=%+v exp=%+v", act, exp)
 	}
 }
@@ -79,8 +92,15 @@ func TestAWS_validateAvailabilityZonesCorrectGiven(t *testing.T) {
 	a := newFakeAWS(t)
 	defer a.ctrl.Finish()
 
-	a.AWS.conf.AvailabiltyZones = []string{"london-north-1b", "london-north-1c"}
-	a.AWS.conf.Region = "london-north-1"
+	a.fakeContext.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{
+		clusterv1alpha1.Subnet{
+			Zone: "london-north-1b",
+		},
+		clusterv1alpha1.Subnet{
+			Zone: "london-north-1c",
+		},
+	}).MinTimes(1)
+	a.fakeContext.EXPECT().Region().Return("london-north-1").AnyTimes()
 
 	a.fakeEC2.EXPECT().DescribeAvailabilityZones(gomock.Any()).Return(&ec2.DescribeAvailabilityZonesOutput{
 		AvailabilityZones: []*ec2.AvailabilityZone{
@@ -107,7 +127,7 @@ func TestAWS_validateAvailabilityZonesCorrectGiven(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 	}
 
-	if exp, act := a.AvailabilityZones(), []string{"london-north-1b", "london-north-1c"}; !reflect.DeepEqual(act, exp) {
+	if act, exp := a.AvailabilityZones(), []string{"london-north-1b", "london-north-1c"}; !reflect.DeepEqual(act, exp) {
 		t.Errorf("unexpected availability zones: act=%+v exp=%+v", act, exp)
 	}
 }
@@ -116,8 +136,19 @@ func TestAWS_validateAvailabilityZonesFalseGiven(t *testing.T) {
 	a := newFakeAWS(t)
 	defer a.ctrl.Finish()
 
-	a.AWS.conf.AvailabiltyZones = []string{"london-north-1-a", "london-north-1-d", "london-north-1-e"}
-	a.AWS.conf.Region = "london-north-1"
+	a.fakeContext.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{
+		clusterv1alpha1.Subnet{
+			Zone: "london-north-1a",
+		},
+		clusterv1alpha1.Subnet{
+			Zone: "london-north-1d",
+		},
+		clusterv1alpha1.Subnet{
+			Zone: "london-north-1e",
+		},
+	}).MinTimes(1)
+	a.fakeContext.EXPECT().Region().Return("london-north-1").AnyTimes()
+	a.fakeEnvironment.EXPECT().Location().Return("london-north-1").AnyTimes()
 
 	a.fakeEC2.EXPECT().DescribeAvailabilityZones(gomock.Any()).Return(&ec2.DescribeAvailabilityZonesOutput{
 		AvailabilityZones: []*ec2.AvailabilityZone{
@@ -141,7 +172,7 @@ func TestAWS_validateAvailabilityZonesFalseGiven(t *testing.T) {
 
 	err := a.validateAvailabilityZones()
 	if err == nil {
-		t.Errorf("expected error: %s", err)
+		t.Error("expected an error")
 	} else if !strings.Contains(err.Error(), "specified invalid availability zone") {
 		t.Errorf("unexpected error messge: %s", err)
 	}

@@ -7,9 +7,9 @@ import (
 
 	"github.com/jetstack-experimental/vault-helper/pkg/kubernetes"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type KubernetesStack struct {
@@ -19,56 +19,17 @@ type KubernetesStack struct {
 
 var _ interfaces.Stack = &KubernetesStack{}
 
-func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStack, error) {
+func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	k := &KubernetesStack{
 		Stack: s,
 	}
 
-	masterRole := &role.Role{
-		Stateful: false,
-		AWS: &role.RoleAWS{
-			ELBAPI:     true,
-			IAMEC2Full: true,
-			IAMELBFull: true,
-		},
-	}
-	masterRole.WithName("master").WithPrefix("kubernetes")
+	s.roles = make(map[string]bool)
+	s.roles[clusterv1alpha1.ServerPoolTypeEtcd] = true
+	s.roles[clusterv1alpha1.ServerPoolTypeMaster] = true
+	s.roles[clusterv1alpha1.ServerPoolTypeWorker] = true
 
-	workerRole := &role.Role{
-		Stateful: false,
-		AWS: &role.RoleAWS{
-			ELBIngress:                     true,
-			IAMEC2Read:                     true,
-			IAMEC2ModifyInstanceAttributes: true,
-		},
-	}
-	workerRole.WithName("worker").WithPrefix("kubernetes")
-
-	etcdRole := &role.Role{
-		Stateful: true,
-		AWS:      &role.RoleAWS{},
-	}
-	etcdRole.WithName("etcd").WithPrefix("kubernetes")
-
-	masterEtcdRole := &role.Role{
-		Stateful: false,
-		AWS: &role.RoleAWS{
-			ELBAPI:     true,
-			IAMEC2Full: true,
-			IAMELBFull: true,
-		},
-	}
-	masterEtcdRole.WithName("etcd-master").WithPrefix("kubernetes")
-
-	s.roles = map[string]*role.Role{
-		"master":      masterRole,
-		"worker":      workerRole,
-		"etcd":        etcdRole,
-		"etcd-master": masterEtcdRole,
-		"master-etcd": masterEtcdRole,
-	}
-
-	s.name = config.StackNameKubernetes
+	s.name = tarmakv1alpha1.StackNameKubernetes
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensurePuppetTarGz)
 	s.verifyPreDestroy = append(s.verifyPreDestroy, k.emptyPuppetTarGz)
@@ -77,10 +38,14 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 }
 
 func (s *KubernetesStack) Variables() map[string]interface{} {
+	vars := s.Stack.Variables()
+
 	if s.initTokens != nil {
-		return s.initTokens
+		for key, val := range s.initTokens {
+			vars[key] = val
+		}
 	}
-	return map[string]interface{}{}
+	return vars
 }
 
 func (s *KubernetesStack) puppetTarGzPath() (string, error) {
@@ -89,7 +54,7 @@ func (s *KubernetesStack) puppetTarGzPath() (string, error) {
 		return "", fmt.Errorf("error getting rootPath: %s", err)
 	}
 
-	path := filepath.Join(rootPath, "terraform", "aws-centos", "kubernetes", "puppet.tar.gz")
+	path := filepath.Join(rootPath, "terraform", s.Context().Environment().Provider().Cloud(), "kubernetes", "puppet.tar.gz")
 
 	return path, nil
 }

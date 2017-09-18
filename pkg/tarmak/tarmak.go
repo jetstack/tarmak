@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
@@ -17,7 +17,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/assets"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/environment"
-	"github.com/jetstack/tarmak/pkg/tarmak/initialize"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
@@ -25,37 +24,23 @@ import (
 )
 
 type Tarmak struct {
-	conf *config.Config
+	homeDir  string
+	rootPath *string
+	log      *logrus.Logger
 
-	homeDir    string
-	rootPath   *string
-	log        *logrus.Logger
-	terraform  *terraform.Terraform
-	puppet     *puppet.Puppet
-	packer     *packer.Packer
-	ssh        interfaces.SSH
-	cmd        *cobra.Command
-	kubectl    *kubectl.Kubectl
-	initialize *initialize.Init
+	config    *config.Config
+	terraform *terraform.Terraform
+	puppet    *puppet.Puppet
+	packer    *packer.Packer
+	ssh       interfaces.SSH
+	cmd       *cobra.Command
+	kubectl   *kubectl.Kubectl
 
-	context      interfaces.Context
-	environments []interfaces.Environment
+	environment interfaces.Environment
+	context     interfaces.Context
 }
 
 var _ interfaces.Tarmak = &Tarmak{}
-
-func (t *Tarmak) MergeEnvironment(inInterface interface{}) error {
-	switch in := inInterface.(type) {
-	case config.Environment:
-		return config.MergeEnvironment(t, in)
-	}
-
-	return fmt.Errorf("unexpected type %T for parameter", inInterface)
-}
-
-func (t *Tarmak) Init() error {
-	return t.initialize.Run()
-}
 
 func New(cmd *cobra.Command) *Tarmak {
 	t := &Tarmak{
@@ -66,64 +51,88 @@ func New(cmd *cobra.Command) *Tarmak {
 	// detect home directory
 	homeDir, err := homedir.Dir()
 	if err != nil {
-		t.log.Fatal("unabled to detect home directory: ", err)
+		t.log.Fatal("unable to detect home directory: ", err)
 	}
 	t.homeDir = homeDir
 
 	t.log.Level = logrus.DebugLevel
 	t.log.Out = os.Stderr
 
-	// return early for init
-	if cmd.Name() == "init" {
-		t.initialize = initialize.New(t)
-		return t
-	}
+	// TODO: enable me for init
+	/*
+		// return early for init
+		if cmd.Name() == "init" {
+			t.initialize = initialize.New(t)
+			return t
+		}
+	*/
 
 	// read config, unless we are initialising the config
-	conf, err := config.ReadConfig(t)
+	t.config, err = config.New(t)
 	if err != nil {
-		t.log.Fatal("unabled to read config: ", err)
+		t.log.Fatal("unable to create tarmak: ", err)
 	}
 
-	if err := t.initFromConfig(conf); err != nil {
-		t.log.Fatal("unabled to validate config: ", err)
+	// TODO: This needs to be validated
+	_, err = t.config.ReadConfig()
+	if err != nil {
+		t.log.Fatal("unable to read config: ", err)
+	}
+
+	err = t.initialize()
+	if err != nil {
+		t.log.Fatal("unable to initialize tarmak: ", err)
 	}
 
 	t.terraform = terraform.New(t)
 	t.packer = packer.New(t)
 	t.ssh = ssh.New(t)
 	t.puppet = puppet.New(t)
-	t.initialize = initialize.New(t)
 	t.kubectl = kubectl.New(t)
 
 	return t
 }
 
-func (t *Tarmak) initFromConfig(cfg *config.Config) error {
-	var result error
+// Initialize default context, its environment and provider
+func (t *Tarmak) initialize() error {
+	var err error
 
-	// init environments
-	for posEnvironment, _ := range cfg.Environments {
-		env, err := environment.NewFromConfig(t, &cfg.Environments[posEnvironment])
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-		t.environments = append(t.environments, env)
+	// get configs
+	environmentName := t.config.CurrentEnvironmentName()
+	environmentConfig, err := t.config.Environment(environmentName)
+	if err != nil {
+		return fmt.Errorf("error finding environment '%s'", environmentName)
 	}
-	if result != nil {
-		return result
-	}
-	t.conf = cfg
 
-	// find context
-	if err := t.findContext(); err != nil {
-		result = multierror.Append(result, err)
+	contextConfigs := t.config.Contexts(environmentName)
+	contextName := t.config.CurrentContextName()
+
+	// init environment
+	t.environment, err = environment.NewFromConfig(t, environmentConfig, contextConfigs)
+	if err != nil {
+		return fmt.Errorf("error initializing environment '%s': %s", environmentName, err)
 	}
-	return result
+
+	// init context
+	t.context, err = t.environment.Context(contextName)
+	if err != nil {
+		return fmt.Errorf("error finding current context '%s': %s", contextName, err)
+	}
+
+	return nil
+}
+
+// This initializes a new tarmak config
+func (t *Tarmak) CmdInit() error {
+	return fmt.Errorf("tarmak init needs refactoring")
 }
 
 func (t *Tarmak) Puppet() interfaces.Puppet {
 	return t.puppet
+}
+
+func (t *Tarmak) Config() interfaces.Config {
+	return t.config
 }
 
 func (t *Tarmak) Packer() interfaces.Packer {
@@ -134,19 +143,8 @@ func (t *Tarmak) Context() interfaces.Context {
 	return t.context
 }
 
-func (t *Tarmak) findContext() error {
-	for _, environment := range t.environments {
-		if !strings.HasPrefix(t.conf.CurrentContext, fmt.Sprintf("%s-", environment.Name())) {
-			continue
-		}
-		for _, context := range environment.Contexts() {
-			if context.ContextName() == t.conf.CurrentContext {
-				t.context = context
-				return nil
-			}
-		}
-	}
-	return fmt.Errorf("context '%s' not found", t.conf.CurrentContext)
+func (t *Tarmak) Environment() interfaces.Environment {
+	return t.environment
 }
 
 // this builds a temporary directory with the needed assets that are built into the go binary
@@ -167,6 +165,21 @@ func (t *Tarmak) RootPath() (string, error) {
 		return "", err
 	}
 
+	// use same creation directory for all folders
+	kubernetesEpoch := time.Unix(1437436800, 0)
+	err = filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
+		if f.IsDir() {
+			err = os.Chtimes(path, kubernetesEpoch, kubernetesEpoch)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
 	t.log.Debugf("restored assets into directory: %s", dir)
 
 	t.rootPath = &dir
@@ -177,14 +190,6 @@ func (t *Tarmak) Log() *logrus.Entry {
 	return t.log.WithField("app", "tarmak")
 }
 
-func (t *Tarmak) discoverAMIID() {
-	amiID, err := t.packer.QueryAMIID()
-	if err != nil {
-		t.log.Fatal("could not find a matching ami: ", err)
-	}
-	t.Context().SetImageID(amiID)
-}
-
 func (t *Tarmak) HomeDir() string {
 	return t.homeDir
 }
@@ -193,23 +198,12 @@ func (t *Tarmak) HomeDirExpand(in string) (string, error) {
 	return homedir.Expand(in)
 }
 
-func (t *Tarmak) Environments() []interfaces.Environment {
-	return t.environments
-}
-
 func (t *Tarmak) ConfigPath() string {
 	return filepath.Join(t.HomeDir(), ".tarmak")
 }
 
 func (t *Tarmak) PackerBuild() {
-	_, err := t.packer.Build()
-	if err != nil {
-		t.log.Fatalf("failed to query ami id: %s", err)
-	}
-}
-
-func (t *Tarmak) PackerQuery() {
-	_, err := t.packer.QueryAMIID()
+	err := t.packer.Build()
 	if err != nil {
 		t.log.Fatalf("failed to query ami id: %s", err)
 	}
@@ -234,12 +228,8 @@ func (t *Tarmak) Validate() error {
 
 func (t *Tarmak) Variables() map[string]interface{} {
 	output := map[string]interface{}{}
-	if t.conf.Contact != "" {
-		output["contact"] = t.conf.Contact
-	}
-	if t.conf.Project != "" {
-		output["project"] = t.conf.Project
-	}
+	output["contact"] = t.config.Contact()
+	output["project"] = t.config.Project()
 	return output
 }
 

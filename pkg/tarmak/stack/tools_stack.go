@@ -3,7 +3,8 @@ package stack
 import (
 	"fmt"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -13,18 +14,23 @@ type ToolsStack struct {
 
 var _ interfaces.Stack = &ToolsStack{}
 
-func newToolsStack(s *Stack, conf *config.StackTools) (*ToolsStack, error) {
+func newToolsStack(s *Stack) (*ToolsStack, error) {
 	t := &ToolsStack{
 		Stack: s,
 	}
 
-	s.name = config.StackNameTools
+	s.roles = make(map[string]bool)
+	s.roles[clusterv1alpha1.ServerPoolTypeJenkins] = true
+	s.roles[clusterv1alpha1.ServerPoolTypeBastion] = true
+
+	s.name = tarmakv1alpha1.StackNameTools
+	s.verifyPreDeploy = append(s.verifyPostDeploy, s.verifyImageIDs)
 	s.verifyPostDeploy = append(s.verifyPostDeploy, t.verifyBastionAvailable)
 	return t, nil
 }
 
 func (s *ToolsStack) Variables() map[string]interface{} {
-	return map[string]interface{}{}
+	return s.Stack.Variables()
 }
 
 func (s *ToolsStack) verifyBastionAvailable() error {

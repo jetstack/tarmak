@@ -8,6 +8,9 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack-experimental/vault-unsealer/pkg/kv"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
+
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
 
 type Context interface {
@@ -16,26 +19,35 @@ type Context interface {
 	Name() string
 	Validate() error
 	Stacks() []Stack
+	Stack(name string) Stack
 	NetworkCIDR() *net.IPNet
 	RemoteState(stackName string) string
 	ConfigPath() string
-	BaseImage() string
+	Config() *clusterv1alpha1.Cluster
+	Images() []string // This returns all neccessary base images
 	SSHConfigPath() string
 	SSHHostKeysPath() string
-	SetImageID(string)
 	ContextName() string
 	Log() *logrus.Entry
 	APITunnel() Tunnel
+	Region() string
+	Subnets() []clusterv1alpha1.Subnet // Return subnets per AZ
+	Role(string) *role.Role
+	Roles() []*role.Role
+	NodeGroups() []NodeGroup
+	ImageIDs() (map[string]string, error)
 }
 
 type Environment interface {
 	Tarmak() Tarmak
+	Location() string // this returns the location of the environment (e.g. the region)
 	Variables() map[string]interface{}
 	Provider() Provider
 	Validate() error
 	Name() string
 	BucketPrefix() string
 	Contexts() []Context
+	Context(name string) (context Context, err error)
 	SSHPrivateKeyPath() string
 	SSHPrivateKey() (signer interface{})
 	Log() *logrus.Entry
@@ -43,20 +55,26 @@ type Environment interface {
 	VaultStack() Stack
 	VaultRootToken() (string, error)
 	VaultTunnel() (VaultTunnel, error)
+	Config() *tarmakv1alpha1.Environment
 }
 
 type Provider interface {
+	Cloud() string
 	Name() string
+	Parameters() map[string]string
 	Region() string
 	Validate() error
 	RemoteStateBucketName() string
 	RemoteStateBucketAvailable() (bool, error)
-	RemoteState(contextName, stackName string) string
+	RemoteState(namespace, clusterName, stackName string) string
+	PublicZone() string
 	Environment() ([]string, error)
 	Variables() map[string]interface{}
-	QueryImage(tags map[string]string) (string, error)
+	QueryImages(tags map[string]string) ([]tarmakv1alpha1.Image, error)
 	VaultKV() (kv.Service, error)
 	ListHosts() ([]Host, error)
+	InstanceType(string) (string, error)
+	VolumeType(string) (string, error)
 }
 
 type Stack interface {
@@ -72,7 +90,6 @@ type Stack interface {
 	VerifyPostDestroy() error
 	SetOutput(map[string]interface{})
 	Output() map[string]interface{}
-	Role(string) *role.Role
 	Roles() []*role.Role
 	NodeGroups() []NodeGroup
 }
@@ -83,17 +100,33 @@ type Tarmak interface {
 	RootPath() (string, error)
 	ConfigPath() string
 	Context() Context
-	Environments() []Environment
+	Environment() Environment
 	Terraform() Terraform
 	Packer() Packer
 	Puppet() Puppet
+	Config() Config
 	SSH() SSH
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
-	MergeEnvironment(interface{}) error
+}
+
+type Config interface {
+	Context(environment string, name string) (context *clusterv1alpha1.Cluster, err error)
+	Contexts(environment string) (contexts []*clusterv1alpha1.Cluster)
+	Provider(name string) (provider *tarmakv1alpha1.Provider, err error)
+	Providers() (providers []*tarmakv1alpha1.Provider)
+	Environment(name string) (environment *tarmakv1alpha1.Environment, err error)
+	Environments() (environments []*tarmakv1alpha1.Environment)
+	CurrentContextName() string
+	CurrentEnvironmentName() string
+	Contact() string
+	Project() string
 }
 
 type Packer interface {
+	IDs() (map[string]string, error)
+	List() ([]tarmakv1alpha1.Image, error)
+	Build() error
 }
 
 type Terraform interface {
@@ -135,7 +168,9 @@ type Kubectl interface {
 }
 
 type NodeGroup interface {
+	TFName() string
 	Name() string
+	Image() string
 	Role() *role.Role
 	Volumes() []Volume
 }

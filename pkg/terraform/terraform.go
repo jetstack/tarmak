@@ -5,8 +5,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -122,34 +122,19 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 	}
 	defer c.CleanUpSilent(t.log)
 
-	initialStateStack := false
-	// check for initial state run on first deployment
-	if !destroy && stack.Name() == config.StackNameState {
-		remoteStateAvail, err := t.tarmak.Context().Environment().Provider().RemoteStateBucketAvailable()
-		if err != nil {
-			return fmt.Errorf("error finding remote state: %s", err)
-		}
-		if !remoteStateAvail {
-			initialStateStack = true
-			c.log.Infof("running state stack for the first time, by passing remote state")
-		}
-	}
+	err := c.CopyRemoteState(stack.RemoteState())
 
-	if !initialStateStack {
-		err := c.CopyRemoteState(stack.RemoteState())
-
-		if err != nil {
-			return fmt.Errorf("error while copying remote state: %s", err)
-		}
-		c.log.Debug("copied remote state into container")
+	if err != nil {
+		return fmt.Errorf("error while copying remote state: %s", err)
 	}
+	c.log.Debug("copied remote state into container")
 
 	if err := c.Init(); err != nil {
 		return fmt.Errorf("error while terraform init: %s", err)
 	}
 
 	// check for destroying the state stack
-	if destroy && stack.Name() == config.StackNameState {
+	if destroy && stack.Name() == tarmakv1alpha1.StackNameState {
 		c.log.Infof("moving remote state to local")
 
 		err := c.CopyRemoteState("")
@@ -171,19 +156,6 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 	if changesNeeded {
 		if err := c.Apply(); err != nil {
 			return fmt.Errorf("error while terraform apply: %s", err)
-		}
-	}
-
-	// upload state if it was an inital state run
-	if initialStateStack {
-		err := c.CopyRemoteState(stack.RemoteState())
-		if err != nil {
-			return fmt.Errorf("error while copying remote state: %s", err)
-		}
-		c.log.Debug("copied remote state into container")
-
-		if err := c.InitForceCopy(); err != nil {
-			return fmt.Errorf("error while terraform init -force-copy: %s", err)
 		}
 	}
 

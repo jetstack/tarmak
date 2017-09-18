@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
@@ -19,25 +19,28 @@ type StateStack struct {
 
 var _ interfaces.Stack = &StateStack{}
 
-func newStateStack(s *Stack, conf *config.StackState) (*StateStack, error) {
+func newStateStack(s *Stack) (*StateStack, error) {
 	ss := &StateStack{
 		Stack: s,
 	}
 
-	s.name = config.StackNameState
+	s.name = tarmakv1alpha1.StackNameState
 	s.verifyPostDeploy = append(s.verifyPostDeploy, ss.verifyDNSDelegation)
 	return ss, nil
 }
 
 func (s *StateStack) Variables() map[string]interface{} {
 	output := map[string]interface{}{}
-	state := s.Stack.conf.State
-	if state.BucketPrefix != "" {
-		output["bucket_prefix"] = state.BucketPrefix
-	}
-	if state.PublicZone != "" {
-		output["public_zone"] = state.PublicZone
-	}
+	// TODO: refactor me
+	/*
+		state := s.Stack.conf.State
+		if state.BucketPrefix != "" {
+			output["bucket_prefix"] = state.BucketPrefix
+		}
+		if state.PublicZone != "" {
+			output["public_zone"] = state.PublicZone
+		}
+	*/
 
 	return output
 }
@@ -50,7 +53,12 @@ func (s *StateStack) verifyDNSDelegation() error {
 
 	tries := 5
 	for {
-		host := strings.Join([]string{utils.RandStringRunes(16), "_tarmak", s.conf.State.PublicZone}, ".")
+		host := strings.Join([]string{
+			utils.RandStringRunes(16),
+			"_tarmak",
+			s.context.Environment().Name(),
+			s.context.Environment().Provider().PublicZone(),
+		}, ".")
 
 		result, err := net.LookupTXT(host)
 		if err == nil {
@@ -67,7 +75,9 @@ func (s *StateStack) verifyDNSDelegation() error {
 			nameservers, ok := s.Output()["public_zone_name_servers"]
 			msg := "failed verifying delegation of public zone 5 times"
 			if ok {
-				msg = fmt.Sprintf("%s, make sure the zone %s is delegated to nameservers %s", msg, s.conf.State.PublicZone, nameservers)
+				// TODO: refactor me
+				msg = fmt.Sprintf("%s, make sure the zone %s is delegated to nameservers %s", msg, host, nameservers)
+				//msg = fmt.Sprintf("%s, make sure the zone %s is delegated to nameservers %s", msg, s.conf.State.PublicZone, nameservers)
 			}
 
 			return errors.New(msg)

@@ -12,7 +12,8 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack-experimental/vault-unsealer/pkg/vault"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -22,18 +23,21 @@ type VaultStack struct {
 
 var _ interfaces.Stack = &VaultStack{}
 
-func newVaultStack(s *Stack, conf *config.StackVault) (*VaultStack, error) {
+func newVaultStack(s *Stack) (*VaultStack, error) {
 	v := &VaultStack{
 		Stack: s,
 	}
 
-	s.name = config.StackNameVault
+	s.roles = make(map[string]bool)
+	s.roles[clusterv1alpha1.ServerPoolTypeVault] = true
+
+	s.name = tarmakv1alpha1.StackNameVault
 	s.verifyPostDeploy = append(s.verifyPostDeploy, v.verifyVaultInit)
 	return v, nil
 }
 
 func (s *VaultStack) Variables() map[string]interface{} {
-	return map[string]interface{}{}
+	return s.Stack.Variables()
 }
 
 const (

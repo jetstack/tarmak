@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,35 +17,32 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/context"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/provider/aws"
+	"github.com/jetstack/tarmak/pkg/tarmak/provider"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type Environment struct {
-	conf *config.Environment
+	conf *tarmakv1alpha1.Environment
 
 	contexts []interfaces.Context
 
 	sshKeyPrivate interface{}
 
-	stackState interfaces.Stack
-	stackVault interfaces.Stack
-	stackTools interfaces.Stack
-
-	provider interfaces.Provider
-
-	tarmak interfaces.Tarmak
+	hubContext interfaces.Context // this is the context that contains state/vault/tools
+	provider   interfaces.Provider
+	tarmak     interfaces.Tarmak
 
 	log *logrus.Entry
 }
 
 var _ interfaces.Environment = &Environment{}
 
-func NewFromConfig(tarmak interfaces.Tarmak, conf *config.Environment) (*Environment, error) {
+func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, contexts []*clusterv1alpha1.Cluster) (*Environment, error) {
 	e := &Environment{
 		conf:   conf,
 		tarmak: tarmak,
@@ -55,98 +51,46 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *config.Environment) (*Environ
 
 	var result error
 
-	networkCIDRs := []*net.IPNet{}
+	providerConf, err := tarmak.Config().Provider(conf.Provider)
+	if err != nil {
+		return nil, fmt.Errorf("error finding provider '%s'", conf.Provider)
+	}
 
-	for posContext, _ := range conf.Contexts {
-		contextConf := &conf.Contexts[posContext]
+	// init provider
+	e.provider, err = provider.NewProviderFromConfig(tarmak, providerConf)
+	if err != nil {
+		return nil, fmt.Errorf("error initializing provider '%s'", conf.Provider)
+	}
+
+	// TODO RENABLE
+	//networkCIDRs := []*net.IPNet{}
+
+	for posContext, _ := range contexts {
+		contextConf := contexts[posContext]
 		contextIntf, err := context.NewFromConfig(e, contextConf)
-
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
 		}
 		e.contexts = append(e.contexts, contextIntf)
-
-		networkCIDRs = append(networkCIDRs, contextIntf.NetworkCIDR())
-
-		// loop through stacks
-		for _, stack := range contextIntf.Stacks() {
-			// ensure no multiple state stacks
-			if stack.Name() == config.StackNameState {
-				if e.stackState == nil {
-					e.stackState = stack
-				} else {
-					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple state stacks", e.Name()))
-				}
-			}
-
-			// ensure no multiple tools stacks
-			if stack.Name() == config.StackNameTools {
-				if e.stackTools == nil {
-					e.stackTools = stack
-				} else {
-					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple tools stacks", e.Name()))
-				}
-			}
-
-			// ensure no multiple vault stacks
-			if stack.Name() == config.StackNameVault {
-				if e.stackVault == nil {
-					e.stackVault = stack
-				} else {
-					result = multierror.Append(result, fmt.Errorf("environment '%s' has multiple vault stacks", e.Name()))
-				}
-			}
+		if len(contexts) == 1 || contextConf.Name == "hub" {
+			e.hubContext = contextIntf
 		}
 	}
-
-	// ensure there is a state stack
-	if e.stackState == nil {
-		result = multierror.Append(result, fmt.Errorf("environment '%s' has no state stack", e.Name()))
+	if result != nil {
+		return nil, result
 	}
 
-	// ensure there is a tools stack
-	if e.stackTools == nil {
-		result = multierror.Append(result, fmt.Errorf("environment '%s' has no tools stack", e.Name()))
-	}
-
-	// ensure there is a vault stack
-	if e.stackVault == nil {
-		result = multierror.Append(result, fmt.Errorf("environment '%s' has no vault stack", e.Name()))
-	}
-
-	// validate network overlap
-	if err := utils.NetworkOverlap(networkCIDRs); err != nil {
-		result = multierror.Append(result, err)
-	}
-
-	// init provider
-	providers := []interfaces.Provider{}
-	if conf.AWS != nil {
-		provider, err := aws.NewFromConfig(e, conf.AWS)
-		if err != nil {
-			return nil, err
-		}
-		providers = append(providers, provider)
-	}
-	if conf.GCP != nil {
-		return nil, errors.New("GCP not yet implemented :(")
-	}
-
-	if len(providers) < 1 {
-		return nil, errors.New("please specify exactly one provider")
-	}
-	if len(providers) > 1 {
-		return nil, fmt.Errorf("more than one provider given: %+v", providers)
-	}
-	e.provider = providers[0]
-
-	return e, result
+	return e, nil
 
 }
 
 func (e *Environment) Name() string {
 	return e.conf.Name
+}
+
+func (e *Environment) Config() *tarmakv1alpha1.Environment {
+	return e.conf.DeepCopy()
 }
 
 func (e *Environment) Provider() interfaces.Provider {
@@ -157,8 +101,18 @@ func (e *Environment) Tarmak() interfaces.Tarmak {
 	return e.tarmak
 }
 
+func (e *Environment) Context(name string) (interfaces.Context, error) {
+	for pos, _ := range e.contexts {
+		context := e.contexts[pos]
+		if context.Name() == name {
+			return context, nil
+		}
+	}
+	return nil, fmt.Errorf("context '%s' in environment '%s' not found", name, e.Name())
+}
+
 func (e *Environment) validateSSHKey() error {
-	bytes, err := ioutil.ReadFile(e.conf.SSHKeyPath)
+	bytes, err := ioutil.ReadFile(e.SSHPrivateKeyPath())
 	if err != nil {
 		return fmt.Errorf("unable to read ssh private key: %s", err)
 	}
@@ -192,9 +146,9 @@ func (e *Environment) Variables() map[string]interface{} {
 	}
 
 	output["state_bucket"] = e.Provider().RemoteStateBucketName()
-	output["state_context_name"] = e.stackState.Context().Name()
-	output["tools_context_name"] = e.stackTools.Context().Name()
-	output["vault_context_name"] = e.stackVault.Context().Name()
+	output["state_context_name"] = e.hubContext.Name()
+	output["tools_context_name"] = e.hubContext.Name()
+	output["vault_context_name"] = e.hubContext.Name()
 	return output
 }
 
@@ -275,15 +229,19 @@ func (e *Environment) getSSHPrivateKey() (interface{}, error) {
 }
 
 func (e *Environment) SSHPrivateKeyPath() string {
-	if e.conf.SSHKeyPath == "" {
+	if e.conf.SSH == nil || e.conf.SSH.PrivateKeyPath == "" {
 		return filepath.Join(e.ConfigPath(), "id_rsa")
 	}
 
-	dir, err := e.Tarmak().HomeDirExpand(e.conf.SSHKeyPath)
+	dir, err := e.Tarmak().HomeDirExpand(e.conf.SSH.PrivateKeyPath)
 	if err != nil {
-		return e.conf.SSHKeyPath
+		return e.conf.SSH.PrivateKeyPath
 	}
 	return dir
+}
+
+func (e *Environment) Location() string {
+	return e.conf.Location
 }
 
 func (e *Environment) Contexts() []interfaces.Context {
@@ -306,7 +264,11 @@ func (e *Environment) Validate() error {
 }
 
 func (e *Environment) BucketPrefix() string {
-	bucketPrefix, ok := e.stackState.Variables()["bucket_prefix"]
+	stackState := e.hubContext.Stack(tarmakv1alpha1.StackNameState)
+	if stackState == nil {
+		return ""
+	}
+	bucketPrefix, ok := stackState.Variables()["bucket_prefix"]
 	if !ok {
 		return ""
 	}
@@ -318,11 +280,11 @@ func (e *Environment) BucketPrefix() string {
 }
 
 func (e *Environment) StateStack() interfaces.Stack {
-	return e.stackState
+	return e.hubContext.Stack(tarmakv1alpha1.StackNameState)
 }
 
 func (e *Environment) VaultStack() interfaces.Stack {
-	return e.stackVault
+	return e.hubContext.Stack(tarmakv1alpha1.StackNameVault)
 }
 
 func (e *Environment) vaultRootTokenPath() string {
@@ -356,9 +318,13 @@ func (e *Environment) VaultRootToken() (string, error) {
 }
 
 func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
-	vaultStack, ok := e.stackVault.(*stack.VaultStack)
+	stackVault := e.hubContext.Stack(tarmakv1alpha1.StackNameVault)
+	if stackVault == nil {
+		return nil, errors.New("could not find vault stack")
+	}
+	vaultStack, ok := stackVault.(*stack.VaultStack)
 	if !ok {
-		return nil, fmt.Errorf("could convert to VaultStack: %T", e.stackVault)
+		return nil, fmt.Errorf("could not convert stack to VaultStack: %T", stackVault)
 	}
 
 	return vaultStack.VaultTunnel()

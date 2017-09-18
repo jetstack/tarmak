@@ -1,21 +1,17 @@
 package stack
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type Stack struct {
-	conf *config.Stack
-
 	name    string
 	context interfaces.Context
 	log     *logrus.Entry
@@ -27,83 +23,39 @@ type Stack struct {
 
 	output map[string]interface{}
 
-	roles map[string]*role.Role
+	roles map[string]bool
 
 	nodeGroups []interfaces.NodeGroup
 }
 
-func NewFromConfig(context interfaces.Context, conf *config.Stack) (interfaces.Stack, error) {
-	stacks := []interfaces.Stack{}
-
+func New(context interfaces.Context, name string) (interfaces.Stack, error) {
+	var stack interfaces.Stack
+	var err error
 	s := &Stack{
-		conf:    conf,
 		context: context,
-		log:     context.Log(),
+		log:     context.Log().WithField("stack", name),
 	}
 
-	if conf.State != nil {
-		stack, err := newStateStack(s, conf.State)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising state stack: %s", err)
-		}
-		stacks = append(stacks, stack)
+	// init stack
+	switch name {
+	case tarmakv1alpha1.StackNameState:
+		stack, err = newStateStack(s)
+	case tarmakv1alpha1.StackNameNetwork:
+		stack, err = newNetworkStack(s)
+	case tarmakv1alpha1.StackNameTools:
+		stack, err = newToolsStack(s)
+	case tarmakv1alpha1.StackNameVault:
+		stack, err = newVaultStack(s)
+	case tarmakv1alpha1.StackNameKubernetes:
+		stack, err = newKubernetesStack(s)
+	default:
+		return nil, fmt.Errorf("unmatched state name: %s", name)
 	}
-	if conf.Network != nil {
-		stack, err := newNetworkStack(s, conf.Network)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising network stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Tools != nil {
-		stack, err := newToolsStack(s, conf.Tools)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising tools stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Vault != nil {
-		stack, err := newVaultStack(s, conf.Vault)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising vault stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Kubernetes != nil {
-		stack, err := newKubernetesStack(s, conf.Kubernetes)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising kubernetes stack: %s", err)
-		}
-		stacks = append(stacks, stack)
-	}
-	if conf.Custom != nil {
-		stack, err := newCustomStack(s, conf.Custom)
-		if err != nil {
-			return nil, fmt.Errorf("error initialising custom stack: %s", err)
-		}
-		stacks = append(stacks, stack)
+	if err != nil {
+		return nil, fmt.Errorf("error initialising %s stack: %s", name, err)
 	}
 
-	if len(stacks) < 1 {
-		return nil, errors.New("please specify exactly a single stack")
-	}
-	if len(stacks) > 1 {
-		return nil, fmt.Errorf("more than one stack given: %+v", stacks)
-	}
-
-	// initialiase node groups
-	var result error
-	for pos, _ := range conf.NodeGroups {
-		nodeGroup, err := node_group.NewFromConfig(stacks[0], &conf.NodeGroups[pos])
-		if err != nil {
-			result = multierror.Append(result, err)
-			continue
-		}
-		s.nodeGroups = append(s.nodeGroups, nodeGroup)
-	}
-
-	return stacks[0], result
-
+	return stack, nil
 }
 
 func (s *Stack) SetOutput(in map[string]interface{}) {
@@ -128,6 +80,19 @@ func (s *Stack) Name() string {
 
 func (s *Stack) Validate() error {
 	return nil
+}
+
+func (s *Stack) verifyImageIDs() error {
+
+	_, err := s.context.ImageIDs()
+	if err != nil {
+		return err
+	}
+
+	// TODO make sure contains my images
+
+	return nil
+
 }
 
 func (s *Stack) VerifyPreDeploy() error {
@@ -178,13 +143,23 @@ func (s *Stack) Log() *logrus.Entry {
 	return s.log
 }
 
-func (s *Stack) Role(roleName string) *role.Role {
-	if s.roles != nil {
-		if role, ok := s.roles[roleName]; ok {
-			return role
+func (s *Stack) Variables() map[string]interface{} {
+	vars := make(map[string]interface{})
+	imageIDs, err := s.context.ImageIDs()
+	if err != nil {
+		s.log.Warnf("error getting image IDs: %s", err)
+		return vars
+	}
+
+	for _, nodeGroup := range s.NodeGroups() {
+		image := nodeGroup.Image()
+		ids, ok := imageIDs[image]
+		if ok {
+			vars[fmt.Sprintf("%s_ami", nodeGroup.TFName())] = ids
 		}
 	}
-	return nil
+	return vars
+
 }
 
 func (s *Stack) Roles() (roles []*role.Role) {
@@ -200,5 +175,13 @@ func (s *Stack) Roles() (roles []*role.Role) {
 }
 
 func (s *Stack) NodeGroups() (nodeGroups []interfaces.NodeGroup) {
-	return s.nodeGroups
+	for _, ng := range s.context.NodeGroups() {
+		if s.roles != nil {
+			if active, ok := s.roles[ng.Role().Name()]; !ok || !active {
+				continue
+			}
+		}
+		nodeGroups = append(nodeGroups, ng)
+	}
+	return nodeGroups
 }

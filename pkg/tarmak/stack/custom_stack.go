@@ -1,7 +1,6 @@
 package stack
 
 import (
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -11,7 +10,7 @@ type CustomStack struct {
 
 var _ interfaces.Stack = &CustomStack{}
 
-func newCustomStack(s *Stack, conf *config.StackCustom) (*CustomStack, error) {
+func newCustomStack(s *Stack) (*CustomStack, error) {
 	s.name = "custom"
 	return &CustomStack{
 		Stack: s,

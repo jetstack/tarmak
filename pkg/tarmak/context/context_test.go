@@ -2,16 +2,167 @@ package context
 
 import (
 	"io/ioutil"
-	"strings"
 	"testing"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
 )
 
+type fakeContext struct {
+	*Context
+	ctrl *gomock.Controller
+
+	fakeEnvironment *mocks.MockEnvironment
+	fakeProvider    *mocks.MockProvider
+	fakeTarmak      *mocks.MockTarmak
+	fakeConfig      *mocks.MockConfig
+}
+
+func (f *fakeContext) Finish() {
+	f.ctrl.Finish()
+}
+
+func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext {
+
+	c := &fakeContext{
+		ctrl: gomock.NewController(t),
+		Context: &Context{
+			conf: cluster,
+		},
+	}
+
+	c.fakeEnvironment = mocks.NewMockEnvironment(c.ctrl)
+	c.fakeProvider = mocks.NewMockProvider(c.ctrl)
+	c.fakeTarmak = mocks.NewMockTarmak(c.ctrl)
+	c.fakeConfig = mocks.NewMockConfig(c.ctrl)
+	c.Context.environment = c.fakeEnvironment
+
+	// setup custom logger
+	logger := logrus.New()
+	loggerCtx := logger.WithField("app", "tarmak")
+	if testing.Verbose() {
+		logger.Level = logrus.DebugLevel
+	} else {
+		logger.Out = ioutil.Discard
+	}
+	c.fakeEnvironment.EXPECT().Log().AnyTimes().Return(loggerCtx)
+	c.fakeEnvironment.EXPECT().Provider().AnyTimes().Return(c.fakeProvider)
+	c.fakeEnvironment.EXPECT().Tarmak().AnyTimes().Return(c.fakeTarmak)
+	c.Context.log = loggerCtx
+
+	c.fakeProvider.EXPECT().InstanceType(gomock.Any()).Do(func(in string) string { return "provider-" + in }).AnyTimes()
+	c.fakeProvider.EXPECT().VolumeType(gomock.Any()).Do(func(in string) string { return "provider-" + in }).AnyTimes()
+	c.fakeProvider.EXPECT().Cloud().Return("provider").AnyTimes()
+	c.fakeProvider.EXPECT().Name().Return("provider-name").AnyTimes()
+
+	c.fakeTarmak.EXPECT().Config().AnyTimes().Return(c.fakeConfig)
+
+	return c
+}
+
+func TestContext_NewMinimalClusterMulti(t *testing.T) {
+	clusterConfig := config.NewClusterMulti("multi", "cluster")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Location = "my-region"
+	c := newFakeContext(t, nil)
+	defer c.Finish()
+
+	// fake two contexts
+	c.fakeEnvironment.EXPECT().Name().Return("multi").AnyTimes()
+	c.fakeConfig.EXPECT().Contexts("multi").Return([]*clusterv1alpha1.Cluster{
+		&clusterv1alpha1.Cluster{},
+		&clusterv1alpha1.Cluster{},
+	}).AnyTimes()
+
+	var err error
+	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	if err != nil {
+		t.Fatal("unexpected error: ", err)
+	}
+
+	if act, exp := c.Name(), "cluster"; act != exp {
+		t.Errorf("unexpected name, actual = '%s', expected = '%s'", act, exp)
+	}
+
+	if act, exp := c.Type(), "cluster-multi"; act != exp {
+		t.Errorf("unexpected type, actual = '%s', expected = '%s'", act, exp)
+	}
+
+	if act, exp := c.Region(), "my-region"; act != exp {
+		t.Errorf("unexpected region, actual = '%s', expected = '%s'", act, exp)
+	}
+}
+
+func TestContext_NewMinimalClusterSingle(t *testing.T) {
+	clusterConfig := config.NewClusterSingle("single", "cluster")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Location = "my-region"
+	c := newFakeContext(t, nil)
+	defer c.Finish()
+
+	// fake single context
+	c.fakeEnvironment.EXPECT().Name().Return("single").AnyTimes()
+	c.fakeConfig.EXPECT().Contexts("single").Return([]*clusterv1alpha1.Cluster{
+		&clusterv1alpha1.Cluster{},
+	}).AnyTimes()
+
+	var err error
+	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	if err != nil {
+		t.Fatal("unexpected error: ", err)
+	}
+
+	if act, exp := c.Name(), "cluster"; act != exp {
+		t.Errorf("unexpected name, actual = '%s', expected = '%s'", act, exp)
+	}
+
+	if act, exp := c.Type(), "cluster-single"; act != exp {
+		t.Errorf("unexpected type, actual = '%s', expected = '%s'", act, exp)
+	}
+
+	if act, exp := c.Region(), "my-region"; act != exp {
+		t.Errorf("unexpected region, actual = '%s', expected = '%s'", act, exp)
+	}
+}
+
+func TestContext_NewMinimalHub(t *testing.T) {
+	clusterConfig := config.NewHub("multi")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Location = "my-region"
+	c := newFakeContext(t, nil)
+	defer c.Finish()
+
+	// fake two contexts
+	c.fakeEnvironment.EXPECT().Name().Return("single").AnyTimes()
+	c.fakeConfig.EXPECT().Contexts("single").Return([]*clusterv1alpha1.Cluster{
+		&clusterv1alpha1.Cluster{},
+		&clusterv1alpha1.Cluster{},
+	}).AnyTimes()
+
+	var err error
+	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	if err != nil {
+		t.Fatal("unexpected error: ", err)
+	}
+
+	if act, exp := c.Name(), "hub"; act != exp {
+		t.Errorf("unexpected name, actual = '%s', expected = '%s'", act, exp)
+	}
+
+	if act, exp := c.Type(), "hub"; act != exp {
+		t.Errorf("unexpected type, actual = '%s', expected = '%s'", act, exp)
+	}
+
+	if act, exp := c.Region(), "my-region"; act != exp {
+		t.Errorf("unexpected region, actual = '%s', expected = '%s'", act, exp)
+	}
+}
+
+/*
 func testDefaultContextConfig() *config.Context {
 	return &config.Context{
 		Name: "cluster1",
@@ -34,41 +185,6 @@ func testDefaultContextConfig() *config.Context {
 	}
 }
 
-type fakeContext struct {
-	*Context
-	ctrl *gomock.Controller
-
-	fakeEnvironment *mocks.MockEnvironment
-}
-
-func (f *fakeContext) Finish() {
-	f.ctrl.Finish()
-}
-
-func newFakeContext(t *testing.T) *fakeContext {
-
-	c := &fakeContext{
-		ctrl: gomock.NewController(t),
-		Context: &Context{
-			conf: testDefaultContextConfig(),
-		},
-	}
-	c.fakeEnvironment = mocks.NewMockEnvironment(c.ctrl)
-	c.Context.environment = c.fakeEnvironment
-
-	// setup custom logger
-	logger := logrus.New()
-	loggerCtx := logger.WithField("app", "tarmak")
-	if testing.Verbose() {
-		logger.Level = logrus.DebugLevel
-	} else {
-		logger.Out = ioutil.Discard
-	}
-	c.fakeEnvironment.EXPECT().Log().AnyTimes().Return(loggerCtx)
-	c.Context.log = loggerCtx
-
-	return c
-}
 
 func TestNewFromConfigValid(t *testing.T) {
 	fakes := newFakeContext(t)
@@ -128,3 +244,5 @@ func TestNewFromConfigDuplicateNetwork(t *testing.T) {
 		t.Errorf("expect error message '%s' to contain: '%s'", err.Error(), contain)
 	}
 }
+
+*/

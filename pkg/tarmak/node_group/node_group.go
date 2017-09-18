@@ -1,12 +1,13 @@
 package node_group
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
@@ -14,36 +15,58 @@ import (
 var _ interfaces.NodeGroup = &NodeGroup{}
 
 type NodeGroup struct {
-	conf  *config.NodeGroup
-	log   *logrus.Entry
-	stack interfaces.Stack
+	conf *clusterv1alpha1.ServerPool
+	log  *logrus.Entry
 
-	volumes []*Volume
+	context interfaces.Context
+
+	volumes    []*Volume
+	rootVolume *Volume
+
+	instanceType string
 
 	role *role.Role
 }
 
-func NewFromConfig(stack interfaces.Stack, conf *config.NodeGroup) (*NodeGroup, error) {
+func NewFromConfig(context interfaces.Context, conf *clusterv1alpha1.ServerPool) (*NodeGroup, error) {
 	nodeGroup := &NodeGroup{
-		conf:  conf,
-		stack: stack,
-		log:   stack.Log().WithField("nodeGroup", conf.Name),
+		conf:    conf,
+		context: context,
+		log:     context.Log().WithField("nodeGroup", conf.Name),
 	}
 
-	nodeGroup.role = stack.Role(conf.Role)
+	nodeGroup.role = context.Role(conf.Type)
 	if nodeGroup.role == nil {
-		return nil, fmt.Errorf("role '%s' is not valid for this stack", conf.Role)
+		return nil, fmt.Errorf("role '%s' is not valid for this context", conf.Type)
 	}
+
+	// validate instance size with cloud provider
+	provider := context.Environment().Provider()
+	instanceType, err := provider.InstanceType(conf.Size)
+	if err != nil {
+		return nil, fmt.Errorf("instanceType '%s' is not valid for this provier", conf.Size)
+	}
+	nodeGroup.instanceType = instanceType
 
 	var result error
 
+	count := 0
 	for pos, _ := range conf.Volumes {
-		volume, err := NewVolumeFromConfig(pos, &conf.Volumes[pos])
+		volume, err := NewVolumeFromConfig(count, provider, &conf.Volumes[pos])
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
 		}
-		nodeGroup.volumes = append(nodeGroup.volumes, volume)
+		if volume.Name() == "root" {
+			nodeGroup.rootVolume = volume
+		} else {
+			count++
+			nodeGroup.volumes = append(nodeGroup.volumes, volume)
+		}
+	}
+
+	if nodeGroup.rootVolume == nil {
+		return nil, errors.New("no root volume given")
 	}
 
 	return nodeGroup, result
@@ -51,6 +74,10 @@ func NewFromConfig(stack interfaces.Stack, conf *config.NodeGroup) (*NodeGroup, 
 
 func (n *NodeGroup) Role() *role.Role {
 	return n.role
+}
+
+func (n *NodeGroup) Image() string {
+	return n.conf.Image
 }
 
 func (n *NodeGroup) Name() string {
@@ -77,20 +104,19 @@ func (n *NodeGroup) Volumes() (volumes []interfaces.Volume) {
 	return volumes
 }
 
+func (n *NodeGroup) RootVolume() interfaces.Volume {
+	return n.rootVolume
+}
+
 func (n *NodeGroup) Count() int {
-	return n.conf.Count
+	// TODO: this needs to be replaced by Max/Min
+	return n.conf.MaxCount
 }
 
-func (n *NodeGroup) AWSInstanceType() string {
-	if n.conf.AWS != nil {
-		return n.conf.AWS.InstanceType
-	}
-	return ""
+func (n *NodeGroup) InstanceType() string {
+	return n.instanceType
 }
 
-func (n *NodeGroup) AWSSpotPrice() string {
-	if n.conf.AWS != nil && n.conf.AWS.SpotPrice > 0 {
-		return fmt.Sprintf("%f", n.conf.AWS.SpotPrice)
-	}
-	return ""
+func (n *NodeGroup) SpotPrice() string {
+	return n.conf.SpotPrice
 }

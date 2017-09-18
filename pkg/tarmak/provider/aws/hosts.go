@@ -93,7 +93,7 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 		},
 		&ec2.Filter{
 			Name:   aws.String("tag:Environment"),
-			Values: []*string{aws.String(a.environment.Name())},
+			Values: []*string{aws.String(a.tarmak.Context().Environment().Name())},
 		},
 	}
 	svc, err := a.EC2()
@@ -119,7 +119,7 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 				hostname:       *instance.PrivateIpAddress,
 				hostnamePublic: false,
 				user:           "centos",
-				context:        a.environment.Tarmak().Context(),
+				context:        a.tarmak.Context(),
 			}
 			if instance.PublicIpAddress != nil {
 				host.hostname = *instance.PublicIpAddress
