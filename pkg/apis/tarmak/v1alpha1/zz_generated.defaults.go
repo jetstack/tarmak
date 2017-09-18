@@ -31,6 +31,8 @@ import (
 func RegisterDefaults(scheme *runtime.Scheme) error {
 	scheme.AddTypeDefaultingFunc(&Config{}, func(obj interface{}) { SetObjectDefaults_Config(obj.(*Config)) })
 	scheme.AddTypeDefaultingFunc(&ConfigList{}, func(obj interface{}) { SetObjectDefaults_ConfigList(obj.(*ConfigList)) })
+	scheme.AddTypeDefaultingFunc(&Environment{}, func(obj interface{}) { SetObjectDefaults_Environment(obj.(*Environment)) })
+	scheme.AddTypeDefaultingFunc(&EnvironmentList{}, func(obj interface{}) { SetObjectDefaults_EnvironmentList(obj.(*EnvironmentList)) })
 	scheme.AddTypeDefaultingFunc(&Provider{}, func(obj interface{}) { SetObjectDefaults_Provider(obj.(*Provider)) })
 	scheme.AddTypeDefaultingFunc(&ProviderList{}, func(obj interface{}) { SetObjectDefaults_ProviderList(obj.(*ProviderList)) })
 	return nil
@@ -54,12 +56,27 @@ func SetObjectDefaults_Config(in *Config) {
 		a := &in.Providers[i]
 		SetObjectDefaults_Provider(a)
 	}
+	for i := range in.Environments {
+		a := &in.Environments[i]
+		SetObjectDefaults_Environment(a)
+	}
 }
 
 func SetObjectDefaults_ConfigList(in *ConfigList) {
 	for i := range in.Items {
 		a := &in.Items[i]
 		SetObjectDefaults_Config(a)
+	}
+}
+
+func SetObjectDefaults_Environment(in *Environment) {
+	SetDefaults_Environment(in)
+}
+
+func SetObjectDefaults_EnvironmentList(in *EnvironmentList) {
+	for i := range in.Items {
+		a := &in.Items[i]
+		SetObjectDefaults_Environment(a)
 	}
 }
 

@@ -41,7 +41,15 @@ type Cluster struct {
 	KubernetesAPI     *KubernetesAPI `json:"kubernetesAPI,omitempty"`
 	GroupIdentifier   string         `json:"groupIdentifier,omitempty"`
 
-	Environment string `json:"environment,omitempty"`
+	Environment string      `json:"environment,omitempty"`
+	Kubernetes  *Kubernetes `json:"kubernetes,omitempty"`
+}
+
+type Kubernetes struct {
+	Zone        string `json:"zone,omitempty"`
+	Version     string `json:"version,omitempty"`
+	PodCIDR     string `json:"podCIDR,omitempty"`
+	ServiceCIDR string `json:"serviceCIDR,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
