@@ -14,9 +14,10 @@ import (
 var _ interfaces.NodeGroup = &NodeGroup{}
 
 type NodeGroup struct {
-	conf  *clusterv1alpha1.ServerPool
-	log   *logrus.Entry
-	stack interfaces.Stack
+	conf *clusterv1alpha1.ServerPool
+	log  *logrus.Entry
+
+	context interfaces.Context
 
 	volumes []*Volume
 
@@ -25,20 +26,20 @@ type NodeGroup struct {
 	role *role.Role
 }
 
-func NewFromConfig(stack interfaces.Stack, conf *clusterv1alpha1.ServerPool) (*NodeGroup, error) {
+func NewFromConfig(context interfaces.Context, conf *clusterv1alpha1.ServerPool) (*NodeGroup, error) {
 	nodeGroup := &NodeGroup{
-		conf:  conf,
-		stack: stack,
-		log:   stack.Log().WithField("nodeGroup", conf.Name),
+		conf:    conf,
+		context: context,
+		log:     context.Log().WithField("nodeGroup", conf.Name),
 	}
 
-	nodeGroup.role = stack.Role(conf.Type)
+	nodeGroup.role = context.Role(conf.Type)
 	if nodeGroup.role == nil {
-		return nil, fmt.Errorf("role '%s' is not valid for this stack", conf.Type)
+		return nil, fmt.Errorf("role '%s' is not valid for this context", conf.Type)
 	}
 
 	// validate instance size with cloud provider
-	provider := stack.Context().Environment().Provider()
+	provider := context.Environment().Provider()
 	instanceType, err := provider.InstanceType(conf.Size)
 	if err != nil {
 		return nil, fmt.Errorf("instanceType '%s' is not valid for this provier", conf.Size)
@@ -63,6 +64,10 @@ func (n *NodeGroup) Role() *role.Role {
 	return n.role
 }
 
+func (n *NodeGroup) Image() string {
+	return n.conf.Image
+}
+
 func (n *NodeGroup) Name() string {
 	if n.conf.Name == "" {
 		return n.Role().Name()
@@ -85,6 +90,15 @@ func (n *NodeGroup) Volumes() (volumes []interfaces.Volume) {
 		volumes = append(volumes, volume)
 	}
 	return volumes
+}
+
+func (n *NodeGroup) RootVolume() interfaces.Volume {
+	for _, volume := range n.volumes {
+		if volume.Name() == "root" {
+			return volume
+		}
+	}
+	return nil
 }
 
 func (n *NodeGroup) Count() int {

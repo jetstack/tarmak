@@ -15,7 +15,6 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type VaultStack struct {
@@ -29,15 +28,8 @@ func newVaultStack(s *Stack) (*VaultStack, error) {
 		Stack: s,
 	}
 
-	vaultRole := &role.Role{
-		Stateful: true,
-		AWS:      &role.RoleAWS{},
-	}
-	vaultRole.WithName("vault")
-
-	s.roles = map[string]*role.Role{
-		clusterv1alpha1.ServerPoolTypeVault: vaultRole,
-	}
+	s.roles = make(map[string]bool)
+	s.roles[clusterv1alpha1.ServerPoolTypeVault] = true
 
 	s.name = tarmakv1alpha1.StackNameVault
 	s.verifyPostDeploy = append(s.verifyPostDeploy, v.verifyVaultInit)
@@ -45,7 +37,7 @@ func newVaultStack(s *Stack) (*VaultStack, error) {
 }
 
 func (s *VaultStack) Variables() map[string]interface{} {
-	return map[string]interface{}{}
+	return s.Stack.Variables()
 }
 
 const (

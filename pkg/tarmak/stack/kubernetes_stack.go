@@ -10,7 +10,6 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type KubernetesStack struct {
@@ -25,47 +24,10 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 		Stack: s,
 	}
 
-	masterRole := &role.Role{
-		Stateful: false,
-		AWS: &role.RoleAWS{
-			ELBAPI:     true,
-			IAMEC2Full: true,
-			IAMELBFull: true,
-		},
-	}
-	masterRole.WithName("master").WithPrefix("kubernetes")
-
-	nodeRole := &role.Role{
-		Stateful: false,
-		AWS: &role.RoleAWS{
-			ELBIngress:                     true,
-			IAMEC2Read:                     true,
-			IAMEC2ModifyInstanceAttributes: true,
-		},
-	}
-	nodeRole.WithName("worker").WithPrefix("kubernetes")
-
-	etcdRole := &role.Role{
-		Stateful: true,
-		AWS:      &role.RoleAWS{},
-	}
-	etcdRole.WithName("etcd").WithPrefix("kubernetes")
-
-	masterEtcdRole := &role.Role{
-		Stateful: false,
-		AWS: &role.RoleAWS{
-			ELBAPI:     true,
-			IAMEC2Full: true,
-			IAMELBFull: true,
-		},
-	}
-	masterEtcdRole.WithName("etcd-master").WithPrefix("kubernetes")
-
-	s.roles = map[string]*role.Role{
-		clusterv1alpha1.ServerPoolTypeEtcd:   etcdRole,
-		clusterv1alpha1.ServerPoolTypeMaster: masterRole,
-		clusterv1alpha1.ServerPoolTypeNode:   nodeRole,
-	}
+	s.roles = make(map[string]bool)
+	s.roles[clusterv1alpha1.ServerPoolTypeEtcd] = true
+	s.roles[clusterv1alpha1.ServerPoolTypeMaster] = true
+	s.roles[clusterv1alpha1.ServerPoolTypeNode] = true
 
 	s.name = tarmakv1alpha1.StackNameKubernetes
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
@@ -76,10 +38,14 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 }
 
 func (s *KubernetesStack) Variables() map[string]interface{} {
+	vars := s.Stack.Variables()
+
 	if s.initTokens != nil {
-		return s.initTokens
+		for key, val := range s.initTokens {
+			vars[key] = val
+		}
 	}
-	return map[string]interface{}{}
+	return vars
 }
 
 func (s *KubernetesStack) puppetTarGzPath() (string, error) {
@@ -88,7 +54,7 @@ func (s *KubernetesStack) puppetTarGzPath() (string, error) {
 		return "", fmt.Errorf("error getting rootPath: %s", err)
 	}
 
-	path := filepath.Join(rootPath, "terraform", "aws-centos", "kubernetes", "puppet.tar.gz")
+	path := filepath.Join(rootPath, "terraform", s.Context().Environment().Provider().Cloud(), "kubernetes", "puppet.tar.gz")
 
 	return path, nil
 }

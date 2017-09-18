@@ -1,7 +1,6 @@
 package stack
 
 import (
-	//"errors"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
@@ -9,7 +8,6 @@ import (
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
@@ -25,7 +23,7 @@ type Stack struct {
 
 	output map[string]interface{}
 
-	roles map[string]*role.Role
+	roles map[string]bool
 
 	nodeGroups []interfaces.NodeGroup
 }
@@ -35,7 +33,7 @@ func New(context interfaces.Context, name string) (interfaces.Stack, error) {
 	var err error
 	s := &Stack{
 		context: context,
-		log:     context.Log(),
+		log:     context.Log().WithField("stack", name),
 	}
 
 	// init stack
@@ -57,24 +55,7 @@ func New(context interfaces.Context, name string) (interfaces.Stack, error) {
 		return nil, fmt.Errorf("error initialising %s stack: %s", name, err)
 	}
 
-	// init node groups
-	var result error
-	for _, serverPool := range context.ServerPools() {
-		// see if type is handled by that stack
-		if _, ok := s.roles[serverPool.Type]; !ok {
-			continue
-		}
-
-		// create node groups
-		nodeGroup, err := node_group.NewFromConfig(stack, &serverPool)
-		if err != nil {
-			result = multierror.Append(result, err)
-			continue
-		}
-		s.nodeGroups = append(s.nodeGroups, nodeGroup)
-	}
-
-	return stack, result
+	return stack, nil
 }
 
 func (s *Stack) SetOutput(in map[string]interface{}) {
@@ -194,5 +175,13 @@ func (s *Stack) Roles() (roles []*role.Role) {
 }
 
 func (s *Stack) NodeGroups() (nodeGroups []interfaces.NodeGroup) {
-	return s.nodeGroups
+	for _, ng := range s.context.NodeGroups() {
+		if s.roles != nil {
+			if active, ok := s.roles[ng.Role().Name()]; !ok || !active {
+				continue
+			}
+		}
+		nodeGroups = append(nodeGroups, ng)
+	}
+	return nodeGroups
 }

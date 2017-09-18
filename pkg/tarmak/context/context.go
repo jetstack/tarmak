@@ -12,6 +12,8 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
+	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
 
@@ -29,9 +31,12 @@ type Context struct {
 
 	stackNetwork interfaces.Stack
 	environment  interfaces.Environment
-	imageID      *string
 	networkCIDR  *net.IPNet
 	log          *logrus.Entry
+
+	imageIDs   map[string]string
+	nodeGroups []interfaces.NodeGroup
+	roles      map[string]*role.Role
 }
 
 var _ interfaces.Context = &Context{}
@@ -48,11 +53,29 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		return nil, err
 	}
 
-	return context, nil
+	context.roles = make(map[string]*role.Role)
+	defineToolsRoles(context.roles)
+	defineVaultRoles(context.roles)
+	defineKubernetesRoles(context.roles)
+
+	// setup node groups
+	var result error
+	for pos, _ := range context.conf.ServerPools {
+		serverPool := context.conf.ServerPools[pos]
+		// create node groups
+		nodeGroup, err := node_group.NewFromConfig(context, &serverPool)
+		if err != nil {
+			result = multierror.Append(result, err)
+			continue
+		}
+		context.nodeGroups = append(context.nodeGroups, nodeGroup)
+	}
+
+	return context, result
 }
 
-func (c *Context) ServerPools() []clusterv1alpha1.ServerPool {
-	return c.conf.ServerPools
+func (c *Context) NodeGroups() []interfaces.NodeGroup {
+	return c.nodeGroups
 }
 
 func (c *Context) ServerPoolsMap() (serverPoolsMap map[string][]*clusterv1alpha1.ServerPool) {
@@ -215,6 +238,18 @@ func (c *Context) Images() []string {
 	return imagesDistinct
 }
 
+func (c *Context) ImageIDs() (map[string]string, error) {
+	if c.imageIDs == nil {
+		imageMap, err := c.Environment().Tarmak().Packer().IDs()
+		if err != nil {
+			return nil, err
+		}
+		c.imageIDs = imageMap
+	}
+
+	return c.imageIDs, nil
+}
+
 func (c *Context) getNetworkCIDR() (*net.IPNet, error) {
 	if c.stackNetwork == nil {
 		return nil, errors.New("no network stack found")
@@ -246,10 +281,6 @@ func (c *Context) APITunnel() interfaces.Tunnel {
 
 }
 
-func (c *Context) SetImageID(imageID string) {
-	c.imageID = &imageID
-}
-
 func (c *Context) Validate() error {
 	return nil
 }
@@ -279,6 +310,10 @@ func (c *Context) Name() string {
 	return c.conf.Name
 }
 
+func (c *Context) Config() *clusterv1alpha1.Cluster {
+	return c.conf.DeepCopy()
+}
+
 func (c *Context) ConfigPath() string {
 	return filepath.Join(c.Environment().Tarmak().ConfigPath(), c.ContextName())
 }
@@ -293,6 +328,27 @@ func (c *Context) SSHHostKeysPath() string {
 
 func (c *Context) Log() *logrus.Entry {
 	return c.log
+}
+
+func (c *Context) Role(roleName string) *role.Role {
+	if c.roles != nil {
+		if role, ok := c.roles[roleName]; ok {
+			return role
+		}
+	}
+	return nil
+}
+
+func (c *Context) Roles() (roles []*role.Role) {
+	roleMap := map[string]bool{}
+	for _, nodeGroup := range c.NodeGroups() {
+		r := nodeGroup.Role()
+		if _, ok := roleMap[r.Name()]; !ok {
+			roles = append(roles, r)
+			roleMap[r.Name()] = true
+		}
+	}
+	return roles
 }
 
 func (c *Context) Variables() map[string]interface{} {

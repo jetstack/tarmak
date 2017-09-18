@@ -6,7 +6,6 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 type ToolsStack struct {
@@ -20,30 +19,18 @@ func newToolsStack(s *Stack) (*ToolsStack, error) {
 		Stack: s,
 	}
 
-	jenkinsRole := &role.Role{
-		Stateful: true,
-		AWS:      &role.RoleAWS{},
-	}
-	jenkinsRole.WithName("jenkins")
-
-	bastionRole := &role.Role{
-		Stateful: true,
-		AWS:      &role.RoleAWS{},
-	}
-	bastionRole.WithName("bastion")
-
-	s.roles = map[string]*role.Role{
-		clusterv1alpha1.ServerPoolTypeJenkins: jenkinsRole,
-		clusterv1alpha1.ServerPoolTypeBastion: bastionRole,
-	}
+	s.roles = make(map[string]bool)
+	s.roles[clusterv1alpha1.ServerPoolTypeJenkins] = true
+	s.roles[clusterv1alpha1.ServerPoolTypeBastion] = true
 
 	s.name = tarmakv1alpha1.StackNameTools
+	s.verifyPreDeploy = append(s.verifyPostDeploy, s.verifyImageIDs)
 	s.verifyPostDeploy = append(s.verifyPostDeploy, t.verifyBastionAvailable)
 	return t, nil
 }
 
 func (s *ToolsStack) Variables() map[string]interface{} {
-	return map[string]interface{}{}
+	return s.Stack.Variables()
 }
 
 func (s *ToolsStack) verifyBastionAvailable() error {

@@ -37,6 +37,7 @@ func (t *Tarmak) CmdTerraformApply(args []string) error {
 			}
 		}
 
+		stack.Log().Info("running apply")
 		err := t.terraform.Apply(stack, args)
 		if err != nil {
 			t.log.Fatal(err)
@@ -76,6 +77,7 @@ func (t *Tarmak) CmdTerraformDestroy(args []string) error {
 			}
 		}
 
+		stack.Log().Info("running destroy")
 		err := t.terraform.Destroy(stack, args)
 		if err != nil {
 			return err

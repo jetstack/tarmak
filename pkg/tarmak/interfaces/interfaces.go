@@ -23,16 +23,19 @@ type Context interface {
 	NetworkCIDR() *net.IPNet
 	RemoteState(stackName string) string
 	ConfigPath() string
+	Config() *clusterv1alpha1.Cluster
 	Images() []string // This returns all neccessary base images
 	SSHConfigPath() string
 	SSHHostKeysPath() string
-	SetImageID(string)
 	ContextName() string
 	Log() *logrus.Entry
 	APITunnel() Tunnel
 	Region() string
-	Subnets() []clusterv1alpha1.Subnet         // Return subnets per AZ
-	ServerPools() []clusterv1alpha1.ServerPool // Return server pools
+	Subnets() []clusterv1alpha1.Subnet // Return subnets per AZ
+	Role(string) *role.Role
+	Roles() []*role.Role
+	NodeGroups() []NodeGroup
+	ImageIDs() (map[string]string, error)
 }
 
 type Environment interface {
@@ -52,6 +55,7 @@ type Environment interface {
 	VaultStack() Stack
 	VaultRootToken() (string, error)
 	VaultTunnel() (VaultTunnel, error)
+	Config() *tarmakv1alpha1.Environment
 }
 
 type Provider interface {
@@ -86,7 +90,6 @@ type Stack interface {
 	VerifyPostDestroy() error
 	SetOutput(map[string]interface{})
 	Output() map[string]interface{}
-	Role(string) *role.Role
 	Roles() []*role.Role
 	NodeGroups() []NodeGroup
 }
@@ -165,7 +168,9 @@ type Kubectl interface {
 }
 
 type NodeGroup interface {
+	TFName() string
 	Name() string
+	Image() string
 	Role() *role.Role
 	Volumes() []Volume
 }

@@ -89,6 +89,10 @@ func (e *Environment) Name() string {
 	return e.conf.Name
 }
 
+func (e *Environment) Config() *tarmakv1alpha1.Environment {
+	return e.conf.DeepCopy()
+}
+
 func (e *Environment) Provider() interfaces.Provider {
 	return e.provider
 }

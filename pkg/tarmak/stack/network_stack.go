@@ -19,11 +19,12 @@ var _ interfaces.Stack = &NetworkStack{}
 func newNetworkStack(s *Stack) (*NetworkStack, error) {
 	s.name = tarmakv1alpha1.StackNameNetwork
 
-	// TODO: refactor me, read network from somewhere
-	_, net, err := net.ParseCIDR("172.18.0.0/16")
+	_, net, err := net.ParseCIDR(s.Context().Config().Network.CIDR)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing network: %s", err)
 	}
+
+	s.roles = make(map[string]bool)
 
 	return &NetworkStack{
 		Stack:       s,
@@ -33,21 +34,19 @@ func newNetworkStack(s *Stack) (*NetworkStack, error) {
 }
 
 func (s *NetworkStack) Variables() map[string]interface{} {
-	output := map[string]interface{}{}
+	vars := s.Stack.Variables()
 	if s.networkCIDR != nil {
-		output["network"] = s.networkCIDR
+		vars["network"] = s.networkCIDR
 	}
-	// TODO: refactor me
+	if s.context.Environment().Config().PrivateZone != "" {
+		vars["private_zone"] = s.context.Environment().Config().PrivateZone
+	}
+	// TODO: enable this for multi cluster environments
 	/*
 		n := s.Stack.conf.Network
-
 		if n.PeerContext != "" {
-			output["vpc_peer_stack"] = n.PeerContext
-		}
-		if n.PrivateZone != "" {
-			output["private_zone"] = n.PrivateZone
+			vars["vpc_peer_stack"] = n.PeerContext
 		}
 	*/
-
-	return output
+	return vars
 }
