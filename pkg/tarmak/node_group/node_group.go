@@ -1,6 +1,7 @@
 package node_group
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
@@ -19,7 +20,8 @@ type NodeGroup struct {
 
 	context interfaces.Context
 
-	volumes []*Volume
+	volumes    []*Volume
+	rootVolume *Volume
 
 	instanceType string
 
@@ -54,7 +56,15 @@ func NewFromConfig(context interfaces.Context, conf *clusterv1alpha1.ServerPool)
 			result = multierror.Append(result, err)
 			continue
 		}
-		nodeGroup.volumes = append(nodeGroup.volumes, volume)
+		if volume.Name() == "root" {
+			nodeGroup.rootVolume = volume
+		} else {
+			nodeGroup.volumes = append(nodeGroup.volumes, volume)
+		}
+	}
+
+	if nodeGroup.rootVolume == nil {
+		return nil, errors.New("no root volume given")
 	}
 
 	return nodeGroup, result
@@ -93,12 +103,7 @@ func (n *NodeGroup) Volumes() (volumes []interfaces.Volume) {
 }
 
 func (n *NodeGroup) RootVolume() interfaces.Volume {
-	for _, volume := range n.volumes {
-		if volume.Name() == "root" {
-			return volume
-		}
-	}
-	return nil
+	return n.rootVolume
 }
 
 func (n *NodeGroup) Count() int {
