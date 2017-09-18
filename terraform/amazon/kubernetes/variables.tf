@@ -8,10 +8,6 @@ variable "key_name" {}
 
 variable "region" {}
 
-variable "centos_ami" {
-  type = "map"
-}
-
 variable "stack" {
   default = ""
 }

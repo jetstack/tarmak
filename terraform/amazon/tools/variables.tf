@@ -4,10 +4,6 @@ variable "stack" {
   default = ""
 }
 
-variable "centos_ami" {
-  type = "map"
-}
-
 variable "key_name" {}
 
 variable "project" {}

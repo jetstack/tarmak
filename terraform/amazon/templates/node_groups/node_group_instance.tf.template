@@ -42,7 +42,7 @@ resource "aws_launch_configuration" "{{.TFName}}" {
 
   spot_price = "${var.{{.TFName}}_spot_price}"
 
-  image_id             = "${lookup(var.centos_ami, var.region)}"
+  image_id             = "${var.{{.TFName}}_ami}"
   instance_type        = "${var.{{.TFName}}_instance_type}"
   name_prefix          = "${data.template_file.stack_name.rendered}-{{.DNSName}}-"
   key_name             = "${var.key_name}"
@@ -134,7 +134,7 @@ resource "aws_instance" "{{.TFName}}" {
   ]
   count                = "${var.{{.TFName}}_count}"
   availability_zone    = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
-  ami                  = "${lookup(var.centos_ami, var.region)}"
+  ami                  = "${var.{{.TFName}}_ami}"
   instance_type        = "${var.{{.TFName}}_instance_type}"
   key_name             = "${var.key_name}"
   subnet_id            = "${element(data.terraform_remote_state.network.private_subnet_ids, count.index)}"

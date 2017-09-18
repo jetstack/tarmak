@@ -3,6 +3,8 @@ variable "{{.TFName}}_instance_type" {
   default = "{{.AWSInstanceType}}"
 }
 
+variable "{{.TFName}}_ami" {}
+
 variable "{{.TFName}}_count" {
   default = {{.Count}}
 }

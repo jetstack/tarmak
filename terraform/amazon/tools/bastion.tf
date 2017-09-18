@@ -2,6 +2,8 @@ variable "bastion_instance_type" {
   default = "t2.nano"
 }
 
+variable "bastion_ami" {}
+
 variable "bastion_root_size" {
   default = "16"
 }
@@ -51,7 +53,7 @@ data "template_file" "bastion_user_data" {
 }
 
 resource "aws_instance" "bastion" {
-  ami                    = "${var.centos_ami[var.region]}"
+  ami                    = "${var.bastion_ami}"
   instance_type          = "${var.bastion_instance_type}"
   subnet_id              = "${data.terraform_remote_state.network.public_subnet_ids[0]}"
   key_name               = "${var.key_name}"

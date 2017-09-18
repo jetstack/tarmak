@@ -101,6 +101,19 @@ func (s *Stack) Validate() error {
 	return nil
 }
 
+func (s *Stack) verifyImageIDs() error {
+
+	_, err := s.context.ImageIDs()
+	if err != nil {
+		return err
+	}
+
+	// TODO make sure contains my images
+
+	return nil
+
+}
+
 func (s *Stack) VerifyPreDeploy() error {
 	var result error
 	for _, f := range s.verifyPreDeploy {
@@ -149,13 +162,23 @@ func (s *Stack) Log() *logrus.Entry {
 	return s.log
 }
 
-func (s *Stack) Role(roleName string) *role.Role {
-	if s.roles != nil {
-		if role, ok := s.roles[roleName]; ok {
-			return role
+func (s *Stack) Variables() map[string]interface{} {
+	vars := make(map[string]interface{})
+	imageIDs, err := s.context.ImageIDs()
+	if err != nil {
+		s.log.Warnf("error getting image IDs: %s", err)
+		return vars
+	}
+
+	for _, nodeGroup := range s.NodeGroups() {
+		image := nodeGroup.Image()
+		ids, ok := imageIDs[image]
+		if ok {
+			vars[fmt.Sprintf("%s_ami", nodeGroup.TFName())] = ids
 		}
 	}
-	return nil
+	return vars
+
 }
 
 func (s *Stack) Roles() (roles []*role.Role) {

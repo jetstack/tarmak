@@ -4,10 +4,6 @@ variable "stack" {
   default = ""
 }
 
-variable "centos_ami" {
-  type = "map"
-}
-
 variable "project" {}
 
 variable "contact" {}
@@ -15,6 +11,8 @@ variable "contact" {}
 variable "key_name" {}
 
 variable "region" {}
+
+variable "vault_ami" {}
 
 variable "state_bucket" {
   default = ""

@@ -50,7 +50,7 @@ resource "aws_cloudwatch_metric_alarm" "vault-autorecover" {
 }
 
 resource "aws_instance" "vault" {
-  ami                  = "${var.centos_ami[var.region]}"
+  ami                  = "${var.vault_ami}"
   instance_type        = "${var.vault_instance_type}"
   key_name             = "${var.key_name}"
   subnet_id            = "${element(data.terraform_remote_state.network.private_subnet_ids, count.index % length(data.terraform_remote_state.network.availability_zones))}"
