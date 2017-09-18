@@ -98,7 +98,7 @@ func (a *AWS) validatePublicZone() error {
 	// validate delegation
 	zoneResult, err := svc.GetHostedZone(&route53.GetHostedZoneInput{Id: zone.Id})
 	if err != nil {
-		return fmt.Errorf("unabled to get zone with ID '%s': %s", zone.Id, err)
+		return fmt.Errorf("unabled to get zone with ID '%s': %s", *zone.Id, err)
 	}
 
 	zoneNameservers := make([]string, len(zoneResult.DelegationSet.NameServers))
