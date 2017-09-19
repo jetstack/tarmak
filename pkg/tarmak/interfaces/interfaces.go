@@ -168,6 +168,7 @@ type Kubectl interface {
 }
 
 type NodeGroup interface {
+	Config() *clusterv1alpha1.ServerPool
 	TFName() string
 	Name() string
 	Image() string
