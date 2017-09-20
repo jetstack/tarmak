@@ -285,14 +285,14 @@ func (tc *TerraformContainer) prepare() error {
 	}
 	tc.log.Debug("copied terraform manifests into container")
 
-	// if node groups exist, execute template
-	nodeGroups := tc.stack.NodeGroups()
-	if len(nodeGroups) > 0 {
-		tc.log.Debug("generating node groups templates")
-		templatesGlob := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Context().Environment().Provider().Cloud(), "templates/node_groups/*.tf.template"))
-		templates := template.Must(template.New("node_groups").Funcs(sprig.TxtFuncMap()).ParseGlob(templatesGlob))
+	// if instance pools exist, execute template
+	instancePools := tc.stack.InstancePools()
+	if len(instancePools) > 0 {
+		tc.log.Debug("generating instance pools templates")
+		templatesGlob := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Context().Environment().Provider().Cloud(), "templates/instance_pools/*.tf.template"))
+		templates := template.Must(template.New("instance_pools").Funcs(sprig.TxtFuncMap()).ParseGlob(templatesGlob))
 
-		baseTemplate := "node_group.tf.template"
+		baseTemplate := "instance_pool.tf.template"
 		tpl := templates.Lookup(baseTemplate)
 
 		buf := new(bytes.Buffer)
@@ -300,9 +300,9 @@ func (tc *TerraformContainer) prepare() error {
 		if err := tpl.Execute(
 			buf,
 			map[string]interface{}{
-				"NodeGroups": nodeGroups,
-				"Roles":      tc.stack.Roles(),
-				"Stack":      tc.stack.Name(),
+				"InstancePools": instancePools,
+				"Roles":         tc.stack.Roles(),
+				"Stack":         tc.stack.Name(),
 			},
 		); err != nil {
 			return err

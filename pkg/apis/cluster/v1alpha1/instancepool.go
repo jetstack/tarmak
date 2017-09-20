@@ -19,27 +19,27 @@ import (
 )
 
 const (
-	ServerPoolSizeTiny   = "tiny"
-	ServerPoolSizeSmall  = "small"
-	ServerPoolSizeMedium = "medium"
-	ServerPoolSizeLarge  = "large"
+	InstancePoolSizeTiny   = "tiny"
+	InstancePoolSizeSmall  = "small"
+	InstancePoolSizeMedium = "medium"
+	InstancePoolSizeLarge  = "large"
 )
 
 const (
-	ServerPoolTypeMaster     = "master"
-	ServerPoolTypeWorker     = "worker"
-	ServerPoolTypeEtcd       = "etcd"
-	ServerPoolTypeBastion    = "bastion" // bastion node with public IP
-	ServerPoolTypeJenkins    = "jenkins" // jenkins CI/CD node
-	ServerPoolTypeVault      = "vault"
-	ServerPoolTypeAll        = "all"         // master + worker + etcd
-	ServerPoolTypeMasterEtcd = "master-etcd" // master + etcd
-	ServerPoolTypeHybrid     = "hybrid"      // master + worker
+	InstancePoolTypeMaster     = "master"
+	InstancePoolTypeWorker     = "worker"
+	InstancePoolTypeEtcd       = "etcd"
+	InstancePoolTypeBastion    = "bastion" // bastion node with public IP
+	InstancePoolTypeJenkins    = "jenkins" // jenkins CI/CD node
+	InstancePoolTypeVault      = "vault"
+	InstancePoolTypeAll        = "all"         // master + worker + etcd
+	InstancePoolTypeMasterEtcd = "master-etcd" // master + etcd
+	InstancePoolTypeHybrid     = "hybrid"      // master + worker
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ServerPool struct {
+type InstancePool struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Identifier        string      `json:"identifier,omitempty"`

@@ -1,5 +1,5 @@
 {{/* vim: set ft=tf: */ -}}
-{{ $nodeGroup := . -}}
+{{ $instancePool := . -}}
 
 data "template_file" "{{.TFName}}_user_data" {
 {{ if .Role.Stateful -}}
@@ -130,7 +130,7 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
 resource "aws_instance" "{{.TFName}}" {
   depends_on = [
 {{ range .Volumes -}}
-    "aws_ebs_volume.{{$nodeGroup.TFName}}_{{.Name}}",
+    "aws_ebs_volume.{{$instancePool.TFName}}_{{.Name}}",
 {{ end -}}
   ]
   count                = "${var.{{.TFName}}_count}"
@@ -190,14 +190,14 @@ resource "aws_cloudwatch_metric_alarm" "autorecover_{{.TFName}}" {
 
 # This sets up persistent volumes per count
 {{ range .Volumes -}}
-resource "aws_ebs_volume" "{{$nodeGroup.TFName}}_{{.Name}}" {
-  count             = "${var.{{$nodeGroup.TFName}}_count}"
+resource "aws_ebs_volume" "{{$instancePool.TFName}}_{{.Name}}" {
+  count             = "${var.{{$instancePool.TFName}}_count}"
   availability_zone = "${element(data.terraform_remote_state.network.availability_zones, count.index)}"
-  size              = "${var.{{$nodeGroup.TFName}}_{{.Name}}_volume_size}"
-  type              = "${var.{{$nodeGroup.TFName}}_{{.Name}}_volume_type}"
+  size              = "${var.{{$instancePool.TFName}}_{{.Name}}_volume_size}"
+  type              = "${var.{{$instancePool.TFName}}_{{.Name}}_volume_type}"
 
   tags {
-    Name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.DNSName}}-{{.Name}}-${count.index+1}"
+    Name        = "${data.template_file.stack_name.rendered}-{{$instancePool.DNSName}}-{{.Name}}-${count.index+1}"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"

@@ -30,16 +30,16 @@ import (
 func RegisterDefaults(scheme *runtime.Scheme) error {
 	scheme.AddTypeDefaultingFunc(&Cluster{}, func(obj interface{}) { SetObjectDefaults_Cluster(obj.(*Cluster)) })
 	scheme.AddTypeDefaultingFunc(&ClusterList{}, func(obj interface{}) { SetObjectDefaults_ClusterList(obj.(*ClusterList)) })
-	scheme.AddTypeDefaultingFunc(&ServerPool{}, func(obj interface{}) { SetObjectDefaults_ServerPool(obj.(*ServerPool)) })
+	scheme.AddTypeDefaultingFunc(&InstancePool{}, func(obj interface{}) { SetObjectDefaults_InstancePool(obj.(*InstancePool)) })
 	scheme.AddTypeDefaultingFunc(&Volume{}, func(obj interface{}) { SetObjectDefaults_Volume(obj.(*Volume)) })
 	return nil
 }
 
 func SetObjectDefaults_Cluster(in *Cluster) {
 	SetDefaults_Cluster(in)
-	for i := range in.ServerPools {
-		a := &in.ServerPools[i]
-		SetObjectDefaults_ServerPool(a)
+	for i := range in.InstancePools {
+		a := &in.InstancePools[i]
+		SetObjectDefaults_InstancePool(a)
 	}
 }
 
@@ -50,8 +50,8 @@ func SetObjectDefaults_ClusterList(in *ClusterList) {
 	}
 }
 
-func SetObjectDefaults_ServerPool(in *ServerPool) {
-	SetDefaults_ServerPool(in)
+func SetObjectDefaults_InstancePool(in *InstancePool) {
+	SetDefaults_InstancePool(in)
 	for i := range in.Volumes {
 		a := &in.Volumes[i]
 		SetObjectDefaults_Volume(a)

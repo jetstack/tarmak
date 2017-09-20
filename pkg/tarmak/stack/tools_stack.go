@@ -20,8 +20,8 @@ func newToolsStack(s *Stack) (*ToolsStack, error) {
 	}
 
 	s.roles = make(map[string]bool)
-	s.roles[clusterv1alpha1.ServerPoolTypeJenkins] = true
-	s.roles[clusterv1alpha1.ServerPoolTypeBastion] = true
+	s.roles[clusterv1alpha1.InstancePoolTypeJenkins] = true
+	s.roles[clusterv1alpha1.InstancePoolTypeBastion] = true
 
 	s.name = tarmakv1alpha1.StackNameTools
 	s.verifyPreDeploy = append(s.verifyPostDeploy, s.verifyImageIDs)

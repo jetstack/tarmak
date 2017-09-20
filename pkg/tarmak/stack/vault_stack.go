@@ -29,7 +29,7 @@ func newVaultStack(s *Stack) (*VaultStack, error) {
 	}
 
 	s.roles = make(map[string]bool)
-	s.roles[clusterv1alpha1.ServerPoolTypeVault] = true
+	s.roles[clusterv1alpha1.InstancePoolTypeVault] = true
 
 	s.name = tarmakv1alpha1.StackNameVault
 	s.verifyPostDeploy = append(s.verifyPostDeploy, v.verifyVaultInit)

@@ -1,5 +1,5 @@
 {{/* vim: set ft=tf: */}}
-{{ $nodeGroup := . -}}
+{{ $instancePool := . -}}
 
 resource "aws_iam_role" "{{.TFName}}" {
   name               = "${data.template_file.stack_name.rendered}.{{.TFName}}"
@@ -44,17 +44,17 @@ resource "aws_iam_role_policy_attachment" "{{.TFName}}_ec2_modify_instance_attri
 # Allow attachment/detachment of volumes
 {{ range .Volumes -}}
 
-data "template_file" "iam_{{$nodeGroup.TFName}}_ebs_attach_{{.Name}}" {
+data "template_file" "iam_{{$instancePool.TFName}}_ebs_attach_{{.Name}}" {
   template = "$${ebs_volume_arns}"
 
   vars {
-    ebs_volume_arns = "${jsonencode(formatlist("arn:aws:ec2:%s:%s:%s", var.region, data.aws_caller_identity.current.account_id, concat(formatlist("volume/%s", aws_ebs_volume.{{$nodeGroup.TFName}}_{{.Name}}.*.id), list("instance/*"))))}"
+    ebs_volume_arns = "${jsonencode(formatlist("arn:aws:ec2:%s:%s:%s", var.region, data.aws_caller_identity.current.account_id, concat(formatlist("volume/%s", aws_ebs_volume.{{$instancePool.TFName}}_{{.Name}}.*.id), list("instance/*"))))}"
   }
 }
 
 
-resource "aws_iam_policy" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
-  name        = "${data.template_file.stack_name.rendered}-{{$nodeGroup.DNSName}}"
+resource "aws_iam_policy" "{{$instancePool.TFName}}_ec2_ebs_attach_{{.Name}}" {
+  name        = "${data.template_file.stack_name.rendered}-{{$instancePool.DNSName}}"
   description = "Allows etcd nodes to attach/detach EBS volumes"
 
   policy      = <<EOF
@@ -67,7 +67,7 @@ resource "aws_iam_policy" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
         "ec2:AttachVolume",
         "ec2:DetachVolume"
       ],
-      "Resource": ${data.template_file.iam_{{$nodeGroup.TFName}}_ebs_attach_{{.Name}}.rendered}
+      "Resource": ${data.template_file.iam_{{$instancePool.TFName}}_ebs_attach_{{.Name}}.rendered}
     },
     {
       "Effect": "Allow",
@@ -84,9 +84,9 @@ resource "aws_iam_policy" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}" {
-  role       = "${aws_iam_role.{{$nodeGroup.TFName}}.name}"
-  policy_arn = "${aws_iam_policy.{{$nodeGroup.TFName}}_ec2_ebs_attach_{{.Name}}.arn}"
+resource "aws_iam_role_policy_attachment" "{{$instancePool.TFName}}_ec2_ebs_attach_{{.Name}}" {
+  role       = "${aws_iam_role.{{$instancePool.TFName}}.name}"
+  policy_arn = "${aws_iam_policy.{{$instancePool.TFName}}_ec2_ebs_attach_{{.Name}}.arn}"
 }
 {{ end -}}
 {{ end -}}

@@ -63,7 +63,7 @@ func SetDefaults_Volume(obj *Volume) {
 	}
 }
 
-func SetDefaults_ServerPool(obj *ServerPool) {
+func SetDefaults_InstancePool(obj *InstancePool) {
 	// set creation time, if unset
 	if obj.CreationTimestamp == zeroTime {
 		obj.CreationTimestamp.Time = time.Now()

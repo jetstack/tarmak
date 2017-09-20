@@ -34,7 +34,7 @@ type Context interface {
 	Subnets() []clusterv1alpha1.Subnet // Return subnets per AZ
 	Role(string) *role.Role
 	Roles() []*role.Role
-	NodeGroups() []NodeGroup
+	InstancePools() []InstancePool
 	ImageIDs() (map[string]string, error)
 }
 
@@ -91,7 +91,7 @@ type Stack interface {
 	SetOutput(map[string]interface{})
 	Output() map[string]interface{}
 	Roles() []*role.Role
-	NodeGroups() []NodeGroup
+	InstancePools() []InstancePool
 }
 
 type Tarmak interface {
@@ -167,8 +167,8 @@ type Puppet interface {
 type Kubectl interface {
 }
 
-type NodeGroup interface {
-	Config() *clusterv1alpha1.ServerPool
+type InstancePool interface {
+	Config() *clusterv1alpha1.InstancePool
 	TFName() string
 	Name() string
 	Image() string

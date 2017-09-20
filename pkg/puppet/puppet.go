@@ -84,7 +84,7 @@ func contentGlobalConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
 	return lines
 }
 
-func contentInstancePoolConfig(conf *clusterv1alpha1.ServerPool) (lines []string) {
+func contentInstancePoolConfig(conf *clusterv1alpha1.InstancePool) (lines []string) {
 	lines = append(lines, kubernetesConfig(conf.Kubernetes)...)
 	return lines
 }
@@ -127,7 +127,7 @@ func (p *Puppet) writeHieraData(puppetPath string, context interfaces.Context) e
 	}
 
 	// loop through instance pools
-	for _, instancePool := range context.NodeGroups() {
+	for _, instancePool := range context.InstancePools() {
 		err = p.writeLines(
 			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s.yaml", instancePool.Name())),
 			contentInstancePoolConfig(instancePool.Config()),

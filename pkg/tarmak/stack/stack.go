@@ -25,7 +25,7 @@ type Stack struct {
 
 	roles map[string]bool
 
-	nodeGroups []interfaces.NodeGroup
+	instancePools []interfaces.InstancePool
 }
 
 func New(context interfaces.Context, name string) (interfaces.Stack, error) {
@@ -151,11 +151,11 @@ func (s *Stack) Variables() map[string]interface{} {
 		return vars
 	}
 
-	for _, nodeGroup := range s.NodeGroups() {
-		image := nodeGroup.Image()
+	for _, instancePool := range s.InstancePools() {
+		image := instancePool.Image()
 		ids, ok := imageIDs[image]
 		if ok {
-			vars[fmt.Sprintf("%s_ami", nodeGroup.TFName())] = ids
+			vars[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
 		}
 	}
 	return vars
@@ -164,8 +164,8 @@ func (s *Stack) Variables() map[string]interface{} {
 
 func (s *Stack) Roles() (roles []*role.Role) {
 	roleMap := map[string]bool{}
-	for _, nodeGroup := range s.NodeGroups() {
-		r := nodeGroup.Role()
+	for _, instancePool := range s.InstancePools() {
+		r := instancePool.Role()
 		if _, ok := roleMap[r.Name()]; !ok {
 			roles = append(roles, r)
 			roleMap[r.Name()] = true
@@ -174,14 +174,14 @@ func (s *Stack) Roles() (roles []*role.Role) {
 	return roles
 }
 
-func (s *Stack) NodeGroups() (nodeGroups []interfaces.NodeGroup) {
-	for _, ng := range s.context.NodeGroups() {
+func (s *Stack) InstancePools() (instancePools []interfaces.InstancePool) {
+	for _, ng := range s.context.InstancePools() {
 		if s.roles != nil {
 			if active, ok := s.roles[ng.Role().Name()]; !ok || !active {
 				continue
 			}
 		}
-		nodeGroups = append(nodeGroups, ng)
+		instancePools = append(instancePools, ng)
 	}
-	return nodeGroups
+	return instancePools
 }

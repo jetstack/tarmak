@@ -1,4 +1,4 @@
-package node_group
+package instance_pool
 
 import (
 	"fmt"

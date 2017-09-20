@@ -11,8 +11,8 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/tarmak/instance_pool"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
@@ -34,9 +34,9 @@ type Context struct {
 	networkCIDR  *net.IPNet
 	log          *logrus.Entry
 
-	imageIDs   map[string]string
-	nodeGroups []interfaces.NodeGroup
-	roles      map[string]*role.Role
+	imageIDs      map[string]string
+	instancePools []interfaces.InstancePool
+	roles         map[string]*role.Role
 }
 
 var _ interfaces.Context = &Context{}
@@ -49,7 +49,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 	}
 
 	// validate server pools and setup stacks
-	if err := context.validateServerPools(); err != nil {
+	if err := context.validateInstancePools(); err != nil {
 		return nil, err
 	}
 
@@ -58,69 +58,69 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 	defineVaultRoles(context.roles)
 	defineKubernetesRoles(context.roles)
 
-	// setup node groups
+	// setup instance pools
 	var result error
-	for pos, _ := range context.conf.ServerPools {
-		serverPool := context.conf.ServerPools[pos]
-		// create node groups
-		nodeGroup, err := node_group.NewFromConfig(context, &serverPool)
+	for pos, _ := range context.conf.InstancePools {
+		instancePool := context.conf.InstancePools[pos]
+		// create instance pools
+		pool, err := instance_pool.NewFromConfig(context, &instancePool)
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
 		}
-		context.nodeGroups = append(context.nodeGroups, nodeGroup)
+		context.instancePools = append(context.instancePools, pool)
 	}
 
 	return context, result
 }
 
-func (c *Context) NodeGroups() []interfaces.NodeGroup {
-	return c.nodeGroups
+func (c *Context) InstancePools() []interfaces.InstancePool {
+	return c.instancePools
 }
 
-func (c *Context) ServerPoolsMap() (serverPoolsMap map[string][]*clusterv1alpha1.ServerPool) {
-	serverPoolsMap = make(map[string][]*clusterv1alpha1.ServerPool)
-	for pos, _ := range c.conf.ServerPools {
-		pool := &c.conf.ServerPools[pos]
-		_, ok := serverPoolsMap[pool.Type]
+func (c *Context) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1alpha1.InstancePool) {
+	instancePoolsMap = make(map[string][]*clusterv1alpha1.InstancePool)
+	for pos, _ := range c.conf.InstancePools {
+		pool := &c.conf.InstancePools[pos]
+		_, ok := instancePoolsMap[pool.Type]
 		if !ok {
-			serverPoolsMap[pool.Type] = []*clusterv1alpha1.ServerPool{pool}
+			instancePoolsMap[pool.Type] = []*clusterv1alpha1.InstancePool{pool}
 		} else {
-			serverPoolsMap[pool.Type] = append(serverPoolsMap[pool.Type], pool)
+			instancePoolsMap[pool.Type] = append(instancePoolsMap[pool.Type], pool)
 		}
 	}
-	return serverPoolsMap
+	return instancePoolsMap
 }
 
-// validate hub serverPool types
-func validateHubTypes(poolMap map[string][]*clusterv1alpha1.ServerPool, clusterType string) (result error) {
-	if len(poolMap[clusterv1alpha1.ServerPoolTypeBastion]) != 1 {
-		result = multierror.Append(result, fmt.Errorf("a hub needs to have exactly one '%s' server pool", clusterv1alpha1.ServerPoolTypeBastion))
+// validate hub instancePool types
+func validateHubTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, clusterType string) (result error) {
+	if len(poolMap[clusterv1alpha1.InstancePoolTypeBastion]) != 1 {
+		result = multierror.Append(result, fmt.Errorf("a hub needs to have exactly one '%s' server pool", clusterv1alpha1.InstancePoolTypeBastion))
 	}
 
-	if len(poolMap[clusterv1alpha1.ServerPoolTypeVault]) != 1 {
-		result = multierror.Append(result, fmt.Errorf("a hub needs to have exactly one '%s' server pool", clusterv1alpha1.ServerPoolTypeVault))
+	if len(poolMap[clusterv1alpha1.InstancePoolTypeVault]) != 1 {
+		result = multierror.Append(result, fmt.Errorf("a hub needs to have exactly one '%s' server pool", clusterv1alpha1.InstancePoolTypeVault))
 	}
 
 	return result
 }
 
-// validate cluster serverPool types
-func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.ServerPool, clusterType string) (result error) {
-	if len(poolMap[clusterv1alpha1.ServerPoolTypeEtcd]) != 1 {
-		result = multierror.Append(result, fmt.Errorf("a %s needs to have exactly one '%s' server pool", clusterType, clusterv1alpha1.ServerPoolTypeEtcd))
+// validate cluster instancePool types
+func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, clusterType string) (result error) {
+	if len(poolMap[clusterv1alpha1.InstancePoolTypeEtcd]) != 1 {
+		result = multierror.Append(result, fmt.Errorf("a %s needs to have exactly one '%s' server pool", clusterType, clusterv1alpha1.InstancePoolTypeEtcd))
 	}
 
-	if len(poolMap[clusterv1alpha1.ServerPoolTypeMaster]) < 1 {
-		result = multierror.Append(result, fmt.Errorf("a %s needs to have more than one '%s' server pool", clusterType, clusterv1alpha1.ServerPoolTypeMaster))
+	if len(poolMap[clusterv1alpha1.InstancePoolTypeMaster]) < 1 {
+		result = multierror.Append(result, fmt.Errorf("a %s needs to have more than one '%s' server pool", clusterType, clusterv1alpha1.InstancePoolTypeMaster))
 	}
 
 	return result
 }
 
 // validate server pools
-func (c *Context) validateServerPools() (result error) {
-	poolMap := c.ServerPoolsMap()
+func (c *Context) validateInstancePools() (result error) {
+	poolMap := c.InstancePoolsMap()
 	clusterType := c.Type()
 	allowedTypes := make(map[string]bool)
 	c.stacks = []interfaces.Stack{}
@@ -131,9 +131,9 @@ func (c *Context) validateServerPools() (result error) {
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
-		allowedTypes[clusterv1alpha1.ServerPoolTypeJenkins] = true
-		allowedTypes[clusterv1alpha1.ServerPoolTypeBastion] = true
-		allowedTypes[clusterv1alpha1.ServerPoolTypeVault] = true
+		allowedTypes[clusterv1alpha1.InstancePoolTypeJenkins] = true
+		allowedTypes[clusterv1alpha1.InstancePoolTypeBastion] = true
+		allowedTypes[clusterv1alpha1.InstancePoolTypeVault] = true
 
 		if s, err := stack.New(c, tarmakv1alpha1.StackNameState); err != nil {
 			result = multierror.Append(result, err)
@@ -166,9 +166,9 @@ func (c *Context) validateServerPools() (result error) {
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
-		allowedTypes[clusterv1alpha1.ServerPoolTypeEtcd] = true
-		allowedTypes[clusterv1alpha1.ServerPoolTypeMaster] = true
-		allowedTypes[clusterv1alpha1.ServerPoolTypeWorker] = true
+		allowedTypes[clusterv1alpha1.InstancePoolTypeEtcd] = true
+		allowedTypes[clusterv1alpha1.InstancePoolTypeMaster] = true
+		allowedTypes[clusterv1alpha1.InstancePoolTypeWorker] = true
 
 		if s, err := stack.New(c, tarmakv1alpha1.StackNameKubernetes); err != nil {
 			result = multierror.Append(result, err)
@@ -210,7 +210,7 @@ func (c *Context) Region() string {
 func (c *Context) Subnets() (subnets []clusterv1alpha1.Subnet) {
 	zones := make(map[string]bool)
 
-	for _, sp := range c.conf.ServerPools {
+	for _, sp := range c.conf.InstancePools {
 		for _, subnet := range sp.Subnets {
 			zones[subnet.Zone] = true
 		}
@@ -226,7 +226,7 @@ func (c *Context) Subnets() (subnets []clusterv1alpha1.Subnet) {
 // This methods aggregates all images of the pools
 func (c *Context) Images() []string {
 	images := make(map[string]bool)
-	for _, sp := range c.conf.ServerPools {
+	for _, sp := range c.conf.InstancePools {
 		images[sp.Image] = true
 	}
 
@@ -341,8 +341,8 @@ func (c *Context) Role(roleName string) *role.Role {
 
 func (c *Context) Roles() (roles []*role.Role) {
 	roleMap := map[string]bool{}
-	for _, nodeGroup := range c.NodeGroups() {
-		r := nodeGroup.Role()
+	for _, instancePool := range c.InstancePools() {
+		r := instancePool.Role()
 		if _, ok := roleMap[r.Name()]; !ok {
 			roles = append(roles, r)
 			roleMap[r.Name()] = true

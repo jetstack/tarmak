@@ -417,16 +417,16 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 // This methods converts and possibly validates a generic instance type to a
 // provider specifc
 func (a *AWS) InstanceType(typeIn string) (typeOut string, err error) {
-	if typeIn == clusterv1alpha1.ServerPoolSizeTiny {
+	if typeIn == clusterv1alpha1.InstancePoolSizeTiny {
 		return "t2.nano", nil
 	}
-	if typeIn == clusterv1alpha1.ServerPoolSizeSmall {
+	if typeIn == clusterv1alpha1.InstancePoolSizeSmall {
 		return "m3.medium", nil
 	}
-	if typeIn == clusterv1alpha1.ServerPoolSizeMedium {
+	if typeIn == clusterv1alpha1.InstancePoolSizeMedium {
 		return "m4.large", nil
 	}
-	if typeIn == clusterv1alpha1.ServerPoolSizeLarge {
+	if typeIn == clusterv1alpha1.InstancePoolSizeLarge {
 		return "m4.xlarge", nil
 	}
 
