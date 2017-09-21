@@ -17,6 +17,7 @@
   script:
   - cd ${CI_PROJECT_DIR}/puppet/modules/${MODULE_NAME}
   - bundle install
+  - gem uninstall vagrant-wrapper
   - bundle exec rake beaker:${BEAKER_TARGET}
 
 # run test for puppet modules
