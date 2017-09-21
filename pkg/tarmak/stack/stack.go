@@ -13,7 +13,7 @@ import (
 
 type Stack struct {
 	name    string
-	context interfaces.Context
+	cluster interfaces.Cluster
 	log     *logrus.Entry
 
 	verifyPreDeploy   []func() error
@@ -25,15 +25,15 @@ type Stack struct {
 
 	roles map[string]bool
 
-	nodeGroups []interfaces.NodeGroup
+	instancePools []interfaces.InstancePool
 }
 
-func New(context interfaces.Context, name string) (interfaces.Stack, error) {
+func New(cluster interfaces.Cluster, name string) (interfaces.Stack, error) {
 	var stack interfaces.Stack
 	var err error
 	s := &Stack{
-		context: context,
-		log:     context.Log().WithField("stack", name),
+		cluster: cluster,
+		log:     cluster.Log().WithField("stack", name),
 	}
 
 	// init stack
@@ -66,12 +66,12 @@ func (s *Stack) Output() map[string]interface{} {
 	return s.output
 }
 
-func (s *Stack) Context() interfaces.Context {
-	return s.context
+func (s *Stack) Cluster() interfaces.Cluster {
+	return s.cluster
 }
 
 func (s *Stack) RemoteState() string {
-	return s.Context().RemoteState(s.Name())
+	return s.Cluster().RemoteState(s.Name())
 }
 
 func (s *Stack) Name() string {
@@ -84,7 +84,7 @@ func (s *Stack) Validate() error {
 
 func (s *Stack) verifyImageIDs() error {
 
-	_, err := s.context.ImageIDs()
+	_, err := s.cluster.ImageIDs()
 	if err != nil {
 		return err
 	}
@@ -145,17 +145,17 @@ func (s *Stack) Log() *logrus.Entry {
 
 func (s *Stack) Variables() map[string]interface{} {
 	vars := make(map[string]interface{})
-	imageIDs, err := s.context.ImageIDs()
+	imageIDs, err := s.cluster.ImageIDs()
 	if err != nil {
 		s.log.Warnf("error getting image IDs: %s", err)
 		return vars
 	}
 
-	for _, nodeGroup := range s.NodeGroups() {
-		image := nodeGroup.Image()
+	for _, instancePool := range s.InstancePools() {
+		image := instancePool.Image()
 		ids, ok := imageIDs[image]
 		if ok {
-			vars[fmt.Sprintf("%s_ami", nodeGroup.TFName())] = ids
+			vars[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
 		}
 	}
 	return vars
@@ -164,8 +164,8 @@ func (s *Stack) Variables() map[string]interface{} {
 
 func (s *Stack) Roles() (roles []*role.Role) {
 	roleMap := map[string]bool{}
-	for _, nodeGroup := range s.NodeGroups() {
-		r := nodeGroup.Role()
+	for _, instancePool := range s.InstancePools() {
+		r := instancePool.Role()
 		if _, ok := roleMap[r.Name()]; !ok {
 			roles = append(roles, r)
 			roleMap[r.Name()] = true
@@ -174,14 +174,14 @@ func (s *Stack) Roles() (roles []*role.Role) {
 	return roles
 }
 
-func (s *Stack) NodeGroups() (nodeGroups []interfaces.NodeGroup) {
-	for _, ng := range s.context.NodeGroups() {
+func (s *Stack) InstancePools() (instancePools []interfaces.InstancePool) {
+	for _, ng := range s.cluster.InstancePools() {
 		if s.roles != nil {
 			if active, ok := s.roles[ng.Role().Name()]; !ok || !active {
 				continue
 			}
 		}
-		nodeGroups = append(nodeGroups, ng)
+		instancePools = append(instancePools, ng)
 	}
-	return nodeGroups
+	return instancePools
 }

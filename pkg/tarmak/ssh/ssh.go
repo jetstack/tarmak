@@ -32,7 +32,7 @@ func New(tarmak interfaces.Tarmak) *SSH {
 }
 
 func (s *SSH) WriteConfig() error {
-	ctx := s.tarmak.Context()
+	ctx := s.tarmak.Cluster()
 
 	hosts, err := ctx.Environment().Provider().ListHosts()
 	if err != nil {
@@ -40,7 +40,7 @@ func (s *SSH) WriteConfig() error {
 	}
 
 	var sshConfig bytes.Buffer
-	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak context %s\n", ctx.ContextName()))
+	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", ctx.ClusterName()))
 
 	for _, host := range hosts {
 		_, err = sshConfig.WriteString(host.SSHConfig())
@@ -66,7 +66,7 @@ func (s *SSH) args() []string {
 	return []string{
 		"ssh",
 		"-F",
-		s.tarmak.Context().SSHConfigPath(),
+		s.tarmak.Cluster().SSHConfigPath(),
 	}
 }
 

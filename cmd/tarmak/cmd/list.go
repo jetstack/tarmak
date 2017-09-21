@@ -14,10 +14,10 @@ import (
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "list nodes of the context",
+	Short: "list nodes of the cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
-		hosts, err := t.Context().Environment().Provider().ListHosts()
+		hosts, err := t.Cluster().Environment().Provider().ListHosts()
 		if err != nil {
 			logrus.Fatal(err)
 		}

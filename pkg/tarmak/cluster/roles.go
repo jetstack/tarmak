@@ -1,4 +1,4 @@
-package context
+package cluster
 
 import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
@@ -11,14 +11,14 @@ func defineToolsRoles(roleMap map[string]*role.Role) {
 		AWS:      &role.RoleAWS{},
 	}
 	jenkinsRole.WithName("jenkins")
-	roleMap[clusterv1alpha1.ServerPoolTypeJenkins] = jenkinsRole
+	roleMap[clusterv1alpha1.InstancePoolTypeJenkins] = jenkinsRole
 
 	bastionRole := &role.Role{
 		Stateful: true,
 		AWS:      &role.RoleAWS{},
 	}
 	bastionRole.WithName("bastion")
-	roleMap[clusterv1alpha1.ServerPoolTypeBastion] = bastionRole
+	roleMap[clusterv1alpha1.InstancePoolTypeBastion] = bastionRole
 }
 
 func defineVaultRoles(roleMap map[string]*role.Role) {
@@ -27,7 +27,7 @@ func defineVaultRoles(roleMap map[string]*role.Role) {
 		AWS:      &role.RoleAWS{},
 	}
 	vaultRole.WithName("vault")
-	roleMap[clusterv1alpha1.ServerPoolTypeVault] = vaultRole
+	roleMap[clusterv1alpha1.InstancePoolTypeVault] = vaultRole
 }
 
 func defineKubernetesRoles(roleMap map[string]*role.Role) {
@@ -40,7 +40,7 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 		},
 	}
 	masterRole.WithName("master").WithPrefix("kubernetes")
-	roleMap[clusterv1alpha1.ServerPoolTypeMaster] = masterRole
+	roleMap[clusterv1alpha1.InstancePoolTypeMaster] = masterRole
 
 	workerRole := &role.Role{
 		Stateful: false,
@@ -51,14 +51,14 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 		},
 	}
 	workerRole.WithName("worker").WithPrefix("kubernetes")
-	roleMap[clusterv1alpha1.ServerPoolTypeWorker] = workerRole
+	roleMap[clusterv1alpha1.InstancePoolTypeWorker] = workerRole
 
 	etcdRole := &role.Role{
 		Stateful: true,
 		AWS:      &role.RoleAWS{},
 	}
 	etcdRole.WithName("etcd").WithPrefix("kubernetes")
-	roleMap[clusterv1alpha1.ServerPoolTypeEtcd] = etcdRole
+	roleMap[clusterv1alpha1.InstancePoolTypeEtcd] = etcdRole
 
 	masterEtcdRole := &role.Role{
 		Stateful: false,
@@ -69,5 +69,5 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 		},
 	}
 	masterEtcdRole.WithName("etcd-master").WithPrefix("kubernetes")
-	roleMap[clusterv1alpha1.ServerPoolTypeMasterEtcd] = masterEtcdRole
+	roleMap[clusterv1alpha1.InstancePoolTypeMasterEtcd] = masterEtcdRole
 }

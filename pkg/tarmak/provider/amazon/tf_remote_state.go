@@ -1,4 +1,4 @@
-package aws
+package amazon
 
 import (
 	"fmt"
@@ -10,10 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func (a *AWS) RemoteStateName() string {
+func (a *Amazon) RemoteStateName() string {
 	return fmt.Sprintf(
 		"%s%s-terraform-state",
-		a.conf.AWS.BucketPrefix,
+		a.conf.Amazon.BucketPrefix,
 		a.Region(),
 	)
 }
@@ -21,11 +21,11 @@ func (a *AWS) RemoteStateName() string {
 const DynamoDBKey = "LockID"
 
 // TODO: remove me, deprecated
-func (a *AWS) RemoteStateBucketName() string {
+func (a *Amazon) RemoteStateBucketName() string {
 	return a.RemoteStateName()
 }
 
-func (a *AWS) RemoteState(namespace string, clusterName string, stackName string) string {
+func (a *Amazon) RemoteState(namespace string, clusterName string, stackName string) string {
 	return fmt.Sprintf(`terraform {
   backend "s3" {
     bucket = "%s"
@@ -41,7 +41,7 @@ func (a *AWS) RemoteState(namespace string, clusterName string, stackName string
 	)
 }
 
-func (a *AWS) RemoteStateBucketAvailable() (bool, error) {
+func (a *Amazon) RemoteStateBucketAvailable() (bool, error) {
 	svc, err := a.S3()
 	if err != nil {
 		return false, err
@@ -59,7 +59,7 @@ func (a *AWS) RemoteStateBucketAvailable() (bool, error) {
 	return false, fmt.Errorf("error while checking if remote state is available: %s", err)
 }
 
-func (a *AWS) RemoteStateAvailable(bucketName string) (bool, error) {
+func (a *Amazon) RemoteStateAvailable(bucketName string) (bool, error) {
 	sess, err := a.Session()
 	if err != nil {
 		return false, fmt.Errorf("error getting session: %s", err)
@@ -77,7 +77,7 @@ func (a *AWS) RemoteStateAvailable(bucketName string) (bool, error) {
 		return false, fmt.Errorf("error while checking if remote state is available: %s", err)
 	}
 }
-func (a *AWS) initRemoteStateBucket() error {
+func (a *Amazon) initRemoteStateBucket() error {
 	svc, err := a.S3()
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (a *AWS) initRemoteStateBucket() error {
 	return err
 }
 
-func (a *AWS) validateRemoteStateBucket() error {
+func (a *Amazon) validateRemoteStateBucket() error {
 	svc, err := a.S3()
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func (a *AWS) validateRemoteStateBucket() error {
 
 }
 
-func (a *AWS) initRemoteStateDynamoDB() error {
+func (a *Amazon) initRemoteStateDynamoDB() error {
 	svc, err := a.DynamoDB()
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func (a *AWS) initRemoteStateDynamoDB() error {
 	return err
 }
 
-func (a *AWS) validateRemoteStateDynamoDB() error {
+func (a *Amazon) validateRemoteStateDynamoDB() error {
 	svc, err := a.DynamoDB()
 	if err != nil {
 		return err

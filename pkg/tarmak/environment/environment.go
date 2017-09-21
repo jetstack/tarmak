@@ -19,7 +19,7 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
-	"github.com/jetstack/tarmak/pkg/tarmak/context"
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
@@ -29,11 +29,11 @@ import (
 type Environment struct {
 	conf *tarmakv1alpha1.Environment
 
-	contexts []interfaces.Context
+	clusters []interfaces.Cluster
 
 	sshKeyPrivate interface{}
 
-	hubContext interfaces.Context // this is the context that contains state/vault/tools
+	hubCluster interfaces.Cluster // this is the cluster that contains state/vault/tools
 	provider   interfaces.Provider
 	tarmak     interfaces.Tarmak
 
@@ -42,7 +42,7 @@ type Environment struct {
 
 var _ interfaces.Environment = &Environment{}
 
-func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, contexts []*clusterv1alpha1.Cluster) (*Environment, error) {
+func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, clusters []*clusterv1alpha1.Cluster) (*Environment, error) {
 	e := &Environment{
 		conf:   conf,
 		tarmak: tarmak,
@@ -65,16 +65,16 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 	// TODO RENABLE
 	//networkCIDRs := []*net.IPNet{}
 
-	for posContext, _ := range contexts {
-		contextConf := contexts[posContext]
-		contextIntf, err := context.NewFromConfig(e, contextConf)
+	for posCluster, _ := range clusters {
+		clusterConf := clusters[posCluster]
+		clusterIntf, err := cluster.NewFromConfig(e, clusterConf)
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
 		}
-		e.contexts = append(e.contexts, contextIntf)
-		if len(contexts) == 1 || contextConf.Name == "hub" {
-			e.hubContext = contextIntf
+		e.clusters = append(e.clusters, clusterIntf)
+		if len(clusters) == 1 || clusterConf.Name == "hub" {
+			e.hubCluster = clusterIntf
 		}
 	}
 	if result != nil {
@@ -101,14 +101,14 @@ func (e *Environment) Tarmak() interfaces.Tarmak {
 	return e.tarmak
 }
 
-func (e *Environment) Context(name string) (interfaces.Context, error) {
-	for pos, _ := range e.contexts {
-		context := e.contexts[pos]
-		if context.Name() == name {
-			return context, nil
+func (e *Environment) Cluster(name string) (interfaces.Cluster, error) {
+	for pos, _ := range e.clusters {
+		cluster := e.clusters[pos]
+		if cluster.Name() == name {
+			return cluster, nil
 		}
 	}
-	return nil, fmt.Errorf("context '%s' in environment '%s' not found", name, e.Name())
+	return nil, fmt.Errorf("cluster '%s' in environment '%s' not found", name, e.Name())
 }
 
 func (e *Environment) validateSSHKey() error {
@@ -146,9 +146,9 @@ func (e *Environment) Variables() map[string]interface{} {
 	}
 
 	output["state_bucket"] = e.Provider().RemoteStateBucketName()
-	output["state_context_name"] = e.hubContext.Name()
-	output["tools_context_name"] = e.hubContext.Name()
-	output["vault_context_name"] = e.hubContext.Name()
+	output["state_cluster_name"] = e.hubCluster.Name()
+	output["tools_cluster_name"] = e.hubCluster.Name()
+	output["vault_cluster_name"] = e.hubCluster.Name()
 	return output
 }
 
@@ -244,8 +244,8 @@ func (e *Environment) Location() string {
 	return e.conf.Location
 }
 
-func (e *Environment) Contexts() []interfaces.Context {
-	return e.contexts
+func (e *Environment) Clusters() []interfaces.Cluster {
+	return e.clusters
 }
 
 func (e *Environment) Log() *logrus.Entry {
@@ -264,7 +264,7 @@ func (e *Environment) Validate() error {
 }
 
 func (e *Environment) BucketPrefix() string {
-	stackState := e.hubContext.Stack(tarmakv1alpha1.StackNameState)
+	stackState := e.hubCluster.Stack(tarmakv1alpha1.StackNameState)
 	if stackState == nil {
 		return ""
 	}
@@ -280,11 +280,11 @@ func (e *Environment) BucketPrefix() string {
 }
 
 func (e *Environment) StateStack() interfaces.Stack {
-	return e.hubContext.Stack(tarmakv1alpha1.StackNameState)
+	return e.hubCluster.Stack(tarmakv1alpha1.StackNameState)
 }
 
 func (e *Environment) VaultStack() interfaces.Stack {
-	return e.hubContext.Stack(tarmakv1alpha1.StackNameVault)
+	return e.hubCluster.Stack(tarmakv1alpha1.StackNameVault)
 }
 
 func (e *Environment) vaultRootTokenPath() string {
@@ -318,7 +318,7 @@ func (e *Environment) VaultRootToken() (string, error) {
 }
 
 func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
-	stackVault := e.hubContext.Stack(tarmakv1alpha1.StackNameVault)
+	stackVault := e.hubCluster.Stack(tarmakv1alpha1.StackNameVault)
 	if stackVault == nil {
 		return nil, errors.New("could not find vault stack")
 	}

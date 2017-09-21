@@ -56,8 +56,8 @@ func (s *StateStack) verifyDNSDelegation() error {
 		host := strings.Join([]string{
 			utils.RandStringRunes(16),
 			"_tarmak",
-			s.context.Environment().Name(),
-			s.context.Environment().Provider().PublicZone(),
+			s.cluster.Environment().Name(),
+			s.cluster.Environment().Provider().PublicZone(),
 		}, ".")
 
 		result, err := net.LookupTXT(host)

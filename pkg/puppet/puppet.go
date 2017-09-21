@@ -40,7 +40,7 @@ func (p *Puppet) TarGz(writer io.Writer) error {
 
 	path := filepath.Join(rootPath, "puppet")
 
-	err = p.writeHieraData(path, p.tarmak.Context())
+	err = p.writeHieraData(path, p.tarmak.Cluster())
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func contentGlobalConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
 	return lines
 }
 
-func contentInstancePoolConfig(conf *clusterv1alpha1.ServerPool) (lines []string) {
+func contentInstancePoolConfig(conf *clusterv1alpha1.InstancePool) (lines []string) {
 	lines = append(lines, kubernetesConfig(conf.Kubernetes)...)
 	return lines
 }
@@ -110,7 +110,7 @@ func (p *Puppet) writeLines(filePath string, lines []string) error {
 	return os.Chtimes(filePath, tarmakv1alpha1.KubernetesEpoch, tarmakv1alpha1.KubernetesEpoch)
 }
 
-func (p *Puppet) writeHieraData(puppetPath string, context interfaces.Context) error {
+func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) error {
 
 	hieraPath := filepath.Join(
 		puppetPath,
@@ -120,14 +120,14 @@ func (p *Puppet) writeHieraData(puppetPath string, context interfaces.Context) e
 	// write global cluster config
 	err := p.writeLines(
 		filepath.Join(hieraPath, "tarmak.yaml"),
-		contentGlobalConfig(context.Config()),
+		contentGlobalConfig(cluster.Config()),
 	)
 	if err != nil {
 		return fmt.Errorf("error writing global hiera config: %s", err)
 	}
 
 	// loop through instance pools
-	for _, instancePool := range context.NodeGroups() {
+	for _, instancePool := range cluster.InstancePools() {
 		err = p.writeLines(
 			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s.yaml", instancePool.Name())),
 			contentInstancePoolConfig(instancePool.Config()),

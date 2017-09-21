@@ -39,8 +39,8 @@ func New(tarmak interfaces.Tarmak) *Packer {
 
 // List necessary images for stack
 func (p *Packer) images() (images []*image) {
-	environment := p.tarmak.Context().Environment().Name()
-	for _, imageName := range p.tarmak.Context().Images() {
+	environment := p.tarmak.Cluster().Environment().Name()
+	for _, imageName := range p.tarmak.Cluster().Images() {
 		image := &image{
 			environment: environment,
 			imageName:   imageName,
@@ -60,7 +60,7 @@ func (p *Packer) images() (images []*image) {
 
 // List existing images
 func (p *Packer) List() ([]tarmakv1alpha1.Image, error) {
-	return p.tarmak.Context().Environment().Provider().QueryImages(
+	return p.tarmak.Cluster().Environment().Provider().QueryImages(
 		map[string]string{tarmakv1alpha1.ImageTagEnvironment: p.tarmak.Environment().Name()},
 	)
 }

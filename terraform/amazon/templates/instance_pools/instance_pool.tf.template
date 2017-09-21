@@ -13,16 +13,16 @@
 
 {{end}}
 
-{{range .NodeGroups}}
+{{range .InstancePools}}
 ## {{.TFName}}
 # Variables for {{.TFName}}
-{{template "node_group_variables.tf.template" .}}
+{{template "instance_pool_variables.tf.template" .}}
 
 # Instance for {{.TFName}}
-{{template "node_group_instance.tf.template" .}}
+{{template "instance_pool_instance.tf.template" .}}
 
 # IAM role for {{.TFName}}
-{{template "node_group_iam.tf.template" .}}
+{{template "instance_pool_iam.tf.template" .}}
 
 {{end}}
 {{end}}

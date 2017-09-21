@@ -39,6 +39,6 @@ variable "environment" {
   default = "nonprod"
 }
 
-variable "state_context_name" {
+variable "state_cluster_name" {
   default = "hub"
 }

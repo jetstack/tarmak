@@ -1,4 +1,4 @@
-package context
+package cluster
 
 import (
 	"io/ioutil"
@@ -12,8 +12,8 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
 )
 
-type fakeContext struct {
-	*Context
+type fakeCluster struct {
+	*Cluster
 	ctrl *gomock.Controller
 
 	fakeEnvironment *mocks.MockEnvironment
@@ -22,15 +22,15 @@ type fakeContext struct {
 	fakeConfig      *mocks.MockConfig
 }
 
-func (f *fakeContext) Finish() {
+func (f *fakeCluster) Finish() {
 	f.ctrl.Finish()
 }
 
-func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext {
+func newFakeCluster(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeCluster {
 
-	c := &fakeContext{
+	c := &fakeCluster{
 		ctrl: gomock.NewController(t),
-		Context: &Context{
+		Cluster: &Cluster{
 			conf: cluster,
 		},
 	}
@@ -39,7 +39,7 @@ func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext
 	c.fakeProvider = mocks.NewMockProvider(c.ctrl)
 	c.fakeTarmak = mocks.NewMockTarmak(c.ctrl)
 	c.fakeConfig = mocks.NewMockConfig(c.ctrl)
-	c.Context.environment = c.fakeEnvironment
+	c.Cluster.environment = c.fakeEnvironment
 
 	// setup custom logger
 	logger := logrus.New()
@@ -52,7 +52,7 @@ func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext
 	c.fakeEnvironment.EXPECT().Log().AnyTimes().Return(loggerCtx)
 	c.fakeEnvironment.EXPECT().Provider().AnyTimes().Return(c.fakeProvider)
 	c.fakeEnvironment.EXPECT().Tarmak().AnyTimes().Return(c.fakeTarmak)
-	c.Context.log = loggerCtx
+	c.Cluster.log = loggerCtx
 
 	c.fakeProvider.EXPECT().InstanceType(gomock.Any()).Do(func(in string) string { return "provider-" + in }).AnyTimes()
 	c.fakeProvider.EXPECT().VolumeType(gomock.Any()).Do(func(in string) string { return "provider-" + in }).AnyTimes()
@@ -64,22 +64,22 @@ func newFakeContext(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeContext
 	return c
 }
 
-func TestContext_NewMinimalClusterMulti(t *testing.T) {
+func TestCluster_NewMinimalClusterMulti(t *testing.T) {
 	clusterConfig := config.NewClusterMulti("multi", "cluster")
 	config.ApplyDefaults(clusterConfig)
 	clusterConfig.Location = "my-region"
-	c := newFakeContext(t, nil)
+	c := newFakeCluster(t, nil)
 	defer c.Finish()
 
-	// fake two contexts
+	// fake two clusters
 	c.fakeEnvironment.EXPECT().Name().Return("multi").AnyTimes()
-	c.fakeConfig.EXPECT().Contexts("multi").Return([]*clusterv1alpha1.Cluster{
+	c.fakeConfig.EXPECT().Clusters("multi").Return([]*clusterv1alpha1.Cluster{
 		&clusterv1alpha1.Cluster{},
 		&clusterv1alpha1.Cluster{},
 	}).AnyTimes()
 
 	var err error
-	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	c.Cluster, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
 	if err != nil {
 		t.Fatal("unexpected error: ", err)
 	}
@@ -97,21 +97,21 @@ func TestContext_NewMinimalClusterMulti(t *testing.T) {
 	}
 }
 
-func TestContext_NewMinimalClusterSingle(t *testing.T) {
+func TestCluster_NewMinimalClusterSingle(t *testing.T) {
 	clusterConfig := config.NewClusterSingle("single", "cluster")
 	config.ApplyDefaults(clusterConfig)
 	clusterConfig.Location = "my-region"
-	c := newFakeContext(t, nil)
+	c := newFakeCluster(t, nil)
 	defer c.Finish()
 
-	// fake single context
+	// fake single cluster
 	c.fakeEnvironment.EXPECT().Name().Return("single").AnyTimes()
-	c.fakeConfig.EXPECT().Contexts("single").Return([]*clusterv1alpha1.Cluster{
+	c.fakeConfig.EXPECT().Clusters("single").Return([]*clusterv1alpha1.Cluster{
 		&clusterv1alpha1.Cluster{},
 	}).AnyTimes()
 
 	var err error
-	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	c.Cluster, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
 	if err != nil {
 		t.Fatal("unexpected error: ", err)
 	}
@@ -129,22 +129,22 @@ func TestContext_NewMinimalClusterSingle(t *testing.T) {
 	}
 }
 
-func TestContext_NewMinimalHub(t *testing.T) {
+func TestCluster_NewMinimalHub(t *testing.T) {
 	clusterConfig := config.NewHub("multi")
 	config.ApplyDefaults(clusterConfig)
 	clusterConfig.Location = "my-region"
-	c := newFakeContext(t, nil)
+	c := newFakeCluster(t, nil)
 	defer c.Finish()
 
-	// fake two contexts
+	// fake two clusters
 	c.fakeEnvironment.EXPECT().Name().Return("single").AnyTimes()
-	c.fakeConfig.EXPECT().Contexts("single").Return([]*clusterv1alpha1.Cluster{
+	c.fakeConfig.EXPECT().Clusters("single").Return([]*clusterv1alpha1.Cluster{
 		&clusterv1alpha1.Cluster{},
 		&clusterv1alpha1.Cluster{},
 	}).AnyTimes()
 
 	var err error
-	c.Context, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	c.Cluster, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
 	if err != nil {
 		t.Fatal("unexpected error: ", err)
 	}
@@ -163,8 +163,8 @@ func TestContext_NewMinimalHub(t *testing.T) {
 }
 
 /*
-func testDefaultContextConfig() *config.Context {
-	return &config.Context{
+func testDefaultClusterConfig() *config.Cluster {
+	return &config.Cluster{
 		Name: "cluster1",
 		Stacks: []config.Stack{
 			config.Stack{
@@ -187,9 +187,9 @@ func testDefaultContextConfig() *config.Context {
 
 
 func TestNewFromConfigValid(t *testing.T) {
-	fakes := newFakeContext(t)
+	fakes := newFakeCluster(t)
 	defer fakes.Finish()
-	_, err := NewFromConfig(fakes.fakeEnvironment, testDefaultContextConfig())
+	_, err := NewFromConfig(fakes.fakeEnvironment, testDefaultClusterConfig())
 
 	if err != nil {
 		t.Error("unexpected error: ", err)
@@ -197,10 +197,10 @@ func TestNewFromConfigValid(t *testing.T) {
 }
 
 func TestNewFromConfigInvalidNetwork(t *testing.T) {
-	fakes := newFakeContext(t)
+	fakes := newFakeCluster(t)
 	defer fakes.Finish()
 
-	cfg := testDefaultContextConfig()
+	cfg := testDefaultClusterConfig()
 	cfg.Stacks[1].Network.NetworkCIDR = "260.0.2.0/24"
 	_, err := NewFromConfig(fakes.fakeEnvironment, cfg)
 
@@ -212,10 +212,10 @@ func TestNewFromConfigInvalidNetwork(t *testing.T) {
 }
 
 func TestNewFromConfigMissingNetwork(t *testing.T) {
-	fakes := newFakeContext(t)
+	fakes := newFakeCluster(t)
 	defer fakes.Finish()
 
-	cfg := testDefaultContextConfig()
+	cfg := testDefaultClusterConfig()
 	stacks := cfg.Stacks[0:1]
 	stacks = append(stacks, cfg.Stacks[2:]...)
 	cfg.Stacks = stacks
@@ -230,10 +230,10 @@ func TestNewFromConfigMissingNetwork(t *testing.T) {
 }
 
 func TestNewFromConfigDuplicateNetwork(t *testing.T) {
-	fakes := newFakeContext(t)
+	fakes := newFakeCluster(t)
 	defer fakes.Finish()
 
-	cfg := testDefaultContextConfig()
+	cfg := testDefaultClusterConfig()
 	cfg.Stacks = append(cfg.Stacks, config.Stack{Network: &config.StackNetwork{NetworkCIDR: "1.2.4.0/22"}})
 
 	_, err := NewFromConfig(fakes.fakeEnvironment, cfg)

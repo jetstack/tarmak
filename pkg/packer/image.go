@@ -44,7 +44,7 @@ func (i *image) Build() (amiID string, err error) {
 	}
 
 	// get aws secrets
-	if environmentProvider, err := i.tarmak.Context().Environment().Provider().Environment(); err != nil {
+	if environmentProvider, err := i.tarmak.Cluster().Environment().Provider().Environment(); err != nil {
 		return "", fmt.Errorf("error getting environment secrets from provider: %s", err)
 	} else {
 		c.Env = append(c.Env, environmentProvider...)
@@ -64,7 +64,7 @@ func (i *image) Build() (amiID string, err error) {
 	buildSourcePath := filepath.Join(
 		rootPath,
 		"packer",
-		i.tarmak.Context().Environment().Provider().Cloud(),
+		i.tarmak.Cluster().Environment().Provider().Cloud(),
 		fmt.Sprintf("%s.json", i.imageName),
 	)
 

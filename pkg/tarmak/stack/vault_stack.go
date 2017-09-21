@@ -29,7 +29,7 @@ func newVaultStack(s *Stack) (*VaultStack, error) {
 	}
 
 	s.roles = make(map[string]bool)
-	s.roles[clusterv1alpha1.ServerPoolTypeVault] = true
+	s.roles[clusterv1alpha1.InstancePoolTypeVault] = true
 
 	s.name = tarmakv1alpha1.StackNameVault
 	s.verifyPostDeploy = append(s.verifyPostDeploy, v.verifyVaultInit)
@@ -189,7 +189,7 @@ func (s *VaultStack) createVaultTunnels(instances []string) ([]*vaultTunnel, err
 	output := make([]*vaultTunnel, len(instances))
 	for pos := range instances {
 		fqdn := instances[pos]
-		sshTunnel := s.Context().Environment().Tarmak().SSH().Tunnel(
+		sshTunnel := s.Cluster().Environment().Tarmak().SSH().Tunnel(
 			"bastion", fqdn, 8200,
 		)
 		vaultTunnel, err := NewVaultTunnel(
@@ -358,12 +358,12 @@ func (s *VaultStack) verifyVaultInit() error {
 			// quorum of vaults is unsealed
 			return nil
 		} else if clusterState == VaultStateUnintialised {
-			rootToken, err := s.Context().Environment().VaultRootToken()
+			rootToken, err := s.Cluster().Environment().VaultRootToken()
 			if err != nil {
 				return err
 			}
 
-			kv, err := s.Context().Environment().Provider().VaultKV()
+			kv, err := s.Cluster().Environment().Provider().VaultKV()
 			if err != nil {
 				return err
 			}

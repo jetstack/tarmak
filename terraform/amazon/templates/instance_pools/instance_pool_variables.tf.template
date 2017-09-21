@@ -21,12 +21,12 @@ variable "{{.TFName}}_spot_price" {
   default = "{{.SpotPrice}}"
 }
 
-{{ $nodeGroup := . }}
+{{ $instancePool := . }}
 {{ range .Volumes }}
-variable "{{$nodeGroup.TFName}}_{{.Name}}_volume_size" {
+variable "{{$instancePool.TFName}}_{{.Name}}_volume_size" {
   default = {{.Size}}
 }
-variable "{{$nodeGroup.TFName}}_{{.Name}}_volume_type" {
+variable "{{$instancePool.TFName}}_{{.Name}}_volume_type" {
   default = "{{.Type}}"
 }
 {{ end }}

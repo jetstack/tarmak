@@ -13,7 +13,7 @@ type Config struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	CurrentContext string `json:"currentContext,omitempty"` // <environmentName>-<contextName>
+	CurrentCluster string `json:"currentCluster,omitempty"` // <environmentName>-<clusterName>
 
 	Contact string `json:"contact,omitempty"`
 	Project string `json:"project,omitempty"`
@@ -40,12 +40,12 @@ type Provider struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	AWS   *ProviderAWS   `json:"aws,omitempty"`
-	GCP   *ProviderGCP   `json:"gcp,omitempty"`
-	Azure *ProviderAzure `json:"azure,omitempty"`
+	Amazon *ProviderAmazon `json:"amazon,omitempty"`
+	GCP    *ProviderGCP    `json:"gcp,omitempty"`
+	Azure  *ProviderAzure  `json:"azure,omitempty"`
 }
 
-type ProviderAWS struct {
+type ProviderAmazon struct {
 	VaultPath         string   `json:"vaultPath,omitempty"`
 	AllowedAccountIDs []string `json:"allowedAccountIDs,omitempty"`
 	Profile           string   `json:"profile,omitempty"`

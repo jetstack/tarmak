@@ -79,6 +79,6 @@ output "vault_unseal_key_name" {
   value = "${data.template_file.vault_unseal_key_name.rendered}"
 }
 
-variable "state_context_name" {
+variable "state_cluster_name" {
   default = "hub"
 }

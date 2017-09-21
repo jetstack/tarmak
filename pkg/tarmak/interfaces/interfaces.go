@@ -13,7 +13,7 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
 
-type Context interface {
+type Cluster interface {
 	Variables() map[string]interface{}
 	Environment() Environment
 	Name() string
@@ -27,14 +27,14 @@ type Context interface {
 	Images() []string // This returns all neccessary base images
 	SSHConfigPath() string
 	SSHHostKeysPath() string
-	ContextName() string
+	ClusterName() string
 	Log() *logrus.Entry
 	APITunnel() Tunnel
 	Region() string
 	Subnets() []clusterv1alpha1.Subnet // Return subnets per AZ
 	Role(string) *role.Role
 	Roles() []*role.Role
-	NodeGroups() []NodeGroup
+	InstancePools() []InstancePool
 	ImageIDs() (map[string]string, error)
 }
 
@@ -46,8 +46,8 @@ type Environment interface {
 	Validate() error
 	Name() string
 	BucketPrefix() string
-	Contexts() []Context
-	Context(name string) (context Context, err error)
+	Clusters() []Cluster
+	Cluster(name string) (cluster Cluster, err error)
 	SSHPrivateKeyPath() string
 	SSHPrivateKey() (signer interface{})
 	Log() *logrus.Entry
@@ -81,7 +81,7 @@ type Stack interface {
 	Variables() map[string]interface{}
 	Name() string
 	Validate() error
-	Context() Context
+	Cluster() Cluster
 	RemoteState() string
 	Log() *logrus.Entry
 	VerifyPreDeploy() error
@@ -91,7 +91,7 @@ type Stack interface {
 	SetOutput(map[string]interface{})
 	Output() map[string]interface{}
 	Roles() []*role.Role
-	NodeGroups() []NodeGroup
+	InstancePools() []InstancePool
 }
 
 type Tarmak interface {
@@ -99,7 +99,7 @@ type Tarmak interface {
 	Log() *logrus.Entry
 	RootPath() (string, error)
 	ConfigPath() string
-	Context() Context
+	Cluster() Cluster
 	Environment() Environment
 	Terraform() Terraform
 	Packer() Packer
@@ -111,13 +111,13 @@ type Tarmak interface {
 }
 
 type Config interface {
-	Context(environment string, name string) (context *clusterv1alpha1.Cluster, err error)
-	Contexts(environment string) (contexts []*clusterv1alpha1.Cluster)
+	Cluster(environment string, name string) (cluster *clusterv1alpha1.Cluster, err error)
+	Clusters(environment string) (clusters []*clusterv1alpha1.Cluster)
 	Provider(name string) (provider *tarmakv1alpha1.Provider, err error)
 	Providers() (providers []*tarmakv1alpha1.Provider)
 	Environment(name string) (environment *tarmakv1alpha1.Environment, err error)
 	Environments() (environments []*tarmakv1alpha1.Environment)
-	CurrentContextName() string
+	CurrentClusterName() string
 	CurrentEnvironmentName() string
 	Contact() string
 	Project() string
@@ -167,8 +167,8 @@ type Puppet interface {
 type Kubectl interface {
 }
 
-type NodeGroup interface {
-	Config() *clusterv1alpha1.ServerPool
+type InstancePool interface {
+	Config() *clusterv1alpha1.InstancePool
 	TFName() string
 	Name() string
 	Image() string

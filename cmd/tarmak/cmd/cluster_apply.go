@@ -9,7 +9,7 @@ import (
 var clusterApplyCmd = &cobra.Command{
 	Use:     "apply",
 	Aliases: []string{"t-a"},
-	Short:   "This applies the set of stacks in the current context",
+	Short:   "This applies the set of stacks in the current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		t.Must(t.CmdTerraformApply(args))

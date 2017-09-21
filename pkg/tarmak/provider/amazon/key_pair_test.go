@@ -1,4 +1,4 @@
-package aws
+package amazon
 
 import (
 	"errors"
@@ -45,12 +45,12 @@ var fakeSSHKeyInsecureFingerprint = "c7:15:68:10:e9:39:6c:ab:99:fe:d0:8b:e8:ec:f
 
 var fakeSSHKeyInsecurePublic = "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ==\n"
 
-// test the happy path, local key matches the one existing in AWS
-func TestAWS_validateAWSKeyPairExistingHappyPath(t *testing.T) {
-	a := newFakeAWS(t)
+// test the happy path, local key matches the one existing in Amazon
+func TestAmazon_validateAmazonKeyPairExistingHappyPath(t *testing.T) {
+	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
-	// aws repsonds with one key
+	// amazon repsonds with one key
 	a.fakeEC2.EXPECT().DescribeKeyPairs(gomock.Any()).Return(
 		&ec2.DescribeKeyPairsOutput{
 			KeyPairs: []*ec2.KeyPairInfo{
@@ -70,17 +70,17 @@ func TestAWS_validateAWSKeyPairExistingHappyPath(t *testing.T) {
 	}
 	a.fakeEnvironment.EXPECT().SSHPrivateKey().Return(signer)
 
-	err = a.AWS.validateAWSKeyPair()
+	err = a.Amazon.validateAWSKeyPair()
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
 }
 
-func TestAWS_validateAWSKeyPairExistingMismatch(t *testing.T) {
-	a := newFakeAWS(t)
+func TestAmazon_validateAmazonKeyPairExistingMismatch(t *testing.T) {
+	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
-	// aws repsonds with one key
+	// amazon repsonds with one key
 	a.fakeEC2.EXPECT().DescribeKeyPairs(gomock.Any()).Return(
 		&ec2.DescribeKeyPairsOutput{
 			KeyPairs: []*ec2.KeyPairInfo{
@@ -100,7 +100,7 @@ func TestAWS_validateAWSKeyPairExistingMismatch(t *testing.T) {
 	}
 	a.fakeEnvironment.EXPECT().SSHPrivateKey().Return(signer)
 
-	err = a.AWS.validateAWSKeyPair()
+	err = a.Amazon.validateAWSKeyPair()
 	if err == nil {
 		t.Errorf("expected an error: %s", err)
 	} else if !strings.Contains(err.Error(), "key pair is not matching") {
@@ -108,11 +108,11 @@ func TestAWS_validateAWSKeyPairExistingMismatch(t *testing.T) {
 	}
 }
 
-func TestAWS_validateAWSKeyPairNotExisting(t *testing.T) {
-	a := newFakeAWS(t)
+func TestAmazon_validateAmazonKeyPairNotExisting(t *testing.T) {
+	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
-	// aws reports no key
+	// amazon reports no key
 	a.fakeEC2.EXPECT().DescribeKeyPairs(gomock.Any()).Return(
 		&ec2.DescribeKeyPairsOutput{
 			KeyPairs: []*ec2.KeyPairInfo{},
@@ -139,7 +139,7 @@ func TestAWS_validateAWSKeyPairNotExisting(t *testing.T) {
 	}
 	a.fakeEnvironment.EXPECT().SSHPrivateKey().Return(signer)
 
-	err = a.AWS.validateAWSKeyPair()
+	err = a.Amazon.validateAWSKeyPair()
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}

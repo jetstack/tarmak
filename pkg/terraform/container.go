@@ -100,9 +100,9 @@ func (tc *TerraformContainer) Shell() (err error) {
 func (tc *TerraformContainer) writeTfvars() (err error) {
 	// adds parameters as CLI args
 	terraformVars := utils.MergeMaps(
-		tc.stack.Context().Environment().Tarmak().Variables(),
-		tc.stack.Context().Environment().Variables(),
-		tc.stack.Context().Variables(),
+		tc.stack.Cluster().Environment().Tarmak().Variables(),
+		tc.stack.Cluster().Environment().Variables(),
+		tc.stack.Cluster().Variables(),
 		tc.stack.Variables(),
 	)
 	tc.log.WithFields(terraformVars).Debug("terraform vars generated")
@@ -225,7 +225,7 @@ func (tc *TerraformContainer) CopyRemoteState(content string) error {
 
 func (tc *TerraformContainer) prepare() error {
 	// validate environment
-	err := tc.t.tarmak.Context().Environment().Validate()
+	err := tc.t.tarmak.Cluster().Environment().Validate()
 	if err != nil {
 		return fmt.Errorf("error validating environment: %s", err)
 	}
@@ -237,7 +237,7 @@ func (tc *TerraformContainer) prepare() error {
 	}
 
 	// get aws secrets
-	if environmentProvider, err := tc.t.tarmak.Context().Environment().Provider().Environment(); err != nil {
+	if environmentProvider, err := tc.t.tarmak.Cluster().Environment().Provider().Environment(); err != nil {
 		return fmt.Errorf("error getting environment secrets from provider: %s", err)
 	} else {
 		tc.Env = append(tc.Env, environmentProvider...)
@@ -263,7 +263,7 @@ func (tc *TerraformContainer) prepare() error {
 		IncludeFiles: []string{"."},
 	}
 
-	terraformDir := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Context().Environment().Provider().Cloud(), tc.stack.Name()))
+	terraformDir := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Cluster().Environment().Provider().Cloud(), tc.stack.Name()))
 	tc.log = tc.log.WithField("terraform-dir", terraformDir)
 
 	terraformDirInfo, err := os.Stat(terraformDir)
@@ -285,14 +285,14 @@ func (tc *TerraformContainer) prepare() error {
 	}
 	tc.log.Debug("copied terraform manifests into container")
 
-	// if node groups exist, execute template
-	nodeGroups := tc.stack.NodeGroups()
-	if len(nodeGroups) > 0 {
-		tc.log.Debug("generating node groups templates")
-		templatesGlob := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Context().Environment().Provider().Cloud(), "templates/node_groups/*.tf.template"))
-		templates := template.Must(template.New("node_groups").Funcs(sprig.TxtFuncMap()).ParseGlob(templatesGlob))
+	// if instance pools exist, execute template
+	instancePools := tc.stack.InstancePools()
+	if len(instancePools) > 0 {
+		tc.log.Debug("generating instance pools templates")
+		templatesGlob := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Cluster().Environment().Provider().Cloud(), "templates/instance_pools/*.tf.template"))
+		templates := template.Must(template.New("instance_pools").Funcs(sprig.TxtFuncMap()).ParseGlob(templatesGlob))
 
-		baseTemplate := "node_group.tf.template"
+		baseTemplate := "instance_pool.tf.template"
 		tpl := templates.Lookup(baseTemplate)
 
 		buf := new(bytes.Buffer)
@@ -300,9 +300,9 @@ func (tc *TerraformContainer) prepare() error {
 		if err := tpl.Execute(
 			buf,
 			map[string]interface{}{
-				"NodeGroups": nodeGroups,
-				"Roles":      tc.stack.Roles(),
-				"Stack":      tc.stack.Name(),
+				"InstancePools": instancePools,
+				"Roles":         tc.stack.Roles(),
+				"Stack":         tc.stack.Name(),
 			},
 		); err != nil {
 			return err

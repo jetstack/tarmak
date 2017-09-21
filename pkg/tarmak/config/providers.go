@@ -11,7 +11,7 @@ func NewAWSProfileProvider(name string, profile string) *tarmakv1alpha1.Provider
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		AWS: &tarmakv1alpha1.ProviderAWS{
+		Amazon: &tarmakv1alpha1.ProviderAmazon{
 			Profile: profile,
 		},
 	}

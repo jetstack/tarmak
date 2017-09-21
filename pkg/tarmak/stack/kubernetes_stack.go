@@ -25,9 +25,9 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	}
 
 	s.roles = make(map[string]bool)
-	s.roles[clusterv1alpha1.ServerPoolTypeEtcd] = true
-	s.roles[clusterv1alpha1.ServerPoolTypeMaster] = true
-	s.roles[clusterv1alpha1.ServerPoolTypeWorker] = true
+	s.roles[clusterv1alpha1.InstancePoolTypeEtcd] = true
+	s.roles[clusterv1alpha1.InstancePoolTypeMaster] = true
+	s.roles[clusterv1alpha1.InstancePoolTypeWorker] = true
 
 	s.name = tarmakv1alpha1.StackNameKubernetes
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
@@ -49,12 +49,12 @@ func (s *KubernetesStack) Variables() map[string]interface{} {
 }
 
 func (s *KubernetesStack) puppetTarGzPath() (string, error) {
-	rootPath, err := s.Context().Environment().Tarmak().RootPath()
+	rootPath, err := s.Cluster().Environment().Tarmak().RootPath()
 	if err != nil {
 		return "", fmt.Errorf("error getting rootPath: %s", err)
 	}
 
-	path := filepath.Join(rootPath, "terraform", s.Context().Environment().Provider().Cloud(), "kubernetes", "puppet.tar.gz")
+	path := filepath.Join(rootPath, "terraform", s.Cluster().Environment().Provider().Cloud(), "kubernetes", "puppet.tar.gz")
 
 	return path, nil
 }
@@ -89,7 +89,7 @@ func (s *KubernetesStack) ensurePuppetTarGz() error {
 		return fmt.Errorf("error creating %s: %s", path, err)
 	}
 
-	if err = s.Context().Environment().Tarmak().Puppet().TarGz(file); err != nil {
+	if err = s.Cluster().Environment().Tarmak().Puppet().TarGz(file); err != nil {
 		return fmt.Errorf("error writing to %s: %s", path, err)
 	}
 
@@ -102,10 +102,10 @@ func (s *KubernetesStack) ensurePuppetTarGz() error {
 }
 
 func (s *KubernetesStack) ensureVaultSetup() error {
-	vaultStack := s.Context().Environment().VaultStack()
+	vaultStack := s.Cluster().Environment().VaultStack()
 
 	// load outputs from terraform
-	s.Context().Environment().Tarmak().Terraform().Output(vaultStack)
+	s.Cluster().Environment().Tarmak().Terraform().Output(vaultStack)
 
 	vaultStackReal, ok := vaultStack.(*VaultStack)
 	if !ok {
@@ -120,7 +120,7 @@ func (s *KubernetesStack) ensureVaultSetup() error {
 
 	vaultClient := vaultTunnel.VaultClient()
 
-	vaultRootToken, err := s.Context().Environment().VaultRootToken()
+	vaultRootToken, err := s.Cluster().Environment().VaultRootToken()
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (s *KubernetesStack) ensureVaultSetup() error {
 	vaultClient.SetToken(vaultRootToken)
 
 	k := kubernetes.New(vaultClient)
-	k.SetClusterID(s.Context().ContextName())
+	k.SetClusterID(s.Cluster().ClusterName())
 
 	if err := k.Ensure(); err != nil {
 		return err

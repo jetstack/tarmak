@@ -43,9 +43,9 @@ func SetObjectDefaults_Config(in *Config) {
 	for i := range in.Clusters {
 		a := &in.Clusters[i]
 		cluster_v1alpha1.SetDefaults_Cluster(a)
-		for j := range a.ServerPools {
-			b := &a.ServerPools[j]
-			cluster_v1alpha1.SetDefaults_ServerPool(b)
+		for j := range a.InstancePools {
+			b := &a.InstancePools[j]
+			cluster_v1alpha1.SetDefaults_InstancePool(b)
 			for k := range b.Volumes {
 				c := &b.Volumes[k]
 				cluster_v1alpha1.SetDefaults_Volume(c)
