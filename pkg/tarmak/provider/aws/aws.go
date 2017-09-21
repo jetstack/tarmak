@@ -130,7 +130,7 @@ func (a *AWS) AvailabilityZones() (availabiltyZones []string) {
 		return *a.availabilityZones
 	}
 
-	subnets := a.tarmak.Context().Subnets()
+	subnets := a.tarmak.Cluster().Subnets()
 	zones := make(map[string]bool)
 
 	for _, subnet := range subnets {

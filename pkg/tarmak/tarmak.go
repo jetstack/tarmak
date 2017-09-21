@@ -36,7 +36,7 @@ type Tarmak struct {
 	kubectl   *kubectl.Kubectl
 
 	environment interfaces.Environment
-	context     interfaces.Context
+	cluster     interfaces.Cluster
 }
 
 var _ interfaces.Tarmak = &Tarmak{}
@@ -92,7 +92,7 @@ func New(cmd *cobra.Command) *Tarmak {
 	return t
 }
 
-// Initialize default context, its environment and provider
+// Initialize default cluster, its environment and provider
 func (t *Tarmak) initialize() error {
 	var err error
 
@@ -103,19 +103,19 @@ func (t *Tarmak) initialize() error {
 		return fmt.Errorf("error finding environment '%s'", environmentName)
 	}
 
-	contextConfigs := t.config.Contexts(environmentName)
-	contextName := t.config.CurrentContextName()
+	clusterConfigs := t.config.Clusters(environmentName)
+	clusterName := t.config.CurrentClusterName()
 
 	// init environment
-	t.environment, err = environment.NewFromConfig(t, environmentConfig, contextConfigs)
+	t.environment, err = environment.NewFromConfig(t, environmentConfig, clusterConfigs)
 	if err != nil {
 		return fmt.Errorf("error initializing environment '%s': %s", environmentName, err)
 	}
 
-	// init context
-	t.context, err = t.environment.Context(contextName)
+	// init cluster
+	t.cluster, err = t.environment.Cluster(clusterName)
 	if err != nil {
-		return fmt.Errorf("error finding current context '%s': %s", contextName, err)
+		return fmt.Errorf("error finding current cluster '%s': %s", clusterName, err)
 	}
 
 	return nil
@@ -138,8 +138,8 @@ func (t *Tarmak) Packer() interfaces.Packer {
 	return t.packer
 }
 
-func (t *Tarmak) Context() interfaces.Context {
-	return t.context
+func (t *Tarmak) Cluster() interfaces.Cluster {
+	return t.cluster
 }
 
 func (t *Tarmak) Environment() interfaces.Environment {
@@ -197,12 +197,12 @@ func (t *Tarmak) Validate() error {
 	var err error
 	var result error
 
-	err = t.Context().Validate()
+	err = t.Cluster().Validate()
 	if err != nil {
 		result = multierror.Append(result, err)
 	}
 
-	err = t.Context().Environment().Validate()
+	err = t.Cluster().Environment().Validate()
 	if err != nil {
 		result = multierror.Append(result, err)
 	}

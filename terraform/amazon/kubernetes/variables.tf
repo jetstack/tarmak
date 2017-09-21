@@ -45,14 +45,14 @@ variable "vault_init_token_etcd" {
   default = ""
 }
 
-variable "state_context_name" {
+variable "state_cluster_name" {
   default = "hub"
 }
 
-variable "vault_context_name" {
+variable "vault_cluster_name" {
   default = "hub"
 }
 
-variable "tools_context_name" {
+variable "tools_cluster_name" {
   default = "hub"
 }

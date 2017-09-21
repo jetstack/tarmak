@@ -1,4 +1,4 @@
-package context
+package cluster
 
 import (
 	"errors"
@@ -18,13 +18,13 @@ import (
 )
 
 const (
-	ContextTypeHub           = "hub"
-	ContextTypeClusterSingle = "cluster-single"
-	ContextTypeClusterMulti  = "cluster-multi"
+	ClusterTypeHub           = "hub"
+	ClusterTypeClusterSingle = "cluster-single"
+	ClusterTypeClusterMulti  = "cluster-multi"
 )
 
 // returns a server
-type Context struct {
+type Cluster struct {
 	conf *clusterv1alpha1.Cluster
 
 	stacks []interfaces.Stack
@@ -39,46 +39,46 @@ type Context struct {
 	roles         map[string]*role.Role
 }
 
-var _ interfaces.Context = &Context{}
+var _ interfaces.Cluster = &Cluster{}
 
-func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Cluster) (*Context, error) {
-	context := &Context{
+func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Cluster) (*Cluster, error) {
+	cluster := &Cluster{
 		conf:        conf,
 		environment: environment,
-		log:         environment.Log().WithField("context", conf.Name),
+		log:         environment.Log().WithField("cluster", conf.Name),
 	}
 
 	// validate server pools and setup stacks
-	if err := context.validateInstancePools(); err != nil {
+	if err := cluster.validateInstancePools(); err != nil {
 		return nil, err
 	}
 
-	context.roles = make(map[string]*role.Role)
-	defineToolsRoles(context.roles)
-	defineVaultRoles(context.roles)
-	defineKubernetesRoles(context.roles)
+	cluster.roles = make(map[string]*role.Role)
+	defineToolsRoles(cluster.roles)
+	defineVaultRoles(cluster.roles)
+	defineKubernetesRoles(cluster.roles)
 
 	// setup instance pools
 	var result error
-	for pos, _ := range context.conf.InstancePools {
-		instancePool := context.conf.InstancePools[pos]
+	for pos, _ := range cluster.conf.InstancePools {
+		instancePool := cluster.conf.InstancePools[pos]
 		// create instance pools
-		pool, err := instance_pool.NewFromConfig(context, &instancePool)
+		pool, err := instance_pool.NewFromConfig(cluster, &instancePool)
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
 		}
-		context.instancePools = append(context.instancePools, pool)
+		cluster.instancePools = append(cluster.instancePools, pool)
 	}
 
-	return context, result
+	return cluster, result
 }
 
-func (c *Context) InstancePools() []interfaces.InstancePool {
+func (c *Cluster) InstancePools() []interfaces.InstancePool {
 	return c.instancePools
 }
 
-func (c *Context) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1alpha1.InstancePool) {
+func (c *Cluster) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1alpha1.InstancePool) {
 	instancePoolsMap = make(map[string][]*clusterv1alpha1.InstancePool)
 	for pos, _ := range c.conf.InstancePools {
 		pool := &c.conf.InstancePools[pos]
@@ -119,14 +119,14 @@ func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, cl
 }
 
 // validate server pools
-func (c *Context) validateInstancePools() (result error) {
+func (c *Cluster) validateInstancePools() (result error) {
 	poolMap := c.InstancePoolsMap()
 	clusterType := c.Type()
 	allowedTypes := make(map[string]bool)
 	c.stacks = []interfaces.Stack{}
 
 	// Validate hub for cluster-single and hub
-	if clusterType == ContextTypeClusterSingle || clusterType == ContextTypeHub {
+	if clusterType == ClusterTypeClusterSingle || clusterType == ClusterTypeHub {
 		err := validateHubTypes(poolMap, clusterType)
 		if err != nil {
 			result = multierror.Append(result, err)
@@ -161,7 +161,7 @@ func (c *Context) validateInstancePools() (result error) {
 	}
 
 	// validate cluster for cluster-*
-	if clusterType == ContextTypeClusterSingle || clusterType == ContextTypeClusterMulti {
+	if clusterType == ClusterTypeClusterSingle || clusterType == ClusterTypeClusterMulti {
 		err := validateClusterTypes(poolMap, clusterType)
 		if err != nil {
 			result = multierror.Append(result, err)
@@ -188,26 +188,26 @@ func (c *Context) validateInstancePools() (result error) {
 	return result
 }
 
-// Determine if this Context is a cluster or hub, single or multi environment
-func (c *Context) Type() string {
-	if len(c.Environment().Tarmak().Config().Contexts(c.Environment().Name())) == 1 {
-		return ContextTypeClusterSingle
+// Determine if this Cluster is a cluster or hub, single or multi environment
+func (c *Cluster) Type() string {
+	if len(c.Environment().Tarmak().Config().Clusters(c.Environment().Name())) == 1 {
+		return ClusterTypeClusterSingle
 	}
-	if c.Name() == ContextTypeHub {
-		return ContextTypeHub
+	if c.Name() == ClusterTypeHub {
+		return ClusterTypeHub
 	}
-	return ContextTypeClusterMulti
+	return ClusterTypeClusterMulti
 }
 
-func (c *Context) RemoteState(stackName string) string {
+func (c *Cluster) RemoteState(stackName string) string {
 	return c.Environment().Provider().RemoteState(c.Environment().Name(), c.Name(), stackName)
 }
 
-func (c *Context) Region() string {
+func (c *Cluster) Region() string {
 	return c.conf.Location
 }
 
-func (c *Context) Subnets() (subnets []clusterv1alpha1.Subnet) {
+func (c *Cluster) Subnets() (subnets []clusterv1alpha1.Subnet) {
 	zones := make(map[string]bool)
 
 	for _, sp := range c.conf.InstancePools {
@@ -224,7 +224,7 @@ func (c *Context) Subnets() (subnets []clusterv1alpha1.Subnet) {
 }
 
 // This methods aggregates all images of the pools
-func (c *Context) Images() []string {
+func (c *Cluster) Images() []string {
 	images := make(map[string]bool)
 	for _, sp := range c.conf.InstancePools {
 		images[sp.Image] = true
@@ -238,7 +238,7 @@ func (c *Context) Images() []string {
 	return imagesDistinct
 }
 
-func (c *Context) ImageIDs() (map[string]string, error) {
+func (c *Cluster) ImageIDs() (map[string]string, error) {
 	if c.imageIDs == nil {
 		imageMap, err := c.Environment().Tarmak().Packer().IDs()
 		if err != nil {
@@ -250,7 +250,7 @@ func (c *Context) ImageIDs() (map[string]string, error) {
 	return c.imageIDs, nil
 }
 
-func (c *Context) getNetworkCIDR() (*net.IPNet, error) {
+func (c *Cluster) getNetworkCIDR() (*net.IPNet, error) {
 	if c.stackNetwork == nil {
 		return nil, errors.New("no network stack found")
 	}
@@ -268,28 +268,28 @@ func (c *Context) getNetworkCIDR() (*net.IPNet, error) {
 	return net, nil
 }
 
-func (c *Context) NetworkCIDR() *net.IPNet {
+func (c *Cluster) NetworkCIDR() *net.IPNet {
 	return c.networkCIDR
 }
 
-func (c *Context) APITunnel() interfaces.Tunnel {
+func (c *Cluster) APITunnel() interfaces.Tunnel {
 	return c.Environment().Tarmak().SSH().Tunnel(
 		"bastion",
-		fmt.Sprintf("api.%s.%s", c.ContextName(), c.Environment().Config().PrivateZone),
+		fmt.Sprintf("api.%s.%s", c.ClusterName(), c.Environment().Config().PrivateZone),
 		6443,
 	)
 
 }
 
-func (c *Context) Validate() error {
+func (c *Cluster) Validate() error {
 	return nil
 }
 
-func (c *Context) Stacks() []interfaces.Stack {
+func (c *Cluster) Stacks() []interfaces.Stack {
 	return c.stacks
 }
 
-func (c *Context) Stack(name string) interfaces.Stack {
+func (c *Cluster) Stack(name string) interfaces.Stack {
 	for _, stack := range c.stacks {
 		if stack.Name() == name {
 			return stack
@@ -298,39 +298,39 @@ func (c *Context) Stack(name string) interfaces.Stack {
 	return nil
 }
 
-func (c *Context) Environment() interfaces.Environment {
+func (c *Cluster) Environment() interfaces.Environment {
 	return c.environment
 }
 
-func (c *Context) ContextName() string {
+func (c *Cluster) ClusterName() string {
 	return fmt.Sprintf("%s-%s", c.environment.Name(), c.conf.Name)
 }
 
-func (c *Context) Name() string {
+func (c *Cluster) Name() string {
 	return c.conf.Name
 }
 
-func (c *Context) Config() *clusterv1alpha1.Cluster {
+func (c *Cluster) Config() *clusterv1alpha1.Cluster {
 	return c.conf.DeepCopy()
 }
 
-func (c *Context) ConfigPath() string {
-	return filepath.Join(c.Environment().Tarmak().ConfigPath(), c.ContextName())
+func (c *Cluster) ConfigPath() string {
+	return filepath.Join(c.Environment().Tarmak().ConfigPath(), c.ClusterName())
 }
 
-func (c *Context) SSHConfigPath() string {
+func (c *Cluster) SSHConfigPath() string {
 	return filepath.Join(c.ConfigPath(), "ssh_config")
 }
 
-func (c *Context) SSHHostKeysPath() string {
+func (c *Cluster) SSHHostKeysPath() string {
 	return filepath.Join(c.ConfigPath(), "ssh_known_hosts")
 }
 
-func (c *Context) Log() *logrus.Entry {
+func (c *Cluster) Log() *logrus.Entry {
 	return c.log
 }
 
-func (c *Context) Role(roleName string) *role.Role {
+func (c *Cluster) Role(roleName string) *role.Role {
 	if c.roles != nil {
 		if role, ok := c.roles[roleName]; ok {
 			return role
@@ -339,7 +339,7 @@ func (c *Context) Role(roleName string) *role.Role {
 	return nil
 }
 
-func (c *Context) Roles() (roles []*role.Role) {
+func (c *Cluster) Roles() (roles []*role.Role) {
 	roleMap := map[string]bool{}
 	for _, instancePool := range c.InstancePools() {
 		r := instancePool.Role()
@@ -351,7 +351,7 @@ func (c *Context) Roles() (roles []*role.Role) {
 	return roles
 }
 
-func (c *Context) Variables() map[string]interface{} {
+func (c *Cluster) Variables() map[string]interface{} {
 	output := c.environment.Variables()
 
 	// TODO: refactor me

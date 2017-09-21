@@ -10,7 +10,7 @@ import (
 
 func (a *AWS) secretsKMSKeyID() (string, error) {
 	tf := a.tarmak.Terraform()
-	output, err := tf.Output(a.tarmak.Context().Environment().StateStack())
+	output, err := tf.Output(a.tarmak.Cluster().Environment().StateStack())
 	if err != nil {
 		return "", fmt.Errorf("error getting state stack output: %s", err)
 	}
@@ -34,7 +34,7 @@ func (a *AWS) secretsKMSKeyID() (string, error) {
 func (a *AWS) vaultUnsealKeyName() (string, error) {
 	key := "vault_unseal_key_name"
 
-	keyNameIntf, ok := a.tarmak.Context().Environment().VaultStack().Output()[key]
+	keyNameIntf, ok := a.tarmak.Cluster().Environment().VaultStack().Output()[key]
 	if !ok {
 		return "", fmt.Errorf("error could not find '%s' in terraform vault output", key)
 	}

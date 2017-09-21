@@ -111,8 +111,8 @@ func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
 	return nil
 }
 
-func (c *Config) CurrentContextName() string {
-	split := strings.Split(c.conf.CurrentContext, "-")
+func (c *Config) CurrentClusterName() string {
+	split := strings.Split(c.conf.CurrentCluster, "-")
 	if len(split) < 2 {
 		return ""
 	}
@@ -120,28 +120,28 @@ func (c *Config) CurrentContextName() string {
 }
 
 func (c *Config) CurrentEnvironmentName() string {
-	split := strings.Split(c.conf.CurrentContext, "-")
+	split := strings.Split(c.conf.CurrentCluster, "-")
 	return split[0]
 }
 
-func (c *Config) Context(environment string, name string) (context *clusterv1alpha1.Cluster, err error) {
+func (c *Config) Cluster(environment string, name string) (cluster *clusterv1alpha1.Cluster, err error) {
 	for pos, _ := range c.conf.Clusters {
-		context := &c.conf.Clusters[pos]
-		if context.Environment == environment && context.Name == name {
-			return context, nil
+		cluster := &c.conf.Clusters[pos]
+		if cluster.Environment == environment && cluster.Name == name {
+			return cluster, nil
 		}
 	}
-	return nil, fmt.Errorf("context '%s' in environment '%s' not found", name, environment)
+	return nil, fmt.Errorf("cluster '%s' in environment '%s' not found", name, environment)
 }
 
-func (c *Config) Contexts(environment string) (contexts []*clusterv1alpha1.Cluster) {
+func (c *Config) Clusters(environment string) (clusters []*clusterv1alpha1.Cluster) {
 	for pos, _ := range c.conf.Clusters {
-		context := &c.conf.Clusters[pos]
-		if context.Environment == environment {
-			contexts = append(contexts, context)
+		cluster := &c.conf.Clusters[pos]
+		if cluster.Environment == environment {
+			clusters = append(clusters, cluster)
 		}
 	}
-	return contexts
+	return clusters
 }
 
 func (c *Config) Environment(name string) (*tarmakv1alpha1.Environment, error) {
@@ -161,7 +161,7 @@ func (c *Config) Environments() (environments []*tarmakv1alpha1.Environment) {
 	return environments
 }
 
-func (c *Config) Provider(name string) (context *tarmakv1alpha1.Provider, err error) {
+func (c *Config) Provider(name string) (cluster *tarmakv1alpha1.Provider, err error) {
 	for pos, _ := range c.conf.Providers {
 		provider := &c.conf.Providers[pos]
 		if provider.Name == name {

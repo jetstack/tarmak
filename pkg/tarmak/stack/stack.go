@@ -13,7 +13,7 @@ import (
 
 type Stack struct {
 	name    string
-	context interfaces.Context
+	cluster interfaces.Cluster
 	log     *logrus.Entry
 
 	verifyPreDeploy   []func() error
@@ -28,12 +28,12 @@ type Stack struct {
 	instancePools []interfaces.InstancePool
 }
 
-func New(context interfaces.Context, name string) (interfaces.Stack, error) {
+func New(cluster interfaces.Cluster, name string) (interfaces.Stack, error) {
 	var stack interfaces.Stack
 	var err error
 	s := &Stack{
-		context: context,
-		log:     context.Log().WithField("stack", name),
+		cluster: cluster,
+		log:     cluster.Log().WithField("stack", name),
 	}
 
 	// init stack
@@ -66,12 +66,12 @@ func (s *Stack) Output() map[string]interface{} {
 	return s.output
 }
 
-func (s *Stack) Context() interfaces.Context {
-	return s.context
+func (s *Stack) Cluster() interfaces.Cluster {
+	return s.cluster
 }
 
 func (s *Stack) RemoteState() string {
-	return s.Context().RemoteState(s.Name())
+	return s.Cluster().RemoteState(s.Name())
 }
 
 func (s *Stack) Name() string {
@@ -84,7 +84,7 @@ func (s *Stack) Validate() error {
 
 func (s *Stack) verifyImageIDs() error {
 
-	_, err := s.context.ImageIDs()
+	_, err := s.cluster.ImageIDs()
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (s *Stack) Log() *logrus.Entry {
 
 func (s *Stack) Variables() map[string]interface{} {
 	vars := make(map[string]interface{})
-	imageIDs, err := s.context.ImageIDs()
+	imageIDs, err := s.cluster.ImageIDs()
 	if err != nil {
 		s.log.Warnf("error getting image IDs: %s", err)
 		return vars
@@ -175,7 +175,7 @@ func (s *Stack) Roles() (roles []*role.Role) {
 }
 
 func (s *Stack) InstancePools() (instancePools []interfaces.InstancePool) {
-	for _, ng := range s.context.InstancePools() {
+	for _, ng := range s.cluster.InstancePools() {
 		if s.roles != nil {
 			if active, ok := s.roles[ng.Role().Name()]; !ok || !active {
 				continue

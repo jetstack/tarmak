@@ -10,7 +10,7 @@ import (
 var terraformDestroyCmd = &cobra.Command{
 	Use:     "terraform-destroy",
 	Aliases: []string{"t-d"},
-	Short:   "This applies the set of stacks in the current context",
+	Short:   "This applies the set of stacks in the current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		t.Must(t.CmdTerraformDestroy(args))

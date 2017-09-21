@@ -21,7 +21,7 @@ type fakeAWS struct {
 
 	fakeEC2         *mocks.MockEC2
 	fakeEnvironment *mocks.MockEnvironment
-	fakeContext     *mocks.MockContext
+	fakeCluster     *mocks.MockCluster
 	fakeTarmak      *mocks.MockTarmak
 }
 
@@ -40,13 +40,13 @@ func newFakeAWS(t *testing.T) *fakeAWS {
 	}
 	f.fakeEC2 = mocks.NewMockEC2(f.ctrl)
 	f.fakeEnvironment = mocks.NewMockEnvironment(f.ctrl)
-	f.fakeContext = mocks.NewMockContext(f.ctrl)
+	f.fakeCluster = mocks.NewMockCluster(f.ctrl)
 	f.fakeTarmak = mocks.NewMockTarmak(f.ctrl)
 	f.AWS.ec2 = f.fakeEC2
 	f.AWS.tarmak = f.fakeTarmak
-	f.fakeTarmak.EXPECT().Context().AnyTimes().Return(f.fakeContext)
+	f.fakeTarmak.EXPECT().Cluster().AnyTimes().Return(f.fakeCluster)
 	f.fakeTarmak.EXPECT().Environment().AnyTimes().Return(f.fakeEnvironment)
-	f.fakeContext.EXPECT().Environment().AnyTimes().Return(f.fakeEnvironment)
+	f.fakeCluster.EXPECT().Environment().AnyTimes().Return(f.fakeEnvironment)
 
 	return f
 }
@@ -55,8 +55,8 @@ func TestAWS_validateAvailabilityZonesNoneGiven(t *testing.T) {
 	a := newFakeAWS(t)
 	defer a.ctrl.Finish()
 
-	a.fakeContext.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{}).MinTimes(1)
-	a.fakeContext.EXPECT().Region().Return("london-north-1").AnyTimes()
+	a.fakeCluster.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{}).MinTimes(1)
+	a.fakeCluster.EXPECT().Region().Return("london-north-1").AnyTimes()
 
 	a.fakeEC2.EXPECT().DescribeAvailabilityZones(gomock.Any()).Return(&ec2.DescribeAvailabilityZonesOutput{
 		AvailabilityZones: []*ec2.AvailabilityZone{
@@ -92,7 +92,7 @@ func TestAWS_validateAvailabilityZonesCorrectGiven(t *testing.T) {
 	a := newFakeAWS(t)
 	defer a.ctrl.Finish()
 
-	a.fakeContext.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{
+	a.fakeCluster.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{
 		clusterv1alpha1.Subnet{
 			Zone: "london-north-1b",
 		},
@@ -100,7 +100,7 @@ func TestAWS_validateAvailabilityZonesCorrectGiven(t *testing.T) {
 			Zone: "london-north-1c",
 		},
 	}).MinTimes(1)
-	a.fakeContext.EXPECT().Region().Return("london-north-1").AnyTimes()
+	a.fakeCluster.EXPECT().Region().Return("london-north-1").AnyTimes()
 
 	a.fakeEC2.EXPECT().DescribeAvailabilityZones(gomock.Any()).Return(&ec2.DescribeAvailabilityZonesOutput{
 		AvailabilityZones: []*ec2.AvailabilityZone{
@@ -136,7 +136,7 @@ func TestAWS_validateAvailabilityZonesFalseGiven(t *testing.T) {
 	a := newFakeAWS(t)
 	defer a.ctrl.Finish()
 
-	a.fakeContext.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{
+	a.fakeCluster.EXPECT().Subnets().Return([]clusterv1alpha1.Subnet{
 		clusterv1alpha1.Subnet{
 			Zone: "london-north-1a",
 		},
@@ -147,7 +147,7 @@ func TestAWS_validateAvailabilityZonesFalseGiven(t *testing.T) {
 			Zone: "london-north-1e",
 		},
 	}).MinTimes(1)
-	a.fakeContext.EXPECT().Region().Return("london-north-1").AnyTimes()
+	a.fakeCluster.EXPECT().Region().Return("london-north-1").AnyTimes()
 	a.fakeEnvironment.EXPECT().Location().Return("london-north-1").AnyTimes()
 
 	a.fakeEC2.EXPECT().DescribeAvailabilityZones(gomock.Any()).Return(&ec2.DescribeAvailabilityZonesOutput{

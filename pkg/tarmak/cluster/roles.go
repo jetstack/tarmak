@@ -1,4 +1,4 @@
-package context
+package cluster
 
 import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"

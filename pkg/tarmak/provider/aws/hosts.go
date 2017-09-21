@@ -19,7 +19,7 @@ type host struct {
 	roles          []string
 	user           string
 
-	context interfaces.Context
+	cluster interfaces.Cluster
 }
 
 var _ interfaces.Host = &host{}
@@ -53,7 +53,7 @@ func (h *host) SSHConfig() string {
     User %s
     Hostname %s
 
-    # use custom host key file per context
+    # use custom host key file per cluster
     UserKnownHostsFile %s
     StrictHostKeyChecking no
 
@@ -70,15 +70,15 @@ func (h *host) SSHConfig() string {
 		strings.Join(append(h.Aliases(), h.ID()), " "),
 		h.User(),
 		h.Hostname(),
-		h.context.SSHHostKeysPath(),
-		h.context.ConfigPath(),
-		h.context.Environment().SSHPrivateKeyPath(),
+		h.cluster.SSHHostKeysPath(),
+		h.cluster.ConfigPath(),
+		h.cluster.Environment().SSHPrivateKeyPath(),
 	)
 
 	if !h.HostnamePublic() {
 		config += fmt.Sprintf(
 			"    ProxyCommand ssh -F %s -W %%h:%%p bastion\n",
-			h.context.SSHConfigPath(),
+			h.cluster.SSHConfigPath(),
 		)
 	}
 	config += "\n"
@@ -93,7 +93,7 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 		},
 		&ec2.Filter{
 			Name:   aws.String("tag:Environment"),
-			Values: []*string{aws.String(a.tarmak.Context().Environment().Name())},
+			Values: []*string{aws.String(a.tarmak.Cluster().Environment().Name())},
 		},
 	}
 	svc, err := a.EC2()
@@ -119,7 +119,7 @@ func (a *AWS) ListHosts() ([]interfaces.Host, error) {
 				hostname:       *instance.PrivateIpAddress,
 				hostnamePublic: false,
 				user:           "centos",
-				context:        a.tarmak.Context(),
+				cluster:        a.tarmak.Cluster(),
 			}
 			if instance.PublicIpAddress != nil {
 				host.hostname = *instance.PublicIpAddress

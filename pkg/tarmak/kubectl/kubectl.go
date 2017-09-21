@@ -39,31 +39,31 @@ func New(tarmak interfaces.Tarmak) *Kubectl {
 }
 
 func (k *Kubectl) ConfigPath() string {
-	return filepath.Join(k.tarmak.Context().ConfigPath(), "kubeconfig")
+	return filepath.Join(k.tarmak.Cluster().ConfigPath(), "kubeconfig")
 }
 
 func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthInfo) error {
-	path := fmt.Sprintf("%s/pki/k8s/sign/admin", k.tarmak.Context().ContextName())
+	path := fmt.Sprintf("%s/pki/k8s/sign/admin", k.tarmak.Cluster().ClusterName())
 
 	k.log.Infof("request new certificate from vault (%s)", path)
 
-	if err := k.tarmak.Context().Environment().Validate(); err != nil {
+	if err := k.tarmak.Cluster().Environment().Validate(); err != nil {
 		k.log.Fatal("could not validate config: ", err)
 	}
 
 	// read vault root token
-	vaultRootToken, err := k.tarmak.Context().Environment().VaultRootToken()
+	vaultRootToken, err := k.tarmak.Cluster().Environment().VaultRootToken()
 	if err != nil {
 		return err
 	}
 
 	// init vault statck
-	_, err = k.tarmak.Terraform().Output(k.tarmak.Context().Environment().VaultStack())
+	_, err = k.tarmak.Terraform().Output(k.tarmak.Cluster().Environment().VaultStack())
 	if err != nil {
 		return err
 	}
 
-	vaultTunnel, err := k.tarmak.Context().Environment().VaultTunnel()
+	vaultTunnel, err := k.tarmak.Cluster().Environment().VaultTunnel()
 	if err != nil {
 		return err
 	}
@@ -139,8 +139,8 @@ func (k *Kubectl) ensureConfig() error {
 	c := api.NewConfig()
 	configPath := k.ConfigPath()
 
-	// context name in tamrak is context name in kubeconfig
-	key := k.tarmak.Context().ContextName()
+	// cluster name in tamrak is cluster name in kubeconfig
+	key := k.tarmak.Cluster().ClusterName()
 
 	// load an existing config
 	if _, err := os.Stat(configPath); err == nil {
@@ -200,7 +200,7 @@ func (k *Kubectl) ensureConfig() error {
 			if tunnel != nil {
 				tunnel.Stop()
 			}
-			tunnel = k.tarmak.Context().APITunnel()
+			tunnel = k.tarmak.Cluster().APITunnel()
 			err := tunnel.Start()
 			if err != nil {
 				return err

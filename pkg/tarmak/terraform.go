@@ -22,7 +22,7 @@ func (t *Tarmak) CmdTerraformApply(args []string) error {
 		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)
 	}
 
-	stacks := t.Context().Stacks()
+	stacks := t.Cluster().Stacks()
 	for _, stack := range stacks {
 
 		if len(selectStacks) > 0 {
@@ -57,7 +57,7 @@ func (t *Tarmak) CmdTerraformDestroy(args []string) error {
 		return fmt.Errorf("could not find flag %s: %s", FlagForceDestroyStateStack, err)
 	}
 
-	stacks := t.Context().Stacks()
+	stacks := t.Cluster().Stacks()
 	for posStack, _ := range stacks {
 		stack := stacks[len(stacks)-posStack-1]
 		if !forceDestroyStateStack && stack.Name() == tarmakv1alpha1.StackNameState {
@@ -93,7 +93,7 @@ func (t *Tarmak) CmdTerraformShell(args []string) error {
 	}
 
 	// find matching stacks
-	stacks := t.Context().Stacks()
+	stacks := t.Cluster().Stacks()
 	stackNames := make([]string, len(stacks))
 	for pos, stack := range stacks {
 		stackNames[pos] = stack.Name()

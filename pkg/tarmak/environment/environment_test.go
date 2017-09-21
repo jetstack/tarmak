@@ -51,8 +51,8 @@ func testDefaultEnvironmentConfig() *config.Environment {
 	return &config.Environment{
 		AWS:  &config.AWSConfig{},
 		Name: "correct",
-		Contexts: []config.Context{
-			config.Context{
+		Clusters: []config.Cluster{
+			config.Cluster{
 				Name: "cluster1",
 				Stacks: []config.Stack{
 					config.Stack{
@@ -71,7 +71,7 @@ func testDefaultEnvironmentConfig() *config.Environment {
 					},
 				},
 			},
-			config.Context{
+			config.Cluster{
 				Name: "cluster2",
 				Stacks: []config.Stack{
 					config.Stack{
@@ -81,7 +81,7 @@ func testDefaultEnvironmentConfig() *config.Environment {
 					},
 				},
 			},
-			config.Context{
+			config.Cluster{
 				Name: "cluster3",
 				Stacks: []config.Stack{
 					config.Stack{
@@ -157,7 +157,7 @@ func TestNewFromConfigNetworkClash(t *testing.T) {
 	defer fakes.Finish()
 
 	cfg := testDefaultEnvironmentConfig()
-	cfg.Contexts[1].Stacks[0].Network.NetworkCIDR = "1.2.4.0/24"
+	cfg.Clusters[1].Stacks[0].Network.NetworkCIDR = "1.2.4.0/24"
 
 	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
 
@@ -173,7 +173,7 @@ func TestNewFromConfigMissingState(t *testing.T) {
 	defer fakes.Finish()
 
 	cfg := testDefaultEnvironmentConfig()
-	cfg.Contexts[0].Stacks = cfg.Contexts[0].Stacks[1:]
+	cfg.Clusters[0].Stacks = cfg.Clusters[0].Stacks[1:]
 
 	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
 
@@ -189,7 +189,7 @@ func TestNewFromConfigDuplicateState(t *testing.T) {
 	defer fakes.Finish()
 
 	cfg := testDefaultEnvironmentConfig()
-	cfg.Contexts[0].Stacks = append(cfg.Contexts[0].Stacks, config.Stack{State: &config.StackState{}})
+	cfg.Clusters[0].Stacks = append(cfg.Clusters[0].Stacks, config.Stack{State: &config.StackState{}})
 
 	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
 
@@ -205,9 +205,9 @@ func TestNewFromConfigMissingTools(t *testing.T) {
 	defer fakes.Finish()
 
 	cfg := testDefaultEnvironmentConfig()
-	stacks := cfg.Contexts[0].Stacks[0:2]
-	stacks = append(stacks, cfg.Contexts[0].Stacks[3:]...)
-	cfg.Contexts[0].Stacks = stacks
+	stacks := cfg.Clusters[0].Stacks[0:2]
+	stacks = append(stacks, cfg.Clusters[0].Stacks[3:]...)
+	cfg.Clusters[0].Stacks = stacks
 
 	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
 
@@ -223,7 +223,7 @@ func TestNewFromConfigDuplicateTools(t *testing.T) {
 	defer fakes.Finish()
 
 	cfg := testDefaultEnvironmentConfig()
-	cfg.Contexts[0].Stacks = append(cfg.Contexts[0].Stacks, config.Stack{Tools: &config.StackTools{}})
+	cfg.Clusters[0].Stacks = append(cfg.Clusters[0].Stacks, config.Stack{Tools: &config.StackTools{}})
 
 	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
 
@@ -239,9 +239,9 @@ func TestNewFromConfigMissingVault(t *testing.T) {
 	defer fakes.Finish()
 
 	cfg := testDefaultEnvironmentConfig()
-	stacks := cfg.Contexts[0].Stacks[0:3]
-	stacks = append(stacks, cfg.Contexts[0].Stacks[4:]...)
-	cfg.Contexts[0].Stacks = stacks
+	stacks := cfg.Clusters[0].Stacks[0:3]
+	stacks = append(stacks, cfg.Clusters[0].Stacks[4:]...)
+	cfg.Clusters[0].Stacks = stacks
 
 	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
 
@@ -257,7 +257,7 @@ func TestNewFromConfigDuplicateVault(t *testing.T) {
 	defer fakes.Finish()
 
 	cfg := testDefaultEnvironmentConfig()
-	cfg.Contexts[0].Stacks = append(cfg.Contexts[0].Stacks, config.Stack{Vault: &config.StackVault{}})
+	cfg.Clusters[0].Stacks = append(cfg.Clusters[0].Stacks, config.Stack{Vault: &config.StackVault{}})
 
 	_, err := NewFromConfig(fakes.fakeTarmak, cfg)
 

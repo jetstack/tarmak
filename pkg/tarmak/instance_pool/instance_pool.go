@@ -18,7 +18,7 @@ type InstancePool struct {
 	conf *clusterv1alpha1.InstancePool
 	log  *logrus.Entry
 
-	context interfaces.Context
+	cluster interfaces.Cluster
 
 	volumes    []*Volume
 	rootVolume *Volume
@@ -28,20 +28,20 @@ type InstancePool struct {
 	role *role.Role
 }
 
-func NewFromConfig(context interfaces.Context, conf *clusterv1alpha1.InstancePool) (*InstancePool, error) {
+func NewFromConfig(cluster interfaces.Cluster, conf *clusterv1alpha1.InstancePool) (*InstancePool, error) {
 	instancePool := &InstancePool{
 		conf:    conf,
-		context: context,
-		log:     context.Log().WithField("instancePool", conf.Name),
+		cluster: cluster,
+		log:     cluster.Log().WithField("instancePool", conf.Name),
 	}
 
-	instancePool.role = context.Role(conf.Type)
+	instancePool.role = cluster.Role(conf.Type)
 	if instancePool.role == nil {
-		return nil, fmt.Errorf("role '%s' is not valid for this context", conf.Type)
+		return nil, fmt.Errorf("role '%s' is not valid for this cluster", conf.Type)
 	}
 
 	// validate instance size with cloud provider
-	provider := context.Environment().Provider()
+	provider := cluster.Environment().Provider()
 	instanceType, err := provider.InstanceType(conf.Size)
 	if err != nil {
 		return nil, fmt.Errorf("instanceType '%s' is not valid for this provier", conf.Size)

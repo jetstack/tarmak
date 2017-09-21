@@ -35,7 +35,7 @@ func (s *ToolsStack) Variables() map[string]interface{} {
 
 func (s *ToolsStack) verifyBastionAvailable() error {
 
-	ssh := s.Context().Environment().Tarmak().SSH()
+	ssh := s.Cluster().Environment().Tarmak().SSH()
 
 	if err := ssh.WriteConfig(); err != nil {
 		return err

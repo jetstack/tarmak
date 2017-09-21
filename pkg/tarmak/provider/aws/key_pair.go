@@ -16,7 +16,7 @@ import (
 
 func (a *AWS) KeyName() string {
 	if a.conf.AWS.KeyName == "" {
-		return fmt.Sprintf("tarmak_%s", a.tarmak.Context().Environment().Name())
+		return fmt.Sprintf("tarmak_%s", a.tarmak.Cluster().Environment().Name())
 	}
 	return a.conf.AWS.KeyName
 }
@@ -56,7 +56,7 @@ func (a *AWS) validateAWSKeyPair() error {
 
 	var awsKeyPair *ec2.KeyPairInfo
 	if len(keypairs.KeyPairs) == 0 {
-		signer, err := ssh.NewSignerFromKey(a.tarmak.Context().Environment().SSHPrivateKey())
+		signer, err := ssh.NewSignerFromKey(a.tarmak.Cluster().Environment().SSHPrivateKey())
 		if err != nil {
 			return fmt.Errorf("unable to generate public key from private key: %s", err)
 		}
@@ -79,7 +79,7 @@ func (a *AWS) validateAWSKeyPair() error {
 	}
 
 	// warn if cannot generate fingerprint, fail if fingerprints are not matching
-	fingerprintExpected, err := fingerprintAWSStyle(a.tarmak.Context().Environment().SSHPrivateKey())
+	fingerprintExpected, err := fingerprintAWSStyle(a.tarmak.Cluster().Environment().SSHPrivateKey())
 	if err != nil {
 		a.log.Warn("failed to generate local fingerprint: ", err)
 	} else if act, exp := *awsKeyPair.KeyFingerprint, fingerprintExpected; act != exp {

@@ -45,6 +45,6 @@ variable "private_zone" {
   default = ""
 }
 
-variable "state_context_name" {
+variable "state_cluster_name" {
   default = "hub"
 }

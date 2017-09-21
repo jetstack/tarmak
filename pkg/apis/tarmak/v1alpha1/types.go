@@ -13,7 +13,7 @@ type Config struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	CurrentContext string `json:"currentContext,omitempty"` // <environmentName>-<contextName>
+	CurrentCluster string `json:"currentCluster,omitempty"` // <environmentName>-<clusterName>
 
 	Contact string `json:"contact,omitempty"`
 	Project string `json:"project,omitempty"`
