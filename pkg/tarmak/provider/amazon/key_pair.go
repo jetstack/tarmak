@@ -1,4 +1,4 @@
-package aws
+package amazon
 
 import (
 	"crypto/md5"
@@ -14,11 +14,11 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func (a *AWS) KeyName() string {
-	if a.conf.AWS.KeyName == "" {
+func (a *Amazon) KeyName() string {
+	if a.conf.Amazon.KeyName == "" {
 		return fmt.Sprintf("tarmak_%s", a.tarmak.Cluster().Environment().Name())
 	}
-	return a.conf.AWS.KeyName
+	return a.conf.Amazon.KeyName
 }
 
 func fingerprintAWSStyle(signer interface{}) (string, error) {
@@ -39,7 +39,7 @@ func fingerprintAWSStyle(signer interface{}) (string, error) {
 	}
 }
 
-func (a *AWS) validateAWSKeyPair() error {
+func (a *Amazon) validateAWSKeyPair() error {
 	svc, err := a.EC2()
 	if err != nil {
 		return err

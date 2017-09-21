@@ -1,4 +1,4 @@
-package aws
+package amazon
 
 import (
 	"fmt"
@@ -85,7 +85,7 @@ func (h *host) SSHConfig() string {
 	return config
 }
 
-func (a *AWS) ListHosts() ([]interfaces.Host, error) {
+func (a *Amazon) ListHosts() ([]interfaces.Host, error) {
 	filters := []*ec2.Filter{
 		&ec2.Filter{
 			Name:   aws.String("instance-state-name"),

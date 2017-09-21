@@ -1,4 +1,4 @@
-package aws
+package amazon
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
 
-func (a *AWS) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Image, err error) {
+func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Image, err error) {
 
 	sess, err := a.Session()
 	if err != nil {
@@ -34,7 +34,7 @@ func (a *AWS) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Image
 		return images, err
 	}
 
-	formatRFC3339aws := "2006-01-02T15:04:05.999Z07:00"
+	formatRFC3339amazon := "2006-01-02T15:04:05.999Z07:00"
 
 	for _, ami := range amis.Images {
 		image := tarmakv1alpha1.Image{}
@@ -47,7 +47,7 @@ func (a *AWS) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Image
 			}
 		}
 
-		creationTimestamp, err := time.Parse(formatRFC3339aws, *ami.CreationDate)
+		creationTimestamp, err := time.Parse(formatRFC3339amazon, *ami.CreationDate)
 		if err != nil {
 			return images, fmt.Errorf("error parsing time stamp '%s'", err)
 		}

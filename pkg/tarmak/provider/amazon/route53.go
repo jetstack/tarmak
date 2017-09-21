@@ -1,4 +1,4 @@
-package aws
+package amazon
 
 import (
 	"errors"
@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 )
 
-func (a *AWS) PublicZone() string {
-	return a.conf.AWS.PublicZone
+func (a *Amazon) PublicZone() string {
+	return a.conf.Amazon.PublicZone
 }
 
 // this removes an ending . in zone and converts it to lowercase
@@ -22,12 +22,12 @@ func normalizeZone(in string) string {
 	return strings.ToLower(strings.TrimRight(in, "."))
 }
 
-func (a *AWS) initPublicZone() (*route53.HostedZone, error) {
-	publicZone := normalizeZone(a.conf.AWS.PublicZone)
+func (a *Amazon) initPublicZone() (*route53.HostedZone, error) {
+	publicZone := normalizeZone(a.conf.Amazon.PublicZone)
 	if publicZone == "" {
 		return nil, errors.New("no public zone given in provider config")
 	}
-	if a.conf.AWS.PublicHostedZoneID != "" {
+	if a.conf.Amazon.PublicHostedZoneID != "" {
 		return nil, errors.New("can not auto create public zone as there is HostedZoneID given in provider config")
 	}
 
@@ -46,18 +46,18 @@ func (a *AWS) initPublicZone() (*route53.HostedZone, error) {
 	return result.HostedZone, err
 }
 
-func (a *AWS) validatePublicZone() error {
+func (a *Amazon) validatePublicZone() error {
 	svc, err := a.Route53()
 	if err != nil {
 		return err
 	}
 
 	input := &route53.ListHostedZonesByNameInput{}
-	if dnsName := a.conf.AWS.PublicZone; dnsName != "" {
+	if dnsName := a.conf.Amazon.PublicZone; dnsName != "" {
 		input.DNSName = aws.String(dnsName)
 	}
 
-	if hostedZoneID := a.conf.AWS.PublicHostedZoneID; hostedZoneID != "" {
+	if hostedZoneID := a.conf.Amazon.PublicHostedZoneID; hostedZoneID != "" {
 		input.HostedZoneId = aws.String(hostedZoneID)
 	}
 
@@ -89,11 +89,11 @@ func (a *AWS) validatePublicZone() error {
 	if split := strings.Split(*zone.Id, "/"); len(split) < 2 {
 		return fmt.Errorf("Unexpected ID %s", *zone.Id)
 	} else {
-		a.conf.AWS.PublicHostedZoneID = split[2]
+		a.conf.Amazon.PublicHostedZoneID = split[2]
 	}
 
 	// store zone information
-	a.conf.AWS.PublicZone = normalizeZone(*zone.Name)
+	a.conf.Amazon.PublicZone = normalizeZone(*zone.Name)
 
 	// validate delegation
 	zoneResult, err := svc.GetHostedZone(&route53.GetHostedZoneInput{Id: zone.Id})
@@ -108,9 +108,9 @@ func (a *AWS) validatePublicZone() error {
 
 	notice := fmt.Sprintf("make sure the domain is delegated to these nameservers %+v", zoneNameservers)
 
-	dnsResult, err := net.LookupNS(a.conf.AWS.PublicZone)
+	dnsResult, err := net.LookupNS(a.conf.Amazon.PublicZone)
 	if err != nil {
-		return fmt.Errorf("error resolving NS records for %s (%s), %s", a.conf.AWS.PublicZone, err, notice)
+		return fmt.Errorf("error resolving NS records for %s (%s), %s", a.conf.Amazon.PublicZone, err, notice)
 	}
 
 	dnsNameservers := make([]string, len(dnsResult))

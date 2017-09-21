@@ -1,4 +1,4 @@
-package aws
+package amazon
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
-type AWS struct {
+type Amazon struct {
 	conf *tarmakv1alpha1.Provider
 
 	tarmak interfaces.Tarmak
@@ -65,11 +65,11 @@ type Route53 interface {
 	ListHostedZonesByName(input *route53.ListHostedZonesByNameInput) (*route53.ListHostedZonesByNameOutput, error)
 }
 
-var _ interfaces.Provider = &AWS{}
+var _ interfaces.Provider = &Amazon{}
 
-func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Provider) (*AWS, error) {
+func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Provider) (*Amazon, error) {
 
-	a := &AWS{
+	a := &Amazon{
 		conf:   conf,
 		log:    tarmak.Log().WithField("provider_name", conf.ObjectMeta.Name),
 		tarmak: tarmak,
@@ -78,30 +78,30 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Provider) (*AW
 	return a, nil
 }
 
-func (a *AWS) Name() string {
+func (a *Amazon) Name() string {
 	return a.conf.Name
 }
 
-func (a *AWS) Cloud() string {
+func (a *Amazon) Cloud() string {
 	return clusterv1alpha1.CloudAmazon
 }
 
 // This parameters should include non sensitive information to identify a provider
-func (a *AWS) Parameters() map[string]string {
+func (a *Amazon) Parameters() map[string]string {
 	p := map[string]string{
-		"public_zone":   a.conf.AWS.PublicZone,
-		"bucket_prefix": a.conf.AWS.BucketPrefix,
+		"public_zone":   a.conf.Amazon.PublicZone,
+		"bucket_prefix": a.conf.Amazon.BucketPrefix,
 	}
-	if a.conf.AWS.VaultPath != "" {
-		p["vault_path"] = a.conf.AWS.VaultPath
+	if a.conf.Amazon.VaultPath != "" {
+		p["vault_path"] = a.conf.Amazon.VaultPath
 	}
-	if a.conf.AWS.Profile != "" {
-		p["aws_profile"] = a.conf.AWS.Profile
+	if a.conf.Amazon.Profile != "" {
+		p["amazon_profile"] = a.conf.Amazon.Profile
 	}
 	return p
 }
 
-func (a *AWS) ListRegions() (regions []string, err error) {
+func (a *Amazon) ListRegions() (regions []string, err error) {
 	svc, err := a.EC2()
 	if err != nil {
 		return regions, err
@@ -120,12 +120,12 @@ func (a *AWS) ListRegions() (regions []string, err error) {
 
 }
 
-func (a *AWS) Region() string {
+func (a *Amazon) Region() string {
 	return a.tarmak.Environment().Location()
 }
 
 // This return the availabililty zones that are used for a cluster
-func (a *AWS) AvailabilityZones() (availabiltyZones []string) {
+func (a *Amazon) AvailabilityZones() (availabiltyZones []string) {
 	if a.availabilityZones != nil {
 		return *a.availabilityZones
 	}
@@ -148,68 +148,68 @@ func (a *AWS) AvailabilityZones() (availabiltyZones []string) {
 	return availabiltyZones
 }
 
-func (a *AWS) EC2() (EC2, error) {
+func (a *Amazon) EC2() (EC2, error) {
 	if a.ec2 == nil {
 		sess, err := a.Session()
 		if err != nil {
-			return nil, fmt.Errorf("error getting AWS session: %s", err)
+			return nil, fmt.Errorf("error getting Amazon session: %s", err)
 		}
 		a.ec2 = ec2.New(sess)
 	}
 	return a.ec2, nil
 }
 
-func (a *AWS) S3() (S3, error) {
+func (a *Amazon) S3() (S3, error) {
 	if a.s3 == nil {
 		sess, err := a.Session()
 		if err != nil {
-			return nil, fmt.Errorf("error getting AWS session: %s", err)
+			return nil, fmt.Errorf("error getting Amazon session: %s", err)
 		}
 		a.s3 = s3.New(sess)
 	}
 	return a.s3, nil
 }
 
-func (a *AWS) DynamoDB() (DynamoDB, error) {
+func (a *Amazon) DynamoDB() (DynamoDB, error) {
 	if a.dynamodb == nil {
 		sess, err := a.Session()
 		if err != nil {
-			return nil, fmt.Errorf("error getting AWS session: %s", err)
+			return nil, fmt.Errorf("error getting Amazon session: %s", err)
 		}
 		a.dynamodb = dynamodb.New(sess)
 	}
 	return a.dynamodb, nil
 }
 
-func (a *AWS) Route53() (Route53, error) {
+func (a *Amazon) Route53() (Route53, error) {
 	if a.route53 == nil {
 		sess, err := a.Session()
 		if err != nil {
-			return nil, fmt.Errorf("error getting AWS session: %s", err)
+			return nil, fmt.Errorf("error getting Amazon session: %s", err)
 		}
 		a.route53 = route53.New(sess)
 	}
 	return a.route53, nil
 }
 
-func (a *AWS) Variables() map[string]interface{} {
+func (a *Amazon) Variables() map[string]interface{} {
 	output := map[string]interface{}{}
 	output["key_name"] = a.KeyName()
-	if len(a.conf.AWS.AllowedAccountIDs) > 0 {
-		output["allowed_account_ids"] = a.conf.AWS.AllowedAccountIDs
+	if len(a.conf.Amazon.AllowedAccountIDs) > 0 {
+		output["allowed_account_ids"] = a.conf.Amazon.AllowedAccountIDs
 	}
 	output["availability_zones"] = a.AvailabilityZones()
 	output["region"] = a.Region()
 
-	output["public_zone"] = a.conf.AWS.PublicZone
-	output["public_zone_id"] = a.conf.AWS.PublicHostedZoneID
-	output["bucket_prefix"] = a.conf.AWS.BucketPrefix
+	output["public_zone"] = a.conf.Amazon.PublicZone
+	output["public_zone_id"] = a.conf.Amazon.PublicHostedZoneID
+	output["bucket_prefix"] = a.conf.Amazon.BucketPrefix
 
 	return output
 }
 
 // This will return necessary environment variables
-func (a *AWS) Environment() ([]string, error) {
+func (a *Amazon) Environment() ([]string, error) {
 	sess, err := a.Session()
 	if err != nil {
 		return []string{}, fmt.Errorf("error getting session: %s", err)
@@ -229,7 +229,7 @@ func (a *AWS) Environment() ([]string, error) {
 }
 
 // This reads the vault token from ~/.vault-token
-func (a *AWS) readVaultToken() (string, error) {
+func (a *Amazon) readVaultToken() (string, error) {
 	homeDir := a.tarmak.HomeDir()
 
 	filePath := filepath.Join(homeDir, ".vault-token")
@@ -242,7 +242,7 @@ func (a *AWS) readVaultToken() (string, error) {
 	return string(vaultToken), nil
 }
 
-func (a *AWS) Validate() error {
+func (a *Amazon) Validate() error {
 	var result error
 	var err error
 
@@ -278,7 +278,7 @@ func (a *AWS) Validate() error {
 
 }
 
-func (a *AWS) validateAvailabilityZones() error {
+func (a *Amazon) validateAvailabilityZones() error {
 	var result error
 
 	svc, err := a.EC2()
@@ -341,7 +341,7 @@ func (a *AWS) validateAvailabilityZones() error {
 	return nil
 }
 
-func (a *AWS) Session() (*session.Session, error) {
+func (a *Amazon) Session() (*session.Session, error) {
 
 	// return cached session
 	if a.session != nil {
@@ -349,7 +349,7 @@ func (a *AWS) Session() (*session.Session, error) {
 	}
 
 	// use default config, if vault disabled
-	if a.conf.AWS.VaultPath != "" {
+	if a.conf.Amazon.VaultPath != "" {
 		sess, err := a.vaultSession()
 		if err != nil {
 			return nil, err
@@ -361,13 +361,13 @@ func (a *AWS) Session() (*session.Session, error) {
 
 	a.session = session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-		Profile:           a.conf.AWS.Profile,
+		Profile:           a.conf.Amazon.Profile,
 	}))
 	a.session.Config.Region = aws.String(a.Region())
 	return a.session, nil
 }
 
-func (a *AWS) vaultSession() (*session.Session, error) {
+func (a *Amazon) vaultSession() (*session.Session, error) {
 	vaultClient, err := vault.NewClient(nil)
 	if err != nil {
 		return nil, err
@@ -383,12 +383,12 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 		}
 	}
 
-	awsSecret, err := vaultClient.Logical().Read(a.conf.AWS.VaultPath)
+	awsSecret, err := vaultClient.Logical().Read(a.conf.Amazon.VaultPath)
 	if err != nil {
 		return nil, err
 	}
 	if awsSecret == nil || awsSecret.Data == nil {
-		return nil, fmt.Errorf("vault did not return data at path '%s'", a.conf.AWS.VaultPath)
+		return nil, fmt.Errorf("vault did not return data at path '%s'", a.conf.Amazon.VaultPath)
 	}
 
 	values := []string{}
@@ -416,7 +416,7 @@ func (a *AWS) vaultSession() (*session.Session, error) {
 
 // This methods converts and possibly validates a generic instance type to a
 // provider specifc
-func (a *AWS) InstanceType(typeIn string) (typeOut string, err error) {
+func (a *Amazon) InstanceType(typeIn string) (typeOut string, err error) {
 	if typeIn == clusterv1alpha1.InstancePoolSizeTiny {
 		return "t2.nano", nil
 	}
@@ -436,7 +436,7 @@ func (a *AWS) InstanceType(typeIn string) (typeOut string, err error) {
 
 // This methods converts and possibly validates a generic volume type to a
 // provider specifc
-func (a *AWS) VolumeType(typeIn string) (typeOut string, err error) {
+func (a *Amazon) VolumeType(typeIn string) (typeOut string, err error) {
 	if typeIn == clusterv1alpha1.VolumeTypeHDD {
 		return "st2", nil
 	}
