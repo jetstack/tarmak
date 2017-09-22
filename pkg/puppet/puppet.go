@@ -17,15 +17,14 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
-const (
-	Master = "master"
-	WORKER = "worker"
-	ETC    = "etc"
-)
-
 type Puppet struct {
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
+}
+
+type hieraData struct {
+	classes   []string
+	variables []string
 }
 
 func New(tarmak interfaces.Tarmak) *Puppet {
@@ -74,51 +73,74 @@ func (p *Puppet) TarGz(writer io.Writer) error {
 	return nil
 }
 
-func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes) (lines []string) {
+func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData *hieraData) {
 	if conf == nil {
-		return lines
+		return
 	}
 	if conf.Version != "" {
-		lines = append(lines, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
 	}
-
-	return lines
+	return
 }
 
-func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, role string) (lines []string) {
+func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, roleName string, hieraData *hieraData) {
 	if conf == nil {
-		return lines
+		return
 	}
 
-	if role == clusterv1alpha1.KubernetesMasterRole && conf.ClusterAutoscaler != nil && conf.ClusterAutoscaler.Enabled {
-		lines = append(lines, `classes:`)
-		lines = append(lines, `- kubernetes_addons::cluster_autoscaler`)
-		lines = append(lines, fmt.Sprintf(`tarmak::cluster_autoscaler_image: "%s"`, conf.ClusterAutoscaler.Image))
-		lines = append(lines, fmt.Sprintf(`tarmak::cluster_autoscaler_version: "%s"`, conf.ClusterAutoscaler.Version))
+	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.ClusterAutoscaler != nil && conf.ClusterAutoscaler.Enabled {
+		hieraData.classes = append(hieraData.classes, `kubernetes_addons::cluster_autoscaler`)
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::cluster_autoscaler_image: "%s"`, conf.ClusterAutoscaler.Image))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::cluster_autoscaler_version: "%s"`, conf.ClusterAutoscaler.Version))
 	}
-
-	return lines
+	return
 }
 
-func kubernetesInstancePoolConfig(conf *clusterv1alpha1.InstancePoolKubernetes) (lines []string) {
+func kubernetesInstancePoolConfig(conf *clusterv1alpha1.InstancePoolKubernetes, hieraData *hieraData) {
 	if conf == nil {
-		return lines
+		return
 	}
 	if conf.Version != "" {
-		lines = append(lines, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
 	}
-
-	return lines
+	return
 }
 
 func contentClusterConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
-	lines = append(lines, kubernetesClusterConfig(conf.Kubernetes)...)
-	return lines
+
+	hieraData := &hieraData{}
+	kubernetesClusterConfig(conf.Kubernetes, hieraData)
+
+	return serialiseHieraData(hieraData)
 }
 
-func contentInstancePoolConfig(clusterConf *clusterv1alpha1.Cluster, instanceConf *clusterv1alpha1.InstancePool, role string) (lines []string) {
-	lines = append(lines, kubernetesClusterConfigPerRole(clusterConf.Kubernetes, role)...)
-	lines = append(lines, kubernetesInstancePoolConfig(instanceConf.Kubernetes)...)
+func contentInstancePoolConfig(clusterConf *clusterv1alpha1.Cluster, instanceConf *clusterv1alpha1.InstancePool, roleName string) (lines []string) {
+
+	hieraData := &hieraData{}
+	kubernetesClusterConfigPerRole(clusterConf.Kubernetes, roleName, hieraData)
+	kubernetesInstancePoolConfig(instanceConf.Kubernetes, hieraData)
+
+	return serialiseHieraData(hieraData)
+}
+
+func serialiseHieraData(hieraData *hieraData) (lines []string) {
+
+	if hieraData == nil {
+		return lines
+	}
+
+	if len(hieraData.classes) > 0 {
+		lines = append(lines, `---`)
+		lines = append(lines, `classes:`)
+		for _, class := range hieraData.classes {
+			lines = append(lines, fmt.Sprintf(`- %s`, class))
+		}
+	}
+
+	for _, variable := range hieraData.variables {
+		lines = append(lines, fmt.Sprintf(`- %s`, variable))
+	}
+
 	return lines
 }
 
