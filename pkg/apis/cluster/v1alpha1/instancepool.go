@@ -42,16 +42,20 @@ const (
 type InstancePool struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Identifier        string      `json:"identifier,omitempty"`
-	MinCount          int         `json:"minCount,omitempty"`
-	MaxCount          int         `json:"maxCount,omitempty"`
-	Type              string      `json:"type,omitempty"`
-	Image             string      `json:"image,omitempty"`
-	Size              string      `json:"size,omitempty"`
-	SpotPrice         string      `json:"spotPrice,omitempty"`
-	BootstrapScripts  []string    `json:"bootstrapScripts,omitempty"`
-	Subnets           []*Subnet   `json:"subnets,omitempty"`
-	Firewalls         []*Firewall `json:"firewalls,omitempty"`
-	Volumes           []Volume    `json:"volumes,omitempty"`
-	Kubernetes        *Kubernetes `json:"kubernetes,omitempty"`
+	Identifier        string                  `json:"identifier,omitempty"`
+	MinCount          int                     `json:"minCount,omitempty"`
+	MaxCount          int                     `json:"maxCount,omitempty"`
+	Type              string                  `json:"type,omitempty"`
+	Image             string                  `json:"image,omitempty"`
+	Size              string                  `json:"size,omitempty"`
+	SpotPrice         string                  `json:"spotPrice,omitempty"`
+	BootstrapScripts  []string                `json:"bootstrapScripts,omitempty"`
+	Subnets           []*Subnet               `json:"subnets,omitempty"`
+	Firewalls         []*Firewall             `json:"firewalls,omitempty"`
+	Volumes           []Volume                `json:"volumes,omitempty"`
+	Kubernetes        *InstancePoolKubernetes `json:"kubernetes,omitempty"`
+}
+
+type InstancePoolKubernetes struct {
+	Version string `json:"version,omitempty"`
 }

@@ -32,7 +32,7 @@ func SetDefaults_Cluster(obj *Cluster) {
 
 	// set kubernetes object if nil {
 	if obj.Kubernetes == nil {
-		obj.Kubernetes = &Kubernetes{}
+		obj.Kubernetes = &ClusterKubernetes{}
 	}
 
 	// set default kubernetes version
@@ -53,6 +53,17 @@ func SetDefaults_Cluster(obj *Cluster) {
 	// serviceCIDR
 	if obj.Kubernetes.ServiceCIDR == "" {
 		obj.Kubernetes.ServiceCIDR = "10.254.0.0/16"
+	}
+
+	// clusterAutoscaler
+	if obj.Kubernetes.ClusterAutoscaler == nil {
+		obj.Kubernetes.ClusterAutoscaler = &ClusterKubernetesClusterAutoscaler{}
+	}
+	if obj.Kubernetes.ClusterAutoscaler.Enabled && obj.Kubernetes.ClusterAutoscaler.Image == "" {
+		obj.Kubernetes.ClusterAutoscaler.Image = "gcr.io/google_containers/cluster-autoscaler"
+	}
+	if obj.Kubernetes.ClusterAutoscaler.Enabled && obj.Kubernetes.ClusterAutoscaler.Version == "" {
+		obj.Kubernetes.ClusterAutoscaler.Version = "0.6.0"
 	}
 }
 

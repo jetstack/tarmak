@@ -17,6 +17,12 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
+const (
+	Master = "master"
+	WORKER = "worker"
+	ETC    = "etc"
+)
+
 type Puppet struct {
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
@@ -68,7 +74,7 @@ func (p *Puppet) TarGz(writer io.Writer) error {
 	return nil
 }
 
-func kubernetesConfig(conf *clusterv1alpha1.Kubernetes) (lines []string) {
+func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes) (lines []string) {
 	if conf == nil {
 		return lines
 	}
@@ -79,13 +85,40 @@ func kubernetesConfig(conf *clusterv1alpha1.Kubernetes) (lines []string) {
 	return lines
 }
 
-func contentGlobalConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
-	lines = append(lines, kubernetesConfig(conf.Kubernetes)...)
+func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, role string) (lines []string) {
+	if conf == nil {
+		return lines
+	}
+
+	if role == clusterv1alpha1.KubernetesMasterRole && conf.ClusterAutoscaler != nil && conf.ClusterAutoscaler.Enabled {
+		lines = append(lines, `classes:`)
+		lines = append(lines, `- kubernetes_addons::cluster_autoscaler`)
+		lines = append(lines, fmt.Sprintf(`tarmak::cluster_autoscaler_image: "%s"`, conf.ClusterAutoscaler.Image))
+		lines = append(lines, fmt.Sprintf(`tarmak::cluster_autoscaler_version: "%s"`, conf.ClusterAutoscaler.Version))
+	}
+
 	return lines
 }
 
-func contentInstancePoolConfig(conf *clusterv1alpha1.InstancePool) (lines []string) {
-	lines = append(lines, kubernetesConfig(conf.Kubernetes)...)
+func kubernetesInstancePoolConfig(conf *clusterv1alpha1.InstancePoolKubernetes) (lines []string) {
+	if conf == nil {
+		return lines
+	}
+	if conf.Version != "" {
+		lines = append(lines, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
+	}
+
+	return lines
+}
+
+func contentClusterConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
+	lines = append(lines, kubernetesClusterConfig(conf.Kubernetes)...)
+	return lines
+}
+
+func contentInstancePoolConfig(clusterConf *clusterv1alpha1.Cluster, instanceConf *clusterv1alpha1.InstancePool, role string) (lines []string) {
+	lines = append(lines, kubernetesClusterConfigPerRole(clusterConf.Kubernetes, role)...)
+	lines = append(lines, kubernetesInstancePoolConfig(instanceConf.Kubernetes)...)
 	return lines
 }
 
@@ -117,10 +150,10 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 		"hieradata",
 	)
 
-	// write global cluster config
+	// write cluster config
 	err := p.writeLines(
 		filepath.Join(hieraPath, "tarmak.yaml"),
-		contentGlobalConfig(cluster.Config()),
+		contentClusterConfig(cluster.Config()),
 	)
 	if err != nil {
 		return fmt.Errorf("error writing global hiera config: %s", err)
@@ -130,7 +163,7 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 	for _, instancePool := range cluster.InstancePools() {
 		err = p.writeLines(
 			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s.yaml", instancePool.Name())),
-			contentInstancePoolConfig(instancePool.Config()),
+			contentInstancePoolConfig(cluster.Config(), instancePool.Config(), instancePool.Role().Name()),
 		)
 		if err != nil {
 			return fmt.Errorf("error writing global hiera for instancePool %s: %s", instancePool.Name(), err)

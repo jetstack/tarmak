@@ -47,17 +47,24 @@ type Cluster struct {
 	KubernetesAPI     *KubernetesAPI `json:"kubernetesAPI,omitempty"`
 	GroupIdentifier   string         `json:"groupIdentifier,omitempty"`
 
-	Environment string      `json:"environment,omitempty"`
-	Kubernetes  *Kubernetes `json:"kubernetes,omitempty"`
+	Environment string             `json:"environment,omitempty"`
+	Kubernetes  *ClusterKubernetes `json:"kubernetes,omitempty"`
 
 	Type string `json:"-"` // This specifies if a cluster is a hub, single or multi
 }
 
-type Kubernetes struct {
-	Zone        string `json:"zone,omitempty"`
-	Version     string `json:"version,omitempty"`
-	PodCIDR     string `json:"podCIDR,omitempty"`
-	ServiceCIDR string `json:"serviceCIDR,omitempty"`
+type ClusterKubernetes struct {
+	Zone              string                              `json:"zone,omitempty"`
+	Version           string                              `json:"version,omitempty"`
+	PodCIDR           string                              `json:"podCIDR,omitempty"`
+	ServiceCIDR       string                              `json:"serviceCIDR,omitempty"`
+	ClusterAutoscaler *ClusterKubernetesClusterAutoscaler `json:"clusterAutoscaler,omitempty"`
+}
+
+type ClusterKubernetesClusterAutoscaler struct {
+	Image   string `json:"enabled,omitempty"`
+	Version string `json"enabled,omitempty"`
+	Enabled bool   `json:"enabled,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
