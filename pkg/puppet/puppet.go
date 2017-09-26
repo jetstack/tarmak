@@ -90,8 +90,8 @@ func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, rol
 
 	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.ClusterAutoscaler != nil && conf.ClusterAutoscaler.Enabled {
 		hieraData.classes = append(hieraData.classes, `kubernetes_addons::cluster_autoscaler`)
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::cluster_autoscaler_image: "%s"`, conf.ClusterAutoscaler.Image))
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::cluster_autoscaler_version: "%s"`, conf.ClusterAutoscaler.Version))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler_image: "%s"`, conf.ClusterAutoscaler.Image))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler_version: "%s"`, conf.ClusterAutoscaler.Version))
 	}
 	return
 }

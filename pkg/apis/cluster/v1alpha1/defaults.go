@@ -59,12 +59,6 @@ func SetDefaults_Cluster(obj *Cluster) {
 	if obj.Kubernetes.ClusterAutoscaler == nil {
 		obj.Kubernetes.ClusterAutoscaler = &ClusterKubernetesClusterAutoscaler{}
 	}
-	if obj.Kubernetes.ClusterAutoscaler.Enabled && obj.Kubernetes.ClusterAutoscaler.Image == "" {
-		obj.Kubernetes.ClusterAutoscaler.Image = "gcr.io/google_containers/cluster-autoscaler"
-	}
-	if obj.Kubernetes.ClusterAutoscaler.Enabled && obj.Kubernetes.ClusterAutoscaler.Version == "" {
-		obj.Kubernetes.ClusterAutoscaler.Version = "0.6.0"
-	}
 }
 
 func SetDefaults_Volume(obj *Volume) {

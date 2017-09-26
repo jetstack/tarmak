@@ -10,4 +10,3 @@ classes:
 - prometheus
 
 kubernetes::kubelet::role: master
-kubernetesa_addons::autoscaler::image: imagename

@@ -1,6 +1,6 @@
 class kubernetes_addons::cluster_autoscaler(
   $image=$::kubernetes_addons::params::cluster_autoscaler_image,
-  String $version='',
+  $version=$::kubernetes_addons::params::cluster_autoscaler_version,
   $request_cpu=$::kubernetes_addons::params::cluster_autoscaler_request_cpu,
   $request_mem=$::kubernetes_addons::params::cluster_autoscaler_request_mem,
   $limit_cpu=$::kubernetes_addons::params::cluster_autoscaler_limit_cpu,
