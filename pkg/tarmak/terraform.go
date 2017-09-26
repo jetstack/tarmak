@@ -1,6 +1,7 @@
 package tarmak
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -15,8 +16,7 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 	return t.terraform
 }
 
-func (t *Tarmak) CmdTerraformApply(args []string) error {
-
+func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
 		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)
@@ -38,15 +38,15 @@ func (t *Tarmak) CmdTerraformApply(args []string) error {
 		}
 
 		stack.Log().Info("running apply")
-		err := t.terraform.Apply(stack, args)
+		err := t.terraform.Apply(stack, args, ctx)
 		if err != nil {
-			t.log.Fatal(err)
+			return err
 		}
 	}
 	return nil
 }
 
-func (t *Tarmak) CmdTerraformDestroy(args []string) error {
+func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
 	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
 		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)
@@ -78,7 +78,7 @@ func (t *Tarmak) CmdTerraformDestroy(args []string) error {
 		}
 
 		stack.Log().Info("running destroy")
-		err := t.terraform.Destroy(stack, args)
+		err := t.terraform.Destroy(stack, args, ctx)
 		if err != nil {
 			return err
 		}
