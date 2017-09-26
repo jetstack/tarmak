@@ -59,12 +59,26 @@ type ClusterKubernetes struct {
 	PodCIDR           string                              `json:"podCIDR,omitempty"`
 	ServiceCIDR       string                              `json:"serviceCIDR,omitempty"`
 	ClusterAutoscaler *ClusterKubernetesClusterAutoscaler `json:"clusterAutoscaler,omitempty"`
+	Tiller            *ClusterKubernetesTiller            `json:"tiller,omitempty"`
+	Dashboard         *ClusterKubernetesDashboard         `json:"dashboard,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
-	Image   string `json:"enabled,omitempty"`
-	Version string `json"enabled,omitempty"`
 	Enabled bool   `json:"enabled,omitempty"`
+	Image   string `json:"image,omitempty"`
+	Version string `json:"version,omitempty"`
+}
+
+type ClusterKubernetesTiller struct {
+	Enabled bool   `json:"enabled,omitempty"`
+	Image   string `json:"image,omitempty"`
+	Version string `json:"version,omitempty"`
+}
+
+type ClusterKubernetesDashboard struct {
+	Enabled bool   `json:"enabled,omitempty"`
+	Image   string `json:"image,omitempty"`
+	Version string `json:"version,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

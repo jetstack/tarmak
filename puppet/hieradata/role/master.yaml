@@ -2,9 +2,7 @@ classes:
 - tarmak::master
 - tarmak::worker
 - tarmak::overlay_calico
-- kubernetes_addons::dashboard
 - kubernetes_addons::heapster
-- kubernetes_addons::tiller
 - kubernetes_addons::influxdb
 - kubernetes_addons::grafana
 - prometheus

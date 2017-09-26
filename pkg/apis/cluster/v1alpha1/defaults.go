@@ -59,6 +59,16 @@ func SetDefaults_Cluster(obj *Cluster) {
 	if obj.Kubernetes.ClusterAutoscaler == nil {
 		obj.Kubernetes.ClusterAutoscaler = &ClusterKubernetesClusterAutoscaler{}
 	}
+
+	// tiller
+	if obj.Kubernetes.Tiller == nil {
+		obj.Kubernetes.Tiller = &ClusterKubernetesTiller{}
+	}
+
+	// dashboard
+	if obj.Kubernetes.Dashboard == nil {
+		obj.Kubernetes.Dashboard = &ClusterKubernetesDashboard{}
+	}
 }
 
 func SetDefaults_Volume(obj *Volume) {

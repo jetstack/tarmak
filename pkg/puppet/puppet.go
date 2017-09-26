@@ -93,6 +93,19 @@ func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, rol
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler_image: "%s"`, conf.ClusterAutoscaler.Image))
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler_version: "%s"`, conf.ClusterAutoscaler.Version))
 	}
+
+	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.Tiller != nil && conf.Tiller.Enabled {
+		hieraData.classes = append(hieraData.classes, `kubernetes_addons::tiller`)
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller_image: "%s"`, conf.Tiller.Image))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller_version: "%s"`, conf.Tiller.Version))
+	}
+
+	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.Dashboard != nil && conf.Dashboard.Enabled {
+		hieraData.classes = append(hieraData.classes, `kubernetes_addons::dashboard`)
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard_image: "%s"`, conf.Dashboard.Image))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard_version: "%s"`, conf.Dashboard.Version))
+	}
+
 	return
 }
 
@@ -130,16 +143,20 @@ func serialiseHieraData(hieraData *hieraData) (lines []string) {
 	}
 
 	if len(hieraData.classes) > 0 {
-		lines = append(lines, `---`)
 		lines = append(lines, `classes:`)
 		for _, class := range hieraData.classes {
 			lines = append(lines, fmt.Sprintf(`- %s`, class))
 		}
 	}
 
+	lines = append(lines, "")
+
 	for _, variable := range hieraData.variables {
-		lines = append(lines, fmt.Sprintf(`- %s`, variable))
+		lines = append(lines, fmt.Sprintf(`%s`, variable))
 	}
+
+	lines = append(lines, "")
+	lines = append(lines, "")
 
 	return lines
 }
