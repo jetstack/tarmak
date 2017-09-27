@@ -17,12 +17,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
 
-const (
-	ClusterTypeHub           = "hub"
-	ClusterTypeClusterSingle = "cluster-single"
-	ClusterTypeClusterMulti  = "cluster-multi"
-)
-
 // returns a server
 type Cluster struct {
 	conf *clusterv1alpha1.Cluster
@@ -126,7 +120,7 @@ func (c *Cluster) validateInstancePools() (result error) {
 	c.stacks = []interfaces.Stack{}
 
 	// Validate hub for cluster-single and hub
-	if clusterType == ClusterTypeClusterSingle || clusterType == ClusterTypeHub {
+	if clusterType == clusterv1alpha1.ClusterTypeClusterSingle || clusterType == clusterv1alpha1.ClusterTypeHub {
 		err := validateHubTypes(poolMap, clusterType)
 		if err != nil {
 			result = multierror.Append(result, err)
@@ -161,7 +155,7 @@ func (c *Cluster) validateInstancePools() (result error) {
 	}
 
 	// validate cluster for cluster-*
-	if clusterType == ClusterTypeClusterSingle || clusterType == ClusterTypeClusterMulti {
+	if clusterType == clusterv1alpha1.ClusterTypeClusterSingle || clusterType == clusterv1alpha1.ClusterTypeClusterMulti {
 		err := validateClusterTypes(poolMap, clusterType)
 		if err != nil {
 			result = multierror.Append(result, err)
@@ -190,13 +184,17 @@ func (c *Cluster) validateInstancePools() (result error) {
 
 // Determine if this Cluster is a cluster or hub, single or multi environment
 func (c *Cluster) Type() string {
+	if c.conf.Type != "" {
+		return c.conf.Type
+	}
+
 	if len(c.Environment().Tarmak().Config().Clusters(c.Environment().Name())) == 1 {
-		return ClusterTypeClusterSingle
+		return clusterv1alpha1.ClusterTypeClusterSingle
 	}
-	if c.Name() == ClusterTypeHub {
-		return ClusterTypeHub
+	if c.Name() == clusterv1alpha1.ClusterTypeHub {
+		return clusterv1alpha1.ClusterTypeHub
 	}
-	return ClusterTypeClusterMulti
+	return clusterv1alpha1.ClusterTypeClusterMulti
 }
 
 func (c *Cluster) RemoteState(stackName string) string {
@@ -349,6 +347,14 @@ func (c *Cluster) Roles() (roles []*role.Role) {
 		}
 	}
 	return roles
+}
+
+func (c *Cluster) Parameters() map[string]string {
+	return map[string]string{
+		"name":        c.Name(),
+		"environment": c.Environment().Name(),
+		"provider":    c.Environment().Provider().String(),
+	}
 }
 
 func (c *Cluster) Variables() map[string]interface{} {

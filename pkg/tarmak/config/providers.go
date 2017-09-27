@@ -6,7 +6,7 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
 
-func NewAWSProfileProvider(name string, profile string) *tarmakv1alpha1.Provider {
+func NewAmazonProfileProvider(name string, profile string) *tarmakv1alpha1.Provider {
 	return &tarmakv1alpha1.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -54,12 +55,12 @@ func newConfig() *tarmakv1alpha1.Config {
 	return c
 }
 
-func (c *Config) NewAWSConfigClusterSingle() *tarmakv1alpha1.Config {
+func (c *Config) NewAmazonConfigClusterSingle() *tarmakv1alpha1.Config {
 	conf := newConfig()
 	conf.Clusters = []clusterv1alpha1.Cluster{
 		*NewClusterSingle("dev", "cluster"),
 	}
-	provider := NewAWSProfileProvider("dev", "jetstack-dev")
+	provider := NewAmazonProfileProvider("dev", "jetstack-dev")
 	cluster := NewClusterSingle("dev", "cluster")
 	cluster.CloudId = provider.ObjectMeta.Name
 	conf.Providers = []tarmakv1alpha1.Provider{*provider}
@@ -111,6 +112,11 @@ func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
 	return nil
 }
 
+func (c *Config) SetCurrentCluster(clusterName string) error {
+	c.conf.CurrentCluster = clusterName
+	return c.writeYAML(c.conf)
+}
+
 func (c *Config) CurrentClusterName() string {
 	split := strings.Split(c.conf.CurrentCluster, "-")
 	if len(split) < 2 {
@@ -155,6 +161,9 @@ func (c *Config) Environment(name string) (*tarmakv1alpha1.Environment, error) {
 }
 
 func (c *Config) Environments() (environments []*tarmakv1alpha1.Environment) {
+	if c.conf == nil {
+		return environments
+	}
 	for pos, _ := range c.conf.Environments {
 		environments = append(environments, &c.conf.Environments[pos])
 	}
@@ -172,10 +181,95 @@ func (c *Config) Provider(name string) (cluster *tarmakv1alpha1.Provider, err er
 }
 
 func (c *Config) Providers() (providers []*tarmakv1alpha1.Provider) {
+	if c.conf == nil {
+		return providers
+	}
 	for pos, _ := range c.conf.Providers {
 		providers = append(providers, &c.conf.Providers[pos])
 	}
 	return providers
+}
+
+func (c *Config) ValidName(name, regex string) error {
+	r := regexp.MustCompile(regex)
+	str := r.FindString(name)
+	if str != name {
+		return fmt.Errorf("error matching name '%s' against regex %s", name, regex)
+	}
+
+	return nil
+}
+
+func (c *Config) UniqueProviderName(name string) error {
+	for _, p := range c.Providers() {
+		if p.Name == name {
+			return fmt.Errorf("name '%s' not unique", name)
+		}
+	}
+	return nil
+}
+
+func (c *Config) AppendProvider(prov *tarmakv1alpha1.Provider) error {
+	if c.conf == nil {
+		c.conf = &tarmakv1alpha1.Config{}
+		c.scheme.Default(c.conf)
+	}
+
+	if err := c.UniqueProviderName(prov.Name); err != nil {
+		return fmt.Errorf("failed to add provider: %v", err)
+	}
+
+	c.scheme.Default(prov)
+	c.conf.Providers = append(c.conf.Providers, *prov)
+	return c.writeYAML(c.conf)
+}
+
+func (c *Config) AppendEnvironment(env *tarmakv1alpha1.Environment) error {
+	if c.conf == nil {
+		c.conf = &tarmakv1alpha1.Config{}
+		c.scheme.Default(c.conf)
+	}
+
+	if err := c.UniqueEnvironmentName(env.Name); err != nil {
+		return fmt.Errorf("failed to add environment: %v", err)
+	}
+
+	c.scheme.Default(env)
+	c.conf.Environments = append(c.conf.Environments, *env)
+	return c.writeYAML(c.conf)
+}
+
+func (c *Config) UniqueEnvironmentName(name string) error {
+	for _, e := range c.Environments() {
+		if e.Name == name {
+			return fmt.Errorf("name '%s' not unique", name)
+		}
+	}
+	return nil
+}
+
+func (c *Config) AppendCluster(cluster *clusterv1alpha1.Cluster) error {
+	if c.conf == nil {
+		c.conf = &tarmakv1alpha1.Config{}
+		c.scheme.Default(c.conf)
+	}
+
+	if err := c.UniqueClusterName(cluster.Environment, cluster.Name); err != nil {
+		return fmt.Errorf("failed to add cluster: %v", err)
+	}
+
+	c.scheme.Default(cluster)
+	c.conf.Clusters = append(c.conf.Clusters, *cluster)
+	return c.writeYAML(c.conf)
+}
+
+func (c *Config) UniqueClusterName(environment, name string) error {
+	for _, u := range c.Clusters(environment) {
+		if u.Name == name {
+			return fmt.Errorf("name '%s' not unique", name)
+		}
+	}
+	return nil
 }
 
 func (c *Config) configPath() string {

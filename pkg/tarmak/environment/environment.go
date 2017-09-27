@@ -57,7 +57,7 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 	}
 
 	// init provider
-	e.provider, err = provider.NewProviderFromConfig(tarmak, providerConf)
+	e.provider, err = provider.NewFromConfig(tarmak, providerConf)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing provider '%s'", conf.Provider)
 	}
@@ -82,7 +82,6 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 	}
 
 	return e, nil
-
 }
 
 func (e *Environment) Name() string {
@@ -248,6 +247,21 @@ func (e *Environment) Clusters() []interfaces.Cluster {
 	return e.clusters
 }
 
+func (e *Environment) Type() string {
+	clusterConfigs := e.tarmak.Config().Clusters(e.Name())
+
+	if len(clusterConfigs) == 0 {
+		return tarmakv1alpha1.EnvironmentTypeEmpty
+	}
+
+	for _, clusterConfig := range clusterConfigs {
+		if clusterConfig.Name == "hub" {
+			return tarmakv1alpha1.EnvironmentTypeMulti
+		}
+	}
+	return tarmakv1alpha1.EnvironmentTypeSingle
+}
+
 func (e *Environment) Log() *logrus.Entry {
 	return e.log
 }
@@ -328,5 +342,12 @@ func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
 	}
 
 	return vaultStack.VaultTunnel()
+}
 
+func (e *Environment) Parameters() map[string]string {
+	return map[string]string{
+		"name":     e.Name(),
+		"location": e.Location(),
+		"provider": e.Provider().String(),
+	}
 }

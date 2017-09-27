@@ -8,7 +8,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
 )
 
-func NewProviderFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Provider) (interfaces.Provider, error) {
+func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Provider) (interfaces.Provider, error) {
 	var provider interfaces.Provider
 	var err error
 

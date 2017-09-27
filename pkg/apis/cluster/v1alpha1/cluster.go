@@ -26,6 +26,12 @@ const (
 	CloudDigitalOcean = "digitalocean"
 )
 
+const (
+	ClusterTypeHub           = "hub"
+	ClusterTypeClusterSingle = "cluster-single"
+	ClusterTypeClusterMulti  = "cluster-multi"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +resource:path=clusters
 
@@ -43,6 +49,8 @@ type Cluster struct {
 
 	Environment string      `json:"environment,omitempty"`
 	Kubernetes  *Kubernetes `json:"kubernetes,omitempty"`
+
+	Type string `json:"-"` // This specifies if a cluster is a hub, single or multi
 }
 
 type Kubernetes struct {

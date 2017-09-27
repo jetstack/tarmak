@@ -9,14 +9,15 @@ import (
 
 func newCluster(environment string, name string) *clusterv1alpha1.Cluster {
 	c := &clusterv1alpha1.Cluster{}
-	c.SetName(name)
-	c.SetNamespace(environment)
+	c.Name = name
+	c.Environment = environment
 	return c
 }
 
 // This creates a new cluster for a single cluster environment
 func NewClusterSingle(environment string, name string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, name)
+	c.Type = clusterv1alpha1.ClusterTypeClusterSingle
 	c.InstancePools = []clusterv1alpha1.InstancePool{
 		*newInstancePoolBastion(),
 		*newInstancePoolVault(),
@@ -24,27 +25,32 @@ func NewClusterSingle(environment string, name string) *clusterv1alpha1.Cluster 
 		*newInstancePoolMaster(),
 		*newInstancePoolWorker(),
 	}
+	ApplyDefaults(c)
 	return c
 }
 
 // This creates a new cluster for a multi cluster environment
 func NewClusterMulti(environment string, name string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, name)
+	c.Type = clusterv1alpha1.ClusterTypeClusterMulti
 	c.InstancePools = []clusterv1alpha1.InstancePool{
 		*newInstancePoolEtcd(),
 		*newInstancePoolMaster(),
 		*newInstancePoolWorker(),
 	}
+	ApplyDefaults(c)
 	return c
 }
 
 // This creates a new hub for a multi cluster environment
 func NewHub(environment string) *clusterv1alpha1.Cluster {
-	c := newCluster(environment, "hub")
+	c := newCluster(environment, clusterv1alpha1.ClusterTypeHub)
+	c.Type = clusterv1alpha1.ClusterTypeHub
 	c.InstancePools = []clusterv1alpha1.InstancePool{
 		*newInstancePoolBastion(),
 		*newInstancePoolVault(),
 	}
+	ApplyDefaults(c)
 	return c
 }
 

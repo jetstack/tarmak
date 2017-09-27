@@ -9,19 +9,19 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
-var providerListCmd = &cobra.Command{
+var environmentListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "list providers",
+	Short: "list environments",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		varMaps := make([]map[string]string, 0)
-		for _, prov := range t.Providers() {
-			varMaps = append(varMaps, prov.Parameters())
+		for _, env := range t.Environments() {
+			varMaps = append(varMaps, env.Parameters())
 		}
-		utils.ListParameters(os.Stdout, []string{"name", "cloud"}, varMaps)
+		utils.ListParameters(os.Stdout, []string{"name", "provider", "location"}, varMaps)
 	},
 }
 
 func init() {
-	providerCmd.AddCommand(providerListCmd)
+	environmentCmd.AddCommand(environmentListCmd)
 }

@@ -62,11 +62,11 @@ func newFakeConfig(t *testing.T) *fakeConfig {
 	return c
 }
 
-func TestNewAWSConfigClusterSingle(t *testing.T) {
+func TestNewAmazonConfigClusterSingle(t *testing.T) {
 	c := newFakeConfig(t)
 	defer c.Finish()
 
-	conf := c.NewAWSConfigClusterSingle()
+	conf := c.NewAmazonConfigClusterSingle()
 
 	err := c.writeYAML(conf)
 	if err != nil {

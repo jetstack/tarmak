@@ -21,7 +21,10 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
+
+var _ interfaces.Provider = &Amazon{}
 
 type Amazon struct {
 	conf *tarmakv1alpha1.Provider
@@ -89,6 +92,8 @@ func (a *Amazon) Cloud() string {
 // This parameters should include non sensitive information to identify a provider
 func (a *Amazon) Parameters() map[string]string {
 	p := map[string]string{
+		"name":          a.Name(),
+		"cloud":         a.Cloud(),
 		"public_zone":   a.conf.Amazon.PublicZone,
 		"bucket_prefix": a.conf.Amazon.BucketPrefix,
 	}
@@ -99,6 +104,10 @@ func (a *Amazon) Parameters() map[string]string {
 		p["amazon_profile"] = a.conf.Amazon.Profile
 	}
 	return p
+}
+
+func (a *Amazon) String() string {
+	return fmt.Sprintf("%s[%s]", a.Cloud(), a.Name())
 }
 
 func (a *Amazon) ListRegions() (regions []string, err error) {
@@ -120,7 +129,29 @@ func (a *Amazon) ListRegions() (regions []string, err error) {
 
 }
 
+func (a *Amazon) AskEnvironmentLocation(init interfaces.Initialize) (location string, err error) {
+	regions, err := a.ListRegions()
+	if err != nil {
+		return "", err
+	}
+
+	regionPos, err := init.Input().AskSelection(&input.AskSelection{
+		Query:   "In which region should this environment reside?",
+		Choices: regions,
+		Default: -1,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return regions[regionPos], nil
+}
+
 func (a *Amazon) Region() string {
+	// without environment selected, fall back to default region
+	if a.tarmak.Environment() == nil {
+		return "us-east-1"
+	}
 	return a.tarmak.Environment().Location()
 }
 
@@ -246,27 +277,31 @@ func (a *Amazon) Validate() error {
 	var result error
 	var err error
 
-	err = a.validateRemoteStateBucket()
-	if err != nil {
-		result = multierror.Append(err)
-	}
+	// These checks only make sense with an environment given
+	if a.tarmak.Environment() != nil {
+		err = a.validateRemoteStateBucket()
+		if err != nil {
+			result = multierror.Append(err)
+		}
 
-	err = a.validateRemoteStateDynamoDB()
-	if err != nil {
-		result = multierror.Append(err)
+		err = a.validateRemoteStateDynamoDB()
+		if err != nil {
+			result = multierror.Append(err)
+		}
+
+		err = a.validateAvailabilityZones()
+		if err != nil {
+			result = multierror.Append(err)
+		}
+
+		err = a.validateAWSKeyPair()
+		if err != nil {
+			result = multierror.Append(err)
+		}
+
 	}
 
 	err = a.validatePublicZone()
-	if err != nil {
-		result = multierror.Append(err)
-	}
-
-	err = a.validateAvailabilityZones()
-	if err != nil {
-		result = multierror.Append(err)
-	}
-
-	err = a.validateAWSKeyPair()
 	if err != nil {
 		result = multierror.Append(err)
 	}
