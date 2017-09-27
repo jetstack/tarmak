@@ -52,9 +52,11 @@ func (a *Amazon) validatePublicZone() error {
 		return err
 	}
 
+	publicZoneName := normalizeZone(a.conf.Amazon.PublicZone)
+
 	input := &route53.ListHostedZonesByNameInput{}
-	if dnsName := a.conf.Amazon.PublicZone; dnsName != "" {
-		input.DNSName = aws.String(dnsName)
+	if publicZoneName != "" {
+		input.DNSName = aws.String(publicZoneName)
 	}
 
 	if hostedZoneID := a.conf.Amazon.PublicHostedZoneID; hostedZoneID != "" {
@@ -63,11 +65,19 @@ func (a *Amazon) validatePublicZone() error {
 
 	var zone *route53.HostedZone
 
-	zones, err := svc.ListHostedZonesByName(input)
+	zonesResponse, err := svc.ListHostedZonesByName(input)
 	if err != nil {
 		return err
 	}
-	if len(zones.HostedZones) > 1 {
+	var zones []*route53.HostedZone
+	for pos, _ := range zonesResponse.HostedZones {
+		zone := zonesResponse.HostedZones[pos]
+		if normalizeZone(*zone.Name) == publicZoneName {
+			zones = append(zones, zone)
+		}
+	}
+
+	if len(zones) > 1 {
 		msg := "more than one matching zone found, "
 		if input.HostedZoneId != nil {
 			msg = fmt.Sprintf("%shostedZoneID = %s ", msg, *input.HostedZoneId)
@@ -76,13 +86,13 @@ func (a *Amazon) validatePublicZone() error {
 			msg = fmt.Sprintf("%sdnsName = %s ", msg, *input.DNSName)
 		}
 		return errors.New(msg)
-	} else if len(zones.HostedZones) == 0 {
+	} else if len(zones) == 0 {
 		zone, err = a.initPublicZone()
 		if err != nil {
 			return err
 		}
 	} else {
-		zone = zones.HostedZones[0]
+		zone = zones[0]
 	}
 
 	// store hostedzone id

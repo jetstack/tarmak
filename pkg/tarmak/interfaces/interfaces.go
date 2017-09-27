@@ -7,10 +7,11 @@ import (
 	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack-experimental/vault-unsealer/pkg/kv"
-	"github.com/jetstack/tarmak/pkg/tarmak/role"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/tarmak/role"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
 type Cluster interface {
@@ -36,6 +37,7 @@ type Cluster interface {
 	Roles() []*role.Role
 	InstancePools() []InstancePool
 	ImageIDs() (map[string]string, error)
+	Parameters() map[string]string
 }
 
 type Environment interface {
@@ -54,8 +56,10 @@ type Environment interface {
 	StateStack() Stack
 	VaultStack() Stack
 	VaultRootToken() (string, error)
+	Parameters() map[string]string
 	VaultTunnel() (VaultTunnel, error)
 	Config() *tarmakv1alpha1.Environment
+	Type() string
 }
 
 type Provider interface {
@@ -75,6 +79,8 @@ type Provider interface {
 	ListHosts() ([]Host, error)
 	InstanceType(string) (string, error)
 	VolumeType(string) (string, error)
+	String() string
+	AskEnvironmentLocation(Initialize) (string, error)
 }
 
 type Stack interface {
@@ -99,8 +105,12 @@ type Tarmak interface {
 	Log() *logrus.Entry
 	RootPath() (string, error)
 	ConfigPath() string
+	Clusters() []Cluster
 	Cluster() Cluster
+	Environments() []Environment
 	Environment() Environment
+	Providers() []Provider
+	Provider() Provider
 	Terraform() Terraform
 	Packer() Packer
 	Puppet() Puppet
@@ -113,10 +123,18 @@ type Tarmak interface {
 type Config interface {
 	Cluster(environment string, name string) (cluster *clusterv1alpha1.Cluster, err error)
 	Clusters(environment string) (clusters []*clusterv1alpha1.Cluster)
+	AppendCluster(prov *clusterv1alpha1.Cluster) error
+	UniqueClusterName(environment, name string) error
 	Provider(name string) (provider *tarmakv1alpha1.Provider, err error)
 	Providers() (providers []*tarmakv1alpha1.Provider)
+	AppendProvider(prov *tarmakv1alpha1.Provider) error
+	UniqueProviderName(name string) error
+	ValidName(name, regex string) error
+	ReadConfig() (*tarmakv1alpha1.Config, error)
 	Environment(name string) (environment *tarmakv1alpha1.Environment, err error)
 	Environments() (environments []*tarmakv1alpha1.Environment)
+	AppendEnvironment(*tarmakv1alpha1.Environment) error
+	UniqueEnvironmentName(name string) error
 	CurrentClusterName() string
 	CurrentEnvironmentName() string
 	Contact() string
@@ -181,4 +199,14 @@ type Volume interface {
 	Size() int
 	Type() string
 	Device() string
+}
+
+type Initialize interface {
+	Input() *input.Input
+	AskProjectName() (string, error)
+	AskContact() (string, error)
+	Config() Config
+	Tarmak() Tarmak
+	CurrentProvider() Provider
+	CurrentEnvironment() Environment
 }

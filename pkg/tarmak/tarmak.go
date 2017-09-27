@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
@@ -15,7 +16,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/puppet"
 	"github.com/jetstack/tarmak/pkg/tarmak/assets"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
-	"github.com/jetstack/tarmak/pkg/tarmak/environment"
+	"github.com/jetstack/tarmak/pkg/tarmak/initialize"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
@@ -57,15 +58,6 @@ func New(cmd *cobra.Command) *Tarmak {
 	t.log.Level = logrus.DebugLevel
 	t.log.Out = os.Stderr
 
-	// TODO: enable me for init
-	/*
-		// return early for init
-		if cmd.Name() == "init" {
-			t.initialize = initialize.New(t)
-			return t
-		}
-	*/
-
 	// read config, unless we are initialising the config
 	t.config, err = config.New(t)
 	if err != nil {
@@ -75,7 +67,19 @@ func New(cmd *cobra.Command) *Tarmak {
 	// TODO: This needs to be validated
 	_, err = t.config.ReadConfig()
 	if err != nil {
-		t.log.Fatal("unable to read config: ", err)
+
+		// TODO: This whole construct is really ugly, make this better soon
+		if strings.Contains(err.Error(), "no such file or directory") {
+			if cmd.Name() == "init" {
+				return t
+			}
+			t.log.Fatal("unable to find an existing config, run 'tarmak init'")
+		}
+
+	}
+
+	if cmd.Name() == "init" {
+		return t
 	}
 
 	err = t.initialize()
@@ -96,22 +100,13 @@ func New(cmd *cobra.Command) *Tarmak {
 func (t *Tarmak) initialize() error {
 	var err error
 
-	// get configs
-	environmentName := t.config.CurrentEnvironmentName()
-	environmentConfig, err := t.config.Environment(environmentName)
+	// get current environment
+	t.environment, err = t.newEnvironment(t.config.CurrentEnvironmentName())
 	if err != nil {
-		return fmt.Errorf("error finding environment '%s'", environmentName)
+		return err
 	}
 
-	clusterConfigs := t.config.Clusters(environmentName)
 	clusterName := t.config.CurrentClusterName()
-
-	// init environment
-	t.environment, err = environment.NewFromConfig(t, environmentConfig, clusterConfigs)
-	if err != nil {
-		return fmt.Errorf("error initializing environment '%s': %s", environmentName, err)
-	}
-
 	// init cluster
 	t.cluster, err = t.environment.Cluster(clusterName)
 	if err != nil {
@@ -121,9 +116,43 @@ func (t *Tarmak) initialize() error {
 	return nil
 }
 
-// This initializes a new tarmak config
-func (t *Tarmak) CmdInit() error {
-	return fmt.Errorf("tarmak init needs refactoring")
+// This initializes a new tarmak cluster
+func (t *Tarmak) CmdClusterInit() error {
+	i := initialize.New(t, os.Stdin, os.Stdout)
+	cluster, err := i.InitCluster()
+	if err != nil {
+		return err
+	}
+
+	t.log.Infof("successfully initialized cluster '%s'", cluster.ClusterName())
+
+	err = t.config.SetCurrentCluster(cluster.ClusterName())
+	if err != nil {
+		return fmt.Errorf("error setting current cluster: %s", err)
+	}
+	return nil
+}
+
+func (t *Tarmak) CmdEnvironmentInit() error {
+	i := initialize.New(t, os.Stdin, os.Stdout)
+	environment, err := i.InitEnvironment()
+	if err != nil {
+		return err
+	}
+
+	t.log.Infof("successfully initialized environment '%s'", environment.Name())
+	return nil
+}
+
+func (t *Tarmak) CmdProviderInit() error {
+	i := initialize.New(t, os.Stdin, os.Stdout)
+	provider, err := i.InitProvider()
+	if err != nil {
+		return err
+	}
+
+	t.log.Infof("successfully initialized provider '%s'", provider.Name())
+	return nil
 }
 
 func (t *Tarmak) Puppet() interfaces.Puppet {
@@ -142,8 +171,8 @@ func (t *Tarmak) Cluster() interfaces.Cluster {
 	return t.cluster
 }
 
-func (t *Tarmak) Environment() interfaces.Environment {
-	return t.environment
+func (t *Tarmak) Clusters() (clusters []interfaces.Cluster) {
+	return clusters
 }
 
 // this builds a temporary directory with the needed assets that are built into the go binary

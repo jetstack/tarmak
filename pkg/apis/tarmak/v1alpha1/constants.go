@@ -17,4 +17,10 @@ const (
 	ImageTagBaseImageName = "tarmak_base_image_name"
 )
 
+const (
+	EnvironmentTypeEmpty  = "empty"  // an environment that contains no cluster at all
+	EnvironmentTypeMulti  = "multi"  // an environment that contains a hub and 0-n clusters
+	EnvironmentTypeSingle = "single" // an environment that contains exactly one cluster
+)
+
 var KubernetesEpoch time.Time = time.Unix(1437436800, 0)
