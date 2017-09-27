@@ -33,6 +33,7 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 	// add multi cluster
 	if environment.Type() == tarmakv1alpha1.EnvironmentTypeMulti {
 		clusterType = tarmakv1alpha1.EnvironmentTypeMulti
+
 	}
 
 	// add single cluster
@@ -66,6 +67,12 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 
 	// TODO: add instance count changes (for master, worker nodes)
 	// TODO: add availability zones selection (one or many)
+
+	availabilityZones, err := init.CurrentEnvironment().Provider().AskInstancePoolLocation(init)
+	if err != nil {
+		return nil, err
+	}
+	init.Config().AddAvailabilityZones(cluster, availabilityZones)
 
 	return cluster, nil
 }

@@ -60,6 +60,21 @@ func (q *AskSelection) Question() string {
 	return strings.Join(output, "\n")
 }
 
+type AskMultipleSelection struct {
+	Query   string
+	Default int
+	AskOpen *AskOpen
+}
+
+func (q *AskMultipleSelection) Question() string {
+	output := []string{q.Query}
+	if q.Default > -1 {
+		output[0] += fmt.Sprintf(" (default '%d')", q.Default)
+	}
+	output = append(output, ">")
+	return strings.Join(output, "\n")
+}
+
 type AskYesNo struct {
 	Query   string
 	Default bool
@@ -185,6 +200,44 @@ func (i *Input) AskSelection(question *AskSelection) (int, error) {
 
 	}
 	return question.Default, nil
+}
+
+func (i *Input) AskMultipleSelection(question *AskMultipleSelection) (responseSlice []string, err error) {
+
+	var count int
+
+	for {
+		response, err := i.Askf(question.Question())
+		if err != nil {
+			return []string{}, err
+		}
+
+		if response == "" {
+			if question.Default > 0 {
+				count = question.Default
+				break
+			} else {
+				i.Warn("nothing entered and no default set")
+			}
+		} else if n, err := strconv.Atoi(response); err != nil || n < 1 {
+			i.Warn("response must be a number of 1 or more")
+		} else {
+			count = n
+			break
+		}
+	}
+
+	for n := 0; n < count; n++ {
+		fmt.Printf("(#%d) ", n+1)
+		response, err := i.AskOpen(question.AskOpen)
+		if err != nil {
+			return []string{}, err
+		}
+
+		responseSlice = append(responseSlice, response)
+	}
+	return responseSlice, nil
+
 }
 
 func (i *Input) AskOpen(question *AskOpen) (response string, err error) {

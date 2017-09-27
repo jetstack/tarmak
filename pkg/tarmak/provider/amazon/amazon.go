@@ -147,6 +147,20 @@ func (a *Amazon) AskEnvironmentLocation(init interfaces.Initialize) (location st
 	return regions[regionPos], nil
 }
 
+func (a *Amazon) AskInstancePoolLocation(init interfaces.Initialize) (zones []string, err error) {
+
+	multiSel := &input.AskMultipleSelection{
+		Query:   "How many availability zones in the cluster? Availability zones will be added to each instance pool in the cluster.",
+		Default: 1,
+		AskOpen: &input.AskOpen{
+			Query:      "Please enter an availability zone",
+			AllowEmpty: false,
+		},
+	}
+
+	return init.Input().AskMultipleSelection(multiSel)
+}
+
 func (a *Amazon) Region() string {
 	// without environment selected, fall back to default region
 	if a.tarmak.Environment() == nil {

@@ -278,6 +278,21 @@ func (c *Config) UniqueClusterName(environment, name string) error {
 	return nil
 }
 
+func (c *Config) AddAvailabilityZones(cluster *clusterv1alpha1.Cluster, zones []string) {
+
+	subnets := make([]*clusterv1alpha1.Subnet, len(zones))
+
+	for i, zone := range zones {
+		subnets[i] = &clusterv1alpha1.Subnet{
+			Location: zone,
+		}
+	}
+
+	for i := range cluster.InstancePools {
+		cluster.InstancePools[i].Subnets = subnets
+	}
+}
+
 func (c *Config) configPath() string {
 	return filepath.Join(c.tarmak.ConfigPath(), "tarmak.yaml")
 }
