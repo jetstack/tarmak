@@ -10,7 +10,7 @@ import (
 )
 
 // distCmd represents the dist command
-var clusterDebugPuppetBuildCmd = &cobra.Command{
+var clusterDebugPuppetBuildTarCmd = &cobra.Command{
 	Use:   "build-tar",
 	Short: "Build a puppet.tar.gz",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -34,5 +34,5 @@ var clusterDebugPuppetBuildCmd = &cobra.Command{
 }
 
 func init() {
-	clusterDebugPuppetCmd.AddCommand(clusterDebugPuppetBuildCmd)
+	clusterDebugPuppetCmd.AddCommand(clusterDebugPuppetBuildTarCmd)
 }
