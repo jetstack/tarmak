@@ -150,12 +150,12 @@ func (a *Amazon) AskEnvironmentLocation(init interfaces.Initialize) (location st
 func (a *Amazon) AskInstancePoolLocation(init interfaces.Initialize) (zones []string, err error) {
 
 	multiSel := &input.AskMultipleSelection{
-		Query:   "How many availability zones in the cluster? Availability zones will be added to each instance pool in the cluster.",
-		Default: 1,
 		AskOpen: &input.AskOpen{
-			Query:      "Please enter an availability zone",
+			Query:      "Please enter an availability zone(s)",
 			AllowEmpty: false,
 		},
+		Query:   "How many availability zones in the cluster? Availability zones will be added to each instance pool in the cluster.",
+		Default: 1,
 	}
 
 	return init.Input().AskMultipleSelection(multiSel)

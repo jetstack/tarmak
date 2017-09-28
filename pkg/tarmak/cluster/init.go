@@ -33,7 +33,6 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 	// add multi cluster
 	if environment.Type() == tarmakv1alpha1.EnvironmentTypeMulti {
 		clusterType = tarmakv1alpha1.EnvironmentTypeMulti
-
 	}
 
 	// add single cluster

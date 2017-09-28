@@ -61,14 +61,14 @@ func (q *AskSelection) Question() string {
 }
 
 type AskMultipleSelection struct {
+	AskOpen *AskOpen
 	Query   string
 	Default int
-	AskOpen *AskOpen
 }
 
 func (q *AskMultipleSelection) Question() string {
 	output := []string{q.Query}
-	if q.Default > -1 {
+	if q.Default > 0 {
 		output[0] += fmt.Sprintf(" (default '%d')", q.Default)
 	}
 	output = append(output, ">")
@@ -227,8 +227,9 @@ func (i *Input) AskMultipleSelection(question *AskMultipleSelection) (responseSl
 		}
 	}
 
+	i.ui.Output(question.AskOpen.Query)
 	for n := 0; n < count; n++ {
-		fmt.Printf("(#%d) ", n+1)
+		question.AskOpen.Query = fmt.Sprintf("(#%d)", n+1)
 		response, err := i.AskOpen(question.AskOpen)
 		if err != nil {
 			return []string{}, err
