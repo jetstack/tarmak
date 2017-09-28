@@ -48,6 +48,14 @@ func (h *host) User() string {
 	return h.user
 }
 
+func (h *host) Parameters() map[string]string {
+	return map[string]string{
+		"id":       h.ID(),
+		"hostname": h.Hostname(),
+		"roles":    strings.Join(h.Roles(), ", "),
+	}
+}
+
 func (h *host) SSHConfig() string {
 	config := fmt.Sprintf(`host %s
     User %s
