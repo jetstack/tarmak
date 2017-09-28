@@ -10,8 +10,8 @@ import (
 )
 
 // distCmd represents the dist command
-var puppetDistCmd = &cobra.Command{
-	Use:   "puppet-dist",
+var clusterDebugPuppetBuildCmd = &cobra.Command{
+	Use:   "build-tar",
 	Short: "Build a puppet.tar.gz",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
@@ -34,5 +34,5 @@ var puppetDistCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(puppetDistCmd)
+	clusterDebugPuppetCmd.AddCommand(clusterDebugPuppetBuildCmd)
 }

@@ -7,7 +7,7 @@ import (
 var clusterImagesCmd = &cobra.Command{
 	Use:     "images",
 	Short:   "operations on images",
-	Aliases: []string{"images"},
+	Aliases: []string{"image"},
 }
 
 func init() {

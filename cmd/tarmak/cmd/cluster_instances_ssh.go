@@ -6,7 +6,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak"
 )
 
-var sshCmd = &cobra.Command{
+var clusterInstancesSshCmd = &cobra.Command{
 	Use:   "ssh",
 	Short: "ssh into instance",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -16,5 +16,5 @@ var sshCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(sshCmd)
+	clusterInstancesCmd.AddCommand(clusterInstancesSshCmd)
 }
