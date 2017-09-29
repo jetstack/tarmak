@@ -38,6 +38,7 @@ type Cluster interface {
 	InstancePools() []InstancePool
 	ImageIDs() (map[string]string, error)
 	Parameters() map[string]string
+	ListHosts() ([]Host, error)
 }
 
 type Environment interface {
@@ -176,6 +177,7 @@ type Host interface {
 	User() string
 	Roles() []string
 	SSHConfig() string
+	Parameters() map[string]string
 }
 
 type Puppet interface {

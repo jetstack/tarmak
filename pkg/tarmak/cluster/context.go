@@ -72,6 +72,10 @@ func (c *Cluster) InstancePools() []interfaces.InstancePool {
 	return c.instancePools
 }
 
+func (c *Cluster) ListHosts() ([]interfaces.Host, error) {
+	return c.Environment().Provider().ListHosts()
+}
+
 func (c *Cluster) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1alpha1.InstancePool) {
 	instancePoolsMap = make(map[string][]*clusterv1alpha1.InstancePool)
 	for pos, _ := range c.conf.InstancePools {
