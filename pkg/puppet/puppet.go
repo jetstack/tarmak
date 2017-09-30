@@ -90,20 +90,32 @@ func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, rol
 
 	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.ClusterAutoscaler != nil && conf.ClusterAutoscaler.Enabled {
 		hieraData.classes = append(hieraData.classes, `kubernetes_addons::cluster_autoscaler`)
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler_image: "%s"`, conf.ClusterAutoscaler.Image))
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler_version: "%s"`, conf.ClusterAutoscaler.Version))
+		if conf.ClusterAutoscaler.Image != "" {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::image: "%s"`, conf.ClusterAutoscaler.Image))
+		}
+		if conf.ClusterAutoscaler.Version != "" {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::version: "%s"`, conf.ClusterAutoscaler.Version))
+		}
 	}
 
 	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.Tiller != nil && conf.Tiller.Enabled {
 		hieraData.classes = append(hieraData.classes, `kubernetes_addons::tiller`)
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller_image: "%s"`, conf.Tiller.Image))
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller_version: "%s"`, conf.Tiller.Version))
+		if conf.Tiller.Image != "" {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller::image: "%s"`, conf.Tiller.Image))
+		}
+		if conf.Tiller.Version != "" {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller::version: "%s"`, conf.Tiller.Version))
+		}
 	}
 
 	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.Dashboard != nil && conf.Dashboard.Enabled {
 		hieraData.classes = append(hieraData.classes, `kubernetes_addons::dashboard`)
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard_image: "%s"`, conf.Dashboard.Image))
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard_version: "%s"`, conf.Dashboard.Version))
+		if conf.Dashboard.Image != "" {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard::image: "%s"`, conf.Dashboard.Image))
+		}
+		if conf.Dashboard.Version != "" {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard::version: "%s"`, conf.Dashboard.Version))
+		}
 	}
 
 	return
@@ -124,10 +136,12 @@ func contentClusterConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
 	hieraData := &hieraData{}
 	kubernetesClusterConfig(conf.Kubernetes, hieraData)
 
-	return serialiseHieraData(hieraData)
+	classes, variables := serialiseHieraData(hieraData)
+
+	return append(classes, variables...)
 }
 
-func contentInstancePoolConfig(clusterConf *clusterv1alpha1.Cluster, instanceConf *clusterv1alpha1.InstancePool, roleName string) (lines []string) {
+func contentInstancePoolConfig(clusterConf *clusterv1alpha1.Cluster, instanceConf *clusterv1alpha1.InstancePool, roleName string) (classes, variables []string) {
 
 	hieraData := &hieraData{}
 	kubernetesClusterConfigPerRole(clusterConf.Kubernetes, roleName, hieraData)
@@ -136,29 +150,30 @@ func contentInstancePoolConfig(clusterConf *clusterv1alpha1.Cluster, instanceCon
 	return serialiseHieraData(hieraData)
 }
 
-func serialiseHieraData(hieraData *hieraData) (lines []string) {
+func serialiseHieraData(hieraData *hieraData) (classes, variables []string) {
 
 	if hieraData == nil {
-		return lines
+		return classes, variables
 	}
 
 	if len(hieraData.classes) > 0 {
-		lines = append(lines, `classes:`)
+		classes = append(classes, `classes:`)
 		for _, class := range hieraData.classes {
-			lines = append(lines, fmt.Sprintf(`- %s`, class))
+			classes = append(classes, fmt.Sprintf(`- %s`, class))
 		}
+		classes = append(classes, "")
+		classes = append(classes, "")
 	}
 
-	lines = append(lines, "")
-
-	for _, variable := range hieraData.variables {
-		lines = append(lines, fmt.Sprintf(`%s`, variable))
+	if len(hieraData.variables) > 0 {
+		for _, variable := range hieraData.variables {
+			variables = append(variables, fmt.Sprintf(`%s`, variable))
+		}
+		variables = append(variables, "")
+		variables = append(variables, "")
 	}
 
-	lines = append(lines, "")
-	lines = append(lines, "")
-
-	return lines
+	return classes, variables
 }
 
 func (p *Puppet) writeLines(filePath string, lines []string) error {
@@ -200,9 +215,16 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 
 	// loop through instance pools
 	for _, instancePool := range cluster.InstancePools() {
+
+		classes, variables := contentInstancePoolConfig(cluster.Config(), instancePool.Config(), instancePool.Role().Name())
+
+		//  classes
 		err = p.writeLines(
-			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s.yaml", instancePool.Name())),
-			contentInstancePoolConfig(cluster.Config(), instancePool.Config(), instancePool.Role().Name()),
+			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s_classes.yaml", instancePool.Name())), classes,
+		)
+		//  variables
+		err = p.writeLines(
+			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s_variables.yaml", instancePool.Name())), variables,
 		)
 		if err != nil {
 			return fmt.Errorf("error writing global hiera for instancePool %s: %s", instancePool.Name(), err)
