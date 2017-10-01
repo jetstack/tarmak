@@ -57,7 +57,7 @@ class kubernetes_addons::params{
   $nginx_ingress_request_mem='100Mi'
 
   $cluster_autoscaler_image='gcr.io/google_containers/cluster-autoscaler'
-  $cluster_autoscaler_version='v0.4.0'
+  $cluster_autoscaler_version=''
   $cluster_autoscaler_limit_cpu='200m'
   $cluster_autoscaler_limit_mem='500Mi'
   $cluster_autoscaler_request_cpu='100m'
