@@ -165,7 +165,8 @@ func (tc *TerraformContainer) Apply() error {
 }
 
 func (tc *TerraformContainer) Init() error {
-	returnCode, err := tc.Execute("terraform", []string{"init", "-input=false"})
+	returnCode, err := tc.Execute("terraform", []string{"init", "-input=false", "-get-plugins=false"})
+
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,7 @@ func (tc *TerraformContainer) Init() error {
 }
 
 func (tc *TerraformContainer) InitForceCopy() error {
-	returnCode, err := tc.Execute("terraform", []string{"init", "-force-copy", "-input=false"})
+	returnCode, err := tc.Execute("terraform", []string{"init", "-force-copy", "-input=false", "-get-plugins=false"})
 	if err != nil {
 		return err
 	}

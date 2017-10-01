@@ -31,7 +31,7 @@ func (a *Amazon) RemoteState(namespace string, clusterName string, stackName str
     bucket = "%s"
     key = "%s"
     region = "%s"
-    lock_table ="%s"
+    dynamodb_table ="%s"
   }
 }`,
 		a.RemoteStateName(),
