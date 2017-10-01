@@ -73,11 +73,17 @@ test::puppet_module::tarmak:
   <<: *test_puppet_module
   variables:
     MODULE_NAME: tarmak
+acceptance::puppet_module::tarmak::centos-7-k8s-1.8:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+    KUBERNETES_VERSION: 1.8.0
+    BEAKER_TARGET: default
 acceptance::puppet_module::tarmak::centos-7-k8s-1.7:
   <<: *acceptance_puppet_module
   variables:
     MODULE_NAME: tarmak
-    KUBERNETES_VERSION: 1.7.4
+    KUBERNETES_VERSION: 1.7.7
     BEAKER_TARGET: default
 acceptance::puppet_module::tarmak::centos-7-k8s-1.6-rbac:
   <<: *acceptance_puppet_module
