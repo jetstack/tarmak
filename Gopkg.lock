@@ -480,18 +480,19 @@
 
 [[projects]]
   branch = "master"
-  name = "k8s.io/gengo"
-  packages = ["args","examples/defaulter-gen/generators","generator","namer","parser","types"]
-  revision = "9e661e9308f078838e266cca1c673922088c0ea4"
+  name = "k8s.io/code-generator"
+  packages = ["cmd/client-gen","cmd/client-gen/args","cmd/client-gen/generators","cmd/client-gen/generators/fake","cmd/client-gen/generators/scheme","cmd/client-gen/generators/util","cmd/client-gen/path","cmd/client-gen/types","cmd/conversion-gen","cmd/conversion-gen/generators","cmd/deepcopy-gen","cmd/defaulter-gen","cmd/informer-gen","cmd/informer-gen/generators","cmd/lister-gen","cmd/lister-gen/generators"]
+  revision = "77491151d5f87cdc19d40f5746b4d90f8d20f180"
 
 [[projects]]
-  name = "k8s.io/kubernetes"
-  packages = ["cmd/libs/go2idl/defaulter-gen"]
-  revision = "25d3523359ff17dda6deb867a7c3dd6c8b7ea705"
+  branch = "master"
+  name = "k8s.io/gengo"
+  packages = ["args","examples/deepcopy-gen/generators","examples/defaulter-gen/generators","examples/set-gen/sets","generator","namer","parser","types"]
+  revision = "9e661e9308f078838e266cca1c673922088c0ea4"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c20109ec158c221490917ff362efa0247fcccf994115067f64355a8b0184ab09"
+  inputs-digest = "ffc7b45a509a65a09453f8cfebfd57a23b20c315bf0f3a7125f41b6b4763b8fb"
   solver-name = "gps-cdcl"
   solver-version = 1

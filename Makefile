@@ -65,27 +65,27 @@ $(BINDIR)/go-bindata:
 
 $(BINDIR)/defaulter-gen:
 	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/defaulter-gen
+	go build -o $@ ./vendor/k8s.io/code-generator/cmd/defaulter-gen
 
 $(BINDIR)/deepcopy-gen:
 	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/deepcopy-gen
+	go build -o $@ ./vendor/k8s.io/code-generator/cmd/deepcopy-gen
 
 $(BINDIR)/conversion-gen:
 	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/conversion-gen
+	go build -o $@ ./vendor/k8s.io/code-generator/cmd/conversion-gen
 
 $(BINDIR)/client-gen:
 	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/client-gen
+	go build -o $@ ./vendor/k8s.io/code-generator/cmd/client-gen
 
 $(BINDIR)/lister-gen:
 	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/lister-gen
+	go build -o $@ ./vendor/k8s.io/code-generator/cmd/lister-gen
 
 $(BINDIR)/informer-gen:
 	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/kubernetes/cmd/libs/go2idl/informer-gen
+	go build -o $@ ./vendor/k8s.io/code-generator/cmd/informer-gen
 
 depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen
 
@@ -95,16 +95,29 @@ go_generate: depend
 go_generate_types: depend $(TYPES_FILES)
 	# generate types
 	defaulter-gen \
-	  --v 1 --logtostderr \
-	  --input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
-	  --input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
-	  --extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
-	  --extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
-	  --output-file-base "zz_generated.defaults"
-
+		--v 1 --logtostderr \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
+		--extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
+		--extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
+		--extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
+		--extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
+		--output-file-base "zz_generated.defaults"
 	# generate deep copies
 	deepcopy-gen \
 		--v 1 --logtostderr \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
 		--output-file-base zz_generated.deepcopy
+	# generate conversions
+	conversion-gen \
+		--v 1 --logtostderr \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
+		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
+		--output-file-base zz_generated.conversion
+	# generate all pkg/client contents
+	$(HACK_DIR)/update-client-gen.sh
