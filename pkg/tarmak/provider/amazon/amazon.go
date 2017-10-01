@@ -456,7 +456,7 @@ func (a *Amazon) InstanceType(typeIn string) (typeOut string, err error) {
 		return "t2.nano", nil
 	}
 	if typeIn == clusterv1alpha1.InstancePoolSizeSmall {
-		return "m3.medium", nil
+		return "t2.medium", nil
 	}
 	if typeIn == clusterv1alpha1.InstancePoolSizeMedium {
 		return "m4.large", nil
