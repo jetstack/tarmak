@@ -1,5 +1,14 @@
 # vendor in code gen tools
-required = ["github.com/golang/mock/mockgen", "github.com/jteeuwen/go-bindata/go-bindata", "k8s.io/kubernetes/cmd/libs/go2idl/defaulter-gen"]
+required = [
+  "k8s.io/code-generator/cmd/client-gen",
+  "k8s.io/code-generator/cmd/conversion-gen",
+  "k8s.io/code-generator/cmd/deepcopy-gen",
+  "k8s.io/code-generator/cmd/defaulter-gen",
+  "k8s.io/code-generator/cmd/informer-gen",
+  "k8s.io/code-generator/cmd/lister-gen",
+  "github.com/golang/mock/mockgen",
+  "github.com/jteeuwen/go-bindata/go-bindata",
+]
 
 [[constraint]]
   branch = "master"
@@ -8,14 +17,6 @@ required = ["github.com/golang/mock/mockgen", "github.com/jteeuwen/go-bindata/go
 [[constraint]]
   branch = "master"
   name = "github.com/hashicorp/go-multierror"
-
-[[constraint]]
-  name = "github.com/mholt/archiver"
-  version = "2.0.0"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/mitchellh/go-homedir"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
@@ -36,10 +37,6 @@ required = ["github.com/golang/mock/mockgen", "github.com/jteeuwen/go-bindata/go
 [[constraint]]
   branch = "master"
   name = "k8s.io/client-go"
-
-[[constraint]]
-  revision = "25d3523359ff17dda6deb867a7c3dd6c8b7ea705"
-  name = "k8s.io/kubernetes"
 
 [[constraint]]
   name = "github.com/jteeuwen/go-bindata"
