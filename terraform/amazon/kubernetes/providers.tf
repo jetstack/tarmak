@@ -1,5 +1,15 @@
 provider "aws" {
-  region = "${var.region}"
+  region              = "${var.region}"
+  allowed_account_ids = ["${var.allowed_account_ids}"]
+  version             = "~> 1.0"
+}
+
+provider "template" {
+  version = "~> 1.0"
+}
+
+provider "terraform" {
+  version = "~> 1.0"
 }
 
 data "aws_caller_identity" "current" {}
