@@ -281,29 +281,29 @@ func (a *Amazon) Validate() error {
 	if a.tarmak.Environment() != nil {
 		err = a.validateRemoteStateBucket()
 		if err != nil {
-			result = multierror.Append(err)
+			result = multierror.Append(result, err)
 		}
 
 		err = a.validateRemoteStateDynamoDB()
 		if err != nil {
-			result = multierror.Append(err)
+			result = multierror.Append(result, err)
 		}
 
 		err = a.validateAvailabilityZones()
 		if err != nil {
-			result = multierror.Append(err)
+			result = multierror.Append(result, err)
 		}
 
 		err = a.validateAWSKeyPair()
 		if err != nil {
-			result = multierror.Append(err)
+			result = multierror.Append(result, err)
 		}
 
 	}
 
 	err = a.validatePublicZone()
 	if err != nil {
-		result = multierror.Append(err)
+		result = multierror.Append(result, err)
 	}
 
 	if result != nil {
