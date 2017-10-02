@@ -161,16 +161,14 @@ func serialiseHieraData(hieraData *hieraData) (classes, variables []string) {
 		for _, class := range hieraData.classes {
 			classes = append(classes, fmt.Sprintf(`- %s`, class))
 		}
-		classes = append(classes, "")
-		classes = append(classes, "")
+		classes = append(classes, "", "")
 	}
 
 	if len(hieraData.variables) > 0 {
 		for _, variable := range hieraData.variables {
 			variables = append(variables, fmt.Sprintf(`%s`, variable))
 		}
-		variables = append(variables, "")
-		variables = append(variables, "")
+		variables = append(variables, "", "")
 	}
 
 	return classes, variables
