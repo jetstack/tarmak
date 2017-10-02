@@ -7,7 +7,6 @@ class kubernetes_addons::cluster_autoscaler(
   String $request_mem='300Mi',
   Integer $min_instances=3,
   Integer $max_instances=6,
-  $asg_name=undef,
   $ca_mounts=$::kubernetes_addons::params::ca_mounts,
   $cloud_provider=$::kubernetes_addons::params::cloud_provider,
   $aws_region=$::kubernetes_addons::params::aws_region,
