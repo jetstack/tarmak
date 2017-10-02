@@ -53,18 +53,6 @@ class kubernetes_addons::params{
   $nginx_ingress_request_cpu='100m'
   $nginx_ingress_request_mem='100Mi'
 
-  $cluster_autoscaler_limit_cpu='200m'
-  $cluster_autoscaler_limit_mem='500Mi'
-  $cluster_autoscaler_request_cpu='100m'
-  $cluster_autoscaler_request_mem='300Mi'
-  $cluster_autoscaler_min_instances=3
-  $cluster_autoscaler_max_instances=6
-  if defined('$kubernetes::cluster_name') {
-    $cluster_autoscaler_asg_name="kubernetes-${::kubernetes::cluster_name}-worker"
-  } else {
-    $cluster_autoscaler_asg_name=undef
-  }
-
   $heapster_image='gcr.io/google_containers/heapster-amd64'
   $heapster_version='v1.3.0'
   $heapster_nanny_limit_cpu='50m'
