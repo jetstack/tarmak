@@ -1,6 +1,6 @@
 class kubernetes_addons::tiller(
-  $image=$::kubernetes_addons::params::tiller_image,
-  $version=$::kubernetes_addons::params::tiller_version,
+  String $image='gcr.io/kubernetes-helm/tiller',
+  String $version='v2.6.1',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 

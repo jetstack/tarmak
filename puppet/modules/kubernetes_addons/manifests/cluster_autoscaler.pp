@@ -1,13 +1,12 @@
 class kubernetes_addons::cluster_autoscaler(
-  $image=$::kubernetes_addons::params::cluster_autoscaler_image,
+  String $image='gcr.io/google_containers/cluster-autoscaler',
   String $version='',
-  $request_cpu=$::kubernetes_addons::params::cluster_autoscaler_request_cpu,
-  $request_mem=$::kubernetes_addons::params::cluster_autoscaler_request_mem,
-  $limit_cpu=$::kubernetes_addons::params::cluster_autoscaler_limit_cpu,
-  $limit_mem=$::kubernetes_addons::params::cluster_autoscaler_limit_mem,
-  $asg_name=$::kubernetes_addons::params::cluster_autoscaler_asg_name,
-  $min_instances=$::kubernetes_addons::params::cluster_autoscaler_min_instances,
-  $max_instances=$::kubernetes_addons::params::cluster_autoscaler_max_instances,
+  String $limit_cpu='200m',
+  String $limit_mem='500Mi',
+  String $request_cpu='100m',
+  String $request_mem='300Mi',
+  Integer $min_instances=3,
+  Integer $max_instances=6,
   $ca_mounts=$::kubernetes_addons::params::ca_mounts,
   $cloud_provider=$::kubernetes_addons::params::cloud_provider,
   $aws_region=$::kubernetes_addons::params::aws_region,
@@ -19,6 +18,12 @@ class kubernetes_addons::cluster_autoscaler(
     $rbac_enabled = true
   } else {
     $rbac_enabled = false
+  }
+
+  if defined('$kubernetes::cluster_name') {
+    $asg_name="kubernetes-${::kubernetes::cluster_name}-worker"
+  } else {
+    $asg_name=undef
   }
 
   if $version == '' {

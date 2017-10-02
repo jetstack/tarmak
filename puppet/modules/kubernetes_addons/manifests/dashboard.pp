@@ -1,10 +1,10 @@
 class kubernetes_addons::dashboard(
-  $image=$::kubernetes_addons::params::dashboard_image,
-  $version=$::kubernetes_addons::params::dashboard_version,
-  $request_cpu=$::kubernetes_addons::params::dashboard_request_cpu,
-  $request_mem=$::kubernetes_addons::params::dashboard_request_mem,
-  $limit_cpu=$::kubernetes_addons::params::dashboard_limit_cpu,
-  $limit_mem=$::kubernetes_addons::params::dashboard_limit_mem,
+  String $image='gcr.io/google_containers/kubernetes-dashboard-amd64',
+  String $version='v1.5.1',
+  String $limit_cpu='100m',
+  String $limit_mem='128Mi',
+  String $request_cpu='10m',
+  String $request_mem='64Mi',
   $replicas=undef,
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes

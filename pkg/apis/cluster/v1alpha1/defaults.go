@@ -32,7 +32,7 @@ func SetDefaults_Cluster(obj *Cluster) {
 
 	// set kubernetes object if nil {
 	if obj.Kubernetes == nil {
-		obj.Kubernetes = &Kubernetes{}
+		obj.Kubernetes = &ClusterKubernetes{}
 	}
 
 	// set default kubernetes version
@@ -53,6 +53,21 @@ func SetDefaults_Cluster(obj *Cluster) {
 	// serviceCIDR
 	if obj.Kubernetes.ServiceCIDR == "" {
 		obj.Kubernetes.ServiceCIDR = "10.254.0.0/16"
+	}
+
+	// clusterAutoscaler
+	if obj.Kubernetes.ClusterAutoscaler == nil {
+		obj.Kubernetes.ClusterAutoscaler = &ClusterKubernetesClusterAutoscaler{}
+	}
+
+	// tiller
+	if obj.Kubernetes.Tiller == nil {
+		obj.Kubernetes.Tiller = &ClusterKubernetesTiller{}
+	}
+
+	// dashboard
+	if obj.Kubernetes.Dashboard == nil {
+		obj.Kubernetes.Dashboard = &ClusterKubernetesDashboard{}
 	}
 }
 
