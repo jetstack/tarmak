@@ -12,31 +12,25 @@ BINDIR=${REPO_ROOT}/bin
 # Generate the internal clientset (pkg/client/clientset_generated/internalclientset)
 ${BINDIR}/client-gen "$@" \
           --input-base "github.com/jetstack/tarmak/pkg/apis/" \
-          --input "tarmak/" \
-          --input "cluster/"
-          --clientset-path "github.com/jetstack/tarmak/pkg/client/" \
+          --input "wing" \
+          --clientset-path "github.com/jetstack/tarmak/pkg/wing/clients" \
           --clientset-name internalclientset \
 # Generate the versioned clientset (pkg/client/clientset_generated/clientset)
 ${BINDIR}/client-gen "$@" \
           --input-base "github.com/jetstack/tarmak/pkg/apis/" \
-          --input "tarmak/v1alpha1" \
-          --input "cluster/v1alpha1" \
-          --clientset-path "github.com/jetstack/tarmak/pkg/" \
+          --input "wing/v1alpha1" \
+          --clientset-path "github.com/jetstack/tarmak/pkg/wing" \
           --clientset-name "client" \
 # generate lister
 ${BINDIR}/lister-gen "$@" \
-          --input-dirs="github.com/jetstack/tarmak/pkg/apis/tarmak" \
-          --input-dirs="github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1" \
-          --input-dirs="github.com/jetstack/tarmak/pkg/apis/cluster" \
-          --input-dirs="github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1" \
-          --output-package "github.com/jetstack/tarmak/pkg/listers" \
+          --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing" \
+          --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1" \
+          --output-package "github.com/jetstack/tarmak/pkg/wing/listers" \
 # generate informer
 ${BINDIR}/informer-gen "$@" \
-          --input-dirs "github.com/jetstack/tarmak/pkg/apis/tarmak" \
-          --input-dirs "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1" \
-          --input-dirs "github.com/jetstack/tarmak/pkg/apis/cluster" \
-          --input-dirs "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1" \
-          --internal-clientset-package "github.com/jetstack/tarmak/pkg/client/internalclientset" \
-          --versioned-clientset-package "github.com/jetstack/tarmak/pkg/client" \
-          --listers-package "github.com/jetstack/tarmak/pkg/listers" \
-          --output-package "github.com/jetstack/tarmak/pkg/informers"
+          --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing" \
+          --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1" \
+          --internal-clientset-package "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset" \
+          --versioned-clientset-package "github.com/jetstack/tarmak/pkg/wing/client" \
+          --listers-package "github.com/jetstack/tarmak/pkg/wing/listers" \
+          --output-package "github.com/jetstack/tarmak/pkg/wing/informers"
