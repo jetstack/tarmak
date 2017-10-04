@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -26,7 +27,7 @@ import (
 )
 
 // This make sure puppet is converged when neccessary
-func (w *Wing) runPuppet() error {
+func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 	// start converging mainfest
 	status := &v1alpha1.InstanceStatus{
 		Converge: &v1alpha1.InstanceStatusManifest{
@@ -39,28 +40,51 @@ func (w *Wing) runPuppet() error {
 		w.log.Warn("reporting status failed: ", err)
 	}
 
-	reader, err := w.getManifests(w.flags.ManifestURL)
+	originalReader, err := w.getManifests(w.flags.ManifestURL)
 	if err != nil {
-		return err
+		return status, err
 	}
 
+	// buffer file locally
+	buf, err := ioutil.ReadAll(originalReader)
+	if err != nil {
+		return status, err
+	}
+	err = originalReader.Close()
+	if err != nil {
+		return status, err
+	}
+
+	// create reader from buffer
+	reader := bytes.NewReader(buf)
+
+	// build hash over puppet.tar.gz
+	hash := sha256.New()
+	if _, err := io.Copy(hash, reader); err != nil {
+		return status, err
+	}
+	hashString := fmt.Sprintf("sha256:%x", hash.Sum(nil))
+
+	// roll back reader
+	reader.Seek(0, 0)
+
+	// read tar in
 	tarReader, err := gzip.NewReader(reader)
 	if err != nil {
-		return err
+		return status, err
 	}
 
 	dir, err := ioutil.TempDir("", "wing-puppet-tar-gz")
 	if err != nil {
-		return err
+		return status, err
 	}
 	defer os.RemoveAll(dir) // clean up
 
 	err = archive.Unpack(tarReader, dir, &archive.TarOptions{})
 	if err != nil {
-		return err
+		return status, err
 	}
 	tarReader.Close()
-	reader.Close()
 
 	var puppetMessages []string
 	var puppetRetCodes []int
@@ -84,6 +108,7 @@ func (w *Wing) runPuppet() error {
 				State:     v1alpha1.InstanceManifestStateConverging,
 				Messages:  puppetMessages,
 				ExitCodes: puppetRetCodes,
+				Hash:      hashString,
 			},
 		}
 		statusErr := w.reportStatus(status)
@@ -105,32 +130,26 @@ func (w *Wing) runPuppet() error {
 		log.Fatal(err)
 	}
 
-	return nil
+	return status, nil
 
 }
 
-func (w *Wing) convergeLoop() {
-	status := &v1alpha1.InstanceStatus{
-		Converge: &v1alpha1.InstanceStatusManifest{
-			State: v1alpha1.InstanceManifestStateConverging,
-		},
-	}
-
+func (w *Wing) converge() {
 	// run puppet
-	err := w.runPuppet()
+	status, err := w.runPuppet()
 	if err != nil {
 		status.Converge.State = v1alpha1.InstanceManifestStateError
-		status.Converge.Messages = []string{err.Error()}
+		status.Converge.Messages = append(status.Converge.Messages, err.Error())
 		w.log.Error(err)
 	} else {
 		status.Converge.State = v1alpha1.InstanceManifestStateConverged
 	}
+
 	// feedback puppet status to apiserver
 	err = w.reportStatus(status)
 	if err != nil {
 		w.log.Warn("reporting status failed: ", err)
 	}
-
 }
 
 // apply puppet code in a specific directory

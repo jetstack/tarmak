@@ -2,6 +2,7 @@ package wing
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/fields"
@@ -69,8 +70,8 @@ func (w *Wing) Run(args []string) error {
 	// start watching for API server events that trigger applies
 	w.watchForNotifications()
 
-	// run converge loop
-	w.convergeLoop()
+	// run converge loop after first start
+	w.converge()
 
 	// Wait forever
 	select {}
@@ -88,8 +89,8 @@ func (w *Wing) Must(err error) *Wing {
 
 func (w *Wing) watchForNotifications() {
 
-	// create the pod watcher
-	instanceListWatcher := cache.NewListWatchFromClient(w.clientset.WingV1alpha1().RESTClient(), "instances", w.flags.ClusterName, fields.Everything())
+	// create the instance watcher
+	instanceListWatcher := cache.NewListWatchFromClient(w.clientset.WingV1alpha1().RESTClient(), "instances", w.flags.ClusterName, fields.ParseSelectorOrDie(fmt.Sprintf("metadata.name=%s", w.flags.InstanceName)))
 
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -102,13 +103,13 @@ func (w *Wing) watchForNotifications() {
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(key)
+				queue.AddAfter(key, 2*time.Second)
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
-				queue.Add(key)
+				queue.AddAfter(key, 2*time.Second)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -116,12 +117,12 @@ func (w *Wing) watchForNotifications() {
 			// key function.
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(key)
+				queue.AddAfter(key, 2*time.Second)
 			}
 		},
 	}, cache.Indexers{})
 
-	controller := NewController(queue, indexer, informer)
+	controller := NewController(queue, indexer, informer, w)
 
 	// Now let's start the controller
 	go controller.Run(1, w.stopCh)

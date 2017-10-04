@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/glog"
+	"github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -17,13 +17,17 @@ type Controller struct {
 	indexer  cache.Indexer
 	queue    workqueue.RateLimitingInterface
 	informer cache.Controller
+	log      *logrus.Entry
+	wing     *Wing
 }
 
-func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller) *Controller {
+func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller, wing *Wing) *Controller {
 	return &Controller{
 		informer: informer,
 		indexer:  indexer,
 		queue:    queue,
+		log:      wing.log.WithField("tier", "controller"),
+		wing:     wing,
 	}
 }
 
@@ -51,7 +55,7 @@ func (c *Controller) processNextItem() bool {
 func (c *Controller) syncToStdout(key string) error {
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		c.log.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
@@ -61,7 +65,26 @@ func (c *Controller) syncToStdout(key string) error {
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual instance, to detect that a Instance was recreated with the same name
-		fmt.Printf("Sync/Add/Update for Instance %s\n", obj.(*v1alpha1.Instance).GetName())
+		instance := obj.(*v1alpha1.Instance)
+
+		// trigger converge if status time is older or not existing
+		if instance.Spec != nil && instance.Spec.Converge != nil && !instance.Spec.Converge.RequestTimestamp.Time.IsZero() {
+			if instance.Status != nil && instance.Status.Converge != nil && !instance.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
+				if instance.Status.Converge.LastUpdateTimestamp.Time.After(instance.Spec.Converge.RequestTimestamp.Time) {
+					c.log.Debug("no converge neccessary, last update was after request")
+					return nil
+				}
+			} else {
+				c.log.Debug("no converge neccessary, no status section found or update timestamp zero")
+				return nil
+			}
+		} else {
+			c.log.Debug("no converge neccessary, no spec section found or request timestamp zero")
+			return nil
+		}
+
+		c.log.Infof("running converge")
+		c.wing.converge()
 	}
 	return nil
 }
@@ -78,7 +101,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		glog.Infof("Error syncing instance %v: %v", key, err)
+		c.log.Infof("Error syncing instance %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -89,7 +112,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	glog.Infof("Dropping instance %q out of the queue: %v", key, err)
+	c.log.Infof("Dropping instance %q out of the queue: %v", key, err)
 }
 
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
@@ -97,7 +120,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 
 	// Let the workers stop when we are done
 	defer c.queue.ShutDown()
-	glog.Info("Starting Instance controller")
+	c.log.Info("Starting Instance controller")
 
 	go c.informer.Run(stopCh)
 
@@ -112,7 +135,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 	}
 
 	<-stopCh
-	glog.Info("Stopping Instance controller")
+	c.log.Info("Stopping Instance controller")
 }
 
 func (c *Controller) runWorker() {
