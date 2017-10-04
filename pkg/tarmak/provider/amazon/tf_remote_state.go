@@ -83,12 +83,17 @@ func (a *Amazon) initRemoteStateBucket() error {
 		return err
 	}
 
-	_, err = svc.CreateBucket(&s3.CreateBucketInput{
+	createBucketInput := &s3.CreateBucketInput{
 		Bucket: aws.String(a.RemoteStateName()),
-		CreateBucketConfiguration: &s3.CreateBucketConfiguration{
+	}
+
+	if a.Region() != "us-east-1" {
+		createBucketInput.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
 			LocationConstraint: aws.String(a.Region()),
-		},
-	})
+		}
+	}
+
+	_, err = svc.CreateBucket(createBucketInput)
 	if err != nil {
 		return err
 	}
@@ -126,7 +131,15 @@ func (a *Amazon) validateRemoteStateBucket() error {
 	if err != nil {
 		return err
 	}
-	if bucketRegion, myRegion := *location.LocationConstraint, a.Region(); bucketRegion != myRegion {
+
+	var bucketRegion string
+	if location.LocationConstraint == nil {
+		bucketRegion = "us-east-1"
+	} else {
+		bucketRegion = *location.LocationConstraint
+	}
+
+	if myRegion := a.Region(); bucketRegion != myRegion {
 		return fmt.Errorf("bucket region is wrong, actual: %s expected: %s", bucketRegion, myRegion)
 	}
 
