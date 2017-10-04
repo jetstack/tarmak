@@ -27,7 +27,7 @@ type InstanceSpec struct {
 //  InstaceSpecManifest defines location and hash for a specific manifest
 type InstanceSpecManifest struct {
 	Path             string      `json:"path,omitempty"`             // PATH to manifests (tar.gz)
-	Hash             string      `json:"hash,omitempty"`             // md5 hash of manifests
+	Hash             string      `json:"hash,omitempty"`             // hash of manifests, prefixed with type (eg: sha256:xyz)
 	RequestTimestamp metav1.Time `json:"requestTimestamp,omitempty"` // timestamp when a converge was requested
 }
 
@@ -40,7 +40,7 @@ type InstanceStatus struct {
 //  InstaceSpecManifest defines the state and hash of a run manifest
 type InstanceStatusManifest struct {
 	State               InstanceManifestState `json:"state,omitempty"`
-	Hash                string                `json:"hash,omitempty"`                // md5 hash of manifests
+	Hash                string                `json:"hash,omitempty"`                // hash of manifests, prefixed with type (eg: sha256:xyz)
 	LastUpdateTimestamp metav1.Time           `json:"lastUpdateTimestamp,omitempty"` // timestamp when a converge was requested
 	Messages            []string              `json:"messages,omitempty"`            // contains output of the retries
 	ExitCodes           []int                 `json:"exitCodes,omitempty"`           // return code of the retries

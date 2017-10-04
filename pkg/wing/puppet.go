@@ -2,6 +2,7 @@ package wing
 
 import (
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -26,6 +27,18 @@ import (
 
 // This make sure puppet is converged when neccessary
 func (w *Wing) runPuppet() error {
+	// start converging mainfest
+	status := &v1alpha1.InstanceStatus{
+		Converge: &v1alpha1.InstanceStatusManifest{
+			State: v1alpha1.InstanceManifestStateConverging,
+		},
+	}
+
+	err := w.reportStatus(status)
+	if err != nil {
+		w.log.Warn("reporting status failed: ", err)
+	}
+
 	reader, err := w.getManifests(w.flags.ManifestURL)
 	if err != nil {
 		return err
@@ -49,15 +62,36 @@ func (w *Wing) runPuppet() error {
 	tarReader.Close()
 	reader.Close()
 
+	var puppetMessages []string
+	var puppetRetCodes []int
+
 	puppetApplyCmd := func() error {
-		retCode, err := w.puppetApply(dir)
+		output, retCode, err := w.puppetApply(dir)
+		if err == nil && retCode != 0 {
+			err = fmt.Errorf("puppet apply has not converged yet (return code %d)", retCode)
+		}
+
 		if err != nil {
-			return err
+			output = fmt.Sprintf("puppet apply error: %s\n%s", err, output)
 		}
-		if retCode != 0 {
-			return fmt.Errorf("puppet apply has not converged yet (return code %d)", retCode)
+
+		puppetMessages = append(puppetMessages, output)
+		puppetRetCodes = append(puppetRetCodes, retCode)
+
+		// start converging mainfest
+		status := &v1alpha1.InstanceStatus{
+			Converge: &v1alpha1.InstanceStatusManifest{
+				State:     v1alpha1.InstanceManifestStateConverging,
+				Messages:  puppetMessages,
+				ExitCodes: puppetRetCodes,
+			},
 		}
-		return nil
+		statusErr := w.reportStatus(status)
+		if statusErr != nil {
+			w.log.Warn("reporting status failed: ", statusErr)
+		}
+
+		return err
 	}
 
 	b := backoff.NewExponentialBackOff()
@@ -76,22 +110,17 @@ func (w *Wing) runPuppet() error {
 }
 
 func (w *Wing) convergeLoop() {
-
-	// start converging mainfest
 	status := &v1alpha1.InstanceStatus{
 		Converge: &v1alpha1.InstanceStatusManifest{
 			State: v1alpha1.InstanceManifestStateConverging,
 		},
 	}
-	err := w.reportStatus(status)
-	if err != nil {
-		w.log.Warn("reporting status failed: ", err)
-	}
 
 	// run puppet
-	err = w.runPuppet()
+	err := w.runPuppet()
 	if err != nil {
 		status.Converge.State = v1alpha1.InstanceManifestStateError
+		status.Converge.Messages = []string{err.Error()}
 		w.log.Error(err)
 	} else {
 		status.Converge.State = v1alpha1.InstanceManifestStateConverged
@@ -105,11 +134,13 @@ func (w *Wing) convergeLoop() {
 }
 
 // apply puppet code in a specific directory
-func (w *Wing) puppetApply(dir string) (int, error) {
+func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 	puppetCmd := exec.Command(
 		"puppet",
 		"apply",
 		"--detailed-exitcodes",
+		"--color",
+		"no",
 		"--environment",
 		"production",
 		"--hiera_config",
@@ -119,20 +150,23 @@ func (w *Wing) puppetApply(dir string) (int, error) {
 		filepath.Join(dir, "manifests/site.pp"),
 	)
 
+	outputBuffer := new(bytes.Buffer)
 	stdoutPipe, err := puppetCmd.StdoutPipe()
 	if err != nil {
-		return 0, err
+		return "", 0, err
 	}
 
 	stderrPipe, err := puppetCmd.StderrPipe()
 	if err != nil {
-		return 0, err
+		return "", 0, err
 	}
 
 	stdoutScanner := bufio.NewScanner(stdoutPipe)
 	go func() {
 		for stdoutScanner.Scan() {
 			w.log.WithField("cmd", "puppet").Debug(stdoutScanner.Text())
+			outputBuffer.WriteString(stdoutScanner.Text())
+			outputBuffer.WriteString("\n")
 		}
 	}()
 
@@ -140,26 +174,30 @@ func (w *Wing) puppetApply(dir string) (int, error) {
 	go func() {
 		for stderrScanner.Scan() {
 			w.log.WithField("cmd", "puppet").Debug(stderrScanner.Text())
+			outputBuffer.WriteString(stderrScanner.Text())
+			outputBuffer.WriteString("\n")
 		}
 	}()
 
 	err = puppetCmd.Start()
 	if err != nil {
-		return 0, err
+		return "", 0, err
 	}
 
 	w.log.Printf("Waiting for command to finish...")
 	err = puppetCmd.Wait()
+	output = outputBuffer.String()
 	if err != nil {
 		perr, ok := err.(*exec.ExitError)
 		if ok {
 			if status, ok := perr.Sys().(syscall.WaitStatus); ok {
-				return status.ExitStatus(), nil
+				return output, status.ExitStatus(), nil
 			}
 		}
-		return 0, err
+		return output, 0, err
 	}
-	return 0, nil
+
+	return output, 0, nil
 }
 
 // report status to the API server
