@@ -149,13 +149,22 @@ func (a *Amazon) AskEnvironmentLocation(init interfaces.Initialize) (location st
 
 func (a *Amazon) AskInstancePoolLocation(init interfaces.Initialize) (zones []string, err error) {
 
+	//TODO: The following panics: nil pointer deref from 187
+	//zones = a.AvailabilityZones()
+	zones = []string{"zone1", "zone2", "zone3"}
+
+	sChoices := make([]bool, len(zones))
+	sChoices[0] = true
+
 	multiSel := &input.AskMultipleSelection{
-		AskOpen: &input.AskOpen{
-			Query:      "Please enter an availability zone(s)",
-			AllowEmpty: false,
+		AskSelection: &input.AskSelection{
+			Query:   "Please select availabilty zones. Min:1 Max:3 (e.g 2, 1-2, 2-, -3)",
+			Choices: zones,
+			Default: 1,
 		},
-		Query:   "How many availability zones in the cluster? Availability zones will be added to each instance pool in the cluster.",
-		Default: 1,
+		SelectedChoices: sChoices,
+		MinSelected:     1,
+		MaxSelected:     2,
 	}
 
 	return init.Input().AskMultipleSelection(multiSel)

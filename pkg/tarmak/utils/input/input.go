@@ -2,6 +2,7 @@ package input
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -61,17 +62,27 @@ func (q *AskSelection) Question() string {
 }
 
 type AskMultipleSelection struct {
-	AskOpen *AskOpen
-	Query   string
-	Default int
+	AskSelection    *AskSelection
+	SelectedChoices []bool
+	MinSelected     int
+	MaxSelected     int
 }
 
 func (q *AskMultipleSelection) Question() string {
-	output := []string{q.Query}
-	if q.Default > 0 {
-		output[0] += fmt.Sprintf(" (default '%d')", q.Default)
+	var output []string
+
+	for pos, choice := range q.AskSelection.Choices {
+		var selected string
+		if q.SelectedChoices[pos] {
+			selected = " (selected)"
+		}
+
+		output = append(output, fmt.Sprintf("% 3d) %s%s", pos+1, choice, selected))
 	}
+
+	output = append(output, fmt.Sprintf("% 3d) continue with selection", len(q.AskSelection.Choices)+1))
 	output = append(output, ">")
+
 	return strings.Join(output, "\n")
 }
 
@@ -204,41 +215,128 @@ func (i *Input) AskSelection(question *AskSelection) (int, error) {
 
 func (i *Input) AskMultipleSelection(question *AskMultipleSelection) (responseSlice []string, err error) {
 
-	var count int
+	if len(question.SelectedChoices) != len(question.AskSelection.Choices) {
+		return []string{}, errors.New("length of choice and selected slice does not match")
+	}
+
+	i.ui.Output(question.AskSelection.Query)
+
+	choiceSize := len(question.SelectedChoices)
 
 	for {
+
 		response, err := i.Askf(question.Question())
 		if err != nil {
 			return []string{}, err
 		}
 
-		if response == "" {
-			if question.Default > 0 {
-				count = question.Default
-				break
+		if response != "" {
+			if cRange, err := question.parseResponce(response); err != nil || cRange[0] < 1 || cRange[1] == choiceSize+1 && cRange[0] != cRange[1] || cRange[1] > choiceSize+1 {
+				i.Warnf("response must be a range between 1 and %d or a number between 1 and %d\n", choiceSize, choiceSize+1)
+
+			} else if cRange[0] == cRange[1] && cRange[0] == choiceSize+1 {
+				if question.insideMinMax() {
+					responseSlice = question.returnSelected()
+					break
+
+				} else {
+					i.Warn(fmt.Sprintf("please select between %d and %d choices", question.MinSelected, question.MaxSelected))
+				}
+
 			} else {
-				i.Warn("nothing entered and no default set")
+				if cRange[0] == cRange[1] {
+					question.SelectedChoices[cRange[0]-1] = !question.SelectedChoices[cRange[0]-1]
+				} else {
+					for n := cRange[0] - 1; n < cRange[1]; n++ {
+						question.SelectedChoices[n] = true
+					}
+				}
 			}
-		} else if n, err := strconv.Atoi(response); err != nil || n < 1 {
-			i.Warn("response must be a number of 1 or more")
+
 		} else {
-			count = n
-			break
+			if question.insideMinMax() {
+				responseSlice = question.returnSelected()
+				break
+
+			} else {
+				i.Warn(fmt.Sprintf("please select between %d and %d choices", question.MinSelected, question.MaxSelected))
+			}
 		}
 	}
 
-	i.ui.Output(question.AskOpen.Query)
-	for n := 0; n < count; n++ {
-		question.AskOpen.Query = fmt.Sprintf("(#%d)", n+1)
-		response, err := i.AskOpen(question.AskOpen)
-		if err != nil {
-			return []string{}, err
-		}
-
-		responseSlice = append(responseSlice, response)
-	}
 	return responseSlice, nil
+}
 
+func (q *AskMultipleSelection) returnSelected() (responseSlice []string) {
+	for pos, choice := range q.AskSelection.Choices {
+		if q.SelectedChoices[pos] {
+			responseSlice = append(responseSlice, choice)
+		}
+	}
+
+	return responseSlice
+}
+
+func (q *AskMultipleSelection) insideMinMax() bool {
+	var count int
+	for _, choice := range q.SelectedChoices {
+		if choice {
+			count++
+		}
+	}
+
+	if count < q.MinSelected || count > q.MaxSelected {
+		return false
+	}
+
+	return true
+}
+
+// Get selections
+func (q *AskMultipleSelection) parseResponce(response string) (selects []int, err error) {
+	choiceRange := []int{1, len(q.AskSelection.Choices)}
+	regex := regexp.MustCompile("^(([0-9]+(-[0-9]*)?)|(([0-9]*-)?[0-9]+))$")
+
+	match := string(regex.Find([]byte(response)))
+	if match == "" {
+		return selects, fmt.Errorf("could not match: %s", response)
+	}
+
+	split := strings.Split(response, "-")
+
+	if len(split) == 1 {
+		n, err := strconv.Atoi(response)
+		if err != nil {
+			return selects, nil
+		}
+		choiceRange[0] = n
+		choiceRange[1] = n
+
+	} else {
+		if split[0] != "" {
+			n, err := strconv.Atoi(split[0])
+			if err != nil {
+				return selects, nil
+			}
+			choiceRange[0] = n
+		}
+
+		if split[1] != "" {
+			n, err := strconv.Atoi(split[1])
+			if err != nil {
+				return selects, nil
+			}
+			choiceRange[1] = n
+		}
+	}
+
+	if choiceRange[0] > choiceRange[1] {
+		temp := choiceRange[1]
+		choiceRange[1] = choiceRange[0]
+		choiceRange[0] = temp
+	}
+
+	return choiceRange, nil
 }
 
 func (i *Input) AskOpen(question *AskOpen) (response string, err error) {
