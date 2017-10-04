@@ -12,9 +12,81 @@ write_files:
     ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
     127.0.1.1   ${fqdn}
 
+- path: /etc/systemd/system/etcd.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Etcd server
+    After=network.target
+
+    [Service]
+    Environment=ETCD_VERSION=3.2.8
+    Environment=ETCD_HASH=3b317ab2367ea3fde4739edcc8f628937015f7bf1704712e62b490260ea065f1
+    Environment=ETCD_DATA_DIR=/var/lib/etcd
+    PermissionsStartOnly=true
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -x /opt/etcd-$${ETCD_VERSION}/etcd && exit 0 ;\
+      mkdir -p /opt/etcd-$${ETCD_VERSION} ;\
+      curl -sLo /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz https://github.com/coreos/etcd/releases/download/v$${ETCD_VERSION}/etcd-v$${ETCD_VERSION}-linux-amd64.tar.gz ;\
+      echo "$${ETCD_HASH}  /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz" | sha256sum -c ;\
+      tar xvf /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz -C /opt/etcd-$${ETCD_VERSION}/ --strip-components 1'
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -d $${ETCD_DATA_DIR} && exit 0 ;\
+      mkdir -p $${ETCD_DATA_DIR} ;\
+      chown etcd:etcd $${ETCD_DATA_DIR} ;\
+      chmod 750 $${ETCD_DATA_DIR}'
+    ExecStart=/bin/sh -c 'exec /opt/etcd-$${ETCD_VERSION}/etcd'
+    Type=notify
+    User=etcd
+    Group=etcd
+
+    [Install]
+    WantedBy=multi-user.target
+
+- path: /etc/systemd/system/wing-server.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Tarmak's wing server
+    After=network.target etcd.service
+    Requires=etcd.service
+
+    [Service]
+    Environment=WING_VERSION=0.1.0-1
+    Environment=WING_HASH=29dbac07ed308d113ca62bee62bb36a3d7978700640bc244d1030ab82fa672df
+    Environment=WING_DATA_DIR=/var/lib/wing
+    PermissionsStartOnly=true
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
+      mkdir -p /opt/wing-$${WING_VERSION} ;\
+      curl -sLo /opt/wing-$${WING_VERSION}/wing https://storage.googleapis.com/tarmak-io/prerelease/$${WING_VERSION}/wing_linux_amd64 ;\
+      echo "$${WING_HASH}  /opt/wing-$${WING_VERSION}/wing" | sha256sum -c ;\
+      chmod 755 /opt/wing-$${WING_VERSION}/wing'
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -d $${WING_DATA_DIR} && exit 0 ;\
+      mkdir -p $${WING_DATA_DIR} ;\
+      chown wing:wing $${WING_DATA_DIR} ;\
+      chmod 750 $${WING_DATA_DIR}'
+    ExecStart=/bin/sh -c 'cd $${WING_DATA_DIR} && exec /opt/wing-$${WING_VERSION}/wing server --secure-port 9443 --etcd-servers http://127.0.0.1:2379'
+    Type=notify
+    User=wing
+    Group=wing
+
+    [Install]
+    WantedBy=multi-user.target
+
 runcmd:
 - hostnamectl set-hostname "${fqdn}"
 - yum -y update
 - yum -y install vim
+- useradd --system etcd
+- useradd --system wing
+- systemctl enable etcd.service
+- systemctl enable wing-server.service
+- systemctl start wing-server.service
 
 output : { all : '| tee -a /var/log/cloud-init-output.log' }

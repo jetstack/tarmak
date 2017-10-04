@@ -4,85 +4,88 @@ repo_upgrade: all
 
 write_files:
 
-  - path: /etc/systemd/system/wing.service
-    permissions: '0644'
-    content: |
-      [Unit]
-      Description=wing the tarmak node agent
-      Wants=network-online.target
-      After=network.target network-online.target
+- path: /etc/systemd/system/wing.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=wing the tarmak node agent
+    Wants=network-online.target
+    After=network.target network-online.target
 
-      [Service]
-      Environment=AWS_REGION=${region}
-      Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
-      ExecStartPre=/bin/mkdir -p /opt/bin
-      ExecStartPre=/bin/curl -sL -o /opt/bin/wing https://storage.googleapis.com/tarmak-io/prerelease/0.1.0/wing_linux_amd64
-      ExecStartPre=/bin/chmod +x /opt/bin/wing
-      ExecStart=/opt/bin/wing -- s3://${puppet_tar_gz_bucket_path}
+    [Service]
+    Environment=AWS_REGION=${region}
+    Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
+    Environment=WING_VERSION=0.1.0-1
+    Environment=WING_HASH=29dbac07ed308d113ca62bee62bb36a3d7978700640bc244d1030ab82fa672df
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
+      mkdir -p /opt/wing-$${WING_VERSION} ;\
+      curl -sLo /opt/wing-$${WING_VERSION}/wing https://storage.googleapis.com/tarmak-io/prerelease/$${WING_VERSION}/wing_linux_amd64 ;\
+      echo "$${WING_HASH}  /opt/wing-$${WING_VERSION}/wing" | sha256sum -c ;\
+      chmod 755 /opt/wing-$${WING_VERSION}/wing'
+      ExecStart=/bin/sh -c 'exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${puppet_tar_gz_bucket_path}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
 
-      Restart=on-failure
-      RestartSec=60
+    [Install]
+    WantedBy=multi-user.target
 
-      [Install]
-      WantedBy=multi-user.target
+- path: /etc/vault/ca.pem
+  permissions: '0644'
+  encoding: b64
+  content: ${vault_ca}
 
-  - path: /etc/vault/ca.pem
-    permissions: '0644'
-    encoding: b64
-    content: ${vault_ca}
+- path: /etc/sysconfig/tarmak
+  permissions: '0644'
+  content: |
+    TARMAK_ROLE=${tarmak_role}
+    TARMAK_CLUSTER=${tarmak_cluster}
+    TARMAK_DNS_ROOT=${tarmak_dns_root}
+    TARMAK_HOSTNAME=${tarmak_hostname}
+    TARMAK_ENVIRONMENT=${tarmak_environment}
+    TARMAK_DESIRED_COUNT=${tarmak_desired_count}
+    TARMAK_VOLUME_ID=${tarmak_volume_id}
+    TARMAK_INSTANCE_POOL=${tarmak_instance_pool}
 
-  - path: /etc/sysconfig/tarmak
-    permissions: '0644'
-    content: |
-      TARMAK_ROLE=${tarmak_role}
-      TARMAK_CLUSTER=${tarmak_cluster}
-      TARMAK_DNS_ROOT=${tarmak_dns_root}
-      TARMAK_HOSTNAME=${tarmak_hostname}
-      TARMAK_ENVIRONMENT=${tarmak_environment}
-      TARMAK_DESIRED_COUNT=${tarmak_desired_count}
-      TARMAK_VOLUME_ID=${tarmak_volume_id}
-      TARMAK_INSTANCE_POOL=${tarmak_instance_pool}
+- path: /etc/profile.d/tarmak.sh
+  permissions: '0644'
+  content: |
+    # Add /opt/bin to the path
+    if ! echo $PATH | grep -q /opt/bin ; then
+      export PATH=$PATH:/opt/bin
+    fi
 
-  - path: /etc/profile.d/tarmak.sh
-    permissions: '0644'
-    content: |
-      # Add /opt/bin to the path
-      if ! echo $PATH | grep -q /opt/bin ; then
-        export PATH=$PATH:/opt/bin
-      fi
+    export PS1="[\u@${tarmak_cluster}|${tarmak_hostname}|\h \W]\$ "
 
-      export PS1="[\u@${tarmak_cluster}|${tarmak_hostname}|\h \W]\$ "
+- path: /etc/facter/facts.d/vault_token
+  permissions: '0700'
+  content: |
+    #!/bin/bash
+    echo VAULT_TOKEN=${vault_token}
 
-  - path: /etc/facter/facts.d/vault_token
-    permissions: '0700'
-    content: |
-      #!/bin/bash
-      echo VAULT_TOKEN=${vault_token}
+- path: /etc/facter/facts.d/tarmak
+  permissions: '0700'
+  content: |
+    #!/bin/bash
+    cat /etc/sysconfig/tarmak
 
-  - path: /etc/facter/facts.d/tarmak
-    permissions: '0700'
-    content: |
-      #!/bin/bash
-      cat /etc/sysconfig/tarmak
+- path: /etc/sudoers
+  permissions: '0440'
+  content: |
+    Defaults    always_set_home
 
-  - path: /etc/sudoers
-    permissions: '0440'
-    content: |
-      Defaults    always_set_home
+    Defaults    env_reset
+    Defaults    env_keep =  "COLORS DISPLAY HOSTNAME HISTSIZE INPUTRC KDEDIR LS_COLORS"
+    Defaults    env_keep += "MAIL PS1 PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE"
+    Defaults    env_keep += "LC_COLLATE LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES"
+    Defaults    env_keep += "LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE"
+    Defaults    env_keep += "LC_TIME LC_ALL LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY"
+    Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin
 
-      Defaults    env_reset
-      Defaults    env_keep =  "COLORS DISPLAY HOSTNAME HISTSIZE INPUTRC KDEDIR LS_COLORS"
-      Defaults    env_keep += "MAIL PS1 PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE"
-      Defaults    env_keep += "LC_COLLATE LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES"
-      Defaults    env_keep += "LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE"
-      Defaults    env_keep += "LC_TIME LC_ALL LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY"
-      Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin
+    root    ALL=(ALL)       NOPASSWD:ALL
+    %wheel  ALL=(ALL)       NOPASSWD:ALL
 
-      root    ALL=(ALL)       NOPASSWD:ALL
-      %wheel  ALL=(ALL)       NOPASSWD:ALL
-
-      #includedir /etc/sudoers.d
+    #includedir /etc/sudoers.d
 
 runcmd:
-  - systemctl enable wing
-  - systemctl start wing
+- systemctl enable wing
+- systemctl start wing
