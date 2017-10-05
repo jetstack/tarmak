@@ -1,6 +1,7 @@
 package packer
 
 import (
+	"context"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -66,9 +67,9 @@ func (p *Packer) List() ([]tarmakv1alpha1.Image, error) {
 }
 
 // Build all images
-func (p *Packer) Build() error {
+func (p *Packer) Build(ctx context.Context) error {
 	for _, image := range p.images() {
-		amiID, err := image.Build()
+		amiID, err := image.Build(ctx)
 		if err != nil {
 			return err
 		}

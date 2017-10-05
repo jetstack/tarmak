@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 var clusterApplyCmd = &cobra.Command{
@@ -12,7 +15,11 @@ var clusterApplyCmd = &cobra.Command{
 	Short:   "This applies the set of stacks in the current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
-		t.Must(t.CmdTerraformApply(args))
+		utils.WaitOrCancel(
+			func(ctx context.Context) error {
+				return t.CmdTerraformApply(args, ctx)
+			},
+		)
 	},
 }
 

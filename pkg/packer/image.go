@@ -1,6 +1,7 @@
 package packer
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -30,7 +31,13 @@ func (i *image) tags() map[string]string {
 	}
 }
 
-func (i *image) Build() (amiID string, err error) {
+func (i *image) Build(ctx context.Context) (amiID string, err error) {
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	default:
+	}
+
 	c := i.packer.Container()
 
 	rootPath, err := i.tarmak.RootPath()
@@ -91,6 +98,11 @@ func (i *image) Build() (amiID string, err error) {
 		return "", fmt.Errorf("error starting container: %s", err)
 	}
 
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	default:
+	}
 	returnCode, err := c.Execute("packer", []string{"build", buildPath})
 	if err != nil {
 		return "", err
