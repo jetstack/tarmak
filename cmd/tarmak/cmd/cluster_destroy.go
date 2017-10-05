@@ -1,18 +1,25 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
-// tfdestroyCmd represents the tfdestroy command
+// clusterDestroyCmd handles `tarmak clusters destroy`
 var clusterDestroyCmd = &cobra.Command{
 	Use:   "destroy",
-	Short: "This applies the set of stacks in the current cluster",
+	Short: "Destroy the current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
-		t.Must(t.CmdTerraformDestroy(args))
+		utils.WaitOrCancel(
+			func(ctx context.Context) error {
+				return t.CmdTerraformDestroy(args, ctx)
+			},
+		)
 	},
 }
 
