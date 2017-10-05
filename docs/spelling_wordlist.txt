@@ -4,13 +4,16 @@ etcd
 kubernetes
 lifecycle
 masterless
+multi
 nameservers
 namespace
 namespaces
 setup
 stateful
+subcommand
 subdomain
 systemd
 tarmak
+testability
 terraform
 toolkit
