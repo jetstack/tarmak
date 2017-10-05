@@ -135,6 +135,8 @@ func (a *Amazon) ListRegions() (regions []string, err error) {
 		regions = append(regions, *region.RegionName)
 	}
 
+	sort.Strings(regions)
+
 	return regions, nil
 
 }
