@@ -68,7 +68,7 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 	if err != nil {
 		return nil, err
 	}
-	init.Config().AddAvailabilityZones(cluster, availabilityZones)
+	addAvailabilityZones(cluster, availabilityZones)
 
 	return cluster, nil
 }
@@ -122,4 +122,19 @@ func askClusterType(init interfaces.Initialize) (clusterType string, err error) 
 	}
 
 	return "", errors.New("no valid selection")
+}
+
+func addAvailabilityZones(cluster *clusterv1alpha1.Cluster, zones []string) {
+
+	subnets := make([]*clusterv1alpha1.Subnet, len(zones))
+
+	for i, zone := range zones {
+		subnets[i] = &clusterv1alpha1.Subnet{
+			Zone: zone,
+		}
+	}
+
+	for i := range cluster.InstancePools {
+		cluster.InstancePools[i].Subnets = subnets
+	}
 }
