@@ -33,6 +33,7 @@ type Tarmak struct {
 	puppet    *puppet.Puppet
 	packer    *packer.Packer
 	ssh       interfaces.SSH
+	init      *initialize.Initialize
 	cmd       *cobra.Command
 	kubectl   *kubectl.Kubectl
 
@@ -119,6 +120,7 @@ func (t *Tarmak) initialize() error {
 // This initializes a new tarmak cluster
 func (t *Tarmak) CmdClusterInit() error {
 	i := initialize.New(t, os.Stdin, os.Stdout)
+	t.init = i
 	cluster, err := i.InitCluster()
 	if err != nil {
 		return err
