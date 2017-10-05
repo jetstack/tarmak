@@ -186,6 +186,7 @@ func (s *KubernetesStack) ensurePuppetConverged() error {
 				if err := client.Delete(instance.Name, &metav1.DeleteOptions{}); err != nil {
 					s.log.Warnf("error deleting instance %s in wing API: %s", instance.Name, err)
 				}
+				continue
 			}
 
 			// index by instance convergance state
