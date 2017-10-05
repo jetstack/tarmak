@@ -215,13 +215,6 @@ func (t *Tarmak) ConfigPath() string {
 	return filepath.Join(t.HomeDir(), ".tarmak")
 }
 
-func (t *Tarmak) PackerBuild() {
-	err := t.packer.Build()
-	if err != nil {
-		t.log.Fatalf("failed to query ami id: %s", err)
-	}
-}
-
 func (t *Tarmak) Validate() error {
 	var err error
 	var result error
