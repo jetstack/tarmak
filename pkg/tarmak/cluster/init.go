@@ -64,7 +64,7 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 		cluster = config.NewClusterSingle(environment.Name(), "cluster")
 	}
 
-	availabilityZones, err := init.CurrentEnvironment().Provider().AskInstancePoolLocation(init)
+	availabilityZones, err := init.CurrentEnvironment().Provider().AskInstancePoolZones(init)
 	if err != nil {
 		return nil, err
 	}

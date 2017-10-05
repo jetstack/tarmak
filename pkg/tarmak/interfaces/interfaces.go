@@ -86,7 +86,7 @@ type Provider interface {
 	VolumeType(string) (string, error)
 	String() string
 	AskEnvironmentLocation(Initialize) (string, error)
-	AskInstancePoolLocation(Initialize) (zones []string, err error)
+	AskInstancePoolZones(Initialize) (zones []string, err error)
 }
 
 type Stack interface {
@@ -145,7 +145,6 @@ type Config interface {
 	CurrentEnvironmentName() string
 	Contact() string
 	Project() string
-	AddAvailabilityZones(cluster *clusterv1alpha1.Cluster, zones []string)
 }
 
 type Packer interface {

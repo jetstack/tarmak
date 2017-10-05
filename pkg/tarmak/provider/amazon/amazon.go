@@ -147,7 +147,7 @@ func (a *Amazon) AskEnvironmentLocation(init interfaces.Initialize) (location st
 	return regions[regionPos], nil
 }
 
-func (a *Amazon) AskInstancePoolLocation(init interfaces.Initialize) (zones []string, err error) {
+func (a *Amazon) AskInstancePoolZones(init interfaces.Initialize) (zones []string, err error) {
 
 	zones, err = a.getAvailablityZoneByRegion()
 	if err != nil {

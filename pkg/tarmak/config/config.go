@@ -284,7 +284,7 @@ func (c *Config) AddAvailabilityZones(cluster *clusterv1alpha1.Cluster, zones []
 
 	for i, zone := range zones {
 		subnets[i] = &clusterv1alpha1.Subnet{
-			Location: zone,
+			Zone: zone,
 		}
 	}
 
