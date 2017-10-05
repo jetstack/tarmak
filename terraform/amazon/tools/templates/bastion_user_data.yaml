@@ -54,8 +54,8 @@ write_files:
     Requires=etcd.service
 
     [Service]
-    Environment=WING_VERSION=0.1.0-2
-    Environment=WING_HASH=97e933e5fd91320891b41535ee100dc1d1d9be3db79f089e1ca81f3a9af21970
+    Environment=WING_VERSION=0.1.0-3
+    Environment=WING_HASH=ce437820ed86e8e248c82d8eeda4159766be600b61f4a253dc755453c9a95350
     Environment=WING_DATA_DIR=/var/lib/wing
     PermissionsStartOnly=true
     ExecStartPre=/bin/sh -c '\

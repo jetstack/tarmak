@@ -103,7 +103,7 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 		puppetRetCodes = append(puppetRetCodes, retCode)
 
 		// start converging mainfest
-		status := &v1alpha1.InstanceStatus{
+		status = &v1alpha1.InstanceStatus{
 			Converge: &v1alpha1.InstanceStatusManifest{
 				State:     v1alpha1.InstanceManifestStateConverging,
 				Messages:  puppetMessages,
