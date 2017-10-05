@@ -1,26 +1,11 @@
-# Tarmak
+Tarmak
+======
 
-```
-Tarmak is a Toolkit to spin up kubernetes clusters
+Tarmak is a toolkit for Kubernetes cluster provisioning and management. It
+focuses on best practice cluster security and cluster management/operation. It
+has been built to be cloud provider-agnostic and hence provides a means for
+consistent and reliable cluster deployment and management, across clouds and
+on-premise environments (metal/private cloud).
 
-Usage:
-  tarmak [command]
-
-Available Commands:
-  help              Help about any command
-  image-build       This builds an image for an environment using packer
-  init              init a cluster configuration
-  list              list nodes of the context
-  puppet-dist       Build a puppet.tar.gz
-  ssh               ssh into instance
-  terraform-apply   This applies the set of stacks in the current context
-  terraform-destroy This applies the set of stacks in the current context
-  version           Print the version number of tarmak
-
-Flags:
-      --config string   config file (default is $HOME/.tarmak.yaml)
-  -h, --help            help for tarmak
-  -t, --toggle          Help message for toggle
-
-Use "tarmak [command] --help" for more information about a command.
-```
+Tarmak uses a number of well known and proven components: terraform, puppet and
+systemd.
