@@ -152,6 +152,8 @@ generate::docs:
   - docker
   image: python:2.7
   script:
+  - apt-get update
+  - apt-get install -y python-enchant
   - virtualenv -q /cache/venv
   - source /cache/venv/bin/activate
   - pip install -r docs/requirements.txt
