@@ -267,6 +267,7 @@ func (i *Initialize) InitCluster() (clusterObj interfaces.Cluster, err error) {
 		return nil, fmt.Errorf("error getting the environment: %s", err)
 	}
 	i.currentEnvironment = environmentObj
+	environmentObj.Provider().Reset()
 
 	var clusterConf *clusterv1alpha1.Cluster
 

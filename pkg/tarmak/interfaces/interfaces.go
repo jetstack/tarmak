@@ -73,6 +73,7 @@ type Provider interface {
 	Parameters() map[string]string
 	Region() string
 	Validate() error
+	Reset() // reset all caches within the provider
 	RemoteStateBucketName() string
 	RemoteStateBucketAvailable() (bool, error)
 	RemoteState(namespace, clusterName, stackName string) string
@@ -86,6 +87,7 @@ type Provider interface {
 	VolumeType(string) (string, error)
 	String() string
 	AskEnvironmentLocation(Initialize) (string, error)
+	AskInstancePoolZones(Initialize) (zones []string, err error)
 }
 
 type Stack interface {
@@ -128,7 +130,7 @@ type Tarmak interface {
 type Config interface {
 	Cluster(environment string, name string) (cluster *clusterv1alpha1.Cluster, err error)
 	Clusters(environment string) (clusters []*clusterv1alpha1.Cluster)
-	AppendCluster(prov *clusterv1alpha1.Cluster) error
+	AppendCluster(cluster *clusterv1alpha1.Cluster) error
 	UniqueClusterName(environment, name string) error
 	Provider(name string) (provider *tarmakv1alpha1.Provider, err error)
 	Providers() (providers []*tarmakv1alpha1.Provider)

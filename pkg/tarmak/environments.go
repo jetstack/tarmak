@@ -24,6 +24,9 @@ func (t *Tarmak) newEnvironment(environmentName string) (interfaces.Environment,
 }
 
 func (t *Tarmak) Environment() interfaces.Environment {
+	if t.init != nil && t.init.CurrentEnvironment() != nil {
+		return t.init.CurrentEnvironment()
+	}
 	return t.environment
 }
 

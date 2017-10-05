@@ -2,6 +2,7 @@ package input
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -57,6 +58,31 @@ func (q *AskSelection) Question() string {
 		output = append(output, fmt.Sprintf("% 3d) %s%s", pos+1, choice, defaultText))
 	}
 	output = append(output, ">")
+	return strings.Join(output, "\n")
+}
+
+type AskMultipleSelection struct {
+	AskSelection    *AskSelection
+	SelectedChoices []bool
+	MinSelected     int
+	MaxSelected     int
+}
+
+func (q *AskMultipleSelection) Question() string {
+	var output []string
+
+	for pos, choice := range q.AskSelection.Choices {
+		var selected string
+		if q.SelectedChoices[pos] {
+			selected = " (selected)"
+		}
+
+		output = append(output, fmt.Sprintf("% 3d) %s%s", pos+1, choice, selected))
+	}
+
+	output = append(output, fmt.Sprintf("% 3d) continue with selection", len(q.AskSelection.Choices)+1))
+	output = append(output, ">")
+
 	return strings.Join(output, "\n")
 }
 
@@ -185,6 +211,76 @@ func (i *Input) AskSelection(question *AskSelection) (int, error) {
 
 	}
 	return question.Default, nil
+}
+
+func (i *Input) AskMultipleSelection(question *AskMultipleSelection) (responseSlice []string, err error) {
+	if len(question.SelectedChoices) != len(question.AskSelection.Choices) {
+		return []string{}, errors.New("length of choice and selected slice does not match")
+	}
+
+	i.ui.Output(question.AskSelection.Query)
+	nChoices := len(question.AskSelection.Choices) + 1
+
+	for {
+		response, err := i.Askf(question.Question())
+		if err != nil {
+			return []string{}, err
+		}
+
+		if response != "" {
+			if n, err := strconv.Atoi(response); err != nil || n < 1 || n > nChoices {
+				i.Warnf("response must be a range between 1 and %d\n", nChoices)
+
+			} else if n == nChoices {
+				if question.insideMinMax() {
+					responseSlice = question.returnSelected()
+					break
+
+				} else {
+					i.Warn(fmt.Sprintf("please select between %d and %d choices", question.MinSelected, question.MaxSelected))
+				}
+
+			} else {
+				question.SelectedChoices[n-1] = !question.SelectedChoices[n-1]
+			}
+
+		} else {
+			if question.insideMinMax() {
+				responseSlice = question.returnSelected()
+				break
+
+			} else {
+				i.Warn(fmt.Sprintf("please select between %d and %d choices", question.MinSelected, question.MaxSelected))
+			}
+		}
+	}
+
+	return responseSlice, nil
+}
+
+func (q *AskMultipleSelection) returnSelected() (responseSlice []string) {
+	for pos, choice := range q.AskSelection.Choices {
+		if q.SelectedChoices[pos] {
+			responseSlice = append(responseSlice, choice)
+		}
+	}
+
+	return responseSlice
+}
+
+func (q *AskMultipleSelection) insideMinMax() bool {
+	var count int
+	for _, choice := range q.SelectedChoices {
+		if choice {
+			count++
+		}
+	}
+
+	if count < q.MinSelected || count > q.MaxSelected {
+		return false
+	}
+
+	return true
 }
 
 func (i *Input) AskOpen(question *AskOpen) (response string, err error) {

@@ -64,8 +64,11 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 		cluster = config.NewClusterSingle(environment.Name(), "cluster")
 	}
 
-	// TODO: add instance count changes (for master, worker nodes)
-	// TODO: add availability zones selection (one or many)
+	availabilityZones, err := init.CurrentEnvironment().Provider().AskInstancePoolZones(init)
+	if err != nil {
+		return nil, err
+	}
+	addAvailabilityZones(cluster, availabilityZones)
 
 	return cluster, nil
 }
@@ -119,4 +122,19 @@ func askClusterType(init interfaces.Initialize) (clusterType string, err error) 
 	}
 
 	return "", errors.New("no valid selection")
+}
+
+func addAvailabilityZones(cluster *clusterv1alpha1.Cluster, zones []string) {
+
+	subnets := make([]*clusterv1alpha1.Subnet, len(zones))
+
+	for i, zone := range zones {
+		subnets[i] = &clusterv1alpha1.Subnet{
+			Zone: zone,
+		}
+	}
+
+	for i := range cluster.InstancePools {
+		cluster.InstancePools[i].Subnets = subnets
+	}
 }

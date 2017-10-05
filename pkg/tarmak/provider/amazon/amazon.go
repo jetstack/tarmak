@@ -89,6 +89,16 @@ func (a *Amazon) Cloud() string {
 	return clusterv1alpha1.CloudAmazon
 }
 
+// this clears all cached state from the provider
+func (a *Amazon) Reset() {
+	a.dynamodb = nil
+	a.session = nil
+	a.s3 = nil
+	a.ec2 = nil
+	a.route53 = nil
+	a.availabilityZones = nil
+}
+
 // This parameters should include non sensitive information to identify a provider
 func (a *Amazon) Parameters() map[string]string {
 	p := map[string]string{
@@ -125,6 +135,8 @@ func (a *Amazon) ListRegions() (regions []string, err error) {
 		regions = append(regions, *region.RegionName)
 	}
 
+	sort.Strings(regions)
+
 	return regions, nil
 
 }
@@ -145,6 +157,34 @@ func (a *Amazon) AskEnvironmentLocation(init interfaces.Initialize) (location st
 	}
 
 	return regions[regionPos], nil
+}
+
+func (a *Amazon) AskInstancePoolZones(init interfaces.Initialize) (zones []string, err error) {
+
+	zones, err = a.getAvailablityZoneByRegion()
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to get availabilty zones: %v", err)
+	}
+
+	if len(zones) == 0 {
+		return []string{}, fmt.Errorf("no availability zones found for region '%s'", a.Region())
+	}
+
+	sChoices := make([]bool, len(zones))
+	sChoices[0] = true
+
+	multiSel := &input.AskMultipleSelection{
+		AskSelection: &input.AskSelection{
+			Query:   "Please select availabilty zones. Enter numbers to toggle selection.",
+			Choices: zones,
+			Default: 1,
+		},
+		SelectedChoices: sChoices,
+		MinSelected:     1,
+		MaxSelected:     len(zones),
+	}
+
+	return init.Input().AskMultipleSelection(multiSel)
 }
 
 func (a *Amazon) Region() string {
@@ -313,15 +353,13 @@ func (a *Amazon) Validate() error {
 
 }
 
-func (a *Amazon) validateAvailabilityZones() error {
-	var result error
-
+func (a *Amazon) getAvailablityZoneByRegion() (zones []string, err error) {
 	svc, err := a.EC2()
 	if err != nil {
-		return fmt.Errorf("error getting AWS EC2 session: %s", err)
+		return []string{}, fmt.Errorf("error getting AWS EC2 session: %s", err)
 	}
 
-	zones, err := svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
+	ec2Zones, err := svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
 		Filters: []*ec2.Filter{
 			&ec2.Filter{
 				Name:   aws.String("state"),
@@ -329,12 +367,28 @@ func (a *Amazon) validateAvailabilityZones() error {
 			},
 		},
 	})
+	if err != nil {
+		return []string{}, err
+	}
 
+	for _, zone := range ec2Zones.AvailabilityZones {
+		zones = append(zones, *zone.ZoneName)
+	}
+
+	sort.Strings(zones)
+
+	return zones, nil
+}
+
+func (a *Amazon) validateAvailabilityZones() error {
+	var result error
+
+	zones, err := a.getAvailablityZoneByRegion()
 	if err != nil {
 		return err
 	}
 
-	if len(zones.AvailabilityZones) == 0 {
+	if len(zones) == 0 {
 		return fmt.Errorf(
 			"no availability zone found for region '%s'",
 			a.Region(),
@@ -345,8 +399,8 @@ func (a *Amazon) validateAvailabilityZones() error {
 
 	for _, zoneConfigured := range availabilityZones {
 		found := false
-		for _, zone := range zones.AvailabilityZones {
-			if zone.ZoneName != nil && *zone.ZoneName == zoneConfigured {
+		for _, zone := range zones {
+			if zone != "" && zone == zoneConfigured {
 				found = true
 				break
 			}
@@ -364,12 +418,12 @@ func (a *Amazon) validateAvailabilityZones() error {
 	}
 
 	if len(availabilityZones) == 0 {
-		zone := zones.AvailabilityZones[0].ZoneName
-		if zone == nil {
+		zone := zones[0]
+		if zone == "" {
 			return fmt.Errorf("error determining availabilty zone")
 		}
-		a.log.Debugf("no availability zones specified selecting zone: %s", *zone)
-		availabilityZones = []string{*zone}
+		a.log.Debugf("no availability zones specified selecting zone: %s", zone)
+		availabilityZones = []string{zone}
 		a.availabilityZones = &availabilityZones
 	}
 
