@@ -73,6 +73,7 @@ type Provider interface {
 	Parameters() map[string]string
 	Region() string
 	Validate() error
+	Reset() // reset all caches within the provider
 	RemoteStateBucketName() string
 	RemoteStateBucketAvailable() (bool, error)
 	RemoteState(namespace, clusterName, stackName string) string

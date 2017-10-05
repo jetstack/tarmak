@@ -89,6 +89,16 @@ func (a *Amazon) Cloud() string {
 	return clusterv1alpha1.CloudAmazon
 }
 
+// this clears all cached state from the provider
+func (a *Amazon) Reset() {
+	a.dynamodb = nil
+	a.session = nil
+	a.s3 = nil
+	a.ec2 = nil
+	a.route53 = nil
+	a.availabilityZones = nil
+}
+
 // This parameters should include non sensitive information to identify a provider
 func (a *Amazon) Parameters() map[string]string {
 	p := map[string]string{
