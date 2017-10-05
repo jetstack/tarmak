@@ -3,7 +3,7 @@
 Getting Started
 ================
 
-Here we will walk through how to use Tarmak to spin up a Kubernetes cluster in AWS. This will deploy the Kubernetes master nodes, an etcd cluster, worker nodes, vault and a bastion node with a public IP address.
+Here we will walk through how to use Tarmak to spin up a Kubernetes cluster in AWS. This will deploy the Kubernetes master nodes, an Etcd cluster, worker nodes, Vault and a bastion node with a public IP address.
 
 Prerequisites
 -------------

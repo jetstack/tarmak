@@ -3,7 +3,7 @@
 Design of Tarmak
 ================
 
-Tarmak is a toolkit for Kubernetes cluster provisioning and management. It
+Tarmak is a tool kit for Kubernetes cluster provisioning and management. It
 focuses on best practice cluster security and cluster management/operation. It
 has been built to be cloud provider-agnostic and hence provides a means for
 consistent and reliable cluster deployment and management, across clouds and
@@ -86,7 +86,7 @@ Terraform
 *********
 
 Terraform is a well known tool for infrastructure provisioning in public and
-private clouds. We use terrraform to manage the lifecycle of resources in them
+private clouds. We use Terraform to manage the lifecycle of resources in them
 and store the state of clusters in Terraform remote state
 
 Puppet
@@ -97,8 +97,8 @@ Puppet is ran masterless, to not have to deal with the complexity of a Puppet
 master setup. All the services are configured in a way that the instance from
 now can run without any involvement of Puppet.
 
-The reason for choosing Puppet over other means of configuration (Like bash
-scripts, ansible, chef), was its testability on various levels and also the
+The reason for choosing Puppet over other means of configuration (Like Bash
+scripts, Ansible, Chef), was its testability on various levels and also the
 concept of defining dependencies explicit, that allows to build a tree of
 dependencies which helps to predict the changes within a dry-run.
 

@@ -6,22 +6,26 @@ Using Tarmak command-line tool
 
 $ tarmak
 
-kubectl
-#######
+``kubectl``
+###########
 
-`kubectl` on clusters (Alias for ``$ tarmak clusters kubectl``)
+Run ``kubectl`` on clusters (Alias for ``$ tarmak clusters kubectl``).
 
-Usage:
+Usage::
+
   $ tarmak kubectl
 
 ------------
 
-init
-####
+``init``
+########
 
-Inits a provider if not existing, inits an env if not existing, inits a cluster
+* Initialises a provider if not existing.
+* Initialises an environment if not existing.
+* Initialises a cluster.
 
-Usage:
+Usage::
+
   $ tarmak init
 
 -------------
@@ -31,208 +35,235 @@ Resources
 
 Tarmak has 3 resources that can be acted upon - environments, providers and clusters.
 
-Usage:
+Usage::
+
   $ tarmak [providers | environments | clusters] [command]
 
 -------------
 
-providers
+Providers
 #########
 
-Providers resource subcommand
+Providers resource subcommand.
 
-list
-*****************
+``list``
+********
 
-List providers resource
+List providers resource.
 
-Usage:
+Usage::
+
   $ tarmak providers list
 
-init
-*****************
+``init``
+********
 
-Init providers resource
+Initialise providers resource.
 
-Usage:
+Usage::
+
   $ tarmak providers init
 
 ------------
 
-environments
+Environments
 ############
 
-Environments resource subcommand
+Environments resource subcommand.
 
-list
-*****************
+``list``
+********
 
-List environments resource
+List environments resource.
 
-Usage:
+Usage::
+
   $ tarmak environments list
 
-init
-*****************
+``init``
+********
 
-Init environments resource
+Initialise environments resource.
 
-Usage:
+Usage::
+
   $ tarmak environments init
 
 ------------
 
-clusters
+Clusters
 ########
 
-Clusters resource subcommand
+Clusters resource subcommand.
 
-list
-*****************
+``list``
+********
 
-List clusters resource
+List clusters resource.
 
-Usage:
+Usage::
+
   $ tarmak clusters list
 
-init
-*****************
+``init``
+********
 
-Init cluster resource
+Initialise cluster resource.
 
-Usage:
+Usage::
+
   $ tarmak clusters init
 
-kubectl
-*****************
+``kubectl``
+***********
 
-`kubectl` on clusters resource
+Run ``kubectl`` on clusters resource.
 
-Usage:
+Usage::
+
   $ tarmak clusters kubectl
 
-ssh <instance_name>
-*******************
+``ssh <instance_name>``
+***********************
 
-Secure Shell into an instance on clusters
+Secure Shell into an instance on clusters.
 
-Usage:
+Usage::
+
   $ tarmak clusters ssh <instance_name>
 
-apply
-*****************
+``apply``
+*********
 
-Apply changes to cluster (apply infrastructure changes only)
+Apply changes to cluster (apply infrastructure changes only).
 
-Usage:
+Usage::
+
   $ tarmak clusters apply
 
-plan
-*****************
+``plan``
+********
 
-Dry run apply
+Dry run apply.
 
-Usage:
+Usage::
+
   $ tarmak clusters plan
 
-XX
-*****************
+``XX``
+******
 
 Does not run any infrastructure changes. Reconfigure based on configuration changes.
 
-Usage:
+Usage::
+
   $ tarmak clusters XX
 
-YY
-*****************
+``YY``
+******
 
 Reconfigure based on infrastructure+configuration changes.
 
-Usage:
+Usage::
+
   $ tarmak clusters YY
 
-YY-rolling-update
-*****************
+``YY-rolling-update``
+*********************
 
-YY with rolling update
+YY with rolling update.
 
-Usage:
+Usage::
+
   $ tarmak clusters YY-rolling-update
 
-instances [ list | ssh ]
-************************
+``instances [ list | ssh ]``
+****************************
 
-Instances on Cluster resource
+Instances on Cluster resource.
 
-list
-^^^^^^^^^^^^^^^
+``list``
+^^^^^^^^
 
 Lists nodes of the context.
 
-ssh
-^^^^^^^^^^^^^^^
+``ssh``
+^^^^^^^
 
-Alias for ``$ tarmak clusters ssh``
+Alias for ``$ tarmak clusters ssh``.
 
-Usage:
+Usage::
+
   $ tarmak clusters instances [list | ssh]
 
-server-pools [ list ]
-*********************
-list
-^^^^^^^^^^^^^^^
+``server-pools [ list ]``
+*************************
 
-List server pools on Cluster resource
+``list``
+^^^^^^^^
 
-Usage:
+List server pools on Cluster resource.
+
+Usage::
+
   $ tarmak clusters server-pools list
 
-images [ list | build ]
-***********************
-list
-^^^^^^^^^^^^^^^
+``images [ list | build ]``
+***************************
 
-List images on Cluster resource
+``list``
+^^^^^^^^
 
-build
-^^^^^^^^^^^^^^^
+List images on Cluster resource.
 
-Build images of Cluster resource
+``build``
+^^^^^^^^^
 
-Usage:
+Build images of Cluster resource.
+
+Usage::
+
   $ tarmak clusters images [list | build]
 
-debug [ terraform shell | puppet | etcd | vault ]
-*************************************************
+``debug [ terraform shell | puppet | etcd | vault ]``
+*****************************************************
 
-Used for debugging
+Used for debugging.
 
-terraform shell
-^^^^^^^^^^^^^^^
-Debug terraform via shell
+``terraform shell``
+^^^^^^^^^^^^^^^^^^^
 
-Usage:
+Debug terraform via shell.
+
+Usage::
+
   $ tarmak clusters debug terraform shell
 
-puppet
-^^^^^^^^^^^^^^^
-Debug puppet
+``puppet``
+^^^^^^^^^^
 
-Usage:
+Debug puppet.
+
+Usage::
+
   $ tarmak clusters debug puppet
 
-etcd
-^^^^^^^^^^^^^^^
-Debug etcd
+``etcd``
+^^^^^^^^
 
-Usage:
+Debug etcd.
+
+Usage::
+
   $ tarmak clusters debug etcd
 
-vault
-^^^^^^^^^^^^^^^
-Debug vault
+``vault``
+^^^^^^^^^
 
-Usage:
+Debug vault.
+
+Usage::
+
   $ tarmak clusters debug vault
 
 ------------
