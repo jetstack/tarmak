@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/jetstack-experimental/vault-helper/pkg/kubernetes"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
+	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -32,6 +36,7 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	s.name = tarmakv1alpha1.StackNameKubernetes
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensurePuppetTarGz)
+	s.verifyPostDeploy = append(s.verifyPostDeploy, k.ensurePuppetConverged)
 	s.verifyPreDestroy = append(s.verifyPreDestroy, k.emptyPuppetTarGz)
 
 	return k, nil
@@ -138,6 +143,109 @@ func (s *KubernetesStack) ensureVaultSetup() error {
 	for role, token := range k.InitTokens() {
 		s.initTokens[fmt.Sprintf("vault_init_token_%s", role)] = token
 	}
+	return nil
+}
+
+func (s *KubernetesStack) ensurePuppetConverged() error {
+	s.log.Debugf("making sure all nodes have converged using puppet")
+
+	// connect to wing
+	clientset, tunnel, err := s.Cluster().Environment().WingClientset()
+	if err != nil {
+		return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	}
+	defer tunnel.Stop()
+	client := clientset.WingV1alpha1().Instances(s.Cluster().ClusterName())
+
+	retries := 50
+
+	for {
+
+		// list all instances in Provider
+		providerInstances, err := s.Cluster().ListHosts()
+		providerInstaceMap := make(map[string]interfaces.Host)
+		for pos, _ := range providerInstances {
+			providerInstaceMap[providerInstances[pos].ID()] = providerInstances[pos]
+		}
+
+		// list all instances in wing
+		wingInstances, err := client.List(metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+
+		instanceByState := make(map[wingv1alpha1.InstanceManifestState][]*wingv1alpha1.Instance)
+
+		// loop through instances
+		for pos, _ := range wingInstances.Items {
+			instance := &wingInstances.Items[pos]
+
+			// removes instances not in AWS
+			if _, ok := providerInstaceMap[instance.Name]; !ok {
+				s.log.Debugf("deleting unused instance %s in wing API", instance.Name)
+				if err := client.Delete(instance.Name, &metav1.DeleteOptions{}); err != nil {
+					s.log.Warnf("error deleting instance %s in wing API: %s", instance.Name, err)
+				}
+			}
+
+			// index by instance convergance state
+			if instance.Status == nil || instance.Status.Converge == nil || instance.Status.Converge.State == "" {
+				continue
+			}
+
+			state := instance.Status.Converge.State
+			if _, ok := instanceByState[state]; !ok {
+				instanceByState[state] = []*wingv1alpha1.Instance{}
+			}
+
+			instanceByState[state] = append(
+				instanceByState[state],
+				instance,
+			)
+		}
+
+		err = s.checkAllInstancesConverged(instanceByState)
+		if err == nil {
+			s.log.Info("all instances converged")
+			return nil
+		} else {
+			s.log.Debug(err)
+		}
+
+		retries -= 1
+		if retries == 0 {
+			break
+		}
+		time.Sleep(time.Second * 5)
+
+	}
+
+	return fmt.Errorf("instances failed to converge in time")
+}
+
+func (s *KubernetesStack) checkAllInstancesConverged(byState map[wingv1alpha1.InstanceManifestState][]*wingv1alpha1.Instance) error {
+	instancesNotConverged := []*wingv1alpha1.Instance{}
+	for key, instances := range byState {
+		if len(instances) == 0 {
+			continue
+		}
+		if key != wingv1alpha1.InstanceManifestStateConverged {
+			instancesNotConverged = append(instancesNotConverged, instances...)
+		}
+		s.Log().Debugf("%d instances in state %s: %s", len(instances), key, outputInstances(instances))
+	}
+
+	if len(instancesNotConverged) > 0 {
+		return fmt.Errorf("not all instances have converged yet %s", outputInstances(instancesNotConverged))
+	}
 
 	return nil
+}
+
+func outputInstances(instances []*wingv1alpha1.Instance) string {
+	var output []string
+	for _, instance := range instances {
+		output = append(output, instance.Name)
+	}
+	return strings.Join(output, ", ")
 }

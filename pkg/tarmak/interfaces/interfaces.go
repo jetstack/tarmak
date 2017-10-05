@@ -13,6 +13,7 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
+	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
 type Cluster interface {
@@ -62,6 +63,8 @@ type Environment interface {
 	VaultTunnel() (VaultTunnel, error)
 	Config() *tarmakv1alpha1.Environment
 	Type() string
+	WingTunnel() Tunnel
+	WingClientset() (*wingclient.Clientset, Tunnel, error)
 }
 
 type Provider interface {

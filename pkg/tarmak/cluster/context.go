@@ -280,7 +280,6 @@ func (c *Cluster) APITunnel() interfaces.Tunnel {
 		fmt.Sprintf("api.%s.%s", c.ClusterName(), c.Environment().Config().PrivateZone),
 		6443,
 	)
-
 }
 
 func (c *Cluster) Validate() error {

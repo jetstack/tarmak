@@ -83,8 +83,20 @@ resource "aws_route53_record" "bastion" {
   records = ["${aws_eip.bastion.public_ip}"]
 }
 
+resource "aws_route53_record" "bastion_private" {
+  zone_id = "${data.terraform_remote_state.network.private_zone_id}"
+  name    = "bastion.${var.environment}"
+  type    = "A"
+  ttl     = "60"
+  records = ["${aws_instance.bastion.private_ip}"]
+}
+
 output "bastion_fqdn" {
   value = "${aws_route53_record.bastion.fqdn}"
+}
+
+output "bastion_private_ip" {
+  value = "${aws_eip.bastion.public_ip}"
 }
 
 output "bastion_ip" {
