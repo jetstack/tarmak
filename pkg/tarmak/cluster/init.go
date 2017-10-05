@@ -64,9 +64,6 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 		cluster = config.NewClusterSingle(environment.Name(), "cluster")
 	}
 
-	// TODO: add instance count changes (for master, worker nodes)
-	// TODO: add availability zones selection (one or many)
-
 	availabilityZones, err := init.CurrentEnvironment().Provider().AskInstancePoolLocation(init)
 	if err != nil {
 		return nil, err

@@ -149,13 +149,9 @@ func (a *Amazon) AskEnvironmentLocation(init interfaces.Initialize) (location st
 
 func (a *Amazon) AskInstancePoolLocation(init interfaces.Initialize) (zones []string, err error) {
 
-	ec2Zones, err := a.getAvailablityZoneByRegion()
+	zones, err = a.getAvailablityZoneByRegion()
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to get availabilty zones: %v", err)
-	}
-
-	for _, zone := range ec2Zones.AvailabilityZones {
-		zones = append(zones, *zone.ZoneName)
 	}
 
 	if len(zones) == 0 {
@@ -345,14 +341,13 @@ func (a *Amazon) Validate() error {
 
 }
 
-func (a *Amazon) getAvailablityZoneByRegion() (zones *ec2.DescribeAvailabilityZonesOutput, err error) {
-
+func (a *Amazon) getAvailablityZoneByRegion() (zones []string, err error) {
 	svc, err := a.EC2()
 	if err != nil {
-		return nil, fmt.Errorf("error getting AWS EC2 session: %s", err)
+		return []string{}, fmt.Errorf("error getting AWS EC2 session: %s", err)
 	}
 
-	return svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
+	ec2Zones, err := svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
 		Filters: []*ec2.Filter{
 			&ec2.Filter{
 				Name:   aws.String("state"),
@@ -360,6 +355,17 @@ func (a *Amazon) getAvailablityZoneByRegion() (zones *ec2.DescribeAvailabilityZo
 			},
 		},
 	})
+	if err != nil {
+		return []string{}, err
+	}
+
+	for _, zone := range ec2Zones.AvailabilityZones {
+		zones = append(zones, *zone.ZoneName)
+	}
+
+	sort.Strings(zones)
+
+	return zones, nil
 }
 
 func (a *Amazon) validateAvailabilityZones() error {
@@ -370,7 +376,7 @@ func (a *Amazon) validateAvailabilityZones() error {
 		return err
 	}
 
-	if len(zones.AvailabilityZones) == 0 {
+	if len(zones) == 0 {
 		return fmt.Errorf(
 			"no availability zone found for region '%s'",
 			a.Region(),
@@ -381,8 +387,8 @@ func (a *Amazon) validateAvailabilityZones() error {
 
 	for _, zoneConfigured := range availabilityZones {
 		found := false
-		for _, zone := range zones.AvailabilityZones {
-			if zone.ZoneName != nil && *zone.ZoneName == zoneConfigured {
+		for _, zone := range zones {
+			if zone != "" && zone == zoneConfigured {
 				found = true
 				break
 			}
@@ -400,12 +406,12 @@ func (a *Amazon) validateAvailabilityZones() error {
 	}
 
 	if len(availabilityZones) == 0 {
-		zone := zones.AvailabilityZones[0].ZoneName
-		if zone == nil {
+		zone := zones[0]
+		if zone == "" {
 			return fmt.Errorf("error determining availabilty zone")
 		}
-		a.log.Debugf("no availability zones specified selecting zone: %s", *zone)
-		availabilityZones = []string{*zone}
+		a.log.Debugf("no availability zones specified selecting zone: %s", zone)
+		availabilityZones = []string{zone}
 		a.availabilityZones = &availabilityZones
 	}
 
