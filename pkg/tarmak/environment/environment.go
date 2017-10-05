@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/crypto/ssh"
+	"k8s.io/client-go/rest"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
@@ -24,6 +25,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/provider"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
 type Environment struct {
@@ -342,6 +344,35 @@ func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
 	}
 
 	return vaultStack.VaultTunnel()
+}
+
+func (e *Environment) WingTunnel() interfaces.Tunnel {
+	return e.Tarmak().SSH().Tunnel(
+		"bastion",
+		"localhost",
+		9443,
+	)
+}
+
+func (e *Environment) WingClientset() (*wingclient.Clientset, interfaces.Tunnel, error) {
+	tunnel := e.WingTunnel()
+	if err := tunnel.Start(); err != nil {
+		return nil, nil, err
+	}
+
+	// TODO: Do proper TLS here
+	restConfig := &rest.Config{
+		Host: fmt.Sprintf("https://127.0.0.1:%d", tunnel.Port()),
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: true,
+		},
+	}
+
+	clientset, err := wingclient.NewForConfig(restConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+	return clientset, tunnel, nil
 }
 
 func (e *Environment) Parameters() map[string]string {
