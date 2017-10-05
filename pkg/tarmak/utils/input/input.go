@@ -214,27 +214,24 @@ func (i *Input) AskSelection(question *AskSelection) (int, error) {
 }
 
 func (i *Input) AskMultipleSelection(question *AskMultipleSelection) (responseSlice []string, err error) {
-
 	if len(question.SelectedChoices) != len(question.AskSelection.Choices) {
 		return []string{}, errors.New("length of choice and selected slice does not match")
 	}
 
 	i.ui.Output(question.AskSelection.Query)
-
-	choiceSize := len(question.SelectedChoices)
+	nChoices := len(question.AskSelection.Choices) + 1
 
 	for {
-
 		response, err := i.Askf(question.Question())
 		if err != nil {
 			return []string{}, err
 		}
 
 		if response != "" {
-			if cRange, err := question.parseResponce(response); err != nil || cRange[0] < 1 || cRange[1] == choiceSize+1 && cRange[0] != cRange[1] || cRange[1] > choiceSize+1 {
-				i.Warnf("response must be a range between 1 and %d or a number between 1 and %d\n", choiceSize, choiceSize+1)
+			if n, err := strconv.Atoi(response); err != nil || n < 1 || n > nChoices {
+				i.Warnf("response must be a range between 1 and %d\n", nChoices)
 
-			} else if cRange[0] == cRange[1] && cRange[0] == choiceSize+1 {
+			} else if n == nChoices {
 				if question.insideMinMax() {
 					responseSlice = question.returnSelected()
 					break
@@ -244,13 +241,7 @@ func (i *Input) AskMultipleSelection(question *AskMultipleSelection) (responseSl
 				}
 
 			} else {
-				if cRange[0] == cRange[1] {
-					question.SelectedChoices[cRange[0]-1] = !question.SelectedChoices[cRange[0]-1]
-				} else {
-					for n := cRange[0] - 1; n < cRange[1]; n++ {
-						question.SelectedChoices[n] = true
-					}
-				}
+				question.SelectedChoices[n-1] = !question.SelectedChoices[n-1]
 			}
 
 		} else {
@@ -290,53 +281,6 @@ func (q *AskMultipleSelection) insideMinMax() bool {
 	}
 
 	return true
-}
-
-// Get selections
-func (q *AskMultipleSelection) parseResponce(response string) (selects []int, err error) {
-	choiceRange := []int{1, len(q.AskSelection.Choices)}
-	regex := regexp.MustCompile("^(([0-9]+(-[0-9]*)?)|(([0-9]*-)?[0-9]+))$")
-
-	match := string(regex.Find([]byte(response)))
-	if match == "" {
-		return selects, fmt.Errorf("could not match: %s", response)
-	}
-
-	split := strings.Split(response, "-")
-
-	if len(split) == 1 {
-		n, err := strconv.Atoi(response)
-		if err != nil {
-			return selects, nil
-		}
-		choiceRange[0] = n
-		choiceRange[1] = n
-
-	} else {
-		if split[0] != "" {
-			n, err := strconv.Atoi(split[0])
-			if err != nil {
-				return selects, nil
-			}
-			choiceRange[0] = n
-		}
-
-		if split[1] != "" {
-			n, err := strconv.Atoi(split[1])
-			if err != nil {
-				return selects, nil
-			}
-			choiceRange[1] = n
-		}
-	}
-
-	if choiceRange[0] > choiceRange[1] {
-		temp := choiceRange[1]
-		choiceRange[1] = choiceRange[0]
-		choiceRange[0] = temp
-	}
-
-	return choiceRange, nil
 }
 
 func (i *Input) AskOpen(question *AskOpen) (response string, err error) {

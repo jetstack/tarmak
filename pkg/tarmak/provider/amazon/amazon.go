@@ -149,22 +149,31 @@ func (a *Amazon) AskEnvironmentLocation(init interfaces.Initialize) (location st
 
 func (a *Amazon) AskInstancePoolLocation(init interfaces.Initialize) (zones []string, err error) {
 
-	//TODO: The following panics: nil pointer deref from 187
-	//zones = a.AvailabilityZones()
-	zones = []string{"zone1", "zone2", "zone3"}
+	ec2Zones, err := a.getAvailablityZoneByRegion()
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to get availabilty zones: %v", err)
+	}
+
+	for _, zone := range ec2Zones.AvailabilityZones {
+		zones = append(zones, *zone.ZoneName)
+	}
+
+	if len(zones) == 0 {
+		return []string{}, fmt.Errorf("no availability zones found for region '%s'", a.Region())
+	}
 
 	sChoices := make([]bool, len(zones))
 	sChoices[0] = true
 
 	multiSel := &input.AskMultipleSelection{
 		AskSelection: &input.AskSelection{
-			Query:   "Please select availabilty zones. Min:1 Max:3 (e.g 2, 1-2, 2-, -3)",
+			Query:   "Please select availabilty zones. Enter numbers to toggle selection.",
 			Choices: zones,
 			Default: 1,
 		},
 		SelectedChoices: sChoices,
 		MinSelected:     1,
-		MaxSelected:     2,
+		MaxSelected:     len(zones),
 	}
 
 	return init.Input().AskMultipleSelection(multiSel)
@@ -336,15 +345,14 @@ func (a *Amazon) Validate() error {
 
 }
 
-func (a *Amazon) validateAvailabilityZones() error {
-	var result error
+func (a *Amazon) getAvailablityZoneByRegion() (zones *ec2.DescribeAvailabilityZonesOutput, err error) {
 
 	svc, err := a.EC2()
 	if err != nil {
-		return fmt.Errorf("error getting AWS EC2 session: %s", err)
+		return nil, fmt.Errorf("error getting AWS EC2 session: %s", err)
 	}
 
-	zones, err := svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
+	return svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
 		Filters: []*ec2.Filter{
 			&ec2.Filter{
 				Name:   aws.String("state"),
@@ -352,7 +360,12 @@ func (a *Amazon) validateAvailabilityZones() error {
 			},
 		},
 	})
+}
 
+func (a *Amazon) validateAvailabilityZones() error {
+	var result error
+
+	zones, err := a.getAvailablityZoneByRegion()
 	if err != nil {
 		return err
 	}
