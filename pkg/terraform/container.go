@@ -243,7 +243,6 @@ func (tc *TerraformContainer) prepare() error {
 	} else {
 		tc.Env = append(tc.Env, environmentProvider...)
 	}
-	tc.log.WithField("environment", tc.Env).Debug("")
 
 	// set default commandpfals
 	tc.Cmd = []string{"sleep", "3600"}
