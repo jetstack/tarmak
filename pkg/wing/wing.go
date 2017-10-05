@@ -74,7 +74,7 @@ func (w *Wing) Run(args []string) error {
 	w.converge()
 
 	// Wait forever
-	select {}
+	<-w.stopCh
 
 	return nil
 
