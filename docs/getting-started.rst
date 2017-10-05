@@ -21,7 +21,7 @@ The plan will be to first initialise our cluster configuration for our environme
 Initialise Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run `tarmak init` to initialise our configuration.
+Run ``tarmak init`` to initialise our configuration.
 
 .. note::
    If you are not using Vault's AWS secret backend you can authenticate with AWS in the same ways as the AWS CLI. More details can be found at `Configuring the AWS CLI <http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html>`_.
@@ -64,21 +64,21 @@ Run `tarmak init` to initialise our configuration.
 
   %
 
-By default the configuration will be created at $HOME/.tarmak/tarmak.yaml.
+By default the configuration will be created at ``$HOME/.tarmak/tarmak.yaml``.
 
 Create an Image
 ~~~~~~~~~~~~~~~
-Now we create an image for our environment by running `tarmak image-build` (this is the step that requires docker to be installed locally).
+Now we create an image for our environment by running ``tarmak clusters images build`` (this is the step that requires docker to be installed locally).
 
 ::
 
-  % tarmak image-build
+  % tarmak clusters images build
   <output omitted>
 
 Create the Cluster
 ~~~~~~~~~~~~~~~~~~
 
-To create the cluster, run `tarmak clusters apply`.
+To create the cluster, run ``tarmak clusters apply``.
 
 ::
 
@@ -94,7 +94,7 @@ To create the cluster, run `tarmak clusters apply`.
 
 To fix this, change the nameservers of your domain to the four listed in the error. If you only want to delegate a subdomain containing your zone to AWS without delegating the parent domain see `Creating a Subdomain That Uses Amazon Route 53 as the DNS Service without Migrating the Parent Domain <http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingNewSubdomain.html>`_.
 
-To complete the cluster re-run `tarmak clusters apply`.
+To complete the cluster re-run ``tarmak clusters apply``.
 
 .. note::
    This process may take 30-60 minutes to complete.
@@ -106,16 +106,16 @@ To complete the cluster re-run `tarmak clusters apply`.
 Destroy the Cluster
 ~~~~~~~~~~~~~~~~~~~
 
-To destroy the cluster, run `tarmak terraform-destroy`.
+To destroy the cluster, run ``tarmak clusters destroy``.
 
 ::
 
-  % tarmak terraform-destroy
+  % tarmak clusters destroy
   <output omitted>
 
 .. note::
    This process may take 30-60 minutes to complete.
-   You can stop it by sending the signal `SIGTERM` or `SIGINT` (ctrl-c) to the process.
+   You can stop it by sending the signal ``SIGTERM`` or ``SIGINT`` (ctrl-c) to the process.
    Tarmak will not exit immediately.
    It will wait for the currently running step to finish and then exit.
    You can complete the process by re-running the command.
