@@ -135,47 +135,41 @@ Usage::
 ``apply``
 *********
 
-Apply changes to cluster (apply infrastructure changes only).
+Apply changes to a cluster (by default applies infrastructure (Terraform) and configuration (Puppet) changes.
 
 Usage::
 
   $ tarmak clusters apply
 
-``plan``
-********
+Flags::
 
-Dry run apply.
+  --infrastructure-stacks [state,network,tools,vault,kubernetes]
+      target exactlyone piece of the infrastructure (aka terraform stack). This implies (--infrastructure-only) 
+  --infrastructure-only   [default=false]
+      only apply infrastructure (aka terraform)
+  --configuration-only    [default=false]
+      only apply configuration  (aka puppet)
+  --dry-run               [default=false]
+      show changes only, do not actually execute them
 
-Usage::
+``destroy``
+*********
 
-  $ tarmak clusters plan
-
-``XX``
-******
-
-Does not run any infrastructure changes. Reconfigure based on configuration changes.
-
-Usage::
-
-  $ tarmak clusters XX
-
-``YY``
-******
-
-Reconfigure based on infrastructure+configuration changes.
+Destroy the infrastructure of a cluster
 
 Usage::
 
-  $ tarmak clusters YY
+  $ tarmak clusters destroy
 
-``YY-rolling-update``
-*********************
+Flags::
 
-YY with rolling update.
+  --infrastructure-stacks     [state,network,tools,vault,kubernetes]
+      target exactlyone piece of the infrastructure (aka terraform stack). This implies (--infrastructure-only) 
+  --force-destroy-state-stack [default=false]
+      force destroy the state stack, this is unreversible
+  --dry-run                   [default=false]
+      show changes only, do not actually execute them
 
-Usage::
-
-  $ tarmak clusters YY-rolling-update
 
 ``instances [ list | ssh ]``
 ****************************
@@ -237,7 +231,7 @@ Debug terraform via shell.
 
 Usage::
 
-  $ tarmak clusters debug terraform shell
+  $ tarmak clusters debug terraform [shell]
 
 ``puppet``
 ^^^^^^^^^^
@@ -246,7 +240,7 @@ Debug puppet.
 
 Usage::
 
-  $ tarmak clusters debug puppet
+  $ tarmak clusters debug puppet []
 
 ``etcd``
 ^^^^^^^^
@@ -255,7 +249,7 @@ Debug etcd.
 
 Usage::
 
-  $ tarmak clusters debug etcd
+  $ tarmak clusters debug etcd [status|shell|etcdctl]
 
 ``vault``
 ^^^^^^^^^
@@ -264,7 +258,7 @@ Debug vault.
 
 Usage::
 
-  $ tarmak clusters debug vault
+  $ tarmak clusters debug vault [status|shell|vault]
 
 ------------
 
@@ -277,15 +271,16 @@ Provider (many) -> Environment (one)
 
 Environment (many) -> Cluster (one)
 
+
 Changed Names
 #############
 
-+-----------+-------------+
-| Old Name  | New Name    |
-+===========+=============+
-| NodeGroup | Server Pool |
-+-----------+-------------+
-| Context   | Cluster     |
-+-----------+-------------+
-|  Nodes    | Instances   |
-+-----------+-------------+
++----------------------+--------------+
+| Old Name             | New Name     |
++======================+==============+
+| NodeGroup/ServerPool | InstancePool |
++----------------------+--------------+
+| Context              | Cluster      |
++----------------------+--------------+
+| Nodes                | Instances    |
++----------------------+--------------+
