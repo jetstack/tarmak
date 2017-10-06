@@ -1,3 +1,4 @@
+# Copyright Jetstack Ltd. See LICENSE for details.
 FROM alpine:3.6
 
 RUN apk add --no-cache unzip curl

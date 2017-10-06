@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright Jetstack Ltd. See LICENSE for details.
 
 set -e
 

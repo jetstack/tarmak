@@ -1,3 +1,4 @@
+# Copyright Jetstack Ltd. See LICENSE for details.
 IMAGE_NAME ?= tarmak-terraform
 IMAGE_TAG ?= latest
 SSH_KEY_PATH ?= ~/.ssh/id_jenkins_p9s_nonprod
