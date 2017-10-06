@@ -1,109 +1,111 @@
 .. _design:
 
-Design of Tarmak
-================
+Tarmak design
+=============
 
-Tarmak is a tool kit for Kubernetes cluster provisioning and management. It
+Tarmak is a toolkit for Kubernetes cluster lifecycle management. It
 focuses on best practice cluster security and cluster management/operation. It
-has been built to be cloud provider-agnostic and hence provides a means for
+has been built from the ground-up to be cloud provider-agnostic and hence provides a means for
 consistent and reliable cluster deployment and management, across clouds and
-on-premise environments (metal/private cloud).
+on-premise environments.
 
 Goals
 -----
 
 * Build and manage as similar as possible cluster deployments across different
-  Cloud and on-premise environments
+  cloud and on-premise environments.
 
-* Combine tried-and-tested tools throughout the stack to provide
-  production-ready and ready-to-use clusters
+* Combine tried-and-tested and well-understood system tools throughout the stack to provide
+  production-ready and ready-to-use clusters.
 
-* Follow security best practices
+* Follow security best practices.
 
-* Support for a fully automated CI/CD operation
+* Support for a fully automated CI/CD operation.
 
-* Provide minimal invasive upgrades, which can be predicted using dry runs
+* Provide minimally invasive upgrades, which can be predicted using dry-runs.
 
-* Have a testable code base, that follows KISS and DRY. Don't use convoluted
-  bash scripts per environment and operating system
+* Have a testable code base, that follows KISS and DRY. For example, avoidance of convoluted
+  bash scripts that are environment and operating system-specific.
 
-* Provide a tool independent CLI experience, that simplifies common tasks and
-  allows to investigate the status of the cluster quick and easy
+* Provide a tool-independent CLI experience, that simplifies common tasks and
+  allows to investigate cluster status and health quickly and easily.
 
-* Allow customisation of parts of the code, to follow internal standards
-
-* Use battle tested concepts to run components
+* Allow customisation to parts of the code, to follow internal standards.
 
 Non-Goals
 ---------
 
-* Reinvent the wheel
+* Reinventing the wheel
 
 Architecture
----------------------
+------------
 
 The architecture how clusters are build follows a couple of concepts that
 turned out to be beneficial to operate Kubernetes clusters
 
-Namespaces & Clusters & Hub
-***************************
+Tarmak resources and components
+*******************************
 
-A namespace can contain one or more kubernetes clusters. Every namespace
-contains exactly one bastion node and one vault cluster. In a multi-cluster
-namespace these bastion and vault instances are run in an separate cluster
-called  `hub`.
+* Environment: contains one or more Kubernetes clusters. Every Environment contains exactly one bastion node and one Vault cluster. 
 
-For a single node namespace, there's always exactly one cluster. This cluster contains all the server pool for the types:
+* Cluster: A 
+
+* Hub: In a multi-cluster Environment, the bastion and Vault instances are run in an separate cluster called the  `Hub`.
+
+* Stack
+
+For a single-node Environment, there's always exactly one Cluster. This cluster contains all the ServerPools for the following system components:
 
 * etcd: Stateful instances with etcd key-value store backing Kubernetes and possible overlay networks
 * master: Stateless Kubernetes master instances
 * node: Stateless Kubernetes node (aka worker) instances
-* vault: Stateful vault instances, that contain the clusters PKI
-* bastion: Bastion instance with public IP address to reach all other nodes, that don't have public IP space assigned
+* vault: Stateful Vault instances, that back the cluster's PKI
+* bastion: Bastion instance with public IP address to reach all other nodes (private IPs by default)
 
-Server Pools
-************
+ServerPools
+***********
 
-Server pools abstract instances of the same type. Every server pool has a type
+ServerPools abstract instances of the same type. Every ServerPool has a type
 attached that defines it's role. The ServerPool abstraction allows to create
 multiple groups of instances of the same type. This is especially useful for
-node/worker type instances
+node/worker type instances.
 
-Tools used under the bonnet
----------------------------
+Tools used under the hood
+-------------------------
 
-Tarmak uses different tools for different problem areas of concern. It acts as
-glue between the various tools.
+Tarmak is backed by tried-and-tested tools, effectively acting as
+glue and automation, managed by a CLI UX. These tools are pluggable, but at this stage we use the following:
 
 Docker
 ******
 
-Docker is used to package the tools necessary and run them in an uniform
-environment across different operating system. This allows use to support Linux
-and Mac OS X right and potentially Windows in the future
+Docker is used to package the tools necessary and run them in a uniform
+environment across different operating systems. This allows Tarmak to be supported on Linux
+and Mac OS X (and potentially Windows in the future).
 
 Terraform
 *********
 
-Terraform is a well known tool for infrastructure provisioning in public and
-private clouds. We use Terraform to manage the lifecycle of resources in them
-and store the state of clusters in Terraform remote state
+Terraform is a well-known tool for infrastructure provisioning in public and
+private clouds. We use Terraform to manage the lifecycle of resources 
+and store the state of clusters in Terraform remote state.
 
 Puppet
 ******
 
-As soon as instances are spun up, Tarmak uses Puppet to configure them once.
-Puppet is ran masterless, to not have to deal with the complexity of a Puppet
-master setup. All the services are configured in a way that the instance from
-now can run without any involvement of Puppet.
+As soon as instances are spun up, Tarmak uses Puppet to configure them.
+Puppet is used in a 'masterless' architecture, to not require the complexity of a full Puppet
+master setup. All the services are configured in such a way that once converged, the instance
+can run without any further involvement of Puppet.
 
-The reason for choosing Puppet over other means of configuration (Like Bash
-scripts, Ansible, Chef), was its testability on various levels and also the
-concept of defining dependencies explicit, that allows to build a tree of
-dependencies which helps to predict the changes within a dry-run.
+Why Puppet over other means of configuration (i.e. bash
+scripts, Ansible, Chef)? The main reason is its testability at various levels and also the
+concept of explicit dependency definition (allowing a tree of
+dependencies to be built which helps to predict the changes with a dry-run).
 
 Systemd
 *******
 
-Systemd units are used to maintain the dependencies between services. It also
-ensures the certificate renewal is happening regularly using systemd timers
+Systemd units are used to maintain the dependencies between services. 
+
+Systemd timers enable periodic application execution, such as for certificate renewal.
