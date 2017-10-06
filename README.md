@@ -325,7 +325,7 @@ class kubernetes::master
 ##### `version`
 
 * Type: `Any`
-* Default: `'1.14.2'`
+* Default: `'1.14.5'`
 
 ##### `dnsmasq_image`
 
@@ -335,7 +335,7 @@ class kubernetes::master
 ##### `dnsmasq_version`
 
 * Type: `Any`
-* Default: `'1.14.2'`
+* Default: `'1.14.5'`
 
 ##### `sidecar_image`
 
@@ -345,7 +345,7 @@ class kubernetes::master
 ##### `sidecar_version`
 
 * Type: `Any`
-* Default: `'1.14.2'`
+* Default: `'1.14.5'`
 
 ##### `autoscaler_image`
 
