@@ -23,7 +23,7 @@ help:
 
 test: go_test
 
-verify: generate go_verify
+verify: generate go_verify verify_boilerplate
 
 all: verify test build
 
@@ -122,3 +122,6 @@ go_generate_types: depend $(TYPES_FILES)
 		--output-file-base zz_generated.conversion
 	# generate all pkg/client contents
 	$(HACK_DIR)/update-client-gen.sh
+
+verify_boilerplate:
+	$(HACK_DIR)/verify-boilerplate.sh
