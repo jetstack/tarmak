@@ -17,7 +17,7 @@ Steps
 
 First we will clone the Tarmak repository and build the `tarmak` binary. Make sure you have your `$GOPATH` set correctly. The last line may change depending on your architecture.
 
-:: 
+::
 
   mkdir -p $GOPATH/src/github.com/jetstack
   cd $GOPATH/src/github.com/jetstack
