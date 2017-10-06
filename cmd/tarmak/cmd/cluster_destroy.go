@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 
 	"github.com/spf13/cobra"
 
@@ -13,8 +14,15 @@ import (
 var clusterDestroyCmd = &cobra.Command{
 	Use:   "destroy",
 	Short: "Destroy the current cluster",
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		store := &globalFlags.Cluster.Destroy
+		if store.DryRun {
+			return errors.New("dry run is not yet supported")
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		t := tarmak.New(globalFlags)
 		utils.WaitOrCancel(
 			func(ctx context.Context) error {
 				return t.CmdTerraformDestroy(args, ctx)
@@ -24,7 +32,6 @@ var clusterDestroyCmd = &cobra.Command{
 }
 
 func init() {
-	terraformPFlags(clusterDestroyCmd.PersistentFlags())
-	clusterDestroyCmd.PersistentFlags().Bool(tarmak.FlagForceDestroyStateStack, false, "destroy the state stack as well, possibly dangerous")
+	clusterDestroyFlags(clusterDestroyCmd.PersistentFlags())
 	clusterCmd.AddCommand(clusterDestroyCmd)
 }

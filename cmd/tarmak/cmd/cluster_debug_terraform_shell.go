@@ -10,7 +10,7 @@ var clusterDebugTerraformShellCmd = &cobra.Command{
 	Use:   "shell",
 	Short: "Prepares a Terraform container and executes a shell in this container",
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		t := tarmak.New(globalFlags)
 		t.Must(t.CmdTerraformShell(args))
 	},
 }

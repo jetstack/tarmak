@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
 
-var cfgFile string
+var globalFlags = &tarmakv1alpha1.Flags{}
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -27,36 +27,19 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	RootCmd.PersistentFlags().StringVarP(
+		&globalFlags.ConfigDirectory,
+		"config-directory",
+		"c",
+		"~/.tarmak",
+		"config directory for tarmak's configuration",
+	)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.tarmak/tarmak.yaml)")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".tarmak" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".tarmak")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	RootCmd.PersistentFlags().BoolVarP(
+		&globalFlags.Verbose,
+		"verbose",
+		"v",
+		false,
+		"enable verbose logging",
+	)
 }

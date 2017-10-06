@@ -153,7 +153,7 @@ Flags::
       show changes only, do not actually execute them
 
 ``destroy``
-*********
+***********
 
 Destroy the infrastructure of a cluster
 

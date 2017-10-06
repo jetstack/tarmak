@@ -10,7 +10,7 @@ var clusterKubectlCmd = &cobra.Command{
 	Use:   "kubectl",
 	Short: "Run kubectl on the current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		t := tarmak.New(globalFlags)
 		t.Must(t.CmdKubectl(args))
 	},
 	DisableFlagParsing: true,

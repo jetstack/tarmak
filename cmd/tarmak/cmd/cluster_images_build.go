@@ -13,7 +13,7 @@ var clusterImagesBuildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "build images",
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		t := tarmak.New(globalFlags)
 		utils.WaitOrCancel(
 			func(ctx context.Context) error {
 				return t.Packer().Build(ctx)

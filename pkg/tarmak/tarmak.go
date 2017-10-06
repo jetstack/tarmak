@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/cobra"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/packer"
 	"github.com/jetstack/tarmak/pkg/puppet"
 	"github.com/jetstack/tarmak/pkg/tarmak/assets"
@@ -24,9 +23,11 @@ import (
 )
 
 type Tarmak struct {
-	homeDir  string
-	rootPath *string
-	log      *logrus.Logger
+	homeDir         string
+	rootPath        *string
+	log             *logrus.Logger
+	flags           *tarmakv1alpha1.Flags
+	configDirectory string
 
 	config    *config.Config
 	terraform *terraform.Terraform
@@ -34,7 +35,6 @@ type Tarmak struct {
 	packer    *packer.Packer
 	ssh       interfaces.SSH
 	init      *initialize.Initialize
-	cmd       *cobra.Command
 	kubectl   *kubectl.Kubectl
 
 	environment interfaces.Environment
@@ -43,10 +43,17 @@ type Tarmak struct {
 
 var _ interfaces.Tarmak = &Tarmak{}
 
-func New(cmd *cobra.Command) *Tarmak {
+func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
-		log: logrus.New(),
-		cmd: cmd,
+		log:   logrus.New(),
+		flags: flags,
+	}
+
+	// set log level
+	if flags.Verbose {
+		t.log.SetLevel(logrus.DebugLevel)
+	} else {
+		t.log.SetLevel(logrus.InfoLevel)
 	}
 
 	// detect home directory
@@ -55,6 +62,12 @@ func New(cmd *cobra.Command) *Tarmak {
 		t.log.Fatal("unable to detect home directory: ", err)
 	}
 	t.homeDir = homeDir
+
+	// set config directory
+	t.configDirectory, err = homedir.Expand(flags.ConfigDirectory)
+	if err != nil {
+		t.log.Fatalf("unable to expand config directory ('%s'): %s", flags.ConfigDirectory, err)
+	}
 
 	t.log.Level = logrus.DebugLevel
 	t.log.Out = os.Stderr
@@ -71,7 +84,7 @@ func New(cmd *cobra.Command) *Tarmak {
 
 		// TODO: This whole construct is really ugly, make this better soon
 		if strings.Contains(err.Error(), "no such file or directory") {
-			if cmd.Name() == "init" {
+			if flags.Initialize {
 				return t
 			}
 			t.log.Fatal("unable to find an existing config, run 'tarmak init'")
@@ -79,7 +92,7 @@ func New(cmd *cobra.Command) *Tarmak {
 
 	}
 
-	if cmd.Name() == "init" {
+	if flags.Initialize {
 		return t
 	}
 
@@ -214,7 +227,7 @@ func (t *Tarmak) HomeDirExpand(in string) (string, error) {
 }
 
 func (t *Tarmak) ConfigPath() string {
-	return filepath.Join(t.HomeDir(), ".tarmak")
+	return t.configDirectory
 }
 
 func (t *Tarmak) Validate() error {

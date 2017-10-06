@@ -11,7 +11,8 @@ var providerInitCmd = &cobra.Command{
 	Aliases: []string{"initialise", "initialize"},
 	Short:   "Initialize a provider",
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		globalFlags.Initialize = true
+		t := tarmak.New(globalFlags)
 		t.Must(t.CmdProviderInit())
 	},
 }
