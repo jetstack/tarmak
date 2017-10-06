@@ -3,81 +3,238 @@
 #### Table of Contents
 
 1. [Description](#description)
-1. [Setup - The basics of getting started with vault_client](#setup)
-    * [What vault_client affects](#what-vault_client-affects)
-    * [Setup requirements](#setup-requirements)
-    * [Beginning with vault_client](#beginning-with-vault_client)
-1. [Usage - Configuration options and additional functionality](#usage)
-1. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
-1. [Limitations - OS compatibility, etc.](#limitations)
-1. [Development - Guide for contributing to the module](#development)
-
+2. [Classes](#classes)
+3. [Defined Types](#defined-types)
 ## Description
+Class: vault_client
+===========================
 
-Start with a one- or two-sentence summary of what the module does and/or what
-problem it solves. This is your 30-second elevator pitch for your module.
-Consider including OS/Puppet version it works with.
+Puppet module to install and manage a vault client install
 
-You can give more descriptive information in a second paragraph. This paragraph
-should answer the questions: "What does this module *do*?" and "Why would I use
-it?" If your module has a range of functionality (installation, configuration,
-management, etc.), this is the time to mention it.
+=== Parameters
 
-## Setup
+[*version*]
+  The package version to install
 
-### What vault_client affects **OPTIONAL**
+[*token*]
+  Static token for the vault client
+  Either token or init_token needs to be specified
 
-If it's obvious what your module touches, you can skip this section. For
-example, folks can probably figure out that your mysql_instance module affects
-their MySQL instances.
+[*init_token*]
+  Initial token for the vault client to generate node unique token
+  Either token or init_token needs to be specified
 
-If there's more that they should know about, though, this is the place to mention:
+[*init_policies*]
+  TODO
 
-* A list of files, packages, services, or operations that the module will alter,
-  impact, or execute.
-* Dependencies that your module automatically installs.
-* Warnings or other important notices.
+[*init_role*]
+  TODO
 
-### Setup Requirements **OPTIONAL**
+## Classes
 
-If your module requires anything extra before setting up (pluginsync enabled,
-etc.), mention it here.
+### `vault_client`
 
-If your most recent release breaks compatibility or requires particular steps
-for upgrading, you might want to include an additional "Upgrading" section
-here.
+Class: vault_client
+===========================
 
-### Beginning with vault_client
+Puppet module to install and manage a vault client install
 
-The very basic steps needed for a user to get the module up and running. This
-can include setup steps, if necessary, or it can be an example of the most
-basic use of the module.
+=== Parameters
 
-## Usage
+[*version*]
+  The package version to install
 
-This section is where you describe how to customize, configure, and do the
-fancy stuff with your module here. It's especially helpful if you include usage
-examples and code samples for doing things with your module.
+[*token*]
+  Static token for the vault client
+  Either token or init_token needs to be specified
 
-## Reference
+[*init_token*]
+  Initial token for the vault client to generate node unique token
+  Either token or init_token needs to be specified
 
-Here, include a complete list of your module's classes, types, providers,
-facts, along with the parameters for each. Users refer to this section (thus
-the name "Reference") to find specific details; most users don't read it per
-se.
+[*init_policies*]
+  TODO
 
-## Limitations
+[*init_role*]
+  TODO
 
-This is where you list OS compatibility, version compatibility, etc. If there
-are Known Issues, you might want to include them under their own heading here.
+#### Parameters
 
-## Development
+##### `version`
 
-Since your module is awesome, other users will want to play with it. Let them
-know what the ground rules for contributing are.
+* Type: `Any`
+* Default: `$::vault_client::params::version`
 
-## Release Notes/Contributors/Etc. **Optional**
+##### `bin_dir`
 
-If you aren't using changelog, put your release notes here (though you should
-consider using changelog). You can also add any additional sections you feel
-are necessary or important to include here. Please use the `## ` header.
+* Type: `Any`
+* Default: `$::vault_client::params::bin_dir`
+
+##### `download_dir`
+
+* Type: `Any`
+* Default: `$::vault_client::params::download_dir`
+
+##### `dest_dir`
+
+* Type: `Any`
+* Default: `$::vault_client::params::dest_dir`
+
+##### `server_url`
+
+* Type: `Any`
+* Default: `$::vault_client::params::server_url`
+
+##### `systemd_dir`
+
+* Type: `Any`
+* Default: `$::vault_client::params::systemd_dir`
+
+##### `init_token`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `init_role`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `token`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `ca_cert_path`
+
+* Type: `Any`
+* Default: `undef`
+
+
+### `vault_client::config`
+
+== Class vault_client::config
+
+This class is called from vault_client for service config.
+
+
+### `vault_client::install`
+
+
+
+
+### `vault_client::params`
+
+== Class vault_client::params
+
+This class is meant to be called from vault_client.
+It sets variables according to platform.
+
+
+### `vault_client::service`
+
+
+
+## DefinedTypes
+
+### `vault_client::cert_service`
+
+
+
+#### Parameters
+
+##### `base_path`
+
+* Type: `String`
+
+##### `common_name`
+
+* Type: `String`
+
+##### `role`
+
+* Type: `String`
+
+##### `alt_names`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `ip_sans`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `uid`
+
+* Type: `Integer`
+* Default: `0`
+
+##### `gid`
+
+* Type: `Integer`
+* Default: `0`
+
+##### `key_type`
+
+* Type: `String`
+* Default: `'rsa'`
+
+##### `key_bits`
+
+* Type: `Integer`
+* Default: `2048`
+
+##### `frequency`
+
+* Type: `Integer`
+* Default: `86400`
+
+##### `exec_post`
+
+* Type: `Array`
+* Default: `[]`
+
+
+### `vault_client::secret_service`
+
+
+
+#### Parameters
+
+##### `secret_path`
+
+* Type: `String`
+
+##### `field`
+
+* Type: `String`
+
+##### `dest_path`
+
+* Type: `String`
+
+##### `uid`
+
+* Type: `Integer`
+* Default: `0`
+
+##### `gid`
+
+* Type: `Integer`
+* Default: `0`
+
+##### `user`
+
+* Type: `String`
+* Default: `'root'`
+
+##### `group`
+
+* Type: `String`
+* Default: `'root'`
+
+##### `exec_post`
+
+* Type: `Array`
+* Default: `[]`
