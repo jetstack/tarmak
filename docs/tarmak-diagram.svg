@@ -15,7 +15,10 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
-   sodipodi:docname="tarmac-diagram.svg">
+   sodipodi:docname="tarmak-diagram.svg"
+   inkscape:export-filename="/home/louis/go/src/github.com/jetstack/tarmak/docs/tarmak-diagram.png"
+   inkscape:export-xdpi="196.88649"
+   inkscape:export-ydpi="196.88649">
   <defs
      id="defs2">
     <marker
@@ -463,9 +466,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4"
-     inkscape:cx="236.27442"
-     inkscape:cy="247.63028"
+     inkscape:zoom="1.979899"
+     inkscape:cx="289.01675"
+     inkscape:cy="219.02674"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -672,10 +675,10 @@
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.36500001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1.09500003, 0.365;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker6743-51-0-4-9)"
-       d="M 82.283552,142.53756 153.79702,115.7426"
+       d="m 82.550822,139.19669 c 0,0 48.176838,0.34798 60.301348,-1.98459 12.1245,-2.33258 3.07806,-18.31172 10.94485,-21.4695"
        id="path6727-2-4-9-9"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="czc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.36500001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker6743-51-6-03-0-1)"
        d="m 147.2033,151.08709 c 0,0 -23.43491,-0.92656 -34.00729,-12.26244 -10.57238,-11.33589 -21.324286,-25.63672 -21.324286,-25.63672"

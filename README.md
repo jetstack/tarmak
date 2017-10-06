@@ -9,3 +9,5 @@ on-premise environments (metal/private cloud).
 
 Tarmak uses a number of well known and proven components: terraform, puppet and
 systemd.
+
+![tarmak diagram](/docs/tarmak-diagram.png?raw=true)
