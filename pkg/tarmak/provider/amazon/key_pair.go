@@ -83,7 +83,7 @@ func (a *Amazon) validateAWSKeyPair() error {
 	if err != nil {
 		a.log.Warn("failed to generate local fingerprint: ", err)
 	} else if act, exp := *awsKeyPair.KeyFingerprint, fingerprintExpected; act != exp {
-		return fmt.Errorf("aws key pair is not matching the local one, aws_fingerprint=%s local_fingerprint=%s", act, exp)
+		return fmt.Errorf("AWS key pair does not match the local key pair, aws_fingerprint=%s local_fingerprint=%s", act, exp)
 	}
 
 	return nil

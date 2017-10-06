@@ -103,7 +103,7 @@ func TestAmazon_validateAmazonKeyPairExistingMismatch(t *testing.T) {
 	err = a.Amazon.validateAWSKeyPair()
 	if err == nil {
 		t.Errorf("expected an error: %s", err)
-	} else if !strings.Contains(err.Error(), "key pair is not matching") {
+	} else if !strings.Contains(err.Error(), "key pair does not match") {
 		t.Errorf("unexpected error message: %s", err)
 	}
 }
