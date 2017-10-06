@@ -1,3 +1,4 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 // +k8s:deepcopy-gen=package,register
 // +k8s:conversion-gen=github.com/jetstack/tarmak/pkg/apis/cluster
 // +k8s:openapi-gen=true

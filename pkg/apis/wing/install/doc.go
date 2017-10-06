@@ -1,3 +1,4 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 /*
 Copyright 2017 Jetstack Ltd.
 

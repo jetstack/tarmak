@@ -1,3 +1,4 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 package utils
 
 func MergeMaps(base map[string]interface{}, m ...map[string]interface{}) map[string]interface{} {
