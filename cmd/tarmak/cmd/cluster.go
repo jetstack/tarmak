@@ -9,7 +9,7 @@ import (
 
 var clusterCmd = &cobra.Command{
 	Use:     "clusters",
-	Short:   "operations on clusters",
+	Short:   "Operations on clusters",
 	Aliases: []string{"cluster"},
 }
 
