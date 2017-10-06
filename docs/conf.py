@@ -1,3 +1,4 @@
+# Copyright Jetstack Ltd. See LICENSE for details.
 # -*- coding: utf-8 -*-
 #
 # Tarmak documentation build configuration file, created by
