@@ -16,6 +16,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
+	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
 // returns a server
@@ -28,6 +29,9 @@ type Cluster struct {
 	environment  interfaces.Environment
 	networkCIDR  *net.IPNet
 	log          *logrus.Entry
+
+	wingClientset *wingclient.Clientset
+	wingTunnel    interfaces.Tunnel
 
 	imageIDs      map[string]string
 	instancePools []interfaces.InstancePool

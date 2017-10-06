@@ -42,6 +42,12 @@ type Cluster interface {
 	ImageIDs() (map[string]string, error)
 	Parameters() map[string]string
 	ListHosts() ([]Host, error)
+	// This enforces a reapply of the puppet.tar.gz on every instance in the cluster
+	ReapplyConfiguration() error
+	// This waits until all instances have congverged successfully
+	WaitForConvergance() error
+	// This upload the puppet.tar.gz to the cluster, warning there is some duplication as terraform is also uploading this puppet.tar.gz
+	UploadConfiguration() error
 }
 
 type Environment interface {
@@ -89,6 +95,7 @@ type Provider interface {
 	String() string
 	AskEnvironmentLocation(Initialize) (string, error)
 	AskInstancePoolZones(Initialize) (zones []string, err error)
+	UploadConfiguration(Cluster, io.ReadSeeker) error
 }
 
 type Stack interface {

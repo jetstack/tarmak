@@ -18,29 +18,54 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 }
 
 func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
-	selectStacks := t.flags.Cluster.Apply.InfrastructureStacks
+	if !t.flags.Cluster.Apply.ConfigurationOnly {
+		selectStacks := t.flags.Cluster.Apply.InfrastructureStacks
 
-	stacks := t.Cluster().Stacks()
-	for _, stack := range stacks {
+		stacks := t.Cluster().Stacks()
+		for _, stack := range stacks {
 
-		if len(selectStacks) > 0 {
-			found := false
-			for _, selectStack := range selectStacks {
-				if selectStack == stack.Name() {
-					found = true
+			if len(selectStacks) > 0 {
+				found := false
+				for _, selectStack := range selectStacks {
+					if selectStack == stack.Name() {
+						found = true
+					}
+				}
+				if !found {
+					continue
 				}
 			}
-			if !found {
-				continue
+
+			stack.Log().Info("running apply")
+			err := t.terraform.Apply(stack, args, ctx)
+			if err != nil {
+				return err
 			}
 		}
+	}
 
-		stack.Log().Info("running apply")
-		err := t.terraform.Apply(stack, args, ctx)
+	// upload tar gz only if terraform hasn't uploaded it yet
+	if t.flags.Cluster.Apply.ConfigurationOnly {
+		err := t.Cluster().UploadConfiguration()
 		if err != nil {
 			return err
 		}
 	}
+
+	// reapply config expect if we are in infrastructure only
+	if !t.flags.Cluster.Apply.InfrastructureOnly {
+		err := t.Cluster().ReapplyConfiguration()
+		if err != nil {
+			return err
+		}
+	}
+
+	// wait for convergance in every mode
+	err := t.Cluster().WaitForConvergance()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

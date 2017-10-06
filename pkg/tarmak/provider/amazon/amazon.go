@@ -48,6 +48,7 @@ type S3 interface {
 	GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error)
 	GetBucketLocation(input *s3.GetBucketLocationInput) (*s3.GetBucketLocationOutput, error)
 	PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error)
+	PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
 }
 
 type EC2 interface {
