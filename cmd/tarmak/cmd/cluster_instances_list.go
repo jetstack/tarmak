@@ -14,7 +14,7 @@ var clusterInstancesListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Print a list of instances in the cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		t := tarmak.New(globalFlags)
 		hosts, err := t.Cluster().ListHosts()
 		if err != nil {
 			logrus.Fatal(err)

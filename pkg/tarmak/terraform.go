@@ -17,10 +17,7 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 }
 
 func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
-	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
-	if err != nil {
-		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)
-	}
+	selectStacks := t.flags.Cluster.Apply.InfrastructureStacks
 
 	stacks := t.Cluster().Stacks()
 	for _, stack := range stacks {
@@ -47,15 +44,8 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
-	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
-	if err != nil {
-		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)
-	}
-
-	forceDestroyStateStack, err := t.cmd.Flags().GetBool(FlagForceDestroyStateStack)
-	if err != nil {
-		return fmt.Errorf("could not find flag %s: %s", FlagForceDestroyStateStack, err)
-	}
+	selectStacks := t.flags.Cluster.Destroy.InfrastructureStacks
+	forceDestroyStateStack := t.flags.Cluster.Destroy.ForceDestroyStateStack
 
 	stacks := t.Cluster().Stacks()
 	for posStack, _ := range stacks {

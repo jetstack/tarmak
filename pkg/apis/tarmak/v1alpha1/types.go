@@ -110,3 +110,37 @@ type Image struct {
 	BaseImage string `json:"baseImage,omitempty"`
 	Location  string `json:"location,omitempty"`
 }
+
+// This represents tarmaks global flags
+type Flags struct {
+	Verbose         bool   // logrus log level to run with
+	ConfigDirectory string // path to config directory
+
+	Initialize bool // run tarmak in initialize mode, don't parse config before rnning init
+
+	Cluster ClusterFlags // cluster specific flags
+}
+
+// This contains the cluster specifc operation flags
+type ClusterFlags struct {
+	Apply   ClusterApplyFlags   // flags for applying clusters
+	Destroy ClusterDestroyFlags // flags for destroying clusters
+}
+
+// Contains the cluster apply flags
+type ClusterApplyFlags struct {
+	DryRun bool // just show what would be done
+
+	InfrastructureStacks []string // filter stacks to this list
+	InfrastructureOnly   bool     // only run terraform
+
+	ConfigurationOnly bool // only run puppet
+}
+
+// Contains the cluster destroy flags
+type ClusterDestroyFlags struct {
+	DryRun bool // just show what would be done
+
+	InfrastructureStacks   []string // filter stacks to this list
+	ForceDestroyStateStack bool     // force destroy state stack
+}

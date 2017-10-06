@@ -13,7 +13,7 @@ var environmentListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Print a list of environments",
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		t := tarmak.New(globalFlags)
 		varMaps := make([]map[string]string, 0)
 		for _, env := range t.Environments() {
 			varMaps = append(varMaps, env.Parameters())

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 
 	"github.com/spf13/cobra"
 
@@ -10,11 +11,30 @@ import (
 )
 
 var clusterApplyCmd = &cobra.Command{
-	Use:     "apply",
-	Aliases: []string{"t-a"},
-	Short:   "Create or update the currently configured cluster",
+	Use:   "apply",
+	Short: "Create or update the currently configured cluster",
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		store := &globalFlags.Cluster.Apply
+
+		if store.DryRun {
+			return errors.New("dry run is not yet supported")
+		}
+
+		if len(store.InfrastructureStacks) > 0 {
+			if store.ConfigurationOnly {
+				return errors.New("the flags --infrastructure-stacks and --configuration-only are mutually exclusive")
+			}
+			store.InfrastructureOnly = true
+		}
+
+		if store.InfrastructureOnly && store.ConfigurationOnly {
+			return errors.New("the flags --infrastructure-only and --configuration-only are mutually exclusive")
+		}
+
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		t := tarmak.New(globalFlags)
 		utils.WaitOrCancel(
 			func(ctx context.Context) error {
 				return t.CmdTerraformApply(args, ctx)
@@ -24,6 +44,6 @@ var clusterApplyCmd = &cobra.Command{
 }
 
 func init() {
-	terraformPFlags(clusterApplyCmd.PersistentFlags())
+	clusterApplyFlags(clusterApplyCmd.PersistentFlags())
 	clusterCmd.AddCommand(clusterApplyCmd)
 }

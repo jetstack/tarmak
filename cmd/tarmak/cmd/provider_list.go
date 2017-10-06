@@ -13,7 +13,7 @@ var providerListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Print a list of providers",
 	Run: func(cmd *cobra.Command, args []string) {
-		t := tarmak.New(cmd)
+		t := tarmak.New(globalFlags)
 		varMaps := make([]map[string]string, 0)
 		for _, prov := range t.Providers() {
 			varMaps = append(varMaps, prov.Parameters())
