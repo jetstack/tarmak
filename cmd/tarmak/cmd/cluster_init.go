@@ -9,7 +9,7 @@ import (
 var clusterInitCmd = &cobra.Command{
 	Use:     "init",
 	Aliases: []string{"initialise", "initialize"},
-	Short:   "initialize a cluster",
+	Short:   "Initialize a cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		t.Must(t.CmdClusterInit())

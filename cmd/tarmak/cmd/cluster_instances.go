@@ -6,7 +6,7 @@ import (
 
 var clusterInstancesCmd = &cobra.Command{
 	Use:     "instances",
-	Short:   "operations on instances",
+	Short:   "Operations on instances",
 	Aliases: []string{"instance"},
 }
 

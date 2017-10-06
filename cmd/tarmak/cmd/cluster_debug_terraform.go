@@ -6,7 +6,7 @@ import (
 
 var clusterDebugTerraformCmd = &cobra.Command{
 	Use:   "terraform",
-	Short: "terraform debug operations on clusters",
+	Short: "Operations for debugging Terraform configuration",
 }
 
 func init() {

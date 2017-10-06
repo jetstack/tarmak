@@ -14,7 +14,7 @@ var cfgFile string
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "tarmak",
-	Short: "Tarmak is a Toolkit to spin up kubernetes clusters",
+	Short: "Tarmak is a toolkit for provisioning and managing Kubernetes clusters.",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -33,10 +33,6 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.tarmak/tarmak.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.

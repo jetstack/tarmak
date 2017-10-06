@@ -6,7 +6,7 @@ import (
 
 var providerCmd = &cobra.Command{
 	Use:     "providers",
-	Short:   "operations on providers",
+	Short:   "Operations on providers",
 	Aliases: []string{"provider"},
 }
 

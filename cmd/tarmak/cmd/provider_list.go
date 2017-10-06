@@ -11,7 +11,7 @@ import (
 
 var providerListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "list providers",
+	Short: "Print a list of providers",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		varMaps := make([]map[string]string, 0)

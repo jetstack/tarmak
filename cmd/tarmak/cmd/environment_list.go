@@ -11,7 +11,7 @@ import (
 
 var environmentListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "list environments",
+	Short: "Print a list of environments",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		varMaps := make([]map[string]string, 0)

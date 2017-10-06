@@ -8,7 +8,7 @@ import (
 
 var providerValidateCmd = &cobra.Command{
 	Use:   "validate",
-	Short: "validate provider(s) used by current cluster",
+	Short: "Validate provider(s) used by current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		t.Must(t.Environment().Provider().Validate())

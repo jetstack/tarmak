@@ -6,7 +6,7 @@ import (
 
 var environmentCmd = &cobra.Command{
 	Use:     "environments",
-	Short:   "operations on environments",
+	Short:   "Operations on environments",
 	Aliases: []string{"environment"},
 }
 

@@ -6,7 +6,7 @@ import (
 
 var clusterDebugPuppetCmd = &cobra.Command{
 	Use:   "puppet",
-	Short: "puppet debug operations on cluster",
+	Short: "Operations for debugging Puppet configuration",
 }
 
 func init() {
