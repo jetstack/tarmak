@@ -85,7 +85,7 @@ This class disable the source/destination check on AWS instances
 ##### `node_version`
 
 * Type: `String`
-* Default: `'1.3.0'`
+* Default: `'2.5.1'`
 
 ##### `cni_image`
 
@@ -95,7 +95,7 @@ This class disable the source/destination check on AWS instances
 ##### `cni_version`
 
 * Type: `String`
-* Default: `'1.9.1'`
+* Default: `'1.10.0'`
 
 ##### `ipv4_pool_cidr`
 
