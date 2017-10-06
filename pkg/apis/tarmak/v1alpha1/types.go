@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/Sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
@@ -109,4 +110,35 @@ type Image struct {
 
 	BaseImage string `json:"baseImage,omitempty"`
 	Location  string `json:"location,omitempty"`
+}
+
+// This represents tarmaks global flags
+type Flags struct {
+	LogLevel        logrus.Level // logrus log level to run with
+	ConfigDirectory string       // path to config directory
+
+	Cluster ClusterFlags // cluster specific flags
+}
+
+// This contains the cluster specifc operation flags
+type ClusterFlags struct {
+	ClusterApply   ClusterApplyFlags   // flags for applying clusters
+	ClusterDestroy ClusterDestroyFlags // flags for destroying clusters
+}
+
+// Contains the cluster apply flags
+type ClusterApplyFlags struct {
+	DryRun bool // just show what would be done
+
+	InfrastructureStacks []string // filter stacks to this list
+	infrastructureOnly   bool     // only run terraform
+
+	ConfigurationOnly bool // only run puppet
+}
+
+// Contains the cluster destroy flags
+type ClusterDestroyFlags struct {
+	DryRun bool // just show what would be done
+
+	InfrastructureStacks []string // filter stacks to this list
 }
