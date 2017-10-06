@@ -186,29 +186,6 @@ data:
         replacement: '${1}'
         target_label: name
 
-    - job_name: 'ctm-log-exporter'
-      kubernetes_sd_configs:
-      - role: node
-
-      relabel_configs:
-      - action: labelmap
-        regex: __meta_kubernetes_node_label_(.+)
-      - source_labels: [__meta_kubernetes_role]
-        action: replace
-        target_label: kubernetes_role
-      - source_labels: [__address__]
-        regex: '(.*):10250'
-        replacement: '${1}:9190'
-        target_label: __address__
-      - source_labels: [__meta_kubernetes_node_label_kubernetes_io_hostname]
-        target_label: __instance__
-      # set "name" value to "job"
-      - source_labels: [job]
-        regex: 'kubernetes-(.*)'
-        replacement: '${1}'
-        target_label: name
-
-
     # Example scrape config for probing services via the Blackbox Exporter.
     #
     # The relabeling allows the actual service scrape endpoint to be configured
