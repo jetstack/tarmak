@@ -8,7 +8,7 @@ import (
 
 var clusterKubectlCmd = &cobra.Command{
 	Use:   "kubectl",
-	Short: "kubectl against the current cluster",
+	Short: "Run kubectl on the current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		t.Must(t.CmdKubectl(args))

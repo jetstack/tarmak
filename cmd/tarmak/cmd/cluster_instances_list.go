@@ -12,7 +12,7 @@ import (
 
 var clusterInstancesListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "list nodes of the cluster",
+	Short: "Print a list of instances in the cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		hosts, err := t.Cluster().ListHosts()

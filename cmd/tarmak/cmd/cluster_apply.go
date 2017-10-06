@@ -12,7 +12,7 @@ import (
 var clusterApplyCmd = &cobra.Command{
 	Use:     "apply",
 	Aliases: []string{"t-a"},
-	Short:   "This applies the set of stacks in the current cluster",
+	Short:   "Create or update the currently configured cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		utils.WaitOrCancel(

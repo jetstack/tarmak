@@ -6,7 +6,7 @@ import (
 
 var clusterDebugCmd = &cobra.Command{
 	Use:   "debug",
-	Short: "used to debug clusters",
+	Short: "Operations for debugging a cluster",
 }
 
 func init() {

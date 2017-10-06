@@ -9,7 +9,7 @@ import (
 var environmentInitCmd = &cobra.Command{
 	Use:     "init",
 	Aliases: []string{"initialise", "initialize"},
-	Short:   "initialize a environment",
+	Short:   "Initialize a environment",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		t.Must(t.CmdEnvironmentInit())

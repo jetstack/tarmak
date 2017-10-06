@@ -9,7 +9,7 @@ import (
 var providerInitCmd = &cobra.Command{
 	Use:     "init",
 	Aliases: []string{"initialise", "initialize"},
-	Short:   "initialize a provider",
+	Short:   "Initialize a provider",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		t.Must(t.CmdProviderInit())
