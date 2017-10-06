@@ -25,13 +25,13 @@ actually attach & mount a volume you have to use the defined type
 ##### `bin_dir`
 
 * path to the binary directory for helper scripts
-* Type: `["String"]`
+* Type: `String`
 * Default: `'/opt/bin'`
 
 ##### `systemd_dir`
 
 * path to the directory where systemd units should be placed
-* Type: `["String"]`
+* Type: `String`
 * Default: `'/etc/systemd/system'`
 
 #### Examples
@@ -60,22 +60,22 @@ volume in AWS.
 ##### `volume_id`
 
 * the volume id of the AWS EBS volume
-* Type: `["String"]`
+* Type: `String`
 
 ##### `dest_path`
 
 * where to mount the device (needs to exists)
-* Type: `["String"]`
+* Type: `String`
 
 ##### `device`
 
 * block device to attach to (should be `/dev/xvd[a-z]`)
-* Type: `["String"]`
+* Type: `String`
 
 ##### `filesystem`
 
 * select the filesystem to initialize a volume
-* Type: `["Enum['xfs']"]`
+* Type: `Enum['xfs']`
 * Default: `'xfs'`
 
 #### Examples
