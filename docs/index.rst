@@ -13,7 +13,8 @@ Tarmak is yet another zero to Kubernetes utility
    :caption: Contents:
 
    getting-started
-
+   known-issues
+   
    design
    design_cli_ux
 
