@@ -1,3 +1,4 @@
+# Copyright Jetstack Ltd. See LICENSE for details.
 PACKAGE_NAME ?= github.com/jetstack/tarmak
 
 BINDIR ?= $(PWD)/bin
