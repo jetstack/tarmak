@@ -94,7 +94,7 @@ the actions of other Stacks. Tarmak currently uses these Stacks:
 * ``vault``: spins up a Vault cluster, backed by a Consul key/value store
 * ``kubernetes``: Kubernetes' master, worker and Etcd instances
 
-.. figure:: providers-environments-clusters.png
+.. figure:: static/providers-environments-clusters.png
    :alt: Config resources architecture: Providers, Environments & Clusters
 
    This is how a single cluster production setup could look like: While the dev
