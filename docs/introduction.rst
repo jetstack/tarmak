@@ -1,7 +1,10 @@
 .. _design:
 
-Tarmak design
-=============
+Introduction
+============
+
+What is Tarmak?
+---------------
 
 Tarmak is a toolkit for Kubernetes cluster lifecycle management. It focuses on
 best practice cluster security and cluster management/operation. It has been
@@ -9,8 +12,16 @@ built from the ground-up to be cloud provider-agnostic and hence provides a
 means for consistent and reliable cluster deployment and management, across
 clouds and on-premise environments.
 
+Tarmak and its underlying components are the product of Jetstack_'s work with 
+its customers to build and deploy Kubernetes in production at scale.
+
+.. _Jetstack: https://www.jetstack.io/
+
+Design goals
+------------
+
 Goals
------
+*****
 
 * Build and manage as similar as possible cluster deployments across different
   cloud and on-premise environments.
@@ -33,13 +44,13 @@ Goals
 
 * Allow customisation to parts of the code, to follow internal standards.
 
-Non-Goals
----------
+Non-goals
+*********
 
 * Reinventing the wheel
 
-Architecture
-------------
+Architecture overview
+---------------------
 
 The architecture how clusters are build follows a couple of concepts that
 turned out to be beneficial to operate Kubernetes clusters
