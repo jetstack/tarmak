@@ -27,7 +27,7 @@ Initialise configuration
 
  in this step, a Provider and an Environment is configured.
 
-Simply run ``tarmak init`` to initialise configuration for the first time. This wil set-up a Provider (AWS) and an Enviroment. 
+Simply run ``tarmak init`` to initialise configuration for the first time. This will set-up a Provider (AWS) and an Environment.
 You will be prompted for the necessary configuration.
 
 .. note::

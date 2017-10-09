@@ -18,3 +18,4 @@ testability
 terraform
 toolkit
 ctrl
+plugable
