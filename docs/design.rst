@@ -70,7 +70,7 @@ wide tooling like bastion nodes and Vault throughout all Clusters
 
 Clusters
 ^^^^^^^^
-
+  
 A Cluster resource represents exactly one Kubernetes cluster. The only
 exception for that rule is the ``hub`` in Multi Cluster Environment: Hubs don't
 contain a Kubernetes cluster, as they are just the place where the Environment

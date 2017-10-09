@@ -1,21 +1,25 @@
 .. getting-started:
 
-Getting Started (AWS)
-=====================
+User guide
+==========
+
+Getting started with AWS
+------------------------
 
 In this getting started guide, we walk through how to use initialise Tarmak with a new Provider (AWS) and Environment and provision a Kubernetes cluster. 
-This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and a bastion node with a public IP address (see Architecture for details of cluster components)
+This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and a bastion node with a public IP address 
+(see :doc:`Architecture overview` for details of cluster components)
 
 Prerequisites
--------------
+~~~~~~~~~~~~~
 
 * Docker
 * An AWS account
 * A public DNS zone that can be delegated to AWS Route 53
 * Optional: Vault with the `AWS secret backend <https://www.vaultproject.io/docs/secrets/aws/index.html>`_ configured
 
-Steps
------
+Overview of steps to follow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Initialise cluster configuration
 * Build an image (AMI) 
@@ -31,7 +35,7 @@ Simply run ``tarmak init`` to initialise configuration for the first time. This 
 You will be prompted for the necessary configuration.
 
 .. note::
-   If you are not using Vault's AWS secret backend, you can authenticate with AWS in the same way as the AWS CLI. More details can be found at `Configuring the AWS CLI <http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html>`_.
+   If you are not using Vault's AWS secret backend, you can authenticate with AWS in the same way as the AWS CLI. More details can be found at `Configuring the AWS CLI <http://docs.aws.amazon.com /cli/latest/userguide/cli-chap-getting-started.html>`_.
 
 ::
 
@@ -85,7 +89,7 @@ Next we create an AMI for this environment by running ``tarmak clusters images b
   % tarmak clusters images build
   <output omitted>
 
-Create the Cluster
+Create the cluster
 ~~~~~~~~~~~~~~~~~~
 To create the cluster, run ``tarmak clusters apply``.
 
@@ -112,7 +116,7 @@ To complete the cluster provisioning, run ``tarmak clusters apply`` once again.
    It will wait for the currently running step to finish and then exit.
    You can complete the process by re-running the command.
 
-Destroy the Cluster
+Destroy the cluster
 ~~~~~~~~~~~~~~~~~~~
 To destroy the cluster, run ``tarmak clusters destroy``.
 
