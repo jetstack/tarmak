@@ -31,6 +31,8 @@ First we will clone the Tarmak repository and build the `tarmak` binary. Make su
 
 You should now be able to run `tarmak` to view the available commands.
 
+.. todo::
+   Make sure this ``tarmak`` output is up to date with new commands etc
 ::
 
   % tarmak
