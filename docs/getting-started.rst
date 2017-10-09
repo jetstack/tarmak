@@ -71,6 +71,9 @@ You will be prompted for the necessary configuration.
 
   %
 
+.. todo::
+   Make sure this ``tarmak init`` stuff is up to date (tarmak is asking different questions now)
+
 By default the configuration will be created at ``$HOME/.tarmak/tarmak.yaml``.
 
 Create an AMI
