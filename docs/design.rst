@@ -103,21 +103,27 @@ the actions of other Stacks. Tarmak currently uses these Stacks:
    single cluster each. The same AWS account is used for the dev and staging
    environment, while produciton runs in seperate account.
 
+.. _InstancePool:
 
-InstancePools, Roles and Stacks
-*******************************
+InstancePools
+*************
 
-* etcd: Stateful instances with etcd key-value store backing Kubernetes and
-  possible overlay networks * master: Stateless Kubernetes master instances
-* node: Stateless Kubernetes node (aka worker) instances
-* vault: Stateful Vault instances, that back the cluster's PKI
-* bastion: Bastion instance with public IP address to reach all other nodes
-  (private IPs by default)
+Every Cluster contains a InstancePools that group instances of the similar type
+together. Every InstancePool has a name and a role attached to it. Other
+parameters allow to customise the instances regarding size, count and location.
 
-InstancePools group instances of the same type together. Every InstancePool has
-a type attached that defines it's role. The InstancePool abstraction allows to
-create multiple groups of instances of the same type. This is especially useful
-for worker type instances, that should run with slightly modified parameters.
+These roles are defined:
+
+* ``bastion``: Bastion instance within the ``tools`` stack. Has a public IP
+  address and allows tarmak to connect to other instances that only have
+  private IP addresses.
+* ``vault``: Vault instance within the ``vault`` stack. Have persistent disks,
+  that back a Consul cluster, which backs Vault itself.
+* ``etcd``: Stateful instances within ``kubernetes`` stack. Etcd is the
+  key-value store backing Kubernetes and possible overlay networks
+* ``master``: Stateless Kubernetes master instances
+* ``worker``: Stateless Kubernetes worker instances
+
 
 Tools used under the hood
 -------------------------
@@ -132,6 +138,13 @@ Docker
 Docker is used to package the tools necessary and run them in a uniform
 environment across different operating systems. This allows Tarmak to be
 supported on Linux and Mac OS X (and potentially Windows in the future).
+
+Packer
+******
+
+Packer help to build reproducible VM images in various environments. Through
+Packer we build custom VM images that contain the latest kernel upgrades and a
+supported puppet version.
 
 Terraform
 *********
