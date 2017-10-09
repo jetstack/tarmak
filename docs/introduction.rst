@@ -63,7 +63,7 @@ Tarmak configuration resources
 Providers
 ^^^^^^^^^
 
-A Provider object contains credentials and information for Cloud provider
+A Provider contains credentials and information for cloud provider
 accounts. A Provider can be used for many Environments, while every Environment
 has to be associated with exactly one Provider.
 
@@ -75,10 +75,10 @@ Environments
 
 An Environment consists of one or more Kubernetes clusters. If an Environment
 has exactly one cluster, it is called a Single Cluster Environment. A Cluster
-in such an environments also contains the Environment wide tooling.
+in such an environments also contains the Environment-wide tooling.
 
-For Multi Cluster Environments, this tooling is placed into a special
-Cluster resource that is called `hub``. This allows to reuse the Environment
+For Multi-Cluster Environments, this tooling is placed into a special
+Cluster resource that is called ``hub``. This allows to reuse the Environment-
 wide tooling like bastion nodes and Vault throughout all Clusters 
 
 Clusters
@@ -86,56 +86,58 @@ Clusters
   
 A Cluster resource represents exactly one Kubernetes cluster. The only
 exception for that rule is the ``hub`` in Multi Cluster Environment: Hubs don't
-contain a Kubernetes cluster, as they are just the place where the Environment
-wide tooling is placed.
+contain a Kubernetes cluster, as they are just the place where the Environment-wide 
+tooling is placed.
 
 All instances in a Cluster are defined by an InstancePool_.
 
 Stacks
 ^^^^^^
 
-The Cluster specific Terraform code is broken down into separate, self
-contained Stacks. The Stacks use Terraform's remote state feature to share
-outputs between them. The execution order of Stacks is important some depend on
-the actions of other Stacks. Tarmak currently uses these Stacks:
+The Cluster-specific Terraform code is broken down into separate, self-contained Stacks. 
+The Stacks use Terraform's remote state feature to share outputs between them. 
+The execution order of Stacks is important some depend on the actions of other Stacks. 
+Tarmak currently uses these Stacks:
 
 
 * ``state``: contains the stateful resources of the Cluster (data stores,
   persistent disk volumes).
 * ``network``: networks sets-up the necessary network objects to allow communication
-* ``tools``: tools contains the Environment wide tooling, like bastion & CI/CD instances
+* ``tools``: tools contains the Environment wide tooling, like bastion and CI/CD instances
 * ``vault``: spins up a Vault cluster, backed by a Consul key/value store
 * ``kubernetes``: Kubernetes' master, worker and Etcd instances
 
 .. figure:: static/providers-environments-clusters.png
-   :alt: Config resources architecture: Providers, Environments & Clusters
+   :alt: Config resources architecture: Providers, Environments and Clusters
 
-   This is how a single cluster production setup could look like: While the dev
-   environment allows for multiple clusters (e.g. each for a differnet features
+   This is how a single cluster production setup could look like. While the dev
+   environment allows for multiple clusters (e.g. each with different features
    and/or team members), the staging and production environments consist of a
    single cluster each. The same AWS account is used for the dev and staging
-   environment, while produciton runs in seperate account.
+   environment, while production runs in separate account.
 
 .. _InstancePool:
 
 InstancePools
 *************
 
-Every Cluster contains a InstancePools that group instances of the similar type
+Every Cluster contains InstancePools that group instances of a similar type
 together. Every InstancePool has a name and a role attached to it. Other
-parameters allow to customise the instances regarding size, count and location.
+parameters allow to customise the instances regarding size, count and location, 
+for example.
 
 These roles are defined:
 
 * ``bastion``: Bastion instance within the ``tools`` stack. Has a public IP
-  address and allows tarmak to connect to other instances that only have
+  address and allows Tarmak to connect to other instances that only have
   private IP addresses.
-* ``vault``: Vault instance within the ``vault`` stack. Have persistent disks,
+* ``vault``: Vault instance within the ``vault`` stack. Has persistent disks,
   that back a Consul cluster, which backs Vault itself.
 * ``etcd``: Stateful instances within ``kubernetes`` stack. Etcd is the
-  key-value store backing Kubernetes and possible overlay networks
-* ``master``: Stateless Kubernetes master instances
-* ``worker``: Stateless Kubernetes worker instances
+  key-value store backing Kubernetes and possibly other components, including 
+  overlay networks (i.e. Calico).
+* ``master``: Stateless Kubernetes master instances.
+* ``worker``: Stateless Kubernetes worker instances.
 
 
 Tools used under the hood
