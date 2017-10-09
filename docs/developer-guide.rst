@@ -1,19 +1,22 @@
 .. getting-started:
 
-Developer Guide
+Developer guide
 ===============
 
 Here we will walk through how to compile the Tarmak CLI and documentation from source.
 
+Building Tarmak
+---------------
+
 Prerequisites
--------------
+*************
 
 * Go (for the CLI)
 * Python 2.x (for documentation)
 * `virtualenv <https://pypi.python.org/pypi/virtualenv>`_ and `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io>`_ (for documentation)
 
-Steps
------
+Building Tarmak binary
+**********************
 
 First we will clone the Tarmak repository and build the `tarmak` binary. Make sure you have your `$GOPATH` set correctly. The last line may change depending on your architecture.
 
@@ -56,7 +59,10 @@ You should now be able to run `tarmak` to view the available commands.
 
   Use "tarmak [command] --help" for more information about a command.
 
-To compile the documentation run the following.
+Building Tarmak documentation
+*****************************
+
+To build the documentation run the following.
 
 ::
 
