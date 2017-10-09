@@ -1,6 +1,8 @@
 Tarmak
 ======
 
+![tarmak logo](/docs/static/logo-tarmak-400px.png)
+
 Tarmak is a toolkit for Kubernetes cluster provisioning and management. It
 focuses on best practice cluster security and cluster management/operation. It
 has been built to be cloud provider-agnostic and hence provides a means for
