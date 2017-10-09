@@ -108,7 +108,7 @@ func askClusterName(init interfaces.Initialize) (clusterName string, err error) 
 func askClusterType(init interfaces.Initialize) (clusterType string, err error) {
 	clusterTypePos, err := init.Input().AskSelection(&input.AskSelection{
 		Query:   "What kind of cluster do you want to add?",
-		Choices: []string{"single cluster environment", "multi cluster environment"},
+		Choices: []string{"Single cluster environment", "Multi-cluster environment"},
 		Default: 0,
 	})
 	if err != nil {

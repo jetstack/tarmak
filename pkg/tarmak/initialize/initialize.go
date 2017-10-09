@@ -95,9 +95,9 @@ creationLoop:
 				choice, err := i.input.AskSelection(&input.AskSelection{
 					Query: "What do you want to do now?",
 					Choices: []string{
-						"retry validation",
-						"ignore validation error",
-						"start over again with provider creation",
+						"Retry validation",
+						"Ignore validation error",
+						"Start over again with provider creation",
 					},
 					Default: 0,
 				})
@@ -243,7 +243,7 @@ func (i *Initialize) AskContact() (contact string, err error) {
 	for {
 		contact, err = i.Input().AskOpen(&input.AskOpen{
 			AllowEmpty: true,
-			Query:      "What is a contact mail address for someone responsible?",
+			Query:      "Provide a contact mail address for the project administrator",
 		})
 		if err != nil {
 			return "", err
@@ -313,9 +313,9 @@ creationLoop:
 				choice, err := i.input.AskSelection(&input.AskSelection{
 					Query: "What do you want to do now?",
 					Choices: []string{
-						"retry validation",
-						"ignore validation error",
-						"start over again with cluster creation",
+						"Retry validation",
+						"Ignore validation error",
+						"Start over again with cluster creation",
 					},
 					Default: 0,
 				})
@@ -346,7 +346,7 @@ creationLoop:
 
 func (i *Initialize) GetProvider() (providerObj interfaces.Provider, err error) {
 	if len(i.tarmak.Config().Providers()) == 0 {
-		i.input.Warn("No providers found in configuration...\n")
+		i.input.Warn("no providers found in configuration...\n")
 		return i.InitProvider()
 	} else {
 
@@ -359,8 +359,8 @@ func (i *Initialize) GetProvider() (providerObj interfaces.Provider, err error) 
 		}
 
 		providerPos, err := i.input.AskSelection(&input.AskSelection{
-			Query:   "Select provider or create new",
-			Choices: append(providerStrings, "create new provider"),
+			Query:   "Select an existing provider or create a new one",
+			Choices: append(providerStrings, "Create a new provider"),
 			Default: len(providerNames),
 		})
 		if err != nil {
@@ -378,7 +378,7 @@ func (i *Initialize) GetProvider() (providerObj interfaces.Provider, err error) 
 
 func (i *Initialize) GetEnvironment() (environmentObj interfaces.Environment, err error) {
 	if len(i.tarmak.Config().Environments()) == 0 {
-		i.input.Warn("No environments found in configuration...\n")
+		i.input.Warn("no environments found in configuration...\n")
 		return i.InitEnvironment()
 	}
 
@@ -411,7 +411,7 @@ func (i *Initialize) GetEnvironment() (environmentObj interfaces.Environment, er
 		}
 
 		if environmentSingle[environmentPos] {
-			i.Input().Warn("You cannot add a cluster to a single cluster environment")
+			i.Input().Warn("you cannot add a cluster to a single cluster environment")
 			continue
 		}
 		environmentObj = environments[environmentPos]
