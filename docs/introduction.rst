@@ -49,6 +49,8 @@ Non-goals
 
 * Reinventing the wheel
 
+.. _architecture_overview:
+
 Architecture overview
 ---------------------
 

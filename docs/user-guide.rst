@@ -8,7 +8,7 @@ Getting started with AWS
 
 In this getting started guide, we walk through how to use initialise Tarmak with a new Provider (AWS) and Environment and provision a Kubernetes cluster. 
 This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and a bastion node with a public IP address 
-(see :doc:`Architecture overview` for details of cluster components)
+(see :ref:`Architecture overview <arch_overview>` for details of cluster components)
 
 Prerequisites
 ~~~~~~~~~~~~~
