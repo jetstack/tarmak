@@ -1,4 +1,4 @@
-.. _design:
+.. _introduction:
 
 Introduction
 ============

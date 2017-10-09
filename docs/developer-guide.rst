@@ -1,4 +1,4 @@
-.. getting-started:
+.. dev-guide:
 
 Developer guide
 ===============
