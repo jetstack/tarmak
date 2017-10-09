@@ -1,8 +1,8 @@
 .. _design_cli_ux:
 
-******************************
-Using Tarmak command-line tool
-******************************
+**********************************
+Tarmak command-line tool reference
+**********************************
 
 $ tarmak
 
