@@ -54,8 +54,8 @@ Non-goals
 Architecture overview
 ---------------------
 
-The architecture how clusters are build follows a couple of concepts that
-turned out to be beneficial to operate Kubernetes clusters
+.. todo::
+   A high-level architecture diagram is coming soon!
 
 Tarmak configuration resources
 ******************************
