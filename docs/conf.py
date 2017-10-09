@@ -51,6 +51,8 @@ project = u'Tarmak'
 copyright = u'2017, Jetstack'
 author = u'Jetstack'
 
+html_logo = "static/logo-tarmak.png"
+
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
@@ -89,6 +91,11 @@ html_theme = 'sphinx_rtd_theme'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
+
+html_theme_options = {
+  'logo_only': True,
+}
+
 # html_theme_options = {}
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -180,3 +187,6 @@ epub_copyright = copyright
 epub_exclude_files = ['search.html']
 
 spelling_lang = "en_GB"
+
+def setup(app):
+    app.add_stylesheet('css/custom.css')
