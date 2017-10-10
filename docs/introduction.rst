@@ -60,6 +60,8 @@ Architecture overview
 Tarmak configuration resources
 ******************************
 
+.. _providers_resource:
+
 Providers
 ^^^^^^^^^
 
@@ -69,6 +71,8 @@ has to be associated with exactly one Provider.
 
 Currently the only supported Provider is **Amazon**. A Provider object for
 Amazon is referencing credentials to log in as an AWS account. 
+
+.. _environments_resource:
 
 Environments
 ^^^^^^^^^^^^
@@ -80,6 +84,8 @@ in such an environments also contains the Environment-wide tooling.
 For Multi-Cluster Environments, this tooling is placed into a special
 Cluster resource that is called ``hub``. This allows to reuse the Environment-
 wide tooling like bastion nodes and Vault throughout all Clusters 
+
+.. _clusters_resource:
 
 Clusters
 ^^^^^^^^

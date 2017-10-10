@@ -30,25 +30,26 @@ Initialise configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Simply run ``tarmak init`` to initialise configuration for the first time. You will be prompted for the necessary configuration 
-to set-up a new Provider (AWS) and Environment. The list below describes the questions you will be asked.
+to set-up a new :ref:`Provider <providers_resource>` (AWS) and :ref:`Environment <environments_resource>`. The list below describes 
+the questions you will be asked.
 
 .. note::
    If you are not using Vault's AWS secret backend, you can authenticate with AWS in the same way as the AWS CLI. More details can be found at `Configuring the AWS CLI <http://docs.aws.amazon.com /cli/latest/userguide/cli-chap-getting-started.html>`_.
 
-* Configuring a new Provider
+* Configuring a new :ref:`Provider <providers_resource>`
    * Provider name: must be unique
    * Cloud: Amazon (AWS) is the default and only option for now (more clouds to come)
    * Credentials: Amazon CLI auth (i.e. env variables/profile) or Vault (optional)
    * Name prefix: for state buckets and DynamoDB tables
    * Public DNS zone: will be created if not already existing, must be delegated from the root
 
-* Configuring a new Environment
+* Configuring a new :ref:`Environment <environments_resource>`
    * Environment name: must be unique
    * Project name: used for AWS resource labels
    * Project administrator mail address
    * Cloud region: pick a region fetched from AWS (using Provider credentials)
 
-* Configuring new Cluster(s)
+* Configuring new :ref:`Cluster(s) <clusters_resource>`
    * Single or multi-cluster environment
    * Cloud availability zone(s): pick zone(s) fetched from AWS
 
