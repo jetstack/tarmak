@@ -111,7 +111,6 @@ func initCredentials(in *input.Input, provider *tarmakv1alpha1.Provider) error {
 		for {
 			vaultPath, err := in.AskOpen(&input.AskOpen{
 				Query:   "Which Vault path should be used for Amazon credentials?",
-				Default: "jetstack/aws/jetstack-dev/sts/admin",
 			})
 			if err != nil {
 				return err
