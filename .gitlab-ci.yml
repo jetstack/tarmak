@@ -169,12 +169,11 @@ release::tarmak::puppet_publish_modules:
   stage: release
   tags:
   - docker
-  script:
-  - cd ${CI_PROJECT_DIR}/puppet
-  - bundle install --path /cache
   only:
   - tags
   script:
+  - cd ${CI_PROJECT_DIR}/puppet
+  - bundle install --path /cache
   - echo "${PUPPETFORGE_DATA}" > ~/.puppetforge.yml && chmod 600 ~/.puppetforge.yml
   - bundle exec rake publish_modules
 
