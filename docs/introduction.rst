@@ -125,7 +125,7 @@ Tarmak currently uses these Stacks:
 .. _InstancePool:
 
 InstancePools
-*************
+^^^^^^^^^^^^^
 
 Every Cluster contains InstancePools that group instances of a similar type
 together. Every InstancePool has a name and a role attached to it. Other
