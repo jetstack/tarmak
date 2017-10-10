@@ -23,7 +23,7 @@ help:
 
 test: go_test
 
-verify: generate go_verify verify_boilerplate
+verify: generate go_verify verify_boilerplate verify_client_gen
 
 all: verify test build
 
@@ -128,3 +128,6 @@ go_generate_types: depend $(TYPES_FILES)
 
 verify_boilerplate:
 	$(HACK_DIR)/verify-boilerplate.sh
+
+verify_client_gen:
+	$(HACK_DIR)/verify-client-gen.sh
