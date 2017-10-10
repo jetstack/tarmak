@@ -110,7 +110,7 @@ func initCredentials(in *input.Input, provider *tarmakv1alpha1.Provider) error {
 	if credentialSource == 1 {
 		for {
 			vaultPath, err := in.AskOpen(&input.AskOpen{
-				Query:   "Which Vault path should be used for Amazon credentials?",
+				Query: "Which Vault path should be used for Amazon credentials?",
 			})
 			if err != nil {
 				return err
