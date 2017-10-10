@@ -54,15 +54,15 @@ write_files:
     Requires=etcd.service
 
     [Service]
-    Environment=WING_VERSION=0.1.0-3
-    Environment=WING_HASH=ce437820ed86e8e248c82d8eeda4159766be600b61f4a253dc755453c9a95350
+    Environment=WING_VERSION=0.1.2-rc3
+    Environment=WING_HASH=59b7c619f5e90a6c59a061ed35592aee6b73757a6bada735ed281088d3e48a20
     Environment=WING_DATA_DIR=/var/lib/wing
     PermissionsStartOnly=true
     ExecStartPre=/bin/sh -c '\
       set -e ;\
       test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
       mkdir -p /opt/wing-$${WING_VERSION} ;\
-      curl -sLo /opt/wing-$${WING_VERSION}/wing https://storage.googleapis.com/tarmak-io/prerelease/$${WING_VERSION}/wing_linux_amd64 ;\
+      curl -sLo /opt/wing-$${WING_VERSION}/wing https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/wing_$${WING_VERSION}_linux_amd64 ;\
       echo "$${WING_HASH}  /opt/wing-$${WING_VERSION}/wing" | sha256sum -c ;\
       chmod 755 /opt/wing-$${WING_VERSION}/wing'
     ExecStartPre=/bin/sh -c '\
