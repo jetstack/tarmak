@@ -18,3 +18,8 @@ including Terraform, Puppet and systemd.
 
 Full documentation, including design/architecture overview, user/developer guides and more, 
 is maintained at https://docs.tarmak.io/.
+
+----
+
+**Disclaimer** - please note that current releases of Tarmak are *alpha* (unless explicitly marked). 
+Although we do not anticipate breaking changes, at this stage this cannot be absolutely guaranteed. 
