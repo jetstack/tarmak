@@ -165,6 +165,19 @@ generate::docs:
     - docs/_build/html
     expire_in: 4 weeks
 
+release::tarmak::puppet_publish_modules:
+  stage: release
+  tags:
+  - docker
+  script:
+  - cd ${CI_PROJECT_DIR}/puppet
+  - bundle install --path /cache
+  only:
+  - tags
+  script:
+  - echo "${PUPPETFORGE_DATA}" > ~/.puppetforge.yml && chmod 600 ~/.puppetforge.yml
+  - bundle exec rake publish_modules
+
 release::tarmak::golang:
   stage: release
   tags:
