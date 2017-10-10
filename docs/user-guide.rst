@@ -21,10 +21,12 @@ Prerequisites
 Overview of steps to follow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Initialise cluster configuration
-* Build an image (AMI) 
-* Create the cluster
-* Destroy the cluster
+* :ref:`Initialise cluster configuration <init_config>`
+* :ref:`Build an image (AMI) <create_ami>`
+* :ref:`Create the cluster <create_cluster>`
+* :ref:`Destroy the cluster <destroy_cluster>`
+
+.. _init_config:
 
 Initialise configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,6 +57,8 @@ the questions you will be asked.
 
 Once initialised, the configuration will be created at ``$HOME/.tarmak/tarmak.yaml`` (default).
 
+.. _create_ami:
+
 Create an AMI
 ~~~~~~~~~~~~~
 Next we create an AMI for this environment by running ``tarmak clusters images build`` (this is the step that requires Docker to be installed locally).
@@ -63,6 +67,8 @@ Next we create an AMI for this environment by running ``tarmak clusters images b
 
   % tarmak clusters images build
   <output omitted>
+
+.. _create_cluster:
 
 Create the cluster
 ~~~~~~~~~~~~~~~~~~
@@ -90,6 +96,8 @@ To complete the cluster provisioning, run ``tarmak clusters apply`` once again.
    Tarmak will not exit immediately.
    It will wait for the currently running step to finish and then exit.
    You can complete the process by re-running the command.
+
+.. _destroy_cluster:
 
 Destroy the cluster
 ~~~~~~~~~~~~~~~~~~~
