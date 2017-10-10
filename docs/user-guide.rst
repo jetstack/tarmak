@@ -29,56 +29,30 @@ Overview of steps to follow
 Initialise configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
- in this step, a Provider and an Environment is configured.
-
-Simply run ``tarmak init`` to initialise configuration for the first time. This will set-up a Provider (AWS) and an Environment.
-You will be prompted for the necessary configuration.
+Simply run ``tarmak init`` to initialise configuration for the first time. You will be prompted for the necessary configuration 
+to set-up a new Provider (AWS) and Environment. The list below describes the questions you will be asked.
 
 .. note::
    If you are not using Vault's AWS secret backend, you can authenticate with AWS in the same way as the AWS CLI. More details can be found at `Configuring the AWS CLI <http://docs.aws.amazon.com /cli/latest/userguide/cli-chap-getting-started.html>`_.
 
-::
+* Configuring a new Provider
+   * Provider name: must be unique
+   * Cloud: Amazon (AWS) is the default and only option for now (more clouds to come)
+   * Credentials: Amazon CLI auth (i.e. env variables/profile) or Vault (optional)
+   * Name prefix: for state buckets and DynamoDB tables
+   * Public DNS zone: will be created if not already existing, must be delegated from the root
 
-  % tarmak init
-  What should be the name of the cluster?
+* Configuring a new Environment
+   * Environment name: must be unique
+   * Project name: used for AWS resource labels
+   * Project administrator mail address
+   * Cloud region: pick a region fetched from AWS (using Provider credentials)
 
-  The name consists of two parts seperated by a dash. The first part is the environment name, second part the cluster name. Both names should be matching [a-z0-9]+
+* Configuring new Cluster(s)
+   * Single or multi-cluster environment
+   * Cloud availability zone(s): pick zone(s) fetched from AWS
 
-  Enter a value: dev-cluster
-
-  Do you want to use vault to get credentials for AWS? [Y/N]
-  Enter a value (Default is N): Y
-
-  Which path should be used for AWS credentials?
-  Enter a value (Default is jetstack/aws/jetstack-dev/sts/admin): jetstack/aws/jetstack-dev/sts/admin
-
-  Which region should be used?
-  Enter a value (Default is eu-west-1): eu-west-1
-
-  What bucket prefix should be used?
-  Enter a value (Default is tarmak-): tarmak-
-
-  What public zone should be used?
-
-  Please make sure you can delegate this zone to AWS!
-
-  Enter a value: k8s.jetstack.io
-
-  What private zone should be used?
-  Enter a value (Default is tarmak.local): tarmak.local
-
-  What is the mail address of someone responsible?
-  Enter a value: luke.addison@jetstack.io
-
-  What is the project name?
-  Enter a value (Default is k8s-playground): k8s-playground
-
-  %
-
-.. todo::
-   Make sure this ``tarmak init`` stuff is up to date (tarmak is asking different questions now)
-
-By default the configuration will be created at ``$HOME/.tarmak/tarmak.yaml``.
+Once initialised, the configuration will be created at ``$HOME/.tarmak/tarmak.yaml`` (default).
 
 Create an AMI
 ~~~~~~~~~~~~~
