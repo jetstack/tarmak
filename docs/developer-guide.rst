@@ -1,19 +1,22 @@
-.. getting-started:
+.. dev-guide:
 
-Developer Guide
+Developer guide
 ===============
 
 Here we will walk through how to compile the Tarmak CLI and documentation from source.
 
+Building Tarmak
+---------------
+
 Prerequisites
--------------
+*************
 
 * Go (for the CLI)
 * Python 2.x (for documentation)
 * `virtualenv <https://pypi.python.org/pypi/virtualenv>`_ and `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io>`_ (for documentation)
 
-Steps
------
+Building Tarmak binary
+**********************
 
 First we will clone the Tarmak repository and build the `tarmak` binary. Make sure you have your `$GOPATH` set correctly. The last line may change depending on your architecture.
 
@@ -30,33 +33,32 @@ You should now be able to run `tarmak` to view the available commands.
 
 ::
 
-  % tarmak
-  Tarmak is a Toolkit to spin up kubernetes clusters
+  $ tarmak
+  Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
 
   Usage:
     tarmak [command]
 
   Available Commands:
-    help              Help about any command
-    image-build       This builds an image for an environment using packer
-    init              init a cluster configuration
-    kubectl           kubectl against the current cluster
-    list              list nodes of the context
-    puppet-dist       Build a puppet.tar.gz
-    ssh               ssh into instance
-    terraform-apply   This applies the set of stacks in the current context
-    terraform-destroy This applies the set of stacks in the current context
-    terraform-shell   This prepare a terraform container and executes a shell in this context
-    version           Print the version number of tarmak
+    clusters     Operations on clusters
+    environments Operations on environments
+    help         Help about any command
+    init         Initialize a cluster
+    kubectl      Run kubectl on the current cluster
+    providers    Operations on providers
+    version      Print the version number of tarmak
 
   Flags:
-        --config string   config file (default is $HOME/.tarmak.yaml)
-    -h, --help            help for tarmak
-    -t, --toggle          Help message for toggle
+    -c, --config-directory string   config directory for tarmak's configuration (default "~/.tarmak")
+    -h, --help                      help for tarmak
+    -v, --verbose                   enable verbose logging
 
   Use "tarmak [command] --help" for more information about a command.
 
-To compile the documentation run the following.
+Building Tarmak documentation
+*****************************
+
+To build the documentation run the following.
 
 ::
 

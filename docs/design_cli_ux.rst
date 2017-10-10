@@ -1,13 +1,16 @@
 .. _design_cli_ux:
 
-******************************
-Using Tarmak command-line tool
-******************************
+***************************
+Command-line tool reference
+***************************
 
-$ tarmak
+Here are the commands and resources for the ``tarmak`` command-line tool.
+
+Commands
+--------
 
 ``kubectl``
-###########
+~~~~~~~~~~~
 
 Run ``kubectl`` on clusters (Alias for ``$ tarmak clusters kubectl``).
 
@@ -18,7 +21,7 @@ Usage::
 ------------
 
 ``init``
-########
+~~~~~~~~
 
 * Initialises a provider if not existing.
 * Initialises an environment if not existing.
@@ -31,9 +34,9 @@ Usage::
 -------------
 
 Resources
-#########
+---------
 
-Tarmak has 3 resources that can be acted upon - environments, providers and clusters.
+Tarmak has three resources that can be acted upon - environments, providers and clusters.
 
 Usage::
 
@@ -42,9 +45,9 @@ Usage::
 -------------
 
 Providers
-#########
+~~~~~~~~~
 
-Providers resource subcommand.
+Providers resource sub-command.
 
 ``list``
 ********
@@ -67,9 +70,9 @@ Usage::
 ------------
 
 Environments
-############
+~~~~~~~~~~~~
 
-Environments resource subcommand.
+Environments resource sub-command.
 
 ``list``
 ********
@@ -92,9 +95,9 @@ Usage::
 ------------
 
 Clusters
-########
+~~~~~~~~
 
-Clusters resource subcommand.
+Clusters resource sub-command.
 
 ``list``
 ********
@@ -259,28 +262,3 @@ Debug vault.
 Usage::
 
   $ tarmak clusters debug vault [status|shell|vault]
-
-------------
-
-Relationships
-#############
-
-The relationship between Providers, Environments and Clusters is as follows:
-
-Provider (many) -> Environment (one)
-
-Environment (many) -> Cluster (one)
-
-
-Changed Names
-#############
-
-+----------------------+--------------+
-| Old Name             | New Name     |
-+======================+==============+
-| NodeGroup/ServerPool | InstancePool |
-+----------------------+--------------+
-| Context              | Cluster      |
-+----------------------+--------------+
-| Nodes                | Instances    |
-+----------------------+--------------+
