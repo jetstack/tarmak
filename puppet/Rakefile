@@ -4,191 +4,78 @@ require 'metadata-json-lint/rake_task'
 require 'base64'
 
 # external modules
-external_modules = ['stdlib', 'archive', 'concat']
+external_modules = ['stdlib', 'archive', 'concat', 'site_module']
 
-def instance_name(i)
-  i.tags.each do |tag|
-    return tag.value if tag.key == 'Name'
-  end
-  return 'unknown'
-end
+desc 'publish all modules to puppet forge'
+task :publish_modules do
+  # make sure tarmak version is set
+  tarmak_version = ENV['CI_COMMIT_TAG']
+  fail "make sure a version is specified using CI_COMMIT_TAG" if tarmak_version.nil?
 
-if RUBY_VERSION >= '1.9'
-  require 'rubocop/rake_task'
-  RuboCop::RakeTask.new
-end
-
-PuppetLint.configuration.send('disable_80chars')
-PuppetLint.configuration.relative = true
-PuppetLint.configuration.ignore_paths = ['spec/**/*.pp', 'pkg/**/*.pp', 'vendor/**/*.pp', 'modules/stdlib/**/*.pp']
+  # copy modules to release folder
+  sh 'rm -rf .release'
+  sh 'mkdir .release'
+  sh 'git archive HEAD . | tar x -C ./.release'
 
 
-desc 'Spec all jetstack modules'
-task :spec_all do
-  Dir["modules/*"].reject do |o|
+  Dir[".release/modules/*"].reject do |o|
+    # filter non directories
     not File.directory?(o)
+
+    # fitler external modules
+    external_modules.include? File.basename(o)
   end.each do |module_path|
-    next if external_modules.include? File.basename(module_path)
+
+    # run in modules directory
     Dir.chdir(module_path) do
-      puts "## spec #{module_path}"
-      sh "bundle exec rake spec"
-    end
-  end
-end
+      module_name = File.basename(module_path)
+      puts "preparing module #{module_name}"
 
-desc 'Validate manifests, templates, and ruby files'
-task :validate do
-  Dir['manifests/**/*.pp'].each do |manifest|
-    sh "puppet parser validate --noop #{manifest}"
-  end
-  Dir['spec/**/*.rb', 'lib/**/*.rb'].each do |ruby_file|
-    sh "ruby -c #{ruby_file}" unless ruby_file =~ %r{spec/fixtures}
-  end
-  Dir['templates/**/*.erb'].each do |template|
-    sh "erb -P -x -T '-' #{template} | ruby -c"
-  end
-end
-
-desc 'Run metadata_lint, lint, validate, and spec tests.'
-task :test do
-  [:metadata_lint, :lint, :validate, :spec].each do |test|
-    Rake::Task[test].invoke
-  end
-end
-
-task :dist do
-  sh 'rm -rf _build'
-  sh 'mkdir -p _build'
-  sh 'cp environment.conf .version version.sh _build'
-  sh 'cp -a modules _build/modules'
-  sh 'cp -a spec/fixtures/modules/* _build/modules/'
-  sh 'cp -a hieradata/ manifests/ _build'
-  Dir.chdir('_build') do
-    sh 'GZIP="--no-name" tar czf ../puppet.tar.gz version.sh environment.conf .version modules/ hieradata/ manifests/site.pp --dereference --mtime="@1328000000" --exclude .git --owner root --group root'
-  end
-end
-
-task :sync do
-  name = ENV['USER']
-  dest_dir = "/etc/puppetlabs/code/environments/dev_#{name}/"
-  sh "ssh -t ctm-puppetmaster.cluster1-dev.internal.maiya.io sudo rm -rf #{dest_dir}"
-  sh "ssh -t ctm-puppetmaster.cluster1-dev.internal.maiya.io sudo mkdir -p #{dest_dir}"
-  sh "scp puppet.tar.gz ctm-puppetmaster.cluster1-dev.internal.maiya.io:/tmp/puppet_#{name}.tar.gz"
-  sh "ssh -t ctm-puppetmaster.cluster1-dev.internal.maiya.io sudo tar xvzf /tmp/puppet_#{name}.tar.gz -C #{dest_dir}"
-end
-
-desc 'Get a AWS session using MFA'
-task :aws_session do
-  require 'json'
-  require 'aws-sdk'
-  credentials_cache = JSON.parse(File.read(File.join(ENV['HOME'], '.aws/cli/cache/ctm_paas_nonprod--arn_aws_iam__650525879627_role-jetstack.json')))['Credentials']
-  @credentials = Aws::Credentials.new(credentials_cache['AccessKeyId'], credentials_cache['SecretAccessKey'], credentials_cache['SessionToken'])
-end
-
-desc 'Run puppet apply on every node in a cluster'
-task :puppet_apply do
-  require 'aws-sdk'
-  require 'net/ssh'
-  require 'thread'
-  semaphore = Mutex.new
-
-  cluster_id = ENV['CLUSTER_ID'] || 'cluster1-dev'
-
-  if @credentials
-    ec2 = Aws::EC2::Resource.new(region: 'eu-west-1', credentials: @credentials)
-  else
-    ec2 = Aws::EC2::Resource.new(region: 'eu-west-1')
-  end
-
-  threads = []
-  results_failed = []
-  results_successful = []
-
-  # Get all instances in cluster
-  ec2.instances({filters: [
-    {name: 'tag:cluster', values: [cluster_id]},
-    {name: 'tag:Role', values: ['worker','master','etcd']},
-  ]}).each do |i|
-    # ignore non running instances
-    next if i.state.name != 'running'
-
-    command = 'sudo /opt/puppetlabs/bin/puppet agent --test'
-
-    if ENV['SSH_PRIVATE_KEY']
-      f = Tempfile.open('ssh_key')
-      puts "write key temporary to: #{f.path}"
-      f.write(Base64.decode64(ENV['SSH_PRIVATE_KEY']))
-      f.close
-      File.chmod(0600,f.path)
-      key = f.path
-    else
-      key = File.join(ENV['HOME'], '.ssh/id_ctm_kubernetes_nonprod')
-    end
-
-    puts "connecting to host #{instance_name(i)} (#{i.private_ip_address})"
-
-    threads << Thread.new do
+      # read fixture dependencies
       begin
-        Net::SSH.start(
-          i.private_ip_address,
-          'centos',
-          :keys => key,
-          :keys_only => true,
-          :paranoid => false,
-          :timeout => 10,
-        ) do |ssh|
-          output = ''
-          exit_code = 0
-          ssh.open_channel do |channel|
-            channel.exec(command) do |ch, success|
-              unless success
-                abort "FAILED: couldn't execute command (ssh.channel.exec)"
-              end
-
-              channel.on_data do |c, data|
-                output += data
-              end
-
-              channel.on_extended_data do |c, type, data|
-                output += data
-              end
-
-              channel.on_request("exit-status") do |c, data|
-                exit_code = data.read_long
-              end
-            end
-          end
-
-          ssh.loop
-
-          semaphore.synchronize do
-            if exit_code == 0 or exit_code == 2
-              results_successful << [i, output]
-            else
-              results_failed << [i, output]
-            end
-          end
+        fixtures = YAML.load_file(".fixtures.yml")['fixtures']['symlinks'].keys.reject do |m|
+          # filter external modules or myself
+          external_modules.include? m or module_name == m
         end
-      rescue => error
-        semaphore.synchronize do
-          results_failed <<  [i, "SSH connection failed: #{error.message}"]
+      rescue Errno::ENOENT
+        fixtures = []
+      end
+
+      # modify metadata accordingly
+      metadata = JSON.parse(File.read("metadata.json"))
+      metadata['name'] = "jetstack-#{module_name}"
+      metadata['project_page'] = "https://docs.tarmak.io"
+      metadata['license'] = "Apache-2.0"
+      metadata['source'] = "https://github.com/jetstack/tarmak/tree/master/puppet/modules/#{module_name}"
+      metadata['issues_url'] = "https://github.com/jetstack/tarmak/issues/new"
+      metadata['author'] = 'jetstack'
+      metadata['version'] = tarmak_version
+
+      # add dependencies
+      fixtures.each do |m|
+        metadata['dependencies'] << {'name':"jetstack-#{m}", 'version_requirement':tarmak_version}
+      end
+
+      # write back json
+      File.write('metadata.json', JSON.pretty_generate(metadata))
+
+      # copy Rakefile (no symlinks are allowed to be in the puppet module)
+      sh 'rm -rf Rakefile'
+      sh 'cp ../../Rakefile.module Rakefile'
+
+      # push to puppet forge
+      Open3.popen3('bundle', 'exec', 'rake', 'module:push') do |stdin, stdout, stderr, wait_thr|
+        stdin.close
+        captured_stdout = stdout.read
+        captured_stderr = stderr.read
+        if not wait_thr.value.success?
+          if captured_stderr.include? 'A release with the version specified in the metadata.json already exists for this module.'
+            puts "warning: module version #{module_name}/#{tarmak_version} is already existing, did not overwrite the release"
+          else
+            fail captured_stderr
+          end
         end
       end
     end
   end
-  threads.each do |thr|
-    thr.join
-  end
-  return_code = 0
-
-  results_successful.each do |i, output|
-    puts "execution on host #{instance_name(i)} (#{i.private_ip_address}) succeeded:"
-    puts output
-  end
-  results_failed.each do |i, output|
-    puts "execution on host #{instance_name(i)} (#{i.private_ip_address}) failed:"
-    puts output
-    return_code = 1
-  end
-  exit return_code
 end
