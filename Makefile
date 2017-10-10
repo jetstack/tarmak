@@ -97,6 +97,7 @@ go_generate_types: depend $(TYPES_FILES)
 	# generate types
 	defaulter-gen \
 		--v 1 --logtostderr \
+		--go-header-file "$(HACK_DIR)/boilerplate/boilerplate.go.txt" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
@@ -109,6 +110,7 @@ go_generate_types: depend $(TYPES_FILES)
 	# generate deep copies
 	deepcopy-gen \
 		--v 1 --logtostderr \
+		--go-header-file "$(HACK_DIR)/boilerplate/boilerplate.go.txt" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
@@ -117,6 +119,7 @@ go_generate_types: depend $(TYPES_FILES)
 	# generate conversions
 	conversion-gen \
 		--v 1 --logtostderr \
+		--go-header-file "$(HACK_DIR)/boilerplate/boilerplate.go.txt" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
 		--output-file-base zz_generated.conversion
