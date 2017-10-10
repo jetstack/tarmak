@@ -33,7 +33,7 @@ func Init(in *input.Input, provider *tarmakv1alpha1.Provider) error {
 func initBucketPrefix(in *input.Input, provider *tarmakv1alpha1.Provider) error {
 	for {
 		bucketPrefix, err := in.AskOpen(&input.AskOpen{
-			Query:   "Which prefix should be used for the state buckets and DynamoDb tables? ([a-z0-9-]+, should be globally unique)",
+			Query:   "Which prefix should be used for the state buckets and DynamoDB tables? ([a-z0-9-]+, should be globally unique)",
 			Default: fmt.Sprintf("%s-tarmak-", provider.Name),
 		})
 		if err != nil {
@@ -56,7 +56,7 @@ func initBucketPrefix(in *input.Input, provider *tarmakv1alpha1.Provider) error 
 func initPublicZone(in *input.Input, provider *tarmakv1alpha1.Provider) error {
 	for {
 		publicZone, err := in.AskOpen(&input.AskOpen{
-			Query: "Which public DNS zone should be used? (DNS zone will be created if not existing, it needs to be delegated from the Root)",
+			Query: "Which public DNS zone should be used? (the DNS zone will be created if it does not exist and it must be delegated from the root)",
 		})
 		if err != nil {
 			return err
@@ -83,7 +83,7 @@ func initCredentials(in *input.Input, provider *tarmakv1alpha1.Provider) error {
 	}
 
 	credentialSource, err := in.AskSelection(&input.AskSelection{
-		Query:   "Where should the credentials for this Provider come from?",
+		Query:   "Where should the credentials for this provider come from?",
 		Choices: credentialSources,
 		Default: 0,
 	})
@@ -110,8 +110,7 @@ func initCredentials(in *input.Input, provider *tarmakv1alpha1.Provider) error {
 	if credentialSource == 1 {
 		for {
 			vaultPath, err := in.AskOpen(&input.AskOpen{
-				Query:   "Which path should be used for Amazon credentials?",
-				Default: "jetstack/aws/jetstack-dev/sts/admin",
+				Query: "Which Vault path should be used for Amazon credentials?",
 			})
 			if err != nil {
 				return err
