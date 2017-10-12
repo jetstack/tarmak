@@ -57,6 +57,7 @@ type EC2 interface {
 	DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error)
 	DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (*ec2.DescribeAvailabilityZonesOutput, error)
 	DescribeRegions(input *ec2.DescribeRegionsInput) (*ec2.DescribeRegionsOutput, error)
+	DescribeReservedInstancesOfferings(input *ec2.DescribeReservedInstancesOfferingsInput) (*ec2.DescribeReservedInstancesOfferingsOutput, error)
 }
 
 type DynamoDB interface {
@@ -503,6 +504,39 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 	sess.Config.Credentials = creds
 
 	return sess, nil
+}
+
+func (a *Amazon) VerifyInstanceTypes() error {
+	var result error
+	var err error
+	types := make(map[string]bool)
+
+	svc, err := a.EC2()
+	if err != nil {
+		return err
+	}
+
+	offerings, err := svc.DescribeReservedInstancesOfferings(&ec2.DescribeReservedInstancesOfferingsInput{})
+	if err != nil {
+		return err
+	}
+
+	for _, offer := range offerings.ReservedInstancesOfferings {
+		types[*offer.InstanceType] = true
+	}
+
+	for _, inst := range a.tarmak.Cluster().InstancePools() {
+		itype, err := a.InstanceType(inst.Config().Size)
+		if err != nil {
+			return err
+		}
+
+		if !types[itype] {
+			result = multierror.Append(result, fmt.Errorf("instance type %s not offered on region %s", itype, a.Region()))
+		}
+	}
+
+	return result
 }
 
 // This methods converts and possibly validates a generic instance type to a

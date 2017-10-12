@@ -21,6 +21,10 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 	if !t.flags.Cluster.Apply.ConfigurationOnly {
 		selectStacks := t.flags.Cluster.Apply.InfrastructureStacks
 
+		if err := t.Provider().VerifyInstanceTypes(); err != nil {
+			return err
+		}
+
 		stacks := t.Cluster().Stacks()
 		for _, stack := range stacks {
 
