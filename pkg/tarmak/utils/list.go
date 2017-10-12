@@ -46,7 +46,8 @@ func ListParameters(out io.Writer, keys []string, varMaps []map[string]string) {
 		fields := make([]interface{}, len(keys))
 		for pos, key := range keys {
 			if val, ok := varMap[key]; ok {
-				fields[pos] = val
+				// pad the value a little for readability
+				fields[pos] = val + " "
 			} else {
 				fields[pos] = ""
 			}

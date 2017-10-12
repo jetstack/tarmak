@@ -41,6 +41,7 @@ type Cluster interface {
 	InstancePools() []InstancePool
 	ImageIDs() (map[string]string, error)
 	Parameters() map[string]string
+	Type() string
 	ListHosts() ([]Host, error)
 	// This enforces a reapply of the puppet.tar.gz on every instance in the cluster
 	ReapplyConfiguration() error
