@@ -1,5 +1,10 @@
 # etcd
 
+Install/configure an etcd node.
+
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be
+considered alpha.
+
 #### Table of Contents
 
 1. [Description](#description)
