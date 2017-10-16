@@ -8,10 +8,10 @@
       }
    ],
    "license" : "Apache-2.0",
-   "issues_url" : "https://github.com/puppernetes/module-etcd",
-   "source" : "https://github.com/puppernetes/module-etcd",
+   "issues_url" : "https://github.com/jetstack/puppet-module-etcd/issues",
+   "source" : "https://github.com/jetstack/puppet-module-etcd",
    "data_provider" : null,
-   "project_page" : "https://github.com/puppernetes/module-etcd",
+   "project_page" : "https://github.com/jetstack/puppet-module-etcd",
    "author" : "jetstack",
-   "summary" : "Install/configure a etcd nodes"
+   "summary" : "Install/configure an etcd node"
 }
