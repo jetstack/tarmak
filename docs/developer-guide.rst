@@ -64,6 +64,7 @@ To build the documentation run the following.
 
   cd $GOPATH/src/github.com/jetstack/tarmak/docs
   mkvirtualenv -p $(which python2) tarmak-docs
+  source tarmak-docs/bin/activate
   pip install -r requirements.txt
   make html
 
