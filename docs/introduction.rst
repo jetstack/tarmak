@@ -10,7 +10,7 @@ Tarmak is a toolkit for Kubernetes cluster lifecycle management. It focuses on
 best practice cluster security and cluster management/operation. It has been
 built from the ground-up to be cloud provider-agnostic and hence provides a
 means for consistent and reliable cluster deployment and management, across
-clouds and on-premise environments.
+clouds and on-premises environments.
 
 Tarmak and its underlying components are the product of Jetstack_'s work with 
 its customers to build and deploy Kubernetes in production at scale.
@@ -24,7 +24,7 @@ Goals
 *****
 
 * Build and manage as similar as possible cluster deployments across different
-  cloud and on-premise environments.
+  cloud and on-premises environments.
 
 * Combine tried-and-tested and well-understood system tools throughout the
   stack to provide production-ready and ready-to-use clusters.
