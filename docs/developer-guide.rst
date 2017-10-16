@@ -24,7 +24,7 @@ First we will clone the Tarmak repository and build the `tarmak` binary. Make su
 
   mkdir -p $GOPATH/src/github.com/jetstack
   cd $GOPATH/src/github.com/jetstack
-  git clone git@gitlab.jetstack.net:tarmak/tarmak.git
+  git clone git@github.com:jetstack/tarmak.git
   cd tarmak
   make build
   ln -s $PWD/tarmak_darwin_amd64 /usr/local/bin/tarmak
