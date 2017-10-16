@@ -1,4 +1,9 @@
-# etcd
+# Install/configure an etcd node.
+#
+# This module is part of [Tarmak](http://docs.tarmak.io) and should currently be
+# considered alpha.
+#
+# [![Travis](https://img.shields.io/travis/jetstack/puppet-module-etcd.svg)](https://travis-ci.org/jetstack/puppet-module-etcd/)
 class etcd(
   $data_dir = $::etcd::params::data_dir,
   $config_dir = $::etcd::params::config_dir,

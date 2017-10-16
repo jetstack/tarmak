@@ -1,23 +1,28 @@
 # etcd
 
-Install/configure an etcd node.
-
-This module is part of [Tarmak](http://docs.tarmak.io) and should currently be
-considered alpha.
-
 #### Table of Contents
 
 1. [Description](#description)
 2. [Classes](#classes)
 3. [Defined Types](#defined-types)
 ## Description
-etcd
+Install/configure an etcd node.
+
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be
+considered alpha.
+
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-etcd.svg)](https://travis-ci.org/jetstack/puppet-module-etcd/)
 
 ## Classes
 
 ### `etcd`
 
-etcd
+Install/configure an etcd node.
+
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be
+considered alpha.
+
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-etcd.svg)](https://travis-ci.org/jetstack/puppet-module-etcd/)
 
 #### Parameters
 
