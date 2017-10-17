@@ -1,9 +1,11 @@
 # Install/configure an etcd node.
 #
-# This module is part of [Tarmak](http://docs.tarmak.io) and should currently be
-# considered alpha.
-#
-# [![Travis](https://img.shields.io/travis/jetstack/puppet-module-etcd.svg)](https://travis-ci.org/jetstack/puppet-module-etcd/)
+# @param data_dir The directory to store etcd data
+# @param config_dir The directory to store etcd config
+# @param user The username to run etcd
+# @param uid The user ID to run etcd
+# @param group The group to run etcd
+# @param gid The etcd group ID
 class etcd(
   $data_dir = $::etcd::params::data_dir,
   $config_dir = $::etcd::params::config_dir,
