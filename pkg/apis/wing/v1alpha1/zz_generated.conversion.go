@@ -65,7 +65,7 @@ func Convert_wing_Instance_To_v1alpha1_Instance(in *wing.Instance, out *Instance
 }
 
 func autoConvert_v1alpha1_InstanceList_To_wing_InstanceList(in *InstanceList, out *wing.InstanceList, s conversion.Scope) error {
-	out.ObjectMeta = in.ObjectMeta
+	out.ListMeta = in.ListMeta
 	out.Items = *(*[]wing.Instance)(unsafe.Pointer(&in.Items))
 	return nil
 }
@@ -76,7 +76,7 @@ func Convert_v1alpha1_InstanceList_To_wing_InstanceList(in *InstanceList, out *w
 }
 
 func autoConvert_wing_InstanceList_To_v1alpha1_InstanceList(in *wing.InstanceList, out *InstanceList, s conversion.Scope) error {
-	out.ObjectMeta = in.ObjectMeta
+	out.ListMeta = in.ListMeta
 	out.Items = *(*[]Instance)(unsafe.Pointer(&in.Items))
 	return nil
 }
