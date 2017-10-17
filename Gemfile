@@ -12,6 +12,7 @@ gem 'net-ssh'
 gem 'puppet-blacksmith'
 gem 'puppet_readme_generator'
 gem 'rspec-retry'
+gem 'semantic_puppet'
 
 # rubocop requires ruby >= 1.9
 gem 'rubocop'
