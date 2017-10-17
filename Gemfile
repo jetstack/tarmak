@@ -15,3 +15,7 @@ gem 'rspec-retry'
 
 # rubocop requires ruby >= 1.9
 gem 'rubocop'
+
+gem 'beaker', :git => 'https://github.com/jetstack-experimental/beaker.git', :branch => 'fix-test-rerun'
+gem 'beaker-rspec'
+gem 'beaker-puppet_install_helper'
