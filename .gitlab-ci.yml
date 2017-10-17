@@ -32,7 +32,6 @@ beaker-three-node-cluster:
   - vagrant
   script:
   - bundle install
-  - bundle exec rake spec_prep
   - bundle exec rake beaker:3n-cluster
   only:
   - master
@@ -44,7 +43,6 @@ beaker-single-node:
   - vagrant
   script:
   - bundle install
-  - bundle exec rake spec_prep
   - bundle exec rake beaker:default
   only:
   - master

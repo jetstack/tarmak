@@ -29,3 +29,5 @@ task :test do
     Rake::Task[test].invoke
   end
 end
+
+task :beaker => :spec_prep
