@@ -1,0 +1,8 @@
+language: go
+go:
+  - 1.9
+install:
+  - make depend
+script:
+  - make verify build
+
