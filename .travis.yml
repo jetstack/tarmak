@@ -1,8 +1,14 @@
 language: go
 go:
   - 1.9
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get -y install enchant
 install:
   - make depend
 script:
   - make verify build
-
+  - virtualenv venv
+  - source venv/bin/activate && pip install -r docs/requirements.txt
+  - source venv/bin/activate && make -C docs html
+  - source venv/bin/activate && make -C docs spelling
