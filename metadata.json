@@ -5,8 +5,8 @@
   "summary": "Installs calico components and sets up advanced overlay networking for kubernetes",
   "license": "Apache-2.0",
   "source": "https://github.com/jetstack/puppet-module-calico",
-  "project_page": null,
-  "issues_url": null,
+  "project_page": "https://github.com/jetstack/puppet-module-calico",
+  "issues_url": "https://github.com/jetstack/puppet-module-calico/issues",
   "dependencies": [
     {"name":"puppetlabs-stdlib","version_requirement":">= 4.2.0 < 5.0.0"},
     {"name":"puppet-archive","version_requirement":">= 1.1.2 < 1.2.0"}
