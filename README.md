@@ -5,7 +5,9 @@
 1. [Description](#description)
 2. [Classes](#classes)
 ## Description
-calico init.pp
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.
+
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-calico.svg)](https://travis-ci.org/jetstack/puppet-module-calico/)
 
 ## Classes
 
@@ -127,4 +129,4 @@ calico params.pp
 ##### `version`
 
 * Type: `String`
-* Default: `'0.5.4'`
+* Default: `'0.7.0'`
