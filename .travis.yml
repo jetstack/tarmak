@@ -6,9 +6,9 @@ before_install:
   - sudo apt-get -y install enchant
 install:
   - make depend
+  - make -C docs .venv
 script:
   - make verify build
-  - virtualenv venv
-  - source venv/bin/activate && pip install -r docs/requirements.txt
-  - source venv/bin/activate && make -C docs html
-  - source venv/bin/activate && make -C docs spelling
+  - make -C docs spelling
+  - make -C docs linkcheck
+  - make -C docs html

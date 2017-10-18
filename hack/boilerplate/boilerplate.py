@@ -144,6 +144,7 @@ skipped_dirs = [
     '.git',
     'cluster/env.sh',
     "vendor",
+    "docs/venv",
     "hack",
     "pkg/tarmak/mocks",
     "pkg/tarmak/assets",
