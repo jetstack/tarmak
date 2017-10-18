@@ -544,6 +544,7 @@ func (a *Amazon) VerifyInstanceTypes() error {
 		response, err := svc.DescribeReservedInstancesOfferings(request)
 		if err != nil {
 			result = multierror.Append(result, fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err))
+			break
 		}
 
 		var available bool
