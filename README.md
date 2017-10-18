@@ -8,7 +8,7 @@
 ## Description
 This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.
 
-[![Travis](https://img.shields.io/travis/jetstack/puppet-module-calico.svg)](https://travis-ci.org/jetstack/puppet-module-calico/)
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-prometheus.svg)](https://travis-ci.org/jetstack/puppet-module-prometheus/)
 
 ## Classes
 
