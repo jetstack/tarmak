@@ -508,7 +508,6 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 
 func (a *Amazon) VerifyInstanceTypes() error {
 	var result error
-	var err error
 	types := make(map[string][]string)
 
 	svc, err := a.EC2()
@@ -516,52 +515,82 @@ func (a *Amazon) VerifyInstanceTypes() error {
 		return err
 	}
 
+	//Loop through cluster instances
 	for _, instance := range a.tarmak.Cluster().InstancePools() {
-		instType, err := a.InstanceType(instance.Config().Size)
+		//Get instance type of each instance
+		instanceType, err := a.InstanceType(instance.Config().Size)
 		if err != nil {
 			return err
 		}
 
-		var zones []string
+		//Add zones to instance type map, append so no zone is lost
 		for _, subnet := range instance.Config().Subnets {
-			zones = append(zones, subnet.Zone)
+			types[instanceType] = append(types[instanceType], subnet.Zone)
 		}
-
-		types[instType] = zones
 	}
 
+	//Loop through instance type map
+	for instanceType := range types {
+		//Remove duplicate zones on each instance type
+		types[instanceType] = a.removeDuplicates(types[instanceType])
+
+		//Verify instance type with the given zones
+		if err := a.verifyInstanceType(instanceType, types[instanceType], svc); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result
+}
+
+func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2) error {
+	var result error
+	var available bool
+
+	//Request offering, filter by given instance type
 	request := &ec2.DescribeReservedInstancesOfferingsInput{
 		InstanceTenancy:    aws.String("default"),
 		IncludeMarketplace: aws.Bool(false),
 		OfferingClass:      aws.String("standard"),
 		OfferingType:       aws.String("No Upfront"),
 		ProductDescription: aws.String("Linux/UNIX (Amazon VPC)"),
+		InstanceType:       aws.String(instanceType),
+	}
+	response, err := svc.DescribeReservedInstancesOfferings(request)
+	if err != nil {
+		return fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err)
 	}
 
-	for instanceType := range types {
-		request.InstanceType = aws.String(instanceType)
+	//Loop through the given zones
+	for _, zone := range zones {
+		available = false
 
-		response, err := svc.DescribeReservedInstancesOfferings(request)
-		if err != nil {
-			result = multierror.Append(result, fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err))
-			break
+		//Loop through every offer given. Check the zone against the current looped zone.
+		for _, offer := range response.ReservedInstancesOfferings {
+			if offer.AvailabilityZone != nil && *offer.AvailabilityZone == zone {
+				available = true
+				break
+			}
 		}
 
-		var available bool
-		for _, zone := range types[instanceType] {
-			available = false
+		//Collect non matched zones
+		if !available {
+			result = multierror.Append(result, fmt.Errorf("availabilty zone %s not offered for type %s", zone, instanceType))
+		}
+	}
 
-			for _, offer := range response.ReservedInstancesOfferings {
-				if offer.AvailabilityZone != nil && *offer.AvailabilityZone == zone {
-					available = true
-					break
-				}
-			}
+	return result
+}
 
-			if !available {
-				result = multierror.Append(result, fmt.Errorf("availabilty zone %s not offered for type %s", zone, instanceType))
+//Remove duplicate strings in a slice
+func (a *Amazon) removeDuplicates(slice []string) []string {
+	var result []string
+	seen := make(map[string]bool)
 
-			}
+	for _, str := range slice {
+		if _, ok := seen[str]; !ok {
+			result = append(result, str)
+			seen[str] = true
 		}
 	}
 
