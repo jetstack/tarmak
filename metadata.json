@@ -5,8 +5,8 @@
   "summary": "Jetstack module to configure prometheus",
   "license": "Apache-2.0",
   "source": "https://github.com/jetstack/module-prometheus",
-  "project_page": null,
-  "issues_url": null,
+  "project_page": "https://github.com/jetstack/module-prometheus",
+  "issues_url": "https://github.com/jetstack/module-prometheus/issues",
    "dependencies" : [
       {
          "name" : "puppetlabs-stdlib",
