@@ -13,6 +13,7 @@
          "version_requirement" : ">= 4.2.0 < 5.0.0"
       }
    ],
-  "data_provider": null
+  "data_provider": null,
+  "long_description" : "This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.\n\n[![Travis](https://img.shields.io/travis/jetstack/puppet-module-calico.svg)](https://travis-ci.org/jetstack/puppet-module-calico/)"
 }
 
