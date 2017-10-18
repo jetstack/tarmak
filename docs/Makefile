@@ -4,18 +4,26 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    = -W
-SPHINXBUILD   = python -msphinx
+SPHINXBUILD   = venv/bin/python -msphinx
 SPHINXPROJ    = Tarmak
 SOURCEDIR     = .
 BUILDDIR      = _build
 
 # Put it first so that "make" without argument is like "make help".
 help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	make " help"
 
-.PHONY: help Makefile
+.PHONY: help Makefile clean
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile
+%: Makefile .venv
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.venv:
+	virtualenv -p $(shell which python3) venv
+	venv/bin/pip install -r requirements.txt
+	touch .venv
+
+clean:
+	rm -rf venv .venv "$(BUILDDIR)"

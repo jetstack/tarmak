@@ -63,8 +63,6 @@ To build the documentation run the following.
 ::
 
   cd $GOPATH/src/github.com/jetstack/tarmak/docs
-  mkvirtualenv -p $(which python2) tarmak-docs
-  pip install -r requirements.txt
   make html
 
 You can now open `_build/html/index.html` in a browser.
