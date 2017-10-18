@@ -21,7 +21,7 @@ help:
 	@. venv/bin/activate && $(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 .venv:
-	virtualenv venv
+	virtualenv -p python3 venv
 	. venv/bin/activate && pip install -r requirements.txt
 	touch .venv
 
