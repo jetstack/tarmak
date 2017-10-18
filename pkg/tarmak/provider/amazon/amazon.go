@@ -509,30 +509,58 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 func (a *Amazon) VerifyInstanceTypes() error {
 	var result error
 	var err error
-	types := make(map[string]bool)
+	types := make(map[string][]string)
 
 	svc, err := a.EC2()
 	if err != nil {
 		return err
 	}
 
-	offerings, err := svc.DescribeReservedInstancesOfferings(&ec2.DescribeReservedInstancesOfferingsInput{})
-	if err != nil {
-		return err
-	}
-
-	for _, offer := range offerings.ReservedInstancesOfferings {
-		types[*offer.InstanceType] = true
-	}
-
-	for _, inst := range a.tarmak.Cluster().InstancePools() {
-		itype, err := a.InstanceType(inst.Config().Size)
+	for _, instance := range a.tarmak.Cluster().InstancePools() {
+		instType, err := a.InstanceType(instance.Config().Size)
 		if err != nil {
 			return err
 		}
 
-		if !types[itype] {
-			result = multierror.Append(result, fmt.Errorf("instance type %s not offered on region %s", itype, a.Region()))
+		var zones []string
+		for _, subnet := range instance.Config().Subnets {
+			zones = append(zones, subnet.Zone)
+		}
+
+		types[instType] = zones
+	}
+
+	request := &ec2.DescribeReservedInstancesOfferingsInput{
+		InstanceTenancy:    aws.String("default"),
+		IncludeMarketplace: aws.Bool(false),
+		OfferingClass:      aws.String("standard"),
+		OfferingType:       aws.String("No Upfront"),
+		ProductDescription: aws.String("Linux/UNIX (Amazon VPC)"),
+	}
+
+	for instanceType := range types {
+		request.InstanceType = aws.String(instanceType)
+
+		response, err := svc.DescribeReservedInstancesOfferings(request)
+		if err != nil {
+			result = multierror.Append(result, fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err))
+		}
+
+		var available bool
+		for _, zone := range types[instanceType] {
+			available = false
+
+			for _, offer := range response.ReservedInstancesOfferings {
+				if offer.AvailabilityZone != nil && *offer.AvailabilityZone == zone {
+					available = true
+					break
+				}
+			}
+
+			if !available {
+				result = multierror.Append(result, fmt.Errorf("availabilty zone %s not offered for type %s", zone, instanceType))
+
+			}
 		}
 	}
 
