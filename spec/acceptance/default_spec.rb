@@ -6,9 +6,8 @@ if hosts.length == 1
       it 'should work once with no errors based on the example' do
         pp = <<-EOS
 class { 'calico':
-  etcd_cluster    => [ 'etcd1' ],
-  aws             => false,
-  aws_filter_hack => false,
+  etcd_cluster   => [ 'etcd1' ],
+  cloud_provider => '',
 }
         EOS
 

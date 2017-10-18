@@ -1,5 +1,8 @@
 fixtures:
-  symlinks:
-    calico: "#{source_dir}"
-    stdlib: "#{source_dir}/../stdlib"
-    concat: "#{source_dir}/../concat"
+  forge_modules:
+    stdlib:
+      repo: "puppetlabs/stdlib"
+      ref: "4.17.1"
+    concat:
+      repo: "puppetlabs/concat"
+      ref: "2.2.1"
