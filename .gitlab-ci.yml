@@ -154,6 +154,7 @@ generate::docs:
   script:
   - apt-get update
   - apt-get install -y python-enchant wbritish
+  - pip install virtualenv
   - make -C docs spelling
   - make -C docs linkcheck
   - make -C docs html
