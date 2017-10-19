@@ -5,10 +5,9 @@
 1. [Description](#description)
 2. [Classes](#classes)
 ## Description
-Tarmak
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.
 
-This is the top-level class for the tarmak project. It's not including
-any component. It's just setting global variables for the cluster
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-tarmak.svg)](https://travis-ci.org/jetstack/puppet-module-tarmak/)
 
 ## Classes
 
