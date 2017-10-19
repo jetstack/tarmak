@@ -6,10 +6,9 @@
 2. [Classes](#classes)
 3. [Defined Types](#defined-types)
 ## Description
-This module attaches, formats (if needed) and mounts EBS volumes in AWS. This
-base class just makes sure that all the necessary dependencies are met. To
-actually attach & mount a volume you have to use the defined type
-`aws_ebs::mount`
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.
+
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-aws_ebs.svg)](https://travis-ci.org/jetstack/puppet-module-aws_ebs/)
 
 ## Classes
 
