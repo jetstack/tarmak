@@ -6,29 +6,9 @@
 2. [Classes](#classes)
 3. [Defined Types](#defined-types)
 ## Description
-Class: vault_client
-===========================
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.
 
-Puppet module to install and manage a vault client install
-
-=== Parameters
-
-[*version*]
-  The package version to install
-
-[*token*]
-  Static token for the vault client
-  Either token or init_token needs to be specified
-
-[*init_token*]
-  Initial token for the vault client to generate node unique token
-  Either token or init_token needs to be specified
-
-[*init_policies*]
-  TODO
-
-[*init_role*]
-  TODO
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-vault_client.svg)](https://travis-ci.org/jetstack/puppet-module-vault_client/)
 
 ## Classes
 
