@@ -178,3 +178,174 @@ func TestAmazon_validateAvailabilityZonesFalseGiven(t *testing.T) {
 		t.Errorf("unexpected error messge: %s", err)
 	}
 }
+
+func TestAmazon_verifyInstanceTypeNoneGiven(t *testing.T) {
+	a := newFakeAmazon(t)
+	defer a.ctrl.Finish()
+
+	svc, err := a.EC2()
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+
+	responce := &ec2.DescribeReservedInstancesOfferingsOutput{
+		ReservedInstancesOfferings: []*ec2.ReservedInstancesOffering{
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1a"),
+			},
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1b"),
+			},
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1c"),
+			},
+		},
+	}
+
+	a.fakeEC2.EXPECT().DescribeReservedInstancesOfferings(gomock.Any()).Return(responce, nil)
+
+	err = a.verifyInstanceType("atype", []string{}, svc)
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+}
+
+func TestAmazon_verifyInstanceTypeZonesGiven(t *testing.T) {
+	a := newFakeAmazon(t)
+	defer a.ctrl.Finish()
+
+	svc, err := a.EC2()
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+
+	responce := &ec2.DescribeReservedInstancesOfferingsOutput{
+		ReservedInstancesOfferings: []*ec2.ReservedInstancesOffering{
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1a"),
+			},
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1b"),
+			},
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1c"),
+			},
+		},
+	}
+
+	a.fakeEC2.EXPECT().DescribeReservedInstancesOfferings(gomock.Any()).Return(responce, nil)
+
+	err = a.verifyInstanceType("atype", []string{"test-east-1a", "test-east-1b", "test-east-1c"}, svc)
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+}
+
+func TestAmazon_verifyInstanceTypeZonesGivenWrong(t *testing.T) {
+	a := newFakeAmazon(t)
+	defer a.ctrl.Finish()
+
+	svc, err := a.EC2()
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+
+	responce := &ec2.DescribeReservedInstancesOfferingsOutput{
+		ReservedInstancesOfferings: []*ec2.ReservedInstancesOffering{
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-wrong-1a"),
+			},
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1b"),
+			},
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1c"),
+			},
+		},
+	}
+
+	a.fakeEC2.EXPECT().DescribeReservedInstancesOfferings(gomock.Any()).Return(responce, nil)
+
+	err = a.verifyInstanceType("atype", []string{"test-east-1a", "test-east-1b", "test-east-1c"}, svc)
+	if err == nil {
+		t.Errorf("expected an error but got none.")
+	}
+}
+
+func TestAmazon_verifyInstanceTypeZonesOneOne(t *testing.T) {
+	a := newFakeAmazon(t)
+	defer a.ctrl.Finish()
+
+	svc, err := a.EC2()
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+
+	responce := &ec2.DescribeReservedInstancesOfferingsOutput{
+		ReservedInstancesOfferings: []*ec2.ReservedInstancesOffering{
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1a"),
+			},
+		},
+	}
+
+	a.fakeEC2.EXPECT().DescribeReservedInstancesOfferings(gomock.Any()).Return(responce, nil)
+
+	err = a.verifyInstanceType("atype", []string{"test-east-1a"}, svc)
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+}
+
+func TestAmazon_verifyInstanceTypeZonesOneMany(t *testing.T) {
+	a := newFakeAmazon(t)
+	defer a.ctrl.Finish()
+
+	svc, err := a.EC2()
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+
+	responce := &ec2.DescribeReservedInstancesOfferingsOutput{
+		ReservedInstancesOfferings: []*ec2.ReservedInstancesOffering{
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1a"),
+			},
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1b"),
+			},
+		},
+	}
+
+	a.fakeEC2.EXPECT().DescribeReservedInstancesOfferings(gomock.Any()).Return(responce, nil)
+
+	err = a.verifyInstanceType("atype", []string{"test-east-1a"}, svc)
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+}
+
+func TestAmazon_verifyInstanceTypeZonesNotAllAvailable(t *testing.T) {
+	a := newFakeAmazon(t)
+	defer a.ctrl.Finish()
+
+	svc, err := a.EC2()
+	if err != nil {
+		t.Errorf("unexpected err:%v", err)
+	}
+
+	responce := &ec2.DescribeReservedInstancesOfferingsOutput{
+		ReservedInstancesOfferings: []*ec2.ReservedInstancesOffering{
+			&ec2.ReservedInstancesOffering{
+				AvailabilityZone: aws.String("test-east-1a"),
+			},
+		},
+	}
+
+	a.fakeEC2.EXPECT().DescribeReservedInstancesOfferings(gomock.Any()).Return(responce, nil)
+
+	err = a.verifyInstanceType("atype", []string{"test-east-1a", "test-east-1b"}, svc)
+	if err == nil {
+		t.Errorf("expected error but got none")
+	}
+}
