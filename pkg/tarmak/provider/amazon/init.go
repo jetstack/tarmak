@@ -40,7 +40,7 @@ func initBucketPrefix(in *input.Input, provider *tarmakv1alpha1.Provider) error 
 			return err
 		}
 
-		nameValid := input.RegexpName.MatchString(bucketPrefix)
+		nameValid := input.RegexpProviderName.MatchString(bucketPrefix)
 
 		if !nameValid {
 			in.Warnf("bucket/table prefix '%s' is not valid", bucketPrefix)

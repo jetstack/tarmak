@@ -13,7 +13,9 @@ import (
 	"github.com/mitchellh/cli"
 )
 
-var RegexpName = regexp.MustCompile("^[a-z0-9-]+$")
+var RegexpProviderName = regexp.MustCompile("^[a-z0-9-]+$")
+var RegexpEnvironmentName = regexp.MustCompile("^[a-z0-9]+$")
+var RegexpClusterName = regexp.MustCompile("^[a-z0-9]+$")
 var RegexpDNS = regexp.MustCompile("^[a-z0-9-\\.]+$")
 
 type Input struct {
