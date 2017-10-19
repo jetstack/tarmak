@@ -1,11 +1,29 @@
 fixtures:
-  symlinks:
-    archive: "#{source_dir}/../archive"
-    aws_ebs: "#{source_dir}/../aws_ebs"
-    calico: "#{source_dir}/../calico"
-    concat: "#{source_dir}/../concat"
-    etcd: "#{source_dir}/../etcd"
-    kubernetes: "#{source_dir}/../kubernetes"
-    vault_client: "#{source_dir}/../vault_client"
-    stdlib: "#{source_dir}/../stdlib"
-    tarmak: "#{source_dir}"
+  forge_modules:
+    stdlib:
+      repo: "puppetlabs/stdlib"
+      ref: "4.17.1"
+    concat:
+      repo: "puppetlabs/concat"
+      ref: "2.2.1"
+    archive:
+      repo: "puppet/archive"
+      ref: "1.1.2"
+    kubernetes:
+      repo: "jetstack/kubernetes"
+      ref: "0.1.2-rc3"
+    calico:
+      repo: "jetstack/calico"
+      ref: "0.1.2-rc3"
+    calico:
+      repo: "jetstack/calico"
+      ref: "0.1.2-rc3"
+    etcd:
+      repo: "jetstack/etcd"
+      ref: "0.2.0-rc1"
+    aws_ebs:
+      repo: "jetstack/aws_ebs"
+      ref: "0.1.2-rc3"
+    vault_client:
+      repo: "jetstack/vault_client"
+      ref: "0.1.2-rc3"
