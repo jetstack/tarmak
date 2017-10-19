@@ -46,13 +46,13 @@ func Init(init interfaces.Initialize) (environment *tarmakv1alpha1.Environment, 
 func askEnvironmentName(init interfaces.Initialize) (environmentName string, err error) {
 	for {
 		environmentName, err = init.Input().AskOpen(&input.AskOpen{
-			Query: "Enter a unique name for this environment ([a-z0-9-]+) - e.g. dev/staging/prod",
+			Query: "Enter a unique name for this environment ([a-z0-9]+) - e.g. dev/staging/prod",
 		})
 		if err != nil {
 			return "", err
 		}
 
-		nameValid := input.RegexpName.MatchString(environmentName)
+		nameValid := input.RegexpEnvironmentName.MatchString(environmentName)
 		nameUnique := init.Config().UniqueProviderName(environmentName) == nil
 
 		if !nameValid {

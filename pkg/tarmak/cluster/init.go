@@ -77,13 +77,13 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 func askClusterName(init interfaces.Initialize) (clusterName string, err error) {
 	for {
 		clusterName, err = init.Input().AskOpen(&input.AskOpen{
-			Query: "Enter a unique name for this cluster [a-z0-9-]+",
+			Query: "Enter a unique name for this cluster [a-z0-9]+",
 		})
 		if err != nil {
 			return "", err
 		}
 
-		nameValid := input.RegexpName.MatchString(clusterName)
+		nameValid := input.RegexpClusterName.MatchString(clusterName)
 		nameUnique := init.Config().UniqueProviderName(clusterName) == nil
 
 		if clusterName == clusterv1alpha1.ClusterTypeHub {

@@ -20,7 +20,7 @@ func Init(init interfaces.Initialize) (provider *tarmakv1alpha1.Provider, err er
 			return nil, err
 		}
 
-		nameValid := input.RegexpName.MatchString(providerName)
+		nameValid := input.RegexpProviderName.MatchString(providerName)
 		nameUnique := init.Config().UniqueProviderName(providerName) == nil
 
 		if !nameValid {
