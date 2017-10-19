@@ -60,6 +60,20 @@ Architecture overview
 Tarmak configuration resources
 ******************************
 
+The Tarmak configuration, which by default is located in
+``~/.tarmak/tarmak.yaml``, uses Kubernetes' APItooling consists of different
+resources. While the Tarmak specific resources Providers_ and Environments_ are
+defined by the Tarmak project, Clusters_ are derived from a draft version of
+the `Cluster API
+<https://github.com/kubernetes/community/tree/master/wg-cluster-api>`_. This is
+a community effort to have a standardised way of defining Kubernetes clusters.
+
+.. note::
+   Although we do not anticipate breaking changes in our configuration, at this
+   stage this cannot be absolutely guaranteed. Through Kubernetes' API tooling
+   we have the chance to migrate between different versions of the
+   configuration in a controlled way.
+
 .. _providers_resource:
 
 Providers
@@ -89,7 +103,7 @@ wide tooling like bastion nodes and Vault throughout all Clusters
 
 Clusters
 ^^^^^^^^
-  
+
 A Cluster resource represents exactly one Kubernetes cluster. The only
 exception for that rule is the ``hub`` in Multi Cluster Environment: Hubs don't
 contain a Kubernetes cluster, as they are just the place where the Environment-wide 
