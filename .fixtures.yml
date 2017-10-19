@@ -15,9 +15,6 @@ fixtures:
     calico:
       repo: "jetstack/calico"
       ref: "0.1.2-rc3"
-    calico:
-      repo: "jetstack/calico"
-      ref: "0.1.2-rc3"
     etcd:
       repo: "jetstack/etcd"
       ref: "0.2.0-rc1"

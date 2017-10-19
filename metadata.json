@@ -14,27 +14,23 @@
     },
     {
        "name": "jetstack/kubernetes",
-       "version_requirement": ">= 0.1.2-rc3"
+       "version_requirement": ">= 0.1.2-rc3 < 1.0.0"
     },
     {
        "name": "jetstack/calico",
-       "version_requirement": ">= 0.1.2-rc3"
-    },
-    {
-       "name": "jetstack/calico",
-       "version_requirement": ">= 0.1.2-rc3"
+       "version_requirement": ">= 0.1.2-rc3 < 1.0.0"
     },
     {
        "name": "jetstack/etcd",
-       "version_requirement": ">= 0.2.0-rc1"
+       "version_requirement": ">= 0.2.0-rc1 < 1.0.0"
     },
     {
        "name": "jetstack/aws_ebs",
-       "version_requirement": ">= 0.1.2-rc3"
+       "version_requirement": ">= 0.1.2-rc3 < 1.0.0"
     },
     {
        "name": "jetstack/vault_client",
-       "version_requirement": ">= 0.1.2-rc3"
+       "version_requirement": ">= 0.1.2-rc3 < 1.0.0"
     }
   ],
   "data_provider": null,
