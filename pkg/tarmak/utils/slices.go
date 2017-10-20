@@ -1,3 +1,4 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 package utils
 
 func RemoveDuplicateStrings(slice []string) (result []string) {
