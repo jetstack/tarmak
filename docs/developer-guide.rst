@@ -71,13 +71,13 @@ You can now open `_build/html/index.html` in a browser.
 Release Checklist
 -----------------
 
-This is a list to collect task manual tasks/checks necessary for cutting a
+This is a list to collect manual tasks/checks necessary for cutting a
 release of Tarmak:
 
 Before tagging a release:
 
 * Update the CHANGELOG
-* Ensure wing release is updated in terraform (not easily possible as we
+* Ensure Wing release is updated in Terraform (not easily possible as we
   protect the download by the hash we don't know yet, `#8
   <https://github.com/jetstack/tarmak/issues/8>`_)
 * Branch out minor releases into ``release-x.y``
