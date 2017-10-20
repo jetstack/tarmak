@@ -354,6 +354,12 @@
   version = "0.2.2"
 
 [[projects]]
+  name = "github.com/json-iterator/go"
+  packages = ["."]
+  revision = "6240e1e7983a85228f7fd9c3e1b6932d46ec58e2"
+  version = "1.0.3"
+
+[[projects]]
   name = "github.com/jteeuwen/go-bindata"
   packages = [".","go-bindata"]
   revision = "a0ff2567cfb70903282db057e799fd826784d41d"
@@ -551,10 +557,10 @@
   revision = "409c3b2393cd3359f275bd8b883b4d9c5aec41f6"
 
 [[projects]]
-  branch = "master"
+  branch = "release-1.8"
   name = "k8s.io/apimachinery"
   packages = ["pkg/api/equality","pkg/api/errors","pkg/api/meta","pkg/api/resource","pkg/api/testing","pkg/api/testing/fuzzer","pkg/api/testing/roundtrip","pkg/api/validation","pkg/api/validation/path","pkg/apimachinery","pkg/apimachinery/announced","pkg/apimachinery/registered","pkg/apis/meta/fuzzer","pkg/apis/meta/internalversion","pkg/apis/meta/v1","pkg/apis/meta/v1/unstructured","pkg/apis/meta/v1/validation","pkg/apis/meta/v1alpha1","pkg/conversion","pkg/conversion/queryparams","pkg/conversion/unstructured","pkg/fields","pkg/labels","pkg/runtime","pkg/runtime/schema","pkg/runtime/serializer","pkg/runtime/serializer/json","pkg/runtime/serializer/protobuf","pkg/runtime/serializer/recognizer","pkg/runtime/serializer/streaming","pkg/runtime/serializer/versioning","pkg/selection","pkg/types","pkg/util/cache","pkg/util/clock","pkg/util/diff","pkg/util/errors","pkg/util/framer","pkg/util/httpstream","pkg/util/intstr","pkg/util/json","pkg/util/mergepatch","pkg/util/net","pkg/util/proxy","pkg/util/rand","pkg/util/runtime","pkg/util/sets","pkg/util/strategicpatch","pkg/util/uuid","pkg/util/validation","pkg/util/validation/field","pkg/util/wait","pkg/util/yaml","pkg/version","pkg/watch","third_party/forked/golang/json","third_party/forked/golang/netutil","third_party/forked/golang/reflect"]
-  revision = "b166f81f5c4c88402ae23a0d0944c6ad08bffd3b"
+  revision = "019ae5ada31de202164b118aee88ee2d14075c31"
 
 [[projects]]
   branch = "release-1.8"
@@ -589,6 +595,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a2b411578e3535329e5f68e22720fcec40661131b003d74fd2d3be15900bfb78"
+  inputs-digest = "e44fab51ceebea3fa44ffb789e358b8ce421858fe33b5d3399b6f25a62739946"
   solver-name = "gps-cdcl"
   solver-version = 1
