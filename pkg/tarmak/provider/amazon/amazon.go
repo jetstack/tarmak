@@ -506,36 +506,21 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 	return sess, nil
 }
 
-func (a *Amazon) VerifyInstanceTypes() error {
+func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) error {
 	var result error
-	types := make(map[string][]string)
 
 	svc, err := a.EC2()
 	if err != nil {
 		return err
 	}
 
-	//Loop through cluster instances
-	for _, instance := range a.tarmak.Cluster().InstancePools() {
-		//Get instance type of each instance
+	for _, instance := range instancePools {
 		instanceType, err := a.InstanceType(instance.Config().Size)
 		if err != nil {
 			return err
 		}
 
-		//Add zones to instance type map, append so no zone is lost
-		for _, subnet := range instance.Config().Subnets {
-			types[instanceType] = append(types[instanceType], subnet.Zone)
-		}
-	}
-
-	//Loop through instance type map
-	for instanceType := range types {
-		//Remove duplicate zones on each instance type
-		types[instanceType] = a.removeDuplicates(types[instanceType])
-
-		//Verify instance type with the given zones
-		if err := a.verifyInstanceType(instanceType, types[instanceType], svc); err != nil {
+		if err := a.verifyInstanceType(instanceType, instance.Zones(), svc); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
@@ -576,21 +561,6 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 		//Collect non matched zones
 		if !available {
 			result = multierror.Append(result, fmt.Errorf("availabilty zone %s not offered for type %s", zone, instanceType))
-		}
-	}
-
-	return result
-}
-
-//Remove duplicate strings in a slice
-func (a *Amazon) removeDuplicates(slice []string) []string {
-	var result []string
-	seen := make(map[string]bool)
-
-	for _, str := range slice {
-		if _, ok := seen[str]; !ok {
-			result = append(result, str)
-			seen[str] = true
 		}
 	}
 

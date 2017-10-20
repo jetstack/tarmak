@@ -4,6 +4,7 @@ package instance_pool
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
@@ -11,6 +12,7 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 var _ interfaces.InstancePool = &InstancePool{}
@@ -79,6 +81,18 @@ func (n *InstancePool) Role() *role.Role {
 
 func (n *InstancePool) Image() string {
 	return n.conf.Image
+}
+
+//Get unique list of zones of instance pool
+func (n *InstancePool) Zones() (zones []string) {
+	for _, subnet := range n.Config().Subnets {
+		zones = append(zones, subnet.Zone)
+	}
+
+	zones = utils.RemoveDuplicateStrings(zones)
+	sort.Strings(zones)
+
+	return zones
 }
 
 func (n *InstancePool) Name() string {

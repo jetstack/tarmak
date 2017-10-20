@@ -96,7 +96,7 @@ type Provider interface {
 	AskEnvironmentLocation(Initialize) (string, error)
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
-	VerifyInstanceTypes() error
+	VerifyInstanceTypes(intstancePools []InstancePool) error
 }
 
 type Stack interface {
@@ -209,6 +209,7 @@ type InstancePool interface {
 	Image() string
 	Role() *role.Role
 	Volumes() []Volume
+	Zones() []string
 }
 
 type Volume interface {
