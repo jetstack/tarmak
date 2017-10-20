@@ -23,7 +23,7 @@ help:
 
 test: go_test
 
-verify: generate go_verify verify_boilerplate verify_client_gen
+verify: generate go_verify verify_boilerplate verify_client_gen verify_vendor
 
 all: verify test build
 
@@ -131,3 +131,6 @@ verify_boilerplate:
 
 verify_client_gen:
 	$(HACK_DIR)/verify-client-gen.sh
+
+verify_vendor:
+	dep ensure -no-vendor -dry-run -v
