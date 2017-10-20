@@ -138,6 +138,8 @@ test::tarmak::golang:
   - docker
   image: golang:1.9
   script:
+  - curl -Lo /usr/local/bin/dep https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64
+  - chmod +x /usr/local/bin/dep
   - rm -rf /go/src/github.com/jetstack
   - mkdir -p /go/src/github.com/jetstack
   - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
@@ -183,6 +185,8 @@ release::tarmak::golang:
   only:
   - tags
   script:
+  - curl -Lo /usr/local/bin/dep https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64
+  - chmod +x /usr/local/bin/dep
   - curl -sL https://github.com/goreleaser/goreleaser/releases/download/v0.24.0/goreleaser_Linux_x86_64.tar.gz > /tmp/goreleaser.tar.gz
   - echo "8d494e03d6ab6e2e1bcbb795859f3618454078eaeb21906437958b32b332cee4  /tmp/goreleaser.tar.gz" | sha256sum -c
   - cd /usr/local/bin && tar xvfz /tmp/goreleaser.tar.gz goreleaser
