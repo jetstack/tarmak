@@ -46,7 +46,7 @@ func init() {
 }
 
 type Config struct {
-	GenericConfig *genericapiserver.Config
+	GenericConfig *genericapiserver.RecommendedConfig
 }
 
 // WingServer contains state for a Kubernetes cluster master/api server.
@@ -56,28 +56,28 @@ type WingServer struct {
 
 type completedConfig struct {
 	*Config
+	completedConfig *genericapiserver.CompletedConfig
 }
 
 // Complete fills in any fields not set that are required to have valid data. It's mutating the receiver.
 func (c *Config) Complete() completedConfig {
-	c.GenericConfig.Complete()
-
+	completedCfg := c.GenericConfig.Complete()
 	c.GenericConfig.Version = &version.Info{
 		Major: "1",
 		Minor: "0",
 	}
-
-	return completedConfig{c}
+	return completedConfig{Config: c, completedConfig: &completedCfg}
 }
 
 // SkipComplete provides a way to construct a server instance without config completion.
 func (c *Config) SkipComplete() completedConfig {
-	return completedConfig{c}
+	completedCfg := c.GenericConfig.Complete()
+	return completedConfig{Config: c, completedConfig: &completedCfg}
 }
 
 // New returns a new instance of WingServer from the given config.
 func (c completedConfig) New() (*WingServer, error) {
-	genericServer, err := c.Config.GenericConfig.SkipComplete().New("wing", genericapiserver.EmptyDelegate) // completion is done in Complete, no need for a second time
+	genericServer, err := c.completedConfig.New("tarmak", genericapiserver.EmptyDelegate) // completion is done in Complete, no need for a second time
 	if err != nil {
 		return nil, err
 	}
