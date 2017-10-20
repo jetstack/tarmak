@@ -12,13 +12,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## 0.1.2 - 2017-10-19
 
-### Initial release
+### Initial release (*alpha*)
 - First public release
 - Support for AWS provider only
 - Prepare and drive infrastructure updates using Terraform
 - Prepare configuration updates using Puppet and drive them using Wing on the
   instances
 - Provides wrappers for basic administrative task: kubectl, ssh
+- Experimental vendoring of Kubicorn's Cluster API (https://github.com/kris-nova/kubicorn) for cluster configuration
 
 > Disclaimer - please note that current releases of Tarmak are alpha (unless
 > explicitly marked). Although we do not anticipate breaking changes, at this

@@ -66,3 +66,23 @@ To build the documentation run the following.
   make html
 
 You can now open `_build/html/index.html` in a browser.
+
+
+Release Checklist
+-----------------
+
+This is a list to collect manual tasks/checks necessary for cutting a
+release of Tarmak:
+
+Before tagging a release:
+
+* Update the CHANGELOG
+* Ensure Wing release is updated in Terraform (not easily possible as we
+  protect the download by the hash we don't know yet, `#8
+  <https://github.com/jetstack/tarmak/issues/8>`_)
+* Branch out minor releases into ``release-x.y``
+* Tag release commit with ``x.y.z``
+
+After release job has run:
+
+* Make sure we update the generated `releases <https://github.com/jetstack/tarmak/releases>`_ page
