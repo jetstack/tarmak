@@ -35,11 +35,11 @@ required = [
   name = "gopkg.in/yaml.v2"
 
 [[constraint]]
-  branch = "master"
+  branch = "release-5.0"
   name = "k8s.io/client-go"
 
 [[constraint]]
-  branch = "master"
+  branch = "release-1.8"
   name = "k8s.io/apiserver"
 
 [[constraint]]
@@ -60,7 +60,6 @@ required = [
   name = "github.com/jetstack-experimental/vault-helper"
   revision = "f7506c9c9ab6cb68dfbb3be12161cae30336875c"
 
-[[override]]
-  name = "google.golang.org/grpc"
-  version = "=1.2.1"
-
+[[constraint]]
+  name = "k8s.io/code-generator"
+  branch = "release-1.8"
