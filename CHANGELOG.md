@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   instances
 - Provides wrappers for basic administrative task: kubectl, ssh
 
+> Disclaimer - please note that current releases of Tarmak are alpha (unless
+> explicitly marked). Although we do not anticipate breaking changes, at this
+> stage this cannot be absolutely guaranteed.
+
 ### Versions used
 
 | Application | Supported versions | Default  |
