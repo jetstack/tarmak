@@ -71,8 +71,8 @@ You can now open `_build/html/index.html` in a browser.
 Updating puppet subtrees
 ************************
 
-Puppet modules are maintained as seperate repositories, which get bundled into
-tarmak using git subtree. To pull the latest changes from the upstream repos,
+Puppet modules are maintained as separate repositories, which get bundled into
+tarmak using git subtree. To pull the latest changes from the upstream repositories,
 run ``make subtrees``.
 
 
