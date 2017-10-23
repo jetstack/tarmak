@@ -1,0 +1,19 @@
+#!/bin/bash
+
+PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin
+DEVICE=$1
+VOLUME_ID=$2
+
+REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}')
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep instanceId | awk -F\" '{print $4}')
+
+VOLUME_ATTACHED=$(aws ec2 describe-volumes --region "${REGION}" --volume-id "${VOLUME_ID}" --query "Volumes[0].Attachments" --output text | grep "${DEVICE}")
+
+if [ "$VOLUME_ATTACHED" == "" ]; then
+    aws ec2 attach-volume --volume-id "${VOLUME_ID}" --instance-id "${INSTANCE_ID}" --region "${REGION}" --device "${DEVICE}"
+fi
+
+until [ "$VOLUME_STATUS_ATTACHED" != "" ]; do
+    VOLUME_STATUS_ATTACHED=$(aws ec2 describe-volumes --region "${REGION}" --volume-id "${VOLUME_ID}" --query "Volumes[0].Attachments" --output text | grep "${DEVICE}" | grep -i attached)
+    sleep 2
+done

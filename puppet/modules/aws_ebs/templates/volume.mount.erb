@@ -1,0 +1,12 @@
+[Unit]
+Description=Mount device to <%= @dest_path %>
+Requires=<%= @format_service_name %>
+After=<%= @format_service_name %>
+
+[Mount]
+What=<%= @device %>
+Where=<%= @dest_path %>
+Type=<%= @filesystem %>
+
+[Install]
+WantedBy=multiuser.target
