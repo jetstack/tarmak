@@ -1,0 +1,11 @@
+[Unit]
+Description=blackbox-exporter
+After=network.target
+
+[Service]
+ExecStart=<%= @dest_dir %>/blackbox_exporter \
+  -config.file <%=@config_dir %>/blackbox_exporter.yaml
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
