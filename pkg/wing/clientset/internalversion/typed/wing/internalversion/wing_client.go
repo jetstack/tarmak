@@ -2,7 +2,7 @@
 package internalversion
 
 import (
-	"github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/scheme"
+	"github.com/jetstack/tarmak/pkg/wing/clientset/internalversion/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

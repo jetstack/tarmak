@@ -3,7 +3,7 @@ package internalversion
 
 import (
 	wing "github.com/jetstack/tarmak/pkg/apis/wing"
-	scheme "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/scheme"
+	scheme "github.com/jetstack/tarmak/pkg/wing/clientset/internalversion/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

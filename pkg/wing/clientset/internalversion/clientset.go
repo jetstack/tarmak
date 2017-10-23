@@ -1,9 +1,9 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-package internalclientset
+package internalversion
 
 import (
 	glog "github.com/golang/glog"
-	winginternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/wing/internalversion"
+	winginternalversion "github.com/jetstack/tarmak/pkg/wing/clientset/internalversion/typed/wing/internalversion"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

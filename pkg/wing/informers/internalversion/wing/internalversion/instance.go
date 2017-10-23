@@ -6,7 +6,7 @@ package internalversion
 
 import (
 	wing "github.com/jetstack/tarmak/pkg/apis/wing"
-	internalclientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
+	clientset_internalversion "github.com/jetstack/tarmak/pkg/wing/clientset/internalversion"
 	internalinterfaces "github.com/jetstack/tarmak/pkg/wing/informers/internalversion/internalinterfaces"
 	internalversion "github.com/jetstack/tarmak/pkg/wing/listers/wing/internalversion"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +30,7 @@ type instanceInformer struct {
 // NewInstanceInformer constructs a new informer for Instance type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewInstanceInformer(client internalclientset.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+func NewInstanceInformer(client clientset_internalversion.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
@@ -46,7 +46,7 @@ func NewInstanceInformer(client internalclientset.Interface, namespace string, r
 	)
 }
 
-func defaultInstanceInformer(client internalclientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+func defaultInstanceInformer(client clientset_internalversion.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
 	return NewInstanceInformer(client, v1.NamespaceAll, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 }
 

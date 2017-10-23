@@ -2,9 +2,9 @@
 package fake
 
 import (
-	clientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
-	winginternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/wing/internalversion"
-	fakewinginternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/wing/internalversion/fake"
+	clientset "github.com/jetstack/tarmak/pkg/wing/clientset/internalversion"
+	winginternalversion "github.com/jetstack/tarmak/pkg/wing/clientset/internalversion/typed/wing/internalversion"
+	fakewinginternalversion "github.com/jetstack/tarmak/pkg/wing/clientset/internalversion/typed/wing/internalversion/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

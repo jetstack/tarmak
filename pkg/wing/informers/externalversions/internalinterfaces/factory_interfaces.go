@@ -5,13 +5,13 @@
 package internalinterfaces
 
 import (
-	client "github.com/jetstack/tarmak/pkg/wing/client"
+	versioned "github.com/jetstack/tarmak/pkg/wing/clientset/versioned"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	cache "k8s.io/client-go/tools/cache"
 	time "time"
 )
 
-type NewInformerFunc func(client.Interface, time.Duration) cache.SharedIndexInformer
+type NewInformerFunc func(versioned.Interface, time.Duration) cache.SharedIndexInformer
 
 // SharedInformerFactory a small interface to allow for adding an informer without an import cycle
 type SharedInformerFactory interface {
