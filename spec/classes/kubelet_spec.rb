@@ -91,7 +91,7 @@ describe 'kubernetes::kubelet' do
       should have_service_file.with_content(/--node-labels=role=worker/)
     end
   end
-  
+
   context 'apiservers config --api-servers vs --kubeconfig' do
     let(:params) { {'ca_file' => '/tmp/ca.pem' } }
     context 'versions before 1.4' do
@@ -161,5 +161,36 @@ describe 'kubernetes::kubelet' do
     end
   end
 
-
+  context 'kernel 4.9+ cgropus hotfix' do
+    let(:facts) { {'kernelversion' => '4.10.1' } }
+    let(:pre_condition) {[
+      """
+        class{'kubernetes': version => '1.6.11'}
+      """
+    ]}
+    context 'on kubernetes 1.6 and newer kernels' do
+      it 'is enabled' do
+        should contain_file(service_file).with_content(%r{--cgroups-per-qos=false})
+        should contain_file(service_file).with_content(%r{--enforce-node-allocatable= })
+      end
+    end
+    context 'on kubernetes 1.6 and older kernels' do
+      let(:facts) { {'kernelversion' => '4.1.1' } }
+      it 'is disabled' do
+        should_not contain_file(service_file).with_content(%r{--cgroups-per-qos=false})
+        should_not contain_file(service_file).with_content(%r{--enforce-node-allocatable= })
+      end
+    end
+    context 'on kubernetes 1.5' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.5.8'}
+        """
+      ]}
+      it 'is disabled' do
+        should_not contain_file(service_file).with_content(%r{--cgroups-per-qos=false})
+        should_not contain_file(service_file).with_content(%r{--enforce-node-allocatable= })
+      end
+    end
+  end
 end
