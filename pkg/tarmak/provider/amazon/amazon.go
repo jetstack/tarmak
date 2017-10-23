@@ -57,6 +57,7 @@ type EC2 interface {
 	DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error)
 	DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (*ec2.DescribeAvailabilityZonesOutput, error)
 	DescribeRegions(input *ec2.DescribeRegionsInput) (*ec2.DescribeRegionsOutput, error)
+	DescribeReservedInstancesOfferings(input *ec2.DescribeReservedInstancesOfferingsInput) (*ec2.DescribeReservedInstancesOfferingsOutput, error)
 }
 
 type DynamoDB interface {
@@ -503,6 +504,67 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 	sess.Config.Credentials = creds
 
 	return sess, nil
+}
+
+func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) error {
+	var result error
+
+	svc, err := a.EC2()
+	if err != nil {
+		return err
+	}
+
+	for _, instance := range instancePools {
+		instanceType, err := a.InstanceType(instance.Config().Size)
+		if err != nil {
+			return err
+		}
+
+		if err := a.verifyInstanceType(instanceType, instance.Zones(), svc); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result
+}
+
+func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2) error {
+	var result error
+	var available bool
+
+	//Request offering, filter by given instance type
+	request := &ec2.DescribeReservedInstancesOfferingsInput{
+		InstanceTenancy:    aws.String("default"),
+		IncludeMarketplace: aws.Bool(false),
+		OfferingClass:      aws.String("standard"),
+		OfferingType:       aws.String("No Upfront"),
+		ProductDescription: aws.String("Linux/UNIX (Amazon VPC)"),
+		InstanceType:       aws.String(instanceType),
+	}
+	response, err := svc.DescribeReservedInstancesOfferings(request)
+	if err != nil {
+		return fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err)
+	}
+
+	//Loop through the given zones
+	for _, zone := range zones {
+		available = false
+
+		//Loop through every offer given. Check the zone against the current looped zone.
+		for _, offer := range response.ReservedInstancesOfferings {
+			if offer.AvailabilityZone != nil && *offer.AvailabilityZone == zone {
+				available = true
+				break
+			}
+		}
+
+		//Collect non matched zones
+		if !available {
+			result = multierror.Append(result, fmt.Errorf("availabilty zone %s not offered for type %s", zone, instanceType))
+		}
+	}
+
+	return result
 }
 
 // This methods converts and possibly validates a generic instance type to a
