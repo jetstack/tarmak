@@ -134,3 +134,10 @@ verify_client_gen:
 
 verify_vendor:
 	dep ensure -no-vendor -dry-run -v
+
+SUBTREES = etcd calico aws_ebs kubernetes kubernetes_addons prometheus tarmak vault_client
+subtrees:
+	for module in $(SUBTREES); do \
+		echo $$module; \
+		git subtree add --prefix puppet/modules/$$module git://github.com/jetstack/puppet-module-$$module.git master; \
+	done
