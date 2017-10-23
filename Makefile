@@ -139,5 +139,5 @@ SUBTREES = etcd calico aws_ebs kubernetes kubernetes_addons prometheus tarmak va
 subtrees:
 	for module in $(SUBTREES); do \
 		echo $$module; \
-		git subtree add --prefix puppet/modules/$$module git://github.com/jetstack/puppet-module-$$module.git master; \
+		git subtree pull --prefix puppet/modules/$$module git://github.com/jetstack/puppet-module-$$module.git master; \
 	done
