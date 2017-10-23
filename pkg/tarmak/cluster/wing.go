@@ -9,7 +9,7 @@ import (
 
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	wingclientv1alpha1 "github.com/jetstack/tarmak/pkg/wing/client/typed/wing/v1alpha1"
+	wingclientv1alpha1 "github.com/jetstack/tarmak/pkg/wing/clientset/versioned/typed/wing/v1alpha1"
 )
 
 func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, error) {
