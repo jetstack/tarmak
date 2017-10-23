@@ -1,0 +1,23 @@
+{
+  "name": "jetstack-kubernetes",
+  "version": "0.1.0",
+  "author": "jetstack",
+  "summary": "Jetstack module to configure kubernetes",
+  "license": "Apache-2.0",
+  "source": "https://github.com/puppernetes/module-kubernetes",
+  "project_page": "https://github.com/puppernetes/module-kubernetes",
+  "issues_url": "https://github.com/puppernetes/module-kubernetes/issues",
+   "dependencies" : [
+      {
+         "name" : "puppetlabs-stdlib",
+         "version_requirement" : ">= 4.16.0 < 5.0.0"
+      },
+      {
+         "name" : "puppetlabs-concat",
+         "version_requirement" : ">= 2.2.1 < 3.0.0"
+      }
+   ],
+  "data_provider": null,
+    "long_description" : "This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.\n\n[![Travis](https://img.shields.io/travis/jetstack/puppet-module-kubernetes.svg)](https://travis-ci.org/jetstack/puppet-module-kubernetes/)"
+}
+
