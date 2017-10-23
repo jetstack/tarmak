@@ -2,7 +2,7 @@
 package fake
 
 import (
-	internalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/wing/internalversion"
+	internalversion "github.com/jetstack/tarmak/pkg/wing/clientset/internalversion/typed/wing/internalversion"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
