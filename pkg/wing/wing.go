@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
-	"github.com/jetstack/tarmak/pkg/wing/client"
+	client "github.com/jetstack/tarmak/pkg/wing/clientset/versioned"
 )
 
 type Wing struct {
@@ -127,5 +127,4 @@ func (w *Wing) watchForNotifications() {
 
 	// Now let's start the controller
 	go controller.Run(1, w.stopCh)
-
 }
