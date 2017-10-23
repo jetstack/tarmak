@@ -1,6 +1,0 @@
-#!/bin/bash
-
-PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin
-DEVICE=$1
-
-blkid "${DEVICE}" || (wipefs -fa "${DEVICE}" && mkfs.xfs "${DEVICE}")

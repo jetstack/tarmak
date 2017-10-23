@@ -1,5 +1,0 @@
-fixtures:
-  symlinks:
-    aws_ebs: "#{source_dir}"
-    stdlib: "#{source_dir}/../stdlib"
-    concat: "#{source_dir}/../concat"
