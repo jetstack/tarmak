@@ -52,7 +52,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --client-ca-file=<%= @_ca_file %> \
 <% end -%>
 <% # Kubernetes older than 1.7 has issues with kernel 4.9+ -%>
-<% if not @kernelversion.nil? and scope.function_versioncmp([scope['kubernetes::version'], '1.5.0']) >= 0 and scope.function_versioncmp([scope['kubernetes::version'], '1.7.0']) < 0 and scope.function_versioncmp([@kernelversion, '4.9']) >= 0 -%>
+<% if not @kernelversion.nil? and scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 and scope.function_versioncmp([scope['kubernetes::version'], '1.7.0']) < 0 and scope.function_versioncmp([@kernelversion, '4.9']) >= 0 -%>
   --cgroups-per-qos=false \
   --enforce-node-allocatable= \
 <% end -%>
