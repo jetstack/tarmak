@@ -1,0 +1,13 @@
+---
+HOSTS:
+  k8s:
+    roles:
+      - master
+      - k8s-master
+      - k8s-worker
+    platform: ubuntu-16.04-amd64
+    box: puppetlabs/ubuntu-16.04-64-nocm
+    hypervisor: vagrant
+CONFIG:
+  type: foss
+  trace_limit: 1024
