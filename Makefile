@@ -64,31 +64,7 @@ $(BINDIR)/go-bindata:
 	mkdir -p $(BINDIR)
 	go build -o $(BINDIR)/go-bindata ./vendor/github.com/jteeuwen/go-bindata/go-bindata
 
-$(BINDIR)/defaulter-gen:
-	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/code-generator/cmd/defaulter-gen
-
-$(BINDIR)/deepcopy-gen:
-	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/code-generator/cmd/deepcopy-gen
-
-$(BINDIR)/conversion-gen:
-	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/code-generator/cmd/conversion-gen
-
-$(BINDIR)/client-gen:
-	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/code-generator/cmd/client-gen
-
-$(BINDIR)/lister-gen:
-	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/code-generator/cmd/lister-gen
-
-$(BINDIR)/informer-gen:
-	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/code-generator/cmd/informer-gen
-
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
