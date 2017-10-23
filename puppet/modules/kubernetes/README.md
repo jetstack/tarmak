@@ -6,7 +6,9 @@
 2. [Classes](#classes)
 3. [Defined Types](#defined-types)
 ## Description
-Class: kubernetes
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.
+
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-kubernetes.svg)](https://travis-ci.org/jetstack/puppet-module-kubernetes/)
 
 ## Classes
 

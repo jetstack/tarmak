@@ -13,14 +13,14 @@ RSpec.configure do |c|
   c.formatter = :documentation
 
   c.before :suite do
-    # Sync modules to all hosts
+    # Sync module to all hosts
     hosts.each do |host|
       if fact('osfamily') == 'RedHat'
         on host, 'yum install -y rsync'
       end
       logger.notify "ensure rsync exists on #{host}"
-      rsync_to(host, "#{module_root}/../", $module_path, {})
-      on host, "chown -R 0:0 #{$module_path}"
+      rsync_to(host, "#{module_root}/spec/fixtures/modules", "#{$module_path}", {})
+      install_dev_puppet_module_on(host, :source => module_root, :module_name => 'etcd', :target_module_path => $module_path)
     end
   end
 end

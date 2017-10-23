@@ -1,4 +1,11 @@
-# etcd
+# Install/configure an etcd node.
+#
+# @param data_dir The directory to store etcd data
+# @param config_dir The directory to store etcd config
+# @param user The username to run etcd
+# @param uid The user ID to run etcd
+# @param group The group to run etcd
+# @param gid The etcd group ID
 class etcd(
   $data_dir = $::etcd::params::data_dir,
   $config_dir = $::etcd::params::config_dir,

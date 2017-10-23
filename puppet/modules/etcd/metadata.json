@@ -1,5 +1,5 @@
 {
-   "version" : "0.1.0",
+   "version" : "0.2.0-rc1",
    "name" : "jetstack-etcd",
    "dependencies" : [
       {
@@ -8,10 +8,11 @@
       }
    ],
    "license" : "Apache-2.0",
-   "issues_url" : "https://github.com/puppernetes/module-etcd",
-   "source" : "https://github.com/puppernetes/module-etcd",
+   "issues_url" : "https://github.com/jetstack/puppet-module-etcd/issues",
+   "source" : "https://github.com/jetstack/puppet-module-etcd",
    "data_provider" : null,
-   "project_page" : "https://github.com/puppernetes/module-etcd",
+   "project_page" : "https://github.com/jetstack/puppet-module-etcd",
    "author" : "jetstack",
-   "summary" : "Install/configure a etcd nodes"
+   "summary" : "Install/configure an etcd node",
+   "long_description" : "This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.\n\n[![Travis](https://img.shields.io/travis/jetstack/puppet-module-etcd.svg)](https://travis-ci.org/jetstack/puppet-module-etcd/)"
 }

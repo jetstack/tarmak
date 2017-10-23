@@ -6,45 +6,53 @@
 2. [Classes](#classes)
 3. [Defined Types](#defined-types)
 ## Description
-etcd
+This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.
+
+[![Travis](https://img.shields.io/travis/jetstack/puppet-module-etcd.svg)](https://travis-ci.org/jetstack/puppet-module-etcd/)
 
 ## Classes
 
 ### `etcd`
 
-etcd
+Install/configure an etcd node.
 
 #### Parameters
 
 ##### `data_dir`
 
+* The directory to store etcd data
 * Type: `Any`
 * Default: `$::etcd::params::data_dir`
 
 ##### `config_dir`
 
+* The directory to store etcd config
 * Type: `Any`
 * Default: `$::etcd::params::config_dir`
 
-##### `uid`
-
-* Type: `Any`
-* Default: `$::etcd::params::uid`
-
-##### `gid`
-
-* Type: `Any`
-* Default: `$::etcd::params::gid`
-
 ##### `user`
 
+* The username to run etcd
 * Type: `Any`
 * Default: `$::etcd::params::user`
 
+##### `uid`
+
+* The user ID to run etcd
+* Type: `Any`
+* Default: `$::etcd::params::uid`
+
 ##### `group`
 
+* The group to run etcd
 * Type: `Any`
 * Default: `$::etcd::params::group`
+
+##### `gid`
+
+* The etcd group ID
+* Type: `Any`
+* Default: `$::etcd::params::gid`
 
 
 ### `etcd::params`
