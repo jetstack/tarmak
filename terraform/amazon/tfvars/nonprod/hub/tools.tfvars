@@ -1,3 +1,0 @@
-# TODO move this to a more secure place
-foreman_admin_password = "Ilo6ielaegh7eleC"
-puppet_deploy_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDVNM6KcgxqsEryNtcsEPyxwjvYavor9wwgq3EamtQxoLH1yOX/w52kY/NAZc6T2XSz51M3fU+0LKHbkmi/2Lp0vbaVdajxMxbVN26BK+tfBm0VoapT2llt/Hq5rji0ck+x+6Nn6phZSx6AFnxxDrpx5xDOi2MfYhHAWdNAJJnBjE1jHDs+6GreCPG4lr0EKt9wY3oEqcEeFj6+H6oPmKAayZomAwpne4+/YXlx0sP9U491mUrRUM8/0NwW9RiNaUdKHP3honUEpgMGUTF08e6yGfPyKBVba+LbiDhH/uX1LICDkWA/LU3C43N0nd8JliWpTo6zsxpbpnzxmQfwu37j id_jenkins_p9s_nonprod"
