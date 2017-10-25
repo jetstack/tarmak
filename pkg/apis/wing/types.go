@@ -52,7 +52,8 @@ type InstanceStatusManifest struct {
 
 type InstanceList struct {
 	metav1.TypeMeta
-	metav1.ObjectMeta
+	// +optional
+	metav1.ListMeta
 
 	Items []Instance
 }

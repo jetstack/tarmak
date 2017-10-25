@@ -92,11 +92,11 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
 	}
 
-	serverConfig := genericapiserver.NewConfig(apiserver.Codecs)
-	if err := o.RecommendedOptions.Etcd.ApplyTo(serverConfig); err != nil {
+	serverConfig := genericapiserver.NewRecommendedConfig(apiserver.Codecs)
+	if err := o.RecommendedOptions.Etcd.ApplyTo(&serverConfig.Config); err != nil {
 		return nil, err
 	}
-	if err := o.RecommendedOptions.SecureServing.ApplyTo(serverConfig); err != nil {
+	if err := o.RecommendedOptions.SecureServing.ApplyTo(&serverConfig.Config); err != nil {
 		return nil, err
 	}
 
@@ -109,7 +109,8 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := o.Admission.ApplyTo(serverConfig, admissionInitializer); err != nil {
+
+	if err := o.Admission.ApplyTo(&serverConfig.Config, serverConfig.SharedInformerFactory, admissionInitializer); err != nil {
 		return nil, err
 	}
 
