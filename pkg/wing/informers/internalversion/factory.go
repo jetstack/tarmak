@@ -5,7 +5,7 @@
 package internalversion
 
 import (
-	internalclientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
+	internalversion "github.com/jetstack/tarmak/pkg/wing/clientset/internalversion"
 	internalinterfaces "github.com/jetstack/tarmak/pkg/wing/informers/internalversion/internalinterfaces"
 	wing "github.com/jetstack/tarmak/pkg/wing/informers/internalversion/wing"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -17,7 +17,7 @@ import (
 )
 
 type sharedInformerFactory struct {
-	client        internalclientset.Interface
+	client        internalversion.Interface
 	lock          sync.Mutex
 	defaultResync time.Duration
 
@@ -28,7 +28,7 @@ type sharedInformerFactory struct {
 }
 
 // NewSharedInformerFactory constructs a new instance of sharedInformerFactory
-func NewSharedInformerFactory(client internalclientset.Interface, defaultResync time.Duration) SharedInformerFactory {
+func NewSharedInformerFactory(client internalversion.Interface, defaultResync time.Duration) SharedInformerFactory {
 	return &sharedInformerFactory{
 		client:           client,
 		defaultResync:    defaultResync,
