@@ -16,7 +16,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
-	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
+	wingclient "github.com/jetstack/tarmak/pkg/wing/clientset/versioned"
 )
 
 // returns a server

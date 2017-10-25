@@ -14,10 +14,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/instanceinittime"
-	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
-	clientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
-	informers "github.com/jetstack/tarmak/pkg/wing/informers/internalversion"
 )
 
 const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
@@ -91,28 +88,10 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 	if err := o.RecommendedOptions.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{net.ParseIP("127.0.0.1")}); err != nil {
 		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
 	}
-
-	serverConfig := genericapiserver.NewConfig(apiserver.Codecs)
-	if err := o.RecommendedOptions.Etcd.ApplyTo(serverConfig); err != nil {
+	serverConfig := genericapiserver.NewRecommendedConfig(apiserver.Codecs)
+	if err := o.RecommendedOptions.ApplyTo(serverConfig); err != nil {
 		return nil, err
 	}
-	if err := o.RecommendedOptions.SecureServing.ApplyTo(serverConfig); err != nil {
-		return nil, err
-	}
-
-	client, err := clientset.NewForConfig(serverConfig.LoopbackClientConfig)
-	if err != nil {
-		return nil, err
-	}
-	informerFactory := informers.NewSharedInformerFactory(client, serverConfig.LoopbackClientConfig.Timeout)
-	admissionInitializer, err := winginitializer.New(informerFactory)
-	if err != nil {
-		return nil, err
-	}
-	if err := o.Admission.ApplyTo(serverConfig, admissionInitializer); err != nil {
-		return nil, err
-	}
-
 	config := &apiserver.Config{
 		GenericConfig: serverConfig,
 	}
@@ -130,12 +109,6 @@ func (o WingServerOptions) RunWingServer(stopCh <-chan struct{}) error {
 	if err != nil {
 		return err
 	}
-
-	/*server.GenericAPIServer.AddPostStartHook("start-sample-server-informers", func(context genericapiserver.PostStartHookContext) error {
-		config.GenericConfig.SharedInformerFactory.Start(context.StopCh)
-		return nil
-	})
-	*/
 
 	return server.GenericAPIServer.PrepareRun().Run(stopCh)
 }
