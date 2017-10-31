@@ -127,8 +127,11 @@ func (n *InstancePool) RootVolume() interfaces.Volume {
 	return n.rootVolume
 }
 
-func (n *InstancePool) Count() int {
-	// TODO: this needs to be replaced by Max/Min
+func (n *InstancePool) MinCount() int {
+	return n.conf.MinCount
+}
+
+func (n *InstancePool) MaxCount() int {
 	return n.conf.MaxCount
 }
 
