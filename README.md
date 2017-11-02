@@ -15,6 +15,21 @@ deploy Kubernetes in production at scale.
 Under-the-hood, Tarmak uses a number of well-known and proven components,
 including Terraform, Puppet and systemd.
 
+## Quickstart
+
+Get a ready built version of tarmak from [the releases
+page](https://github.com/jetstack/tarmak/releases):
+
+    $ wget https://github.com/jetstack/tarmak/releases/download/0.1.2/tarmak_0.1.2_linux_amd64
+    $ mv tarmak_0.1.2_linux_amd64 tarmak
+    $ chmod +x tarmak
+
+If you want compile from source, follow the [build
+guide](https://docs.tarmak.io/en/latest/developer-guide.html#building-tarmak)
+instead.
+
+Now follow the [user guide](https://docs.tarmak.io/en/latest/user-guide.html).
+
 ## Documentation
 
 Full documentation, including design/architecture overview, user/developer
