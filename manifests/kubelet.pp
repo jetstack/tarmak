@@ -42,6 +42,10 @@ class kubernetes::kubelet(
 
   $cluster_domain = $::kubernetes::cluster_domain
   $cluster_dns = $::kubernetes::_cluster_dns
+  $cloud_provider = $::kubernetes::cloud_provider
+
+  # TODO: this should come from something higher in the stack
+  $container_interface = 'cali+'
 
   $service_name = 'kubelet'
 
@@ -89,7 +93,7 @@ class kubernetes::kubelet(
   }
 
   $availability_zone = dig44($facts, ['ec2_metadata', 'placement', 'availability-zone'])
-  if $::kubernetes::cloud_provider == 'aws' and $availability_zone != undef {
+  if $cloud_provider == 'aws' and $availability_zone != undef {
     file{"${kubelet_dir}/plugins/kubernetes.io":
       ensure  => 'directory',
       mode    => '0750',
