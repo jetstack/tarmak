@@ -48,7 +48,7 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 		AWS: &role.RoleAWS{
 			ELBIngress:                     true,
 			IAMEC2Read:                     true,
-			IAMEC2ModifyInstanceAttributes: true,
+			IAMEC2ModifyInstanceAttributes: false,
 		},
 	}
 	workerRole.WithName("worker").WithPrefix("kubernetes")
