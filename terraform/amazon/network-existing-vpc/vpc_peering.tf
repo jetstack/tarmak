@@ -26,14 +26,14 @@ resource "aws_vpc_peering_connection" "peering" {
 
 resource "aws_route" "myself_peering_private" {
   count                     = "${signum(length(var.vpc_peer_stack))*length(var.availability_zones)}"
-  route_table_id            = "${aws_route_table.private.*.id[count.index]}"
+  route_table_id            = "${data.aws_route_table.private.*.id[count.index]}"
   destination_cidr_block    = "${data.terraform_remote_state.vpc_peer_stack.vpc_net}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peering.id}"
 }
 
 resource "aws_route" "myself_peering_public" {
   count                     = "${signum(length(var.vpc_peer_stack))}"
-  route_table_id            = "${aws_route_table.public.id}"
+  route_table_id            = "${data.aws_route_table.public.id}"
   destination_cidr_block    = "${data.terraform_remote_state.vpc_peer_stack.vpc_net}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peering.id}"
 }

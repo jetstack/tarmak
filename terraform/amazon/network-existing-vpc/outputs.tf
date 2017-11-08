@@ -27,15 +27,15 @@ output "public_subnets" {
 }
 
 output "nat_public_ips" {
-  value = ["${aws_nat_gateway.main.*.public_ip}"]
+  value = []
 }
 
 output "route_table_public_ids" {
-  value = ["${aws_route_table.public.*.id}"]
+  value = ["${data.aws_route_table.public.*.id}"]
 }
 
 output "route_table_private_ids" {
-  value = ["${aws_route_table.private.*.id}"]
+  value = ["${data.aws_route_table.private.*.id}"]
 }
 
 output "private_zone_id" {
