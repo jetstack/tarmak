@@ -14,7 +14,9 @@ variable "availability_zones" {
 
 variable "vpc_id" {}
 
-variable "vpc_net" {}
+variable "public_subnets" {}
+
+variable "private_subnets" {}
 
 variable "stack" {
   default = ""

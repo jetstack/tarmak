@@ -47,8 +47,12 @@ func (s *ExistingNetworkStack) Variables() map[string]interface{} {
 		vars["vpc_id"] = vpc_id
 	}
 
-	if vpc_net, ok := s.cluster.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-subnet-ids"]; ok {
-		vars["vpc_net"] = vpc_net
+	if public_subnets, ok := s.cluster.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-public-subnet-ids"]; ok {
+		vars["public_subnets"] = public_subnets
+	}
+
+	if private_subnets, ok := s.cluster.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-private-subnet-ids"]; ok {
+		vars["private_subnets"] = private_subnets
 	}
 
 	// TODO: enable this for multi cluster environments

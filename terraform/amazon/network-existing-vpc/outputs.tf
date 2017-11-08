@@ -1,9 +1,9 @@
 output "vpc_id" {
-  value = "${var.vpc_id}"
+  value = "${data.aws_vpc.main.id}"
 }
 
 output "vpc_net" {
-  value = "${var.vpc_net}"
+  value = "${data.aws_vpc.main.cidr_block}"
 }
 
 output "stack_name" {
@@ -11,19 +11,19 @@ output "stack_name" {
 }
 
 output "private_subnet_ids" {
-  value = ["${aws_subnet.private.*.id}"]
+  value = ["${data.aws_subnet.private.*.id}"]
 }
 
 output "private_subnets" {
-  value = ["${aws_subnet.private.*.cidr_block}"]
+  value = ["${data.aws_subnet.private.*.cidr_block}"]
 }
 
 output "public_subnet_ids" {
-  value = ["${aws_subnet.public.*.id}"]
+  value = ["${data.aws_subnet.public.*.id}"]
 }
 
 output "public_subnets" {
-  value = ["${aws_subnet.public.*.cidr_block}"]
+  value = ["${data.aws_subnet.public.*.cidr_block}"]
 }
 
 output "nat_public_ips" {

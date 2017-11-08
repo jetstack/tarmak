@@ -145,7 +145,7 @@ func (c *Cluster) validateInstancePools() (result error) {
 		}
 
 		// make the choice between deploying into existing VPC or creating a new one
-		if vpc_id, ok := c.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]; ok {
+		if _, ok := c.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]; ok {
 			if s, err := stack.New(c, tarmakv1alpha1.StackNameExistingNetwork); err != nil {
 				result = multierror.Append(result, err)
 			} else {
