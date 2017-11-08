@@ -1,41 +1,46 @@
-# Vault Dev Environment - Setup
+# vault-helper usage
+```
+Automates PKI tasks using Hashicorp's Vault as a backend.
 
-Start a development vault server
-```
-$ vault server -dev
+Usage:
+  vault-helper [command]
+
+Available Commands:
+  cert        Create local key to generate a CSR. Call vault with CSR for specified cert role.
+  dev-server  Run a vault server in development mode with kubernetes PKI created.
+  help        Help about any command
+  kubeconfig  Create local key to generate a CSR. Call vault with CSR for specified cert role. Write kubeconfig to yaml file.
+  read        Read arbitrary vault path. If no output file specified, output to console.
+  renew-token Renew token on vault server.
+  setup       Setup kubernetes on a running vault server.
+  version     Print the version number of vault-helper.
+
+Flags:
+  -h, --help            help for vault-helper
+  -l, --log-level int   Set the log level of output. 0-Fatal 1-Info 2-Debug (default 1)
+
+Use "vault-helper [command] --help" for more information about a command.
 ```
 
-Note the root token :
-```
-Root Token: ########-####-####-####-#############
-```
-
-Export root token to environment variable:
-```
-$ export VAULT_TOKEN=########-####-####-####-############
-```
-
-Export vault address (local) :
+## Vault helper requires the following environment variable set
+Export vault address:
 ```
 $ export VAULT_ADDR=http://127.0.0.1:8200
 ```
 
 
-# Building Golang Vault Helper
-
-Ensure Go path has been set.
-
-Get dep - dependency management tool for go
+## Vault Helper command examples
+### setup
 ```
-$ go get -u github.com/golang/dep/cmd/dep
+$ vault-helper setup cluster-name
 ```
 
-Use dep ensure
+#### renew-token
 ```
-$ dep ensure
+$ vault-helper renew-token --init_role=cluster-name-master
 ```
 
-Build golang vault helper (-o vault-helper-golang is required due to name conflict):
+### cert
 ```
-$ go build -o vault-helper-golang
+$ vault-helper cert cluster-name/pki/k8s/sign/kube-apiserver k8s /etc/vault/name
 ```

@@ -1,4 +1,3 @@
-/Rakefile
-/Gemfile
-/Gemfile.lock
-/spec
+**
+!vault-helper
+!vault-helper_linux_amd64

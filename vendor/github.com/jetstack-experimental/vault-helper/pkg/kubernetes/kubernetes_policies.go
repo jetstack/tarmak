@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 )
 
 func (k *Kubernetes) WritePolicy(p *Policy) error {
 	err := k.vaultClient.Sys().PutPolicy(p.Name, p.Policy())
 	if err != nil {
-		return fmt.Errorf("error writting policy '%s': %s", err)
+		return fmt.Errorf("error writting policy '%s': %v", p.Name, err)
 	}
 
 	return nil
@@ -32,10 +31,9 @@ func (k *Kubernetes) ensurePolicies() error {
 			str += "'" + p.Role + "'  "
 		}
 	}
-	logrus.Infof(str)
+	k.Log.Infof(str)
 
 	return result
-
 }
 
 func (k *Kubernetes) etcdPolicy() *Policy {
@@ -85,7 +83,6 @@ func (k *Kubernetes) masterPolicy() *Policy {
 	}
 
 	// adds the roles from the worker
-	// TODO: Do that in vault in the future
 	p.Policies = append(p.Policies, k.workerPolicyPaths()...)
 
 	return p
