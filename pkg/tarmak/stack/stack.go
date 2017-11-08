@@ -43,6 +43,8 @@ func New(cluster interfaces.Cluster, name string) (interfaces.Stack, error) {
 		stack, err = newStateStack(s)
 	case tarmakv1alpha1.StackNameNetwork:
 		stack, err = newNetworkStack(s)
+	case tarmakv1alpha1.StackNameExistingNetwork:
+		stack, err = newExistingNetworkStack(s)
 	case tarmakv1alpha1.StackNameTools:
 		stack, err = newToolsStack(s)
 	case tarmakv1alpha1.StackNameVault:

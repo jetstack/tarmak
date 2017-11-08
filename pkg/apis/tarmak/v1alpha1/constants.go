@@ -6,11 +6,12 @@ import (
 )
 
 const (
-	StackNameState      = "state"
-	StackNameNetwork    = "network"
-	StackNameTools      = "tools"
-	StackNameVault      = "vault"
-	StackNameKubernetes = "kubernetes"
+	StackNameState           = "state"
+	StackNameNetwork         = "network"
+	StackNameExistingNetwork = "network-existing-vpc"
+	StackNameTools           = "tools"
+	StackNameVault           = "vault"
+	StackNameKubernetes      = "kubernetes"
 )
 
 const (

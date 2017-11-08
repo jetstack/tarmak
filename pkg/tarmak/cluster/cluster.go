@@ -144,10 +144,22 @@ func (c *Cluster) validateInstancePools() (result error) {
 			c.stacks = append(c.stacks, s)
 		}
 
-		if s, err := stack.New(c, tarmakv1alpha1.StackNameNetwork); err != nil {
-			result = multierror.Append(result, err)
+		// make the choice between deploying into existing VPC or creating a new one
+		if vpc_id, ok := c.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]; ok {
+			if vpc_id == "" {
+				panic(vpc_id)
+			}
+			if s, err := stack.New(c, tarmakv1alpha1.StackNameExistingNetwork); err != nil {
+				result = multierror.Append(result, err)
+			} else {
+				c.stacks = append(c.stacks, s)
+			}
 		} else {
-			c.stacks = append(c.stacks, s)
+			if s, err := stack.New(c, tarmakv1alpha1.StackNameNetwork); err != nil {
+				result = multierror.Append(result, err)
+			} else {
+				c.stacks = append(c.stacks, s)
+			}
 		}
 
 		if s, err := stack.New(c, tarmakv1alpha1.StackNameTools); err != nil {
