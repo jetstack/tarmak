@@ -130,7 +130,7 @@ func (k *Kubernetes) k8sComponentRole(roleName string) *pkiRole {
 			"allow_bare_domains":  true,
 			"allow_localhost":     false,
 			"allow_subdomains":    false,
-			"allow_ip_sans":       false,
+			"allow_ip_sans":       true,
 			"server_flag":         false,
 			"client_flag":         true,
 			"max_ttl":             fmt.Sprintf("%ds", int(k.MaxValidityComponents.Seconds())),

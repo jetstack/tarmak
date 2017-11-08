@@ -13,8 +13,17 @@ import (
 	vault "github.com/hashicorp/vault/api"
 )
 
+const FlagMaxValidityAdmin = "max-validity-admin"
+const FlagMaxValidityCA = "max-validity-ca"
+const FlagMaxValidityComponents = "max-validity-components"
+
+const FlagInitTokenEtcd = "init-token-etcd"
+const FlagInitTokenAll = "init-token-all"
+const FlagInitTokenMaster = "init-token-master"
+const FlagInitTokenWorker = "init-token-worker"
+
 type Backend interface {
-	Ensure() (bool, error)
+	Ensure() error
 	Path() string
 }
 
@@ -39,6 +48,8 @@ type VaultAuth interface {
 
 type VaultToken interface {
 	CreateOrphan(opts *vault.TokenCreateRequest) (*vault.Secret, error)
+	RevokeOrphan(token string) error
+	Lookup(token string) (*vault.Secret, error)
 }
 
 type Vault interface {
@@ -54,6 +65,36 @@ type realVault struct {
 type realVaultAuth struct {
 	a *vault.Auth
 }
+
+type FlagInitTokens struct {
+	Etcd   string
+	Master string
+	Worker string
+	All    string
+}
+
+type Kubernetes struct {
+	clusterID   string // clusterID is required parameter, lowercase only, [a-z0-9-]+
+	vaultClient Vault
+	Log         *logrus.Entry
+
+	etcdKubernetesPKI *PKI
+	etcdOverlayPKI    *PKI
+	kubernetesPKI     *PKI
+	secretsGeneric    *Generic
+
+	MaxValidityAdmin      time.Duration
+	MaxValidityComponents time.Duration
+	MaxValidityCA         time.Duration
+	MaxValidityInitTokens time.Duration
+
+	FlagInitTokens FlagInitTokens
+
+	initTokens []*InitToken
+}
+
+var _ Backend = &PKI{}
+var _ Backend = &Generic{}
 
 func (rv *realVault) Auth() VaultAuth {
 	return &realVaultAuth{a: rv.c.Auth()}
@@ -73,28 +114,7 @@ func realVaultFromAPI(vaultClient *vault.Client) Vault {
 	return &realVault{c: vaultClient}
 }
 
-type Kubernetes struct {
-	clusterID   string // clusterID is required parameter, lowercase only, [a-z0-9-]+
-	vaultClient Vault
-
-	etcdKubernetesPKI *PKI
-	etcdOverlayPKI    *PKI
-	kubernetesPKI     *PKI
-	secretsGeneric    *Generic
-
-	MaxValidityAdmin      time.Duration
-	MaxValidityComponents time.Duration
-	MaxValidityCA         time.Duration
-	MaxValidityInitTokens time.Duration
-
-	initTokens []*InitToken
-}
-
-var _ Backend = &PKI{}
-var _ Backend = &Generic{}
-
 func isValidClusterID(clusterID string) error {
-
 	if len(clusterID) < 1 {
 		return errors.New("Invalid cluster ID - None given")
 	}
@@ -120,10 +140,9 @@ func isValidClusterID(clusterID string) error {
 	}
 
 	return nil
-
 }
 
-func New(vaultClient *vault.Client) *Kubernetes {
+func New(vaultClient *vault.Client, logger *logrus.Entry) *Kubernetes {
 
 	k := &Kubernetes{
 		// set default validity periods
@@ -131,17 +150,26 @@ func New(vaultClient *vault.Client) *Kubernetes {
 		MaxValidityComponents: time.Hour * 24 * 30,       // Validity period of Component certificates
 		MaxValidityAdmin:      time.Hour * 24 * 365,      // Validity period of Admin ceritficate
 		MaxValidityInitTokens: time.Hour * 24 * 365 * 5,  // Validity of init tokens
+		FlagInitTokens: FlagInitTokens{
+			Etcd:   "",
+			Master: "",
+			Worker: "",
+			All:    "",
+		},
 	}
 
 	if vaultClient != nil {
 		k.vaultClient = realVaultFromAPI(vaultClient)
 	}
+	if logger != nil {
+		k.Log = logger
+	}
 
-	k.etcdKubernetesPKI = NewPKI(k, "etcd-k8s")
-	k.etcdOverlayPKI = NewPKI(k, "etcd-overlay")
-	k.kubernetesPKI = NewPKI(k, "k8s")
+	k.etcdKubernetesPKI = NewPKI(k, "etcd-k8s", k.Log)
+	k.etcdOverlayPKI = NewPKI(k, "etcd-overlay", k.Log)
+	k.kubernetesPKI = NewPKI(k, "k8s", k.Log)
 
-	k.secretsGeneric = k.NewGeneric()
+	k.secretsGeneric = k.NewGeneric(k.Log)
 
 	return k
 }
@@ -166,20 +194,10 @@ func (k *Kubernetes) Ensure() error {
 
 	// setup backends
 	var result error
-	change := false
-	str := "Mounted & CA written for: "
 	for _, backend := range k.backends() {
-		if changed, err := backend.Ensure(); err != nil {
+		if err := backend.Ensure(); err != nil {
 			result = multierror.Append(result, fmt.Errorf("backend %s: %s", backend.Path(), err))
-		} else {
-			if changed {
-				change = true
-				str += "'" + backend.Path() + "'  "
-			}
 		}
-	}
-	if change {
-		logrus.Infof(str)
 	}
 	if result != nil {
 		return result
@@ -213,18 +231,18 @@ func (k *Kubernetes) Path() string {
 	return k.clusterID
 }
 
-func (k *Kubernetes) NewGeneric() *Generic {
+func (k *Kubernetes) NewGeneric(logger *logrus.Entry) *Generic {
 	return &Generic{
 		kubernetes: k,
 		initTokens: make(map[string]string),
+		Log:        logger,
 	}
 }
 
 func GetMountByPath(vaultClient Vault, mountPath string) (*vault.MountOutput, error) {
-
 	mounts, err := vaultClient.Sys().ListMounts()
 	if err != nil {
-		return nil, fmt.Errorf("error listing mounts: %s", err)
+		return nil, fmt.Errorf("error listing mounts: %v", err)
 	}
 
 	var mount *vault.MountOutput
@@ -238,62 +256,53 @@ func GetMountByPath(vaultClient Vault, mountPath string) (*vault.MountOutput, er
 	return mount, nil
 }
 
-func (k *Kubernetes) NewInitToken(role string, policies []string) *InitToken {
+func (k *Kubernetes) NewInitToken(role, expected string, policies []string) *InitToken {
 	return &InitToken{
-		Role:       role,
-		Policies:   policies,
-		kubernetes: k,
+		Role:          role,
+		Policies:      policies,
+		kubernetes:    k,
+		ExpectedToken: expected,
 	}
 }
 
 func (k *Kubernetes) ensureInitTokens() error {
 	var result error
 
-	k.initTokens = append(k.initTokens, k.NewInitToken("etcd", []string{
+	k.initTokens = append(k.initTokens, k.NewInitToken("etcd", k.FlagInitTokens.Etcd, []string{
 		k.etcdPolicy().Name,
 	}))
-	k.initTokens = append(k.initTokens, k.NewInitToken("master", []string{
+	k.initTokens = append(k.initTokens, k.NewInitToken("master", k.FlagInitTokens.Master, []string{
 		k.masterPolicy().Name,
 		k.workerPolicy().Name,
 	}))
-	k.initTokens = append(k.initTokens, k.NewInitToken("worker", []string{
+	k.initTokens = append(k.initTokens, k.NewInitToken("worker", k.FlagInitTokens.Worker, []string{
 		k.workerPolicy().Name,
 	}))
-	k.initTokens = append(k.initTokens, k.NewInitToken("all", []string{
+	k.initTokens = append(k.initTokens, k.NewInitToken("all", k.FlagInitTokens.All, []string{
 		k.etcdPolicy().Name,
 		k.masterPolicy().Name,
 		k.workerPolicy().Name,
 	}))
 
-	change := false
-	strc := "Init_tokens created for: "
-	strw := "Init_tokens written for: "
 	for _, initToken := range k.initTokens {
-		if changed, err := initToken.Ensure(); err != nil {
+		if err := initToken.Ensure(); err != nil {
 			result = multierror.Append(result, err)
-		} else {
-			strw += "'" + initToken.Name() + "'  "
-			if changed {
-				change = true
-				strc += "'" + initToken.Name() + "'  "
-			}
 		}
 	}
-	if change {
-		logrus.Infof(strc)
-	}
-	logrus.Infof(strw)
-
 	return result
 }
 
 func (k *Kubernetes) InitTokens() map[string]string {
 	output := map[string]string{}
 	for _, initToken := range k.initTokens {
-		token, _, err := initToken.InitToken()
+		token, err := initToken.InitToken()
 		if err == nil {
 			output[initToken.Role] = token
 		}
 	}
 	return output
+}
+
+func (k *Kubernetes) SetInitFlags(flags FlagInitTokens) {
+	k.FlagInitTokens = flags
 }

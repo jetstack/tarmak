@@ -42,15 +42,13 @@ required = [
   name = "github.com/jteeuwen/go-bindata"
   revision = "a0ff2567cfb70903282db057e799fd826784d41d"
 
-# TODO: Update once changes are released
 [[constraint]]
   name = "github.com/jetstack-experimental/vault-unsealer"
-  revision = "cea1258b2833b938e168e86dffaa980bd89f74c3"
+  version = "0.1.4"
 
-# TODO: Update once changes are released
 [[constraint]]
   name = "github.com/jetstack-experimental/vault-helper"
-  revision = "f7506c9c9ab6cb68dfbb3be12161cae30336875c"
+  version = "0.8.8"
 
 [[constraint]]
   name = "k8s.io/client-go"

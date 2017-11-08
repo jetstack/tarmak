@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -9,25 +10,27 @@ import (
 	vault "github.com/hashicorp/vault/api"
 )
 
-func NewPKI(k *Kubernetes, pkiName string) *PKI {
-	return &PKI{
-		pkiName:         pkiName,
-		kubernetes:      k,
-		MaxLeaseTTL:     k.MaxValidityCA,
-		DefaultLeaseTTL: k.MaxValidityCA,
-	}
-}
-
 type PKI struct {
 	pkiName    string
 	kubernetes *Kubernetes
 
 	MaxLeaseTTL     time.Duration
 	DefaultLeaseTTL time.Duration
+
+	Log *logrus.Entry
+}
+
+func NewPKI(k *Kubernetes, pkiName string, logger *logrus.Entry) *PKI {
+	return &PKI{
+		pkiName:         pkiName,
+		kubernetes:      k,
+		MaxLeaseTTL:     k.MaxValidityCA,
+		DefaultLeaseTTL: k.MaxValidityCA,
+		Log:             logger,
+	}
 }
 
 func (p *PKI) TuneMount(mount *vault.MountOutput) error {
-
 	tuneMountRequired := false
 
 	if mount.Config.DefaultLeaseTTL != int(p.DefaultLeaseTTL.Seconds()) {
@@ -41,26 +44,25 @@ func (p *PKI) TuneMount(mount *vault.MountOutput) error {
 		mountConfig := p.getMountConfigInput()
 		err := p.kubernetes.vaultClient.Sys().TuneMount(p.Path(), mountConfig)
 		if err != nil {
-			return fmt.Errorf("error tuning mount config: %s", err.Error())
+			return fmt.Errorf("error tuning mount config: %v", err.Error())
 		}
-		logrus.Debugf("Tuned Mount: %s", p.pkiName)
+		p.Log.Debugf("Tuned Mount: %s", p.pkiName)
 		return nil
 	}
-	logrus.Debugf("No tune required: %s", p.pkiName)
+	p.Log.Debugf("No tune required: %s", p.pkiName)
 
 	return nil
-
 }
 
-func (p *PKI) Ensure() (bool, error) {
-
+func (p *PKI) Ensure() error {
 	mount, err := GetMountByPath(p.kubernetes.vaultClient, p.Path())
 	if err != nil {
-		return false, err
+		return err
 	}
 
+	// Mount doesn't Exist
 	if mount == nil {
-		logrus.Debugf("No mounts found for: %s", p.pkiName)
+		p.Log.Debugf("No mounts found for: %s", p.pkiName)
 		err := p.kubernetes.vaultClient.Sys().Mount(
 			p.Path(),
 			&vault.MountInput{
@@ -68,50 +70,50 @@ func (p *PKI) Ensure() (bool, error) {
 				Type:        "pki",
 			},
 		)
+
 		if err != nil {
-			return false, fmt.Errorf("error creating mount: %s", err)
+			return fmt.Errorf("failed to create mount: %v", err)
 		}
 		mount, err = GetMountByPath(p.kubernetes.vaultClient, p.Path())
 		if err != nil {
-			return false, err
+			return err
 		}
+		p.Log.Infof("Mounted '%s'", p.pkiName)
 
 	} else {
 		if mount.Type != "pki" {
-			return false, fmt.Errorf("Mount '%s' already existing with wrong type '%s'", p.Path(), mount.Type)
+			return fmt.Errorf("Mount '%s' already existing with wrong type '%s'", p.Path(), mount.Type)
 		}
-		logrus.Debugf("Mount '%s' already existing", p.Path())
+		p.Log.Debugf("Mount '%s' already existing", p.Path())
 	}
 
 	if mount != nil {
 		err = p.TuneMount(mount)
 		if err != nil {
-			logrus.Fatalf("Tuning Error")
-			return false, err
+			return errors.New("failed to tune mount")
 		}
 	}
 
 	return p.ensureCA()
 }
 
-func (p *PKI) ensureCA() (bool, error) {
-
+func (p *PKI) ensureCA() error {
 	b, err := p.caPathExists()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if !b {
 		return p.generateCA()
 	}
 
-	return false, nil
+	return nil
 }
 
-func (p *PKI) generateCA() (bool, error) {
-
+func (p *PKI) generateCA() error {
 	path := filepath.Join(p.Path(), "root", "generate", "internal")
 	description := "Kubernetes " + p.kubernetes.clusterID + "/" + p.pkiName + " CA"
+
 	data := map[string]interface{}{
 		"common_name": description,
 		"ttl":         p.getMaxLeaseTTL(),
@@ -119,19 +121,18 @@ func (p *PKI) generateCA() (bool, error) {
 
 	_, err := p.kubernetes.vaultClient.Logical().Write(path, data)
 	if err != nil {
-		return false, fmt.Errorf("error writing new CA: ", err)
+		return fmt.Errorf("error writing new CA: %v", err)
 	}
 
-	return true, nil
+	return nil
 }
 
 func (p *PKI) caPathExists() (bool, error) {
-
 	path := filepath.Join(p.Path(), "cert", "ca")
 
 	s, err := p.kubernetes.vaultClient.Logical().Read(path)
 	if err != nil {
-		return false, fmt.Errorf("error reading ca path '%s': ", path, err)
+		return false, fmt.Errorf("error reading ca path '%s': %v", path, err)
 	}
 
 	if s == nil {
@@ -142,16 +143,14 @@ func (p *PKI) caPathExists() (bool, error) {
 	}
 
 	return true, nil
-
 }
 
 func (p *PKI) WriteRole(role *pkiRole) error {
-
 	path := filepath.Join(p.Path(), "roles", role.Name)
 
 	_, err := p.kubernetes.vaultClient.Logical().Write(path, role.Data)
 	if err != nil {
-		return fmt.Errorf("error writting role '%s' to '%s': %s", role.Name, p.Path(), err)
+		return fmt.Errorf("error writting role '%s' to '%s': %v", role.Name, p.Path(), err)
 	}
 
 	return nil
@@ -177,18 +176,17 @@ func (p *PKI) getMaxLeaseTTL() string {
 }
 
 func (p *PKI) getTokenPolicyExists(name string) (bool, error) {
-
 	policy, err := p.kubernetes.vaultClient.Sys().GetPolicy(name)
 	if err != nil {
 		return false, err
 	}
 
 	if policy == "" {
-		logrus.Debugf("Policy Not Found: %s", name)
+		p.Log.Debugf("Policy Not Found: %s", name)
 		return false, nil
 	}
 
-	logrus.Debugf("Policy Found: %s", name)
+	p.Log.Debugf("Policy Found: %s", name)
 
 	return true, nil
 }

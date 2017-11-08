@@ -128,7 +128,7 @@ func (s *KubernetesStack) ensureVaultSetup() error {
 
 	vaultClient.SetToken(vaultRootToken)
 
-	k := kubernetes.New(vaultClient)
+	k := kubernetes.New(vaultClient, s.log)
 	k.SetClusterID(s.Cluster().ClusterName())
 
 	if err := k.Ensure(); err != nil {

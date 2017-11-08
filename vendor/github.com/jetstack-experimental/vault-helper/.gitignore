@@ -1,2 +1,5 @@
-/vendor/
-vault-helper-golang
+/bin/
+/vault-helper
+/vault-helper_linux_amd64
+/vault-helper-image.tar
+/vendor.orig/
