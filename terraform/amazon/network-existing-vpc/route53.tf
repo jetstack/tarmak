@@ -1,7 +1,7 @@
 resource "aws_route53_zone" "private" {
   count         = "${signum(length(var.private_zone))}"
   name          = "${var.private_zone}"
-  vpc_id        = "${aws_vpc.main.id}"
+  vpc_id        = "${var.vpc_id}"
   force_destroy = true
   comment       = "Hosted zone for private kubernetes in ${var.environment}"
 

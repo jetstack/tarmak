@@ -1,7 +1,7 @@
 resource "aws_subnet" "public" {
   count                   = "${length(var.availability_zones)}"
-  vpc_id                  = "${aws_vpc.main.id}"
-  cidr_block              = "${cidrsubnet(cidrsubnet(aws_vpc.main.cidr_block, 3, 0), 3, count.index)}"
+  vpc_id                  = "${var.vps_id}"
+  cidr_block              = "${cidrsubnet(cidrsubnet(var.vpc_net, 3, 0), 3, count.index)}"
   availability_zone       = "${var.availability_zones[count.index]}"
   map_public_ip_on_launch = true
 
@@ -16,8 +16,8 @@ resource "aws_subnet" "public" {
 
 resource "aws_subnet" "private" {
   count             = "${length(var.availability_zones)}"
-  vpc_id            = "${aws_vpc.main.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 3, count.index + 1)}"
+  vpc_id            = "${var.vpc_id}"
+  cidr_block        = "${cidrsubnet(var.vpc_net, 3, count.index + 1)}"
   availability_zone = "${var.availability_zones[count.index]}"
 
   tags {

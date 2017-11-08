@@ -1,9 +1,9 @@
 output "vpc_id" {
-  value = "${aws_vpc.main.id}"
+  value = "${var.vpc_id}"
 }
 
 output "vpc_net" {
-  value = "${aws_vpc.main.cidr_block}"
+  value = "${var.vpc_net}"
 }
 
 output "stack_name" {

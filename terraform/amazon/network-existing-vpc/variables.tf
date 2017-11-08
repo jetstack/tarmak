@@ -12,6 +12,10 @@ variable "availability_zones" {
   type = "list"
 }
 
+variable "vpc_id" {}
+
+variable "vpc_net" {}
+
 variable "stack" {
   default = ""
 }

@@ -1,5 +1,5 @@
 resource "aws_route_table" "public" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = "${var.vpc_id}"
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}_public"
@@ -17,7 +17,7 @@ resource "aws_route" "public" {
 
 resource "aws_route_table" "private" {
   count  = "${length(var.availability_zones)}"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = "${var.vpc_id}"
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}_private_${var.availability_zones[count.index]}"
