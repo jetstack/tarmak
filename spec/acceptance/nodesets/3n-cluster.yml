@@ -6,24 +6,27 @@ HOSTS:
       - master
     platform: el-7-x86_64
     box: centos/7
-    box_version: 1704.01
-    hypervisor: vagrant
+    box_version: 1710.01
+    hypervisor: vagrant_libvirt
     ip: 10.123.0.11
   etcd2:
     roles:
       - etcd
     platform: el-7-x86_64
     box: centos/7
-    box_version: 1704.01
-    hypervisor: vagrant
+    box_version: 1710.01
+    hypervisor: vagrant_libvirt
     ip: 10.123.0.12
   etcd3:
     roles:
       - etcd
     platform: el-7-x86_64
     box: centos/7
-    box_version: 1704.01
-    hypervisor: vagrant
+    box_version: 1710.01
+    hypervisor: vagrant_libvirt
     ip: 10.123.0.13
 CONFIG:
   type: foss
+  trace_limit: 1024
+  libvirt:
+    random_hostname: true
