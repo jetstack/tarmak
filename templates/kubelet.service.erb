@@ -10,12 +10,12 @@ Requires=docker.service
 WorkingDirectory=<%= @kubelet_dir %>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
-<% if @_register_schedulable -%>
 <% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
-  --register-with-taints="node-role.kubernetes.io/master=true:NoSchedule" \
+<% if @_node_taints_string and @_node_taints_string.length > 0 -%>
+  --register-with-taints=<%= @_node_taints_string %> \
+<% end -%>
 <% else -%>
   --register-schedulable=<%= @_register_schedulable %> \
-<% end -%>
 <% end -%>
   --register-node=<%= @register_node %> \
 <% if @allow_privileged -%>
