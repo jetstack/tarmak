@@ -216,6 +216,11 @@ func (c *Cluster) Type() string {
 }
 
 func (c *Cluster) RemoteState(stackName string) string {
+	// special case for the existing network stack, allows other stacks to not
+	// care which is deployed
+	if stackName == "network-existing-vpc" {
+		stackName = "network"
+	}
 	return c.Environment().Provider().RemoteState(c.Environment().Name(), c.Name(), stackName)
 }
 
