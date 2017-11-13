@@ -14,7 +14,13 @@ ExecStartPre=/bin/sh -e -c "iptables -C PREROUTING -p tcp --destination 169.254.
 <% end -%>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
+<% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
+<% if @_node_taints_string and @_node_taints_string.length > 0 -%>
+  --register-with-taints=<%= @_node_taints_string %> \
+<% end -%>
+<% else -%>
   --register-schedulable=<%= @_register_schedulable %> \
+<% end -%>
   --register-node=<%= @register_node %> \
 <% if @allow_privileged -%>
   --allow-privileged=true \

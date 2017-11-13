@@ -12,6 +12,7 @@ class kubernetes::kubelet(
   $cert_file = undef,
   $key_file = undef,
   $node_labels = undef,
+  $node_taints = undef,
   $pod_cidr = undef,
   $hostname_override = undef,
   Enum['systemd', 'cgroupfs'] $cgroup_driver = 'systemd',
@@ -28,6 +29,22 @@ class kubernetes::kubelet(
   } else {
     $_register_schedulable = $register_schedulable
   }
+
+  if $node_taints == undef {
+    if !$_register_schedulable {
+      $_node_taints = {
+        'node-role.kubernetes.io/master' => 'true:NoSchedule',
+      }
+    }
+    else {
+      $_node_taints = {}
+    }
+  } else {
+    $_node_taints = $node_taints
+  }
+
+  $_node_taints_list = $_node_taints.map |$k,$v| { "${k}=${v}"}
+  $_node_taints_string = $_node_taints_list.join(',')
 
   if $node_labels == undef {
     $_node_labels = {
