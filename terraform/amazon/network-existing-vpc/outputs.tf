@@ -26,10 +26,6 @@ output "public_subnets" {
   value = ["${data.aws_subnet.public.*.cidr_block}"]
 }
 
-output "nat_public_ips" {
-  value = []
-}
-
 output "route_table_public_ids" {
   value = ["${data.aws_route_table.public.*.id}"]
 }
