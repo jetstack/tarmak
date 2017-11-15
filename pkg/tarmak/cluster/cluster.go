@@ -144,10 +144,19 @@ func (c *Cluster) validateInstancePools() (result error) {
 			c.stacks = append(c.stacks, s)
 		}
 
-		if s, err := stack.New(c, tarmakv1alpha1.StackNameNetwork); err != nil {
-			result = multierror.Append(result, err)
+		// make the choice between deploying into existing VPC or creating a new one
+		if _, ok := c.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]; ok {
+			if s, err := stack.New(c, tarmakv1alpha1.StackNameExistingNetwork); err != nil {
+				result = multierror.Append(result, err)
+			} else {
+				c.stacks = append(c.stacks, s)
+			}
 		} else {
-			c.stacks = append(c.stacks, s)
+			if s, err := stack.New(c, tarmakv1alpha1.StackNameNetwork); err != nil {
+				result = multierror.Append(result, err)
+			} else {
+				c.stacks = append(c.stacks, s)
+			}
 		}
 
 		if s, err := stack.New(c, tarmakv1alpha1.StackNameTools); err != nil {
@@ -207,6 +216,11 @@ func (c *Cluster) Type() string {
 }
 
 func (c *Cluster) RemoteState(stackName string) string {
+	// special case for the existing network stack, allows other stacks to not
+	// care which is deployed
+	if stackName == "network-existing-vpc" {
+		stackName = "network"
+	}
 	return c.Environment().Provider().RemoteState(c.Environment().Name(), c.Name(), stackName)
 }
 

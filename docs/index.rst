@@ -26,3 +26,4 @@ build and deploy Kubernetes in production at scale.
    design_cli_ux
    developer-guide
    known-issues
+   existing-vpc
