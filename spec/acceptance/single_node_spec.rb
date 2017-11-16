@@ -47,9 +47,6 @@ class{'tarmak::single_node':
 
     before(:all) do
       hosts.each do |host|
-        # reset firewall
-        on host, "iptables -F INPUT"
-
         # make hostname resolvable
         line = "#{host.host_hash[:ip]} k8s.test.jetstack.net api.test.jetstack.net k8s"
         on(host, "grep -q \"#{line}\" /etc/hosts || echo \"#{line}\" >> /etc/hosts")
@@ -64,6 +61,9 @@ class{'tarmak::single_node':
           on(host, 'apt-get update')
           on(host, 'apt-get -y install docker-engine')
         end
+
+        # reset firewall
+        on host, "iptables -F INPUT"
 
         # setup develop vault server
         on host, 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.service /etc/systemd/system/vault-dev-server.service'
