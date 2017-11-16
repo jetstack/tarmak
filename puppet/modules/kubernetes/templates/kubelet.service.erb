@@ -8,9 +8,19 @@ Requires=docker.service
 
 [Service]
 WorkingDirectory=<%= @kubelet_dir %>
+<% if @cloud_provider == 'aws' -%>
+# prevent metadata service access on AWS
+ExecStartPre=/bin/sh -e -c "iptables -C PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181 2> /dev/null || iptables -A PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181"
+<% end -%>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
+<% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
+<% if @_node_taints_string and @_node_taints_string.length > 0 -%>
+  --register-with-taints=<%= @_node_taints_string %> \
+<% end -%>
+<% else -%>
   --register-schedulable=<%= @_register_schedulable %> \
+<% end -%>
   --register-node=<%= @register_node %> \
 <% if @allow_privileged -%>
   --allow-privileged=true \
@@ -42,8 +52,8 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --network-plugin-mtu=<%= @network_plugin_mtu %> \
 <% end -%>
 <% end -%>
-<% if scope['kubernetes::cloud_provider'] != '' -%>
-  --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
+<% if @cloud_provider != '' -%>
+  --cloud-provider=<%= @cloud_provider %> \
 <% end -%>
 <% if @container_runtime -%>
   --container-runtime=<%= @container_runtime %> \
