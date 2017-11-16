@@ -1,26 +1,26 @@
 fixtures:
-  forge_modules:
+  repositories:
     stdlib:
-      repo: "puppetlabs/stdlib"
+      repo: "https://github.com/puppetlabs/puppetlabs-stdlib.git"
       ref: "4.17.1"
     concat:
-      repo: "puppetlabs/concat"
+      repo: "https://github.com/puppetlabs/puppetlabs-concat.git"
       ref: "2.2.1"
     archive:
-      repo: "puppet/archive"
-      ref: "1.1.2"
+      repo: "https://github.com/voxpupuli/puppet-archive.git"
+      ref: "v1.1.2"
     kubernetes:
-      repo: "jetstack/kubernetes"
-      ref: "0.1.2-rc3"
+      repo: "https://github.com/jetstack/puppet-module-kubernetes.git"
+      ref: "master"
     calico:
-      repo: "jetstack/calico"
-      ref: "0.1.2-rc3"
+      repo: "https://github.com/jetstack/puppet-module-calico.git"
+      ref: "master"
     etcd:
-      repo: "jetstack/etcd"
-      ref: "0.2.0-rc1"
+      repo: "https://github.com/jetstack/puppet-module-etcd.git"
+      ref: "master"
     aws_ebs:
-      repo: "jetstack/aws_ebs"
-      ref: "0.1.2-rc3"
+      repo: "https://github.com/jetstack/puppet-module-aws_ebs.git"
+      ref: "master"
     vault_client:
-      repo: "jetstack/vault_client"
-      ref: "0.1.2-rc3"
+      repo: "https://github.com/jetstack/puppet-module-vault_client.git"
+      ref: "master"
