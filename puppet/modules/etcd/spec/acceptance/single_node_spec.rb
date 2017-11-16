@@ -6,7 +6,7 @@ if hosts.length == 1
       # Using puppet_apply as a helper
       it 'should work with no errors based on the example' do
         pp = <<-EOS
-$advertise_client_network = '10.0.0.0/16'
+$advertise_client_network = '10.0.0.0/8'
 
 etcd::instance{'k8s-main':
   version                  => '3.2.9',
