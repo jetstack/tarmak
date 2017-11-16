@@ -36,7 +36,7 @@ class{'vault_client':
 class{'tarmak::single_node':
   cluster_name                  => '#{cluster_name}',
   etcd_advertise_client_network => '10.0.0.0/8',
-  kubernetes_api_url            => 'https://#{$ip}:6443',
+  kubernetes_api_url            => 'https://api.test.jetstack.net:6443',
   kubernetes_version            => '#{kubernetes_version}',
   kubernetes_authorization_mode => #{kubernetes_authorization_mode},
 }
@@ -51,7 +51,7 @@ class{'tarmak::single_node':
         on host, "iptables -F INPUT"
 
         # make hostname resolvable
-        line = "#{$ip} k8s.test.jetstack.net k8s"
+        line = "#{host.host_hash[:ip]} k8s.test.jetstack.net api.test.jetstack.net k8s"
         on(host, "grep -q \"#{line}\" /etc/hosts || echo \"#{line}\" >> /etc/hosts")
 
         # make sure curl unzip vim is installed
