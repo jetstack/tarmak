@@ -6,7 +6,7 @@ verify: bundle_install
 bundle_install:
 	bundle install --path $(BUNDLE_DIR)
 
-acecptance: acceptance-1-7-centos
+acceptance: acceptance-1-7-centos
 
 acceptance-1-8-centos: export KUBERNETES_VERSION = 1.8.3
 acceptance-1-8-centos: bundle_install
