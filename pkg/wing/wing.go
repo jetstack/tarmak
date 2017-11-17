@@ -3,6 +3,10 @@ package wing
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -17,10 +21,12 @@ import (
 )
 
 type Wing struct {
-	log       *logrus.Entry
-	flags     *Flags
-	clientset *client.Clientset
-	stopCh    chan struct{}
+	log         *logrus.Entry
+	flags       *Flags
+	clientset   *client.Clientset
+	stopCh      chan struct{}
+	convergedCh chan struct{}
+	puppetCmd   *exec.Cmd
 }
 
 type Flags struct {
@@ -35,14 +41,17 @@ func New(flags *Flags) *Wing {
 	logger.Level = logrus.DebugLevel
 
 	t := &Wing{
-		log:   logger.WithField("app", "wing"),
-		flags: flags,
+		log:         logger.WithField("app", "wing"),
+		flags:       flags,
+		stopCh:      make(chan struct{}),
+		convergedCh: make(chan struct{}),
 	}
 	return t
 }
 
 func (w *Wing) Run(args []string) error {
 	var errors []error
+
 	if w.flags.InstanceName == "" {
 		errors = append(errors, fmt.Errorf("--instance-name flag cannot be empty"))
 	}
@@ -66,7 +75,7 @@ func (w *Wing) Run(args []string) error {
 	}
 	w.clientset = clientset
 
-	w.stopCh = make(chan struct{})
+	w.signalHandler()
 
 	// start watching for API server events that trigger applies
 	w.watchForNotifications()
@@ -128,4 +137,44 @@ func (w *Wing) watchForNotifications() {
 	// Now let's start the controller
 	go controller.Run(1, w.stopCh)
 
+}
+
+func (w *Wing) signalHandler() {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGHUP)
+
+	go func() {
+		select {
+		case <-w.stopCh:
+			break
+		case sig := <-ch:
+			switch sig {
+			case syscall.SIGHUP:
+				w.log.Infof("Wing received SIGHUP")
+				// If the puppet process is still running, kill before re-converging
+				select {
+				case <-w.convergedCh:
+					break
+				default:
+					w.killPuppetProcess()
+				}
+				// Reconverge
+				w.converge()
+				//kill puppet and stop
+			case syscall.SIGTERM:
+				w.log.Infof("Wing received SIGTERM")
+				w.killPuppetProcess()
+				close(w.stopCh)
+			}
+		}
+	}()
+}
+
+func (w *Wing) killPuppetProcess() {
+	if w.puppetCmd != nil && w.puppetCmd.Process != nil {
+		err := syscall.Kill(w.puppetCmd.Process.Pid, syscall.SIGTERM)
+		if err != nil {
+			w.log.Errorf("error killing puppet subprocess: %v", err)
+		}
+	}
 }

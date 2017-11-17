@@ -55,7 +55,6 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 	if err != nil {
 		return status, err
 	}
-
 	// create reader from buffer
 	reader := bytes.NewReader(buf)
 
@@ -92,6 +91,7 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 
 	puppetApplyCmd := func() error {
 		output, retCode, err := w.puppetApply(dir)
+
 		if err == nil && retCode != 0 {
 			err = fmt.Errorf("puppet apply has not converged yet (return code %d)", retCode)
 		}
@@ -120,22 +120,36 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 		return err
 	}
 
-	b := backoff.NewExponentialBackOff()
-	b.InitialInterval = time.Second * 30
-	b.MaxElapsedTime = time.Minute * 30
+	go func(puppetApplyCmd backoff.Operation) {
+		b := backoff.NewExponentialBackOff()
+		b.InitialInterval = time.Second * 30
+		b.MaxElapsedTime = time.Minute * 30
 
-	err = backoff.Retry(puppetApplyCmd, b)
+		err := backoff.Retry(puppetApplyCmd, b)
 
-	b.GetElapsedTime()
-	if err != nil {
-		log.Fatal(err)
+		b.GetElapsedTime()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// successful backoff
+		close(w.convergedCh)
+	}(puppetApplyCmd)
+
+	// block on successful backoff or close
+	select {
+	case <-w.stopCh:
+		break
+	case <-w.convergedCh:
+		break
 	}
 
 	return status, nil
-
 }
 
 func (w *Wing) converge() {
+	w.convergedCh = make(chan struct{})
+
 	// run puppet
 	status, err := w.runPuppet()
 	if err != nil {
@@ -155,7 +169,7 @@ func (w *Wing) converge() {
 
 // apply puppet code in a specific directory
 func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
-	puppetCmd := exec.Command(
+	w.puppetCmd = exec.Command(
 		"puppet",
 		"apply",
 		"--detailed-exitcodes",
@@ -171,12 +185,12 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 	)
 
 	outputBuffer := new(bytes.Buffer)
-	stdoutPipe, err := puppetCmd.StdoutPipe()
+	stdoutPipe, err := w.puppetCmd.StdoutPipe()
 	if err != nil {
 		return "", 0, err
 	}
 
-	stderrPipe, err := puppetCmd.StderrPipe()
+	stderrPipe, err := w.puppetCmd.StderrPipe()
 	if err != nil {
 		return "", 0, err
 	}
@@ -199,13 +213,13 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 		}
 	}()
 
-	err = puppetCmd.Start()
+	err = w.puppetCmd.Start()
 	if err != nil {
 		return "", 0, err
 	}
 
 	w.log.Printf("Waiting for command to finish...")
-	err = puppetCmd.Wait()
+	err = w.puppetCmd.Wait()
 	output = outputBuffer.String()
 	if err != nil {
 		perr, ok := err.(*exec.ExitError)
