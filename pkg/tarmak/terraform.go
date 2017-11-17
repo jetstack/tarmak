@@ -3,6 +3,7 @@ package tarmak
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -18,6 +19,10 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 }
 
 func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
+	if err := t.verifyImageExists(); err != nil {
+		return err
+	}
+
 	if !t.flags.Cluster.Apply.ConfigurationOnly {
 		selectStacks := t.flags.Cluster.Apply.InfrastructureStacks
 
@@ -123,4 +128,17 @@ func (t *Tarmak) CmdTerraformShell(args []string) error {
 	}
 
 	return fmt.Errorf("you have to provide exactly one parameter that contains one of the stack names %s", strings.Join(stackNames, ", "))
+}
+
+func (t *Tarmak) verifyImageExists() error {
+	images, err := t.Packer().List()
+	if err != nil {
+		return err
+	}
+
+	if len(images) == 0 {
+		return errors.New("no images found")
+	}
+
+	return nil
 }
