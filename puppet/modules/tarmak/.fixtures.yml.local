@@ -1,0 +1,11 @@
+fixtures:
+  symlinks:
+    archive: "#{source_dir}/../archive"
+    aws_ebs: "#{source_dir}/../aws_ebs"
+    calico: "#{source_dir}/../calico"
+    concat: "#{source_dir}/../concat"
+    etcd: "#{source_dir}/../etcd"
+    kubernetes: "#{source_dir}/../kubernetes"
+    vault_client: "#{source_dir}/../vault_client"
+    stdlib: "#{source_dir}/../stdlib"
+    tarmak: "#{source_dir}"
