@@ -1,4 +1,5 @@
 require 'beaker-rspec'
+require 'rspec/retry'
 
 $module_path = '/etc/puppetlabs/code/modules/'
 
@@ -16,11 +17,25 @@ RSpec.configure do |c|
     # Sync modules to all hosts
     hosts.each do |host|
       if fact('osfamily') == 'RedHat'
+        logger.notify "ensure rsync exists on #{host}"
         on host, 'yum install -y rsync'
+      elsif fact_on(host, 'osfamily') == 'Debian'
+        on(host, 'apt-get update')
+        on(host, 'apt-get -y install rsync')
       end
-      logger.notify "ensure rsync exists on #{host}"
-      rsync_to(host, "#{module_root}/spec/fixtures/modules", $module_path, {})
+
+      # rsync modules fixtures or folders in if you are on tarmak
+      rsync_source_path = "#{module_root}/spec/fixtures/modules"
+      if File.basename(File.dirname(module_root)) == 'modules'
+        rsync_source_path = File.expand_path(File.join(module_root, ".."))
+        logger.notify "override rsync source to #{rsync_source_path}"
+      end
+      rsync_to(host, rsync_source_path, $module_path, {})
+
+      # install myself
       install_dev_puppet_module_on(host, :source => module_root, :module_name => 'kubernetes', :target_module_path => $module_path)
+
+
     end
   end
 end
