@@ -68,6 +68,10 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% end -%>
 <% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
   --cgroup-driver=<%= @cgroup_driver %> \
+<% if not @osfamily.nil? and @osfamily == 'RedHat' -%>
+  --runtime-cgroups=/systemd/system.slice \
+  --kubelet-cgroups=/systemd/system.slice \
+<% end -%>
 <% end -%>
   --logtostderr=true
 

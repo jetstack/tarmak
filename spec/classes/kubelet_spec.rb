@@ -167,7 +167,7 @@ describe 'kubernetes::kubelet' do
         class{'kubernetes': version => '1.5.4'}
         """
       ]}
-      it { should_not contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+      it { should_not contain_file(service_file).with_content(%r{--cgroup-driver}) }
     end
 
     context 'versions 1.6+' do
@@ -176,7 +176,18 @@ describe 'kubernetes::kubelet' do
         class{'kubernetes': version => '1.6.0'}
         """
       ]}
-      it { should contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+
+      context 'on redhat family os' do
+        let(:facts) { {'osfamily' => 'RedHat' } }
+        it { should contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+        it { should contain_file(service_file).with_content(%r{--runtime-cgroups=/systemd/system.slice}) }
+        it { should contain_file(service_file).with_content(%r{--kubelet-cgroups=/systemd/system.slice}) }
+      end
+
+      context 'on anything but redhat family os' do
+        let(:facts) { {'osfamily' => 'Debian' } }
+        it { should contain_file(service_file).with_content(%r{--cgroup-driver=cgroupfs}) }
+      end
     end
   end
 

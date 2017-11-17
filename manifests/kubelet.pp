@@ -15,7 +15,10 @@ class kubernetes::kubelet(
   $node_taints = undef,
   $pod_cidr = undef,
   $hostname_override = undef,
-  Enum['systemd', 'cgroupfs'] $cgroup_driver = 'systemd',
+  Enum['systemd', 'cgroupfs'] $cgroup_driver =  $::osfamily ? {
+    'RedHat' => 'systemd',
+    default  => 'cgroupfs',
+  },
 ){
   require ::kubernetes
 
