@@ -141,6 +141,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/dsnet/compress"
+  packages = [".","bzip2","bzip2/internal/sais","internal","internal/errors","internal/prefix"]
+  revision = "c4dbed65594871659ea7347a85e1b8dcd97b9990"
+
+[[projects]]
+  branch = "master"
   name = "github.com/elazarl/go-bindata-assetfs"
   packages = ["."]
   revision = "30f82fa23fd844bd5bb1e5f216db87fd77b5eb43"
@@ -397,6 +403,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/mholt/archiver"
+  packages = ["."]
+  revision = "cdc68dd1f170b8dfc1a0d2231b5bb0967ed67006"
+  version = "v2.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/mitchellh/cli"
   packages = ["."]
@@ -419,6 +431,12 @@
   name = "github.com/mxk/go-flowrate"
   packages = ["flowrate"]
   revision = "cca7078d478f8520f85629ad7c68962d31ed7682"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/nwaples/rardecode"
+  packages = ["."]
+  revision = "e06696f847aeda6f39a8f0b7cdff193b7690aef6"
 
 [[projects]]
   name = "github.com/opencontainers/runc"
@@ -521,6 +539,12 @@
   name = "github.com/ugorji/go"
   packages = ["codec"]
   revision = "5efa3251c7f7d05e5d9704a69a984ec9f1386a40"
+
+[[projects]]
+  name = "github.com/ulikunitz/xz"
+  packages = [".","internal/hash","internal/xlog","lzma"]
+  revision = "0c6b41e72360850ca4f98dc341fd999726ea007f"
+  version = "v0.5.4"
 
 [[projects]]
   branch = "master"
