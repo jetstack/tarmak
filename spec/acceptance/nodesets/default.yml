@@ -7,8 +7,10 @@ HOSTS:
       - k8s-worker
     platform: el-7-x86_64
     box: centos/7
-    box_version: 1704.01
-    hypervisor: vagrant
+    box_version: 1710.01
+    hypervisor: vagrant_libvirt
 CONFIG:
   type: foss
   trace_limit: 1024
+  libvirt:
+    random_hostname: true
