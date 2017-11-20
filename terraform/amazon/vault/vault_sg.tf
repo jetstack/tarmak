@@ -3,7 +3,7 @@ resource "aws_security_group" "vault" {
   vpc_id = "${data.terraform_remote_state.network.vpc_id}"
 
   tags {
-    Name        = "${data.template_file.stack_name.rendered}-puppet_master"
+    Name        = "${data.template_file.stack_name.rendered}-vault"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
