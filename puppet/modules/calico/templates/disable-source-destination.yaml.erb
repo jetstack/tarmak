@@ -55,15 +55,6 @@ spec:
           env:
             - name: AWS_REGION
               value: "<%= @aws_region %>"
-          volumeMounts:
-            - name: ssl-certs
-              mountPath: "/etc/ssl/certs/ca-certificates.crt"
-              readOnly: true
-          imagePullPolicy: "Always"
-      volumes:
-        - name: ssl-certs
-          hostPath:
-            path: "/etc/ssl/certs/ca-certificates.crt"
       nodeSelector:
         role: "master"
 <%- if @rbac_enabled -%>
