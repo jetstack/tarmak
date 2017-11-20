@@ -148,6 +148,7 @@ skipped_dirs = [
     "hack",
     "pkg/tarmak/mocks",
     "pkg/tarmak/assets",
+    "puppet/modules",
 ]
 
 
