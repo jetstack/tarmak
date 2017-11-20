@@ -34,7 +34,7 @@ generate: go_generate
 go_verify: go_fmt go_vet
 
 go_test:
-	go test $$(go list ./pkg/... ./cmd/...)
+	go test $$(go list ./pkg/... ./cmd/... ./puppet)
 
 go_fmt:
 	@set -e; \
