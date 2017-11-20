@@ -4,7 +4,11 @@ HOSTS:
     roles:
       - master
     platform: el-7-x86_64
-    box: puppetlabs/centos-7.2-64-puppet
-    hypervisor: vagrant
+    box: centos/7
+    box_version: 1710.01
+    hypervisor: vagrant_libvirt
 CONFIG:
   type: foss
+  trace_limit: 1024
+  libvirt:
+    random_hostname: true

@@ -95,7 +95,7 @@ describe 'kubernetes::kubelet' do
       ]}
       it do
         have_service_file = contain_file('/etc/systemd/system/kubelet.service')
-        should have_service_file.with_content(/--register-with-taints=node-role\.kubernetes\.io\/master=true:NoSchedule/)
+        should have_service_file.with_content(/--register-with-taints=node-role\.kubernetes\.io\/master=:NoSchedule/)
         should have_service_file.with_content(/--node-labels=role=master/)
       end
     end

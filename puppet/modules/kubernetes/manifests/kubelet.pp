@@ -36,7 +36,7 @@ class kubernetes::kubelet(
   if $node_taints == undef {
     if !$_register_schedulable {
       $_node_taints = {
-        'node-role.kubernetes.io/master' => 'true:NoSchedule',
+        'node-role.kubernetes.io/master' => ':NoSchedule',
       }
     }
     else {
@@ -51,7 +51,8 @@ class kubernetes::kubelet(
 
   if $node_labels == undef {
     $_node_labels = {
-      'role' => $role,
+      'role'                            => $role,
+      "node-role.kubernetes.io/${role}" => '',
     }
   } else {
     $_node_labels = $node_labels
