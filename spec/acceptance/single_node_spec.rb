@@ -65,6 +65,9 @@ class{'tarmak::single_node':
         # reset firewall
         on host, "iptables -F INPUT"
 
+        # ensure no swap space is mounted
+        on host, "swapoff -a"
+
         # setup develop vault server
         on host, 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.service /etc/systemd/system/vault-dev-server.service'
         on host, 'systemctl daemon-reload'
