@@ -1,0 +1,5 @@
+fixtures:
+  symlinks:
+    kubernetes: "#{source_dir}"
+    concat: "#{source_dir}/../concat"
+    stdlib: "#{source_dir}/../stdlib"

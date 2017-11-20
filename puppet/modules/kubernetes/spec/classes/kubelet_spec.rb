@@ -74,11 +74,30 @@ describe 'kubernetes::kubelet' do
 
   context 'with role master' do
     let(:params) { {'role' => 'master' } }
+    context 'versions before 1.6' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.5.8'}
+        """
+      ]}
+      it do
+        have_service_file = contain_file('/etc/systemd/system/kubelet.service')
+        should have_service_file.with_content(/--register-schedulable=false/)
+        should have_service_file.with_content(/--node-labels=role=master/)
+      end
+    end
 
-    it do
-      have_service_file = contain_file('/etc/systemd/system/kubelet.service')
-      should have_service_file.with_content(/--register-schedulable=false/)
-      should have_service_file.with_content(/--node-labels=role=master/)
+    context 'versions 1.6+' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.6.0'}
+        """
+      ]}
+      it do
+        have_service_file = contain_file('/etc/systemd/system/kubelet.service')
+        should have_service_file.with_content(/--register-with-taints=node-role\.kubernetes\.io\/master=true:NoSchedule/)
+        should have_service_file.with_content(/--node-labels=role=master/)
+      end
     end
   end
 
@@ -148,7 +167,7 @@ describe 'kubernetes::kubelet' do
         class{'kubernetes': version => '1.5.4'}
         """
       ]}
-      it { should_not contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+      it { should_not contain_file(service_file).with_content(%r{--cgroup-driver}) }
     end
 
     context 'versions 1.6+' do
@@ -157,7 +176,18 @@ describe 'kubernetes::kubelet' do
         class{'kubernetes': version => '1.6.0'}
         """
       ]}
-      it { should contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+
+      context 'on redhat family os' do
+        let(:facts) { {'osfamily' => 'RedHat' } }
+        it { should contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+        it { should contain_file(service_file).with_content(%r{--runtime-cgroups=/systemd/system.slice}) }
+        it { should contain_file(service_file).with_content(%r{--kubelet-cgroups=/systemd/system.slice}) }
+      end
+
+      context 'on anything but redhat family os' do
+        let(:facts) { {'osfamily' => 'Debian' } }
+        it { should contain_file(service_file).with_content(%r{--cgroup-driver=cgroupfs}) }
+      end
     end
   end
 
