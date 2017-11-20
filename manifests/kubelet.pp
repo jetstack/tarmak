@@ -51,7 +51,8 @@ class kubernetes::kubelet(
 
   if $node_labels == undef {
     $_node_labels = {
-      'role' => $role,
+      'role'                            => $role,
+      "node-role.kubernetes.io/${role}" => '',
     }
   } else {
     $_node_labels = $node_labels
