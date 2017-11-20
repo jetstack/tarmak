@@ -1,0 +1,102 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: k8s-ec2-srcdst
+  namespace: <%= @namespace %>
+  labels:
+    k8s-app: k8s-ec2-srcdst
+    role.kubernetes.io/networking: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: k8s-ec2-srcdst
+  template:
+    metadata:
+      labels:
+        k8s-app: k8s-ec2-srcdst
+        role.kubernetes.io/networking: "1"
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+<%- if @version_before_1_6 -%>
+        scheduler.alpha.kubernetes.io/tolerations: |
+          [
+            {"key": "dedicated", "value": "master", "effect": "NoSchedule" },
+            {"key": "CriticalAddonsOnly", "operator":"Exists"},
+            {"key": "node-role.kubernetes.io/master", "effect": "NoSchedule"}
+          ]
+<%- end -%>
+    spec:
+      # this is required, metadata service is blocked through iptables rule otherwise
+      hostNetwork: true
+<%- if @rbac_enabled -%>
+      serviceAccountName: k8s-ec2-srcdst
+<%- end -%>
+<%- unless @version_before_1_6 -%>
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+      - key: "dedicated"
+        value: "master"
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+<%- end -%>
+      containers:
+        - image: <%= @image %>:v<%= @version %>
+          name: k8s-ec2-srcdst
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          env:
+            - name: AWS_REGION
+              value: "<%= @aws_region %>"
+      nodeSelector:
+        role: "master"
+<%- if @rbac_enabled -%>
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: k8s-ec2-srcdst
+  labels:
+    role.kubernetes.io/networking: "1"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-ec2-srcdst
+  namespace: <%= @namespace %>
+  labels:
+    role.kubernetes.io/networking: "1"
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: k8s-ec2-srcdst
+  labels:
+    role.kubernetes.io/networking: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-ec2-srcdst
+subjects:
+- kind: ServiceAccount
+  name: k8s-ec2-srcdst
+  namespace: <%= @namespace %>
+<%- end -%>

@@ -20,8 +20,11 @@ spec:
         scheduler.alpha.kubernetes.io/critical-pod: ''
 <%- if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: |
-          [{"key": "dedicated", "value": "master", "effect": "NoSchedule" },
-           {"key":"CriticalAddonsOnly", "operator":"Exists"}]
+          [
+            {"key": "dedicated", "value": "master", "effect": "NoSchedule" },
+            {"key": "CriticalAddonsOnly", "operator":"Exists"},
+            {"key": "node-role.kubernetes.io/master", "effect": "NoSchedule"}
+          ]
 <%- end -%>
     spec:
 <%- if @rbac_enabled -%>
@@ -34,6 +37,8 @@ spec:
       - key: "dedicated"
         value: "master"
         effect: "NoSchedule"
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
 <%- end -%>
       hostNetwork: true
       containers:
