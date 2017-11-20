@@ -29,14 +29,33 @@ class kubernetes::apiserver(
   $_systemd_after = ['network.target'] + $systemd_after
   $_systemd_before = $systemd_before
 
-  # Admission controllers
+  # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
   if $admission_control == undef {
-    # No DefaultStorageClass controller pre 1.4
-    if versioncmp($::kubernetes::version, '1.4.0') >= 0 {
+    if versioncmp($::kubernetes::version, '1.8.0') >= 0 {
+      $_admission_control =  [
+        'Initializers',
+        'NamespaceLifecycle',
+        'LimitRanger',
+        'ServiceAccount',
+        'DefaultStorageClass',
+        'ResourceQuota',
+        'DefaultTolerationSeconds',
+        'NodeRestriction'
+      ]
+    } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+      $_admission_control =  [
+        'NamespaceLifecycle',
+        'LimitRanger',
+        'ServiceAccount',
+        'PersistentVolumeLabel',
+        'DefaultStorageClass',
+        'ResourceQuota',
+        'DefaultTolerationSeconds'
+      ]
+    } elsif versioncmp($::kubernetes::version, '1.4.0') >= 0 {
       $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota']
     } else {
       $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'ResourceQuota']
-
     }
   } else {
     $_admission_control = $admission_control
