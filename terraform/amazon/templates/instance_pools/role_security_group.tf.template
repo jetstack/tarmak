@@ -221,11 +221,12 @@ resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_to_{{.TFName}}" {
 
 {{/* Rules for worker roles */}}
 {{ if .HasWorker }}
-resource "aws_security_group_rule" "{{.TFName}}_allow_kubelet_from_kubernetes_master" {
+# allows everything from master to workers
+resource "aws_security_group_rule" "{{.TFName}}_allow_all_from_kubernetes_master" {
   type                     = "ingress"
-  from_port                = 10250
-  to_port                  = 10250
-  protocol                 = "tcp"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
   source_security_group_id = "${aws_security_group.kubernetes_master.id}"
   security_group_id        = "${aws_security_group.{{.TFName}}.id}"
 }
