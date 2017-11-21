@@ -10,6 +10,8 @@ class kubernetes::apiserver(
   $etcd_ca_file = undef,
   $etcd_cert_file = undef,
   $etcd_key_file = undef,
+  $kubelet_client_cert_file = undef,
+  $kubelet_client_key_file = undef,
   $ca_file = undef,
   $cert_file = undef,
   $key_file = undef,
