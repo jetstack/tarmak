@@ -11,6 +11,7 @@ class kubernetes::kubelet(
   $ca_file = undef,
   $cert_file = undef,
   $key_file = undef,
+  $client_ca_file = undef,
   $node_labels = undef,
   $node_taints = undef,
   $pod_cidr = undef,
