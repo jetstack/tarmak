@@ -1,7 +1,7 @@
 # Copyright Jetstack Ltd. See LICENSE for details.
 PACKAGE_NAME ?= github.com/jetstack/tarmak
 
-BINDIR ?= $(PWD)/bin
+BINDIR ?= $(CURDIR)/bin
 PATH   := $(BINDIR):$(PATH)
 
 CI_COMMIT_TAG ?= unknown
@@ -11,6 +11,8 @@ CI_COMMIT_SHA ?= unknown
 TYPES_FILES = $(shell find pkg/apis -name types.go)
 
 HACK_DIR     ?= hack
+
+GOPATH ?= /tmp/go
 
 help:
 	# all       - runs verify, build targets
