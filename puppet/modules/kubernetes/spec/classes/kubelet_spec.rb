@@ -6,6 +6,10 @@ describe 'kubernetes::kubelet' do
       '/etc/systemd/system/kubelet.service'
   end
 
+  let :kubeconfig_file do
+      '/etc/kubernetes/kubeconfig-kubelet'
+  end
+
   context 'defaults' do
     it do
       should contain_file(service_file).with_content(/--register-node=true/)
@@ -140,14 +144,16 @@ describe 'kubernetes::kubelet' do
 
 
   context 'flag --client-ca-file' do
-    let(:params) { {'ca_file' => '/tmp/ca.pem' } }
+    let(:params) {{
+      'client_ca_file' => '/tmp/client_ca.pem'
+    }}
     context 'versions before 1.5' do
       let(:pre_condition) {[
         """
         class{'kubernetes': version => '1.4.8'}
         """
       ]}
-      it { should_not contain_file(service_file).with_content(%r{--client-ca-file=/tmp/ca\.pem}) }
+      it { should_not contain_file(service_file).with_content(%r{--client-ca-file=/tmp/client_ca\.pem}) }
     end
 
     context 'versions 1.5+' do
@@ -156,7 +162,9 @@ describe 'kubernetes::kubelet' do
         class{'kubernetes': version => '1.5.0'}
         """
       ]}
-      it { should contain_file(service_file).with_content(%r{--client-ca-file=/tmp/ca\.pem}) }
+      it {
+        should contain_file(service_file).with_content(%r{--client-ca-file=/tmp/client_ca\.pem})
+      }
     end
   end
 

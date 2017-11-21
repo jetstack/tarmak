@@ -30,7 +30,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @kubeconfig_path -%>
   --kubeconfig=<%= @kubeconfig_path %> \
 <% if scope.function_versioncmp([scope['kubernetes::version'], '1.4.0']) >= 0 -%>
+<% if scope.function_versioncmp([scope['kubernetes::version'], '1.8.0']) < 0 -%>
   --require-kubeconfig \
+<% end -%>
 <% else -%>
   --api-servers=<%= scope['kubernetes::master_url'] %> \
 <% end -%>
@@ -58,8 +60,11 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @container_runtime -%>
   --container-runtime=<%= @container_runtime %> \
 <% end -%>
-<% if @_ca_file and scope.function_versioncmp([scope['kubernetes::version'], '1.5.0']) >= 0 -%>
-  --client-ca-file=<%= @_ca_file %> \
+<% if @client_ca_file and scope.function_versioncmp([scope['kubernetes::version'], '1.5.0']) >= 0 -%>
+  --client-ca-file=<%= @client_ca_file %> \
+  --anonymous-auth=false \
+  --authentication-token-webhook \
+  --authorization-mode=Webhook \
 <% end -%>
 <% # Kubernetes older than 1.7 has issues with kernel 4.9+ -%>
 <% if not @kernelversion.nil? and scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 and scope.function_versioncmp([scope['kubernetes::version'], '1.7.0']) < 0 and scope.function_versioncmp([@kernelversion, '4.9']) >= 0 -%>

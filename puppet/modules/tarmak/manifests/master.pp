@@ -86,17 +86,27 @@ class tarmak::master(
   }
 
   class { 'kubernetes::apiserver':
-      ca_file          => "${apiserver_base_path}-ca.pem",
-      key_file         => "${apiserver_base_path}-key.pem",
-      cert_file        => "${apiserver_base_path}.pem",
-      etcd_ca_file     => "${etcd_apiserver_base_path}-ca.pem",
-      etcd_key_file    => "${etcd_apiserver_base_path}-key.pem",
-      etcd_cert_file   => "${etcd_apiserver_base_path}.pem",
-      etcd_port        => $::tarmak::etcd_k8s_main_client_port,
-      etcd_events_port => $::tarmak::etcd_k8s_events_client_port,
-      etcd_nodes       => $::tarmak::_etcd_cluster,
-      systemd_after    => ['kube-apiserver-cert.service', 'kube-service-account-key-secret.service'],
-      systemd_requires => ['kube-apiserver-cert.service', 'kube-service-account-key-secret.service'],
+      ca_file                  => "${apiserver_base_path}-ca.pem",
+      key_file                 => "${apiserver_base_path}-key.pem",
+      cert_file                => "${apiserver_base_path}.pem",
+      etcd_ca_file             => "${etcd_apiserver_base_path}-ca.pem",
+      etcd_key_file            => "${etcd_apiserver_base_path}-key.pem",
+      etcd_cert_file           => "${etcd_apiserver_base_path}.pem",
+      etcd_port                => $::tarmak::etcd_k8s_main_client_port,
+      etcd_events_port         => $::tarmak::etcd_k8s_events_client_port,
+      etcd_nodes               => $::tarmak::_etcd_cluster,
+      kubelet_client_key_file  => "${admin_base_path}-key.pem",
+      kubelet_client_cert_file => "${admin_base_path}.pem",
+      systemd_after            => [
+        'kube-apiserver-cert.service',
+        'kube-admin-cert.service',
+        'kube-service-account-key-secret.service'
+      ],
+      systemd_requires         => [
+        'kube-apiserver-cert.service',
+        'kube-admin-cert.service',
+        'kube-service-account-key-secret.service'
+      ],
   }
 
   class { 'kubernetes::controller_manager':
@@ -124,6 +134,7 @@ class tarmak::master(
   Service['kube-scheduler-cert.service'] -> Service['kube-scheduler.service']
   Service['kube-controller-manager-cert.service'] -> Service['kube-controller-manager.service']
   Service['kube-apiserver-cert.service'] -> Service['kube-apiserver.service']
+  Service['kube-admin-cert.service'] -> Service['kube-apiserver.service']
   Service['kube-service-account-key-secret.service'] -> Service['kube-controller-manager.service']
   Service['kube-service-account-key-secret.service'] -> Service['kube-apiserver.service']
   Service['kube-admin-cert.service'] -> Kubernetes::Apply <||>
