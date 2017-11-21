@@ -31,6 +31,12 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if scope['kubernetes::apiserver::key_file'] -%>
   --tls-private-key-file=<%= scope['kubernetes::apiserver::key_file'] %> \
 <% end -%>
+<% if @kubelet_client_cert_file -%>
+  --kubelet-client-certificate=<%= @kubelet_client_cert_file %> \
+<% end -%>
+<% if @kubelet_client_key_file -%>
+  --kubelet-client-key=<%= @kubelet_client_key_file %> \
+<% end -%>
   "--etcd-servers=<%= @etcd_servers %>" \
   "--etcd-quorum-read=true" \
 <% @etcd_servers_overrides.each do |override| -%>
