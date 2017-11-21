@@ -12,12 +12,22 @@ describe '::kubernetes' do
     "test-#{SecureRandom.hex}"
   end
 
+  let :kubernetes_version do
+    if not ENV['KUBERNETES_VERSION'].nil?
+      "version => '#{ENV['KUBERNETES_VERSION']}',"
+    else
+      ''
+    end
+  end
+
   context 'test master and worker on a single node, no tls' do
     let :pp do
       "
 class{'kubernetes':
   cluster_name                 => '#{cluster_name}',
   service_account_key_generate => true,
+  apiserver_insecure_port => 8080,
+  #{kubernetes_version}
 }
 class{'kubernetes::master':
   disable_kubelet => true,

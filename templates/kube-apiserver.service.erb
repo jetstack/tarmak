@@ -16,6 +16,12 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% else -%>
   --allow-privileged=false \
 <% end -%>
+<% if @secure_port -%>
+  --secure-port=<%= @secure_port %> \
+<% end -%>
+<% if @insecure_port -%>
+  --insecure-port=<%= @insecure_port %> \
+<% end -%>
 <% if @insecure_bind_address -%>
   --insecure-bind-address=<%= @insecure_bind_address %> \
 <% end -%>
