@@ -14,3 +14,7 @@ script:
   - make -C docs spelling
   - make -C docs linkcheck
   - make -C docs html
+
+branches:
+  only:
+    - master
