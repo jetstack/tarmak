@@ -4,6 +4,7 @@ resource "aws_elb" "{{.TFName}}" {
   name         = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
   subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
   internal     = true
+  idle_timeout = 3600
 
   security_groups = [
     "${aws_security_group.{{.TFName}}_elb.id}",
