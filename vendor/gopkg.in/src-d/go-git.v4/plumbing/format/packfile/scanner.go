@@ -8,10 +8,12 @@ import (
 	"hash"
 	"hash/crc32"
 	"io"
-	"io/ioutil"
+	stdioutil "io/ioutil"
+	"sync"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/utils/binary"
+	"gopkg.in/src-d/go-git.v4/utils/ioutil"
 )
 
 var (
@@ -38,6 +40,7 @@ type ObjectHeader struct {
 
 type Scanner struct {
 	r   reader
+	zr  readerResetter
 	crc hash.Hash32
 
 	// pendingObject is used to detect if an object has been read, or still
@@ -197,7 +200,7 @@ func (s *Scanner) discardObjectIfNeeded() error {
 	}
 
 	h := s.pendingObject
-	n, _, err := s.NextObject(ioutil.Discard)
+	n, _, err := s.NextObject(stdioutil.Discard)
 	if err != nil {
 		return err
 	}
@@ -274,24 +277,36 @@ func (s *Scanner) NextObject(w io.Writer) (written int64, crc32 uint32, err erro
 
 // ReadRegularObject reads and write a non-deltified object
 // from it zlib stream in an object entry in the packfile.
-func (s *Scanner) copyObject(w io.Writer) (int64, error) {
-	zr, err := zlib.NewReader(s.r)
-	if err != nil {
-		return -1, fmt.Errorf("zlib reading error: %s", err)
+func (s *Scanner) copyObject(w io.Writer) (n int64, err error) {
+	if s.zr == nil {
+		zr, err := zlib.NewReader(s.r)
+		if err != nil {
+			return 0, fmt.Errorf("zlib initialization error: %s", err)
+		}
+
+		s.zr = zr.(readerResetter)
+	} else {
+		if err := s.zr.Reset(s.r, nil); err != nil {
+			return 0, fmt.Errorf("zlib reset error: %s", err)
+		}
 	}
 
-	defer func() {
-		closeErr := zr.Close()
-		if err == nil {
-			err = closeErr
-		}
-	}()
-
-	return io.Copy(w, zr)
+	defer ioutil.CheckClose(s.zr, &err)
+	buf := byteSlicePool.Get().([]byte)
+	n, err = io.CopyBuffer(w, s.zr, buf)
+	byteSlicePool.Put(buf)
+	return
 }
 
-// Seek sets a new offset from start, returns the old position before the change
-func (s *Scanner) Seek(offset int64) (previous int64, err error) {
+var byteSlicePool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 32*1024)
+	},
+}
+
+// SeekFromStart sets a new offset from start, returns the old position before
+// the change.
+func (s *Scanner) SeekFromStart(offset int64) (previous int64, err error) {
 	// if seeking we assume that you are not interested on the header
 	if s.version == 0 {
 		s.version = VersionSupported
@@ -318,7 +333,9 @@ func (s *Scanner) Checksum() (plumbing.Hash, error) {
 
 // Close reads the reader until io.EOF
 func (s *Scanner) Close() error {
-	_, err := io.Copy(ioutil.Discard, s.r)
+	buf := byteSlicePool.Get().([]byte)
+	_, err := io.CopyBuffer(stdioutil.Discard, s.r, buf)
+	byteSlicePool.Put(buf)
 	return err
 }
 
@@ -368,6 +385,11 @@ func (r *bufferedSeeker) Seek(offset int64, whence int) (int64, error) {
 
 	defer r.Reader.Reset(r.r)
 	return r.r.Seek(offset, whence)
+}
+
+type readerResetter interface {
+	io.ReadCloser
+	zlib.Resetter
 }
 
 type reader interface {

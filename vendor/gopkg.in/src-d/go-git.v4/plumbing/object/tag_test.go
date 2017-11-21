@@ -3,9 +3,10 @@ package object
 import (
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
-	"gopkg.in/src-d/go-git.v4/fixtures"
+	"github.com/src-d/go-git-fixtures"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/storage/filesystem"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
@@ -233,33 +234,32 @@ func (s *TagSuite) TestString(c *C) {
 	)
 }
 
-func (s *TagSuite) TestTagToTagString(c *C) {
+func (s *TagSuite) TestStringNonCommit(c *C) {
 	store := memory.NewStorage()
 
-	tagOneHash := plumbing.NewHash("TAGONE")
-	tagTwoHash := plumbing.NewHash("TAGTWO")
-
-	tagOne := &Tag{
-		Target:     tagTwoHash,
-		Hash:       tagOneHash,
+	target := &Tag{
+		Target:     plumbing.NewHash("TAGONE"),
 		Name:       "TAG ONE",
+		Message:    "tag one",
 		TargetType: plumbing.TagObject,
 	}
-	tagTwo := &Tag{
-		Target:     tagOneHash,
-		Hash:       tagTwoHash,
+
+	targetObj := &plumbing.MemoryObject{}
+	target.Encode(targetObj)
+	store.SetEncodedObject(targetObj)
+
+	tag := &Tag{
+		Target:     targetObj.Hash(),
 		Name:       "TAG TWO",
+		Message:    "tag two",
 		TargetType: plumbing.TagObject,
 	}
-	oOne := &plumbing.MemoryObject{}
-	tagOne.Encode(oOne)
-	oTwo := &plumbing.MemoryObject{}
-	tagTwo.Encode(oTwo)
 
-	store.SetEncodedObject(oOne)
-	store.SetEncodedObject(oTwo)
+	tagObj := &plumbing.MemoryObject{}
+	tag.Encode(tagObj)
+	store.SetEncodedObject(tagObj)
 
-	tag, err := GetTag(store, tagOneHash)
+	tag, err := GetTag(store, tagObj.Hash())
 	c.Assert(err, IsNil)
 
 	c.Assert(tag.String(), Equals,
@@ -267,5 +267,21 @@ func (s *TagSuite) TestTagToTagString(c *C) {
 			"Tagger:  <>\n"+
 			"Date:   Mon Jan 01 00:00:00 0001 +0000\n"+
 			"\n"+
-			"\n")
+			"tag two\n")
+}
+
+func (s *TagSuite) TestLongTagNameSerialization(c *C) {
+	encoded := &plumbing.MemoryObject{}
+	decoded := &Tag{}
+	tag := s.tag(c, plumbing.NewHash("b742a2a9fa0afcfa9a6fad080980fbc26b007c69"))
+
+	longName := "my tag: name " + strings.Repeat("test", 4096) + " OK"
+	tag.Name = longName
+
+	err := tag.Encode(encoded)
+	c.Assert(err, IsNil)
+
+	err = decoded.Decode(encoded)
+	c.Assert(err, IsNil)
+	c.Assert(decoded.Name, Equals, longName)
 }

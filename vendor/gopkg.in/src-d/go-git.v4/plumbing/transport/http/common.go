@@ -1,14 +1,69 @@
-// Package http implements a HTTP client for go-git.
+// Package http implements the HTTP transport protocol.
 package http
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/protocol/packp"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 )
+
+// it requires a bytes.Buffer, because we need to know the length
+func applyHeadersToRequest(req *http.Request, content *bytes.Buffer, host string, requestType string) {
+	req.Header.Add("User-Agent", "git/1.0")
+	req.Header.Add("Host", host) // host:port
+
+	if content == nil {
+		req.Header.Add("Accept", "*/*")
+		return
+	}
+
+	req.Header.Add("Accept", fmt.Sprintf("application/x-%s-result", requestType))
+	req.Header.Add("Content-Type", fmt.Sprintf("application/x-%s-request", requestType))
+	req.Header.Add("Content-Length", strconv.Itoa(content.Len()))
+}
+
+func advertisedReferences(s *session, serviceName string) (*packp.AdvRefs, error) {
+	url := fmt.Sprintf(
+		"%s/info/refs?service=%s",
+		s.endpoint.String(), serviceName,
+	)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	s.applyAuthToRequest(req)
+	applyHeadersToRequest(req, nil, s.endpoint.Host, serviceName)
+	res, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := NewErr(res); err != nil {
+		_ = res.Body.Close()
+		return nil, err
+	}
+
+	ar := packp.NewAdvRefs()
+	if err := ar.Decode(res.Body); err != nil {
+		if err == packp.ErrEmptyAdvRefs {
+			err = transport.ErrEmptyRemoteRepository
+		}
+
+		return nil, err
+	}
+
+	transport.FilterUnsupportedCapabilities(ar.Capabilities)
+	s.advRefs = ar
+
+	return ar, nil
+}
 
 type client struct {
 	c *http.Client
@@ -25,7 +80,7 @@ var DefaultClient = NewClient(nil)
 // Note that for HTTP client cannot distinguist between private repositories and
 // unexistent repositories on GitHub. So it returns `ErrAuthorizationRequired`
 // for both.
-func NewClient(c *http.Client) transport.Client {
+func NewClient(c *http.Client) transport.Transport {
 	if c == nil {
 		return &client{http.DefaultClient}
 	}
@@ -35,33 +90,41 @@ func NewClient(c *http.Client) transport.Client {
 	}
 }
 
-func (c *client) NewFetchPackSession(ep transport.Endpoint) (
-	transport.FetchPackSession, error) {
+func (c *client) NewUploadPackSession(ep *transport.Endpoint, auth transport.AuthMethod) (
+	transport.UploadPackSession, error) {
 
-	return newFetchPackSession(c.c, ep), nil
+	return newUploadPackSession(c.c, ep, auth)
 }
 
-func (c *client) NewSendPackSession(ep transport.Endpoint) (
-	transport.SendPackSession, error) {
+func (c *client) NewReceivePackSession(ep *transport.Endpoint, auth transport.AuthMethod) (
+	transport.ReceivePackSession, error) {
 
-	return newSendPackSession(c.c, ep), nil
+	return newReceivePackSession(c.c, ep, auth)
 }
 
 type session struct {
 	auth     AuthMethod
 	client   *http.Client
-	endpoint transport.Endpoint
+	endpoint *transport.Endpoint
 	advRefs  *packp.AdvRefs
 }
 
-func (s *session) SetAuth(auth transport.AuthMethod) error {
-	a, ok := auth.(AuthMethod)
-	if !ok {
-		return transport.ErrInvalidAuthMethod
+func newSession(c *http.Client, ep *transport.Endpoint, auth transport.AuthMethod) (*session, error) {
+	s := &session{
+		auth:     basicAuthFromEndpoint(ep),
+		client:   c,
+		endpoint: ep,
+	}
+	if auth != nil {
+		a, ok := auth.(AuthMethod)
+		if !ok {
+			return nil, transport.ErrInvalidAuthMethod
+		}
+
+		s.auth = a
 	}
 
-	s.auth = a
-	return nil
+	return s, nil
 }
 
 func (*session) Close() error {
@@ -82,29 +145,18 @@ type AuthMethod interface {
 	setAuth(r *http.Request)
 }
 
-func basicAuthFromEndpoint(ep transport.Endpoint) *BasicAuth {
-	info := ep.User
-	if info == nil {
+func basicAuthFromEndpoint(ep *transport.Endpoint) *BasicAuth {
+	u := ep.User
+	if u == "" {
 		return nil
 	}
 
-	p, ok := info.Password()
-	if !ok {
-		return nil
-	}
-
-	u := info.Username()
-	return NewBasicAuth(u, p)
+	return &BasicAuth{u, ep.Password}
 }
 
 // BasicAuth represent a HTTP basic auth
 type BasicAuth struct {
-	username, password string
-}
-
-// NewBasicAuth returns a basicAuth base on the given user and password
-func NewBasicAuth(username, password string) *BasicAuth {
-	return &BasicAuth{username, password}
+	Username, Password string
 }
 
 func (a *BasicAuth) setAuth(r *http.Request) {
@@ -112,7 +164,7 @@ func (a *BasicAuth) setAuth(r *http.Request) {
 		return
 	}
 
-	r.SetBasicAuth(a.username, a.password)
+	r.SetBasicAuth(a.Username, a.Password)
 }
 
 // Name is name of the auth
@@ -122,11 +174,11 @@ func (a *BasicAuth) Name() string {
 
 func (a *BasicAuth) String() string {
 	masked := "*******"
-	if a.password == "" {
+	if a.Password == "" {
 		masked = "<empty>"
 	}
 
-	return fmt.Sprintf("%s - %s:%s", a.Name(), a.username, masked)
+	return fmt.Sprintf("%s - %s:%s", a.Name(), a.Username, masked)
 }
 
 // Err is a dedicated error to return errors based on status code
@@ -142,7 +194,9 @@ func NewErr(r *http.Response) error {
 
 	switch r.StatusCode {
 	case http.StatusUnauthorized:
-		return transport.ErrAuthorizationRequired
+		return transport.ErrAuthenticationRequired
+	case http.StatusForbidden:
+		return transport.ErrAuthorizationFailed
 	case http.StatusNotFound:
 		return transport.ErrRepositoryNotFound
 	}

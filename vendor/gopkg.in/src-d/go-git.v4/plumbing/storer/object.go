@@ -38,6 +38,14 @@ type EncodedObjectStorer interface {
 	IterEncodedObjects(plumbing.ObjectType) (EncodedObjectIter, error)
 }
 
+// DeltaObjectStorer is an EncodedObjectStorer that can return delta
+// objects.
+type DeltaObjectStorer interface {
+	// DeltaObject is the same as EncodedObject but without resolving deltas.
+	// Deltas will be returned as plumbing.DeltaObject instances.
+	DeltaObject(plumbing.ObjectType, plumbing.Hash) (plumbing.EncodedObject, error)
+}
+
 // Transactioner is a optional method for ObjectStorer, it enable transaction
 // base write and read operations in the storage
 type Transactioner interface {
@@ -115,7 +123,7 @@ func (iter *EncodedObjectLookupIter) Next() (plumbing.EncodedObject, error) {
 }
 
 // ForEach call the cb function for each object contained on this iter until
-// an error happends or the end of the iter is reached. If ErrStop is sent
+// an error happens or the end of the iter is reached. If ErrStop is sent
 // the iteration is stop but no error is returned. The iterator is closed.
 func (iter *EncodedObjectLookupIter) ForEach(cb func(plumbing.EncodedObject) error) error {
 	return ForEachIterator(iter, cb)
@@ -160,7 +168,7 @@ func (iter *EncodedObjectSliceIter) Next() (plumbing.EncodedObject, error) {
 }
 
 // ForEach call the cb function for each object contained on this iter until
-// an error happends or the end of the iter is reached. If ErrStop is sent
+// an error happens or the end of the iter is reached. If ErrStop is sent
 // the iteration is stop but no error is returned. The iterator is closed.
 func (iter *EncodedObjectSliceIter) ForEach(cb func(plumbing.EncodedObject) error) error {
 	return ForEachIterator(iter, cb)
@@ -205,7 +213,7 @@ func (iter *MultiEncodedObjectIter) Next() (plumbing.EncodedObject, error) {
 }
 
 // ForEach call the cb function for each object contained on this iter until
-// an error happends or the end of the iter is reached. If ErrStop is sent
+// an error happens or the end of the iter is reached. If ErrStop is sent
 // the iteration is stop but no error is returned. The iterator is closed.
 func (iter *MultiEncodedObjectIter) ForEach(cb func(plumbing.EncodedObject) error) error {
 	return ForEachIterator(iter, cb)
