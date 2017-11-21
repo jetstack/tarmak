@@ -33,9 +33,10 @@ class tarmak::worker {
   }
 
   class { 'kubernetes::kubelet':
-      ca_file   => "${kubelet_base_path}-ca.pem",
-      key_file  => "${kubelet_base_path}-key.pem",
-      cert_file => "${kubelet_base_path}.pem",
+      ca_file        => "${kubelet_base_path}-ca.pem",
+      key_file       => "${kubelet_base_path}-key.pem",
+      cert_file      => "${kubelet_base_path}.pem",
+      client_ca_file => "${kubelet_base_path}-ca.pem",
   }
 
   class { 'kubernetes::proxy':
