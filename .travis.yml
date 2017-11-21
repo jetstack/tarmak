@@ -10,7 +10,11 @@ install:
   - make depend
   - make -C docs .venv
 script:
-  - make verify build
+  - make all
   - make -C docs spelling
   - make -C docs linkcheck
   - make -C docs html
+
+branches:
+  only:
+    - master

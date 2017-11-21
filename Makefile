@@ -1,7 +1,7 @@
 # Copyright Jetstack Ltd. See LICENSE for details.
 PACKAGE_NAME ?= github.com/jetstack/tarmak
 
-BINDIR ?= $(PWD)/bin
+BINDIR ?= $(CURDIR)/bin
 PATH   := $(BINDIR):$(PATH)
 
 CI_COMMIT_TAG ?= unknown
@@ -11,6 +11,8 @@ CI_COMMIT_SHA ?= unknown
 TYPES_FILES = $(shell find pkg/apis -name types.go)
 
 HACK_DIR     ?= hack
+
+GOPATH ?= /tmp/go
 
 help:
 	# all       - runs verify, build targets
@@ -88,7 +90,12 @@ $(BINDIR)/informer-gen:
 	mkdir -p $(BINDIR)
 	go build -o $@ ./vendor/k8s.io/code-generator/cmd/informer-gen
 
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen
+$(BINDIR)/dep:
+	curl -sL -o $@ https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64
+	echo "322152b8b50b26e5e3a7f6ebaeb75d9c11a747e64bbfd0d8bb1f4d89a031c2b5  $@" | sha256sum -c
+	chmod +x $@
+
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
@@ -132,7 +139,7 @@ verify_boilerplate:
 verify_client_gen:
 	$(HACK_DIR)/verify-client-gen.sh
 
-verify_vendor:
+verify_vendor: $(BINDIR)/dep
 	dep ensure -no-vendor -dry-run -v
 
 SUBTREES = etcd calico aws_ebs kubernetes kubernetes_addons prometheus tarmak vault_client

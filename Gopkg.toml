@@ -69,3 +69,7 @@ required = [
 [[constraint]]
   name = "k8s.io/code-generator"
   branch = "release-1.8"
+
+[[constraint]]
+  name = "gopkg.in/src-d/go-git.v4"
+  revision = "b08cc8dc5450981530af3e6f6ad1159ae8ea8705"

@@ -6,7 +6,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT=$(dirname "${BASH_SOURCE}")/..
+REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE}")/.."; pwd)
 BINDIR=${REPO_ROOT}/bin
 
 # Generate the internal clientset (pkg/client/clientset_generated/internalclientset)

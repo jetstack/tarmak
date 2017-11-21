@@ -133,6 +133,9 @@ func (s *Subtree) TestSubtreeUpstream(t *testing.T) {
 		remote, err = g.CreateRemote(&config.RemoteConfig{
 			Name: remoteName,
 			URLs: []string{s.RemoteRepository},
+			Fetch: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("+refs/heads/*:refs/remotes/%s/*", remoteName)),
+			},
 		})
 		if err != nil {
 			t.Fatalf("error creating remote: %s", err)
@@ -144,35 +147,34 @@ func (s *Subtree) TestSubtreeUpstream(t *testing.T) {
 		remoteFetched = true
 	}
 
-	// walk through commit in remote to find reference
-	refName := plumbing.ReferenceName(filepath.Join("refs/remotes", remoteName, s.RemoteRef))
-	ref, err := g.Reference(refName, true)
-	if err != nil {
-		t.Fatalf("error resolving ref '%s': %s", refName, err)
-	}
-
-	commitIter, err := g.Log(&git.LogOptions{From: ref.Hash()})
-	if err != nil {
-		t.Fatalf("error iterating ref '%s': %s", refName, err)
-	}
-
 	for {
-		commit, err := commitIter.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			t.Fatalf("error while iterating: %s", err)
-			return
-		}
-		if commit.Hash.String() == subtreeHash {
-			s.log.Info("commit found upstream")
-			return
-		}
-	}
 
-	if !remoteFetched {
-		// TODO: refetch and retest for commit
+		refName := plumbing.ReferenceName(filepath.Join("refs/remotes", remoteName, s.RemoteRef))
+		ref, err := g.Reference(refName, true)
+		if err != nil {
+			t.Fatalf("error resolving ref '%s': %s", refName, err)
+		}
+
+		found, err := commitInRemote(g, ref, subtreeHash)
+		if err != nil {
+			t.Fatalf("error iterating ref '%s': %s", refName, err)
+		}
+
+		if found {
+			return
+		}
+
+		// if haven't fetched, fetch now and retest
+		if !remoteFetched {
+			if err := remote.Fetch(remoteFetchOptions); err != nil {
+				break
+			}
+			remoteFetched = true
+			continue
+		}
+
+		break
+
 	}
 
 	t.Fatalf(
@@ -182,5 +184,27 @@ func (s *Subtree) TestSubtreeUpstream(t *testing.T) {
 		s.RemoteRepository,
 		s.RemoteRef,
 	)
+}
 
+// walk through commit in remote to find reference
+func commitInRemote(g *git.Repository, ref *plumbing.Reference, commitHash string) (found bool, err error) {
+	commitIter, err := g.Log(&git.LogOptions{From: ref.Hash()})
+	if err != nil {
+		return false, err
+	}
+
+	for {
+		commit, err := commitIter.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return false, err
+		}
+		if commit.Hash.String() == commitHash {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
