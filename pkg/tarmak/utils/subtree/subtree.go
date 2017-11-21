@@ -133,6 +133,9 @@ func (s *Subtree) TestSubtreeUpstream(t *testing.T) {
 		remote, err = g.CreateRemote(&config.RemoteConfig{
 			Name: remoteName,
 			URLs: []string{s.RemoteRepository},
+			Fetch: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("+refs/heads/*:refs/remotes/%s/*", remoteName)),
+			},
 		})
 		if err != nil {
 			t.Fatalf("error creating remote: %s", err)
