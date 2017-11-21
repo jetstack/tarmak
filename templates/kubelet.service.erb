@@ -34,7 +34,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --require-kubeconfig \
 <% end -%>
 <% else -%>
-  --api-servers=<%= scope['kubernetes::master_url'] %> \
+  --api-servers=<%= scope['kubernetes::_master_url'] %> \
 <% end -%>
 <% end -%>
 <% if @_node_labels_string and @_node_labels_string.length > 0 -%>
