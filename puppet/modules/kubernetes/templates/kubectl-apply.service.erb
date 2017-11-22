@@ -11,7 +11,11 @@ TimeoutStartSec=600
 Environment=KUBECONFIG=<%= scope['kubernetes::kubectl::kubeconfig_path'] %>
 RemainAfterExit=yes
 # Wait for API server to be healthy
-ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
+<%- if scope['kubernetes::_apiserver_insecure_port'] == 0 %>
+ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -k -w '%{http_code}' https://localhost:<%= scope['kubernetes::apiserver_secure_port'] %>/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
+<%- else -%>
+ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:<%= scope['kubernetes::_apiserver_insecure_port'] %>/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
+<%- end -%>
 # Apply template
 ExecStart=<%= @kubectl_path %> apply -f <%= @apply_file %>
 
