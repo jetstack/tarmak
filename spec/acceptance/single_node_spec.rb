@@ -65,6 +65,10 @@ class{'tarmak::single_node':
         # reset firewall
         on host, "iptables -F INPUT"
 
+        # setup kubectl in path with correct kubeconfig
+        on host, "echo -e '#!/bin/sh\nKUBECONFIG=/etc/kubernetes/kubeconfig-kubectl exec /opt/bin/kubectl $@' > /usr/bin/kubectl"
+        on host, "chmod +x /usr/bin/kubectl"
+
         # ensure no swap space is mounted
         on host, "swapoff -a"
 
@@ -89,24 +93,24 @@ class{'tarmak::single_node':
 
     it 'should setup a healthy master', :retry => 20, :retry_wait => 5 do
       # verify master setup
-      result = shell('/opt/bin/kubectl version')
+      result = shell('kubectl version')
       logger.notify "kubectl version:\n#{result.stdout}"
       expect(result.exit_code).to eq(0)
-      result = shell('/opt/bin/kubectl get cs')
+      result = shell('kubectl get cs')
       logger.notify "kubectl get cs:\n#{result.stdout}"
       expect(result.exit_code).to eq(0)
       expect(result.stdout.scan(/Healthy/m).size).to be >= 2
     end
 
     it 'should have a ready node', :retry => 20, :retry_wait => 5 do
-      result = shell('/opt/bin/kubectl get nodes')
+      result = shell('kubectl get nodes')
       logger.notify "kubectl get nodes:\n#{result.stdout}"
       expect(result.exit_code).to eq(0)
       expect(result.stdout.scan(/Ready/m).size).to eq(1)
     end
 
     it 'should have three ready dns pods', :retry => 20, :retry_wait => 5 do
-      result = shell('/opt/bin/kubectl get pods --namespace kube-system -l k8s-app=kube-dns')
+      result = shell('kubectl get pods --namespace kube-system -l k8s-app=kube-dns')
       logger.notify "kubectl get pods:\n#{result.stdout}"
       expect(result.exit_code).to eq(0)
       expect(result.stdout.scan(/Running/m).size).to eq(3)
@@ -114,7 +118,7 @@ class{'tarmak::single_node':
     end
 
     it 'should have a ready dns autoscaler pod', :retry => 20, :retry_wait => 5 do
-      result = shell('/opt/bin/kubectl get pods --namespace kube-system -l k8s-app=kube-dns-autoscaler')
+      result = shell('kubectl get pods --namespace kube-system -l k8s-app=kube-dns-autoscaler')
       logger.notify "kubectl get pods:\n#{result.stdout}"
       expect(result.exit_code).to eq(0)
       expect(result.stdout.scan(/Running/m).size).to eq(1)
