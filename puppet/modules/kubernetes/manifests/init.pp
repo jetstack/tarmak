@@ -12,7 +12,7 @@ class kubernetes (
   $gid = $::kubernetes::params::gid,
   $user = $::kubernetes::params::user,
   $group = $::kubernetes::params::group,
-  $master_url = $::kubernetes::params::master_url,
+  String $master_url = '',
   $curl_path = $::kubernetes::params::curl_path,
   $ssl_dir = undef,
   $source = undef,
@@ -27,6 +27,8 @@ class kubernetes (
   $allow_privileged = true,
   $service_account_key_file = undef,
   $service_account_key_generate = false,
+  Integer[-1,65535] $apiserver_insecure_port = -1,
+  Integer[0,65535] $apiserver_secure_port = 6443,
   Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $authorization_mode = [],
 ) inherits ::kubernetes::params
 {
@@ -44,6 +46,26 @@ class kubernetes (
     }
   } else {
     $_authorization_mode = $authorization_mode
+  }
+
+  # do not insecure bind the apiserver after 1.5
+  if $apiserver_insecure_port == -1 and versioncmp($version, '1.6.0') < 0 {
+    $_apiserver_insecure_port = 8080
+  } elsif $apiserver_insecure_port == -1 {
+    $_apiserver_insecure_port = 0
+  } else {
+    $_apiserver_insecure_port = $::kubernetes::apiserver_insecure_port
+  }
+
+  # build a good default master URL
+  if $master_url == '' {
+    if $_apiserver_insecure_port == 0  {
+      $_master_url = "https://localhost:${apiserver_secure_port}"
+    } else {
+      $_master_url = "http://127.0.0.1:${_apiserver_insecure_port}"
+    }
+  } else {
+      $_master_url = $master_url
   }
 
   $download_url = regsubst(

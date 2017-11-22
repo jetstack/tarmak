@@ -14,7 +14,6 @@ class kubernetes::params {
   $gid = 873
   $user = 'kubernetes'
   $group = 'kubernetes'
-  $master_url = 'http://127.0.0.1:8080'
   $curl_path = $::osfamily ? {
     'RedHat' => '/bin/curl',
     'Debian' => '/usr/bin/curl',

@@ -63,6 +63,10 @@ class kubernetes::apiserver(
     $_admission_control = $admission_control
   }
 
+  # Do not insecure bind the API server on kubernetes 1.6+
+  $insecure_port = $::kubernetes::_apiserver_insecure_port
+  $secure_port = $::kubernetes::apiserver_secure_port
+
   # Default to etcd3 for versions bigger than 1.5
   if $storage_backend == undef and versioncmp($::kubernetes::version, '1.5.0') >= 0 {
     $_storage_backend = 'etcd3'
