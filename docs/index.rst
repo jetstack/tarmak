@@ -27,3 +27,4 @@ build and deploy Kubernetes in production at scale.
    developer-guide
    known-issues
    existing-vpc
+   vault-setup-config
