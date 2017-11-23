@@ -344,16 +344,16 @@
   revision = "d14ea06fba99483203c19d92cfcd13ebe73135f4"
 
 [[projects]]
-  name = "github.com/jetstack-experimental/vault-helper"
+  name = "github.com/jetstack/vault-helper"
   packages = ["pkg/kubernetes"]
-  revision = "eed4ccd495a9fec3c57a89e7f9ee0d4dfc4b10dd"
-  version = "0.8.8"
+  revision = "9ed2e18241de981cb498f5ea5e1adb6cae6ad532"
+  version = "0.9.2"
 
 [[projects]]
-  name = "github.com/jetstack-experimental/vault-unsealer"
+  name = "github.com/jetstack/vault-unsealer"
   packages = ["pkg/kv","pkg/kv/aws_kms","pkg/kv/aws_ssm","pkg/vault"]
-  revision = ""
-  version = "0.1.4"
+  revision = "4750773f4531cb27794056af0fb9ce52b17a0689"
+  version = "0.2.0"
 
 [[projects]]
   name = "github.com/jmespath/go-jmespath"
@@ -638,6 +638,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "eda3d274508010be5139624a8b8d320bbbe80be5c811340be9f4cee67545f015"
+  inputs-digest = "493534870e5aed975ec30cc34ce2e558c8726f4299b11161ede6fbd2ee2fccff"
   solver-name = "gps-cdcl"
   solver-version = 1

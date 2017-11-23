@@ -11,7 +11,7 @@ import (
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	vault "github.com/hashicorp/vault/api"
-	vaultUnsealer "github.com/jetstack-experimental/vault-unsealer/pkg/vault"
+	vaultUnsealer "github.com/jetstack/vault-unsealer/pkg/vault"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
