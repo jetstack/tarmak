@@ -134,6 +134,54 @@ describe 'kubernetes::apiserver' do
     end
   end
 
+  context 'request header and proxy client options' do
+    let(:params) { {
+      'requestheader_client_ca_file' => '/tmp/proxy-ca.pem',
+      'proxy_client_cert_file' => '/tmp/proxy.pem',
+      'proxy_client_key_file' => '/tmp/proxy-key.pem',
+    } }
+
+    let(:pre_condition) {[
+      """
+        class{'kubernetes':
+          version => '#{kubernetes_version}',
+        }
+      """
+    ]}
+
+    context 'all necessary parameters k8s version 1.5.x' do
+      let(:kubernetes_version) { '1.5.7' }
+      it "should not setup request header options" do
+        should_not contain_file(service_file).with_content(/#{Regexp.escape('--requestheader-client-ca-file=/tmp/proxy-ca.pem')}/)
+        should_not contain_file(service_file).with_content(/#{Regexp.escape('--proxy-client-cert-file=/tmp/proxy.pem')}/)
+        should_not contain_file(service_file).with_content(/#{Regexp.escape('--proxy-client-key-file=/tmp/proxy-key.pem')}/)
+      end
+    end
+
+    context 'all necessary parameters k8s version 1.6.x' do
+      let(:kubernetes_version) { '1.6.12' }
+      it "should not setup request header options" do
+        should contain_file(service_file).with_content(/#{Regexp.escape('--requestheader-client-ca-file=/tmp/proxy-ca.pem')}/)
+        should contain_file(service_file).with_content(/#{Regexp.escape('--proxy-client-cert-file=/tmp/proxy.pem')}/)
+        should contain_file(service_file).with_content(/#{Regexp.escape('--proxy-client-key-file=/tmp/proxy-key.pem')}/)
+      end
+    end
+
+    context 'missing parameters k8s version 1.6.x' do
+      let(:params) { {
+        'proxy_client_cert_file' => '/tmp/proxy.pem',
+        'proxy_client_key_file' => '/tmp/proxy-key.pem',
+      } }
+
+      let(:kubernetes_version) { '1.6.12' }
+      it "should not setup request header options" do
+        should_not contain_file(service_file).with_content(/#{Regexp.escape('--requestheader-client-ca-file=/tmp/proxy-ca.pem')}/)
+        should_not contain_file(service_file).with_content(/#{Regexp.escape('--proxy-client-cert-file=/tmp/proxy.pem')}/)
+        should_not contain_file(service_file).with_content(/#{Regexp.escape('--proxy-client-key-file=/tmp/proxy-key.pem')}/)
+      end
+    end
+  end
+
   context 'authorization_mode' do
     let :kubernetes_version do
       '1.6.2'
