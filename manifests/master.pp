@@ -64,6 +64,34 @@ class tarmak::master(
     ],
   }
 
+  $apiserver_dependencies_base =  [
+    'kube-apiserver-cert.service',
+    'kube-admin-cert.service',
+    'kube-service-account-key-secret.service'
+  ]
+
+  if $::tarmak::_kubernetes_api_aggregation {
+    $apiserver_proxy_base_path = "${::tarmak::kubernetes_ssl_dir}/kube-apiserver-proxy"
+    vault_client::cert_service { 'kube-apiserver-proxy':
+      base_path   => $apiserver_proxy_base_path,
+      common_name => 'kube-apiserver-proxy',
+      role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_api_proxy_ca_name}/sign/kube-apiserver",
+      uid         => $::tarmak::kubernetes_uid,
+      exec_post   => [
+        "-${::tarmak::systemctl_path} --no-block try-restart kube-apiserver.service"
+      ],
+    }
+    $apiserver_dependencies = $apiserver_dependencies_base + 'kube-apiserver-proxy-cert.service'
+    $requestheader_client_ca_file = "${apiserver_proxy_base_path}-ca.pem"
+    $proxy_client_cert_file = "${apiserver_proxy_base_path}.pem"
+    $proxy_client_key_file = "${apiserver_proxy_base_path}-key.pem"
+  } else {
+    $apiserver_dependencies = $apiserver_dependencies_base
+    $requestheader_client_ca_file = undef
+    $proxy_client_cert_file = undef
+    $proxy_client_key_file = undef
+  }
+
   $admin_base_path = "${::tarmak::kubernetes_ssl_dir}/kube-admin"
   vault_client::cert_service { 'kube-admin':
     base_path   => $admin_base_path,
@@ -86,27 +114,22 @@ class tarmak::master(
   }
 
   class { 'kubernetes::apiserver':
-      ca_file                  => "${apiserver_base_path}-ca.pem",
-      key_file                 => "${apiserver_base_path}-key.pem",
-      cert_file                => "${apiserver_base_path}.pem",
-      etcd_ca_file             => "${etcd_apiserver_base_path}-ca.pem",
-      etcd_key_file            => "${etcd_apiserver_base_path}-key.pem",
-      etcd_cert_file           => "${etcd_apiserver_base_path}.pem",
-      etcd_port                => $::tarmak::etcd_k8s_main_client_port,
-      etcd_events_port         => $::tarmak::etcd_k8s_events_client_port,
-      etcd_nodes               => $::tarmak::_etcd_cluster,
-      kubelet_client_key_file  => "${admin_base_path}-key.pem",
-      kubelet_client_cert_file => "${admin_base_path}.pem",
-      systemd_after            => [
-        'kube-apiserver-cert.service',
-        'kube-admin-cert.service',
-        'kube-service-account-key-secret.service'
-      ],
-      systemd_requires         => [
-        'kube-apiserver-cert.service',
-        'kube-admin-cert.service',
-        'kube-service-account-key-secret.service'
-      ],
+      ca_file                      => "${apiserver_base_path}-ca.pem",
+      key_file                     => "${apiserver_base_path}-key.pem",
+      cert_file                    => "${apiserver_base_path}.pem",
+      etcd_ca_file                 => "${etcd_apiserver_base_path}-ca.pem",
+      etcd_key_file                => "${etcd_apiserver_base_path}-key.pem",
+      etcd_cert_file               => "${etcd_apiserver_base_path}.pem",
+      etcd_port                    => $::tarmak::etcd_k8s_main_client_port,
+      etcd_events_port             => $::tarmak::etcd_k8s_events_client_port,
+      etcd_nodes                   => $::tarmak::_etcd_cluster,
+      kubelet_client_key_file      => "${admin_base_path}-key.pem",
+      kubelet_client_cert_file     => "${admin_base_path}.pem",
+      systemd_after                => $apiserver_dependencies,
+      systemd_requires             => $apiserver_dependencies,
+      requestheader_client_ca_file => $requestheader_client_ca_file,
+      proxy_client_cert_file       => $proxy_client_cert_file ,
+      proxy_client_key_file        => $proxy_client_key_file,
   }
 
   class { 'kubernetes::controller_manager':
