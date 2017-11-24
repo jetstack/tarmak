@@ -51,6 +51,26 @@ func NewFromConfig(cluster interfaces.Cluster, conf *clusterv1alpha1.InstancePoo
 	}
 	instancePool.instanceType = instanceType
 
+	// validate minCount <= maxCount or minCount == maxCount if role is stateful
+	// if only one of the two values are set, we should default to the other
+	if instancePool.Config().MinCount == 0 && instancePool.Config().MaxCount == 0 {
+		return nil, errors.New("minCount and maxCount both not set or set to 0")
+	}
+
+	if instancePool.Config().MinCount == 0 {
+		instancePool.conf.MinCount = instancePool.conf.MaxCount
+	} else if instancePool.Config().MaxCount == 0 {
+		instancePool.conf.MaxCount = instancePool.conf.MinCount
+	}
+
+	if instancePool.Config().MinCount > instancePool.Config().MaxCount {
+		return nil, fmt.Errorf("minCount is larger than maxCount. minCount=%d maxCount=%d", instancePool.Config().MinCount, instancePool.Config().MaxCount)
+	}
+
+	if instancePool.Role().Stateful && instancePool.Config().MinCount != instancePool.Config().MaxCount {
+		return nil, fmt.Errorf("minCount does not equal maxCount but role is stateful. minCount=%d maxCount=%d", instancePool.Config().MinCount, instancePool.Config().MaxCount)
+	}
+
 	var result error
 
 	count := 0
