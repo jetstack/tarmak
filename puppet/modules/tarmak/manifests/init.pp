@@ -16,6 +16,9 @@
 # @param systemctl_path absoulute path to systemctl binary
 # @param role which role to build
 # @param kubernetes_version Kubernetes version to install
+# @param kubernetes_ca_name Name of the PKI resource in Vault for main Kubernetes CA
+# @param kubernetes_api_proxy_ca_name Name of the PKI resource in Vault for the API server proxy
+# @param kubernetes_api_aggregation Enable API aggregation for Kubernetes, defaults to true for versions 1.7+
 class tarmak (
   String $dest_dir = '/opt',
   String $bin_dir = '/opt/bin',
@@ -28,8 +31,10 @@ class tarmak (
   Integer $kubernetes_uid = 837,
   Integer $kubernetes_gid = 837,
   String $kubernetes_ca_name = 'k8s',
+  String $kubernetes_api_proxy_ca_name = 'k8s-api-proxy',
   String $kubernetes_ssl_dir = '/etc/kubernetes/ssl',
   String $kubernetes_config_dir = '/etc/kubernetes',
+  Optional[Boolean] $kubernetes_api_aggregation = undef,
   Integer[1,65535] $kubernetes_api_insecure_port = 6443,
   Integer[1,65535] $kubernetes_api_secure_port = 8080,
   String $kubernetes_pod_network = '10.234.0.0/16',
@@ -65,6 +70,18 @@ class tarmak (
   String $systemd_dir = '/etc/systemd/system',
 ) inherits ::tarmak::params {
   $ipaddress = $::ipaddress
+
+  # decide if API aggregation should be enabled
+  if $kubernetes_api_aggregation == undef {
+    # enable after 1.7
+    if versioncmp($kubernetes_version, '1.7.0') >= 0 {
+      $_kubernetes_api_aggregation = true
+    } else {
+      $_kubernetes_api_aggregation = false
+    }
+  } else {
+    $_kubernetes_api_aggregation = $kubernetes_api_aggregation
+  }
 
   if $kubernetes_api_url == nil {
       $_kubernetes_api_url = "http://localhost:${$kubernetes_api_insecure_port}"
