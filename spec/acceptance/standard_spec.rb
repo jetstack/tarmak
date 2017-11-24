@@ -1,16 +1,18 @@
 require 'spec_helper_acceptance'
 
 describe '::vault_client' do
-  version = '0.8.8'
+  version = '0.9.2'
 
   before(:all) do
     hosts.each do |host|
-      on host, "iptables -F INPUT"
       if fact_on(host, 'osfamily') == 'RedHat'
         on(host, 'yum install -y unzip')
       elsif fact_on(host, 'osfamily') == 'Debian'
-        on(host, 'apt-get install -y unzip')
+        on(host, 'apt-get install -y unzip iptables')
       end
+
+      on host, "iptables -F INPUT"
+
       on host, 'ln -sf /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.service /etc/systemd/system/vault-dev-server.service'
       on host, 'systemctl daemon-reload'
       on host, 'systemctl start vault-dev-server.service'
