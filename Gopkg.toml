@@ -43,12 +43,12 @@ required = [
   revision = "a0ff2567cfb70903282db057e799fd826784d41d"
 
 [[constraint]]
-  name = "github.com/jetstack-experimental/vault-unsealer"
-  version = "0.1.4"
+  name = "github.com/jetstack/vault-unsealer"
+  version = "0.2.0"
 
 [[constraint]]
-  name = "github.com/jetstack-experimental/vault-helper"
-  version = "0.8.8"
+  name = "github.com/jetstack/vault-helper"
+  version = "0.9.2"
 
 [[constraint]]
   name = "k8s.io/client-go"

@@ -1,0 +1,134 @@
+variables:
+  DOCKER_DRIVER: overlay
+  VAULT_VERSION: 0.7.3
+  VAULT_HASH: 2822164d5dd347debae8b3370f73f9564a037fc18e9adcabca5907201e5aab45
+  GORELEASER_HASH: 634f5eedd1000a1eb675c2ca93bbbc889aa0388df76aea3501d7734616910584
+
+
+
+stages:
+- build
+- deploy
+- docker
+
+build:golang:
+  tags:
+  - docker
+  image: golang:1.9.2-alpine
+  services:
+  - docker:dind
+  script:
+  - apk --update add curl unzip make docker
+  - rm -rf /go/src/github.com/jetstack/vault-helper
+  - mkdir -p /go/src/github.com/jetstack
+  - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
+  - cd /go/src/github.com/jetstack/vault-helper
+  # Installs vault version as specified
+  - curl -sL  https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip > /tmp/vault.zip
+  - echo "${VAULT_HASH}  /tmp/vault.zip" | sha256sum  -c
+  - unzip /tmp/vault.zip
+  - rm /tmp/vault.zip
+  - mv vault /usr/local/bin/vault
+  - chmod +x /usr/local/bin/vault
+  - make all
+  - mv /go/src/github.com/jetstack/vault-helper ${CI_PROJECT_DIR}
+  stage: build
+  artifacts:
+    paths:
+    - vault-helper_linux_amd64
+    expire_in: 4 weeks
+
+deploy:release:
+  image: golang:1.9.2-alpine
+  stage: deploy
+  tags:
+  - docker
+  script:
+  - apk --update add curl unzip make git docker
+  - umask 0077
+  - mkdir -p /root/.gnupg
+  - echo "${GPG_PRIVATE_KEY}" | base64 -d > /root/.gnupg/secring.gpg
+  - curl -sL https://github.com/simonswine/goreleaser/releases/download/v0.36.0-gpg/goreleaser_Linux_x86_64.tar.gz > /tmp/goreleaser.tar.gz
+  - echo "${GORELEASER_HASH}  /tmp/goreleaser.tar.gz" | sha256sum -c
+  - cd /usr/local/bin && tar xvfz /tmp/goreleaser.tar.gz goreleaser
+  - rm -rf /go/src/github.com/jetstack/vault-helper
+  - mkdir -p /go/src/github.com/jetstack
+  - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
+  - cd /go/src/github.com/jetstack/vault-helper
+  - goreleaser
+  - mv "dist/vault-helper_${CI_COMMIT_TAG}_linux_amd64/vault-helper_${CI_COMMIT_TAG}_linux_amd64" vault-helper_linux_amd64
+  - mv /go/src/github.com/jetstack/vault-helper ${CI_PROJECT_DIR}
+  only:
+  - tags
+  artifacts:
+    paths:
+    - vault-helper_linux_amd64
+  services:
+  - docker:dind
+
+docker:image:
+  image: docker:latest
+  stage: docker
+  tags:
+  - docker
+  script:
+  - apk --update add make docker
+  - mkdir -p ~/.docker && echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json && chmod 600 ~/.docker/config.json
+  - make image save
+  only:
+  - master
+  except:
+  - tags
+  services:
+  - docker:dind
+
+docker:image_tagged:
+  image: docker:latest
+  stage: docker
+  tags:
+  - docker
+  script:
+  - apk --update add make docker
+  - mkdir -p ~/.docker && echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json && chmod 600 ~/.docker/config.json
+  - make image save
+  only:
+  - tags
+  except:
+  - master
+  services:
+  - docker:dind
+
+docker:master_build_push:
+  before_script: []
+  after_script: []
+  image: docker:1.12
+  stage: docker
+  tags:
+  - docker
+  services:
+  - docker:dind
+  script:
+  - apk --update add make docker
+  - mkdir -p ~/.docker && echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json && chmod 600 ~/.docker/config.json
+  - make docker_push IMAGE_TAGS="${CI_BUILD_REF_SLUG}-${CI_PIPELINE_ID} canary"
+  only:
+  - master
+
+
+docker:tags_build_push:
+  before_script: []
+  after_script: []
+  image: docker:1.12
+  stage: docker
+  tags:
+  - docker
+  services:
+  - docker:dind
+  script:
+  - apk --update add make docker
+  - mkdir -p ~/.docker && echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json && chmod 600 ~/.docker/config.json
+  - make docker_push IMAGE_TAGS="${CI_COMMIT_TAG} latest"
+  only:
+  - tags
+  services:
+  - docker:dind

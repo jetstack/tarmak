@@ -4,9 +4,9 @@ package amazon
 import (
 	"fmt"
 
-	"github.com/jetstack-experimental/vault-unsealer/pkg/kv"
-	"github.com/jetstack-experimental/vault-unsealer/pkg/kv/aws_kms"
-	"github.com/jetstack-experimental/vault-unsealer/pkg/kv/aws_ssm"
+	"github.com/jetstack/vault-unsealer/pkg/kv"
+	"github.com/jetstack/vault-unsealer/pkg/kv/aws_kms"
+	"github.com/jetstack/vault-unsealer/pkg/kv/aws_ssm"
 )
 
 func (a *Amazon) secretsKMSKeyID() (string, error) {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
-	"github.com/jetstack-experimental/vault-unsealer/pkg/kv"
+	"github.com/jetstack/vault-unsealer/pkg/kv"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
