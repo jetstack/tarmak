@@ -43,6 +43,19 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if @kubelet_client_key_file -%>
   --kubelet-client-key=<%= @kubelet_client_key_file %> \
 <% end -%>
+<%- # add requestheaders + its CA for api aggregation support -%>
+<%- if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 and \
+        @requestheader_client_ca_file and \
+        @proxy_client_cert_file and \
+        @proxy_client_key_file -%>
+  --requestheader-allowed-names=<%= @requestheader_allowed_names %> \
+  --requestheader-extra-headers-prefix=<%= @requestheader_extra_headers %> \
+  --requestheader-group-headers=<%= @requestheader_group_headers %> \
+  --requestheader-username-headers=<%= @requestheader_username_headers %> \
+  --requestheader-client-ca-file=<%= @requestheader_client_ca_file %> \
+  --proxy-client-cert-file=<%= @proxy_client_cert_file %> \
+  --proxy-client-key-file=<%= @proxy_client_key_file %> \
+<%- end -%>
   "--etcd-servers=<%= @etcd_servers %>" \
   "--etcd-quorum-read=true" \
 <% @etcd_servers_overrides.each do |override| -%>
