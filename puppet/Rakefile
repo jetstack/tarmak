@@ -33,7 +33,8 @@ task :publish_modules do
 
       # read fixture dependencies
       begin
-        fixtures = YAML.load_file(".fixtures.yml")['fixtures']['symlinks'].keys.reject do |m|
+        fixtures = YAML.load_file(".fixtures.yml")['fixtures']['symlinks'] || YAML.load_file(".fixtures.yml")['fixtures']['forge_modules'] || YAML.load_file(".fixtures.yml")['fixtures']['repositories']
+        fixtures = fixtures.keys.reject do |m|
           # filter external modules or myself
           external_modules.include? m or module_name == m
         end
