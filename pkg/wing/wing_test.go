@@ -3,6 +3,7 @@ package wing
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,9 +14,9 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/docker/docker/pkg/archive"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/hashicorp/go-multierror"
-	"github.com/mholt/archiver"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 
@@ -29,8 +30,7 @@ type fakeWing struct {
 	*Wing
 	ctrl *gomock.Controller
 
-	fakeWingInt    *mocks.MockWingV1alpha1Interface
-	fakeRest       *mocks.MockRestInterface
+	fakeRest       *mocks.MockInterface
 	fakeHTTPClient *mocks.MockHTTPClient
 }
 
@@ -69,9 +69,8 @@ func newFakeWing(t *testing.T) *fakeWing {
 		},
 	}
 
-	w.fakeRest = mocks.NewMockRestInterface(w.ctrl)
+	w.fakeRest = mocks.NewMockInterface(w.ctrl)
 	w.fakeHTTPClient = mocks.NewMockHTTPClient(w.ctrl)
-	w.fakeWingInt = mocks.NewMockWingV1alpha1Interface(w.ctrl)
 	w.clientset = client.New(w.fakeRest)
 
 	w.fakeHTTPClient.EXPECT().Do(gomock.Any()).AnyTimes().Return(&http.Response{StatusCode: 0, Body: nopCloser{bytes.NewBufferString("")}}, nil)
@@ -197,8 +196,18 @@ func createTmpFiles() error {
 		return err
 	}
 
-	if err := archiver.TarGz.Make(manifestURLgz, []string{manifestURL}); err != nil {
-		return err
+	tarOpts := &archive.TarOptions{
+		Compression: archive.Gzip,
+		NoLchown:    true,
+	}
+
+	reader, err := archive.TarWithOptions(manifestURL, tarOpts)
+	if err != nil {
+		return fmt.Errorf("error creating tar from path '%s': %v", manifestURL, err)
+	}
+
+	if _, err := io.Copy(filegz, reader); err != nil {
+		return fmt.Errorf("error writing temp tar file: %v", err)
 	}
 
 	return nil
