@@ -14,7 +14,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+* Adds signal handling to Wing to handle TERM and HUP, SIGHUP: Cause a node to be reconverged, SIGTERM: Forward sigterm to puppet subprocess (if exists) (#32, [@JoshVanL](https://github.com/JoshVanL))
+* Sign released binaries using GPG (#58, [@simonswine](https://github.com/simonswine))
+* Update default kubernetes version to 1.7.10 (#54, [@simonswine](https://github.com/simonswine))
+* Add support for API server aggregation, enabled by default for kubernetes 1.7+ (#53, [@simonswine](https://github.com/simonswine))
+* Validate minCount and maxCount of Instance Pool (#52, [@JoshVanL](https://github.com/JoshVanL))
+* Enable authorization and authentication for kubelet (#46, [@simonswine](https://github.com/simonswine))
+* Enable Node authorizer and related admission controller for 1.8 compatibility  (#41, [@simonswine](https://github.com/simonswine))
+* Add experimental support for deploying clusters into existing AWS VPCs (#31, [@kragniz](https://github.com/kragniz))
+
+
 ### Changed
+
+* Allow master to communicate with workers on any port (#50, [@simonswine](https://github.com/simonswine))
+* Raise the master LoadBalancer time out to 3600 seconds (#49, [@simonswine](https://github.com/simonswine))
+* Verify at least one image exists before running terraform apply (#36, [@JoshVanL](https://github.com/JoshVanL))
+* Disable apiserver binding insecure-port on the master (#48, [@simonswine](https://github.com/simonswine))
+* Update vendored k8s.io packages to target release-1.8/release-5.0 branches (#15, [@simonswine](https://github.com/simonswine))
+* Disable source/destination check on cloud-provider AWS using a controller run on kubernetes masters. No need to authorize worker instances for ec2:ModifyInstanceAttribute anymore. (#28, [@mattbates](https://github.com/mattbates))
+* Update vendored vault-helper and vault-unsealer to latest releases (#20, [@JoshVanL](https://github.com/JoshVanL))
+* Update kubernetes master taints and cgroup fixes (#38, [@simonswine](https://github.com/simonswine))
+* Upgrade terraform to 0.10.8 (#40, [@simonswine](https://github.com/simonswine))
 
 ### Versions
 
