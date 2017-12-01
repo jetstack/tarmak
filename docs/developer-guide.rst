@@ -82,14 +82,21 @@ Release Checklist
 This is a list to collect manual tasks/checks necessary for cutting a
 release of Tarmak:
 
-Before tagging a release:
+* Ensure release references are updated (don't forget to commit)
 
-* Update the CHANGELOG
-* Ensure Wing release is updated in Terraform (not easily possible as we
-  protect the download by the hash we don't know yet, `#8
-  <https://github.com/jetstack/tarmak/issues/8>`_)
+::
+
+  make release VERSION=x.y.x
+
+* Tag release commit with ``x.y.z`` and push to GitLab and GitHub
+* Update the CHANGELOG using the release notes
+
+::
+
+  # relnotes is the golang tool from https://github.com/kubernetes/release/tree/master/toolbox/relnotes
+  relnotes -repo tarmak -owner jetstack -doc-url=https://docs.tarmak.io -htmlize-md -markdown-file CHANGELOGX.md x.y(-1).z-1..x.y.z
+
 * Branch out minor releases into ``release-x.y``
-* Tag release commit with ``x.y.z``
 
 After release job has run:
 
