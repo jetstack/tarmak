@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Application | Supported versions | Default  |
 |-------------|-------------------:|---------:|
 | Packer      |                    | `1.0.2`  |
-| Terraform   |                    | `0.10.6` |
+| Terraform   |                    | `0.10.8` |
 | Consul      |                    | `0.8.5`  |
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.6 && < 1.9`  | `1.7.10` |
