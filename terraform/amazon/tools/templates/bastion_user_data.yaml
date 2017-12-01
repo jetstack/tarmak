@@ -56,7 +56,7 @@ write_files:
     [Service]
     Environment=AIRWORTHY_VERSION=0.1.1
     Environment=AIRWORTHY_HASH=299a84be45e108a8da8663ed602a52680dbcdb8382c98f0d6770a2a456a60fed
-    Environment=WING_VERSION=0.2.0-rc3
+    Environment=WING_VERSION=0.2.0-rc5
     Environment=WING_DATA_DIR=/var/lib/wing
     PermissionsStartOnly=true
     ExecStartPre=/bin/sh -c '\
