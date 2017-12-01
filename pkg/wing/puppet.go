@@ -126,14 +126,14 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 		b.MaxElapsedTime = time.Minute * 30
 
 		err := backoff.Retry(puppetApplyCmd, b)
-
-		b.GetElapsedTime()
 		if err != nil {
 			log.Fatal(err)
+			return
 		}
 
-		// successful backoff
+		// successfull backoff
 		close(w.convergedCh)
+
 	}(puppetApplyCmd)
 
 	// block on successful backoff or close
