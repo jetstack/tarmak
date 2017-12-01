@@ -2,3 +2,4 @@ CommonMark==0.5.4
 Sphinx==1.6.3
 sphinx-rtd-theme==0.2.4
 sphinxcontrib-spelling==2.3.0
+sphinxcontrib-versioning==2.2.1

@@ -27,3 +27,9 @@ help:
 
 clean:
 	rm -rf venv .venv "$(BUILDDIR)"
+
+multiversion_build:
+	venv/bin/sphinx-versioning build -r master -w "^(master|release-\d+\.\d+)$$" -W "none" ./docs ./_build
+
+multiversion_push:
+	gsutil -m rsync -rd _build/ gs://docs.tarmak.io/
