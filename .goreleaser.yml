@@ -25,3 +25,6 @@ release:
   github:
     owner: jetstack
     name: tarmak
+
+gpg_signing:
+  key_id: 9A1C42C8F5AA3CE6
