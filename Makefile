@@ -148,3 +148,16 @@ subtrees:
 		echo $$module; \
 		git subtree pull --prefix puppet/modules/$$module git://github.com/jetstack/puppet-module-$$module.git master; \
 	done
+
+release:
+ifndef VERSION
+	$(error VERSION is undefined)
+endif
+	# replace wing version in terraform
+	sed -i 's/Environment=WING_VERSION=.*$$/Environment=WING_VERSION=$(VERSION)/g' terraform/amazon/tools/templates/bastion_user_data.yaml terraform/amazon/kubernetes/templates/puppet_agent_user_data.yaml
+	# replace major version in docs
+	sed -i 's#^version = u.*$$#version = u"$(shell echo "$(VERSION)" | grep -oe "^[0-9]\{1,\}\\.[0-9]\{1,\}")"#g' docs/conf.py
+	sed -i 's#^release = u.*$$#release = u"$(shell echo "$(VERSION)" | grep -oe "^[0-9]\{1,\}\\.[0-9]\{1,\}")"#g' docs/conf.py
+	# replace version in README
+	sed -i 's#wget https://github.com/jetstack/tarmak/releases/download/.*$$#wget https://github.com/jetstack/tarmak/releases/download/$(VERSION)/tarmak_$(VERSION)_linux_amd64#g' README.md
+	sed -i 's/mv tarmak_.*$$/mv tarmak_$(VERSION)_linux_amd64 tarmak/g' README.md
