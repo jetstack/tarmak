@@ -170,11 +170,17 @@ func (w *Wing) signalHandler() {
 	}()
 }
 
-func (w *Wing) killPuppetProcess() {
+func (w *Wing) killPuppetProcess() error {
 	if w.puppetCmd != nil && w.puppetCmd.Process != nil {
-		err := syscall.Kill(w.puppetCmd.Process.Pid, syscall.SIGTERM)
-		if err != nil {
+		if err := w.puppetCmd.Process.Signal(syscall.SIGTERM); err != nil {
 			w.log.Errorf("error killing puppet subprocess: %v", err)
+			return err
+		}
+
+		if _, err := w.puppetCmd.Process.Wait(); err != nil {
+			w.log.Errorf("error killing puppet subprocess: %v", err)
+			return err
 		}
 	}
+	return nil
 }
