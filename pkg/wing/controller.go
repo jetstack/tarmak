@@ -54,6 +54,10 @@ func (c *Controller) processNextItem() bool {
 // information about the instance to stdout. In case an error happened, it has to simply return the error.
 // The retry logic should not be part of the business logic.
 func (c *Controller) syncToStdout(key string) error {
+
+	// ensure only one converge at a time
+	c.wing.convergeWG.Wait()
+
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
 		c.log.Errorf("Fetching object with key %s from store failed with %v", key, err)

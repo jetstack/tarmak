@@ -4,8 +4,8 @@ package wing
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -21,12 +21,21 @@ import (
 )
 
 type Wing struct {
-	log         *logrus.Entry
-	flags       *Flags
-	clientset   *client.Clientset
-	stopCh      chan struct{}
-	convergedCh chan struct{}
-	puppetCmd   *exec.Cmd
+	log       *logrus.Entry
+	flags     *Flags
+	clientset *client.Clientset
+
+	// stop channel, signals termination to all goroutines
+	stopCh chan struct{}
+
+	convergeStopCh chan struct{}  // stop channel, signals to cancel current puppet run
+	convergeWG     sync.WaitGroup // wait group for converge runs
+
+	// controller loop
+	controller *Controller
+
+	// allows overriding puppet command for testing
+	puppetCommandOverride Command
 }
 
 type Flags struct {
@@ -41,10 +50,10 @@ func New(flags *Flags) *Wing {
 	logger.Level = logrus.DebugLevel
 
 	t := &Wing{
-		log:         logger.WithField("app", "wing"),
-		flags:       flags,
-		stopCh:      make(chan struct{}),
-		convergedCh: make(chan struct{}),
+		log:            logger.WithField("app", "wing"),
+		flags:          flags,
+		stopCh:         make(chan struct{}),
+		convergeStopCh: make(chan struct{}),
 	}
 	return t
 }
@@ -75,16 +84,20 @@ func (w *Wing) Run(args []string) error {
 	}
 	w.clientset = clientset
 
-	w.signalHandler()
+	// listen to signals
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
+	w.signalHandler(signalCh)
+
+	// run converge loop after first start
+	go w.converge()
 
 	// start watching for API server events that trigger applies
 	w.watchForNotifications()
 
-	// run converge loop after first start
-	w.converge()
-
-	// Wait forever
+	// Wait for all goroutines to exit
 	<-w.stopCh
+	w.convergeWG.Wait()
 
 	return nil
 
@@ -132,17 +145,14 @@ func (w *Wing) watchForNotifications() {
 		},
 	}, cache.Indexers{})
 
-	controller := NewController(queue, indexer, informer, w)
+	w.controller = NewController(queue, indexer, informer, w)
 
 	// Now let's start the controller
-	go controller.Run(1, w.stopCh)
+	go w.controller.Run(1, w.stopCh)
 
 }
 
-func (w *Wing) signalHandler() {
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGTERM, syscall.SIGHUP)
-
+func (w *Wing) signalHandler(ch chan os.Signal) {
 	go func() {
 		select {
 		case <-w.stopCh:
@@ -150,37 +160,27 @@ func (w *Wing) signalHandler() {
 		case sig := <-ch:
 			switch sig {
 			case syscall.SIGHUP:
-				w.log.Infof("Wing received SIGHUP")
-				// If the puppet process is still running, kill before re-converging
-				select {
-				case <-w.convergedCh:
-					break
-				default:
-					w.killPuppetProcess()
-				}
-				// Reconverge
+				w.log.Infof("wing received SIGHUP")
+
+				// if the puppet process is still running, kill and wait before re-converging
+				w.log.Infof("terminating puppet if existing")
+				close(w.convergeStopCh)
+				w.convergeWG.Wait()
+
+				// create new converge stop channel and run converge
+				w.convergeStopCh = make(chan struct{})
 				w.converge()
-				//kill puppet and stop
+
+			case syscall.SIGINT:
+				w.log.Infof("wing received SIGINT")
+				close(w.convergeStopCh)
+				close(w.stopCh)
+
 			case syscall.SIGTERM:
-				w.log.Infof("Wing received SIGTERM")
-				w.killPuppetProcess()
+				w.log.Infof("wing received SIGTERM")
+				close(w.convergeStopCh)
 				close(w.stopCh)
 			}
 		}
 	}()
-}
-
-func (w *Wing) killPuppetProcess() error {
-	if w.puppetCmd != nil && w.puppetCmd.Process != nil {
-		if err := w.puppetCmd.Process.Signal(syscall.SIGTERM); err != nil {
-			w.log.Errorf("error killing puppet subprocess: %v", err)
-			return err
-		}
-
-		if _, err := w.puppetCmd.Process.Wait(); err != nil {
-			w.log.Errorf("error killing puppet subprocess: %v", err)
-			return err
-		}
-	}
-	return nil
 }
