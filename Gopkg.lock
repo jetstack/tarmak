@@ -92,10 +92,10 @@
   version = "v0.1.0"
 
 [[projects]]
-  name = "github.com/cenk/backoff"
+  name = "github.com/cenkalti/backoff"
   packages = ["."]
-  revision = "32cd0c5b3aef12c76ed64aaf678f6c79736be7dc"
-  version = "v1.0.0"
+  revision = "61153c768f31ee5f130071d08fc82b85208528de"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/coreos/etcd"
@@ -638,6 +638,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "493534870e5aed975ec30cc34ce2e558c8726f4299b11161ede6fbd2ee2fccff"
+  inputs-digest = "cac3da1b8cb6753f1f6d7236c9c4428299510b7412625cea38414d8fbdddf61e"
   solver-name = "gps-cdcl"
   solver-version = 1
