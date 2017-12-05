@@ -5,3 +5,4 @@ package mocks
 
 //go:generate mockgen -package=mocks -source=../../../vendor/k8s.io/client-go/rest/request.go -destination http_client.go
 //go:generate mockgen -imports .=k8s.io/client-go/rest -package=mocks -source=../../../vendor/k8s.io/client-go/rest/client.go -destination client.go
+//go:generate mockgen -package=mocks -source=../command.go -destination command.go

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,11 +19,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cenk/backoff"
+	"github.com/cenkalti/backoff"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/wing/provider/file"
 	"github.com/jetstack/tarmak/pkg/wing/provider/s3"
+	"golang.org/x/net/context"
 )
 
 // This make sure puppet is converged when neccessary
@@ -120,35 +120,42 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 		return err
 	}
 
-	go func(puppetApplyCmd backoff.Operation) {
-		b := backoff.NewExponentialBackOff()
-		b.InitialInterval = time.Second * 30
-		b.MaxElapsedTime = time.Minute * 30
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.InitialInterval = time.Second * 30
+	expBackoff.MaxElapsedTime = time.Minute * 30
 
-		err := backoff.Retry(puppetApplyCmd, b)
-		if err != nil {
-			log.Fatal(err)
-			return
+	// add context to backoff
+	ctx, cancelRetries := context.WithCancel(context.Background())
+	b := backoff.WithContext(expBackoff, ctx)
+
+	quitCh := make(chan struct{})
+	defer close(quitCh)
+
+	// cancel retries when supposed to stop
+
+	go func() {
+		for {
+			select {
+			case <-w.convergeStopCh:
+				cancelRetries()
+				return
+			case <-quitCh:
+				return
+			}
 		}
+	}()
 
-		// successfull backoff
-		close(w.convergedCh)
-
-	}(puppetApplyCmd)
-
-	// block on successful backoff or close
-	select {
-	case <-w.stopCh:
-		break
-	case <-w.convergedCh:
-		break
+	err = backoff.Retry(puppetApplyCmd, b)
+	if err != nil {
+		w.log.Error("error applying puppet:", err)
 	}
 
 	return status, nil
 }
 
 func (w *Wing) converge() {
-	w.convergedCh = make(chan struct{})
+	w.convergeWG.Add(1)
+	defer w.convergeWG.Done()
 
 	// run puppet
 	status, err := w.runPuppet()
@@ -167,34 +174,45 @@ func (w *Wing) converge() {
 	}
 }
 
+func (w *Wing) puppetCommand(dir string) Command {
+	if w.puppetCommandOverride != nil {
+		return w.puppetCommandOverride
+	}
+
+	return &execCommand{
+		Cmd: exec.Command(
+			"puppet",
+			"apply",
+			"--detailed-exitcodes",
+			"--color",
+			"no",
+			"--environment",
+			"production",
+			"--hiera_config",
+			filepath.Join(dir, "hiera.yaml"),
+			"--modulepath",
+			filepath.Join(dir, "modules"),
+			filepath.Join(dir, "manifests/site.pp"),
+		),
+	}
+}
+
 // apply puppet code in a specific directory
 func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
-	w.puppetCmd = exec.Command(
-		"puppet",
-		"apply",
-		"--detailed-exitcodes",
-		"--color",
-		"no",
-		"--environment",
-		"production",
-		"--hiera_config",
-		filepath.Join(dir, "hiera.yaml"),
-		"--modulepath",
-		filepath.Join(dir, "modules"),
-		filepath.Join(dir, "manifests/site.pp"),
-	)
+	puppetCmd := w.puppetCommand(dir)
 
 	outputBuffer := new(bytes.Buffer)
-	stdoutPipe, err := w.puppetCmd.StdoutPipe()
+	stdoutPipe, err := puppetCmd.StdoutPipe()
 	if err != nil {
 		return "", 0, err
 	}
 
-	stderrPipe, err := w.puppetCmd.StderrPipe()
+	stderrPipe, err := puppetCmd.StderrPipe()
 	if err != nil {
 		return "", 0, err
 	}
 
+	// forward stdout
 	stdoutScanner := bufio.NewScanner(stdoutPipe)
 	go func() {
 		for stdoutScanner.Scan() {
@@ -204,6 +222,7 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 		}
 	}()
 
+	// forward stderr
 	stderrScanner := bufio.NewScanner(stderrPipe)
 	go func() {
 		for stderrScanner.Scan() {
@@ -213,13 +232,35 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 		}
 	}()
 
-	err = w.puppetCmd.Start()
+	// handle exit signal
+	quitCh := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-w.convergeStopCh:
+				if puppetCmd.Process() != nil {
+					w.log.Debugf("terminating puppet pid=%d process early", puppetCmd.Process().Pid)
+					err := puppetCmd.Process().Signal(syscall.SIGTERM)
+					if err != nil {
+						w.log.Warn("error terminating puppet process early:", err)
+					}
+				}
+				return
+			case <-quitCh:
+				return
+			}
+		}
+	}()
+
+	err = puppetCmd.Start()
 	if err != nil {
 		return "", 0, err
 	}
 
 	w.log.Printf("Waiting for command to finish...")
-	err = w.puppetCmd.Wait()
+	err = puppetCmd.Wait()
+	close(quitCh)
+
 	output = outputBuffer.String()
 	if err != nil {
 		perr, ok := err.(*exec.ExitError)

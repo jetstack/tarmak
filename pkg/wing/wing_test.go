@@ -32,6 +32,9 @@ type fakeWing struct {
 
 	fakeRest       *mocks.MockInterface
 	fakeHTTPClient *mocks.MockHTTPClient
+	fakeCommand    *mocks.MockCommand
+
+	signalCh chan os.Signal
 }
 
 type nopCloser struct {
@@ -64,10 +67,18 @@ func newFakeWing(t *testing.T) *fakeWing {
 				ClusterName:  "fakeClusterName",
 				InstanceName: "fakeInstanceName",
 			},
-			log:    logrus.NewEntry(logger),
-			stopCh: make(chan struct{}),
+			log:            logrus.NewEntry(logger),
+			stopCh:         make(chan struct{}),
+			convergeStopCh: make(chan struct{}),
 		},
 	}
+
+	w.signalCh = make(chan os.Signal, 1)
+
+	w.fakeCommand = mocks.NewMockCommand(w.ctrl)
+	w.Wing.puppetCommandOverride = w.fakeCommand
+	w.fakeCommand.EXPECT().StderrPipe().AnyTimes().Return(nopCloser{bytes.NewBufferString("i am stderr")}, nil)
+	w.fakeCommand.EXPECT().StdoutPipe().AnyTimes().Return(nopCloser{bytes.NewBufferString("i am stdout")}, nil)
 
 	w.fakeRest = mocks.NewMockInterface(w.ctrl)
 	w.fakeHTTPClient = mocks.NewMockHTTPClient(w.ctrl)
@@ -86,19 +97,93 @@ func newFakeWing(t *testing.T) *fakeWing {
 	return w
 }
 
-func TestWing_SIGTERM_handler(t *testing.T) {
-	t.Skip("disabled needs refactoring")
+// this tests when the SIGTERM hits wing when it's currently running puppet
+func TestWing_SIGTERM_handler_first_execute(t *testing.T) {
 	w := newFakeWing(t)
 	defer w.ctrl.Finish()
 	defer deleteTmpFiles(t)
 
+	// enable signal handling
 	go func() {
-		time.Sleep(time.Second)
-		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		w.signalHandler(w.signalCh)
 	}()
 
-	w.signalHandler()
-	executeSleep(w, t)
+	// start replacement process
+	proccess := exec.Command(
+		"sleep",
+		"100",
+	)
+	if err := proccess.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// channel that gets closed after sleep has been stopped
+	exitCh := make(chan struct{})
+	go func() {
+		proccess.Wait()
+		close(exitCh)
+	}()
+
+	// once started send sigterm to wing
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		// after start send sigterm to wing
+		w.signalCh <- syscall.SIGTERM
+	})
+
+	// make wing wait for us to signal the exit
+	w.fakeCommand.EXPECT().Wait().Do(func() {
+		<-exitCh
+	})
+
+	// return sleep process instead
+	w.fakeCommand.EXPECT().Process().AnyTimes().Return(proccess.Process)
+
+	// run a converge
+	w.converge()
+
+}
+
+// this tests when the SIGTERM hits wing when it's currently waiting in the exp backoff
+func TestWing_SIGTERM_handler_backoff(t *testing.T) {
+	w := newFakeWing(t)
+	defer w.ctrl.Finish()
+	defer deleteTmpFiles(t)
+
+	// TODO: find a better way to get an error with non zero return code
+	process := exec.Command(
+		"false",
+	)
+	if err := process.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	processErr := process.Wait()
+
+	// enable signal handling
+	go func() {
+		w.signalHandler(w.signalCh)
+	}()
+
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start")
+	})
+
+	// make wing wait for us to signal the exit
+	puppetFinished := make(chan struct{})
+	w.fakeCommand.EXPECT().Wait().Return(processErr).Do(func() {
+		w.log.Debugf("fake process called wait")
+		close(puppetFinished)
+	})
+
+	// send signal after puppet exited
+	go func() {
+		<-puppetFinished
+		time.Sleep(time.Millisecond)
+		w.signalCh <- syscall.SIGTERM
+	}()
+
+	// run a converge
+	w.converge()
+
 }
 
 func TestWing_SIGHUP_handler(t *testing.T) {
@@ -108,12 +193,9 @@ func TestWing_SIGHUP_handler(t *testing.T) {
 	defer deleteTmpFiles(t)
 
 	go func() {
-		time.Sleep(time.Second)
-		syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
+		w.signalHandler(w.signalCh)
 	}()
 
-	w.signalHandler()
-	executeSleep(w, t)
 }
 
 func TestWing_SIGTERM_puppet(t *testing.T) {
@@ -122,19 +204,9 @@ func TestWing_SIGTERM_puppet(t *testing.T) {
 	defer w.ctrl.Finish()
 	defer deleteTmpFiles(t)
 
-	go func(w *fakeWing, t *testing.T) {
-		time.Sleep(time.Second)
-		go executeSleep(w, t)
-		time.Sleep(time.Second)
-		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-	}(w, t)
-
-	w.signalHandler()
-
-	_, err := w.runPuppet()
-	if err != nil {
-		t.Errorf("%v", err)
-	}
+	go func() {
+		w.signalHandler(w.signalCh)
+	}()
 }
 
 func TestWing_SIGHUP_puppet(t *testing.T) {
@@ -143,45 +215,9 @@ func TestWing_SIGHUP_puppet(t *testing.T) {
 	defer w.ctrl.Finish()
 	defer deleteTmpFiles(t)
 
-	go func(w *fakeWing, t *testing.T) {
-		time.Sleep(time.Second)
-		go executeSleep(w, t)
-		time.Sleep(time.Second)
-		syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
-		time.Sleep(time.Second)
-		close(w.stopCh)
-	}(w, t)
-
-	w.signalHandler()
-
-	_, err := w.runPuppet()
-	if err != nil {
-		t.Errorf("%v", err)
-	}
-}
-
-func executeSleep(w *fakeWing, t *testing.T) {
-	w.puppetCmd = exec.Command(
-		"sleep",
-		"10",
-	)
-	if err := w.puppetCmd.Start(); err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	err := w.puppetCmd.Wait()
-	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				if int(status) != 15 {
-					w.log.Errorf("expected error code 15, got %d", int(status))
-				}
-			}
-		} else {
-			t.Errorf("unexpected error: %v", err)
-		}
-	} else {
-		t.Errorf("expected error, got none")
-	}
+	go func() {
+		w.signalHandler(w.signalCh)
+	}()
 }
 
 func createTmpFiles() error {
