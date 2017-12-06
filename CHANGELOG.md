@@ -10,6 +10,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
+### Fixed
+
+## [0.2.1]: 0.2.1 - 2017-12-05
+
+### Fixed
+
+* Fix concurrency issues with Wing, ensure only a single puppet run happens at a time  (#61, [@simonswine](https://github.com/simonswine))
+
+### Versions
+
+| Application | Supported versions | Default  |
+|-------------|-------------------:|---------:|
+| Packer      |                    | `1.0.2`  |
+| Terraform   |                    | `0.10.8` |
+| Consul      |                    | `0.8.5`  |
+| Vault       |                    | `0.7.3`  |
+| Kubernetes  | `>= 1.6 && < 1.9`  | `1.7.10` |
+
 ## [0.2.0]: 0.2.0 - 2017-12-01
 
 ### Added
@@ -71,5 +89,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
+[0.2.1]: https://github.com/jetstack/tarmak/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/jetstack/tarmak/compare/0.1.2...0.2.0
 [Unreleased]: https://github.com/jetstack/tarmak/compare/0.2.0...HEAD
