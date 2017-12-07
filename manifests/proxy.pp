@@ -1,12 +1,21 @@
 # class kubernetes::kubelet
 class kubernetes::proxy(
-  $ca_file = undef,
-  $cert_file = undef,
-  $key_file = undef,
+  Optional[String] $ca_file = undef,
+  Optional[String] $cert_file = undef,
+  Optional[String] $key_file = undef,
+  Array[String] $systemd_wants = [],
+  Array[String] $systemd_requires = [],
+  Array[String] $systemd_after = [],
+  Array[String] $systemd_before = [],
 ){
   require ::kubernetes
 
   $service_name = 'kube-proxy'
+
+  $_systemd_wants = $systemd_wants
+  $_systemd_after = $systemd_after
+  $_systemd_requires = $systemd_after
+  $_systemd_before = $systemd_before
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-proxy"
   file{$kubeconfig_path:

@@ -1,10 +1,7 @@
 [Unit]
 Description=Kubernetes Kubelet Server
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-<% if $container_engine == 'docker' %>
-After=docker.service
-Requires=docker.service
-<% end -%>
+<%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
 WorkingDirectory=<%= @kubelet_dir %>
