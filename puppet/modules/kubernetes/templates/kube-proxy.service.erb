@@ -2,6 +2,7 @@
 Description=Kubernetes Kube-Proxy Server
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 After=network.target
+<%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/proxy \

@@ -1,17 +1,17 @@
 # class kubernetes::kubelet
 class kubernetes::kubelet(
-  $role = 'worker',
-  $container_runtime = 'docker',
-  $kubelet_dir = '/var/lib/kubelet',
-  $network_plugin = undef,
-  $network_plugin_mtu = 1460,
-  $allow_privileged = true,
-  $register_node = true,
-  $register_schedulable = undef,
-  $ca_file = undef,
-  $cert_file = undef,
-  $key_file = undef,
-  $client_ca_file = undef,
+  String $role = 'worker',
+  String $container_runtime = 'docker',
+  String $kubelet_dir = '/var/lib/kubelet',
+  Optional[String] $network_plugin = undef,
+  Integer $network_plugin_mtu = 1460,
+  Boolean $allow_privileged = true,
+  Boolean $register_node = true,
+  Optional[Boolean] $register_schedulable = undef,
+  Optional[String] $ca_file = undef,
+  Optional[String] $cert_file = undef,
+  Optional[String] $key_file = undef,
+  Optional[String] $client_ca_file = undef,
   $node_labels = undef,
   $node_taints = undef,
   $pod_cidr = undef,
@@ -20,8 +20,22 @@ class kubernetes::kubelet(
     'RedHat' => 'systemd',
     default  => 'cgroupfs',
   },
+  Array[String] $systemd_wants = [],
+  Array[String] $systemd_requires = [],
+  Array[String] $systemd_after = [],
+  Array[String] $systemd_before = [],
 ){
   require ::kubernetes
+
+  $_systemd_wants = $systemd_wants
+  if $container_runtime == 'docker' {
+    $_systemd_after = ['docker.service'] + $systemd_after
+    $_systemd_requires = ['docker.service'] + $systemd_after
+  } else {
+    $_systemd_after = $systemd_after
+    $_systemd_requires = $systemd_after
+  }
+  $_systemd_before = $systemd_before
 
   if $register_schedulable == undef {
     if $role == 'master' {

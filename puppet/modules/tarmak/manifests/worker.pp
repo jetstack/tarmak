@@ -33,16 +33,20 @@ class tarmak::worker {
   }
 
   class { 'kubernetes::kubelet':
-      ca_file        => "${kubelet_base_path}-ca.pem",
-      key_file       => "${kubelet_base_path}-key.pem",
-      cert_file      => "${kubelet_base_path}.pem",
-      client_ca_file => "${kubelet_base_path}-ca.pem",
+      ca_file          => "${kubelet_base_path}-ca.pem",
+      key_file         => "${kubelet_base_path}-key.pem",
+      cert_file        => "${kubelet_base_path}.pem",
+      client_ca_file   => "${kubelet_base_path}-ca.pem",
+      systemd_after    => ['kubelet-cert.service'],
+      systemd_requires => ['kubelet-cert.service'],
   }
 
   class { 'kubernetes::proxy':
-      ca_file   => "${proxy_base_path}-ca.pem",
-      key_file  => "${proxy_base_path}-key.pem",
-      cert_file => "${proxy_base_path}.pem",
+      ca_file          => "${proxy_base_path}-ca.pem",
+      key_file         => "${proxy_base_path}-key.pem",
+      cert_file        => "${proxy_base_path}.pem",
+      systemd_after    => ['kube-proxy-cert.service'],
+      systemd_requires => ['kube-proxy-cert.service'],
   }
 
   class { 'kubernetes::worker':
