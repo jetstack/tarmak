@@ -1,0 +1,58 @@
+.. vim:set ft=rst spell:
+
+My Proposal
+===========
+
+.. todo::
+
+  1-2 sentence summary of the proposal
+
+Background
+----------
+
+.. todo::
+
+   Provide some context to the situation now (e.g. current situation, short
+   comings, future challenges, ...)
+
+
+Objective
+---------
+
+.. todo::
+
+    What are we going to do to make the situation described above better? (high
+    level design overview, goals & considerations)
+
+
+Changes
+-------
+
+.. todo::
+
+    Detail the actual changes that will need to be made here. If needs be, use
+    (annotated) code-snippets to illustrate the required changes. This sort of
+    specs out the work required, but obviously is subject to change once
+    implementation starts (if it has not already)
+
+    It should also plan out how a larger proposal can be broken down into
+    several releasable iterations.
+
+
+Notable items
+-------------
+
+.. todo::
+
+    Here we can call out things that are particularly bad,
+    good, difficult or whatever else. Anything **notable**.
+
+Out of scope
+------------
+
+.. todo::
+
+    Puts a *bound* on the scope of the work. This may not be applicable all the
+    time, but it's useful to include if there's any ambiguity as to whether
+    something should or should not be done.
+
