@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -201,6 +202,9 @@ func (w *Wing) puppetCommand(dir string) Command {
 func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 	puppetCmd := w.puppetCommand(dir)
 
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
 	outputBuffer := new(bytes.Buffer)
 	stdoutPipe, err := puppetCmd.StdoutPipe()
 	if err != nil {
@@ -216,9 +220,12 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 	stdoutScanner := bufio.NewScanner(stdoutPipe)
 	go func() {
 		for stdoutScanner.Scan() {
+			//critical region to avoid race condition
+			mu.Lock()
 			w.log.WithField("cmd", "puppet").Debug(stdoutScanner.Text())
 			outputBuffer.WriteString(stdoutScanner.Text())
 			outputBuffer.WriteString("\n")
+			mu.Unlock()
 		}
 	}()
 
@@ -226,27 +233,33 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 	stderrScanner := bufio.NewScanner(stderrPipe)
 	go func() {
 		for stderrScanner.Scan() {
+			//critical region to avoid race condition
+			mu.Lock()
 			w.log.WithField("cmd", "puppet").Debug(stderrScanner.Text())
 			outputBuffer.WriteString(stderrScanner.Text())
 			outputBuffer.WriteString("\n")
+			mu.Unlock()
 		}
 	}()
 
 	// handle exit signal
+	wg.Add(1)
 	quitCh := make(chan struct{})
 	go func() {
 		for {
 			select {
 			case <-w.convergeStopCh:
-				if puppetCmd.Process() != nil {
+				if puppetCmd != nil && puppetCmd.Process() != nil {
 					w.log.Debugf("terminating puppet pid=%d process early", puppetCmd.Process().Pid)
 					err := puppetCmd.Process().Signal(syscall.SIGTERM)
 					if err != nil {
 						w.log.Warn("error terminating puppet process early:", err)
 					}
 				}
+				wg.Done()
 				return
 			case <-quitCh:
+				wg.Done()
 				return
 			}
 		}
@@ -260,8 +273,13 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 	w.log.Printf("Waiting for command to finish...")
 	err = puppetCmd.Wait()
 	close(quitCh)
+	//ensure go routine has closed
+	wg.Wait()
 
+	//critical region to avoid race condition
+	mu.Lock()
 	output = outputBuffer.String()
+	mu.Unlock()
 	if err != nil {
 		perr, ok := err.(*exec.ExitError)
 		if ok {

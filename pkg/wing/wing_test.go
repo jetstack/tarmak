@@ -127,7 +127,9 @@ func TestWing_SIGTERM_handler_first_execute(t *testing.T) {
 	// once started send sigterm to wing
 	w.fakeCommand.EXPECT().Start().Do(func() {
 		// after start send sigterm to wing
+		time.Sleep(time.Millisecond)
 		w.signalCh <- syscall.SIGTERM
+		<-w.convergeStopCh
 	})
 
 	// make wing wait for us to signal the exit
@@ -141,6 +143,7 @@ func TestWing_SIGTERM_handler_first_execute(t *testing.T) {
 	// run a converge
 	w.converge()
 
+	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
 		t.Error("expected convergeStopCh to be closed")
 	}
@@ -189,6 +192,8 @@ func TestWing_SIGTERM_handler_backoff(t *testing.T) {
 
 	// run a converge
 	w.converge()
+
+	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
 		t.Error("expected convergeStopCh to be closed")
 	}
@@ -222,27 +227,30 @@ func TestWing_SIGHUP_handler_first_excute(t *testing.T) {
 	go func() {
 		process.Wait()
 		close(exitCh)
-
-		//After SIGHUP expect another convergence to run and then close
-		w.fakeCommand.EXPECT().Start().Do(func() {
-			w.log.Debugf("fake process called start again")
-		}).Times(1)
-		w.fakeCommand.EXPECT().Wait().Do(func() {
-			w.log.Debugf("fake process called wait again")
-			close(w.stopCh)
-		}).Times(1)
 	}()
 
 	// once started send sigterm to wing
 	w.fakeCommand.EXPECT().Start().Do(func() {
 		// after start send SIGHUP to wing
+		w.log.Debugf("fake process called start")
+		time.Sleep(time.Millisecond)
 		w.signalCh <- syscall.SIGHUP
 		<-w.convergeStopCh
 	}).Times(1)
-
 	// make wing wait for us to signal the exit
 	w.fakeCommand.EXPECT().Wait().Do(func() {
+		w.log.Debugf("fake process called wait")
 		<-exitCh
+	}).Times(1)
+
+	//After SIGHUP expect another convergence to run and then close
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start again")
+	}).Times(1)
+
+	w.fakeCommand.EXPECT().Wait().Do(func() {
+		w.log.Debugf("fake process called wait again")
+		close(w.stopCh)
 	}).Times(1)
 
 	// return sleep process instead
@@ -251,6 +259,7 @@ func TestWing_SIGHUP_handler_first_excute(t *testing.T) {
 	// run a converge
 	w.converge()
 
+	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
 		t.Error("expected convergeStopCh to be closed")
 	}
@@ -272,7 +281,17 @@ func TestWing_SIGHUP_handler_backoff(t *testing.T) {
 	if err := process.Start(); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	processErr := process.Wait()
+
+	var processErr error
+	puppetFinished := make(chan struct{})
+	go func() {
+		processErr = process.Wait()
+		<-puppetFinished
+
+		puppetFinished = make(chan struct{})
+		process.Wait()
+		close(puppetFinished)
+	}()
 
 	// enable signal handling
 	go func() {
@@ -282,33 +301,33 @@ func TestWing_SIGHUP_handler_backoff(t *testing.T) {
 	w.fakeCommand.EXPECT().Start().Do(func() {
 		w.log.Debugf("fake process called start")
 	})
-
 	// make wing wait for us to signal the exit
-	puppetFinished := make(chan struct{})
 	w.fakeCommand.EXPECT().Wait().Return(processErr).Do(func() {
 		w.log.Debugf("fake process called wait")
 		close(puppetFinished)
 	})
 
+	//Ensure re-converge after sending SIGHUP during backoff
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start again")
+	})
+	w.fakeCommand.EXPECT().Wait().Do(func() {
+		w.log.Debugf("fake process called wait again")
+		close(w.stopCh)
+		<-puppetFinished
+	})
+
 	// send signal after puppet exited
 	go func() {
 		<-puppetFinished
-
-		//Ensure re-converge after sending SIGHUP during backoff
-		w.fakeCommand.EXPECT().Start().Do(func() {
-			w.log.Debugf("fake process called start again")
-		})
-		w.fakeCommand.EXPECT().Wait().Return(processErr).Do(func() {
-			w.log.Debugf("fake process called wait again")
-			close(w.stopCh)
-		})
-
 		time.Sleep(time.Millisecond)
 		w.signalCh <- syscall.SIGHUP
 	}()
 
 	// run a converge
 	w.converge()
+
+	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
 		t.Error("expected convergeStopCh to be closed")
 	}
@@ -360,7 +379,7 @@ func TestWing_SIGTERM_puppet_converged(t *testing.T) {
 	//Send SIGTERM after convergence
 	w.signalCh <- syscall.SIGTERM
 
-	//Ensure close from signal handler
+	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
 		t.Error("expected convergeStopCh to be closed")
 	}
@@ -422,7 +441,10 @@ func TestWing_SIGHUP_puppet_converged(t *testing.T) {
 	//Send SIGHUP after convergence
 	w.signalCh <- syscall.SIGHUP
 
-	//Ensure close from wait
+	//Ensure close from signal handlers
+	if _, ok := (<-w.convergeStopCh); ok {
+		t.Error("expected convergeStopCh to be closed")
+	}
 	if _, ok := (<-w.stopCh); ok {
 		t.Error("expected stopCh to be closed")
 	}
