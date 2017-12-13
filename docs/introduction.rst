@@ -111,6 +111,8 @@ tooling is placed.
 
 All instances in a Cluster are defined by an InstancePool_.
 
+.. _Stacks:
+
 Stacks
 ^^^^^^
 

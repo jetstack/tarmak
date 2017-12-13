@@ -22,8 +22,29 @@ build and deploy Kubernetes in production at scale.
    :maxdepth: 2
 
    introduction
+
+.. toctree::
+   :maxdepth: 2
+
    user-guide
+
+.. toctree::
+   :maxdepth: 2
+
    design_cli_ux
+
+.. toctree::
+   :maxdepth: 2
+
    developer-guide
+
+.. toctree::
+   :maxdepth: 1
+
+   proposals
+
+.. toctree::
+   :maxdepth: 1
+
    known-issues
    existing-vpc
