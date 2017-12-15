@@ -10,6 +10,10 @@ SPHINXPROJ    = Tarmak
 SOURCEDIR     = .
 BUILDDIR      = _build
 
+LC_ALL = C.UTF-8
+LANG = C.UTF-8
+export LANG LC_ALL
+
 # Put it first so that "make" without argument is like "make help".
 help:
 	make " help"
