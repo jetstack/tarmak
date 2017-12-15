@@ -33,8 +33,13 @@ copy_artifacts:
 	mkdir -p ../_artifacts
 	cp -a $(BUILDDIR)/html ../_artifacts/docs
 
-multiversion_build:
+multiversion_build: .venv
 	$(VENV_PATH)/bin/sphinx-versioning build -r master -w "^(master|release-\d+\.\d+)$$" -W "none" ./docs ./_build
 
+multiversion_push: CLOUDSDK_CONFIG = $(CURDIR)/.gcloud
 multiversion_push:
+	mkdir -p $(CLOUDSDK_CONFIG)
+	chmod 644 $(CLOUDSDK_CONFIG)
+	gcloud auth activate-service-account --key-file $(DOCS_GOOGLE_APPLICATION_CREDENTIALS)
 	gsutil -m rsync -rd _build/ gs://docs.tarmak.io/
+	rm -rf $(CLOUDSDK_CONFIG)
