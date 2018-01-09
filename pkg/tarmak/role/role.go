@@ -77,3 +77,7 @@ func (r *Role) ELBIngressExternalName() string {
 func (r *Role) ELBAPIName() string {
 	return r.Name() + "-api"
 }
+
+func (r *Role) HasPrefix() bool {
+	return r.prefix != ""
+}
