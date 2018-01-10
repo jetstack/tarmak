@@ -12,10 +12,10 @@ define kubernetes::apply_fragment(
     fail('This defined type can only be used on the kubernetes master')
   }
 
-  $apply_file = "${::kubernetes::apply_dir}/${name}.${format}"
+  $apply_file = "${::kubernetes::apply_dir}/${target}.${format}"
 
   concat::fragment { "kubectl-apply-${name}":
-    target  => $target,
+    target  => $apply_file,
     content => $content,
     order   => $order,
   }
