@@ -195,6 +195,18 @@ Puppet::Type.newtype(:archive) do
     defaultto(:true)
   end
 
+  newparam(:signature_armored) do
+    desc 'url for gpg armored signature'
+  end
+
+  newparam(:signature_binary) do
+    desc 'url for gpg binary signature'
+  end
+
+  newparam(:sha256sums) do
+    desc 'url for sha256sums file'
+  end
+
   newparam(:username) do
     desc 'username to download source file.'
   end
