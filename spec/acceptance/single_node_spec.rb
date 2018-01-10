@@ -184,37 +184,37 @@ kubernetes::apply { 'hello2':
 kubernetes::apply_fragment { 'hello2-kind':
   content => 'kind: Namespace',
   order   => '00',
-  target  => '/etc/kubernetes/apply/hello2.yaml',
+  target  => 'hello2',
 }
 
 kubernetes::apply_fragment { 'hello2-apiVersion':
   content => 'apiVersion: v1',
   order   => '01',
-  target  => '/etc/kubernetes/apply/hello2.yaml',
+  target  => 'hello2',
 }
 
 kubernetes::apply_fragment { 'hello2-metadata':
   content => 'metadata:',
   order   => '02',
-  target  => '/etc/kubernetes/apply/hello2.yaml',
+  target  => 'hello2',
 }
 
 kubernetes::apply_fragment { 'hello2-metadata-name':
   content => '  name: testing2',
   order   => '03',
-  target  => '/etc/kubernetes/apply/hello2.yaml',
+  target  => 'hello2',
 }
 
 kubernetes::apply_fragment { 'hello2-metadata-label':
   content => '  labels:',
   order   => '04',
-  target  => '/etc/kubernetes/apply/hello2.yaml',
+  target  => 'hello2',
 }
 
 kubernetes::apply_fragment { 'hello2-metadata-labelname':
   content => '    name: testing2',
   order   => '05',
-  target  => '/etc/kubernetes/apply/hello2.yaml',
+  target  => 'hello2',
 }
 "
       end
