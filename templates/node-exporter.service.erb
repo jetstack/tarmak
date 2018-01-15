@@ -1,0 +1,12 @@
+[Unit]
+Description=node-exporter
+After=network.target
+
+[Service]
+ExecStart=<%= @dest_dir %>/node_exporter \
+  --web.listen-address=:<%= @port %> \
+  --collector.filesystem.ignored-mount-points "<%= @ignored_mount_points %>"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

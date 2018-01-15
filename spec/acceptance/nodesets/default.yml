@@ -1,0 +1,13 @@
+---
+HOSTS:
+  k8s:
+    roles:
+      - master
+    platform: el-7-x86_64
+    box: centos/7
+    box_version: 1704.01
+    hypervisor: vagrant
+    vagrant_memsize: 2048
+CONFIG:
+  type: foss
+  trace_limit: 1024
