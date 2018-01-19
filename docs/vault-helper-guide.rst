@@ -25,13 +25,14 @@ idempotent.
 
 Vault is now set up correctly for each CA, tokens, roles and policies.
 
-The vault-helper binary is stored on all Kubernetes instances. Two cron jobs
-are run on every Kubernetes instance type in order to renew both tokens and
-certificates every day. These will trigger oneshot services
-(token-renewal.service, cert.service) to be fired, executing the locally stored
-vault-helper binary to renew certificates and tokens. When executing either
-renew-token or cert, vault-helper will recognise if an init-token is present in
-local file, generating a new unique token to be stored, deleting the
-init-token. The cert subcommand will ensure a private key is generated, if one
-does not exist, before sending a CSR to the Vault server. The returned signed
-certificate it then stored locally, replacing any previous certificates.
+The vault-helper binary is stored on all cluster instances (etcd, worker and
+master). Two Systemd timers are run on every cluster instance in order to
+renew both tokens and certificates every day. These will trigger oneshot
+services (token-renewal.service, cert.service) to be fired, executing the
+locally stored vault-helper binary to renew certificates and tokens. When
+executing either renew-token or cert, vault-helper will recognise if an
+init-token is present in local file, generating a new unique token to be
+stored, deleting the init-token. The cert subcommand will ensure a private key
+is generated, if one does not exist, before sending a CSR to the Vault server.
+The returned signed certificate it then stored locally, replacing any previous
+certificates.
