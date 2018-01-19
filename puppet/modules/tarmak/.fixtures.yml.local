@@ -1,5 +1,6 @@
 fixtures:
   symlinks:
+    airworthy: "#{source_dir}/../airworthy"
     archive: "#{source_dir}/../archive"
     aws_ebs: "#{source_dir}/../aws_ebs"
     calico: "#{source_dir}/../calico"
