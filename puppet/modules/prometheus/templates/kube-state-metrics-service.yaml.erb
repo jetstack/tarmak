@@ -4,7 +4,7 @@ metadata:
   annotations:
     prometheus.io/scrape: 'true'
   name: kube-state-metrics
-  namespace: <%= @prometheus_namespace %>
+  namespace: <%= @namespace %>
   labels:
     app: kube-state-metrics
 spec:

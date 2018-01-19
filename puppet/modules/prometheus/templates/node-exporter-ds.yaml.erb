@@ -1,0 +1,56 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    name: node-exporter
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: node-exporter
+    spec:
+      hostPID: true
+      hostNetwork: true
+      tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+        - name: node-exporter
+          resources:
+            requests:
+              memory: 30Mi
+              cpu: 150m
+            limits:
+              memory: 50Mi
+              cpu: 250m
+          image: <%= @image %>:v<%= @version %>
+          # This runs prometheus in the host mount namespace and allows monitoring of persistent volumes
+          command:
+          - /bin/sh
+          - -c
+          - cp /bin/node_exporter /host/tmp/node_exporter/node_exporter && exec nsenter --mount=/host/proc/1/ns/mnt -- /tmp/node_exporter/node_exporter --web.listen-address=:<%= @port %> --collector.filesystem.ignored-mount-points "<%= @ignored_mount_points %>"
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
+            - name: tmp
+              mountPath: /host/tmp/node_exporter
+          ports:
+            - containerPort: <%= @port %>
+              hostPort: <%= @port %>
+              protocol: TCP
+          securityContext:
+            privileged: true
+            runAsUser: 0
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: tmp
+          hostPath:
+            path: /tmp/node_exporter

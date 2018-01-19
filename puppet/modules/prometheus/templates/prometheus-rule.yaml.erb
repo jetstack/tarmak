@@ -1,0 +1,4 @@
+  <%= @name %>.yaml: |
+<%# Make sure config is converted to a correct yaml and indented propery -%>
+<% configYAML = @config.to_yaml.split("\n") -%>
+    <%= configYAML[1,configYAML.length].join("\n    ") %>

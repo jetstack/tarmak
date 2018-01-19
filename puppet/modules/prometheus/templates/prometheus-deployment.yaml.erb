@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: prometheus
-  namespace: <%= @prometheus_namespace %>
+  namespace: <%= @namespace %>
 spec:
   replicas: 1
   selector:
@@ -14,25 +14,137 @@ spec:
       labels:
         app: prometheus
     spec:
+<%- if @rbac_enabled -%>
+      serviceAccountName: prometheus
+<%- end -%>
       containers:
       - name: prometheus
-        image: <%= @prometheus_image %>:<%= @prometheus_version %>
+        image: <%= @image %>:v<%= @version %>
         args:
-          - '-storage.local.retention=<%= @prometheus_storage_local_retention %>'
-          - '-storage.local.memory-chunks=<%= @prometheus_storage_local_memchunks %>'
-          - '-config.file=/etc/prometheus/prometheus.yml'
+          - --config.file=/etc/prometheus/prometheus.yaml
+          - --web.enable-lifecycle
+          - --storage.tsdb.path=/var/lib/prometheus
+          - --storage.tsdb.retention=<%=@retention%>
+          - --web.listen-address=:<%= @port %>
+<% if @external_url != '' -%>
+          - --web.external-url=<%= @external_url %>
+<% end -%>
         ports:
         - name: web
-          containerPort: <%= @prometheus_port %>
+          containerPort: <%= @port %>
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
         - name: rules-volume
           mountPath: /etc/prometheus-rules
+        - name: data-volume
+          mountPath: /var/lib/prometheus
+      - name: config-reloader
+        image: <%= @reloader_image %>:v<%= @reloader_version %>
+        args:
+          - --volume-dir=/etc/prometheus
+          - --webhook-url=http://localhost:<%= @port %>/-/reload
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/prometheus
+            readOnly: true
+      - name: rules-reloader
+        image: <%= @reloader_image %>:v<%= @reloader_version %>
+        args:
+          - --volume-dir=/etc/prometheus-rules
+          - --webhook-url=http://localhost:<%= @port %>/-/reload
+        volumeMounts:
+          - name: rules-volume
+            mountPath: /etc/prometheus-rules
+            readOnly: true
       volumes:
       - name: config-volume
         configMap:
           name: prometheus
       - name: rules-volume
         configMap:
-          name: prometheus-rules
+         name: prometheus-rules
+      - name: data-volume
+<% if ! @persistent_volume -%>
+        emptyDir: {}
+<% else -%>
+        persistentVolumeClaim:
+          claimName: prometheus-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: prometheus-data
+  namespace: <%= @namespace %>
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: <%= @persistent_volume_size %>Gi
+<% end -%>
+<%- if @rbac_enabled -%>
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: <%= @namespace %>
+---
+<%- if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<%- else -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<%- end -%>
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: <%= @namespace %>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+---
+<%- if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<%- else -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<%- end -%>
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - "/metrics"
+    verbs:
+      - get
+<% end -%>
