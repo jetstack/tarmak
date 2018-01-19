@@ -114,7 +114,16 @@ Puppet::Type.newtype(:concat_file) do
     @generated_content = ""
     content_fragments = []
 
-    resources = catalog.resources.select do |r|
+    # resolve puppet resources if needed
+    resources = catalog.resources.map do |r|
+      if r.is_a?(Puppet::Resource)
+        r.to_ral
+      else
+        r
+      end
+    end
+
+    resources = resources.select do |r|
       r.is_a?(Puppet::Type.type(:concat_fragment)) && r[:tag] == self[:tag]
     end
 

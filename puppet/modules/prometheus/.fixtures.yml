@@ -1,0 +1,14 @@
+fixtures:
+  repositories:
+    stdlib:
+      repo: "https://github.com/puppetlabs/puppetlabs-stdlib.git"
+      ref: "4.17.1"
+    concat:
+      repo: "https://github.com/jetstack/puppet-module-concat.git"
+      ref: "master"
+    archive:
+      repo: "https://github.com/jetstack/puppet-module-archive.git"
+      ref: "master"
+    kubernetes:
+      repo: "https://github.com/jetstack/puppet-module-kubernetes.git"
+      ref: "master"

@@ -1,0 +1,7 @@
+fixtures:
+  symlinks:
+    prometheus: "#{source_dir}"
+    concat: "#{source_dir}/../concat"
+    kubernetes: "#{source_dir}/../kubernetes"
+    stdlib: "#{source_dir}/../stdlib"
+    archive: "#{source_dir}/../archive"

@@ -18,179 +18,158 @@ This module is part of [Tarmak](http://docs.tarmak.io) and should currently be c
 
 #### Parameters
 
+##### `systemd_path`
+
+* Type: `String`
+* Default: `'/etc/systemd/system'`
+
+##### `namespace`
+
+* Type: `String`
+* Default: `'monitoring'`
+
 ##### `role`
 
-* Type: `Any`
-* Default: `''`
+* Type: `Optional[Enum['etcd','master','worker']]`
+* Default: `$::prometheus::params::role`
 
 ##### `etcd_cluster`
 
 * Type: `Any`
 * Default: `$::prometheus::params::etcd_cluster`
 
-##### `etcd_k8s_port`
+##### `etcd_k8s_main_port`
 
-* Type: `Any`
-* Default: `$::prometheus::params::etcd_k8s_port`
+* Type: `Integer[1025,65535]`
+* Default: `$::prometheus::params::etcd_k8s_main_port`
 
-##### `etcd_events_port`
+##### `etcd_k8s_events_port`
 
-* Type: `Any`
-* Default: `$::prometheus::params::etcd_events_port`
+* Type: `Integer[1025,65535]`
+* Default: `$::prometheus::params::etcd_k8s_events_port`
 
 ##### `etcd_overlay_port`
 
-* Type: `Any`
+* Type: `Integer[1024,65535]`
 * Default: `$::prometheus::params::etcd_overlay_port`
 
-##### `blackbox_download_url`
 
-* Type: `Any`
-* Default: `$::prometheus::params::blackbox_download_url`
+### `prometheus::blackbox_exporter`
 
-##### `blackbox_dest_dir`
+Sets up a blackbox exporter to blackbox probe in-cluster services and pods
 
-* Type: `Any`
-* Default: `$::prometheus::params::blackbox_dest_dir`
+#### Parameters
 
-##### `blackbox_config_dir`
+##### `image`
 
-* Type: `Any`
-* Default: `$::prometheus::params::blackbox_config_dir`
+* Type: `String`
+* Default: `'prom/blackbox-exporter'`
 
-##### `systemd_path`
+##### `version`
 
-* Type: `Any`
-* Default: `$::prometheus::params::systemd_path`
+* Type: `String`
+* Default: `'0.11.0'`
 
-##### `node_exporter_image`
+##### `port`
 
-* Type: `Any`
-* Default: `$::prometheus::params::node_exporter_image`
+* Type: `Integer`
+* Default: `9115`
 
-##### `node_exporter_version`
+##### `replicas`
 
-* Type: `Any`
-* Default: `$::prometheus::params::node_exporter_version`
-
-##### `node_exporter_port`
-
-* Type: `Any`
-* Default: `$::prometheus::params::node_exporter_port`
-
-##### `addon_dir`
-
-* Type: `Any`
-* Default: `$::prometheus::params::addon_dir`
-
-##### `helper_dir`
-
-* Type: `Any`
-* Default: `$::prometheus::params::helper_dir`
-
-##### `prometheus_namespace`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_namespace`
-
-##### `prometheus_image`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_image`
-
-##### `prometheus_version`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_version`
-
-##### `prometheus_storage_local_retention`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_storage_local_retention`
-
-##### `prometheus_storage_local_memchunks`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_storage_local_memchunks`
-
-##### `prometheus_port`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_port`
-
-##### `prometheus_use_module_config`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_use_module_config`
-
-##### `prometheus_use_module_rules`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_use_module_rules`
-
-##### `prometheus_install_state_metrics`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_install_state_metrics`
-
-##### `prometheus_install_node_exporter`
-
-* Type: `Any`
-* Default: `$::prometheus::params::prometheus_install_node_exporter`
+* Type: `Integer`
+* Default: `2`
 
 
-### `prometheus::blackbox_etcd`
+### `prometheus::blackbox_exporter_etcd`
 
-Get blackbox_exporter
+exporter_# Sets up a blackbox exporter to forward etcd metrics from etcd nodes
 
 #### Parameters
 
 ##### `download_url`
 
-* Type: `Any`
-* Default: `$::prometheus::blackbox_download_url`
+* Type: `String`
+* Default: `'https://github.com/jetstack-experimental/blackbox_exporter/releases/download/v#VERSION#/blackbox_exporter_#VERSION#_linux_amd64'`
+
+##### `version`
+
+* Type: `String`
+* Default: `'0.4.0-jetstack'`
 
 ##### `config_dir`
 
-* Type: `Any`
-* Default: `$::prometheus::blackbox_config_dir`
+* Type: `String`
+* Default: `'/etc/blackbox_exporter'`
 
-##### `dest_dir`
+##### `port`
 
-* Type: `Any`
-* Default: `$::prometheus::blackbox_dest_dir`
-
-##### `systemd_path`
-
-* Type: `Any`
-* Default: `$::prometheus::systemd_path`
+* Type: `Integer`
+* Default: `9115`
 
 
-### `prometheus::node_exporter_service`
+### `prometheus::kube_state_metrics`
 
 
 
 #### Parameters
 
-##### `systemd_path`
+##### `image`
+
+* Type: `String`
+* Default: `'gcr.io/google_containers/kube-state-metrics'`
+
+##### `version`
+
+* Type: `String`
+* Default: `'1.1.0'`
+
+##### `resizer_image`
+
+* Type: `String`
+* Default: `'gcr.io/google_containers/addon-resizer'`
+
+##### `resizer_version`
+
+* Type: `String`
+* Default: `'1.0'`
+
+
+### `prometheus::node_exporter`
+
+
+
+#### Parameters
+
+##### `image`
+
+* Type: `String`
+* Default: `'prom/node-exporter'`
+
+##### `version`
+
+* Type: `String`
+* Default: `'0.15.2'`
+
+##### `download_url`
+
+* Type: `String`
+* Default: `'https://github.com/prometheus/node_exporter/releases/download/v#VERSION#/node_exporter-#VERSION#.linux-amd64.tar.gz'`
+
+##### `sha256sums_url`
+
+* Type: `String`
+* Default: `'https://github.com/prometheus/node_exporter/releases/download/v#VERSION#/sha256sums.txt'`
+
+##### `signature_url`
+
+* Type: `String`
+* Default: `'https://releases.tarmak.io/signatures/node_exporter/#VERSION#/sha256sums.txt.asc'`
+
+##### `port`
 
 * Type: `Any`
-* Default: `$::prometheus::systemd_path`
-
-##### `node_exporter_image`
-
-* Type: `Any`
-* Default: `$::prometheus::node_exporter_image`
-
-##### `node_exporter_version`
-
-* Type: `Any`
-* Default: `$::prometheus::node_exporter_version`
-
-##### `node_exporter_port`
-
-* Type: `Any`
-* Default: `$::prometheus::node_exporter_port`
+* Default: `9100`
 
 
 ### `prometheus::params`
@@ -198,108 +177,123 @@ Get blackbox_exporter
 
 
 
-### `prometheus::prometheus_deployment`
+### `prometheus::server`
 
 
 
 #### Parameters
 
-##### `addon_dir`
+##### `image`
 
-* Type: `Any`
-* Default: `$::prometheus::addon_dir`
+* Type: `String`
+* Default: `'prom/prometheus'`
 
-##### `helper_dir`
+##### `version`
 
-* Type: `Any`
-* Default: `$::prometheus::helper_dir`
+* Type: `String`
+* Default: `'2.0.0'`
 
-##### `prometheus_namespace`
+##### `reloader_image`
 
-* Type: `Any`
-* Default: `$::prometheus::prometheus_namespace`
+* Type: `String`
+* Default: `'jimmidyson/configmap-reload'`
 
-##### `prometheus_image`
+##### `reloader_version`
 
-* Type: `Any`
-* Default: `$::prometheus::prometheus_image`
+* Type: `String`
+* Default: `'0.1'`
 
-##### `prometheus_version`
+##### `retention`
 
-* Type: `Any`
-* Default: `$::prometheus::prometheus_version`
+* Type: `String`
+* Default: `'720h'`
 
-##### `prometheus_storage_local_retention`
+##### `port`
 
-* Type: `Any`
-* Default: `$::prometheus::prometheus_storage_local_retention`
+* Type: `Integer[1025,65535]`
+* Default: `9090`
 
-##### `prometheus_storage_local_memchunks`
+##### `external_url`
 
-* Type: `Any`
-* Default: `$::prometheus::prometheus_storage_local_memchunks`
+* Type: `String`
+* Default: `''`
 
-##### `prometheus_port`
+##### `persistent_volume`
 
-* Type: `Any`
-* Default: `$::prometheus::prometheus_port`
+* Type: `Boolean`
+* Default: `false`
 
-##### `prometheus_use_module_config`
+##### `persistent_volume_size`
 
-* Type: `Any`
-* Default: `$::prometheus::prometheus_use_module_config`
+* Type: `Integer`
+* Default: `15`
 
-##### `etcd_cluster`
+##### `kubernetes_token_file`
 
-* Type: `Any`
-* Default: `$::prometheus::etcd_cluster`
+* Type: `String`
+* Default: `'/var/run/secrets/kubernetes.io/serviceaccount/token'`
 
-##### `etcd_k8s_port`
+##### `kubernetes_ca_file`
 
-* Type: `Any`
-* Default: `$::prometheus::etcd_k8s_port`
-
-##### `etcd_events_port`
-
-* Type: `Any`
-* Default: `$::prometheus::etcd_events_port`
-
-##### `etcd_overlay_port`
-
-* Type: `Any`
-* Default: `$::prometheus::etcd_overlay_port`
-
-##### `prometheus_use_module_rules`
-
-* Type: `Any`
-* Default: `$::prometheus::prometheus_use_module_rules`
-
-##### `prometheus_install_state_metrics`
-
-* Type: `Any`
-* Default: `$::prometheus::prometheus_install_state_metrics`
-
-##### `prometheus_install_node_exporter`
-
-* Type: `Any`
-* Default: `$::prometheus::prometheus_install_node_exporter`
-
-##### `node_exporter_image`
-
-* Type: `Any`
-* Default: `$::prometheus::node_exporter_image`
-
-##### `node_exporter_port`
-
-* Type: `Any`
-* Default: `$::prometheus::node_exporter_port`
-
-##### `node_exporter_version`
-
-* Type: `Any`
-* Default: `$::prometheus::node_exporter_version`
+* Type: `String`
+* Default: `'/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'`
 
 ## DefinedTypes
+
+### `prometheus::rule`
+
+
+
+#### Parameters
+
+##### `expr`
+
+* Type: `String`
+
+##### `summary`
+
+* Type: `String`
+
+##### `description`
+
+* Type: `String`
+
+##### `for`
+
+* Type: `String`
+* Default: `'5m'`
+
+##### `labels`
+
+* Type: `Any`
+* Default: `{'severity' => 'page'}`
+
+##### `order`
+
+* Type: `Integer`
+* Default: `10`
+
+
+### `prometheus::scrape_config`
+
+
+
+#### Parameters
+
+##### `order`
+
+* Type: `Integer`
+
+##### `config`
+
+* Type: `Any`
+* Default: `{}`
+
+##### `job_name`
+
+* Type: `Any`
+* Default: `$title`
+
 
 ### `prometheus::wget_file`
 

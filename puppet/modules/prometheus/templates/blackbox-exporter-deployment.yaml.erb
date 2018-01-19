@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: blackbox-exporter
+  namespace: <%= @namespace %>
+spec:
+  replicas: <%= @replicas %>
+  selector:
+    matchLabels:
+      app: blackbox-exporter
+  template:
+    metadata:
+      name: blackbox-exporter
+      labels:
+        app: blackbox-exporter
+    spec:
+      containers:
+      - name: blackbox-exporter
+        image: <%= @image %>:v<%= @version %>
+        args:
+        - --config.file=/etc/blackbox_exporter/config.yml
+        - --web.listen-address=:<%= @port %>
+        ports:
+        - name: web
+          containerPort: <%= @port %>

@@ -4,14 +4,11 @@ metadata:
   labels:
     app: prometheus
   name: prometheus
-  namespace: <%= @prometheus_namespace %>
+  namespace: <%= @namespace %>
 spec:
   ports:
-  - nodePort: 31131
-    port: 9090
+  - port: <%= @port %>
     protocol: TCP
-    targetPort: 9090
+    targetPort: <%= @port %>
   selector:
     app: prometheus
-  sessionAffinity: None
-  type: NodePort
