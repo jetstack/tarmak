@@ -11,7 +11,7 @@ cluster is in need of signed certificates from Vault to operate. These
 certificates need to be stored locally and regularly renewed.
 
 It is essential for the Vault stack to be executed and completed before the
-Kuebrnetes stacks as they rely on communication from Vault. With the Vault
+Kubernetes stacks as they rely on communication from Vault. With the Vault
 stack completed and the connection to the Vault server established, the
 vault-helper package is used to mount all backends (Etcd, Etcd overlay, K8s,
 K8s proxy and secrets generic) to Vault if they have not already. Mounts with
