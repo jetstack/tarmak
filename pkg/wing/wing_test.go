@@ -109,25 +109,27 @@ func TestWing_SIGTERM_handler_first_execute(t *testing.T) {
 	}()
 
 	// start replacement process
-	proccess := exec.Command(
+	process := exec.Command(
 		"sleep",
 		"100",
 	)
-	if err := proccess.Start(); err != nil {
+	if err := process.Start(); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	// channel that gets closed after sleep has been stopped
 	exitCh := make(chan struct{})
 	go func() {
-		proccess.Wait()
+		process.Wait()
 		close(exitCh)
 	}()
 
 	// once started send sigterm to wing
 	w.fakeCommand.EXPECT().Start().Do(func() {
 		// after start send sigterm to wing
+		time.Sleep(time.Millisecond)
 		w.signalCh <- syscall.SIGTERM
+		<-w.convergeStopCh
 	})
 
 	// make wing wait for us to signal the exit
@@ -136,11 +138,18 @@ func TestWing_SIGTERM_handler_first_execute(t *testing.T) {
 	})
 
 	// return sleep process instead
-	w.fakeCommand.EXPECT().Process().AnyTimes().Return(proccess.Process)
+	w.fakeCommand.EXPECT().Process().AnyTimes().Return(process.Process)
 
 	// run a converge
 	w.converge()
 
+	//Ensure close from signal handlers
+	if _, ok := (<-w.convergeStopCh); ok {
+		t.Error("expected convergeStopCh to be closed")
+	}
+	if _, ok := (<-w.stopCh); ok {
+		t.Error("expected stopCh to be closed")
+	}
 }
 
 // this tests when the SIGTERM hits wing when it's currently waiting in the exp backoff
@@ -184,40 +193,261 @@ func TestWing_SIGTERM_handler_backoff(t *testing.T) {
 	// run a converge
 	w.converge()
 
+	//Ensure close from signal handlers
+	if _, ok := (<-w.convergeStopCh); ok {
+		t.Error("expected convergeStopCh to be closed")
+	}
+	if _, ok := (<-w.stopCh); ok {
+		t.Error("expected stopCh to be closed")
+	}
 }
 
-func TestWing_SIGHUP_handler(t *testing.T) {
-	t.Skip("disabled needs refactoring")
+// this tests when the SIGHUP hits wing when it's currently running puppet
+func TestWing_SIGHUP_handler_first_excute(t *testing.T) {
 	w := newFakeWing(t)
 	defer w.ctrl.Finish()
 	defer deleteTmpFiles(t)
 
+	// enable signal handling
 	go func() {
 		w.signalHandler(w.signalCh)
 	}()
 
+	// start replacement process
+	process := exec.Command(
+		"sleep",
+		"100",
+	)
+	if err := process.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// channel that gets closed after sleep has been stopped
+	exitCh := make(chan struct{})
+	go func() {
+		process.Wait()
+		close(exitCh)
+	}()
+
+	// once started send sigterm to wing
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		// after start send SIGHUP to wing
+		w.log.Debugf("fake process called start")
+		time.Sleep(time.Millisecond)
+		w.signalCh <- syscall.SIGHUP
+		<-w.convergeStopCh
+	}).Times(1)
+	// make wing wait for us to signal the exit
+	w.fakeCommand.EXPECT().Wait().Do(func() {
+		w.log.Debugf("fake process called wait")
+		<-exitCh
+	}).Times(1)
+
+	//After SIGHUP expect another convergence to run and then close
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start again")
+	}).Times(1)
+
+	w.fakeCommand.EXPECT().Wait().Do(func() {
+		w.log.Debugf("fake process called wait again")
+		close(w.stopCh)
+	}).Times(1)
+
+	// return sleep process instead
+	w.fakeCommand.EXPECT().Process().AnyTimes().Return(process.Process)
+
+	// run a converge
+	w.converge()
+
+	//Ensure close from signal handlers
+	if _, ok := (<-w.convergeStopCh); ok {
+		t.Error("expected convergeStopCh to be closed")
+	}
+	if _, ok := (<-w.stopCh); ok {
+		t.Error("expected stopCh to be closed")
+	}
 }
 
-func TestWing_SIGTERM_puppet(t *testing.T) {
-	t.Skip("disabled needs refactoring")
+// this tests when the SIGHUP hits wing when it's currently waiting in the exp backoff
+func TestWing_SIGHUP_handler_backoff(t *testing.T) {
 	w := newFakeWing(t)
 	defer w.ctrl.Finish()
 	defer deleteTmpFiles(t)
 
+	// TODO: find a better way to get an error with non zero return code
+	process := exec.Command(
+		"false",
+	)
+	if err := process.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var processErr error
+	puppetFinished := make(chan struct{})
+	go func() {
+		processErr = process.Wait()
+		<-puppetFinished
+
+		puppetFinished = make(chan struct{})
+		process.Wait()
+		close(puppetFinished)
+	}()
+
+	// enable signal handling
 	go func() {
 		w.signalHandler(w.signalCh)
 	}()
+
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start")
+	})
+	// make wing wait for us to signal the exit
+	w.fakeCommand.EXPECT().Wait().Return(processErr).Do(func() {
+		w.log.Debugf("fake process called wait")
+		close(puppetFinished)
+	})
+
+	//Ensure re-converge after sending SIGHUP during backoff
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start again")
+	})
+	w.fakeCommand.EXPECT().Wait().Do(func() {
+		w.log.Debugf("fake process called wait again")
+		close(w.stopCh)
+		<-puppetFinished
+	})
+
+	// send signal after puppet exited
+	go func() {
+		<-puppetFinished
+		time.Sleep(time.Millisecond)
+		w.signalCh <- syscall.SIGHUP
+	}()
+
+	// run a converge
+	w.converge()
+
+	//Ensure close from signal handlers
+	if _, ok := (<-w.convergeStopCh); ok {
+		t.Error("expected convergeStopCh to be closed")
+	}
+	if _, ok := (<-w.stopCh); ok {
+		t.Error("expected stopCh to be closed")
+	}
 }
 
-func TestWing_SIGHUP_puppet(t *testing.T) {
-	t.Skip("disabled needs refactoring")
+//Test nothing happens when sending a SIGTERM after puppet has converged
+func TestWing_SIGTERM_puppet_converged(t *testing.T) {
 	w := newFakeWing(t)
 	defer w.ctrl.Finish()
 	defer deleteTmpFiles(t)
 
+	// TODO: find a better way to get an error with non zero return code
+	process := exec.Command(
+		"true",
+	)
+	if err := process.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	processErr := process.Wait()
+
+	// enable signal handling
 	go func() {
 		w.signalHandler(w.signalCh)
 	}()
+
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start")
+	})
+
+	// make wing wait for us to signal the exit
+	puppetFinished := make(chan struct{})
+	w.fakeCommand.EXPECT().Wait().Return(processErr).Do(func() {
+		w.log.Debugf("fake process called wait")
+		close(puppetFinished)
+	})
+
+	// run a converge
+	w.converge()
+
+	w.convergeWG.Wait()
+	if _, ok := (<-puppetFinished); ok {
+		t.Error("expected puppetFinished to be closed")
+	}
+	time.Sleep(time.Microsecond)
+
+	//Send SIGTERM after convergence
+	w.signalCh <- syscall.SIGTERM
+
+	//Ensure close from signal handlers
+	if _, ok := (<-w.convergeStopCh); ok {
+		t.Error("expected convergeStopCh to be closed")
+	}
+	if _, ok := (<-w.stopCh); ok {
+		t.Error("expected stopCh to be closed")
+	}
+}
+
+//Test re-convergence happens when sending a SIGHUP after puppet has converged
+func TestWing_SIGHUP_puppet_converged(t *testing.T) {
+	w := newFakeWing(t)
+	defer w.ctrl.Finish()
+	defer deleteTmpFiles(t)
+
+	// TODO: find a better way to get an error with non zero return code
+	process := exec.Command(
+		"true",
+	)
+	if err := process.Start(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	processErr := process.Wait()
+
+	// enable signal handling
+	go func() {
+		w.signalHandler(w.signalCh)
+	}()
+
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start")
+	})
+
+	// make wing wait for us to signal the exit
+	puppetFinished := make(chan struct{})
+	w.fakeCommand.EXPECT().Wait().Return(processErr).Do(func() {
+		w.log.Debugf("fake process called wait")
+		close(puppetFinished)
+	})
+
+	// run a converge
+	w.converge()
+
+	w.convergeWG.Wait()
+	if _, ok := (<-puppetFinished); ok {
+		t.Error("expected puppetFinished to be closed")
+	}
+
+	//Expect re-convergence
+	w.fakeCommand.EXPECT().Start().Do(func() {
+		w.log.Debugf("fake process called start again")
+	})
+	w.fakeCommand.EXPECT().Wait().Return(processErr).Do(func() {
+		w.log.Debugf("fake process called wait again")
+		close(w.stopCh)
+	})
+
+	time.Sleep(time.Microsecond)
+
+	//Send SIGHUP after convergence
+	w.signalCh <- syscall.SIGHUP
+
+	//Ensure close from signal handlers
+	if _, ok := (<-w.convergeStopCh); ok {
+		t.Error("expected convergeStopCh to be closed")
+	}
+	if _, ok := (<-w.stopCh); ok {
+		t.Error("expected stopCh to be closed")
+	}
 }
 
 func createTmpFiles() error {
