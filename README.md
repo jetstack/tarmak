@@ -25,10 +25,10 @@ page](https://github.com/jetstack/tarmak/releases):
     $ chmod +x tarmak
 
 If you want compile from source, follow the [build
-guide](https://docs.tarmak.io/en/latest/developer-guide.html#building-tarmak)
+guide](https://docs.tarmak.io/developer-guide.html#building-tarmak)
 instead.
 
-Now follow the [user guide](https://docs.tarmak.io/en/latest/user-guide.html).
+Now follow the [user guide](https://docs.tarmak.io/user-guide.html).
 
 ## Documentation
 
