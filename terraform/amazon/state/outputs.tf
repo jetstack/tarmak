@@ -15,7 +15,7 @@ output "public_zone" {
 }
 
 output "jenkins_data_volume_id" {
-  value = "${aws_ebs_volume.jenkins.id}"
+  value = "${aws_ebs_volume.jenkins.*.id}"
 }
 
 output "bucket_prefix" {

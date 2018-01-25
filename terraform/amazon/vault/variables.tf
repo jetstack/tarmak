@@ -72,7 +72,7 @@ output "vault_url" {
 }
 
 output "vault_kms_key_id" {
-  value = "${element(split("/", data.terraform_remote_state.network.secrets_kms_arn), 1)}"
+  value = "${element(split("/", data.terraform_remote_state.state.secrets_kms_arn.0), 1)}"
 }
 
 output "vault_unseal_key_name" {

@@ -10,13 +10,13 @@ data "template_file" "{{.TFName}}_user_data" {
   vars {
     region = "${var.region}"
 
-    puppet_tar_gz_bucket_path = "${data.terraform_remote_state.hub_state.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+    puppet_tar_gz_bucket_path = "${data.terraform_remote_state.hub_state.secrets_bucket.0}/${aws_s3_bucket_object.puppet-tar-gz.key}"
 
     vault_token = "${var.vault_init_token_{{.Role.Name}}}"
     vault_ca    = "${base64encode(data.terraform_remote_state.hub_vault.vault_ca)}"
     vault_url   = "${data.terraform_remote_state.hub_vault.vault_url}"
 
-    tarmak_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
+    tarmak_dns_root      = "${data.terraform_remote_state.hub_network.private_zone.0}"
     tarmak_role          = "{{.Role.Name}}"
     tarmak_instance_pool = "{{.Name}}"
     tarmak_cluster       = "${data.template_file.stack_name.rendered}"
@@ -206,7 +206,7 @@ resource "aws_ebs_volume" "{{$instancePool.TFName}}_{{.Name}}" {
 
 {{ end -}}
 resource "aws_route53_record" "{{.TFName}}" {
-  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
+  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id.0}"
   name    = "etcd-${count.index+1}.${data.template_file.stack_name.rendered}"
   type    = "A"
   ttl     = "300"

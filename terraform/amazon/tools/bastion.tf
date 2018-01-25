@@ -84,7 +84,7 @@ resource "aws_route53_record" "bastion" {
 }
 
 resource "aws_route53_record" "bastion_private" {
-  zone_id = "${data.terraform_remote_state.network.private_zone_id}"
+  zone_id = "${data.terraform_remote_state.network.private_zone_id.0}"
   name    = "bastion.${var.environment}"
   type    = "A"
   ttl     = "60"

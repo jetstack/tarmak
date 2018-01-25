@@ -44,9 +44,9 @@ resource "aws_kms_alias" "backups" {
 }
 
 output "backups_bucket" {
-  value = "${aws_s3_bucket.backups.bucket}"
+  value = "${aws_s3_bucket.backups.*.bucket}"
 }
 
 output "backups_kms_arn" {
-  value = "${aws_kms_key.backups.arn}"
+  value = "${aws_kms_key.backups.*.arn}"
 }
