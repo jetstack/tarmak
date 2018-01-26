@@ -1,6 +1,6 @@
 class calico::policy_controller (
-  String $image = 'quay.io/calico/kube-policy-controller',
-  String $version = '0.7.0',
+  String $image = 'quay.io/calico/kube-controllers',
+  String $version = '1.0.3',
 )
 {
   include ::kubernetes
