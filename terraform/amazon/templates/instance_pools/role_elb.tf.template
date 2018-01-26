@@ -34,7 +34,7 @@ resource "aws_elb" "{{.TFName}}" {
 }
 
 resource "aws_route53_record" "{{.TFName}}_api" {
-  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id}"
+  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id.0}"
   name    = "api.${data.template_file.stack_name.rendered}"
   type    = "A"
 

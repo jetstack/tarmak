@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+### Versions
+
+| Application | Supported versions | Default  |
+|-------------|-------------------:|---------:|
+| Packer      |                    | `1.0.2`  |
+| Terraform   |                    | `0.10.8` |
+| Consul      |                    | `1.0.2`  |
+| Vault       |                    | `0.9.1`  |
+| Kubernetes  | `>= 1.6 && < 1.10` | `1.7.10` |
+
 ## [0.2.1]: 0.2.1 - 2017-12-05
 
 ### Fixed

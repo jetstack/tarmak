@@ -2,7 +2,7 @@ data "template_file" "iam_tarmak_bucket_read" {
   template = "${file("${path.module}/templates/iam_tarmak_bucket_read.json")}"
 
   vars {
-    puppet_tar_gz_bucket_path = "${data.terraform_remote_state.hub_state.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+    puppet_tar_gz_bucket_path = "${data.terraform_remote_state.hub_state.secrets_bucket.0}/${aws_s3_bucket_object.puppet-tar-gz.key}"
   }
 }
 

@@ -24,9 +24,9 @@ resource "aws_kms_alias" "secrets" {
 }
 
 output "secrets_bucket" {
-  value = "${aws_s3_bucket.secrets.bucket}"
+  value = "${aws_s3_bucket.secrets.*.bucket}"
 }
 
 output "secrets_kms_arn" {
-  value = "${aws_kms_key.secrets.arn}"
+  value = "${aws_kms_key.secrets.*.arn}"
 }

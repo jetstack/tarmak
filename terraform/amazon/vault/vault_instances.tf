@@ -3,7 +3,7 @@ data "template_file" "vault" {
   count    = "${var.instance_count}"
 
   vars {
-    fqdn           = "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zone}"
+    fqdn           = "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zone.0}"
     environment    = "${var.environment}"
     region         = "${var.region}"
     instance_count = "${var.instance_count}"
@@ -17,14 +17,14 @@ data "template_file" "vault" {
     consul_encrypt = "${replace(replace(random_id.consul_encrypt.b64,"-","+"),"_","/")}=="
 
     vault_version       = "${var.vault_version}"
-    vault_tls_cert_path = "s3://${data.terraform_remote_state.state.secrets_bucket}/${element(aws_s3_bucket_object.node-certs.*.key, count.index)}"
-    vault_tls_key_path  = "s3://${data.terraform_remote_state.state.secrets_bucket}/${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
-    vault_tls_ca_path   = "s3://${data.terraform_remote_state.state.secrets_bucket}/${aws_s3_bucket_object.ca-cert.key}"
+    vault_tls_cert_path = "s3://${data.terraform_remote_state.state.secrets_bucket.0}/${element(aws_s3_bucket_object.node-certs.*.key, count.index)}"
+    vault_tls_key_path  = "s3://${data.terraform_remote_state.state.secrets_bucket.0}/${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
+    vault_tls_ca_path   = "s3://${data.terraform_remote_state.state.secrets_bucket.0}/${aws_s3_bucket_object.ca-cert.key}"
 
-    vault_unsealer_kms_key_id     = "${data.terraform_remote_state.state.secrets_kms_arn}"
+    vault_unsealer_kms_key_id     = "${data.terraform_remote_state.state.secrets_kms_arn.0}"
     vault_unsealer_ssm_key_prefix = "${data.template_file.vault_unseal_key_name.rendered}"
 
-    backup_bucket_prefix = "${data.terraform_remote_state.state.backups_bucket}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
+    backup_bucket_prefix = "${data.terraform_remote_state.state.backups_bucket.0}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
 
     # run backup once per instance spread throughout the day
     backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.instance_count))}:00:00"

@@ -23,13 +23,27 @@ func (a *Amazon) secretsKMSKeyID() (string, error) {
 		return "", fmt.Errorf("error could not find '%s' in terraform state output", key)
 	}
 
-	secretID, ok := secretIDIntf.(string)
-	if !ok {
+	var secretID string
+	switch v := secretIDIntf.(type) {
+	// return a list (necessary for 0.11 terraform +
+	case []interface{}:
+		if len(v) < 1 {
+			return "", fmt.Errorf("no list elements found for '%s'", key)
+		}
+		elem, ok := v[0].(string)
+		if !ok {
+			return "", fmt.Errorf("first element for '%s' is not a string", key)
+		}
+		secretID = elem
+
+	case string:
+		secretID = v
+
+	default:
 		return "", fmt.Errorf("error unexpected type for '%s': %T", key, secretIDIntf)
 	}
 
 	return secretID, nil
-
 }
 
 func (a *Amazon) vaultUnsealKeyName() (string, error) {
