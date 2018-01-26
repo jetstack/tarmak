@@ -61,7 +61,7 @@ describe 'calico::policy_controller' do
         end
         it 'sets up TLS' do
           expect(calico_policy_controller).to match(/^[-\s].*name: calico-config$/)
-          expect(calico_policy_controller).to match(/^[-\s].*image: quay.io\/calico\/kube-policy-controller:v/)
+          expect(calico_policy_controller).to match(/^[-\s].*image: quay.io\/calico\/kube-controllers:v/)
           expect(calico_policy_controller).to match(/^[-\s].*mountPath: \/my\/etcd-secrets$/)
         end
       end
