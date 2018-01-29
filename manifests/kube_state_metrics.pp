@@ -1,6 +1,6 @@
 class prometheus::kube_state_metrics (
   String $image = 'gcr.io/google_containers/kube-state-metrics',
-  String $version = '1.1.0',
+  String $version = '1.2.0',
   String $resizer_image = 'gcr.io/google_containers/addon-resizer',
   String $resizer_version = '1.0',
 ){
@@ -31,10 +31,17 @@ class prometheus::kube_state_metrics (
   }
 
   prometheus::rule { 'KubernetesPodUnready':
-    expr        => 'SUM((kube_pod_status_ready{condition="true"} and ON(pod, namespace) kube_pod_status_phase{phase="Running"})) WITHOUT (kubernetes_name, kubernetes_namespace, job, app, instance, condition) == 0',
+    expr        => '(kube_pod_info{created_by_kind!="Job"} and ON(pod, namespace) kube_pod_status_ready{condition="true"}) == 0',
     for         => '5m',
     summary     => '{{$labels.namespace}}/{{$labels.pod}}: pod is unready',
     description => '{{$labels.namespace}}/{{$labels.pod}}: pod is unready',
+  }
+
+  prometheus::rule { 'KubernetesPodFrequentlyRestarting':
+    expr        => 'increase(kube_pod_container_status_restarts[1h]) > 5',
+    for         => '5m',
+    summary     => '{{$labels.namespace}}/{{$labels.pod}}: pod is too frequently restarting',
+    description => 'Pod {{$labels.namespaces}}/{{$labels.pod}} was restarted {{$value}} times within the last hour',
   }
 
   prometheus::rule { 'KubernetesNodeUnready':
