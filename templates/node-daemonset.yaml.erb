@@ -12,6 +12,8 @@ spec:
   selector:
     matchLabels:
       k8s-app: calico-node
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -30,6 +32,9 @@ spec:
 <%- if @rbac_enabled -%>
       serviceAccountName: calico-node
 <%- end -%>
+      # Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force
+      # deletion": https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods.
+      terminationGracePeriodSeconds: 0
 <%- unless @version_before_1_6 -%>
       tolerations:
       - key: "CriticalAddonsOnly"
