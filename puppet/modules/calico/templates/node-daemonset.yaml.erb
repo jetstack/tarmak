@@ -12,6 +12,8 @@ spec:
   selector:
     matchLabels:
       k8s-app: calico-node
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -26,10 +28,17 @@ spec:
             {"key": "node-role.kubernetes.io/master", "effect": "NoSchedule"}
           ]
 <%- end -%>
+<%- if @metrics_port > 0 -%>
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "<%= @metrics_port %>"
+<%- end -%>
     spec:
 <%- if @rbac_enabled -%>
       serviceAccountName: calico-node
 <%- end -%>
+      # Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force
+      # deletion": https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods.
+      terminationGracePeriodSeconds: 0
 <%- unless @version_before_1_6 -%>
       tolerations:
       - key: "CriticalAddonsOnly"
@@ -103,6 +112,14 @@ spec:
             # Setup a custom MTU value
             - name: FELIX_IPINIPMTU
               value: "<%= @mtu %>"
+<%- if @metrics_port > 0 -%>
+            # Enable metrics collection
+            - name: FELIX_PROMETHEUSMETRICSENABLED
+              value: "true"
+            # Enable metrics collection
+            - name: FELIX_PROMETHEUSMETRICSPORT
+              value: "<%= @metrics_port %>"
+<%- end -%>
           securityContext:
             privileged: true
           resources:
