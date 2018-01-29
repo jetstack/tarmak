@@ -28,6 +28,10 @@ spec:
             {"key": "node-role.kubernetes.io/master", "effect": "NoSchedule"}
           ]
 <%- end -%>
+<%- if @metrics_port > 0 -%>
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "<%= @metrics_port %>"
+<%- end -%>
     spec:
 <%- if @rbac_enabled -%>
       serviceAccountName: calico-node
@@ -108,6 +112,14 @@ spec:
             # Setup a custom MTU value
             - name: FELIX_IPINIPMTU
               value: "<%= @mtu %>"
+<%- if @metrics_port > 0 -%>
+            # Enable metrics collection
+            - name: FELIX_PROMETHEUSMETRICSENABLED
+              value: "true"
+            # Enable metrics collection
+            - name: FELIX_PROMETHEUSMETRICSPORT
+              value: "<%= @metrics_port %>"
+<%- end -%>
           securityContext:
             privileged: true
           resources:
