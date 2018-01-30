@@ -4,6 +4,11 @@ provider "aws" {
   version             = "~> 1.7.1"
 }
 
+provider "awstag" {
+  region              = "${var.region}"
+  allowed_account_ids = ["${var.allowed_account_ids}"]
+}
+
 provider "template" {
   version = "~> 1.0"
 }

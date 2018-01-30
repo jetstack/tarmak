@@ -116,11 +116,10 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
     propagate_at_launch = true
   }
 
-
   # Required for AWS cloud provider
   tag {
-    key                 = "KubernetesCluster"
-    value               = "${data.template_file.stack_name.rendered}"
+    key                 = "kubernetes.io/cluster/${data.template_file.stack_name.rendered}"
+    value               = ""
     propagate_at_launch = true
   }
 }
@@ -151,6 +150,10 @@ resource "aws_instance" "{{.TFName}}" {
     volume_size = "${var.{{.TFName}}_root_volume_size}"
   }
 
+  lifecycle {
+    ignore_changes = ["tags"]
+  }
+
   tags {
     Name               = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
     Environment        = "${var.environment}"
@@ -158,7 +161,6 @@ resource "aws_instance" "{{.TFName}}" {
     Contact            = "${var.contact}"
     Etcd_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
     Role               = "etcd"
-    KubernetesCluster  = "${data.template_file.stack_name.rendered}"
     tarmak_role        = "etcd-${count.index+1}"
   }
 
@@ -167,6 +169,14 @@ resource "aws_instance" "{{.TFName}}" {
   lifecycle {
     ignore_changes = ["volume_tags"]
   }
+}
+
+# Add dynamic instance tags
+resource "awstag_ec2_tag" "{{.TFName}}" {
+  count = "${var.{{.TFName}}_count}"
+  ec2_id = "${element(aws_instance.{{.TFName}}.*.id, count.index)}"
+  key = "kubernetes.io/cluster/${data.template_file.stack_name.rendered}"
+  value = ""
 }
 
 # This cloudwatch alarm sets up an autorecovery of the instance in case it fails the checks
