@@ -1,0 +1,14 @@
+[Unit]
+Description=Consul exporter
+
+[Service]
+User=<%= @user %>
+Group=<%= @group %>
+<%- if @token_file_path -%>
+EnvironmentFile=<%= @token_file_path %>
+<%- end -%>
+ExecStart=<%= @exporter_bin_path %> \
+  --consul.server=127.0.0.1:8500
+
+[Install]
+WantedBy=multi-user.target

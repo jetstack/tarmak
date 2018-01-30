@@ -1,0 +1,5 @@
+fixtures:
+  symlinks:
+    airworthy: "#{source_dir}/../airworthy"
+    archive: "#{source_dir}/../archive"
+    stdlib: "#{source_dir}/../stdlib"

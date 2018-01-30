@@ -29,4 +29,6 @@ class airworthy (
       $_checksum = $checksum
   }
 
+  class { '::airworthy::install': }
+  -> Class['::airworthy']
 }

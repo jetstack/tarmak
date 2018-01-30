@@ -1,0 +1,32 @@
+---
+HOSTS:
+  consul1:
+    roles:
+      - master
+      - consul
+    platform: el-7-x86_64
+    box: centos/7
+    box_version: 1710.01
+    hypervisor: vagrant_libvirt
+    ip: 10.123.0.11
+    vagrant_memsize: 256
+  consul2:
+    roles:
+      - consul
+    platform: el-7-x86_64
+    box: centos/7
+    box_version: 1710.01
+    hypervisor: vagrant_libvirt
+    ip: 10.123.0.12
+    vagrant_memsize: 256
+  consul3:
+    roles:
+      - consul
+    platform: el-7-x86_64
+    box: centos/7
+    box_version: 1710.01
+    hypervisor: vagrant_libvirt
+    ip: 10.123.0.13
+    vagrant_memsize: 256
+CONFIG:
+  type: foss
