@@ -45,7 +45,7 @@ multiversion_build: .venv
 multiversion_push: CLOUDSDK_CONFIG = $(CURDIR)/.gcloud
 multiversion_push:
 	mkdir -p $(CLOUDSDK_CONFIG)
-	chmod 644 $(CLOUDSDK_CONFIG)
+	chmod 700 $(CLOUDSDK_CONFIG)
 	gcloud auth activate-service-account --key-file $(DOCS_GOOGLE_APPLICATION_CREDENTIALS)
 	gsutil -m rsync -rd _build/ gs://docs.tarmak.io/
 	rm -rf $(CLOUDSDK_CONFIG)
