@@ -1,10 +1,16 @@
+# Calico Node
+#
+# Calico Node contains a Daemon Set that spinsup the overlay network on every
+# workern node.
+# @param metrics_port Port for felix metrics endpoint, 0 disables metrics collection
 class calico::node (
   String $node_image = 'quay.io/calico/node',
-  String $node_version = '2.5.1',
+  String $node_version = '2.6.6',
   String $cni_image = 'quay.io/calico/cni',
-  String $cni_version = '1.10.0',
+  String $cni_version = '1.11.2',
   String $ipv4_pool_cidr = '10.231.0.0/16',
   Enum['always', 'cross-subnet', 'off'] $ipv4_pool_ipip_mode = 'always',
+  Integer[0,65535] $metrics_port = 9091,
 )
 {
   include ::kubernetes
