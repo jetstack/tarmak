@@ -38,6 +38,8 @@ copy_artifacts:
 	cp -a $(BUILDDIR)/html ../_artifacts/docs
 
 multiversion_build: .venv
+	# ensure git remote is added and fetched (necessary for prow job)
+	git remote -v | grep origin || git remote add origin https://github.com/jetstack/tarmak.git && git fetch origin
 	$(VENV_PATH)/bin/sphinx-versioning build -r master -w "^(master|release-\d+\.\d+)$$" -W "none" ./docs ./_build
 
 multiversion_push: CLOUDSDK_CONFIG = $(CURDIR)/.gcloud
