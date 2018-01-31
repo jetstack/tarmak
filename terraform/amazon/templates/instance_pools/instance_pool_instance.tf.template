@@ -150,10 +150,6 @@ resource "aws_instance" "{{.TFName}}" {
     volume_size = "${var.{{.TFName}}_root_volume_size}"
   }
 
-  lifecycle {
-    ignore_changes = ["tags"]
-  }
-
   tags {
     Name               = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
     Environment        = "${var.environment}"
@@ -167,7 +163,7 @@ resource "aws_instance" "{{.TFName}}" {
   user_data = "${element(data.template_file.{{.TFName}}_user_data.*.rendered, count.index)}"
 
   lifecycle {
-    ignore_changes = ["volume_tags"]
+    ignore_changes = ["volume_tags", "tags"]
   }
 }
 
