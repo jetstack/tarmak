@@ -58,6 +58,7 @@ type Environment interface {
 	Provider() Provider
 	Validate() error
 	Name() string
+	HubName() string
 	BucketPrefix() string
 	Clusters() []Cluster
 	Cluster(name string) (cluster Cluster, err error)
