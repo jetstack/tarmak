@@ -91,6 +91,10 @@ func (e *Environment) Name() string {
 	return e.conf.Name
 }
 
+func (c *Environment) HubName() string {
+	return fmt.Sprintf("%s-%s", c.Name(), clusterv1alpha1.ClusterTypeHub)
+}
+
 func (e *Environment) Config() *tarmakv1alpha1.Environment {
 	return e.conf.DeepCopy()
 }
