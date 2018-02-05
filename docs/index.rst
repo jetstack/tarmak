@@ -48,3 +48,4 @@ build and deploy Kubernetes in production at scale.
 
    known-issues
    existing-vpc
+   vault-setup-config
