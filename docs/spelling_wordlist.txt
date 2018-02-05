@@ -29,3 +29,8 @@ stdin
 init
 Golang
 refactoring
+kube
+ttl
+apiserver
+api
+kubelet

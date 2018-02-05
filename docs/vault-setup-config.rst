@@ -85,14 +85,14 @@ Certificate Roles on Kubernetes CA
 **admin**: Allowed to get admin domain, certified for server certificates -
 long ttl.
 
-**kube-apiserver**: Allowed to get any hostname certified for server
+**kube-apiserver**: Allowed to get any domain name certified for server
 certificates - short ttl.
 
 **worker**: Allowed to get "kubelet" and "system:node" domains certified for
 server and client certificates - short ttl.
 
 **admin (kube-scheduler, kube-controller-manager, kube-proxy)**: Allowed to get
-"system:<rolename>" domains (i.e. "system:kube-scheduler") certified for client
+`system:<rolename>` domains (i.e. `system:kube-scheduler`) certified for client
 certificates - short ttl.
 
 **kube-apiserver-proxy**: Allowed to get "kube-apiserver-proxy" domain,
