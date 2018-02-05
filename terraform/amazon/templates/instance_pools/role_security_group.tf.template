@@ -32,7 +32,7 @@ resource "aws_security_group" "{{.TFName}}_elb" {
 
 {{range $role, $rules := .AWSSGRules}}
 {{range $rules}}
-source "aws_security_group_rule" "{{.Destination}}_allow_{{.Service}}_from_{{.Source}}" {
+resource "aws_security_group_rule" "{{.Destination}}_allow_{{.Service}}_from_{{.Source}}" {
   type                     = "{{.Direction}}"
   from_port                = {{.FromPort}}
   to_port                  = {{.ToPort}}
