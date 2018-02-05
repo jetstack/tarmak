@@ -24,6 +24,7 @@ type Port struct {
 }
 
 type FirewallRule struct {
+	Comment      string
 	Services     []Service
 	Direction    string
 	Sources      []Host
@@ -31,18 +32,20 @@ type FirewallRule struct {
 }
 
 var (
-	zeroPort      = uint16(0)
-	sshPort       = uint16(22)
-	bgpPort       = uint16(179)
-	overlayPort   = uint16(2359)
-	k8sEventsPort = uint16(2369)
-	k8sPort       = uint16(2379)
-	apiPort       = uint16(6443)
-	vaultPort     = uint16(8200)
-	nodePort      = uint16(9100)
-	blackboxPort  = uint16(9115)
-	wingPort      = uint16(9443)
-	maxPort       = uint16(65535)
+	zeroPort       = uint16(0)
+	sshPort        = uint16(22)
+	bgpPort        = uint16(179)
+	overlayPort    = uint16(2359)
+	k8sEventsPort  = uint16(2369)
+	k8sPort        = uint16(2379)
+	apiPort        = uint16(6443)
+	consulRCPPort  = uint16(8300)
+	consulSerfPort = uint16(8301)
+	vaultPort      = uint16(8200)
+	nodePort       = uint16(9100)
+	blackboxPort   = uint16(9115)
+	wingPort       = uint16(9443)
+	maxPort        = uint16(65535)
 )
 
 func newWingService() Service {
@@ -115,6 +118,27 @@ func newVaultService() Service {
 	}
 }
 
+func newConsulTCPService() Service {
+	return Service{
+		Name:     "consul-tcp",
+		Protocol: "tcp",
+		Ports: []Port{
+			Port{Single: &consulRCPPort},
+			Port{Single: &consulSerfPort},
+		},
+	}
+}
+
+func newConsulUDPService() Service {
+	return Service{
+		Name:     "consul-udp",
+		Protocol: "udp",
+		Ports: []Port{
+			Port{Single: &consulSerfPort},
+		},
+	}
+}
+
 func newBlackboxExporterService() Service {
 	return Service{
 		Name:     "blackbox_exporter",
@@ -151,49 +175,91 @@ func newBGPService() Service {
 	}
 }
 
-func FirewallRules() (rules []*FirewallRule, err error) {
-	_, CIDR0, err := net.ParseCIDR("0.0.0.0/0")
+func cidrAll() *net.IPNet {
+	_, ipNet, err := net.ParseCIDR("0.0.0.0/0")
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
+	return ipNet
+}
+
+func FirewallRules() (rules []*FirewallRule) {
 
 	return []*FirewallRule{
 		&FirewallRule{
-			Services:     []Service{newVaultService()},
-			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "kubernetes"}},
-			Destinations: []Host{Host{Role: "vault", Name: "kubernetes"}},
+			Comment:   "allow all instance to egress to anywhere",
+			Services:  []Service{newAllServices()},
+			Direction: "egress",
+			Sources: []Host{
+				Host{Role: "bastion"},
+				Host{Role: "vault"},
+				Host{Role: "etcd"},
+				Host{Role: "worker"},
+				Host{Role: "master"},
+			},
+			Destinations: []Host{Host{Name: "all", CIDR: cidrAll()}},
+		},
+
+		//// Bastion
+		&FirewallRule{
+			Comment:   "allow everyone to connect to the bastion via SSH",
+			Services:  []Service{newSSHService()},
+			Direction: "ingress",
+			// TODO:  use "admin_ips" for CIDR
+			Sources:      []Host{Host{Name: "admin_ips", CIDR: cidrAll()}},
+			Destinations: []Host{Host{Role: "bastion"}},
 		},
 		&FirewallRule{
-			Services:     []Service{newWingService()},
-			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "kubernetes"}},
-			Destinations: []Host{Host{Role: "bastion", Name: "kubernetes"}},
+			Comment:   "allow all instances to connect to wing",
+			Services:  []Service{newWingService()},
+			Direction: "ingress",
+			Sources: []Host{
+				Host{Role: "vault"},
+				Host{Role: "etcd"},
+				Host{Role: "worker"},
+				Host{Role: "master"},
+			},
+			Destinations: []Host{Host{Role: "bastion"}},
 		},
 		&FirewallRule{
-			Services:     []Service{newSSHService()},
-			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "bastion"}},
-			Destinations: []Host{Host{Role: "kubernetes"}},
+			Comment:   "allow bastion to connect to all instances via SSH",
+			Services:  []Service{newSSHService()},
+			Direction: "ingress",
+			Sources:   []Host{Host{Role: "bastion"}},
+			Destinations: []Host{
+				Host{Role: "vault"},
+				Host{Role: "etcd"},
+				Host{Role: "worker"},
+				Host{Role: "master"},
+			},
+		},
+
+		//// Vault
+		&FirewallRule{
+			Comment:   "allow all instances to connect to vault",
+			Services:  []Service{newVaultService()},
+			Direction: "ingress",
+			Sources: []Host{
+				Host{Role: "bastion"},
+				Host{Role: "vault"},
+				Host{Role: "etcd"},
+				Host{Role: "worker"},
+				Host{Role: "master"},
+			},
+			Destinations: []Host{Host{Role: "vault"}},
 		},
 		&FirewallRule{
-			Services:     []Service{newAllServices()},
+			Comment: "allow vault instances to connect to each other's consul",
+			Services: []Service{
+				newConsulTCPService(),
+				newConsulUDPService(),
+			},
 			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "kubernetes"}},
-			Destinations: []Host{Host{Role: "kubernetes"}},
+			Sources:      []Host{Host{Role: "vault"}},
+			Destinations: []Host{Host{Role: "vault"}},
 		},
-		&FirewallRule{
-			Services:     []Service{newAllServices()},
-			Direction:    "egress",
-			Sources:      []Host{Host{Role: "kubernetes"}},
-			Destinations: []Host{Host{Name: "kubernetes", CIDR: CIDR0}},
-		},
-		&FirewallRule{
-			Services:     []Service{newBlackboxExporterService(), newNodeExporterService()},
-			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "worker"}},
-			Destinations: []Host{Host{Role: "etcd"}},
-		},
+
+		//// Etcd
 		&FirewallRule{
 			Services:     []Service{newEtcdOverlayService()},
 			Direction:    "ingress",
@@ -201,59 +267,48 @@ func FirewallRules() (rules []*FirewallRule, err error) {
 			Destinations: []Host{Host{Role: "etcd"}},
 		},
 		&FirewallRule{
-			Services:     []Service{newBGPService(), newIPIPService(), newAPIService()},
+			Services:     []Service{newBlackboxExporterService(), newNodeExporterService()},
 			Direction:    "ingress",
 			Sources:      []Host{Host{Role: "worker"}},
+			Destinations: []Host{Host{Role: "etcd"}},
+		},
+
+		//// Master
+		&FirewallRule{
+			Comment:   "allow workers/master to connect to calico's service + api server",
+			Services:  []Service{newBGPService(), newIPIPService(), newAPIService()},
+			Direction: "ingress",
+			Sources: []Host{
+				Host{Role: "master"},
+				Host{Role: "worker"},
+			},
 			Destinations: []Host{Host{Role: "master"}},
 		},
 		&FirewallRule{
+			Comment:      "allow ELB to connect to API server",
 			Services:     []Service{newAPIService()},
 			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "elb"}},
+			Sources:      []Host{Host{Role: "master_elb"}},
 			Destinations: []Host{Host{Role: "master"}},
 		},
 		&FirewallRule{
-			Services:     []Service{newAPIService()},
-			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "master"}, Host{Role: "worker"}, Host{Role: "bastion"}},
-			Destinations: []Host{Host{Role: "elb"}},
-		},
-		&FirewallRule{
+			Comment:      "allow ELB to connect to API server",
 			Services:     []Service{newAPIService()},
 			Direction:    "egress",
-			Sources:      []Host{Host{Role: "elb"}},
-			Destinations: []Host{Host{Role: "elb"}},
-		},
-		&FirewallRule{
-			Services:     []Service{newAllServices()},
-			Direction:    "ingress",
 			Sources:      []Host{Host{Role: "master"}},
+			Destinations: []Host{Host{Role: "master_elb"}},
+		},
+
+		//// Worker
+		&FirewallRule{
+			Comment:   "allow master and workers to connect to anything on workers",
+			Services:  []Service{newAllServices()},
+			Direction: "ingress",
+			Sources: []Host{
+				Host{Role: "master"},
+				Host{Role: "worker"},
+			},
 			Destinations: []Host{Host{Role: "worker"}},
 		},
-		&FirewallRule{
-			Services:     []Service{newToMaxPort()},
-			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "bastion"}},
-			Destinations: []Host{Host{Role: "bastion", CIDR: CIDR0}},
-		},
-		&FirewallRule{
-			Services:  []Service{newSSHService()},
-			Direction: "egress",
-			Sources:   []Host{Host{Role: "bastion"}},
-			// use "admin_ips" for CIDR
-			Destinations: []Host{Host{Name: "bastion", CIDR: CIDR0, Role: "all"}},
-		},
-		&FirewallRule{
-			Services:     []Service{newAllServices()},
-			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "vault"}},
-			Destinations: []Host{Host{Role: "vault"}},
-		},
-		&FirewallRule{
-			Services:     []Service{newAllServices()},
-			Direction:    "egress",
-			Sources:      []Host{Host{Role: "vault"}},
-			Destinations: []Host{Host{Name: "vault", CIDR: CIDR0, Role: "all"}},
-		},
-	}, nil
+	}
 }
