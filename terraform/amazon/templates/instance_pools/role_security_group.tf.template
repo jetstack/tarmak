@@ -38,7 +38,7 @@ source "aws_security_group_rule" "{{.Destination}}_allow_{{.Service}}_from_{{.So
   to_port                  = {{.ToPort}}
   protocol                 = "{{.Protocol}}"
 {{if .CIDRBlock}}
-  cidr_blocks =            = ["{{CIDRToString .CIDRBlock}}"]
+  cidr_blocks              = ["{{CIDRToString .CIDRBlock}}"]
 {{else}}
   source_security_group_id = "{{.SourceSGGroupID}}"
 {{end}}
