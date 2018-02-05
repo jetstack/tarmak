@@ -66,15 +66,15 @@ restart all services which are dependant.
 Expiration of Tokens and Certificates
 -------------------------------------
 Both signed certificates and tokens issued to each instance are short lived
-meaning they need to be renewed regularly. A Cron Job is run on each instance
-that will periodically renew its certificate and token in time before expiry,
-ensuring all instances always have valid certificates. If an instance were to
-become offline or the Vault server became unreachable for a sufficient amount
-of time, certificates and tokens will no longer be renewable. If a certificate
-expires it will become invalid and will cause the relevant operation to be
-halted until its certificates are renewed. If an instance's unique token is not
-renewed, it will no longer be able to ever authenticate itself against Vault
-and so will need to be replaced.
+meaning they need to be renewed regularly. A systemd timer is run on each
+instance that will periodically renew its certificate and token in time before
+expiry, ensuring all instances always have valid certificates. If an instance
+were to become offline or the Vault server became unreachable for a sufficient
+amount of time, certificates and tokens will no longer be renewable. If a
+certificate expires it will become invalid and will cause the relevant
+operation to be halted until its certificates are renewed. If an instance's
+unique token is not renewed, it will no longer be able to ever authenticate
+itself against Vault and so will need to be replaced.
 
 Certificate Roles on Kubernetes CA
 ----------------------------------
@@ -85,14 +85,14 @@ Certificate Roles on Kubernetes CA
 **admin**: Allowed to get admin domain, certified for server certificates -
 long ttl.
 
-**kube-apiserver**: Allowed to get any hostname certified for server
+**kube-apiserver**: Allowed to get any domain name certified for server
 certificates - short ttl.
 
 **worker**: Allowed to get "kubelet" and "system:node" domains certified for
 server and client certificates - short ttl.
 
 **admin (kube-scheduler, kube-controller-manager, kube-proxy)**: Allowed to get
-"system:<rolename>" domains (i.e. "system:kube-scheduler") certified for client
+`system:<rolename>` domains (i.e. `system:kube-scheduler`) certified for client
 certificates - short ttl.
 
 **kube-apiserver-proxy**: Allowed to get "kube-apiserver-proxy" domain,
