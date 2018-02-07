@@ -1,7 +1,7 @@
 {{/* vim: set ft=tf: */}}
 
-{{range .Roles -}}
-# This is the security group for the role
+{{ range .Roles -}}
+# This is the security group for the role {{.Name}}
 resource "aws_security_group" "{{.TFName}}" {
   name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}"
   vpc_id = "${data.terraform_remote_state.network.vpc_id}"
@@ -15,7 +15,7 @@ resource "aws_security_group" "{{.TFName}}" {
 }
 
 {{ if .HasELB -}}
-# This is the security group for the ELB of the role
+# This is the security group for the ELB of the role {{.Name}}
 resource "aws_security_group" "{{.TFName}}_elb" {
   name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
   vpc_id = "${data.terraform_remote_state.network.vpc_id}"
@@ -30,19 +30,21 @@ resource "aws_security_group" "{{.TFName}}_elb" {
 {{ end -}}
 {{ end -}}
 
-{{range $role, $rules := .AWSSGRules -}}
-{{range $rules -}}
-resource "aws_security_group_rule" "{{.Destination}}_allow_{{.Service}}_from_{{.Source}}" {
+{{ range $role, $rules := .AWSSGRules -}}
+{{ range $rules -}}
+resource "aws_security_group_rule" "{{.Destination}}_allow_{{.Service}}
+{{- if .Identifier }}{{ stringFromPointer .Identifier }}{{ end -}}
+_from_{{.Source}}" {
   type                     = "{{.Direction}}"
   from_port                = {{.FromPort}}
   to_port                  = {{.ToPort}}
   protocol                 = "{{.Protocol}}"
-{{if .CIDRBlock-}}
+{{ if .CIDRBlock -}}
   cidr_blocks              = ["{{CIDRToString .CIDRBlock}}"]
-{{else-}}
+{{ else -}}
   source_security_group_id = "{{.SourceSGGroupID}}"
-{{end-}}
+{{ end -}}
   security_group_id        = "{{.SGID}}"
 }
-{{end-}}
-{{end-}}
+{{ end -}}
+{{ end -}}

@@ -9,15 +9,19 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
 
+const apiElb = "api_elb"
+
 type AWSSGRule struct {
+	Comment     string
 	Destination string
 	Source      string
 	Service     string
 
-	Direction string
-	FromPort  uint16
-	ToPort    uint16
-	Protocol  string
+	Direction  string
+	Identifier *string
+	FromPort   uint16
+	ToPort     uint16
+	Protocol   string
 
 	CIDRBlock       *net.IPNet
 	SourceSGGroupID string
@@ -30,67 +34,70 @@ func awsGroupID(role string) string {
 		return "${data.terraform_remote_state.hub_vault.vault_security_group_id}"
 	case "bastion":
 		return "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
-	case "elb":
-		return fmt.Sprintf("${aws_security_group.kubernetes_%s_elb.id}", role)
 	default:
 		return fmt.Sprintf("${aws_security_group.kubernetes_%s.id}", role)
 	}
 }
 
 func GenerateAWSRules(role *role.Role) (awsRules []*AWSSGRule, err error) {
-	var firewallRules []*stack.FirewallRule
-	allRules, err := stack.FirewallRules()
-	if err != nil {
-		return nil, err
-	}
-
-	// Get all firewall rules where the role is mentioned
-	for _, rule := range allRules {
-		for _, host := range rule.Destinations {
-			if role.HasELB() && host.Role == "elb" {
-				firewallRules = append(firewallRules, rule)
-				continue
-			}
-			if host.Role == role.Name() {
-				firewallRules = append(firewallRules, rule)
-				continue
-			}
-			if role.HasPrefix() && (host.Role == "kubernetes" || host.Name == "kubernetes") {
-				firewallRules = append(firewallRules, rule)
-				continue
-			}
-		}
-	}
-
-	// Build AWS Rules
-	for _, rule := range firewallRules {
+	// Get all firewall rules where the role is mentioned in the Destination
+	for _, rule := range stack.FirewallRules() {
 		for _, destination := range rule.Destinations {
-			for _, source := range rule.Sources {
-				for _, service := range rule.Services {
-					for _, port := range service.Ports {
-						awsRule := &AWSSGRule{
-							Destination: role.TFName(),
-							Source:      source.Role,
-							Service:     service.Name,
-							Direction:   rule.Direction,
-							Protocol:    service.Protocol,
-							CIDRBlock:   destination.CIDR,
-						}
-						if port.Single != nil {
-							awsRule.FromPort = *port.Single
-							awsRule.ToPort = *port.Single
-						} else {
-							awsRule.FromPort = *port.RangeFrom
-							awsRule.ToPort = *port.RangeTo
-						}
-						awsRule.SourceSGGroupID = awsGroupID(source.Role)
-						awsRule.SGID = awsGroupID(destination.Role)
-						awsRules = append(awsRules, awsRule)
-					}
-				}
+			if destination.Role == role.Name() || (role.HasELB() && destination.Role == apiElb) {
+				awsRules = append(awsRules, generateFromRule(rule, role, &destination)...)
 			}
 		}
 	}
 
 	return awsRules, nil
+}
+
+func generateFromRule(rule *stack.FirewallRule, role *role.Role, destination *stack.Host) []*AWSSGRule {
+	var awsRules []*AWSSGRule
+
+	for _, source := range rule.Sources {
+		for _, service := range rule.Services {
+			for _, port := range service.Ports {
+				awsRule := &AWSSGRule{
+					Comment:    rule.Comment,
+					Service:    service.Name,
+					Direction:  rule.Direction,
+					Protocol:   service.Protocol,
+					CIDRBlock:  destination.CIDR,
+					Identifier: port.Identifier,
+				}
+
+				if port.Single != nil {
+					awsRule.FromPort = *port.Single
+					awsRule.ToPort = *port.Single
+				} else {
+					awsRule.FromPort = *port.RangeFrom
+					awsRule.ToPort = *port.RangeTo
+				}
+
+				if source.Role != "" {
+					awsRule.Source = source.Role
+					if source.Role == apiElb {
+						source.Role = fmt.Sprintf("%s_elb", role.Name())
+					}
+					awsRule.SourceSGGroupID = awsGroupID(source.Role)
+				} else {
+					awsRule.Source = source.Name
+					awsRule.SourceSGGroupID = awsGroupID(source.Name)
+				}
+
+				if destination.Role == apiElb {
+					awsRule.Destination = fmt.Sprintf("%s_elb", role.TFName())
+					awsRule.SGID = awsGroupID(fmt.Sprintf("%s_elb", role.Name()))
+				} else {
+					awsRule.Destination = role.TFName()
+					awsRule.SGID = awsGroupID(destination.Role)
+				}
+
+				awsRules = append(awsRules, awsRule)
+			}
+		}
+	}
+
+	return awsRules
 }

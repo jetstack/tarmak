@@ -18,9 +18,10 @@ type Service struct {
 }
 
 type Port struct {
-	RangeFrom *uint16
-	RangeTo   *uint16
-	Single    *uint16
+	Identifier *string
+	RangeFrom  *uint16
+	RangeTo    *uint16
+	Single     *uint16
 }
 
 type FirewallRule struct {
@@ -46,6 +47,10 @@ var (
 	blackboxPort   = uint16(9115)
 	wingPort       = uint16(9443)
 	maxPort        = uint16(65535)
+
+	k8sIdentifier       = "k8s"
+	k8sEventsIdentifier = "k8sevents"
+	overlayIdentifier   = "overlay"
 )
 
 func newWingService() Service {
@@ -160,9 +165,9 @@ func newEtcdOverlayService() Service {
 		Name:     "etcd",
 		Protocol: "tcp",
 		Ports: []Port{
-			Port{Single: &k8sPort},
-			Port{Single: &k8sEventsPort},
-			Port{Single: &overlayPort},
+			Port{Single: &k8sPort, Identifier: &k8sIdentifier},
+			Port{Single: &k8sEventsPort, Identifier: &k8sEventsIdentifier},
+			Port{Single: &overlayPort, Identifier: &overlayIdentifier},
 		},
 	}
 }
@@ -206,6 +211,7 @@ func FirewallRules() (rules []*FirewallRule) {
 			Services:  []Service{newSSHService()},
 			Direction: "ingress",
 			// TODO:  use "admin_ips" for CIDR
+
 			Sources:      []Host{Host{Name: "admin_ips", CIDR: cidrAll()}},
 			Destinations: []Host{Host{Role: "bastion"}},
 		},
@@ -288,15 +294,27 @@ func FirewallRules() (rules []*FirewallRule) {
 			Comment:      "allow ELB to connect to API server",
 			Services:     []Service{newAPIService()},
 			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "master_elb"}},
+			Sources:      []Host{Host{Role: "api_elb"}},
 			Destinations: []Host{Host{Role: "master"}},
+		},
+		&FirewallRule{
+			Comment:   "allow ELB to connect to API server",
+			Services:  []Service{newAPIService()},
+			Direction: "ingress",
+			Sources: []Host{
+				Host{Role: "master"},
+				Host{Role: "api_elb"},
+				Host{Role: "bastion"},
+				Host{Role: "worker"},
+			},
+			Destinations: []Host{Host{Role: "api_elb"}},
 		},
 		&FirewallRule{
 			Comment:      "allow ELB to connect to API server",
 			Services:     []Service{newAPIService()},
 			Direction:    "egress",
 			Sources:      []Host{Host{Role: "master"}},
-			Destinations: []Host{Host{Role: "master_elb"}},
+			Destinations: []Host{Host{Role: "api_elb"}},
 		},
 
 		//// Worker

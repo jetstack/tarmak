@@ -300,6 +300,7 @@ func (tc *TerraformContainer) prepare() error {
 
 		templatesFuncs := sprig.TxtFuncMap()
 		templatesFuncs["CIDRToString"] = func(i *net.IPNet) string { return i.String() }
+		templatesFuncs["stringFromPointer"] = func(i *string) string { return *i }
 
 		templatesGlob := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Cluster().Environment().Provider().Cloud(), "templates/instance_pools/*.tf.template"))
 		templates := template.Must(template.New("instance_pools").Funcs(templatesFuncs).ParseGlob(templatesGlob))
