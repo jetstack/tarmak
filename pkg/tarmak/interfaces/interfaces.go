@@ -135,6 +135,7 @@ type Tarmak interface {
 	SSH() SSH
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
+	KeepContainers() bool
 }
 
 type Config interface {

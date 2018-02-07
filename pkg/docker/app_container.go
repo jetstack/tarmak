@@ -18,9 +18,11 @@ type AppContainer struct {
 
 	dockerContainer *docker.Container
 
-	WorkingDir string
-	Env        []string
-	Cmd        []string
+	WorkingDir string   // working dir inside the container
+	Env        []string // environment variables
+	Cmd        []string // command to run in the container
+	Keep       bool     // don't cleanup containers
+
 }
 
 func (ac *AppContainer) SetLog(log *logrus.Entry) {
@@ -84,6 +86,11 @@ func (ac *AppContainer) CleanUp() error {
 		if err != nil {
 			return fmt.Errorf("error sending KILL signal to container %s: %s", ac.dockerContainer.ID, err)
 		}
+	}
+
+	if ac.Keep {
+		ac.log.Debug("keep container as requested")
+		return nil
 	}
 
 	return ac.app.dockerClient.RemoveContainer(docker.RemoveContainerOptions{ID: ac.dockerContainer.ID})

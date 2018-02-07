@@ -248,6 +248,7 @@ func (tc *TerraformContainer) prepare() error {
 	// set default commandpfals
 	tc.Cmd = []string{"sleep", "3600"}
 	tc.WorkingDir = "/terraform"
+	tc.Keep = tc.t.tarmak.KeepContainers()
 
 	// build terraform image if needed
 	tc.log.Debug("prepare container")
