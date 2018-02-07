@@ -43,4 +43,11 @@ func init() {
 		false,
 		"enable verbose logging",
 	)
+
+	RootCmd.PersistentFlags().BoolVar(
+		&globalFlags.KeepContainers,
+		"keep-containers",
+		false,
+		"do not clean-up terraform/packer containers after running them",
+	)
 }

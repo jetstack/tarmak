@@ -227,6 +227,10 @@ func (t *Tarmak) HomeDirExpand(in string) (string, error) {
 	return homedir.Expand(in)
 }
 
+func (t *Tarmak) KeepContainers() bool {
+	return t.flags.KeepContainers
+}
+
 func (t *Tarmak) ConfigPath() string {
 	return t.configDirectory
 }

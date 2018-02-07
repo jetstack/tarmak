@@ -116,6 +116,7 @@ type Image struct {
 type Flags struct {
 	Verbose         bool   // logrus log level to run with
 	ConfigDirectory string // path to config directory
+	KeepContainers  bool   // do not clean-up terraform/packer containers after running them
 
 	Initialize bool // run tarmak in initialize mode, don't parse config before rnning init
 

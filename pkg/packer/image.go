@@ -60,6 +60,7 @@ func (i *image) Build(ctx context.Context) (amiID string, err error) {
 
 	c.WorkingDir = "/packer"
 	c.Cmd = []string{"sleep", "3600"}
+	c.Keep = i.packer.tarmak.KeepContainers()
 
 	err = c.Prepare()
 	if err != nil {
