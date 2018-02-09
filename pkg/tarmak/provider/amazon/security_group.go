@@ -9,7 +9,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
 
-const apiElb = "api_elb"
+const apiELB = "api_elb"
 
 type AWSSGRule struct {
 	Comment     string
@@ -34,16 +34,18 @@ func awsGroupID(role string) string {
 		return "${data.terraform_remote_state.hub_vault.vault_security_group_id}"
 	case "bastion":
 		return "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
+	case apiELB:
+		return "${aws_security_group.kubernetes_master_elb.id}"
 	default:
 		return fmt.Sprintf("${aws_security_group.kubernetes_%s.id}", role)
 	}
 }
 
 func GenerateAWSRules(role *role.Role) (awsRules []*AWSSGRule, err error) {
-	// Get all firewall rules where the role is mentioned in the Destination
+	// Get all firewall rules where the role is mentioned in the destination
 	for _, rule := range stack.FirewallRules() {
 		for _, destination := range rule.Destinations {
-			if destination.Role == role.Name() || (role.Name() == "master" && destination.Role == apiElb) {
+			if destination.Role == role.Name() || (role.Name() == "master" && destination.Role == apiELB) {
 				awsRules = append(awsRules, generateFromRule(rule, role, &destination)...)
 			}
 		}
@@ -67,6 +69,7 @@ func generateFromRule(rule *stack.FirewallRule, role *role.Role, destination *st
 					Identifier: port.Identifier,
 				}
 
+				// use single port for from and to if not nil
 				if port.Single != nil {
 					awsRule.FromPort = *port.Single
 					awsRule.ToPort = *port.Single
@@ -75,13 +78,9 @@ func generateFromRule(rule *stack.FirewallRule, role *role.Role, destination *st
 					awsRule.ToPort = *port.RangeTo
 				}
 
-				if source.Role != "" {
-					awsRule.Source = source.Role
-					if source.Role == apiElb {
-						source.Role = fmt.Sprintf("%s_elb", role.Name())
-					}
-					awsRule.SourceSGGroupID = awsGroupID(source.Role)
-				} else {
+				// if source has no role and the name is "all" use the role name
+				// for source else use the source name
+				if source.Role == "" {
 					if source.Name == "all" {
 						awsRule.SourceSGGroupID = awsGroupID(role.Name())
 						awsRule.Source = role.Name()
@@ -89,15 +88,18 @@ func generateFromRule(rule *stack.FirewallRule, role *role.Role, destination *st
 						awsRule.SourceSGGroupID = awsGroupID(source.Name)
 						awsRule.Source = source.Name
 					}
+				} else {
+					awsRule.Source = source.Role
+					awsRule.SourceSGGroupID = awsGroupID(source.Role)
 				}
 
-				if destination.Role == apiElb {
+				// if the role is elb then change the destination name accordingly
+				if destination.Role == apiELB {
 					awsRule.Destination = fmt.Sprintf("%s_elb", role.TFName())
-					awsRule.SGID = awsGroupID(fmt.Sprintf("%s_elb", role.Name()))
 				} else {
 					awsRule.Destination = role.TFName()
-					awsRule.SGID = awsGroupID(destination.Role)
 				}
+				awsRule.SGID = awsGroupID(destination.Role)
 
 				awsRules = append(awsRules, awsRule)
 			}

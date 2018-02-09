@@ -191,6 +191,7 @@ func cidrAll() *net.IPNet {
 func FirewallRules() (rules []*FirewallRule) {
 
 	return []*FirewallRule{
+		// All egress
 		&FirewallRule{
 			Comment:   "allow all instance to egress to anywhere",
 			Services:  []Service{newAllServices()},
@@ -205,6 +206,7 @@ func FirewallRules() (rules []*FirewallRule) {
 			},
 		},
 
+		// All ingress with same role
 		&FirewallRule{
 			Comment:   "all components should be able to communicate with each other",
 			Services:  []Service{newAllServices()},
@@ -230,16 +232,11 @@ func FirewallRules() (rules []*FirewallRule) {
 			Destinations: []Host{Host{Role: "bastion"}},
 		},
 		&FirewallRule{
-			Comment:   "allow all instances to connect to wing",
-			Services:  []Service{newWingService()},
-			Direction: "ingress",
-			Sources: []Host{
-				Host{Role: "vault"},
-				Host{Role: "etcd"},
-				Host{Role: "worker"},
-				Host{Role: "master"},
-			},
-			Destinations: []Host{Host{Role: "bastion"}},
+			Comment:      "allow instances to access wing server",
+			Services:     []Service{newWingService()},
+			Direction:    "ingress",
+			Sources:      []Host{Host{Role: "bastion"}},
+			Destinations: []Host{Host{Name: "all"}},
 		},
 		&FirewallRule{
 			Comment:   "allow bastion to connect to all instances via SSH",
@@ -260,13 +257,9 @@ func FirewallRules() (rules []*FirewallRule) {
 			Services:  []Service{newVaultService()},
 			Direction: "ingress",
 			Sources: []Host{
-				Host{Role: "bastion"},
 				Host{Role: "vault"},
-				Host{Role: "etcd"},
-				Host{Role: "worker"},
-				Host{Role: "master"},
 			},
-			Destinations: []Host{Host{Role: "vault"}},
+			Destinations: []Host{Host{Name: "all"}},
 		},
 		&FirewallRule{
 			Comment: "allow vault instances to connect to each other's consul",
