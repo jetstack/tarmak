@@ -205,6 +205,20 @@ func FirewallRules() (rules []*FirewallRule) {
 			},
 		},
 
+		&FirewallRule{
+			Comment:   "all components should be able to communicate with each other",
+			Services:  []Service{newAllServices()},
+			Direction: "ingress",
+			Sources:   []Host{Host{Name: "all"}},
+			Destinations: []Host{
+				Host{Role: "bastion"},
+				Host{Role: "vault"},
+				Host{Role: "etcd"},
+				Host{Role: "worker"},
+				Host{Role: "master"},
+			},
+		},
+
 		//// Bastion
 		&FirewallRule{
 			Comment:   "allow everyone to connect to the bastion via SSH",
@@ -327,7 +341,6 @@ func FirewallRules() (rules []*FirewallRule) {
 			Direction: "ingress",
 			Sources: []Host{
 				Host{Role: "master"},
-				Host{Role: "worker"},
 			},
 			Destinations: []Host{Host{Role: "worker"}},
 		},

@@ -43,7 +43,7 @@ func GenerateAWSRules(role *role.Role) (awsRules []*AWSSGRule, err error) {
 	// Get all firewall rules where the role is mentioned in the Destination
 	for _, rule := range stack.FirewallRules() {
 		for _, destination := range rule.Destinations {
-			if destination.Role == role.Name() || (role.HasELB() && destination.Role == apiElb) {
+			if destination.Role == role.Name() || (role.Name() == "master" && destination.Role == apiElb) {
 				awsRules = append(awsRules, generateFromRule(rule, role, &destination)...)
 			}
 		}
@@ -82,8 +82,13 @@ func generateFromRule(rule *stack.FirewallRule, role *role.Role, destination *st
 					}
 					awsRule.SourceSGGroupID = awsGroupID(source.Role)
 				} else {
-					awsRule.Source = source.Name
-					awsRule.SourceSGGroupID = awsGroupID(source.Name)
+					if source.Name == "all" {
+						awsRule.SourceSGGroupID = awsGroupID(role.Name())
+						awsRule.Source = role.Name()
+					} else {
+						awsRule.SourceSGGroupID = awsGroupID(source.Name)
+						awsRule.Source = source.Name
+					}
 				}
 
 				if destination.Role == apiElb {
