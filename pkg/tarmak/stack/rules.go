@@ -304,7 +304,7 @@ func FirewallRules() (rules []*FirewallRule) {
 			Comment:      "allow ELB to connect to API server",
 			Services:     []Service{newAPIService()},
 			Direction:    "ingress",
-			Sources:      []Host{Host{Role: "api_elb"}},
+			Sources:      []Host{Host{Role: "master_elb"}},
 			Destinations: []Host{Host{Role: "master"}},
 		},
 		&FirewallRule{
@@ -313,18 +313,18 @@ func FirewallRules() (rules []*FirewallRule) {
 			Direction: "ingress",
 			Sources: []Host{
 				Host{Role: "master"},
-				Host{Role: "api_elb"},
+				Host{Role: "master_elb"},
 				Host{Role: "bastion"},
 				Host{Role: "worker"},
 			},
-			Destinations: []Host{Host{Role: "api_elb"}},
+			Destinations: []Host{Host{Role: "master_elb"}},
 		},
 		&FirewallRule{
 			Comment:      "allow ELB to connect to API server",
 			Services:     []Service{newAPIService()},
 			Direction:    "egress",
 			Sources:      []Host{Host{Role: "master"}},
-			Destinations: []Host{Host{Role: "api_elb"}},
+			Destinations: []Host{Host{Role: "master_elb"}},
 		},
 
 		//// Worker

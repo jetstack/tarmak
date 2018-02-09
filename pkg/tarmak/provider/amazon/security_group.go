@@ -9,7 +9,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
 
-const apiELB = "api_elb"
+const masterELB = "master_elb"
 
 type AWSSGRule struct {
 	Comment     string
@@ -34,8 +34,6 @@ func awsGroupID(role string) string {
 		return "${data.terraform_remote_state.hub_vault.vault_security_group_id}"
 	case "bastion":
 		return "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
-	case apiELB:
-		return "${aws_security_group.kubernetes_master_elb.id}"
 	default:
 		return fmt.Sprintf("${aws_security_group.kubernetes_%s.id}", role)
 	}
@@ -45,7 +43,7 @@ func GenerateAWSRules(role *role.Role) (awsRules []*AWSSGRule, err error) {
 	// Get all firewall rules where the role is mentioned in the destination
 	for _, rule := range stack.FirewallRules() {
 		for _, destination := range rule.Destinations {
-			if destination.Role == role.Name() || (role.Name() == "master" && destination.Role == apiELB) {
+			if destination.Role == role.Name() || (role.Name() == "master" && destination.Role == masterELB) {
 				awsRules = append(awsRules, generateFromRule(rule, role, &destination)...)
 			}
 		}
@@ -93,8 +91,8 @@ func generateFromRule(rule *stack.FirewallRule, role *role.Role, destination *st
 					awsRule.SourceSGGroupID = awsGroupID(source.Role)
 				}
 
-				// if the role is elb then change the destination name accordingly
-				if destination.Role == apiELB {
+				// if the role is elb then add elb to destination name
+				if destination.Role == masterELB {
 					awsRule.Destination = fmt.Sprintf("%s_elb", role.TFName())
 				} else {
 					awsRule.Destination = role.TFName()
