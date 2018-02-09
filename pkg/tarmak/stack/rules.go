@@ -195,14 +195,14 @@ func FirewallRules() (rules []*FirewallRule) {
 			Comment:   "allow all instance to egress to anywhere",
 			Services:  []Service{newAllServices()},
 			Direction: "egress",
-			Sources: []Host{
+			Sources:   []Host{Host{Name: "all", CIDR: cidrAll()}},
+			Destinations: []Host{
 				Host{Role: "bastion"},
 				Host{Role: "vault"},
 				Host{Role: "etcd"},
 				Host{Role: "worker"},
 				Host{Role: "master"},
 			},
-			Destinations: []Host{Host{Name: "all", CIDR: cidrAll()}},
 		},
 
 		//// Bastion
@@ -267,12 +267,15 @@ func FirewallRules() (rules []*FirewallRule) {
 
 		//// Etcd
 		&FirewallRule{
+			Comment:      "allow prometheus connections to node_exporter and blackbox_exporter",
 			Services:     []Service{newEtcdOverlayService()},
 			Direction:    "ingress",
 			Sources:      []Host{Host{Role: "worker"}, Host{Role: "master"}},
 			Destinations: []Host{Host{Role: "etcd"}},
 		},
+
 		&FirewallRule{
+			Comment:      "allow prometheus connections to node_exporter and blackbox_exporter",
 			Services:     []Service{newBlackboxExporterService(), newNodeExporterService()},
 			Direction:    "ingress",
 			Sources:      []Host{Host{Role: "worker"}},

@@ -63,7 +63,7 @@ func generateFromRule(rule *stack.FirewallRule, role *role.Role, destination *st
 					Service:    service.Name,
 					Direction:  rule.Direction,
 					Protocol:   service.Protocol,
-					CIDRBlock:  destination.CIDR,
+					CIDRBlock:  source.CIDR,
 					Identifier: port.Identifier,
 				}
 

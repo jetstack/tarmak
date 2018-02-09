@@ -32,6 +32,7 @@ resource "aws_security_group" "{{.TFName}}_elb" {
 
 {{ range $role, $rules := .AWSSGRules -}}
 {{ range $rules -}}
+# {{ .Comment }}
 resource "aws_security_group_rule" "{{.Destination}}_allow_{{.Service}}
 {{- if .Identifier }}{{ stringFromPointer .Identifier }}{{ end -}}
 _{{- if eq .Direction "ingress" -}} from {{- else -}} to {{- end -}}
