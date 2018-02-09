@@ -34,7 +34,8 @@ resource "aws_security_group" "{{.TFName}}_elb" {
 {{ range $rules -}}
 resource "aws_security_group_rule" "{{.Destination}}_allow_{{.Service}}
 {{- if .Identifier }}{{ stringFromPointer .Identifier }}{{ end -}}
-_from_{{.Source}}" {
+_{{- if eq .Direction "ingress" -}} from {{- else -}} to {{- end -}}
+_{{.Source}}" {
   type                     = "{{.Direction}}"
   from_port                = {{.FromPort}}
   to_port                  = {{.ToPort}}
