@@ -1,6 +1,7 @@
 {{/* vim: set ft=tf: */}}
 
-# This is the security group for the role
+{{ range .Roles -}}
+# This is the security group for the role {{.Name}}
 resource "aws_security_group" "{{.TFName}}" {
   name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}"
   vpc_id = "${data.terraform_remote_state.network.vpc_id}"
@@ -12,6 +13,21 @@ resource "aws_security_group" "{{.TFName}}" {
     Contact     = "${var.contact}"
   }
 }
+
+{{ if .HasELB -}}
+# This is the security group for the ELB of the role {{.Name}}
+resource "aws_security_group" "{{.TFName}}_elb" {
+  name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
+  vpc_id = "${data.terraform_remote_state.network.vpc_id}"
+
+  tags {
+    Name        = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+{{ end -}}
 
 # Allow instance to access vault
 resource "aws_security_group_rule" "vault_allow_vault_from_{{.TFName}}" {
@@ -33,219 +49,25 @@ resource "aws_security_group_rule" "bastion_allow_wing_from_{{.TFName}}" {
   security_group_id        = "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
 }
 
-# Allow bastion to access ssh
-resource "aws_security_group_rule" "{{.TFName}}_allow_ssh_from_bastion" {
-  type                     = "ingress"
-  from_port                = 22
-  to_port                  = 22
-  protocol                 = "tcp"
-  source_security_group_id = "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
+{{ end -}}
+
+{{ range $role, $rules := .AWSSGRules -}}
+{{ range $rules -}}
+# {{ .Comment }}
+resource "aws_security_group_rule" "{{.Destination}}_allow_{{.Service}}
+{{- if .Identifier }}{{ stringFromPointer .Identifier }}{{ end -}}
+_{{- if eq .Direction "ingress" -}} from {{- else -}} to {{- end -}}
+_{{.Source}}" {
+  type                     = "{{.Direction}}"
+  from_port                = {{.FromPort}}
+  to_port                  = {{.ToPort}}
+  protocol                 = "{{.Protocol}}"
+{{ if .CIDRBlock -}}
+  cidr_blocks              = ["{{CIDRToString .CIDRBlock}}"]
+{{ else -}}
+  source_security_group_id = "{{.SourceSGGroupID}}"
+{{ end -}}
+  security_group_id        = "{{.SGID}}"
 }
-
-# All nodes of a role should be able to communicate with each other
-resource "aws_security_group_rule" "{{.TFName}}_allow_all_from_{{.TFName}}" {
-  type                     = "ingress"
-  from_port                = 0
-  to_port                  = 0
-  protocol                 = "-1"
-  source_security_group_id = "${aws_security_group.{{.TFName}}.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-# Always allow egress to all destinations
-resource "aws_security_group_rule" "{{.TFName}}_allow_egress" {
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.{{.TFName}}.id}"
-}
-
-{{ if .HasELB }}
-# This is the security group for the ELB of the role
-resource "aws_security_group" "{{.TFName}}_elb" {
-  name   = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
-  vpc_id = "${data.terraform_remote_state.network.vpc_id}"
-
-  tags {
-    Name        = "${data.template_file.stack_name.rendered}-{{.DNSName}}-elb"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-    Contact     = "${var.contact}"
-  }
-} 
-{{ end }}
-
-{{/* Rules for etcd roles */}}
-{{ if .HasEtcd }}
-# allow prometheus connections to node_exporter and blackbox_exporter
-resource "aws_security_group_rule" "{{.TFName}}_allow_blackbox_exporter_from_kubernetes_worker" {
-  type                     = "ingress"
-  from_port                = 9115
-  to_port                  = 9115
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-resource "aws_security_group_rule" "{{.TFName}}_allow_node_exporter_from_kubernetes_worker" {
-  type                     = "ingress"
-  from_port                = 9100
-  to_port                  = 9100
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-# allow etcd connections to overlay etcd
-resource "aws_security_group_rule" "{{.TFName}}_allow_etcd_overlay_from_kubernetes_worker" {
-  type                     = "ingress"
-  from_port                = 2359
-  to_port                  = 2359
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-resource "aws_security_group_rule" "{{.TFName}}_allow_etcd_overlay_from_kubernetes_master" {
-  type                     = "ingress"
-  from_port                = 2359
-  to_port                  = 2359
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_master.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-# allow etcd connections to k8s etcd
-resource "aws_security_group_rule" "{{.TFName}}_allow_etcd_k8s_from_kubernetes_master" {
-  type                     = "ingress"
-  from_port                = 2379
-  to_port                  = 2379
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_master.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-# allow etcd connections to k8s-events etcd
-resource "aws_security_group_rule" "{{.TFName}}_allow_etcd_k8sevents_from_kubernetes_master" {
-  type                     = "ingress"
-  from_port                = 2369
-  to_port                  = 2369
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_master.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-{{ end }}
-
-{{/* Rules for master roles */}}
-{{ if .HasMaster }}
-
-
-# allow incoming bgp from workers to masters
-resource "aws_security_group_rule" "{{.TFName}}_allow_bgp_from_kubernetes_worker" {
-  type                     = "ingress"
-  from_port                = 179
-  to_port                  = 179
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-# allow incoming IP-in-IP from workers to masters
-resource "aws_security_group_rule" "{{.TFName}}_allow_ipip_from_kubernetes_worker" {
-  type                     = "ingress"
-  from_port                = 0
-  to_port                  = 0
-  protocol                 = "94"
-  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-# allow incoming API from workers to masters
-resource "aws_security_group_rule" "{{.TFName}}_allow_api_from_kubernetes_worker" {
-  type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-
-{{ if .HasELB }}
-# allow incoming API from its ELBs to masters
-resource "aws_security_group_rule" "{{.TFName}}_allow_api_from_its_elb" {
-  type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.{{.TFName}}_elb.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-
-# allow incoming API from workers to ELB
-resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_from_kubernetes_worker" {
-  type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.kubernetes_worker.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
-}
-
-# allow incoming API from bastion to ELB
-resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_from_bastion" {
-  type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
-}
-
-## TODO: generialze this and reenable
-# allow incoming API from jenkins to ELB
-#resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_from_jenkins" {
-#  type                     = "ingress"
-#  from_port                = 6443
-#  to_port                  = 6443
-#  protocol                 = "tcp"
-#  source_security_group_id = "${data.terraform_remote_state.hub_tools.jenkins_security_group_id}"
-#  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
-#}
-
-# allow incoming API from masters to ELB
-resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_from_{{.TFName}}" {
-  type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.{{.TFName}}.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
-}
-
-# allow outgoing API from ELBs to masters
-resource "aws_security_group_rule" "{{.TFName}}_elb_allow_api_to_{{.TFName}}" {
-  type                     = "egress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.{{.TFName}}.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}_elb.id}"
-}
-{{end}}
-{{end}}
-
-{{/* Rules for worker roles */}}
-{{ if .HasWorker }}
-# allows everything from master to workers
-resource "aws_security_group_rule" "{{.TFName}}_allow_all_from_kubernetes_master" {
-  type                     = "ingress"
-  from_port                = 0
-  to_port                  = 0
-  protocol                 = "-1"
-  source_security_group_id = "${aws_security_group.kubernetes_master.id}"
-  security_group_id        = "${aws_security_group.{{.TFName}}.id}"
-}
-{{end}}
+{{ end -}}
+{{ end -}}

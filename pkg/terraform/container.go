@@ -18,6 +18,7 @@ import (
 
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
@@ -290,21 +291,32 @@ func (tc *TerraformContainer) prepare() error {
 	// if instance pools exist, execute template
 	instancePools := tc.stack.InstancePools()
 	if len(instancePools) > 0 {
+		awsSGRules, err := tc.GenerateAWSSecurityGroup()
+		if err != nil {
+			return err
+		}
+
 		tc.log.Debug("generating instance pools templates")
+
+		templatesFuncs := sprig.TxtFuncMap()
+		templatesFuncs["CIDRToString"] = func(i *net.IPNet) string { return i.String() }
+		templatesFuncs["stringFromPointer"] = func(i *string) string { return *i }
+
 		templatesGlob := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Cluster().Environment().Provider().Cloud(), "templates/instance_pools/*.tf.template"))
-		templates := template.Must(template.New("instance_pools").Funcs(sprig.TxtFuncMap()).ParseGlob(templatesGlob))
+		templates := template.Must(template.New("instance_pools").Funcs(templatesFuncs).ParseGlob(templatesGlob))
 
 		baseTemplate := "instance_pool.tf.template"
 		tpl := templates.Lookup(baseTemplate)
 
 		buf := new(bytes.Buffer)
 
-		if err := tpl.Execute(
+		if err = tpl.Execute(
 			buf,
 			map[string]interface{}{
 				"InstancePools": instancePools,
 				"Roles":         tc.stack.Roles(),
 				"Stack":         tc.stack.Name(),
+				"AWSSGRules":    awsSGRules,
 			},
 		); err != nil {
 			return err
@@ -327,4 +339,17 @@ func (tc *TerraformContainer) prepare() error {
 	}
 
 	return nil
+}
+
+func (tc *TerraformContainer) GenerateAWSSecurityGroup() (rules map[string][]*amazon.AWSSGRule, err error) {
+	rules = make(map[string][]*amazon.AWSSGRule)
+	for _, role := range tc.stack.Roles() {
+		roleRules, err := amazon.GenerateAWSRules(role)
+		if err != nil {
+			return nil, err
+		}
+		rules[role.Name()] = roleRules
+	}
+
+	return rules, nil
 }
