@@ -15,7 +15,6 @@ func resourceAwstagEC2Tag() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwstagEC2TagCreate,
 		Read:   resourceAwstagEC2TagRead,
-		//Update: resourceAwstagEC2TagUpdate,
 		Delete: resourceAwstagEC2TagDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -155,34 +154,3 @@ func resourceAwstagEC2TagDelete(d *schema.ResourceData, meta interface{}) error 
 
 	return nil
 }
-
-/*func resourceAwstagEC2TagUpdate(d *schema.ResourceData, meta interface{}) error {
-	// Enable partial state mode to state isn't saved on error
-	d.Partial(true)
-
-	// Tags cannot be modified, so we delete and create
-	if d.HasChange("key") || d.HasChange("value") {
-
-		// delete tag
-		err := resourceAwstagEC2TagDelete(d, meta)
-		if err != nil {
-			return err
-		}
-
-		// create tag
-		err = resourceAwstagEC2TagCreate(d, meta)
-		if err != nil {
-			return err
-		}
-
-		// tag was recreated successfully
-		// it is safe to persist new key and value
-		d.SetPartial("key")
-		d.SetPartial("value")
-	}
-
-	// We succeeded, disable partial mode
-	d.Partial(false)
-
-	return nil
-}*/
