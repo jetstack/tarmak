@@ -50,4 +50,11 @@ func init() {
 		false,
 		"do not clean-up terraform/packer containers after running them",
 	)
+
+	/*RootCmd.PersistenFlags().BoolVar(
+		&globalFlags.RPC,
+		"rpc",
+		flase,
+		"start RPC server"
+	)*/
 }
