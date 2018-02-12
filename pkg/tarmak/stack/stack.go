@@ -48,7 +48,7 @@ func New(cluster interfaces.Cluster, name string) (interfaces.Stack, error) {
 	case tarmakv1alpha1.StackNameTools:
 		stack, err = newToolsStack(s)
 	case tarmakv1alpha1.StackNameVault:
-		stack, err = newVaultStack(s)
+		stack, err = NewVaultStack(s)
 	case tarmakv1alpha1.StackNameKubernetes:
 		stack, err = newKubernetesStack(s)
 	default:
@@ -71,6 +71,14 @@ func (s *Stack) Output() map[string]interface{} {
 
 func (s *Stack) Cluster() interfaces.Cluster {
 	return s.cluster
+}
+
+func (s *Stack) SetCluster(in interfaces.Cluster) {
+	s.cluster = in
+}
+
+func (s *Stack) SetLog(in *logrus.Entry) {
+	s.log = in
 }
 
 func (s *Stack) RemoteState() string {
