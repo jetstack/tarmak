@@ -12,7 +12,11 @@ var rpc = &cobra.Command{
 	Short: "Run standalone RPC server",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		t.Must(rpcServer.Start())
+		/*func(ctx context.Context) error {
+			return t.CmdTerraformApply(args, ctx)
+		},*/
+		//t.Must(rpcServer.Start())
+		rpcServer.Start(t)
 	},
 }
 

@@ -5,28 +5,51 @@ import (
 	"io"
 	"net"
 	"net/rpc"
+	"time"
+
+	"github.com/jetstack/tarmak/pkg/tarmak"
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 )
 
 const (
-	serverName = "Tarmak"
-	socketName = "tarmak.sock"
+	serverName        = "Tarmak"
+	socketName        = "tarmak.sock"
+	onFailureWaitTime = 10 * time.Second
 )
 
-type tarmakRPC struct{}
+type tarmakRPC struct {
+	tarmak *tarmak.Tarmak
+}
 
 func (i *tarmakRPC) BastionStatus(args string, reply *string) error {
 
 	fmt.Printf("BastionStatus called\n")
 
-	// TODO: actually check if bastion is up
-	*reply = "running"
+	t := i.tarmak
+	c, err := cluster.NewFromConfig(t.Environment(), t.Cluster().Config())
+	if err != nil {
+		*reply = "down"
+		return fmt.Errorf("failed to retreive cluster: %s", err)
+	}
 
-	return nil
+	for {
+		_, err = c.WingInstanceClient()
+		if err != nil {
+			time.Sleep(onFailureWaitTime)
+			//*reply = "down"
+			//return fmt.Errorf("failed to connect to wing API on bastion") //: %s"), err)
+			continue
+		}
+
+		*reply = "up"
+		return nil
+	}
+
 }
 
 // Start starts an RPC server to serve requests from
 // the container
-func Start() error {
+func Start(t *tarmak.Tarmak) error {
 
 	fmt.Printf("starting %s RPC server\n", serverName)
 	ln, err := net.Listen("unix", socketName)
@@ -40,14 +63,16 @@ func Start() error {
 			fmt.Printf("error accepting RPC request: %s", err)
 		}
 
-		go accept(fd)
+		go accept(fd, t)
 	}
 }
 
-func accept(conn net.Conn) {
+func accept(conn net.Conn, tarmak *tarmak.Tarmak) {
+
+	tarmakRPC := tarmakRPC{tarmak: tarmak}
 
 	s := rpc.NewServer()
-	s.RegisterName(serverName, &tarmakRPC{})
+	s.RegisterName(serverName, &tarmakRPC)
 
 	fmt.Printf("Connection made\n")
 
