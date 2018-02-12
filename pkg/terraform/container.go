@@ -326,5 +326,10 @@ func (tc *TerraformContainer) prepare() error {
 		return fmt.Errorf("error starting container: %s", err)
 	}
 
+	/*err = rpc.Start()
+	if err != nil {
+		return fmt.Errorf("error starting RPC server: %s", err)
+	}*/
+
 	return nil
 }
