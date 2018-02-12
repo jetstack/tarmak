@@ -3,12 +3,8 @@ package rpc
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/rpc"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 const (
@@ -37,15 +33,6 @@ func Start() error {
 	if err != nil {
 		return fmt.Errorf("unable to listen on socket %s: %s", socketName, err)
 	}
-
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
-	go func(ln net.Listener, c chan os.Signal) {
-		sig := <-c
-		log.Printf("caught signal %s: shutting down.", sig)
-		ln.Close()
-		//os.Exit(0)
-	}(ln, sigc)
 
 	for {
 		fd, err := ln.Accept()
