@@ -33,20 +33,21 @@ type FirewallRule struct {
 }
 
 var (
-	zeroPort       = uint16(0)
-	sshPort        = uint16(22)
-	bgpPort        = uint16(179)
-	overlayPort    = uint16(2359)
-	k8sEventsPort  = uint16(2369)
-	k8sPort        = uint16(2379)
-	apiPort        = uint16(6443)
-	consulRCPPort  = uint16(8300)
-	consulSerfPort = uint16(8301)
-	vaultPort      = uint16(8200)
-	nodePort       = uint16(9100)
-	blackboxPort   = uint16(9115)
-	wingPort       = uint16(9443)
-	maxPort        = uint16(65535)
+	zeroPort          = uint16(0)
+	sshPort           = uint16(22)
+	bgpPort           = uint16(179)
+	overlayPort       = uint16(2359)
+	k8sEventsPort     = uint16(2369)
+	k8sPort           = uint16(2379)
+	apiPort           = uint16(6443)
+	consulRCPPort     = uint16(8300)
+	consulSerfPort    = uint16(8301)
+	vaultPort         = uint16(8200)
+	calicoMetricsPort = uint16(9091)
+	nodePort          = uint16(9100)
+	blackboxPort      = uint16(9115)
+	wingPort          = uint16(9443)
+	maxPort           = uint16(65535)
 
 	k8sIdentifier       = "k8s"
 	k8sEventsIdentifier = "k8sevents"
@@ -89,6 +90,16 @@ func newSSHService() Service {
 		Protocol: "tcp",
 		Ports: []Port{
 			Port{Single: &sshPort},
+		},
+	}
+}
+
+func newCalicoMetricsService() Service {
+	return Service{
+		Name:     "metrics",
+		Protocol: "tcp",
+		Ports: []Port{
+			Port{Single: &calicoMetricsPort},
 		},
 	}
 }
@@ -292,7 +303,7 @@ func FirewallRules() (rules []*FirewallRule) {
 		//// Master
 		&FirewallRule{
 			Comment:   "allow workers/master to connect to calico's service + api server",
-			Services:  []Service{newBGPService(), newIPIPService(), newAPIService()},
+			Services:  []Service{newBGPService(), newIPIPService(), newCalicoMetricsService(), newAPIService()},
 			Direction: "ingress",
 			Sources: []Host{
 				Host{Role: "master"},
