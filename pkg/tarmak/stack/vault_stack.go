@@ -24,7 +24,7 @@ type VaultStack struct {
 
 var _ interfaces.Stack = &VaultStack{}
 
-func newVaultStack(s *Stack) (*VaultStack, error) {
+func NewVaultStack(s *Stack) (*VaultStack, error) {
 	v := &VaultStack{
 		Stack: s,
 	}
@@ -33,7 +33,7 @@ func newVaultStack(s *Stack) (*VaultStack, error) {
 	s.roles[clusterv1alpha1.InstancePoolTypeVault] = true
 
 	s.name = tarmakv1alpha1.StackNameVault
-	s.verifyPostDeploy = append(s.verifyPostDeploy, v.verifyVaultInit)
+	s.verifyPostDeploy = append(s.verifyPostDeploy, v.VerifyVaultInit)
 	return v, nil
 }
 
@@ -313,9 +313,101 @@ func (s *VaultStack) vaultInstanceState(tunnels []*vaultTunnel) (state int, inst
 	return VaultStateErr, []*vaultTunnel{}
 }
 
-func (s *VaultStack) verifyVaultInit() error {
+func (s *VaultStack) VerifyVaultInit() error {
 
 	tunnels, err := s.VaultTunnels()
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+	for pos, _ := range tunnels {
+		wg.Add(1)
+		go func(pos int) {
+			defer wg.Done()
+			err := tunnels[pos].Start()
+			if err != nil {
+				s.log.Warn(err)
+			}
+		}(pos)
+	}
+
+	// wait for all tunnel attempts
+	wg.Wait()
+
+	defer func() {
+		var wg sync.WaitGroup
+		for pos, _ := range tunnels {
+			wg.Add(1)
+			go func(pos int) {
+				defer wg.Done()
+				err := tunnels[pos].Stop()
+				if err != nil {
+					s.log.Warn(err)
+				}
+			}(pos)
+		}
+		wg.Wait()
+	}()
+
+	// get state of all instances
+	retries := 60
+	for {
+		clusterState, instances := s.vaultInstanceState(tunnels)
+
+		if clusterState == VaultStateUnsealed {
+			// quorum of vaults is unsealed
+			return nil
+		} else if clusterState == VaultStateUnintialised {
+			rootToken, err := s.Cluster().Environment().VaultRootToken()
+			if err != nil {
+				return err
+			}
+
+			kv, err := s.Cluster().Environment().Provider().VaultKV()
+			if err != nil {
+				return err
+			}
+
+			cl := instances[0].VaultClient()
+
+			v, err := vaultUnsealer.New(kv, cl, vaultUnsealer.Config{
+				KeyPrefix: "vault",
+
+				SecretShares:    1,
+				SecretThreshold: 1,
+
+				InitRootToken:  rootToken,
+				StoreRootToken: false,
+
+				OverwriteExisting: true,
+			})
+
+			err = v.Init()
+			if err != nil {
+				return fmt.Errorf("error initialising vault: %s", err)
+			}
+			s.log.Info("vault succesfully initialised")
+			return nil
+
+		} else if clusterState == VaultStateSealed {
+			s.log.Debug("a quorum of vault instances is sealed, retrying")
+		} else {
+			s.log.Debug("a quorum of vault instances is in unknown state, retrying")
+		}
+		retries -= 1
+		if retries == 0 {
+			break
+		}
+		time.Sleep(time.Second * 10)
+	}
+
+	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed")
+}
+
+func (s *VaultStack) VerifyVaultInitForFQDNs(instances []string) error {
+
+	tunnels, err := s.createVaultTunnels(instances)
 	if err != nil {
 		return err
 	}

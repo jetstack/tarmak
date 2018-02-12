@@ -7,8 +7,10 @@ import (
 	"net/rpc"
 	"time"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
+	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
 
 const (
@@ -21,9 +23,9 @@ type tarmakRPC struct {
 	tarmak *tarmak.Tarmak
 }
 
-func (i *tarmakRPC) BastionStatus(args string, reply *string) error {
+func (i *tarmakRPC) BastionInstanceStatus(hostname string, reply *string) error {
 
-	fmt.Printf("BastionStatus called\n")
+	fmt.Printf("BastionInstanceStatus called\n")
 
 	t := i.tarmak
 	c, err := cluster.NewFromConfig(t.Environment(), t.Cluster().Config())
@@ -33,11 +35,10 @@ func (i *tarmakRPC) BastionStatus(args string, reply *string) error {
 	}
 
 	for {
-		_, err = c.WingInstanceClient()
+		tunnel := c.Environment().WingTunnel()
+		err = tunnel.Start()
 		if err != nil {
 			time.Sleep(onFailureWaitTime)
-			//*reply = "down"
-			//return fmt.Errorf("failed to connect to wing API on bastion") //: %s"), err)
 			continue
 		}
 
@@ -46,6 +47,48 @@ func (i *tarmakRPC) BastionStatus(args string, reply *string) error {
 	}
 
 }
+
+func (i *tarmakRPC) VaultClusterStatus(instances []string, reply *string) error {
+
+	fmt.Printf("VaultClusterStatus called\n")
+
+	t := i.tarmak
+
+	// build vault stack
+	s := &stack.Stack{}
+	s.SetCluster(t.Cluster())
+	s.SetLog(t.Cluster().Log().WithField("stack", tarmakv1alpha1.StackNameVault))
+
+	v, err := stack.NewVaultStack(s)
+	if err != nil {
+		return fmt.Errorf("error while getting vault stack: %s", err)
+	}
+
+	output, err := t.Terraform().Output(v)
+	if err != nil {
+		return fmt.Errorf("error while getting terraform output: %s", err)
+	}
+	v.SetOutput(output)
+
+	for {
+		err = v.VerifyVaultInitForFQDNs(instances)
+		if err != nil {
+			fmt.Printf("failed to connect to vault: %s", err)
+			time.Sleep(onFailureWaitTime)
+			continue
+		}
+
+		*reply = "up"
+		return nil
+	}
+
+}
+
+/*func (i *tarmakRPC) VaultInstanceRoleStatus(args string, reply *string) error {
+	fmt.Printf("VaultInstanceRoleStatus called\n")
+
+	t := i.tarmak
+}*/
 
 // Start starts an RPC server to serve requests from
 // the container
