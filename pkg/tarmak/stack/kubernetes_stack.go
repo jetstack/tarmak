@@ -20,7 +20,7 @@ type KubernetesStack struct {
 
 var _ interfaces.Stack = &KubernetesStack{}
 
-func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
+func NewKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	k := &KubernetesStack{
 		Stack: s,
 	}
@@ -31,7 +31,7 @@ func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	s.roles[clusterv1alpha1.InstancePoolTypeWorker] = true
 
 	s.name = tarmakv1alpha1.StackNameKubernetes
-	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensureVaultSetup)
+	s.verifyPreDeploy = append(s.verifyPreDeploy, k.EnsureVaultSetup)
 	s.verifyPreDeploy = append(s.verifyPreDeploy, k.ensurePuppetTarGz)
 	s.verifyPreDestroy = append(s.verifyPreDestroy, k.emptyPuppetTarGz)
 
@@ -102,7 +102,7 @@ func (s *KubernetesStack) ensurePuppetTarGz() error {
 
 }
 
-func (s *KubernetesStack) ensureVaultSetup() error {
+func (s *KubernetesStack) EnsureVaultSetup() error {
 	vaultStack := s.Cluster().Environment().VaultStack()
 
 	// load outputs from terraform
@@ -140,4 +140,8 @@ func (s *KubernetesStack) ensureVaultSetup() error {
 		s.initTokens[fmt.Sprintf("vault_init_token_%s", role)] = token
 	}
 	return nil
+}
+
+func (s *KubernetesStack) InitTokens() map[string]interface{} {
+	return s.initTokens
 }

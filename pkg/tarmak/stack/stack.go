@@ -50,7 +50,7 @@ func New(cluster interfaces.Cluster, name string) (interfaces.Stack, error) {
 	case tarmakv1alpha1.StackNameVault:
 		stack, err = NewVaultStack(s)
 	case tarmakv1alpha1.StackNameKubernetes:
-		stack, err = newKubernetesStack(s)
+		stack, err = NewKubernetesStack(s)
 	default:
 		return nil, fmt.Errorf("unmatched state name: %s", name)
 	}

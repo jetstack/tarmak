@@ -23,9 +23,12 @@ type tarmakRPC struct {
 	tarmak *tarmak.Tarmak
 }
 
-func (i *tarmakRPC) BastionInstanceStatus(hostname string, reply *string) error {
+func (i *tarmakRPC) BastionInstanceStatus(args [2]string, reply *string) error {
 
 	fmt.Printf("BastionInstanceStatus called\n")
+
+	//hostname := args[0]
+	//username := args[1]
 
 	t := i.tarmak
 	c, err := cluster.NewFromConfig(t.Environment(), t.Cluster().Config())
@@ -55,13 +58,14 @@ func (i *tarmakRPC) VaultClusterStatus(instances []string, reply *string) error 
 	t := i.tarmak
 
 	// build vault stack
+	// TODO: Look at ensureVaultSetup in kubernetes_stack.go for a better way of doing this
 	s := &stack.Stack{}
 	s.SetCluster(t.Cluster())
 	s.SetLog(t.Cluster().Log().WithField("stack", tarmakv1alpha1.StackNameVault))
 
 	v, err := stack.NewVaultStack(s)
 	if err != nil {
-		return fmt.Errorf("error while getting vault stack: %s", err)
+		return fmt.Errorf("error while creating vault stack: %s", err)
 	}
 
 	output, err := t.Terraform().Output(v)
@@ -84,11 +88,46 @@ func (i *tarmakRPC) VaultClusterStatus(instances []string, reply *string) error 
 
 }
 
-/*func (i *tarmakRPC) VaultInstanceRoleStatus(args string, reply *string) error {
+func (i *tarmakRPC) VaultInstanceRoleStatus(args [2]string, reply *string) error {
 	fmt.Printf("VaultInstanceRoleStatus called\n")
 
+	//vaultClusterName := args[0]
+	roleName := args[1]
+
 	t := i.tarmak
-}*/
+	clusterStacks := t.Cluster().Stacks()
+
+	for {
+		for _, clusterStack := range clusterStacks {
+			if clusterStack.Name() == tarmakv1alpha1.StackNameKubernetes {
+
+				// get real kubernetes stack
+				kubernetesStack, ok := clusterStack.(*stack.KubernetesStack)
+				if !ok {
+					return fmt.Errorf("unexpected type for kubernetes stack: %T", clusterStack)
+				}
+
+				// retrieve init tokens
+				err := kubernetesStack.EnsureVaultSetup()
+				if err != nil {
+					return fmt.Errorf("error ensuring vault setup: %s", err)
+				}
+
+				// test existence of init token for role
+				initTokens := kubernetesStack.InitTokens()
+				_, ok = initTokens[fmt.Sprintf("vault_init_token_%s", roleName)]
+
+				if ok {
+					*reply = "up"
+					return nil
+				}
+			}
+		}
+		fmt.Printf("failed to retrieve init token for %s", roleName)
+		time.Sleep(onFailureWaitTime)
+		continue
+	}
+}
 
 // Start starts an RPC server to serve requests from
 // the container
