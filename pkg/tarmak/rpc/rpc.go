@@ -100,7 +100,7 @@ func (i *tarmakRPC) VaultInstanceRoleStatus(args [2]string, reply *string) error
 					return fmt.Errorf("unexpected type for kubernetes stack: %T", clusterStack)
 				}
 
-				// retrieve init tokens
+				// attempt to retrieve init tokens
 				err := kubernetesStack.EnsureVaultSetup()
 				if err != nil {
 					return fmt.Errorf("error ensuring vault setup: %s", err)
@@ -116,7 +116,7 @@ func (i *tarmakRPC) VaultInstanceRoleStatus(args [2]string, reply *string) error
 				}
 			}
 		}
-		fmt.Printf("failed to retrieve init token for %s", roleName)
+		fmt.Printf("failed to retrieve init token for role %s", roleName)
 		time.Sleep(onFailureWaitTime)
 		continue
 	}
