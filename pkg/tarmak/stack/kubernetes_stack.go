@@ -20,7 +20,7 @@ type KubernetesStack struct {
 
 var _ interfaces.Stack = &KubernetesStack{}
 
-func NewKubernetesStack(s *Stack) (*KubernetesStack, error) {
+func newKubernetesStack(s *Stack) (*KubernetesStack, error) {
 	k := &KubernetesStack{
 		Stack: s,
 	}

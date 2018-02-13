@@ -57,25 +57,18 @@ func (i *tarmakRPC) VaultClusterStatus(instances []string, reply *string) error 
 
 	t := i.tarmak
 
-	// build vault stack
-	// TODO: Look at ensureVaultSetup in kubernetes_stack.go for a better way of doing this
-	s := &stack.Stack{}
-	s.SetCluster(t.Cluster())
-	s.SetLog(t.Cluster().Log().WithField("stack", tarmakv1alpha1.StackNameVault))
+	vaultStack := t.Cluster().Environment().VaultStack()
 
-	v, err := stack.NewVaultStack(s)
-	if err != nil {
-		return fmt.Errorf("error while creating vault stack: %s", err)
-	}
+	// load outputs from terraform
+	t.Cluster().Environment().Tarmak().Terraform().Output(vaultStack)
 
-	output, err := t.Terraform().Output(v)
-	if err != nil {
-		return fmt.Errorf("error while getting terraform output: %s", err)
+	vaultStackReal, ok := vaultStack.(*stack.VaultStack)
+	if !ok {
+		return fmt.Errorf("unexpected type for vault stack: %T", vaultStack)
 	}
-	v.SetOutput(output)
 
 	for {
-		err = v.VerifyVaultInitForFQDNs(instances)
+		err := vaultStackReal.VerifyVaultInitForFQDNs(instances)
 		if err != nil {
 			fmt.Printf("failed to connect to vault: %s", err)
 			time.Sleep(onFailureWaitTime)
