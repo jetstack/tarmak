@@ -3,11 +3,17 @@ FROM alpine:3.6
 
 RUN apk add --no-cache unzip curl
 
+# install airworthy
+COPY airworthy /usr/local/bin/airworthy
+
 # install terraform
 ENV TERRAFORM_VERSION 0.11.2
-ENV TERRAFORM_HASH f728fa73ff2a4c4235a28de4019802531758c7c090b6ca4c024d48063ab8537b
-RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > /tmp/terraform.zip && \
-    echo "${TERRAFORM_HASH}  /tmp/terraform.zip" | sha256sum  -c && \
+RUN curl -sL  https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
+    airworthy -v download https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS -S https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS.sig && \
+    cat terraform_${TERRAFORM_VERSION}_SHA256SUMS | grep terraform_${TERRAFORM_VERSION}_linux_amd64.zip > terraform_${TERRAFORM_VERSION}_linux_amd64_SHA256SUMS && \
+    sha256sum -c terraform_${TERRAFORM_VERSION}_linux_amd64_SHA256SUMS && \ 
+    rm terraform_${TERRAFORM_VERSION}_SHA256SUMS terraform_${TERRAFORM_VERSION}_linux_amd64_SHA256SUMS && \
+    mv terraform_${TERRAFORM_VERSION}_linux_amd64.zip /tmp/terraform.zip && \ 
     unzip /tmp/terraform.zip && \
     rm /tmp/terraform.zip && \
     mv terraform /usr/local/bin/terraform && \
