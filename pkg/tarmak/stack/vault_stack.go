@@ -24,7 +24,7 @@ type VaultStack struct {
 
 var _ interfaces.Stack = &VaultStack{}
 
-func NewVaultStack(s *Stack) (*VaultStack, error) {
+func newVaultStack(s *Stack) (*VaultStack, error) {
 	v := &VaultStack{
 		Stack: s,
 	}
