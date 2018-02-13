@@ -108,10 +108,10 @@ func (i *tarmakRPC) VaultInstanceRoleStatus(args [2]string, reply *string) error
 
 				// test existence of init token for role
 				initTokens := kubernetesStack.InitTokens()
-				_, ok = initTokens[fmt.Sprintf("vault_init_token_%s", roleName)]
+				initToken, ok := initTokens[fmt.Sprintf("vault_init_token_%s", roleName)]
 
 				if ok {
-					*reply = "up"
+					*reply = initToken.(string)
 					return nil
 				}
 			}
