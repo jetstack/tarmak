@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
 )

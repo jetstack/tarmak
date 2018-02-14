@@ -6,9 +6,9 @@ import (
 	"io"
 	"net"
 
-	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack/vault-unsealer/pkg/kv"
+	"github.com/sirupsen/logrus"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"

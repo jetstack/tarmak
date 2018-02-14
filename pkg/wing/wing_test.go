@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/archive"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/hashicorp/go-multierror"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 

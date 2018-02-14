@@ -5,7 +5,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"

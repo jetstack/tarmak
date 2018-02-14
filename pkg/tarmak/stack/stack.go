@@ -4,8 +4,8 @@ package stack
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
+	"github.com/sirupsen/logrus"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
