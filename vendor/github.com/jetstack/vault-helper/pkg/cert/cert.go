@@ -7,7 +7,7 @@ import (
 	"os/user"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/vault-helper/pkg/instanceToken"
 )
@@ -18,19 +18,21 @@ const FlagIpSans = "ip-sans"
 const FlagSanHosts = "san-hosts"
 const FlagOwner = "owner"
 const FlagGroup = "group"
+const FlagOrganisation = "organisation"
 
 type Cert struct {
-	role        string
-	commonName  string
-	destination string
-	bitSize     int
-	pemSize     int
-	keyType     string
-	ipSans      []string
-	sanHosts    []string
-	owner       string
-	group       string
-	data        *pem.Block
+	role         string
+	commonName   string
+	organisation []string
+	destination  string
+	bitSize      int
+	pemSize      int
+	keyType      string
+	ipSans       []string
+	sanHosts     []string
+	owner        string
+	group        string
+	data         *pem.Block
 
 	Log           *logrus.Entry
 	instanceToken *instanceToken.InstanceToken
@@ -163,6 +165,14 @@ func (c *Cert) SetCommonName(name string) {
 }
 func (c *Cert) CommonName() string {
 	return c.commonName
+}
+
+func (c *Cert) SetOrganisation(org []string) {
+	c.organisation = org
+}
+
+func (c *Cert) Organisation() []string {
+	return c.organisation
 }
 
 func (c *Cert) SetDestination(destination string) {

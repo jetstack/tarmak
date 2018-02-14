@@ -2,6 +2,7 @@ package vault
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -21,11 +22,33 @@ const (
 	barrierSealConfigPath = "core/seal-config"
 
 	// recoverySealConfigPath is the path to the recovery key seal
-	// configuration. It is inside the barrier.
+	// configuration. It lives inside the barrier.
+	// DEPRECATED: Use recoverySealConfigPlaintextPath instead.
 	recoverySealConfigPath = "core/recovery-seal-config"
+
+	// recoverySealConfigPlaintextPath is the path to the recovery key seal
+	// configuration. This is stored in plaintext so that we can perform
+	// auto-unseal.
+	recoverySealConfigPlaintextPath = "core/recovery-config"
 
 	// recoveryKeyPath is the path to the recovery key
 	recoveryKeyPath = "core/recovery-key"
+
+	// storedBarrierKeysPath is the path used for storing HSM-encrypted unseal keys
+	storedBarrierKeysPath = "core/hsm/barrier-unseal-keys"
+
+	// hsmStoredIVPath is the path to the initialization vector for stored keys
+	hsmStoredIVPath = "core/hsm/iv"
+)
+
+const (
+	SealTypeShamir = "shamir"
+	SealTypePKCS11 = "pkcs11"
+	SealTypeAWSKMS = "awskms"
+	SealTypeTest   = "test-auto"
+
+	RecoveryTypeUnsupported = "unsupported"
+	RecoveryTypeShamir      = "shamir"
 )
 
 type KeyNotFoundError struct {
@@ -42,23 +65,23 @@ func (e *KeyNotFoundError) Error() string {
 
 type Seal interface {
 	SetCore(*Core)
-	Init() error
-	Finalize() error
+	Init(context.Context) error
+	Finalize(context.Context) error
 
 	StoredKeysSupported() bool
-	SetStoredKeys([][]byte) error
-	GetStoredKeys() ([][]byte, error)
+	SetStoredKeys(context.Context, [][]byte) error
+	GetStoredKeys(context.Context) ([][]byte, error)
 
 	BarrierType() string
-	BarrierConfig() (*SealConfig, error)
-	SetBarrierConfig(*SealConfig) error
+	BarrierConfig(context.Context) (*SealConfig, error)
+	SetBarrierConfig(context.Context, *SealConfig) error
 
 	RecoveryKeySupported() bool
 	RecoveryType() string
-	RecoveryConfig() (*SealConfig, error)
-	SetRecoveryConfig(*SealConfig) error
-	SetRecoveryKey([]byte) error
-	VerifyRecoveryKey([]byte) error
+	RecoveryConfig(context.Context) (*SealConfig, error)
+	SetRecoveryConfig(context.Context, *SealConfig) error
+	SetRecoveryKey(context.Context, []byte) error
+	VerifyRecoveryKey(context.Context, []byte) error
 }
 
 type DefaultSeal struct {
@@ -77,16 +100,16 @@ func (d *DefaultSeal) SetCore(core *Core) {
 	d.core = core
 }
 
-func (d *DefaultSeal) Init() error {
+func (d *DefaultSeal) Init(ctx context.Context) error {
 	return nil
 }
 
-func (d *DefaultSeal) Finalize() error {
+func (d *DefaultSeal) Finalize(ctx context.Context) error {
 	return nil
 }
 
 func (d *DefaultSeal) BarrierType() string {
-	return "shamir"
+	return SealTypeShamir
 }
 
 func (d *DefaultSeal) StoredKeysSupported() bool {
@@ -97,15 +120,15 @@ func (d *DefaultSeal) RecoveryKeySupported() bool {
 	return false
 }
 
-func (d *DefaultSeal) SetStoredKeys(keys [][]byte) error {
+func (d *DefaultSeal) SetStoredKeys(ctx context.Context, keys [][]byte) error {
 	return fmt.Errorf("core: stored keys are not supported")
 }
 
-func (d *DefaultSeal) GetStoredKeys() ([][]byte, error) {
+func (d *DefaultSeal) GetStoredKeys(ctx context.Context) ([][]byte, error) {
 	return nil, fmt.Errorf("core: stored keys are not supported")
 }
 
-func (d *DefaultSeal) BarrierConfig() (*SealConfig, error) {
+func (d *DefaultSeal) BarrierConfig(ctx context.Context) (*SealConfig, error) {
 	if d.config != nil {
 		return d.config.Clone(), nil
 	}
@@ -115,7 +138,7 @@ func (d *DefaultSeal) BarrierConfig() (*SealConfig, error) {
 	}
 
 	// Fetch the core configuration
-	pe, err := d.core.physical.Get(barrierSealConfigPath)
+	pe, err := d.core.physical.Get(ctx, barrierSealConfigPath)
 	if err != nil {
 		d.core.logger.Error("core: failed to read seal configuration", "error", err)
 		return nil, fmt.Errorf("failed to check seal configuration: %v", err)
@@ -155,7 +178,7 @@ func (d *DefaultSeal) BarrierConfig() (*SealConfig, error) {
 	return d.config.Clone(), nil
 }
 
-func (d *DefaultSeal) SetBarrierConfig(config *SealConfig) error {
+func (d *DefaultSeal) SetBarrierConfig(ctx context.Context, config *SealConfig) error {
 	if err := d.checkCore(); err != nil {
 		return err
 	}
@@ -181,7 +204,7 @@ func (d *DefaultSeal) SetBarrierConfig(config *SealConfig) error {
 		Value: buf,
 	}
 
-	if err := d.core.physical.Put(pe); err != nil {
+	if err := d.core.physical.Put(ctx, pe); err != nil {
 		d.core.logger.Error("core: failed to write seal configuration", "error", err)
 		return fmt.Errorf("failed to write seal configuration: %v", err)
 	}
@@ -192,22 +215,22 @@ func (d *DefaultSeal) SetBarrierConfig(config *SealConfig) error {
 }
 
 func (d *DefaultSeal) RecoveryType() string {
-	return "unsupported"
+	return RecoveryTypeUnsupported
 }
 
-func (d *DefaultSeal) RecoveryConfig() (*SealConfig, error) {
+func (d *DefaultSeal) RecoveryConfig(ctx context.Context) (*SealConfig, error) {
 	return nil, fmt.Errorf("recovery not supported")
 }
 
-func (d *DefaultSeal) SetRecoveryConfig(config *SealConfig) error {
+func (d *DefaultSeal) SetRecoveryConfig(ctx context.Context, config *SealConfig) error {
 	return fmt.Errorf("recovery not supported")
 }
 
-func (d *DefaultSeal) VerifyRecoveryKey([]byte) error {
+func (d *DefaultSeal) VerifyRecoveryKey(context.Context, []byte) error {
 	return fmt.Errorf("recovery not supported")
 }
 
-func (d *DefaultSeal) SetRecoveryKey(key []byte) error {
+func (d *DefaultSeal) SetRecoveryKey(ctx context.Context, key []byte) error {
 	return fmt.Errorf("recovery not supported")
 }
 
@@ -298,28 +321,4 @@ func (s *SealConfig) Clone() *SealConfig {
 		copy(ret.PGPKeys, s.PGPKeys)
 	}
 	return ret
-}
-
-type SealAccess struct {
-	seal Seal
-}
-
-func (s *SealAccess) SetSeal(seal Seal) {
-	s.seal = seal
-}
-
-func (s *SealAccess) StoredKeysSupported() bool {
-	return s.seal.StoredKeysSupported()
-}
-
-func (s *SealAccess) BarrierConfig() (*SealConfig, error) {
-	return s.seal.BarrierConfig()
-}
-
-func (s *SealAccess) RecoveryKeySupported() bool {
-	return s.seal.RecoveryKeySupported()
-}
-
-func (s *SealAccess) RecoveryConfig() (*SealConfig, error) {
-	return s.seal.RecoveryConfig()
 }

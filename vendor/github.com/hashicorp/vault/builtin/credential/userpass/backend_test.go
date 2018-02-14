@@ -1,11 +1,13 @@
 package userpass
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/vault/helper/policyutil"
 	"github.com/hashicorp/vault/logical"
 	logicaltest "github.com/hashicorp/vault/logical/testing"
 	"github.com/mitchellh/mapstructure"
@@ -44,7 +46,7 @@ func TestBackend_TTLDurations(t *testing.T) {
 	data5 := map[string]interface{}{
 		"password": "password",
 	}
-	b, err := Factory(&logical.BackendConfig{
+	b, err := Factory(context.Background(), &logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
 			DefaultLeaseTTLVal: testSysTTL,
@@ -68,7 +70,7 @@ func TestBackend_TTLDurations(t *testing.T) {
 }
 
 func TestBackend_basic(t *testing.T) {
-	b, err := Factory(&logical.BackendConfig{
+	b, err := Factory(context.Background(), &logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
 			DefaultLeaseTTLVal: testSysTTL,
@@ -91,7 +93,7 @@ func TestBackend_basic(t *testing.T) {
 }
 
 func TestBackend_userCrud(t *testing.T) {
-	b, err := Factory(&logical.BackendConfig{
+	b, err := Factory(context.Background(), &logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
 			DefaultLeaseTTLVal: testSysTTL,
@@ -106,7 +108,7 @@ func TestBackend_userCrud(t *testing.T) {
 		Backend: b,
 		Steps: []logicaltest.TestStep{
 			testAccStepUser(t, "web", "password", "foo"),
-			testAccStepReadUser(t, "web", "default,foo"),
+			testAccStepReadUser(t, "web", "foo"),
 			testAccStepDeleteUser(t, "web"),
 			testAccStepReadUser(t, "web", ""),
 		},
@@ -114,7 +116,7 @@ func TestBackend_userCrud(t *testing.T) {
 }
 
 func TestBackend_userCreateOperation(t *testing.T) {
-	b, err := Factory(&logical.BackendConfig{
+	b, err := Factory(context.Background(), &logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
 			DefaultLeaseTTLVal: testSysTTL,
@@ -135,7 +137,7 @@ func TestBackend_userCreateOperation(t *testing.T) {
 }
 
 func TestBackend_passwordUpdate(t *testing.T) {
-	b, err := Factory(&logical.BackendConfig{
+	b, err := Factory(context.Background(), &logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
 			DefaultLeaseTTLVal: testSysTTL,
@@ -150,7 +152,7 @@ func TestBackend_passwordUpdate(t *testing.T) {
 		Backend: b,
 		Steps: []logicaltest.TestStep{
 			testAccStepUser(t, "web", "password", "foo"),
-			testAccStepReadUser(t, "web", "default,foo"),
+			testAccStepReadUser(t, "web", "foo"),
 			testAccStepLogin(t, "web", "password", []string{"default", "foo"}),
 			testUpdatePassword(t, "web", "newpassword"),
 			testAccStepLogin(t, "web", "newpassword", []string{"default", "foo"}),
@@ -160,7 +162,7 @@ func TestBackend_passwordUpdate(t *testing.T) {
 }
 
 func TestBackend_policiesUpdate(t *testing.T) {
-	b, err := Factory(&logical.BackendConfig{
+	b, err := Factory(context.Background(), &logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
 			DefaultLeaseTTLVal: testSysTTL,
@@ -175,10 +177,10 @@ func TestBackend_policiesUpdate(t *testing.T) {
 		Backend: b,
 		Steps: []logicaltest.TestStep{
 			testAccStepUser(t, "web", "password", "foo"),
-			testAccStepReadUser(t, "web", "default,foo"),
+			testAccStepReadUser(t, "web", "foo"),
 			testAccStepLogin(t, "web", "password", []string{"default", "foo"}),
 			testUpdatePolicies(t, "web", "foo,bar"),
-			testAccStepReadUser(t, "web", "bar,default,foo"),
+			testAccStepReadUser(t, "web", "bar,foo"),
 			testAccStepLogin(t, "web", "password", []string{"bar", "default", "foo"}),
 		},
 	})
@@ -311,13 +313,13 @@ func testAccStepReadUser(t *testing.T, name string, policies string) logicaltest
 			}
 
 			var d struct {
-				Policies string `mapstructure:"policies"`
+				Policies []string `mapstructure:"policies"`
 			}
 			if err := mapstructure.Decode(resp.Data, &d); err != nil {
 				return err
 			}
 
-			if d.Policies != policies {
+			if !reflect.DeepEqual(d.Policies, policyutil.ParsePolicies(policies)) {
 				return fmt.Errorf("bad: %#v", resp)
 			}
 

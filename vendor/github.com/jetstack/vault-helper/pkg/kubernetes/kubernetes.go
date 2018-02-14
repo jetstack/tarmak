@@ -8,9 +8,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 )
 
 const FlagMaxValidityAdmin = "max-validity-admin"

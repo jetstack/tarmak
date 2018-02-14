@@ -26,11 +26,19 @@ crash the entirety of Vault.
 
 ## Plugin Communication
 Vault creates a mutually authenticated TLS connection for communication with the
-plugin's RPC server. While invoking the plugin process Vault passes a [wrapping
+plugin's RPC server. While invoking the plugin process, Vault passes a [wrapping
 token](https://www.vaultproject.io/docs/concepts/response-wrapping.html) to the
 plugin process' environment. This token is single use and has a short TTL. Once
-unwrapped, it provides the plugin with a unique generated TLS certificate and
-private key for it to use to talk to the original vault process. 
+unwrapped, it provides the plugin with a uniquely generated TLS certificate and
+private key for it to use to talk to the original vault process.
+
+The [`api_addr`][api_addr] must be set in order for the plugin process establish
+communication with the Vault server during mount time. If the storage backend
+has HA enabled and supports automatic host address detection (e.g. Consul),
+Vault will automatically attempt to determine the `api_addr` as well.
+
+~> Note: Reading the original connection's TLS connection state is not supported
+in plugins.
 
 ## Plugin Registration
 An important consideration of Vault's plugin system is to ensure the plugin
@@ -70,7 +78,6 @@ $ vault write sys/plugins/catalog/myplugin-database-plugin \
 Success! Data written to: sys/plugins/catalog/myplugin-database-plugin
 ```
 
-
 ### Plugin Execution
 When a backend wants to run a plugin, it first looks up the plugin, by name, in
 the catalog. It then checks the executable's SHA256 sum against the one
@@ -79,6 +86,11 @@ the catalog, sending along the JWT formatted response wrapping token and mlock
 settings (like Vault, plugins support the use of mlock when available).
 
 # Plugin Development
+
+~> Advanced topic! Plugin development is a highly advanced topic in Vault, and
+is not required knowledge for day-to-day usage. If you don't plan on writing any
+plugins, we recommend not reading this section of the documentation.
+
 Because Vault communicates to plugins over a RPC interface, you can build and
 distribute a plugin for Vault without having to rebuild Vault itself. This makes
 it easy for you to build a Vault plugin for your organization's internal use,
@@ -88,10 +100,6 @@ something before contributing it back to the main project.
 In theory, because the plugin interface is HTTP, you could even develop a plugin
 using a completely different programming language! (Disclaimer, you would also
 have to re-implement the plugin API which is not a trivial amount of work.)
-
-~> Advanced topic! Plugin development is a highly advanced topic in Vault, and
-is not required knowledge for day-to-day usage. If you don't plan on writing any
-plugins, we recommend not reading this section of the documentation.
 
 Developing a plugin is simple. The only knowledge necessary to write
 a plugin is basic command-line skills and basic knowledge of the
@@ -105,13 +113,22 @@ backend running the plugin.
 package main
 
 import (
+	"os"
+	
+	"github.com/hashicorp/vault/helper/pluginutil"
 	"github.com/hashicorp/vault/plugins"
 )
 
 func main() {
-	plugins.Serve(new(MyPlugin), nil)
+	apiClientMeta := &pluginutil.APIClientMeta{}
+	flags := apiClientMeta.FlagSet()
+	flags.Parse(os.Args)
+	
+	plugins.Serve(New().(MyPlugin), apiClientMeta.GetTLSConfig())
 }
 ```
 
 And that's basically it! You would just need to change MyPlugin to your actual
 plugin.
+
+[api_addr]: /docs/configuration/index.html#api_addr

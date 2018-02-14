@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"context"
+
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -23,6 +25,14 @@ func pathConfigRoot() *framework.Path {
 				Type:        framework.TypeString,
 				Description: "Region for API calls.",
 			},
+			"iam_endpoint": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "Endpoint to custom IAM server URL",
+			},
+			"sts_endpoint": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "Endpoint to custom STS server URL",
+			},
 		},
 
 		Callbacks: map[logical.Operation]framework.OperationFunc{
@@ -34,23 +44,23 @@ func pathConfigRoot() *framework.Path {
 	}
 }
 
-func pathConfigRootWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func pathConfigRootWrite(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	region := data.Get("region").(string)
-	if region == "" {
-		region = "us-east-1"
-	}
+	iamendpoint := data.Get("iam_endpoint").(string)
+	stsendpoint := data.Get("sts_endpoint").(string)
 
 	entry, err := logical.StorageEntryJSON("config/root", rootConfig{
-		AccessKey: data.Get("access_key").(string),
-		SecretKey: data.Get("secret_key").(string),
-		Region:    region,
+		AccessKey:   data.Get("access_key").(string),
+		SecretKey:   data.Get("secret_key").(string),
+		IAMEndpoint: iamendpoint,
+		STSEndpoint: stsendpoint,
+		Region:      region,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 
@@ -58,9 +68,11 @@ func pathConfigRootWrite(
 }
 
 type rootConfig struct {
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	Region    string `json:"region"`
+	AccessKey   string `json:"access_key"`
+	SecretKey   string `json:"secret_key"`
+	IAMEndpoint string `json:"iam_endpoint"`
+	STSEndpoint string `json:"sts_endpoint"`
+	Region      string `json:"region"`
 }
 
 const pathConfigRootHelpSyn = `

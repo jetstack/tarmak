@@ -367,11 +367,11 @@ func TestEchoWithMessaging(t *testing.T) {
 		OutputBufferSize: 65536,
 	}
 	l, err := ListenPipe(testPipeName, &c)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer l.Close()
+
 	listenerDone := make(chan bool)
 	clientDone := make(chan bool)
 	go func() {
@@ -380,6 +380,8 @@ func TestEchoWithMessaging(t *testing.T) {
 		if e != nil {
 			t.Fatal(e)
 		}
+		defer conn.Close()
+
 		time.Sleep(500 * time.Millisecond) // make *sure* we don't begin to read before eof signal is sent
 		io.Copy(conn, conn)
 		conn.(CloseWriter).CloseWrite()
@@ -419,4 +421,33 @@ func TestEchoWithMessaging(t *testing.T) {
 	client.(CloseWriter).CloseWrite()
 	<-listenerDone
 	<-clientDone
+}
+
+func TestConnectRace(t *testing.T) {
+	l, err := ListenPipe(testPipeName, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	go func() {
+		for {
+			s, err := l.Accept()
+			if err == ErrPipeListenerClosed {
+				return
+			}
+
+			if err != nil {
+				t.Fatal(err)
+			}
+			s.Close()
+		}
+	}()
+
+	for i := 0; i < 1000; i++ {
+		c, err := DialPipe(testPipeName, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		c.Close()
+	}
 }

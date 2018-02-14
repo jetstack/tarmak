@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.9.3] - 2018-02-12
+### Chnaged
+- Use Update to use lowercase logrus import
+
 ## [0.9.2] - 2017-11-23
 ### Fixed
 - Fix role for kube-apiserver-proxy, allow only bare domains

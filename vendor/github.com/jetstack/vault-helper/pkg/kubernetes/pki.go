@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 )
 
 type PKI struct {

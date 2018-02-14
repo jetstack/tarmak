@@ -3,10 +3,10 @@ package cmd
 import (
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/vault/api"
-	"github.com/spf13/cobra"
 	"github.com/jetstack/vault-unsealer/pkg/vault"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 const cfgUnsealPeriod = "unseal-period"

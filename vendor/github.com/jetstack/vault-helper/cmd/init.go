@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/spf13/cobra"

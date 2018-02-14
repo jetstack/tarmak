@@ -1,35 +1,43 @@
 package vault
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/hashicorp/vault/helper/jsonutil"
 	"github.com/hashicorp/vault/helper/parseutil"
+	"github.com/hashicorp/vault/helper/wrapping"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
 
 // PassthroughBackendFactory returns a PassthroughBackend
 // with leases switched off
-func PassthroughBackendFactory(conf *logical.BackendConfig) (logical.Backend, error) {
-	return LeaseSwitchedPassthroughBackend(conf, false)
+func PassthroughBackendFactory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
+	return LeaseSwitchedPassthroughBackend(ctx, conf, false)
 }
 
-// PassthroughBackendWithLeasesFactory returns a PassthroughBackend
+// LeasedPassthroughBackendFactory returns a PassthroughBackend
 // with leases switched on
-func LeasedPassthroughBackendFactory(conf *logical.BackendConfig) (logical.Backend, error) {
-	return LeaseSwitchedPassthroughBackend(conf, true)
+func LeasedPassthroughBackendFactory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
+	return LeaseSwitchedPassthroughBackend(ctx, conf, true)
 }
 
-// LeaseSwitchedPassthroughBackendFactory returns a PassthroughBackend
+// LeaseSwitchedPassthroughBackend returns a PassthroughBackend
 // with leases switched on or off
-func LeaseSwitchedPassthroughBackend(conf *logical.BackendConfig, leases bool) (logical.Backend, error) {
+func LeaseSwitchedPassthroughBackend(ctx context.Context, conf *logical.BackendConfig, leases bool) (logical.Backend, error) {
 	var b PassthroughBackend
 	b.generateLeases = leases
 	b.Backend = &framework.Backend{
 		Help: strings.TrimSpace(passthroughHelp),
+
+		PathsSpecial: &logical.Paths{
+			SealWrapStorage: []string{
+				"/",
+			},
+		},
 
 		Paths: []*framework.Path{
 			&framework.Path{
@@ -53,7 +61,7 @@ func LeaseSwitchedPassthroughBackend(conf *logical.BackendConfig, leases bool) (
 
 	b.Backend.Secrets = []*framework.Secret{
 		&framework.Secret{
-			Type: "generic",
+			Type: "kv",
 
 			Renew:  b.handleRead,
 			Revoke: b.handleRevoke,
@@ -63,7 +71,7 @@ func LeaseSwitchedPassthroughBackend(conf *logical.BackendConfig, leases bool) (
 	if conf == nil {
 		return nil, fmt.Errorf("Configuation passed into backend is nil")
 	}
-	b.Backend.Setup(conf)
+	b.Backend.Setup(ctx, conf)
 
 	return &b, nil
 }
@@ -77,15 +85,13 @@ type PassthroughBackend struct {
 	generateLeases bool
 }
 
-func (b *PassthroughBackend) handleRevoke(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *PassthroughBackend) handleRevoke(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	// This is a no-op
 	return nil, nil
 }
 
-func (b *PassthroughBackend) handleExistenceCheck(
-	req *logical.Request, data *framework.FieldData) (bool, error) {
-	out, err := req.Storage.Get(req.Path)
+func (b *PassthroughBackend) handleExistenceCheck(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
+	out, err := req.Storage.Get(ctx, req.Path)
 	if err != nil {
 		return false, fmt.Errorf("existence check failed: %v", err)
 	}
@@ -93,10 +99,9 @@ func (b *PassthroughBackend) handleExistenceCheck(
 	return out != nil, nil
 }
 
-func (b *PassthroughBackend) handleRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *PassthroughBackend) handleRead(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	// Read the path
-	out, err := req.Storage.Get(req.Path)
+	out, err := req.Storage.Get(ctx, req.Path)
 	if err != nil {
 		return nil, fmt.Errorf("read failed: %v", err)
 	}
@@ -116,13 +121,22 @@ func (b *PassthroughBackend) handleRead(
 	var resp *logical.Response
 	if b.generateLeases {
 		// Generate the response
-		resp = b.Secret("generic").Response(rawData, nil)
+		resp = b.Secret("kv").Response(rawData, nil)
 		resp.Secret.Renewable = false
 	} else {
 		resp = &logical.Response{
 			Secret: &logical.Secret{},
 			Data:   rawData,
 		}
+	}
+
+	// Ensure seal wrapping is carried through if the response is
+	// response-wrapped
+	if out.SealWrap {
+		if resp.WrapInfo == nil {
+			resp.WrapInfo = &wrapping.ResponseWrapInfo{}
+		}
+		resp.WrapInfo.SealWrap = out.SealWrap
 	}
 
 	// Check if there is a ttl key
@@ -147,8 +161,11 @@ func (b *PassthroughBackend) handleRead(
 	return resp, nil
 }
 
-func (b *PassthroughBackend) handleWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *PassthroughBackend) GeneratesLeases() bool {
+	return b.generateLeases
+}
+
+func (b *PassthroughBackend) handleWrite(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	// Check that some fields are given
 	if len(req.Data) == 0 {
 		return logical.ErrorResponse("missing data fields"), nil
@@ -165,25 +182,23 @@ func (b *PassthroughBackend) handleWrite(
 		Key:   req.Path,
 		Value: buf,
 	}
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, fmt.Errorf("failed to write: %v", err)
 	}
 
 	return nil, nil
 }
 
-func (b *PassthroughBackend) handleDelete(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *PassthroughBackend) handleDelete(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	// Delete the key at the request path
-	if err := req.Storage.Delete(req.Path); err != nil {
+	if err := req.Storage.Delete(ctx, req.Path); err != nil {
 		return nil, err
 	}
 
 	return nil, nil
 }
 
-func (b *PassthroughBackend) handleList(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *PassthroughBackend) handleList(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	// Right now we only handle directories, so ensure it ends with /; however,
 	// some physical backends may not handle the "/" case properly, so only add
 	// it if we're not listing the root
@@ -193,7 +208,7 @@ func (b *PassthroughBackend) handleList(
 	}
 
 	// List the keys at the prefix given by the request
-	keys, err := req.Storage.List(path)
+	keys, err := req.Storage.List(ctx, path)
 	if err != nil {
 		return nil, err
 	}
@@ -202,12 +217,8 @@ func (b *PassthroughBackend) handleList(
 	return logical.ListResponse(keys), nil
 }
 
-func (b *PassthroughBackend) GeneratesLeases() bool {
-	return b.generateLeases
-}
-
 const passthroughHelp = `
-The generic backend reads and writes arbitrary secrets to the backend.
+The kv backend reads and writes arbitrary secrets to the backend.
 The secrets are encrypted/decrypted by Vault: they are never stored
 unencrypted in the backend and the backend never has an opportunity to
 see the unencrypted value.

@@ -1,6 +1,7 @@
 package pki
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/vault/helper/certutil"
@@ -16,9 +17,7 @@ func pathConfigCA(b *backend) *framework.Path {
 			"pem_bundle": &framework.FieldSchema{
 				Type: framework.TypeString,
 				Description: `PEM-format, concatenated unencrypted
-secret key and certificate, or, if a
-CSR was generated with the "generate"
-endpoint, just the signed certificate.`,
+secret key and certificate.`,
 			},
 		},
 
@@ -31,8 +30,7 @@ endpoint, just the signed certificate.`,
 	}
 }
 
-func (b *backend) pathCAWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathCAWrite(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	pemBundle := data.Get("pem_bundle").(string)
 
 	parsedBundle, err := certutil.ParsePEMBundle(pemBundle)
@@ -67,7 +65,7 @@ func (b *backend) pathCAWrite(
 	if err != nil {
 		return nil, err
 	}
-	err = req.Storage.Put(entry)
+	err = req.Storage.Put(ctx, entry)
 	if err != nil {
 		return nil, err
 	}
@@ -76,12 +74,12 @@ func (b *backend) pathCAWrite(
 	// location, plus a fresh CRL
 	entry.Key = "ca"
 	entry.Value = parsedBundle.CertificateBytes
-	err = req.Storage.Put(entry)
+	err = req.Storage.Put(ctx, entry)
 	if err != nil {
 		return nil, err
 	}
 
-	err = buildCRL(b, req)
+	err = buildCRL(ctx, b, req)
 
 	return nil, err
 }

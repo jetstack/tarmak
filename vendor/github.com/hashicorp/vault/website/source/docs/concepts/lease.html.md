@@ -26,7 +26,7 @@ to check in routinely.
 
 In addition to renewals, a lease can be _revoked_. When a lease is revoked, it
 invalidates that secret immediately and prevents any further renewals. For
-example, with the [AWS secret backend](/docs/secrets/aws/index.html), the
+example, with the [AWS secrets engine](/docs/secrets/aws/index.html), the
 access keys will be deleted from AWS the moment a secret is revoked. This
 renders the access keys invalid from that point forward.
 
@@ -34,7 +34,7 @@ Revocation can happen manually via the API, via the `vault revoke` cli command,
 or automatically by Vault. When a lease is expired, Vault will automatically
 revoke that lease.
 
-**Note**: The [Generic Backend](/docs/secrets/generic/index.html) which stores
+**Note**: The [Key/Value Backend](/docs/secrets/kv/index.html) which stores
 arbitrary secrets does not issue leases.
 
 ## Lease IDs

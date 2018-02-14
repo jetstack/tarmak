@@ -1,14 +1,16 @@
 package kv
 
+import "fmt"
+
 type NotFoundError struct {
 	msg string // description of error
 }
 
 func (e *NotFoundError) Error() string { return e.msg }
 
-func NewNotFoundError(msg string) *NotFoundError {
+func NewNotFoundError(msg string, args ...interface{}) *NotFoundError {
 	return &NotFoundError{
-		msg: msg,
+		msg: fmt.Sprintf(msg, args...),
 	}
 }
 

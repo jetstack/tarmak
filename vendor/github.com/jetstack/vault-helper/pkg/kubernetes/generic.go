@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 )
 
 type Generic struct {

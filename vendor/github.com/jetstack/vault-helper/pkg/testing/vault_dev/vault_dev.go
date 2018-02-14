@@ -7,8 +7,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 )
 
 const RootTokenDev = "root-token-dev"

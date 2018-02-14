@@ -1,12 +1,14 @@
 package ldap
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/vault/helper/policyutil"
 	"github.com/hashicorp/vault/logical"
 	logicaltest "github.com/hashicorp/vault/logical/testing"
 	"github.com/mitchellh/mapstructure"
@@ -21,7 +23,7 @@ func createBackendWithStorage(t *testing.T) (*backend, logical.Storage) {
 		t.Fatalf("failed to create backend")
 	}
 
-	_, err := b.Backend.Setup(config)
+	err := b.Backend.Setup(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +50,7 @@ func TestLdapAuthBackend_UserPolicies(t *testing.T) {
 		},
 		Storage: storage,
 	}
-	resp, err = b.HandleRequest(configReq)
+	resp, err = b.HandleRequest(context.Background(), configReq)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
@@ -61,7 +63,7 @@ func TestLdapAuthBackend_UserPolicies(t *testing.T) {
 		Path:    "groups/engineers",
 		Storage: storage,
 	}
-	resp, err = b.HandleRequest(groupReq)
+	resp, err = b.HandleRequest(context.Background(), groupReq)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
@@ -76,7 +78,7 @@ func TestLdapAuthBackend_UserPolicies(t *testing.T) {
 		Storage: storage,
 	}
 
-	resp, err = b.HandleRequest(userReq)
+	resp, err = b.HandleRequest(context.Background(), userReq)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
@@ -90,18 +92,18 @@ func TestLdapAuthBackend_UserPolicies(t *testing.T) {
 		Storage: storage,
 	}
 
-	resp, err = b.HandleRequest(loginReq)
+	resp, err = b.HandleRequest(context.Background(), loginReq)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
-	expected := []string{"default", "grouppolicy", "userpolicy"}
+	expected := []string{"grouppolicy", "userpolicy"}
 	if !reflect.DeepEqual(expected, resp.Auth.Policies) {
 		t.Fatalf("bad: policies: expected: %q, actual: %q", expected, resp.Auth.Policies)
 	}
 }
 
 /*
- * Acceptance test for LDAP Auth Backend
+ * Acceptance test for LDAP Auth Method
  *
  * The tests here rely on a public LDAP server:
  * [http://www.forumsys.com/tutorials/integration-how-to/ldap/online-ldap-test-server/]
@@ -118,7 +120,7 @@ func TestLdapAuthBackend_UserPolicies(t *testing.T) {
 func factory(t *testing.T) logical.Backend {
 	defaultLeaseTTLVal := time.Hour * 24
 	maxLeaseTTLVal := time.Hour * 24 * 32
-	b, err := Factory(&logical.BackendConfig{
+	b, err := Factory(context.Background(), &logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
 			DefaultLeaseTTLVal: defaultLeaseTTLVal,
@@ -211,7 +213,7 @@ func TestBackend_groupCrud(t *testing.T) {
 		Backend: b,
 		Steps: []logicaltest.TestStep{
 			testAccStepGroup(t, "g1", "foo"),
-			testAccStepReadGroup(t, "g1", "default,foo"),
+			testAccStepReadGroup(t, "g1", "foo"),
 			testAccStepDeleteGroup(t, "g1"),
 			testAccStepReadGroup(t, "g1", ""),
 		},
@@ -259,7 +261,7 @@ func TestBackend_configDefaultsAfterUpdate(t *testing.T) {
 
 					defaultDenyNullBind := true
 					if cfg["deny_null_bind"] != defaultDenyNullBind {
-						t.Errorf("Default mismatch: deny_null_bind. Expected: '%s', received :'%s'", defaultDenyNullBind, cfg["deny_null_bind"])
+						t.Errorf("Default mismatch: deny_null_bind. Expected: '%t', received :'%s'", defaultDenyNullBind, cfg["deny_null_bind"])
 					}
 
 					return nil
@@ -357,13 +359,13 @@ func testAccStepReadGroup(t *testing.T, group string, policies string) logicalte
 			}
 
 			var d struct {
-				Policies string `mapstructure:"policies"`
+				Policies []string `mapstructure:"policies"`
 			}
 			if err := mapstructure.Decode(resp.Data, &d); err != nil {
 				return err
 			}
 
-			if d.Policies != policies {
+			if !reflect.DeepEqual(d.Policies, policyutil.ParsePolicies(policies)) {
 				return fmt.Errorf("bad: %#v", resp)
 			}
 

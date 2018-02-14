@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/vault-unsealer/pkg/vault"

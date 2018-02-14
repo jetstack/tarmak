@@ -1,7 +1,6 @@
 package aws_kms
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -30,7 +29,7 @@ func (f *fakeKV) Set(key string, data []byte) error {
 func (f *fakeKV) Get(key string) ([]byte, error) {
 	out, ok := f.Values[key]
 	if !ok {
-		return []byte{}, kv.NewNotFoundError(fmt.Sprintf("key '%s' not found", key))
+		return []byte{}, kv.NewNotFoundError("key '%s' not found", key)
 	}
 	return *out, nil
 }

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/pkg/plugingetter"
 	"github.com/docker/docker/pkg/plugins"
 	"github.com/docker/docker/plugin/v2"
-	"github.com/docker/docker/reference"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 /* allowV1PluginsFallback determines daemon's support for V1 plugins.
@@ -20,23 +20,11 @@ const allowV1PluginsFallback bool = true
 
 /* defaultAPIVersion is the version of the plugin API for volume, network,
    IPAM and authz. This is a very stable API. When we update this API, then
-   pluginType should include a version. eg "networkdriver/2.0".
+   pluginType should include a version. e.g. "networkdriver/2.0".
 */
 const defaultAPIVersion string = "1.0"
 
-// ErrNotFound indicates that a plugin was not found locally.
-type ErrNotFound string
-
-func (name ErrNotFound) Error() string { return fmt.Sprintf("plugin %q not found", string(name)) }
-
-// ErrAmbiguous indicates that a plugin was not found locally.
-type ErrAmbiguous string
-
-func (name ErrAmbiguous) Error() string {
-	return fmt.Sprintf("multiple plugins found for %q", string(name))
-}
-
-// GetV2Plugin retreives a plugin by name, id or partial ID.
+// GetV2Plugin retrieves a plugin by name, id or partial ID.
 func (ps *Store) GetV2Plugin(refOrID string) (*v2.Plugin, error) {
 	ps.RLock()
 	defer ps.RUnlock()
@@ -48,7 +36,7 @@ func (ps *Store) GetV2Plugin(refOrID string) (*v2.Plugin, error) {
 
 	p, idOk := ps.plugins[id]
 	if !idOk {
-		return nil, errors.WithStack(ErrNotFound(id))
+		return nil, errors.WithStack(errNotFound(id))
 	}
 
 	return p, nil
@@ -58,13 +46,13 @@ func (ps *Store) GetV2Plugin(refOrID string) (*v2.Plugin, error) {
 func (ps *Store) validateName(name string) error {
 	for _, p := range ps.plugins {
 		if p.Name() == name {
-			return errors.Errorf("plugin %q already exists", name)
+			return alreadyExistsError(name)
 		}
 	}
 	return nil
 }
 
-// GetAll retreives all plugins.
+// GetAll retrieves all plugins.
 func (ps *Store) GetAll() map[string]*v2.Plugin {
 	ps.RLock()
 	defer ps.RUnlock()
@@ -123,38 +111,40 @@ func (ps *Store) Remove(p *v2.Plugin) {
 
 // Get returns an enabled plugin matching the given name and capability.
 func (ps *Store) Get(name, capability string, mode int) (plugingetter.CompatPlugin, error) {
-	var (
-		p   *v2.Plugin
-		err error
-	)
-
 	// Lookup using new model.
 	if ps != nil {
-		p, err = ps.GetV2Plugin(name)
+		p, err := ps.GetV2Plugin(name)
 		if err == nil {
-			p.AddRefCount(mode)
 			if p.IsEnabled() {
-				return p.FilterByCap(capability)
+				fp, err := p.FilterByCap(capability)
+				if err != nil {
+					return nil, err
+				}
+				p.AddRefCount(mode)
+				return fp, nil
 			}
+
 			// Plugin was found but it is disabled, so we should not fall back to legacy plugins
 			// but we should error out right away
-			return nil, ErrNotFound(name)
+			return nil, errDisabled(name)
 		}
-		if _, ok := errors.Cause(err).(ErrNotFound); !ok {
+		if _, ok := errors.Cause(err).(errNotFound); !ok {
 			return nil, err
 		}
 	}
 
-	// Lookup using legacy model.
-	if allowV1PluginsFallback {
-		p, err := plugins.Get(name, capability)
-		if err != nil {
-			return nil, fmt.Errorf("legacy plugin: %v", err)
-		}
-		return p, nil
+	if !allowV1PluginsFallback {
+		return nil, errNotFound(name)
 	}
 
-	return nil, err
+	p, err := plugins.Get(name, capability)
+	if err == nil {
+		return p, nil
+	}
+	if errors.Cause(err) == plugins.ErrNotFound {
+		return nil, errNotFound(name)
+	}
+	return nil, errors.Wrap(systemError{err}, "legacy plugin")
 }
 
 // GetAllManagedPluginsByCap returns a list of managed plugins matching the given capability.
@@ -182,7 +172,7 @@ func (ps *Store) GetAllByCap(capability string) ([]plugingetter.CompatPlugin, er
 	if allowV1PluginsFallback {
 		pl, err := plugins.GetAll(capability)
 		if err != nil {
-			return nil, fmt.Errorf("legacy plugin: %v", err)
+			return nil, errors.Wrap(systemError{err}, "legacy plugin")
 		}
 		for _, p := range pl {
 			result = append(result, p)
@@ -230,19 +220,19 @@ func (ps *Store) resolvePluginID(idOrName string) (string, error) {
 		return idOrName, nil
 	}
 
-	ref, err := reference.ParseNamed(idOrName)
+	ref, err := reference.ParseNormalizedNamed(idOrName)
 	if err != nil {
-		return "", errors.WithStack(ErrNotFound(idOrName))
+		return "", errors.WithStack(errNotFound(idOrName))
 	}
 	if _, ok := ref.(reference.Canonical); ok {
-		logrus.Warnf("canonical references cannot be resolved: %v", ref.String())
-		return "", errors.WithStack(ErrNotFound(idOrName))
+		logrus.Warnf("canonical references cannot be resolved: %v", reference.FamiliarString(ref))
+		return "", errors.WithStack(errNotFound(idOrName))
 	}
 
-	fullRef := reference.WithDefaultTag(ref)
+	ref = reference.TagNameOnly(ref)
 
 	for _, p := range ps.plugins {
-		if p.PluginObj.Name == fullRef.String() {
+		if p.PluginObj.Name == reference.FamiliarString(ref) {
 			return p.PluginObj.ID, nil
 		}
 	}
@@ -251,13 +241,13 @@ func (ps *Store) resolvePluginID(idOrName string) (string, error) {
 	for id, p := range ps.plugins { // this can be optimized
 		if strings.HasPrefix(id, idOrName) {
 			if found != nil {
-				return "", errors.WithStack(ErrAmbiguous(idOrName))
+				return "", errors.WithStack(errAmbiguous(idOrName))
 			}
 			found = p
 		}
 	}
 	if found == nil {
-		return "", errors.WithStack(ErrNotFound(idOrName))
+		return "", errors.WithStack(errNotFound(idOrName))
 	}
 	return found.PluginObj.ID, nil
 }

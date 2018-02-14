@@ -3,8 +3,8 @@ package instanceToken
 import (
 	"path/filepath"
 
-	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 )
 
 const FlagInitRole = "init-role"

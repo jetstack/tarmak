@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/jetstack/vault-helper/pkg/cert"
 	"github.com/jetstack/vault-helper/pkg/instanceToken"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
 	"github.com/jetstack/vault-helper/pkg/testing/vault_dev"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
