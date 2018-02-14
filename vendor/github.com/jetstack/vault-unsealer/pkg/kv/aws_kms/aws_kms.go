@@ -54,7 +54,7 @@ func (a *awsKMS) decrypt(cipherText []byte) ([]byte, error) {
 func (a *awsKMS) Get(key string) ([]byte, error) {
 	cipherText, err := a.store.Get(key)
 	if err != nil {
-		return nil, err.(*kv.NotFoundError)
+		return nil, err
 	}
 
 	return a.decrypt(cipherText)

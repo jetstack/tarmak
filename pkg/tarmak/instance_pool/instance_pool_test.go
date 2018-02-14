@@ -4,8 +4,8 @@ package instance_pool
 import (
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"

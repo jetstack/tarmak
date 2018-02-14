@@ -30,7 +30,7 @@ func TestContainerInspectContainerNotFound(t *testing.T) {
 	}
 
 	_, err := client.ContainerInspect(context.Background(), "unknown")
-	if err == nil || !IsErrContainerNotFound(err) {
+	if err == nil || !IsErrNotFound(err) {
 		t.Fatalf("expected a containerNotFound error, got %v", err)
 	}
 }
@@ -67,10 +67,10 @@ func TestContainerInspect(t *testing.T) {
 		t.Fatalf("expected `container_id`, got %s", r.ID)
 	}
 	if r.Image != "image" {
-		t.Fatalf("expected `image`, got %s", r.ID)
+		t.Fatalf("expected `image`, got %s", r.Image)
 	}
 	if r.Name != "name" {
-		t.Fatalf("expected `name`, got %s", r.ID)
+		t.Fatalf("expected `name`, got %s", r.Name)
 	}
 }
 
@@ -107,10 +107,10 @@ func TestContainerInspectNode(t *testing.T) {
 		t.Fatalf("expected `container_id`, got %s", r.ID)
 	}
 	if r.Image != "image" {
-		t.Fatalf("expected `image`, got %s", r.ID)
+		t.Fatalf("expected `image`, got %s", r.Image)
 	}
 	if r.Name != "name" {
-		t.Fatalf("expected `name`, got %s", r.ID)
+		t.Fatalf("expected `name`, got %s", r.Name)
 	}
 	if r.Node.ID != "container_node_id" {
 		t.Fatalf("expected `container_node_id`, got %s", r.Node.ID)

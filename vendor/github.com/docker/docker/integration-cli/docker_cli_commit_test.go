@@ -3,22 +3,23 @@ package main
 import (
 	"strings"
 
-	"github.com/docker/docker/pkg/integration/checker"
+	"github.com/docker/docker/integration-cli/checker"
+	"github.com/docker/docker/integration-cli/cli"
 	"github.com/go-check/check"
 )
 
 func (s *DockerSuite) TestCommitAfterContainerIsDone(c *check.C) {
-	out, _ := dockerCmd(c, "run", "-i", "-a", "stdin", "busybox", "echo", "foo")
+	out := cli.DockerCmd(c, "run", "-i", "-a", "stdin", "busybox", "echo", "foo").Combined()
 
 	cleanedContainerID := strings.TrimSpace(out)
 
-	dockerCmd(c, "wait", cleanedContainerID)
+	cli.DockerCmd(c, "wait", cleanedContainerID)
 
-	out, _ = dockerCmd(c, "commit", cleanedContainerID)
+	out = cli.DockerCmd(c, "commit", cleanedContainerID).Combined()
 
 	cleanedImageID := strings.TrimSpace(out)
 
-	dockerCmd(c, "inspect", cleanedImageID)
+	cli.DockerCmd(c, "inspect", cleanedImageID)
 }
 
 func (s *DockerSuite) TestCommitWithoutPause(c *check.C) {
@@ -39,7 +40,6 @@ func (s *DockerSuite) TestCommitWithoutPause(c *check.C) {
 //test commit a paused container should not unpause it after commit
 func (s *DockerSuite) TestCommitPausedContainer(c *check.C) {
 	testRequires(c, DaemonIsLinux)
-	defer unpauseAllContainers()
 	out, _ := dockerCmd(c, "run", "-i", "-d", "busybox")
 
 	cleanedContainerID := strings.TrimSpace(out)
@@ -54,9 +54,9 @@ func (s *DockerSuite) TestCommitPausedContainer(c *check.C) {
 }
 
 func (s *DockerSuite) TestCommitNewFile(c *check.C) {
-	dockerCmd(c, "run", "--name", "commiter", "busybox", "/bin/sh", "-c", "echo koye > /foo")
+	dockerCmd(c, "run", "--name", "committer", "busybox", "/bin/sh", "-c", "echo koye > /foo")
 
-	imageID, _ := dockerCmd(c, "commit", "commiter")
+	imageID, _ := dockerCmd(c, "commit", "committer")
 	imageID = strings.TrimSpace(imageID)
 
 	out, _ := dockerCmd(c, "run", imageID, "cat", "/foo")
@@ -76,7 +76,7 @@ func (s *DockerSuite) TestCommitHardlink(c *check.C) {
 	imageID, _ := dockerCmd(c, "commit", "hardlinks", "hardlinks")
 	imageID = strings.TrimSpace(imageID)
 
-	secondOutput, _ := dockerCmd(c, "run", "-t", "hardlinks", "ls", "-di", "file1", "file2")
+	secondOutput, _ := dockerCmd(c, "run", "-t", imageID, "ls", "-di", "file1", "file2")
 
 	chunks = strings.Split(strings.TrimSpace(secondOutput), " ")
 	inode = chunks[0]
@@ -90,7 +90,7 @@ func (s *DockerSuite) TestCommitTTY(c *check.C) {
 	imageID, _ := dockerCmd(c, "commit", "tty", "ttytest")
 	imageID = strings.TrimSpace(imageID)
 
-	dockerCmd(c, "run", "ttytest", "/bin/ls")
+	dockerCmd(c, "run", imageID, "/bin/ls")
 }
 
 func (s *DockerSuite) TestCommitWithHostBindMount(c *check.C) {
@@ -100,7 +100,7 @@ func (s *DockerSuite) TestCommitWithHostBindMount(c *check.C) {
 	imageID, _ := dockerCmd(c, "commit", "bind-commit", "bindtest")
 	imageID = strings.TrimSpace(imageID)
 
-	dockerCmd(c, "run", "bindtest", "true")
+	dockerCmd(c, "run", imageID, "true")
 }
 
 func (s *DockerSuite) TestCommitChange(c *check.C) {
@@ -122,7 +122,7 @@ func (s *DockerSuite) TestCommitChange(c *check.C) {
 	imageID = strings.TrimSpace(imageID)
 
 	prefix, slash := getPrefixAndSlashFromDaemonPlatform()
-	prefix = strings.ToUpper(prefix) // Force C: as that's how WORKDIR is normalised on Windows
+	prefix = strings.ToUpper(prefix) // Force C: as that's how WORKDIR is normalized on Windows
 	expected := map[string]string{
 		"Config.ExposedPorts": "map[8080/tcp:{}]",
 		"Config.Env":          "[DEBUG=true test=1 PATH=/foo]",

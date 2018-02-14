@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/vault-helper/pkg/instanceToken"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"

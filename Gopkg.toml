@@ -11,8 +11,8 @@ required = [
 ]
 
 [[constraint]]
-  branch = "master"
   name = "github.com/fsouza/go-dockerclient"
+  version = "1.0"
 
 [[constraint]]
   branch = "master"
@@ -44,11 +44,11 @@ required = [
 
 [[constraint]]
   name = "github.com/jetstack/vault-unsealer"
-  version = "0.2.0"
+  version = "0.2.1"
 
 [[constraint]]
   name = "github.com/jetstack/vault-helper"
-  version = "0.9.2"
+  version = "0.9.3"
 
 [[constraint]]
   name = "github.com/cenkalti/backoff"
@@ -77,3 +77,11 @@ required = [
 [[constraint]]
   name = "gopkg.in/src-d/go-git.v4"
   revision = "b08cc8dc5450981530af3e6f6ad1159ae8ea8705"
+
+[[override]]
+  name = "github.com/opencontainers/runc"
+  revision = "a618ab5a0186905949ee463dbb762c3d23e12a80"
+
+[[override]]
+  name = "github.com/docker/go-connections"
+  revision = "7beb39f0b969b075d1325fecb092faf27fd357b6"

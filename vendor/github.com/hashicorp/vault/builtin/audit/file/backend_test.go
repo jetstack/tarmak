@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,8 +16,15 @@ import (
 func TestAuditFile_fileModeNew(t *testing.T) {
 	modeStr := "0777"
 	mode, err := strconv.ParseUint(modeStr, 8, 32)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	path, err := ioutil.TempDir("", "vault-test_audit_file-file_mode_new")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	defer os.RemoveAll(path)
 
 	file := filepath.Join(path, "auditTest.txt")
@@ -26,7 +34,7 @@ func TestAuditFile_fileModeNew(t *testing.T) {
 		"mode": modeStr,
 	}
 
-	_, err = Factory(&audit.BackendConfig{
+	_, err = Factory(context.Background(), &audit.BackendConfig{
 		SaltConfig: &salt.Config{},
 		SaltView:   &logical.InmemStorage{},
 		Config:     config,
@@ -65,7 +73,7 @@ func TestAuditFile_fileModeExisting(t *testing.T) {
 		"path": f.Name(),
 	}
 
-	_, err = Factory(&audit.BackendConfig{
+	_, err = Factory(context.Background(), &audit.BackendConfig{
 		Config:     config,
 		SaltConfig: &salt.Config{},
 		SaltView:   &logical.InmemStorage{},

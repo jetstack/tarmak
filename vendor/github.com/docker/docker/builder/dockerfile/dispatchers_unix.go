@@ -3,16 +3,16 @@
 package dockerfile
 
 import (
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 )
 
-// normaliseWorkdir normalises a user requested working directory in a
-// platform sematically consistent way.
-func normaliseWorkdir(current string, requested string) (string, error) {
+// normalizeWorkdir normalizes a user requested working directory in a
+// platform semantically consistent way.
+func normalizeWorkdir(_ string, current string, requested string) (string, error) {
 	if requested == "" {
-		return "", fmt.Errorf("cannot normalise nothing")
+		return "", errors.New("cannot normalize nothing")
 	}
 	current = filepath.FromSlash(current)
 	requested = filepath.FromSlash(requested)
@@ -22,6 +22,8 @@ func normaliseWorkdir(current string, requested string) (string, error) {
 	return requested, nil
 }
 
-func errNotJSON(command, _ string) error {
-	return fmt.Errorf("%s requires the arguments to be in JSON form", command)
+// equalEnvKeys compare two strings and returns true if they are equal. On
+// Windows this comparison is case insensitive.
+func equalEnvKeys(from, to string) bool {
+	return from == to
 }

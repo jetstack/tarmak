@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/docker/distribution"
-	"github.com/docker/distribution/digest"
 	"github.com/docker/docker/image"
 	"github.com/docker/docker/layer"
 	"github.com/docker/docker/pkg/progress"
+	"github.com/opencontainers/go-digest"
 	"golang.org/x/net/context"
 )
 
@@ -26,6 +26,7 @@ type mockLayer struct {
 	diffID    layer.DiffID
 	chainID   layer.ChainID
 	parent    layer.Layer
+	os        layer.OS
 }
 
 func (ml *mockLayer) TarStream() (io.ReadCloser, error) {
@@ -54,6 +55,10 @@ func (ml *mockLayer) Size() (size int64, err error) {
 
 func (ml *mockLayer) DiffSize() (size int64, err error) {
 	return 0, nil
+}
+
+func (ml *mockLayer) OS() layer.OS {
+	return ml.os
 }
 
 func (ml *mockLayer) Metadata() (map[string]string, error) {
@@ -86,7 +91,7 @@ func (ls *mockLayerStore) Map() map[layer.ChainID]layer.Layer {
 	return layers
 }
 
-func (ls *mockLayerStore) Register(reader io.Reader, parentID layer.ChainID) (layer.Layer, error) {
+func (ls *mockLayerStore) Register(reader io.Reader, parentID layer.ChainID, os layer.OS) (layer.Layer, error) {
 	return ls.RegisterWithDescriptor(reader, parentID, distribution.Descriptor{})
 }
 
@@ -126,7 +131,7 @@ func (ls *mockLayerStore) Get(chainID layer.ChainID) (layer.Layer, error) {
 func (ls *mockLayerStore) Release(l layer.Layer) ([]layer.Metadata, error) {
 	return []layer.Metadata{}, nil
 }
-func (ls *mockLayerStore) CreateRWLayer(string, layer.ChainID, string, layer.MountInit, map[string]string) (layer.RWLayer, error) {
+func (ls *mockLayerStore) CreateRWLayer(string, layer.ChainID, *layer.CreateRWLayerOpts) (layer.RWLayer, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -265,8 +270,11 @@ func TestSuccessfulDownload(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Needs fixing on Windows")
 	}
+
 	layerStore := &mockLayerStore{make(map[layer.ChainID]*mockLayer)}
-	ldm := NewLayerDownloadManager(layerStore, maxDownloadConcurrency)
+	lsMap := make(map[string]layer.Store)
+	lsMap[runtime.GOOS] = layerStore
+	ldm := NewLayerDownloadManager(lsMap, maxDownloadConcurrency, func(m *LayerDownloadManager) { m.waitDuration = time.Millisecond })
 
 	progressChan := make(chan progress.Progress)
 	progressDone := make(chan struct{})
@@ -285,13 +293,13 @@ func TestSuccessfulDownload(t *testing.T) {
 	firstDescriptor := descriptors[0].(*mockDownloadDescriptor)
 
 	// Pre-register the first layer to simulate an already-existing layer
-	l, err := layerStore.Register(firstDescriptor.mockTarStream(), "")
+	l, err := layerStore.Register(firstDescriptor.mockTarStream(), "", layer.OS(runtime.GOOS))
 	if err != nil {
 		t.Fatal(err)
 	}
 	firstDescriptor.diffID = l.DiffID()
 
-	rootFS, releaseFunc, err := ldm.Download(context.Background(), *image.NewRootFS(), descriptors, progress.ChanOutput(progressChan))
+	rootFS, releaseFunc, err := ldm.Download(context.Background(), *image.NewRootFS(), layer.OS(runtime.GOOS), descriptors, progress.ChanOutput(progressChan))
 	if err != nil {
 		t.Fatalf("download error: %v", err)
 	}
@@ -327,7 +335,10 @@ func TestSuccessfulDownload(t *testing.T) {
 }
 
 func TestCancelledDownload(t *testing.T) {
-	ldm := NewLayerDownloadManager(&mockLayerStore{make(map[layer.ChainID]*mockLayer)}, maxDownloadConcurrency)
+	layerStore := &mockLayerStore{make(map[layer.ChainID]*mockLayer)}
+	lsMap := make(map[string]layer.Store)
+	lsMap[runtime.GOOS] = layerStore
+	ldm := NewLayerDownloadManager(lsMap, maxDownloadConcurrency, func(m *LayerDownloadManager) { m.waitDuration = time.Millisecond })
 
 	progressChan := make(chan progress.Progress)
 	progressDone := make(chan struct{})
@@ -346,7 +357,7 @@ func TestCancelledDownload(t *testing.T) {
 	}()
 
 	descriptors := downloadDescriptors(nil)
-	_, _, err := ldm.Download(ctx, *image.NewRootFS(), descriptors, progress.ChanOutput(progressChan))
+	_, _, err := ldm.Download(ctx, *image.NewRootFS(), layer.OS(runtime.GOOS), descriptors, progress.ChanOutput(progressChan))
 	if err != context.Canceled {
 		t.Fatal("expected download to be cancelled")
 	}

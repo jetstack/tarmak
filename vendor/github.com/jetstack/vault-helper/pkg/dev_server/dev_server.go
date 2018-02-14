@@ -1,7 +1,7 @@
 package dev_server
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
 	"github.com/jetstack/vault-helper/pkg/testing/vault_dev"

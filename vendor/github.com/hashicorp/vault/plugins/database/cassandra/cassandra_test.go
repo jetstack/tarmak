@@ -1,6 +1,7 @@
 package cassandra
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"testing"
@@ -13,9 +14,9 @@ import (
 	dockertest "gopkg.in/ory-am/dockertest.v3"
 )
 
-func prepareCassandraTestContainer(t *testing.T) (cleanup func(), retURL string) {
+func prepareCassandraTestContainer(t *testing.T) (func(), string, int) {
 	if os.Getenv("CASSANDRA_HOST") != "" {
-		return func() {}, os.Getenv("CASSANDRA_HOST")
+		return func() {}, os.Getenv("CASSANDRA_HOST"), 0
 	}
 
 	pool, err := dockertest.NewPool("")
@@ -29,6 +30,7 @@ func prepareCassandraTestContainer(t *testing.T) (cleanup func(), retURL string)
 	ro := &dockertest.RunOptions{
 		Repository: "cassandra",
 		Tag:        "latest",
+		Env:        []string{"CASSANDRA_BROADCAST_ADDRESS=127.0.0.1"},
 		Mounts:     []string{cassandraMountPath},
 	}
 	resource, err := pool.RunWithOptions(ro)
@@ -36,19 +38,19 @@ func prepareCassandraTestContainer(t *testing.T) (cleanup func(), retURL string)
 		t.Fatalf("Could not start local cassandra docker container: %s", err)
 	}
 
-	cleanup = func() {
+	cleanup := func() {
 		err := pool.Purge(resource)
 		if err != nil {
 			t.Fatalf("Failed to cleanup local container: %s", err)
 		}
 	}
 
-	retURL = fmt.Sprintf("localhost:%s", resource.GetPort("9042/tcp"))
 	port, _ := strconv.Atoi(resource.GetPort("9042/tcp"))
+	address := fmt.Sprintf("127.0.0.1:%d", port)
 
 	// exponential backoff-retry
 	if err = pool.Retry(func() error {
-		clusterConfig := gocql.NewCluster(retURL)
+		clusterConfig := gocql.NewCluster(address)
 		clusterConfig.Authenticator = gocql.PasswordAuthenticator{
 			Username: "cassandra",
 			Password: "cassandra",
@@ -63,20 +65,22 @@ func prepareCassandraTestContainer(t *testing.T) (cleanup func(), retURL string)
 		defer session.Close()
 		return nil
 	}); err != nil {
+		cleanup()
 		t.Fatalf("Could not connect to cassandra docker container: %s", err)
 	}
-	return
+	return cleanup, address, port
 }
 
 func TestCassandra_Initialize(t *testing.T) {
 	if os.Getenv("TRAVIS") != "true" {
 		t.SkipNow()
 	}
-	cleanup, connURL := prepareCassandraTestContainer(t)
+	cleanup, address, port := prepareCassandraTestContainer(t)
 	defer cleanup()
 
 	connectionDetails := map[string]interface{}{
-		"hosts":            connURL,
+		"hosts":            address,
+		"port":             port,
 		"username":         "cassandra",
 		"password":         "cassandra",
 		"protocol_version": 4,
@@ -86,7 +90,7 @@ func TestCassandra_Initialize(t *testing.T) {
 	db := dbRaw.(*Cassandra)
 	connProducer := db.ConnectionProducer.(*cassandraConnectionProducer)
 
-	err := db.Initialize(connectionDetails, true)
+	err := db.Initialize(context.Background(), connectionDetails, true)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -99,17 +103,32 @@ func TestCassandra_Initialize(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
+
+	// test a string protocol
+	connectionDetails = map[string]interface{}{
+		"hosts":            address,
+		"port":             strconv.Itoa(port),
+		"username":         "cassandra",
+		"password":         "cassandra",
+		"protocol_version": "4",
+	}
+
+	err = db.Initialize(context.Background(), connectionDetails, true)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
 }
 
 func TestCassandra_CreateUser(t *testing.T) {
 	if os.Getenv("TRAVIS") != "true" {
 		t.SkipNow()
 	}
-	cleanup, connURL := prepareCassandraTestContainer(t)
+	cleanup, address, port := prepareCassandraTestContainer(t)
 	defer cleanup()
 
 	connectionDetails := map[string]interface{}{
-		"hosts":            connURL,
+		"hosts":            address,
+		"port":             port,
 		"username":         "cassandra",
 		"password":         "cassandra",
 		"protocol_version": 4,
@@ -117,7 +136,7 @@ func TestCassandra_CreateUser(t *testing.T) {
 
 	dbRaw, _ := New()
 	db := dbRaw.(*Cassandra)
-	err := db.Initialize(connectionDetails, true)
+	err := db.Initialize(context.Background(), connectionDetails, true)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -131,12 +150,12 @@ func TestCassandra_CreateUser(t *testing.T) {
 		RoleName:    "test",
 	}
 
-	username, password, err := db.CreateUser(statements, usernameConfig, time.Now().Add(time.Minute))
+	username, password, err := db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
 
-	if err := testCredsExist(t, connURL, username, password); err != nil {
+	if err := testCredsExist(t, address, port, username, password); err != nil {
 		t.Fatalf("Could not connect with new credentials: %s", err)
 	}
 }
@@ -145,11 +164,12 @@ func TestMyCassandra_RenewUser(t *testing.T) {
 	if os.Getenv("TRAVIS") != "true" {
 		t.SkipNow()
 	}
-	cleanup, connURL := prepareCassandraTestContainer(t)
+	cleanup, address, port := prepareCassandraTestContainer(t)
 	defer cleanup()
 
 	connectionDetails := map[string]interface{}{
-		"hosts":            connURL,
+		"hosts":            address,
+		"port":             port,
 		"username":         "cassandra",
 		"password":         "cassandra",
 		"protocol_version": 4,
@@ -157,7 +177,7 @@ func TestMyCassandra_RenewUser(t *testing.T) {
 
 	dbRaw, _ := New()
 	db := dbRaw.(*Cassandra)
-	err := db.Initialize(connectionDetails, true)
+	err := db.Initialize(context.Background(), connectionDetails, true)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -171,16 +191,16 @@ func TestMyCassandra_RenewUser(t *testing.T) {
 		RoleName:    "test",
 	}
 
-	username, password, err := db.CreateUser(statements, usernameConfig, time.Now().Add(time.Minute))
+	username, password, err := db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
 
-	if err := testCredsExist(t, connURL, username, password); err != nil {
+	if err := testCredsExist(t, address, port, username, password); err != nil {
 		t.Fatalf("Could not connect with new credentials: %s", err)
 	}
 
-	err = db.RenewUser(statements, username, time.Now().Add(time.Minute))
+	err = db.RenewUser(context.Background(), statements, username, time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -190,11 +210,12 @@ func TestCassandra_RevokeUser(t *testing.T) {
 	if os.Getenv("TRAVIS") != "true" {
 		t.SkipNow()
 	}
-	cleanup, connURL := prepareCassandraTestContainer(t)
+	cleanup, address, port := prepareCassandraTestContainer(t)
 	defer cleanup()
 
 	connectionDetails := map[string]interface{}{
-		"hosts":            connURL,
+		"hosts":            address,
+		"port":             port,
 		"username":         "cassandra",
 		"password":         "cassandra",
 		"protocol_version": 4,
@@ -202,7 +223,7 @@ func TestCassandra_RevokeUser(t *testing.T) {
 
 	dbRaw, _ := New()
 	db := dbRaw.(*Cassandra)
-	err := db.Initialize(connectionDetails, true)
+	err := db.Initialize(context.Background(), connectionDetails, true)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -216,33 +237,34 @@ func TestCassandra_RevokeUser(t *testing.T) {
 		RoleName:    "test",
 	}
 
-	username, password, err := db.CreateUser(statements, usernameConfig, time.Now().Add(time.Minute))
+	username, password, err := db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
 
-	if err = testCredsExist(t, connURL, username, password); err != nil {
+	if err = testCredsExist(t, address, port, username, password); err != nil {
 		t.Fatalf("Could not connect with new credentials: %s", err)
 	}
 
 	// Test default revoke statememts
-	err = db.RevokeUser(statements, username)
+	err = db.RevokeUser(context.Background(), statements, username)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
 
-	if err = testCredsExist(t, connURL, username, password); err == nil {
+	if err = testCredsExist(t, address, port, username, password); err == nil {
 		t.Fatal("Credentials were not revoked")
 	}
 }
 
-func testCredsExist(t testing.TB, connURL, username, password string) error {
-	clusterConfig := gocql.NewCluster(connURL)
+func testCredsExist(t testing.TB, address string, port int, username, password string) error {
+	clusterConfig := gocql.NewCluster(address)
 	clusterConfig.Authenticator = gocql.PasswordAuthenticator{
 		Username: username,
 		Password: password,
 	}
 	clusterConfig.ProtoVersion = 4
+	clusterConfig.Port = port
 
 	session, err := clusterConfig.CreateSession()
 	if err != nil {

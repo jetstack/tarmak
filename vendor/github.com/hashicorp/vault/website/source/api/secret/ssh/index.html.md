@@ -1,19 +1,19 @@
 ---
 layout: "api"
-page_title: "SSH Secret Backend - HTTP API"
+page_title: "SSH - Secrets Engines - HTTP API"
 sidebar_current: "docs-http-secret-ssh"
 description: |-
-  This is the API documentation for the Vault SSH secret backend.
+  This is the API documentation for the Vault SSH secrets engine.
 ---
 
-# SSH Secret Backend HTTP API
+# SSH Secrets Engine (API)
 
-This is the API documentation for the Vault SSH secret backend. For general
-information about the usage and operation of the SSH backend, please see the
-[Vault SSH backend documentation](/docs/secrets/ssh/index.html).
+This is the API documentation for the Vault SSH secrets engine. For general
+information about the usage and operation of the SSH secrets engine, please see
+the [SSH documentation](/docs/secrets/ssh/index.html).
 
-This documentation assumes the SSH backend is mounted at the `/ssh` path in
-Vault. Since it is possible to mount secret backends at any location, please
+This documentation assumes the SSH secrets engine is enabled at the `/ssh` path
+in Vault. Since it is possible to enable secrets engines at any location, please
 update your API calls accordingly.
 
 ## Create/Update Key
@@ -115,7 +115,7 @@ This endpoint creates or updates a named role.
   and certain parts need to be kept out.
 
 - `port` `(int: 22)` – Specifies the port number for SSH connection. Port number
-  does not play any role in OTP generation. For the `otp` backend type, this is
+  does not play any role in OTP generation. For the `otp` secrets engine type, this is
   just a way to inform the client about the port number to use. The port number
   will be	returned to the client by Vault along with the OTP.
 
@@ -143,8 +143,8 @@ This endpoint creates or updates a named role.
   credentials can be created for any domain. See also `allow_bare_domains` and
   `allow_subdomains`.
 
-- `key_option_specs` `(string: "")` – Specifies a aomma separated option
-  specification which will be prefixed to RSA keys in	the remote host's
+- `key_option_specs` `(string: "")` – Specifies a comma separated option
+  specification which will be prefixed to RSA keys in the remote host's
   authorized_keys file. N.B.: Vault does not check this string for validity.
 
 - `ttl` `(string: "")` – Specifies the Time To Live value provided as a string
@@ -194,6 +194,13 @@ This endpoint creates or updates a named role.
   ID for a signed certificate with the "key_id" field. When false, the key ID
   will always be the token display name. The key ID is logged by the SSH server
   and can be useful for auditing.
+
+- `key_id_format` `(string: "")` – When supplied, this value specifies a custom
+  format for the key id of a signed certificate. The following variables are
+  available for use: '{{token_display_name}}' - The display name of the token used
+  to make the request. '{{role_name}}' - The name of the role signing the request.
+  '{{public_key_hash}}' - A SHA256 checksum of the public key that is being signed.
+  e.g. "custom-keyid-{{token_display_name}}",
 
 ### Sample Payload
 
@@ -302,7 +309,15 @@ $ curl \
 {
   "auth": null,
   "data": {
-    "keys": ["dev", "prod"]
+    "keys": ["dev", "prod"],
+    "key_info": {
+      "dev": {
+        "key_type": "ca"
+      },
+      "prod": {
+        "key_type": "dynamic"
+      }
+    }
   },
   "lease_duration": 2764800,
   "lease_id": "",
@@ -596,12 +611,12 @@ $ curl \
 
 ## Submit CA Information
 
-This endpoint allows submitting the CA information for the backend via an SSH
+This endpoint allows submitting the CA information for the secrets engine via an SSH
 key pair. _If you have already set a certificate and key, they will be
 overridden._
 
-| Method   | Path                         | Produces               |
-| :------- | :--------------------------- | :--------------------- |
+| Method   | Path                         | Produces                   |
+| :------- | :--------------------------- | :------------------------- |
 | `POST`   | `/ssh/config/ca`             | `200/204 application/json` |
 
 ### Parameters
@@ -612,7 +627,7 @@ overridden._
 - `public_key` `(string: "")` – Specifies the public key part of the SSH CA key
   pair; required if `generate_signing_key` is false.
 
-- `generate_signing_key` `(bool: false)` – Specifies if Vault should generate
+- `generate_signing_key` `(bool: true)` – Specifies if Vault should generate
   the signing key pair internally. The generated public key will be returned so
   you can add it to your configuration.
 
@@ -650,6 +665,23 @@ This will return a `200` response if `generate_signing_key` was true:
   },
   "warnings": null
 }
+```
+
+## Delete CA Information
+
+This endpoint deletes the CA information for the backend via an SSH key pair.
+
+| Method   | Path                         | Produces               |
+| :------- | :--------------------------- | :--------------------- |
+| `DELETE` | `/ssh/config/ca`             | `204 (empty body)`     |
+
+### Sample Request
+
+```
+$ curl \
+    --header "X-Vault-Token: ..." \
+    --request DELETE \
+    https://vault.rocks/v1/ssh/config/ca
 ```
 
 ## Read Public Key (Unauthenticated)

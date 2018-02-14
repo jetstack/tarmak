@@ -8,10 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/vbatts/tar-split/tar/storage"
 
 	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/containerfs"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/plugingetter"
 )
@@ -30,7 +31,7 @@ var (
 
 	// ErrNotSupported returned when driver is not supported.
 	ErrNotSupported = errors.New("driver not supported")
-	// ErrPrerequisites retuned when driver does not meet prerequisites.
+	// ErrPrerequisites returned when driver does not meet prerequisites.
 	ErrPrerequisites = errors.New("prerequisites for driver not satisfied (wrong filesystem?)")
 	// ErrIncompatibleFS returned when file system is not supported.
 	ErrIncompatibleFS = fmt.Errorf("backing file system is unsupported for this graph driver")
@@ -68,7 +69,7 @@ type ProtoDriver interface {
 	// Get returns the mountpoint for the layered filesystem referred
 	// to by this id. You can optionally specify a mountLabel or "".
 	// Returns the absolute path to the mounted layered filesystem.
-	Get(id, mountLabel string) (dir string, err error)
+	Get(id, mountLabel string) (fs containerfs.ContainerFS, err error)
 	// Put releases the system resources for the specified id,
 	// e.g, unmounting layered filesystem.
 	Put(id string) error
@@ -110,6 +111,23 @@ type DiffDriver interface {
 type Driver interface {
 	ProtoDriver
 	DiffDriver
+}
+
+// Capabilities defines a list of capabilities a driver may implement.
+// These capabilities are not required; however, they do determine how a
+// graphdriver can be used.
+type Capabilities struct {
+	// Flags that this driver is capable of reproducing exactly equivalent
+	// diffs for read-only layers. If set, clients can rely on the driver
+	// for consistent tar streams, and avoid extra processing to account
+	// for potential differences (eg: the layer store's use of tar-split).
+	ReproducesExactDiffs bool
+}
+
+// CapabilityDriver is the interface for layered file system drivers that
+// can report on their Capabilities.
+type CapabilityDriver interface {
+	Capabilities() Capabilities
 }
 
 // DiffGetterDriver is the interface for layered file system drivers that
@@ -190,7 +208,9 @@ func New(name string, pg plugingetter.PluginGetter, config Options) (Driver, err
 
 	// Guess for prior driver
 	driversMap := scanPriorDrivers(config.Root)
-	for _, name := range priority {
+	list := strings.Split(priority, ",")
+	logrus.Debugf("[graphdriver] priority list: %v", list)
+	for _, name := range list {
 		if name == "vfs" {
 			// don't use vfs even if there is state present.
 			continue
@@ -225,7 +245,7 @@ func New(name string, pg plugingetter.PluginGetter, config Options) (Driver, err
 	}
 
 	// Check for priority drivers first
-	for _, name := range priority {
+	for _, name := range list {
 		driver, err := getBuiltinDriver(name, config.Root, config.DriverOptions, config.UIDMaps, config.GIDMaps)
 		if err != nil {
 			if isDriverNotSupported(err) {

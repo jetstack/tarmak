@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 )
 
 func TestPKI_Ensure(t *testing.T) {

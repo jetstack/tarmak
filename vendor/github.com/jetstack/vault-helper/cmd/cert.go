@@ -62,6 +62,10 @@ func init() {
 	certCmd.PersistentFlags().StringSlice(cert.FlagSanHosts, []string{}, "Host Sans. [[]string] (default none)")
 	certCmd.Flag(cert.FlagSanHosts).Shorthand = "s"
 
+	certCmd.PersistentFlags().StringSlice(cert.FlagOrganisation, []string{}, "Organisation(s) - i.e. kubernetes groups. [[]string] (default none)")
+
+	certCmd.Flag(cert.FlagOrganisation).Shorthand = "n"
+
 	certCmd.PersistentFlags().String(cert.FlagOwner, "", "Owner of created file/directories. Uid value also accepted. [string] (default <current user>)")
 	certCmd.Flag(cert.FlagOwner).Shorthand = "o"
 
@@ -109,6 +113,12 @@ func setFlagsCert(c *cert.Cert, cmd *cobra.Command) error {
 		return fmt.Errorf("error parsing %s [[]string] '%s': %v", cert.FlagSanHosts, vSli, err)
 	}
 	c.SetSanHosts(vSli)
+
+	vSli, err = cmd.PersistentFlags().GetStringSlice(cert.FlagOrganisation)
+	if err != nil {
+		return fmt.Errorf("error parsing %s [[]string] '%s' : %v", cert.FlagOrganisation, vSli, err)
+	}
+	c.SetOrganisation(vSli)
 
 	return nil
 }

@@ -147,6 +147,7 @@ func (c *Cert) decodeSec(sec *vault.Secret) (cert string, certCA string, err err
 func (c *Cert) createCSR() (csr []byte, err error) {
 	names := pkix.Name{
 		CommonName: c.CommonName(),
+		Organization: c.Organisation(),
 	}
 	var csrTemplate = x509.CertificateRequest{
 		Subject:            names,

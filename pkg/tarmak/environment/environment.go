@@ -13,9 +13,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"k8s.io/client-go/rest"
 

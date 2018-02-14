@@ -7,8 +7,8 @@ import (
 	"net"
 	"path/filepath"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
+	"github.com/sirupsen/logrus"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"

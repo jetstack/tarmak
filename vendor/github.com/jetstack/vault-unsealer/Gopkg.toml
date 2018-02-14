@@ -51,43 +51,43 @@
 
 
 
-[[dependencies]]
+[[constraint]]
   branch = "master"
   name = "cloud.google.com/go"
 
-[[dependencies]]
-  name = "github.com/Sirupsen/logrus"
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
 
-[[dependencies]]
+[[constraint]]
   name = "github.com/fatih/structs"
   version = "^1.0.0"
 
-[[dependencies]]
+[[constraint]]
   branch = "master"
   name = "github.com/hashicorp/go-cleanhttp"
 
-[[dependencies]]
+[[constraint]]
   branch = "master"
   name = "github.com/hashicorp/go-multierror"
 
-[[dependencies]]
+[[constraint]]
   branch = "master"
   name = "github.com/hashicorp/go-rootcerts"
 
-[[dependencies]]
+[[constraint]]
   branch = "master"
   name = "github.com/hashicorp/vault"
 
-[[dependencies]]
+[[constraint]]
   branch = "master"
   name = "github.com/sethgrid/pester"
 
-[[dependencies]]
+[[constraint]]
   name = "github.com/spf13/cobra"
 
-[[dependencies]]
+[[constraint]]
   name = "golang.org/x/oauth2"
 
-[[dependencies]]
+[[constraint]]
   branch = "master"
   name = "google.golang.org/api"

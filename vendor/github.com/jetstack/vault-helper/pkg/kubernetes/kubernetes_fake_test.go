@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 )
 
 type fakeVault struct {

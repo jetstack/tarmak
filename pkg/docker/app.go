@@ -7,8 +7,8 @@ import (
 	"io"
 	"path/filepath"
 
-	logrus "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	logrus "github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )

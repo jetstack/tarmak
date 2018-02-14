@@ -1,6 +1,8 @@
 package http
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"io"
 	"net"
 	"net/http"
@@ -49,6 +51,7 @@ func buildLogicalRequest(core *vault.Core, w http.ResponseWriter, r *http.Reques
 		op = logical.UpdateOperation
 	case "LIST":
 		op = logical.ListOperation
+	case "OPTIONS":
 	default:
 		return nil, http.StatusMethodNotAllowed, nil
 	}
@@ -95,7 +98,7 @@ func buildLogicalRequest(core *vault.Core, w http.ResponseWriter, r *http.Reques
 	return req, 0, nil
 }
 
-func handleLogical(core *vault.Core, dataOnly bool, prepareRequestCallback PrepareRequestFunc) http.Handler {
+func handleLogical(core *vault.Core, injectDataIntoTopLevel bool, prepareRequestCallback PrepareRequestFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		req, statusCode, err := buildLogicalRequest(core, w, r)
 		if err != nil || statusCode != 0 {
@@ -124,11 +127,11 @@ func handleLogical(core *vault.Core, dataOnly bool, prepareRequestCallback Prepa
 		}
 
 		// Build the proper response
-		respondLogical(w, r, req, dataOnly, resp)
+		respondLogical(w, r, req, injectDataIntoTopLevel, resp)
 	})
 }
 
-func respondLogical(w http.ResponseWriter, r *http.Request, req *logical.Request, dataOnly bool, resp *logical.Response) {
+func respondLogical(w http.ResponseWriter, r *http.Request, req *logical.Request, injectDataIntoTopLevel bool, resp *logical.Response) {
 	var httpResp *logical.HTTPResponse
 	var ret interface{}
 
@@ -150,8 +153,10 @@ func respondLogical(w http.ResponseWriter, r *http.Request, req *logical.Request
 			httpResp = &logical.HTTPResponse{
 				WrapInfo: &logical.HTTPWrapInfo{
 					Token:           resp.WrapInfo.Token,
+					Accessor:        resp.WrapInfo.Accessor,
 					TTL:             int(resp.WrapInfo.TTL.Seconds()),
 					CreationTime:    resp.WrapInfo.CreationTime.Format(time.RFC3339Nano),
+					CreationPath:    resp.WrapInfo.CreationPath,
 					WrappedAccessor: resp.WrapInfo.WrappedAccessor,
 				},
 			}
@@ -162,7 +167,7 @@ func respondLogical(w http.ResponseWriter, r *http.Request, req *logical.Request
 
 		ret = httpResp
 
-		if dataOnly {
+		if injectDataIntoTopLevel {
 			injector := logical.HTTPSysInjector{
 				Response: httpResp,
 			}
@@ -197,8 +202,21 @@ func respondRaw(w http.ResponseWriter, r *http.Request, resp *logical.Response) 
 		retErr(w, "no status code given")
 		return
 	}
-	status, ok := statusRaw.(int)
-	if !ok {
+
+	var status int
+	switch statusRaw.(type) {
+	case int:
+		status = statusRaw.(int)
+	case float64:
+		status = int(statusRaw.(float64))
+	case json.Number:
+		s64, err := statusRaw.(json.Number).Float64()
+		if err != nil {
+			retErr(w, "cannot decode status code")
+			return
+		}
+		status = int(s64)
+	default:
 		retErr(w, "cannot decode status code")
 		return
 	}
@@ -210,7 +228,7 @@ func respondRaw(w http.ResponseWriter, r *http.Request, resp *logical.Response) 
 
 	// Get the content type header; don't require it if the body is empty
 	contentTypeRaw, ok := resp.Data[logical.HTTPContentType]
-	if !ok && !nonEmpty {
+	if !ok && nonEmpty {
 		retErr(w, "no content type given")
 		return
 	}
@@ -229,8 +247,18 @@ func respondRaw(w http.ResponseWriter, r *http.Request, resp *logical.Response) 
 			retErr(w, "no body given")
 			return
 		}
-		body, ok = bodyRaw.([]byte)
-		if !ok {
+
+		switch bodyRaw.(type) {
+		case string:
+			var err error
+			body, err = base64.StdEncoding.DecodeString(bodyRaw.(string))
+			if err != nil {
+				retErr(w, "cannot decode body")
+				return
+			}
+		case []byte:
+			body = bodyRaw.([]byte)
+		default:
 			retErr(w, "cannot decode body")
 			return
 		}

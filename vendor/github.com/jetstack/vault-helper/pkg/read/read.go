@@ -10,8 +10,8 @@ import (
 	"os/user"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/vault-helper/pkg/instanceToken"
 )

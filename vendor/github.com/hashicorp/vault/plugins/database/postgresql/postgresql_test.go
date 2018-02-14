@@ -1,6 +1,7 @@
 package postgresql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -63,7 +64,8 @@ func TestPostgreSQL_Initialize(t *testing.T) {
 	defer cleanup()
 
 	connectionDetails := map[string]interface{}{
-		"connection_url": connURL,
+		"connection_url":       connURL,
+		"max_open_connections": 5,
 	}
 
 	dbRaw, _ := New()
@@ -71,7 +73,7 @@ func TestPostgreSQL_Initialize(t *testing.T) {
 
 	connProducer := db.ConnectionProducer.(*connutil.SQLConnectionProducer)
 
-	err := db.Initialize(connectionDetails, true)
+	err := db.Initialize(context.Background(), connectionDetails, true)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -84,6 +86,18 @@ func TestPostgreSQL_Initialize(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
+
+	// Test decoding a string value for max_open_connections
+	connectionDetails = map[string]interface{}{
+		"connection_url":       connURL,
+		"max_open_connections": "5",
+	}
+
+	err = db.Initialize(context.Background(), connectionDetails, true)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
 }
 
 func TestPostgreSQL_CreateUser(t *testing.T) {
@@ -96,7 +110,7 @@ func TestPostgreSQL_CreateUser(t *testing.T) {
 
 	dbRaw, _ := New()
 	db := dbRaw.(*PostgreSQL)
-	err := db.Initialize(connectionDetails, true)
+	err := db.Initialize(context.Background(), connectionDetails, true)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -107,7 +121,7 @@ func TestPostgreSQL_CreateUser(t *testing.T) {
 	}
 
 	// Test with no configured Creation Statememt
-	_, _, err = db.CreateUser(dbplugin.Statements{}, usernameConfig, time.Now().Add(time.Minute))
+	_, _, err = db.CreateUser(context.Background(), dbplugin.Statements{}, usernameConfig, time.Now().Add(time.Minute))
 	if err == nil {
 		t.Fatal("Expected error when no creation statement is provided")
 	}
@@ -116,7 +130,7 @@ func TestPostgreSQL_CreateUser(t *testing.T) {
 		CreationStatements: testPostgresRole,
 	}
 
-	username, password, err := db.CreateUser(statements, usernameConfig, time.Now().Add(time.Minute))
+	username, password, err := db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -126,10 +140,13 @@ func TestPostgreSQL_CreateUser(t *testing.T) {
 	}
 
 	statements.CreationStatements = testPostgresReadOnlyRole
-	username, password, err = db.CreateUser(statements, usernameConfig, time.Now().Add(time.Minute))
+	username, password, err = db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
+
+	// Sleep to make sure we haven't expired if granularity is only down to the second
+	time.Sleep(2 * time.Second)
 
 	if err = testCredsExist(t, connURL, username, password); err != nil {
 		t.Fatalf("Could not connect with new credentials: %s", err)
@@ -146,7 +163,7 @@ func TestPostgreSQL_RenewUser(t *testing.T) {
 
 	dbRaw, _ := New()
 	db := dbRaw.(*PostgreSQL)
-	err := db.Initialize(connectionDetails, true)
+	err := db.Initialize(context.Background(), connectionDetails, true)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -160,7 +177,7 @@ func TestPostgreSQL_RenewUser(t *testing.T) {
 		RoleName:    "test",
 	}
 
-	username, password, err := db.CreateUser(statements, usernameConfig, time.Now().Add(2*time.Second))
+	username, password, err := db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(2*time.Second))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -169,7 +186,7 @@ func TestPostgreSQL_RenewUser(t *testing.T) {
 		t.Fatalf("Could not connect with new credentials: %s", err)
 	}
 
-	err = db.RenewUser(statements, username, time.Now().Add(time.Minute))
+	err = db.RenewUser(context.Background(), statements, username, time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -181,7 +198,7 @@ func TestPostgreSQL_RenewUser(t *testing.T) {
 		t.Fatalf("Could not connect with new credentials: %s", err)
 	}
 	statements.RenewStatements = defaultPostgresRenewSQL
-	username, password, err = db.CreateUser(statements, usernameConfig, time.Now().Add(2*time.Second))
+	username, password, err = db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(2*time.Second))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -190,7 +207,7 @@ func TestPostgreSQL_RenewUser(t *testing.T) {
 		t.Fatalf("Could not connect with new credentials: %s", err)
 	}
 
-	err = db.RenewUser(statements, username, time.Now().Add(time.Minute))
+	err = db.RenewUser(context.Background(), statements, username, time.Now().Add(time.Minute))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -214,7 +231,7 @@ func TestPostgreSQL_RevokeUser(t *testing.T) {
 
 	dbRaw, _ := New()
 	db := dbRaw.(*PostgreSQL)
-	err := db.Initialize(connectionDetails, true)
+	err := db.Initialize(context.Background(), connectionDetails, true)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -228,7 +245,7 @@ func TestPostgreSQL_RevokeUser(t *testing.T) {
 		RoleName:    "test",
 	}
 
-	username, password, err := db.CreateUser(statements, usernameConfig, time.Now().Add(2*time.Second))
+	username, password, err := db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(2*time.Second))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -238,7 +255,7 @@ func TestPostgreSQL_RevokeUser(t *testing.T) {
 	}
 
 	// Test default revoke statememts
-	err = db.RevokeUser(statements, username)
+	err = db.RevokeUser(context.Background(), statements, username)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -247,7 +264,7 @@ func TestPostgreSQL_RevokeUser(t *testing.T) {
 		t.Fatal("Credentials were not revoked")
 	}
 
-	username, password, err = db.CreateUser(statements, usernameConfig, time.Now().Add(2*time.Second))
+	username, password, err = db.CreateUser(context.Background(), statements, usernameConfig, time.Now().Add(2*time.Second))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -258,7 +275,7 @@ func TestPostgreSQL_RevokeUser(t *testing.T) {
 
 	// Test custom revoke statements
 	statements.RevocationStatements = defaultPostgresRevocationSQL
-	err = db.RevokeUser(statements, username)
+	err = db.RevokeUser(context.Background(), statements, username)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}

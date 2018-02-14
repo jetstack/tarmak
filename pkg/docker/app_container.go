@@ -8,8 +8,8 @@ import (
 	"io"
 	"os"
 
-	logrus "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	logrus "github.com/sirupsen/logrus"
 )
 
 type AppContainer struct {

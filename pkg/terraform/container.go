@@ -13,8 +13,8 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
-	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/archive"
+	log "github.com/sirupsen/logrus"
 
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"

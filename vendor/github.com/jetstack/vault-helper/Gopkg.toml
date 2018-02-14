@@ -3,8 +3,8 @@
 required = ["github.com/golang/mock/mockgen"]
 
 [[constraint]]
-  name = "github.com/Sirupsen/logrus"
-  version = "1.0.0"
+  name = "github.com/sirupsen/logrus"
+  version = "^1.0.0"
 
 [[constraint]]
   branch = "master"

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	"golang.org/x/crypto/ssh"
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/vault-unsealer/pkg/kv"
 )
