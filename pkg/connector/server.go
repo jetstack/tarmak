@@ -21,10 +21,8 @@ type multiCloser struct {
 }
 
 func (c *Connector) StartServer() {
-	c.connRPC = &ConnectorRPC{}
-
 	server := rpc.NewServer()
-	server.RegisterName("Connector", c)
+	server.RegisterName("Connector", c.connRPC)
 	server.ServeConn(struct {
 		io.Reader
 		io.Writer

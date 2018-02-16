@@ -2,8 +2,12 @@
 package connector
 
 import (
+	"context"
 	"fmt"
 	"net/rpc"
+	"time"
+
+	"github.com/cenkalti/backoff"
 )
 
 const (
@@ -11,12 +15,27 @@ const (
 )
 
 func (c *Connector) ConnectClient() error {
-	client, err := rpc.Dial("unix", providerSocket)
-	if err != nil {
-		return fmt.Errorf("failed to resolve provide socket: %v", err)
+
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.InitialInterval = time.Second
+	expBackoff.MaxElapsedTime = time.Minute
+
+	ctx, _ := context.WithCancel(context.Background())
+	b := backoff.WithContext(expBackoff, ctx)
+
+	resolveClient := func() error {
+		client, err := rpc.Dial("unix", providerSocket)
+		if err != nil {
+			return err
+		}
+
+		c.client = client
+		return nil
 	}
 
-	c.client = client
+	if err := backoff.Retry(resolveClient, b); err != nil {
+		return fmt.Errorf("unable to resolve tarmak-provider client: %v", err)
+	}
 
 	return nil
 }

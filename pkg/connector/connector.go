@@ -2,6 +2,7 @@
 package connector
 
 import (
+	"fmt"
 	"net/rpc"
 
 	"github.com/spf13/cobra"
@@ -19,7 +20,10 @@ func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
 		Long:  "Launch tarmak connector",
 		RunE: func(c *cobra.Command, args []string) error {
 
-			connector := &Connector{}
+			connector := &Connector{
+				connRPC: &ConnectorRPC{},
+			}
+
 			if err := connector.ConnectClient(); err != nil {
 				return err
 			}
@@ -29,6 +33,10 @@ func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
 			}()
 
 			<-stopCh
+
+			if err := connector.client.Close(); err != nil {
+				return fmt.Errorf("failed to close connector client: %v", err)
+			}
 
 			return nil
 		},
