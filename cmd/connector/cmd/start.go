@@ -26,8 +26,10 @@ func Execute() {
 }
 
 func init() {
-	serverCmd := connector.NewCommandStartConnector()
-	serverCmd.Use = "serve"
-	serverCmd.Flags().AddGoFlagSet(flag.CommandLine)
-	RootCmd.AddCommand(serverCmd)
+	stopCh := make(chan struct{})
+
+	startCmd := connector.NewCommandStartConnector(stopCh)
+	startCmd.Use = "start"
+	startCmd.Flags().AddGoFlagSet(flag.CommandLine)
+	RootCmd.AddCommand(startCmd)
 }
