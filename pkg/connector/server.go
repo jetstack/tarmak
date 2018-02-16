@@ -80,5 +80,4 @@ func (cc connectorCloser) Close() error {
 	case <-time.After(1 * time.Second):
 		return cc.Process.Kill()
 	}
-	return nil
 }

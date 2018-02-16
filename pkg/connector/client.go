@@ -20,8 +20,7 @@ func (c *Connector) ConnectClient() error {
 	expBackoff.InitialInterval = time.Second
 	expBackoff.MaxElapsedTime = time.Minute
 
-	ctx, _ := context.WithCancel(context.Background())
-	b := backoff.WithContext(expBackoff, ctx)
+	b := backoff.WithContext(expBackoff, context.Background())
 
 	resolveClient := func() error {
 		client, err := rpc.Dial("unix", providerSocket)
