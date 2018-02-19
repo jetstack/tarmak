@@ -27,7 +27,7 @@ ifeq ($(UNAME_S),Darwin)
 	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-darwin-amd64
 	DEP_HASH := f170008e2bf8b196779c361a4eaece1b03450d23bbf32d1a0beaa9b00b6a5ab4
 	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.54.0/goreleaser_Darwin_x86_64.tar.gz
-	GORELEASER_HASH := 895df4293580dd8f9b0daf0ef5456f2238a2fbfc51d9f75dde6e2c63ca4fccc2
+	GORELEASER_HASH := 9d927528a599174eed4d0d6a1ce6bdc810463c4cb105b0d2319c7c63ec642c9b
 endif
 
 
