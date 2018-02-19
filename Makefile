@@ -14,6 +14,23 @@ HACK_DIR     ?= hack
 
 GOPATH ?= /tmp/go
 
+# Source URLs / hashes based on OS
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64
+	DEP_HASH := 31144e465e52ffbc0035248a10ddea61a09bf28b00784fd3fdd9882c8cbb2315
+	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.54.0/goreleaser_Linux_x86_64.tar.gz
+	GORELEASER_HASH := 895df4293580dd8f9b0daf0ef5456f2238a2fbfc51d9f75dde6e2c63ca4fccc2
+endif
+ifeq ($(UNAME_S),Darwin)
+	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-darwin-amd64
+	DEP_HASH := f170008e2bf8b196779c361a4eaece1b03450d23bbf32d1a0beaa9b00b6a5ab4
+	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.54.0/goreleaser_Darwin_x86_64.tar.gz
+	GORELEASER_HASH := 895df4293580dd8f9b0daf0ef5456f2238a2fbfc51d9f75dde6e2c63ca4fccc2
+endif
+
+
 help:
 	# all       - runs verify, build targets
 	# test      - runs go_test target
@@ -91,11 +108,16 @@ $(BINDIR)/informer-gen:
 	go build -o $@ ./vendor/k8s.io/code-generator/cmd/informer-gen
 
 $(BINDIR)/dep:
-	curl -sL -o $@ https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64
-	echo "322152b8b50b26e5e3a7f6ebaeb75d9c11a747e64bbfd0d8bb1f4d89a031c2b5  $@" | sha256sum -c
+	curl -sL -o $@ $(DEP_URL)
+	echo "$(DEP_HASH)  $@" | sha256sum -c
 	chmod +x $@
 
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep
+$(BINDIR)/goreleaser:
+	curl -sL -o $@.tar.gz $(GORELEASER_URL)
+	echo "$(GORELEASER_HASH) $@.tar.gz" | sha256sum -c
+	cd $(BINDIR) && tar xzvf $(shell basename $@).tar.gz goreleaser
+
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
