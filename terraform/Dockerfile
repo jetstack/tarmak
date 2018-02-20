@@ -12,7 +12,7 @@ RUN curl -sLo /usr/local/bin/airworthy https://github.com/jetstack/airworthy/rel
 
 # install terraform
 ENV TERRAFORM_VERSION 0.11.2
-RUN airworthy -v download \
+RUN airworthy download \
   https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
   --sha256sums https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS \
   --signature-binary https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS.sig && \
@@ -24,15 +24,13 @@ RUN airworthy -v download \
 # install terraform plugins
 WORKDIR /terraform
 
-ENV TERRAFORM_PROVIDER_AWSTAG_VERSION 0.3.0-rc2
-RUN airworthy -v download \
-  https://github.com/jetstack/tarmak/releases/download/release-${TERRAFORM_PROVIDER_AWSTAG_VERSION}/terraform-provider-awstag_${TERRAFORM_PROVIDER_AWSTAG_VERSION}_linux_amd64.zip \
-  --sha256sums https://github.com/jetstack/tarmak/releases/download/release-${TERRAFORM_PROVIDER_AWSTAG_VERSION}/terraform-provider-awstag_${TERRAFORM_PROVIDER_AWSTAG_VERSION}_SHA256SUMS \
-  --signature-binary https://github.com/jetstack/tarmak/releases/download/release-${TERRAFORM_PROVIDER_AWSTAG_VERSION}/terraform-provider-awstag_${TERRAFORM_PROVIDER_AWSTAG_VERSION}_SHA256SUMS.sig && \
-  unzip terraform-provider-awstag_linux_amd64.zip && \
-  rm terraform-provider-awstag_linux_amd64.zip && \
+ENV TARMAK_VERSION 0.3.0-rc2
+RUN airworthy download \
+  https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/terraform-provider-awstag_${TARMAK_VERSION}_linux_amd64 \
+  --sha256sums https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak_${TARMAK_VERSION}_checksums.txt \
+  --signature-armored https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak_${TARMAK_VERSION}_checksums.txt.asc \
   chmod +x terraform-provider-awstag && \
-  mv terraform-provider-awstag /terraform/terraform-provider-awstag
+  mv terraform-provider-awstag_${TARMAK_VERSION}_linux_amd64 terraform-provider-awstag
 
 ADD providers.tf /terraform
 RUN terraform init
