@@ -781,6 +781,10 @@
       "type":"list",
       "member":{"shape":"AmazonResourceName"}
     },
+    "AndroidPaths":{
+      "type":"list",
+      "member":{"shape":"String"}
+    },
     "AppPackagesCleanup":{"type":"boolean"},
     "ArgumentException":{
       "type":"structure",
@@ -834,7 +838,9 @@
         "EXPLORER_SUMMARY_LOG",
         "APPLICATION_CRASH_REPORT",
         "XCTEST_LOG",
-        "VIDEO"
+        "VIDEO",
+        "CUSTOMER_ARTIFACT",
+        "CUSTOMER_ARTIFACT_LOG"
       ]
     },
     "Artifacts":{
@@ -856,6 +862,11 @@
         "architecture":{"shape":"String"},
         "clock":{"shape":"Double"}
       }
+    },
+    "ClientId":{
+      "type":"string",
+      "max":64,
+      "min":0
     },
     "ContentType":{
       "type":"string",
@@ -950,8 +961,14 @@
       "members":{
         "projectArn":{"shape":"AmazonResourceName"},
         "deviceArn":{"shape":"AmazonResourceName"},
+        "sshPublicKey":{"shape":"SshPublicKey"},
+        "remoteDebugEnabled":{"shape":"Boolean"},
+        "remoteRecordEnabled":{"shape":"Boolean"},
+        "remoteRecordAppArn":{"shape":"AmazonResourceName"},
         "name":{"shape":"Name"},
-        "configuration":{"shape":"CreateRemoteAccessSessionConfiguration"}
+        "clientId":{"shape":"ClientId"},
+        "configuration":{"shape":"CreateRemoteAccessSessionConfiguration"},
+        "interactionMode":{"shape":"InteractionMode"}
       }
     },
     "CreateRemoteAccessSessionResult":{
@@ -983,6 +1000,14 @@
     "CurrencyCode":{
       "type":"string",
       "enum":["USD"]
+    },
+    "CustomerArtifactPaths":{
+      "type":"structure",
+      "members":{
+        "iosPaths":{"shape":"IosPaths"},
+        "androidPaths":{"shape":"AndroidPaths"},
+        "deviceHostPaths":{"shape":"DeviceHostPaths"}
+      }
     },
     "DateTime":{"type":"timestamp"},
     "DeleteDevicePoolRequest":{
@@ -1064,6 +1089,7 @@
         "name":{"shape":"Name"},
         "manufacturer":{"shape":"String"},
         "model":{"shape":"String"},
+        "modelId":{"shape":"String"},
         "formFactor":{"shape":"DeviceFormFactor"},
         "platform":{"shape":"DevicePlatform"},
         "os":{"shape":"String"},
@@ -1075,6 +1101,7 @@
         "carrier":{"shape":"String"},
         "radio":{"shape":"String"},
         "remoteAccessEnabled":{"shape":"Boolean"},
+        "remoteDebugEnabled":{"shape":"Boolean"},
         "fleetType":{"shape":"String"},
         "fleetName":{"shape":"String"}
       }
@@ -1087,6 +1114,7 @@
         "FORM_FACTOR",
         "MANUFACTURER",
         "REMOTE_ACCESS_ENABLED",
+        "REMOTE_DEBUG_ENABLED",
         "APPIUM_VERSION"
       ]
     },
@@ -1096,6 +1124,10 @@
         "PHONE",
         "TABLET"
       ]
+    },
+    "DeviceHostPaths":{
+      "type":"list",
+      "member":{"shape":"String"}
     },
     "DeviceMinutes":{
       "type":"structure",
@@ -1169,6 +1201,10 @@
         "ERRORED",
         "STOPPED"
       ]
+    },
+    "ExecutionResultCode":{
+      "type":"string",
+      "enum":["PARSING_FAILED"]
     },
     "ExecutionStatus":{
       "type":"string",
@@ -1361,6 +1397,10 @@
         "upload":{"shape":"Upload"}
       }
     },
+    "HostAddress":{
+      "type":"string",
+      "max":1024
+    },
     "IdempotencyException":{
       "type":"structure",
       "members":{
@@ -1397,6 +1437,20 @@
       }
     },
     "Integer":{"type":"integer"},
+    "InteractionMode":{
+      "type":"string",
+      "enum":[
+        "INTERACTIVE",
+        "NO_VIDEO",
+        "VIDEO_ONLY"
+      ],
+      "max":64,
+      "min":0
+    },
+    "IosPaths":{
+      "type":"list",
+      "member":{"shape":"String"}
+    },
     "Job":{
       "type":"structure",
       "members":{
@@ -1919,9 +1973,16 @@
         "started":{"shape":"DateTime"},
         "stopped":{"shape":"DateTime"},
         "device":{"shape":"Device"},
+        "remoteDebugEnabled":{"shape":"Boolean"},
+        "remoteRecordEnabled":{"shape":"Boolean"},
+        "remoteRecordAppArn":{"shape":"AmazonResourceName"},
+        "hostAddress":{"shape":"HostAddress"},
+        "clientId":{"shape":"ClientId"},
         "billingMethod":{"shape":"BillingMethod"},
         "deviceMinutes":{"shape":"DeviceMinutes"},
-        "endpoint":{"shape":"String"}
+        "endpoint":{"shape":"String"},
+        "deviceUdid":{"shape":"String"},
+        "interactionMode":{"shape":"InteractionMode"}
       }
     },
     "RemoteAccessSessions":{
@@ -1989,7 +2050,19 @@
         "completedJobs":{"shape":"Integer"},
         "billingMethod":{"shape":"BillingMethod"},
         "deviceMinutes":{"shape":"DeviceMinutes"},
-        "networkProfile":{"shape":"NetworkProfile"}
+        "networkProfile":{"shape":"NetworkProfile"},
+        "parsingResultUrl":{"shape":"String"},
+        "resultCode":{"shape":"ExecutionResultCode"},
+        "seed":{"shape":"Integer"},
+        "appUpload":{"shape":"AmazonResourceName"},
+        "eventCount":{"shape":"Integer"},
+        "jobTimeoutMinutes":{"shape":"JobTimeoutMinutes"},
+        "devicePoolArn":{"shape":"AmazonResourceName"},
+        "locale":{"shape":"String"},
+        "radios":{"shape":"Radios"},
+        "location":{"shape":"Location"},
+        "customerArtifactPaths":{"shape":"CustomerArtifactPaths"},
+        "webUrl":{"shape":"String"}
       }
     },
     "Runs":{
@@ -2037,6 +2110,7 @@
         "networkProfileArn":{"shape":"AmazonResourceName"},
         "locale":{"shape":"String"},
         "location":{"shape":"Location"},
+        "customerArtifactPaths":{"shape":"CustomerArtifactPaths"},
         "radios":{"shape":"Radios"},
         "auxiliaryApps":{"shape":"AmazonResourceNames"},
         "billingMethod":{"shape":"BillingMethod"}
@@ -2081,6 +2155,11 @@
         "message":{"shape":"Message"}
       },
       "exception":true
+    },
+    "SshPublicKey":{
+      "type":"string",
+      "max":8192,
+      "min":0
     },
     "StopRemoteAccessSessionRequest":{
       "type":"structure",
@@ -2155,6 +2234,7 @@
       "enum":[
         "BUILTIN_FUZZ",
         "BUILTIN_EXPLORER",
+        "WEB_PERFORMANCE_PROFILE",
         "APPIUM_JAVA_JUNIT",
         "APPIUM_JAVA_TESTNG",
         "APPIUM_PYTHON",
@@ -2166,7 +2246,9 @@
         "UIAUTOMATION",
         "UIAUTOMATOR",
         "XCTEST",
-        "XCTEST_UI"
+        "XCTEST_UI",
+        "REMOTE_ACCESS_RECORD",
+        "REMOTE_ACCESS_REPLAY"
       ]
     },
     "Tests":{

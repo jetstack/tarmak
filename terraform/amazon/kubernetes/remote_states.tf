@@ -44,6 +44,6 @@ data "terraform_remote_state" "network" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "${var.environment}/${var.name}/network.tfstate"
+    key    = "${var.environment}/${var.tools_cluster_name}/network.tfstate"
   }
 }

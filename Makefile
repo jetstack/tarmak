@@ -27,7 +27,7 @@ ifeq ($(UNAME_S),Darwin)
 	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-darwin-amd64
 	DEP_HASH := f170008e2bf8b196779c361a4eaece1b03450d23bbf32d1a0beaa9b00b6a5ab4
 	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.54.0/goreleaser_Darwin_x86_64.tar.gz
-	GORELEASER_HASH := 895df4293580dd8f9b0daf0ef5456f2238a2fbfc51d9f75dde6e2c63ca4fccc2
+	GORELEASER_HASH := 9d927528a599174eed4d0d6a1ce6bdc810463c4cb105b0d2319c7c63ec642c9b
 endif
 
 
@@ -71,9 +71,11 @@ go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/fake | grep -v pkg/wing/clients/internalclientset/fake)
 
 go_build:
+	# Make sure you add all binaries to the .goreleaser.yml as well
 	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -a -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o tarmak_linux_amd64  ./cmd/tarmak
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o tarmak_darwin_amd64 ./cmd/tarmak
 	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -a -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o wing_linux_amd64    ./cmd/wing
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -a -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o terraform-provider-awstag_linux_amd64	./cmd/terraform-provider-awstag
 
 $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
@@ -183,3 +185,5 @@ endif
 	# replace version in README
 	sed -i 's#wget https://github.com/jetstack/tarmak/releases/download/.*$$#wget https://github.com/jetstack/tarmak/releases/download/$(VERSION)/tarmak_$(VERSION)_linux_amd64#g' README.md
 	sed -i 's/mv tarmak_.*$$/mv tarmak_$(VERSION)_linux_amd64 tarmak/g' README.md
+	# replace version in Dockerfile
+	sed -i 's#^ENV TERRAFORM_PROVIDER_AWSTAG_VERSION .*$$#ENV TERRAFORM_PROVIDER_AWSTAG_VERSION $(VERSION)#g' terraform/Dockerfile

@@ -64,19 +64,18 @@ func NewEncryptionClient(prov client.ConfigProvider, builder ContentCipherBuilde
 //	req, out := svc.PutObjectRequest(&s3.PutObjectInput {
 //	  Key: aws.String("testKey"),
 //	  Bucket: aws.String("testBucket"),
-//	  Body: bytes.NewBuffer("test data"),
+//	  Body: strings.NewReader("test data"),
 //	})
 //	err := req.Send()
 func (c *EncryptionClient) PutObjectRequest(input *s3.PutObjectInput) (*request.Request, *s3.PutObjectOutput) {
 	req, out := c.S3Client.PutObjectRequest(input)
 
 	// Get Size of file
-	n, err := input.Body.Seek(0, 2)
+	n, err := aws.SeekerLen(input.Body)
 	if err != nil {
 		req.Error = err
 		return req, out
 	}
-	input.Body.Seek(0, 0)
 
 	dst, err := getWriterStore(req, c.TempFolderPath, n >= c.MinFileSize)
 	if err != nil {

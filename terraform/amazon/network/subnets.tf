@@ -5,12 +5,15 @@ resource "aws_subnet" "public" {
   availability_zone       = "${var.availability_zones[count.index]}"
   map_public_ip_on_launch = true
 
+  lifecycle {
+    ignore_changes = ["tags"]
+  }
+
   tags {
     Name              = "${data.template_file.stack_name.rendered}_public_${var.availability_zones[count.index]}"
     Environment       = "${var.environment}"
     Project           = "${var.project}"
     Contact           = "${var.contact}"
-    KubernetesCluster = "${data.template_file.stack_name.rendered}"
   }
 }
 
@@ -20,11 +23,14 @@ resource "aws_subnet" "private" {
   cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 3, count.index + 1)}"
   availability_zone = "${var.availability_zones[count.index]}"
 
+  lifecycle {
+    ignore_changes = ["tags"]
+  }
+
   tags {
     Name              = "${data.template_file.stack_name.rendered}_private_${var.availability_zones[count.index]}"
     Environment       = "${var.environment}"
     Project           = "${var.project}"
     Contact           = "${var.contact}"
-    KubernetesCluster = "${data.template_file.stack_name.rendered}"
   }
 }

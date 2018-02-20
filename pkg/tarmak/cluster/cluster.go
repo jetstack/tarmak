@@ -339,6 +339,9 @@ func (c *Cluster) ConfigPath() string {
 }
 
 func (c *Cluster) SSHConfigPath() string {
+	if c.Type() == clusterv1alpha1.ClusterTypeClusterMulti {
+		return filepath.Join(c.Environment().Tarmak().ConfigPath(), c.Environment().HubName(), "ssh_config")
+	}
 	return filepath.Join(c.ConfigPath(), "ssh_config")
 }
 
