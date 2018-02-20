@@ -1,16 +1,11 @@
-variables:
-  GORELEASER_HASH: 634f5eedd1000a1eb675c2ca93bbbc889aa0388df76aea3501d7734616910584
-
 # run test on golang code
 #
 test::tarmak::golang:
   stage: test
   tags:
   - docker
-  image: golang:1.9.2
+  image: golang:1.9.3
   script:
-  - curl -Lo /usr/local/bin/dep https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64
-  - chmod +x /usr/local/bin/dep
   - rm -rf /go/src/github.com/jetstack
   - mkdir -p /go/src/github.com/jetstack
   - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
@@ -66,24 +61,19 @@ release::tarmak::golang:
   stage: release
   tags:
   - docker
-  image: golang:1.9.2
+  image: golang:1.9.3
   only:
   - tags
   script:
-  - curl -Lo /usr/local/bin/dep https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64
-  - chmod +x /usr/local/bin/dep
   - umask 0077
   - mkdir -p /root/.gnupg
   - echo "${GPG_PRIVATE_KEY}" | base64 -d > /root/.gnupg/secring.gpg
-  - curl -sL https://github.com/simonswine/goreleaser/releases/download/v0.36.0-gpg/goreleaser_Linux_x86_64.tar.gz > /tmp/goreleaser.tar.gz
-  - echo "${GORELEASER_HASH}  /tmp/goreleaser.tar.gz" | sha256sum -c
-  - cd /usr/local/bin && tar xvfz /tmp/goreleaser.tar.gz goreleaser
   - rm -rf /go/src/github.com/jetstack
   - mkdir -p /go/src/github.com/jetstack
   - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
   - cd /go/src/github.com/jetstack/tarmak
   - make all
-  - goreleaser
+  - bin/goreleaser
   - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
 
 stages:

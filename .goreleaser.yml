@@ -1,5 +1,5 @@
 builds:
-  - main: ./cmd/wing/main.go
+  - main: ./cmd/wing
     binary: wing
     env:
       - CGO_ENABLED=0
@@ -9,7 +9,7 @@ builds:
     goarch:
       - amd64
     flags: -tags netgo
-  - main: ./cmd/tarmak/main.go
+  - main: ./cmd/tarmak
     binary: tarmak
     env:
       - CGO_ENABLED=0
@@ -26,5 +26,7 @@ release:
     owner: jetstack
     name: tarmak
 
-gpg_signing:
-  key_id: 9A1C42C8F5AA3CE6
+sign:
+  signature: "${artifact}.asc"
+  args: ["-u", "tech+releases@jetstack.io", "--armor", "--output", "${artifact}.asc", "--detach-sign", "${artifact}"]
+  artifacts: all
