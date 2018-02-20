@@ -38,5 +38,5 @@ release:
 
 sign:
   signature: "${artifact}.asc"
-  args: ["-u", "tech+releases@jetstack.io", "--armor", "--output", "${artifact}.asc", "--detach-sign", "${artifact}"]
+  args: ["-u", "tech+releases@jetstack.io", "--armor", "--output", "${signature}", "--detach-sign", "${artifact}"]
   artifacts: all
