@@ -13,7 +13,6 @@ resource "aws_eip" "bastion" {
   instance = "${aws_instance.bastion.id}"
 }
 
-
 resource "aws_security_group" "bastion" {
   name        = "${data.template_file.stack_name.rendered}-bastion"
   vpc_id      = "${data.terraform_remote_state.network.vpc_id}"
