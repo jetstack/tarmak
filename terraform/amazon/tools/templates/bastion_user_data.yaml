@@ -68,7 +68,7 @@ write_files:
         echo "$${AIRWORTHY_HASH}  /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy" | sha256sum -c ;\
         chmod 755 /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy ;\
       fi ;\
-      /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy download --output /opt/wing-$${WING_VERSION}/wing https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/wing_$${WING_VERSION}_linux_amd64'
+      /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy download --output /opt/wing-$${WING_VERSION}/wing --sha256sums https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt  --signature-armored https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt.asc https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/wing_$${WING_VERSION}_linux_amd64'
     ExecStartPre=/bin/sh -c '\
       set -e ;\
       test -d $${WING_DATA_DIR} && exit 0 ;\
