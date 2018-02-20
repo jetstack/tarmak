@@ -54,8 +54,8 @@ write_files:
     Requires=etcd.service
 
     [Service]
-    Environment=AIRWORTHY_VERSION=0.1.1
-    Environment=AIRWORTHY_HASH=299a84be45e108a8da8663ed602a52680dbcdb8382c98f0d6770a2a456a60fed
+    Environment=AIRWORTHY_VERSION=0.2.0
+    Environment=AIRWORTHY_HASH=2d69cfe0b92f86481805c28d0b8ae47a8ffa6bb2373217e7c5215d61fc9efa1d
     Environment=WING_VERSION=0.3.0-rc4
     Environment=WING_DATA_DIR=/var/lib/wing
     PermissionsStartOnly=true
