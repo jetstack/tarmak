@@ -184,3 +184,5 @@ endif
 	# replace version in README
 	sed -i 's#wget https://github.com/jetstack/tarmak/releases/download/.*$$#wget https://github.com/jetstack/tarmak/releases/download/$(VERSION)/tarmak_$(VERSION)_linux_amd64#g' README.md
 	sed -i 's/mv tarmak_.*$$/mv tarmak_$(VERSION)_linux_amd64 tarmak/g' README.md
+	# replace version in Dockerfile
+	sed -i 's#^ENV TERRAFORM_PROVIDER_AWSTAG_VERSION .*$$#ENV TERRAFORM_PROVIDER_AWSTAG_VERSION $(VERSION)#g' terraform/Dockerfile
