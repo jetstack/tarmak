@@ -24,7 +24,7 @@ RUN airworthy download \
 # install terraform plugins
 WORKDIR /terraform
 
-ENV TARMAK_VERSION 0.3.0-rc3
+ENV TARMAK_VERSION 0.3.0-rc4
 RUN airworthy download \
   https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/terraform-provider-awstag_${TARMAK_VERSION}_linux_amd64 \
   --sha256sums https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak_${TARMAK_VERSION}_checksums.txt \
