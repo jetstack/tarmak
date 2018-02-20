@@ -13,20 +13,6 @@ test::tarmak::golang:
   - make all
   - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
 
-# run validation on terraform code
-test::tarmak::terraform:
-  stage: test
-  tags:
-  - docker
-  services:
-  - docker:dind
-  image: docker:1.12
-  script:
-  - docker build -t tarmak-terraform:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID} terraform/
-  - CONTAINER_ID=$(docker create tarmak-terraform:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID} /bin/sh -c "apk add --update make git && git init && git add .&& make verify")
-  - docker cp terraform/ ${CONTAINER_ID}:/
-  - docker start $CONTAINER_ID -a
-
 # generate sphinx documentation
 generate::docs:
   stage: test
