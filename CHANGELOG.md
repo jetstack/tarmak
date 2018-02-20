@@ -17,11 +17,46 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Application | Supported versions | Default  |
 |-------------|-------------------:|---------:|
 | Packer      |                    | `1.0.2`  |
-| Terraform   |                    | `0.10.8` |
+| Terraform   |                    | `0.11.2` |
 | Consul      |                    | `1.0.2`  |
 | Vault       |                    | `0.9.1`  |
-| Kubernetes  | `>= 1.6 && < 1.10` | `1.7.10` |
+| Kubernetes  | `>= 1.6 && < 1.10` | `1.8.8`  |
 | Calico      |                    | `2.6.6`  |
+
+## [0.3.0]: 0.3.0 - 2018-02-20
+
+### Added
+
+* Add `--keep-containers` flag to preserve container environment launched by tarmak (#108, [@simonswine](https://github.com/simonswine))
+* Adds vault setup and config to docs (#51, [@JoshVanL](https://github.com/JoshVanL))
+* Upgrade prometheus monitoring to 2.0 (support for RBAC, customizable scraping + alerting configs) (#68, [@simonswine](https://github.com/simonswine))
+
+### Changed
+
+* Use upstream goreleaser, GPG signing merged upstream (#116, [@simonswine](https://github.com/simonswine))
+* Update calico to 2.6.6 (#91, [@simonswine](https://github.com/simonswine))
+* Enhance kube state metrics (#95, [@simonswine](https://github.com/simonswine))
+* Update terraform to 0.11 (#87, [@simonswine](https://github.com/simonswine))
+* Update vault to 0.9.1 and consul to 1.0.2 (#88, [@simonswine](https://github.com/simonswine))
+* Tarmak is now compiled against k8s.io release-1.8 branches. (#14, [@wallrj](https://github.com/wallrj))
+
+### Fixed
+
+* Fix multi cluster environments by supporting multiple clusters in a single VPC (#100, [@dippynark](https://github.com/dippynark))
+* Retry SSH connection to bastion during tools stack (#81, [@JoshVanL](https://github.com/JoshVanL))
+* Ensure systemd unit order for kubelet and kube-proxy (#69, [@simonswine](https://github.com/simonswine))
+
+### Versions
+
+| Application | Supported versions | Default  |
+|-------------|-------------------:|---------:|
+| Packer      |                    | `1.0.2`  |
+| Terraform   |                    | `0.11.2` |
+| Consul      |                    | `1.0.2`  |
+| Vault       |                    | `0.9.1`  |
+| Kubernetes  | `>= 1.6 && < 1.10` | `1.8.8`  |
+| Calico      |                    | `2.6.6`  |
+
 
 ## [0.2.1]: 0.2.1 - 2017-12-05
 
