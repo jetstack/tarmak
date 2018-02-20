@@ -55,7 +55,7 @@ type ProviderAmazon struct {
 	KeyName           string   `json:"keyName,omitempty"`
 
 	PublicZone         string `json:"publicZone,omitempty"`
-	PublicHostedZoneID string `json:"publicHostedZoneID, omitempty"`
+	PublicHostedZoneID string `json:"publicHostedZoneID,omitempty"`
 }
 
 type ProviderGCP struct {
