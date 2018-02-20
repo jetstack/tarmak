@@ -38,7 +38,7 @@ func SetDefaults_Cluster(obj *Cluster) {
 
 	// set default kubernetes version
 	if obj.Kubernetes.Version == "" {
-		obj.Kubernetes.Version = "1.7.10"
+		obj.Kubernetes.Version = "1.8.8"
 	}
 
 	// zone
