@@ -186,4 +186,7 @@ endif
 	sed -i 's#wget https://github.com/jetstack/tarmak/releases/download/.*$$#wget https://github.com/jetstack/tarmak/releases/download/$(VERSION)/tarmak_$(VERSION)_linux_amd64#g' README.md
 	sed -i 's/mv tarmak_.*$$/mv tarmak_$(VERSION)_linux_amd64 tarmak/g' README.md
 	# replace version in Dockerfile
-	sed -i 's#^ENV TERRAFORM_PROVIDER_AWSTAG_VERSION .*$$#ENV TERRAFORM_PROVIDER_AWSTAG_VERSION $(VERSION)#g' terraform/Dockerfile
+	sed -i 's#^ENV TARMAK_VERSION .*$$#ENV TARMAK_VERSION $(VERSION)#g' terraform/Dockerfile
+	git add -p terraform/Dockerfile docs/conf.py terraform/amazon/tools/templates/bastion_user_data.yaml terraform/amazon/kubernetes/templates/puppet_agent_user_data.yaml README.md
+	git commit -m "Release $(VERSION)"
+	git tag $(VERSION)
