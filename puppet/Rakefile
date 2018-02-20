@@ -4,7 +4,7 @@ require 'metadata-json-lint/rake_task'
 require 'base64'
 
 # external modules
-external_modules = ['stdlib', 'archive', 'concat', 'site_module']
+external_modules = ['stdlib', 'archive', 'concat', 'site_module', 'airworthy']
 
 desc 'publish all modules to puppet forge'
 task :publish_modules do
