@@ -29,6 +29,16 @@ builds:
     goarch:
       - amd64
     flags: -tags netgo
+  - main: ./cmd/tarmak-connector
+    binary: tarmak-connector
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+    flags: -tags netgo
 archive:
   format: binary
 release:
