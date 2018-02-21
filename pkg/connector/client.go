@@ -43,7 +43,7 @@ func (c *Connector) CallInit() ([]byte, error) {
 	var args string
 	var reply string
 
-	if err := c.client.Call("Tarmak.Init", args, &reply); err != nil {
+	if err := c.client.Call("Tarmak.Handshake", args, &reply); err != nil {
 		return nil, fmt.Errorf("failed to call init to tarmak rpc server: %v", err)
 	}
 

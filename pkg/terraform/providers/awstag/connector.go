@@ -2,8 +2,10 @@
 package awstag
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"time"
 
@@ -14,7 +16,12 @@ const (
 	providerSocket = "tarmak-connector"
 )
 
-func newClient() (net.Conn, error) {
+type ConnectorClient struct {
+	client net.Conn
+	reader *bufio.Reader
+}
+
+func NewClient() (*ConnectorClient, error) {
 	var client net.Conn
 
 	expBackoff := backoff.NewExponentialBackOff()
@@ -38,5 +45,31 @@ func newClient() (net.Conn, error) {
 		return nil, fmt.Errorf("failed to resolve connector - provider client: %v", err)
 	}
 
-	return client, nil
+	return &ConnectorClient{client, bufio.NewReader(client)}, nil
+}
+
+func (c *ConnectorClient) CloseClient() error {
+	return c.client.Close()
+}
+
+func (c *ConnectorClient) ReadBytes() ([]byte, error) {
+	var buff []byte
+
+LOOP:
+	for {
+		b, err := c.reader.ReadByte()
+
+		switch err {
+		case io.EOF:
+			break LOOP
+
+		case nil:
+			buff = append(buff, b)
+
+		default:
+			return nil, fmt.Errorf("failed to read byte from server: %v", err)
+		}
+	}
+
+	return buff, nil
 }

@@ -354,7 +354,7 @@ func (tc *TerraformContainer) GenerateAWSSecurityGroup() (rules map[string][]*am
 	return rules, nil
 }
 
-func (tc *TerraformContainer) startConnector() (err error) {
+func (tc *TerraformContainer) StartConnector() (err error) {
 	returnCode, err := tc.Execute("./tarmak-connector", []string{"start"})
 	if err != nil {
 		return err

@@ -2,7 +2,6 @@
 package connector
 
 import (
-	"fmt"
 	"net"
 	"net/rpc"
 
@@ -21,10 +20,7 @@ func (c *Connector) InitiateConnection() error {
 		return err
 	}
 
-	fmt.Printf("%v\n", reply)
-
-	//return c.ForwardConnection(reply)
-	return nil
+	return c.ForwardConnection(reply)
 }
 
 func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
@@ -55,9 +51,9 @@ func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
 				result = multierror.Append(result, err)
 			}
 
-			//if err := connector.CloseServer(); err != nil {
-			//	result = multierror.Append(result, err)
-			//}
+			if err := connector.CloseServer(); err != nil {
+				result = multierror.Append(result, err)
+			}
 
 			return result.ErrorOrNil()
 		},
