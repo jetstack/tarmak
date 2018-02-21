@@ -2,6 +2,7 @@
 package connector
 
 import (
+	"fmt"
 	"net"
 	"net/rpc"
 
@@ -11,16 +12,29 @@ import (
 
 type Connector struct {
 	client *rpc.Client
-	server net.Conn
+	server net.Listener
 }
 
 func (c *Connector) InitiateConnection() error {
+	if err := c.NewClient(); err != nil {
+		return err
+	}
+
+	if err := c.NewServer(); err != nil {
+		return err
+	}
+
 	reply, err := c.CallInit()
 	if err != nil {
 		return err
 	}
 
-	return c.ForwardConnection(reply)
+	conn, err := c.AcceptProvider()
+	if err != nil {
+		return err
+	}
+
+	return c.SendProvider(conn, reply)
 }
 
 func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
@@ -31,21 +45,17 @@ func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
 			var result *multierror.Error
 			connector := new(Connector)
 
-			if err := connector.ConnectorClient(); err != nil {
-				result = multierror.Append(result, err)
-			}
-
-			if err := connector.StartServer(); err != nil {
-				result = multierror.Append(result, err)
-			}
-
-			if result != nil {
-				return result
-			}
-
 			if err := connector.InitiateConnection(); err != nil {
-				result = multierror.Append(result, err)
+				return fmt.Errorf("error initialising connection: %v", err)
 			}
+
+			go func() {
+				if err := connector.StartServer(stopCh); err != nil {
+					fmt.Printf("error in connector server: %v", err)
+				}
+			}()
+
+			<-stopCh
 
 			if err := connector.CloseClient(); err != nil {
 				result = multierror.Append(result, err)

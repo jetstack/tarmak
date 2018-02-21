@@ -21,6 +21,22 @@ type ConnectorClient struct {
 	reader *bufio.Reader
 }
 
+func StartClient() error {
+	client, err := NewClient()
+	if err != nil {
+		return err
+	}
+
+	bytes, err := client.ReadBytes()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Initial message from connector: %v", bytes)
+
+	return nil
+}
+
 func NewClient() (*ConnectorClient, error) {
 	var client net.Conn
 
@@ -33,7 +49,7 @@ func NewClient() (*ConnectorClient, error) {
 	resolveClient := func() error {
 		conn, err := net.Dial("unix", providerSocket)
 		if err != nil {
-			fmt.Printf("unable to connect to uinx socket '%s': %v", providerSocket, err)
+			fmt.Printf("unable to dial into uinx socket '%s': %v", providerSocket, err)
 			return err
 		}
 
@@ -42,7 +58,7 @@ func NewClient() (*ConnectorClient, error) {
 	}
 
 	if err := backoff.Retry(resolveClient, b); err != nil {
-		return nil, fmt.Errorf("failed to resolve connector - provider client: %v", err)
+		return nil, fmt.Errorf("failed to resolve provider client: %v", err)
 	}
 
 	return &ConnectorClient{client, bufio.NewReader(client)}, nil
@@ -72,4 +88,16 @@ LOOP:
 	}
 
 	return buff, nil
+}
+
+func (c *ConnectorClient) SendBytes(bytes []byte) error {
+	writer := bufio.NewWriter(c.client)
+
+	for _, b := range bytes {
+		if err := writer.WriteByte(b); err != nil {
+			return fmt.Errorf("error sending bytes to connector server: %v", err)
+		}
+	}
+
+	return nil
 }

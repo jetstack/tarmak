@@ -14,7 +14,7 @@ const (
 	tarmakSocket = "tarmak.sock"
 )
 
-func (c *Connector) ConnectorClient() error {
+func (c *Connector) NewClient() error {
 	expBackoff := backoff.NewExponentialBackOff()
 	expBackoff.InitialInterval = time.Second
 	expBackoff.MaxElapsedTime = time.Minute * 2
@@ -24,7 +24,7 @@ func (c *Connector) ConnectorClient() error {
 	resolveClient := func() error {
 		client, err := rpc.Dial("unix", tarmakSocket)
 		if err != nil {
-			fmt.Printf("unable to connect to unix socket '%s': %v\n", tarmakSocket, err)
+			fmt.Printf("unable to dial into unix socket '%s': %v\n", tarmakSocket, err)
 			return err
 		}
 
@@ -44,7 +44,7 @@ func (c *Connector) CallInit() ([]byte, error) {
 	var reply string
 
 	if err := c.client.Call("Tarmak.Handshake", args, &reply); err != nil {
-		return nil, fmt.Errorf("failed to call init to tarmak rpc server: %v", err)
+		return nil, fmt.Errorf("failed to call handshake to tarmak rpc server: %v", err)
 	}
 
 	return []byte(reply), nil
