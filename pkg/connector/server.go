@@ -2,82 +2,47 @@
 package connector
 
 import (
-	"io"
-	"net/rpc"
-	"os"
-	"time"
-
-	"github.com/hashicorp/go-multierror"
+	"bufio"
+	"fmt"
+	"net"
+	//"github.com/hashicorp/go-multierror"
 )
 
-type ConnectorRPC struct{}
+const (
+	providerSocket = "provider-tarmak.sock"
+	serverName     = "tarmak-connector"
+)
 
-type connectorCloser struct {
-	*os.Process
-}
-
-type multiCloser struct {
-	closers []io.Closer
-}
-
-func (c *Connector) StartServer() {
-	server := rpc.NewServer()
-	server.RegisterName("Connector", c.connRPC)
-	server.ServeConn(struct {
-		io.Reader
-		io.Writer
-		io.Closer
-	}{
-		os.Stdin,
-		os.Stdout,
-		multiCloser{
-			[]io.Closer{
-				os.Stdout,
-				os.Stdin,
-				connectorCloser{},
-			},
-		},
-	})
-}
-
-func (c *ConnectorRPC) Hello(args int, reply *int) error {
-	*reply = args + args
+func (c *Connector) CloseServer() error {
+	if err := c.server.Close(); err != nil {
+		return fmt.Errorf("failed to close connector server: %v", err)
+	}
 
 	return nil
 }
 
-func (mc multiCloser) Close() error {
-	var result *multierror.Error
+func (c *Connector) StartServer() error {
+	ln, err := net.Listen("unix", providerSocket)
+	if err != nil {
+		return fmt.Errorf("unable to listen to provider socket: %v", err)
+	}
 
-	for _, c := range mc.closers {
-		if err := c.Close(); err != nil {
-			result = multierror.Append(result, err)
+	c.server, err = ln.Accept()
+	if err != nil {
+		return fmt.Errorf("unable to accept from provider socket: %v", err)
+	}
+
+	return nil
+}
+
+func (c *Connector) ForwardConnection(buf []byte) error {
+	writer := bufio.NewWriter(c.server)
+
+	for _, b := range buf {
+		if _, err := writer.Write([]byte{b}); err != nil {
+			return fmt.Errorf("failed to send byte to provider: %v", err)
 		}
 	}
 
-	return result.ErrorOrNil()
-}
-
-func (cc connectorCloser) Close() error {
-	if cc.Process == nil {
-		os.Exit(0)
-		return nil
-	}
-
-	c := make(chan error)
-	go func() {
-		_, err := cc.Process.Wait()
-		c <- err
-	}()
-
-	if err := cc.Process.Signal(os.Interrupt); err != nil {
-		return err
-	}
-
-	select {
-	case err := <-c:
-		return err
-	case <-time.After(1 * time.Second):
-		return cc.Process.Kill()
-	}
+	return nil
 }

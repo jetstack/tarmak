@@ -30,6 +30,5 @@ func init() {
 
 	startCmd := connector.NewCommandStartConnector(stopCh)
 	startCmd.Use = "start"
-	startCmd.Flags().AddGoFlagSet(flag.CommandLine)
 	RootCmd.AddCommand(startCmd)
 }

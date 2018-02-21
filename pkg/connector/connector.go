@@ -3,15 +3,28 @@ package connector
 
 import (
 	"fmt"
+	"net"
 	"net/rpc"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 )
 
 type Connector struct {
-	client  *rpc.Client
-	server  *rpc.Server
-	connRPC *ConnectorRPC
+	client *rpc.Client
+	server net.Conn
+}
+
+func (c *Connector) InitiateConnection() error {
+	reply, err := c.CallInit()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%v\n", reply)
+
+	//return c.ForwardConnection(reply)
+	return nil
 }
 
 func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
@@ -19,26 +32,34 @@ func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
 		Short: "Launch tarmak connector",
 		Long:  "Launch tarmak connector",
 		RunE: func(c *cobra.Command, args []string) error {
+			var result *multierror.Error
+			connector := new(Connector)
 
-			connector := &Connector{
-				connRPC: &ConnectorRPC{},
+			if err := connector.ConnectorClient(); err != nil {
+				result = multierror.Append(result, err)
 			}
 
-			if err := connector.ConnectClient(); err != nil {
-				return err
+			if err := connector.StartServer(); err != nil {
+				result = multierror.Append(result, err)
 			}
 
-			go func() {
-				connector.StartServer()
-			}()
-
-			<-stopCh
-
-			if err := connector.client.Close(); err != nil {
-				return fmt.Errorf("failed to close connector client: %v", err)
+			if result != nil {
+				return result
 			}
 
-			return nil
+			if err := connector.InitiateConnection(); err != nil {
+				result = multierror.Append(result, err)
+			}
+
+			if err := connector.CloseClient(); err != nil {
+				result = multierror.Append(result, err)
+			}
+
+			//if err := connector.CloseServer(); err != nil {
+			//	result = multierror.Append(result, err)
+			//}
+
+			return result.ErrorOrNil()
 		},
 	}
 

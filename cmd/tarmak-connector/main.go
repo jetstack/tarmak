@@ -2,7 +2,7 @@
 package main
 
 import (
-	"github.com/jetstack/tarmak/cmd/connector/cmd"
+	"github.com/jetstack/tarmak/cmd/tarmak-connector/cmd"
 )
 
 var (
