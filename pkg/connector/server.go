@@ -44,6 +44,7 @@ func (c *Connector) StartServer(stopCh chan struct{}) error {
 
 			bytes, err := c.HandleConnection(conn)
 			if err != nil {
+				return err
 			}
 
 			fmt.Printf("Received from client: %s\n", bytes)
