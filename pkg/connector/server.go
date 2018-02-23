@@ -20,6 +20,8 @@ func (c *Connector) NewServer() error {
 
 	c.server = ln
 
+	c.log.Infof("Connector server started.")
+
 	return nil
 }
 
@@ -28,29 +30,31 @@ func (c *Connector) CloseServer() error {
 		return fmt.Errorf("failed to close connector server: %v", err)
 	}
 
+	c.log.Infof("Connector server closed.")
+
 	return nil
 }
 
-func (c *Connector) StartServer(stopCh chan struct{}) error {
+func (c *Connector) StartServer() {
 	for {
 		select {
-		case <-stopCh:
-			return nil
+		case <-c.stopCh:
+			return
 		default:
 			conn, err := c.AcceptProvider()
 			if err != nil {
-				return err
+				continue
 			}
 
 			bytes, err := c.HandleConnection(conn)
 			if err != nil {
-				return err
+				c.log.Errorf("error handling connection: %v", err)
+				continue
 			}
 
-			fmt.Printf("Received from client: %s\n", bytes)
+			c.log.Debugf("Received from client: %s\n", bytes)
 		}
 	}
-
 }
 
 func (c *Connector) AcceptProvider() (net.Conn, error) {
@@ -95,6 +99,8 @@ func (c *Connector) SendProvider(conn net.Conn, bytes []byte) error {
 	if _, err := conn.Write([]byte{EOT}); err != nil {
 		return fmt.Errorf("error sending EOT to connection: %v", err)
 	}
+
+	c.log.Debugf("Sent bytes to provider.")
 
 	return nil
 }

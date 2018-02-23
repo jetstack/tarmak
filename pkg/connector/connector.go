@@ -5,14 +5,28 @@ import (
 	"fmt"
 	"net"
 	"net/rpc"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/spf13/cobra"
+	"github.com/sirupsen/logrus"
 )
 
 type Connector struct {
+	log *logrus.Entry
+
 	client *rpc.Client
 	server net.Listener
+
+	stopCh chan struct{}
+}
+
+func NewConnector(log *logrus.Entry) *Connector {
+	return &Connector{
+		log:    log,
+		stopCh: SignalHandler(log),
+	}
 }
 
 func (c *Connector) InitiateConnection() error {
@@ -37,37 +51,42 @@ func (c *Connector) InitiateConnection() error {
 	return c.SendProvider(conn, reply)
 }
 
-func NewCommandStartConnector(stopCh chan struct{}) *cobra.Command {
-	cmd := &cobra.Command{
-		Short: "Launch tarmak connector",
-		Long:  "Launch tarmak connector",
-		RunE: func(c *cobra.Command, args []string) error {
-			var result *multierror.Error
-			connector := new(Connector)
+func (c *Connector) RunConnector() error {
+	var result *multierror.Error
 
-			if err := connector.InitiateConnection(); err != nil {
-				return fmt.Errorf("error initialising connection: %v", err)
-			}
-
-			go func() {
-				if err := connector.StartServer(stopCh); err != nil {
-					fmt.Printf("error in connector server: %v", err)
-				}
-			}()
-
-			<-stopCh
-
-			if err := connector.CloseClient(); err != nil {
-				result = multierror.Append(result, err)
-			}
-
-			if err := connector.CloseServer(); err != nil {
-				result = multierror.Append(result, err)
-			}
-
-			return result.ErrorOrNil()
-		},
+	if err := c.InitiateConnection(); err != nil {
+		return fmt.Errorf("error initialising connection: %v", err)
 	}
 
-	return cmd
+	go c.StartServer()
+
+	<-c.stopCh
+
+	if err := c.CloseClient(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if err := c.CloseServer(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
+}
+
+func SignalHandler(log *logrus.Entry) chan struct{} {
+
+	stopCh := make(chan struct{})
+	ch := make(chan os.Signal, 2)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
+	go func(log *logrus.Entry) {
+		<-ch
+		log.Infof("Connector received interupt. Shutting down...")
+		close(stopCh)
+		<-ch
+		log.Infof("Force Closed.")
+		os.Exit(1)
+	}(log)
+
+	return stopCh
 }

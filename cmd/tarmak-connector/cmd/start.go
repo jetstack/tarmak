@@ -2,33 +2,28 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/connector"
 )
 
-var RootCmd = &cobra.Command{
-	Use:   "connector",
-	Short: "tarmak connector to facilitate tarmak and terraform communications",
-}
+func NewCommandStartConnector() *cobra.Command {
+	cmd := &cobra.Command{
+		Short: "Launch tarmak connector",
+		Long:  "Launch tarmak connector",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			log := LogLevel(cmd)
+			connector := connector.NewConnector(log)
 
-func Execute() {
-	flag.CommandLine.Parse([]string{})
+			if err := connector.RunConnector(); err != nil {
+				return fmt.Errorf("connector failed: %v", err)
+			}
 
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+			return nil
+		},
 	}
-}
 
-func init() {
-	stopCh := make(chan struct{})
-
-	startCmd := connector.NewCommandStartConnector(stopCh)
-	startCmd.Use = "start"
-	RootCmd.AddCommand(startCmd)
+	return cmd
 }

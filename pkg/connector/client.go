@@ -24,7 +24,7 @@ func (c *Connector) NewClient() error {
 	resolveClient := func() error {
 		client, err := rpc.Dial("unix", tarmakSocket)
 		if err != nil {
-			fmt.Printf("unable to dial into unix socket '%s': %v\n", tarmakSocket, err)
+			c.log.Debugf("unable to dial into unix socket '%s': %v", tarmakSocket, err)
 			return err
 		}
 
@@ -35,6 +35,8 @@ func (c *Connector) NewClient() error {
 	if err := backoff.Retry(resolveClient, b); err != nil {
 		return fmt.Errorf("unable to resolve tarmak RPC client: %v", err)
 	}
+
+	c.log.Infof("Connector client resolved.")
 
 	return nil
 }
@@ -54,6 +56,8 @@ func (c *Connector) CloseClient() error {
 	if err := c.client.Close(); err != nil {
 		return fmt.Errorf("failed to close connector client: %v", err)
 	}
+
+	c.log.Infof("Connector client closed.")
 
 	return nil
 }
