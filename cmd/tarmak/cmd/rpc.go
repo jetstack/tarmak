@@ -2,12 +2,13 @@
 package cmd
 
 import (
-	"github.com/jetstack/tarmak/pkg/tarmak"
-	rpcServer "github.com/jetstack/tarmak/pkg/tarmak/rpc"
 	"github.com/spf13/cobra"
+
+	"github.com/jetstack/tarmak/pkg/tarmak"
+	"github.com/jetstack/tarmak/pkg/tarmak/rpc"
 )
 
-var rpc = &cobra.Command{
+var rpcCmd = &cobra.Command{
 	Use:   "rpc",
 	Short: "Run standalone RPC server",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -16,10 +17,10 @@ var rpc = &cobra.Command{
 			return t.CmdTerraformApply(args, ctx)
 		},*/
 		//t.Must(rpcServer.Start())
-		rpcServer.Start(t)
+		rpc.Start(t)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(rpc)
+	RootCmd.AddCommand(rpcCmd)
 }

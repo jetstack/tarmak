@@ -122,6 +122,12 @@ func (i *tarmakRPC) VaultInstanceRoleStatus(args [2]string, reply *string) error
 	}
 }
 
+func (i *tarmakRPC) Handshake(args string, reply *string) error {
+	*reply = "Hello from the other side!"
+
+	return nil
+}
+
 // Start starts an RPC server to serve requests from
 // the container
 func Start(t *tarmak.Tarmak) error {

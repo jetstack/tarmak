@@ -2,14 +2,14 @@
 package connector
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"net"
 )
 
 const (
-	providerSocket = "provider-tarmak.sock"
+	providerSocket = "provider.sock"
+	EOT            = byte(4)
 )
 
 func (c *Connector) NewServer() error {
@@ -64,19 +64,18 @@ func (c *Connector) AcceptProvider() (net.Conn, error) {
 
 func (c *Connector) HandleConnection(conn net.Conn) ([]byte, error) {
 	var buff []byte
-
-	reader := bufio.NewReader(conn)
+	b := make([]byte, 1)
 
 LOOP:
 	for {
-		b, err := reader.ReadByte()
+		_, err := conn.Read(b)
 
 		switch err {
 		case io.EOF:
 			break LOOP
 
 		case nil:
-			buff = append(buff, b)
+			buff = append(buff, b...)
 
 		default:
 			return nil, fmt.Errorf("failed to read byte from client: %v", err)
@@ -87,12 +86,14 @@ LOOP:
 }
 
 func (c *Connector) SendProvider(conn net.Conn, bytes []byte) error {
-	writer := bufio.NewWriter(conn)
-
 	for _, b := range bytes {
-		if err := writer.WriteByte(b); err != nil {
-			return fmt.Errorf("error sending bytes to connection: %v", err)
+		if _, err := conn.Write([]byte{b}); err != nil {
+			return fmt.Errorf("error sending byte to connection: %v", err)
 		}
+	}
+
+	if _, err := conn.Write([]byte{EOT}); err != nil {
+		return fmt.Errorf("error sending EOT to connection: %v", err)
 	}
 
 	return nil

@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"time"
 
@@ -13,12 +12,12 @@ import (
 )
 
 const (
-	providerSocket = "tarmak-connector"
+	providerSocket = "provider.sock"
+	EOT            = byte(4)
 )
 
 type ConnectorClient struct {
 	client net.Conn
-	reader *bufio.Reader
 }
 
 func StartClient() error {
@@ -32,7 +31,7 @@ func StartClient() error {
 		return err
 	}
 
-	fmt.Printf("Initial message from connector: %v", bytes)
+	fmt.Printf("Received bytes from connector: %s\n", bytes)
 
 	return nil
 }
@@ -49,7 +48,7 @@ func NewClient() (*ConnectorClient, error) {
 	resolveClient := func() error {
 		conn, err := net.Dial("unix", providerSocket)
 		if err != nil {
-			fmt.Printf("unable to dial into uinx socket '%s': %v", providerSocket, err)
+			fmt.Printf("unable to dial into uinx socket '%s': %v\n", providerSocket, err)
 			return err
 		}
 
@@ -61,7 +60,7 @@ func NewClient() (*ConnectorClient, error) {
 		return nil, fmt.Errorf("failed to resolve provider client: %v", err)
 	}
 
-	return &ConnectorClient{client, bufio.NewReader(client)}, nil
+	return &ConnectorClient{client}, nil
 }
 
 func (c *ConnectorClient) CloseClient() error {
@@ -70,21 +69,20 @@ func (c *ConnectorClient) CloseClient() error {
 
 func (c *ConnectorClient) ReadBytes() ([]byte, error) {
 	var buff []byte
+	b := make([]byte, 1)
 
 LOOP:
 	for {
-		b, err := c.reader.ReadByte()
-
-		switch err {
-		case io.EOF:
-			break LOOP
-
-		case nil:
-			buff = append(buff, b)
-
-		default:
+		_, err := c.client.Read(b)
+		if err != nil {
 			return nil, fmt.Errorf("failed to read byte from server: %v", err)
 		}
+
+		if b[0] == EOT {
+			break LOOP
+		}
+
+		buff = append(buff, b...)
 	}
 
 	return buff, nil
