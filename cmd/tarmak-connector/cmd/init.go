@@ -39,7 +39,7 @@ func LogLevel(cmd *cobra.Command) *logrus.Entry {
 		logrus.Fatalf("failed to get log level of flag: %s", err)
 	}
 	if i < 0 || i > 2 {
-		logrus.Fatalf("not a valid log level")
+		logrus.Fatalf("invalid valid log level")
 	}
 	switch i {
 	case 0:

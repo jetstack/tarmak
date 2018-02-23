@@ -60,8 +60,6 @@ func Start(t *tarmak.Tarmak) error {
 			go accept(fd, t)
 		}
 	}
-
-	return nil
 }
 
 func accept(conn net.Conn, tarmak *tarmak.Tarmak) {
