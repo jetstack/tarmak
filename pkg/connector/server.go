@@ -3,7 +3,6 @@ package connector
 
 import (
 	"fmt"
-	"io"
 	"net"
 )
 
@@ -40,6 +39,7 @@ func (c *Connector) StartServer() {
 		select {
 		case <-c.stopCh:
 			return
+
 		default:
 			conn, err := c.AcceptProvider()
 			if err != nil {
@@ -70,20 +70,17 @@ func (c *Connector) HandleConnection(conn net.Conn) ([]byte, error) {
 	var buff []byte
 	b := make([]byte, 1)
 
-LOOP:
 	for {
 		_, err := conn.Read(b)
-
-		switch err {
-		case io.EOF:
-			break LOOP
-
-		case nil:
-			buff = append(buff, b...)
-
-		default:
-			return nil, fmt.Errorf("failed to read byte from client: %v", err)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read byte from provider: %v", err)
 		}
+
+		if b[0] == EOT {
+			break
+		}
+
+		buff = append(buff, b...)
 	}
 
 	return buff, nil

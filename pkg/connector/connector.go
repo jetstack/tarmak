@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"net"
 	"net/rpc"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
+
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type Connector struct {
@@ -25,7 +24,7 @@ type Connector struct {
 func NewConnector(log *logrus.Entry) *Connector {
 	return &Connector{
 		log:    log,
-		stopCh: SignalHandler(log),
+		stopCh: utils.BasicSignalHandler(log),
 	}
 }
 
@@ -71,22 +70,4 @@ func (c *Connector) RunConnector() error {
 	}
 
 	return result.ErrorOrNil()
-}
-
-func SignalHandler(log *logrus.Entry) chan struct{} {
-
-	stopCh := make(chan struct{})
-	ch := make(chan os.Signal, 2)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-
-	go func(log *logrus.Entry) {
-		<-ch
-		log.Infof("Connector received interupt. Shutting down...")
-		close(stopCh)
-		<-ch
-		log.Infof("Force Closed.")
-		os.Exit(1)
-	}(log)
-
-	return stopCh
 }

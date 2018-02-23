@@ -2,31 +2,86 @@
 package rpc
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
 	"net/rpc"
 	"time"
 
+	"github.com/cenkalti/backoff"
+
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 const (
-	serverName        = "Tarmak"
-	socketName        = "tarmak.sock"
-	onFailureWaitTime = 10 * time.Second
+	serverName = "Tarmak"
+	socketName = "tarmak.sock"
 )
 
 type tarmakRPC struct {
 	tarmak *tarmak.Tarmak
 }
 
+// Start starts an RPC server to serve requests from
+// the container
+func Start(t *tarmak.Tarmak) error {
+	t.Log().Infof("Starting %s RPC server", serverName)
+
+	stopCh := utils.BasicSignalHandler(t.Log())
+
+	ln, err := net.Listen("unix", socketName)
+	if err != nil {
+		return fmt.Errorf("unable to listen on socket %s: %s", socketName, err)
+	}
+
+	go func() {
+		<-stopCh
+		if err := ln.Close(); err != nil {
+			t.Log().Errorf("failed to close rpc server: %v", err)
+		}
+	}()
+
+	for {
+		select {
+		case <-stopCh:
+			return nil
+
+		default:
+			fd, err := ln.Accept()
+			if err != nil {
+				continue
+			}
+
+			go accept(fd, t)
+		}
+	}
+
+	return nil
+}
+
+func accept(conn net.Conn, tarmak *tarmak.Tarmak) {
+	tarmakRPC := tarmakRPC{tarmak: tarmak}
+
+	s := rpc.NewServer()
+	s.RegisterName(serverName, &tarmakRPC)
+
+	tarmak.Log().Debugf("Connection made.")
+
+	s.ServeConn(struct {
+		io.Reader
+		io.Writer
+		io.Closer
+	}{conn, conn, conn})
+}
+
 func (i *tarmakRPC) BastionInstanceStatus(args [2]string, reply *string) error {
 
-	fmt.Printf("BastionInstanceStatus called\n")
+	i.tarmak.Log().Debugf("BastionInstanceStatus called.")
 
 	//hostname := args[0]
 	//username := args[1]
@@ -38,23 +93,27 @@ func (i *tarmakRPC) BastionInstanceStatus(args [2]string, reply *string) error {
 		return fmt.Errorf("failed to retreive cluster: %s", err)
 	}
 
-	for {
-		tunnel := c.Environment().WingTunnel()
-		err = tunnel.Start()
+	b := i.newBackOff()
+	wingTunnel := func() error {
+		err := c.Environment().WingTunnel().Start()
 		if err != nil {
-			time.Sleep(onFailureWaitTime)
-			continue
+			return err
 		}
 
 		*reply = "up"
 		return nil
 	}
 
+	if err := backoff.Retry(wingTunnel, b); err != nil {
+		return fmt.Errorf("unable to retrieve bastion status: %v", err)
+	}
+
+	return nil
 }
 
 func (i *tarmakRPC) VaultClusterStatus(instances []string, reply *string) error {
 
-	fmt.Printf("VaultClusterStatus called\n")
+	i.tarmak.Log().Debugf("VaultClusterStatus called.")
 
 	t := i.tarmak
 
@@ -68,59 +127,65 @@ func (i *tarmakRPC) VaultClusterStatus(instances []string, reply *string) error 
 		return fmt.Errorf("unexpected type for vault stack: %T", vaultStack)
 	}
 
-	for {
+	b := i.newBackOff()
+	verifyVault := func() error {
 		err := vaultStackReal.VerifyVaultInitForFQDNs(instances)
 		if err != nil {
-			fmt.Printf("failed to connect to vault: %s", err)
-			time.Sleep(onFailureWaitTime)
-			continue
+			return err
 		}
 
 		*reply = "up"
 		return nil
 	}
 
+	if err := backoff.Retry(verifyVault, b); err != nil {
+		return fmt.Errorf("unable to verify vault cluster status: %v", err)
+	}
+
+	return nil
 }
 
-func (i *tarmakRPC) VaultInstanceRoleStatus(args [2]string, reply *string) error {
-	fmt.Printf("VaultInstanceRoleStatus called\n")
+func (i *tarmakRPC) VaultInstanceRoleStatus(args string, reply *string) error {
+	i.tarmak.Log().Debugf("VaultInstanceRoleStatus called.")
 
-	//vaultClusterName := args[0]
-	roleName := args[1]
+	b := i.newBackOff()
+	vaultRoleStatus := func() error {
+		for {
+			for _, clusterStack := range i.tarmak.Cluster().Stacks() {
+				if clusterStack.Name() == tarmakv1alpha1.StackNameKubernetes {
 
-	t := i.tarmak
-	clusterStacks := t.Cluster().Stacks()
+					// get real kubernetes stack
+					kubernetesStack, ok := clusterStack.(*stack.KubernetesStack)
+					if !ok {
+						return fmt.Errorf("unexpected type for kubernetes stack: %T", clusterStack)
+					}
 
-	for {
-		for _, clusterStack := range clusterStacks {
-			if clusterStack.Name() == tarmakv1alpha1.StackNameKubernetes {
+					// attempt to retrieve init tokens
+					err := kubernetesStack.EnsureVaultSetup()
+					if err != nil {
+						return fmt.Errorf("error ensuring vault setup: %s", err)
+					}
 
-				// get real kubernetes stack
-				kubernetesStack, ok := clusterStack.(*stack.KubernetesStack)
-				if !ok {
-					return fmt.Errorf("unexpected type for kubernetes stack: %T", clusterStack)
-				}
+					// test existence of init token for role
+					initTokens := kubernetesStack.InitTokens()
+					initToken, ok := initTokens[fmt.Sprintf("vault_init_token_%s", args)]
 
-				// attempt to retrieve init tokens
-				err := kubernetesStack.EnsureVaultSetup()
-				if err != nil {
-					return fmt.Errorf("error ensuring vault setup: %s", err)
-				}
-
-				// test existence of init token for role
-				initTokens := kubernetesStack.InitTokens()
-				initToken, ok := initTokens[fmt.Sprintf("vault_init_token_%s", roleName)]
-
-				if ok {
-					*reply = initToken.(string)
-					return nil
+					if ok {
+						*reply = initToken.(string)
+						return nil
+					}
 				}
 			}
+
+			return fmt.Errorf("failed to retrieve init token for role %s", args)
 		}
-		fmt.Printf("failed to retrieve init token for role %s", roleName)
-		time.Sleep(onFailureWaitTime)
-		continue
 	}
+
+	if err := backoff.Retry(vaultRoleStatus, b); err != nil {
+		return fmt.Errorf("failed to retrive vault instance role status: %v", err)
+	}
+
+	return nil
 }
 
 func (i *tarmakRPC) Handshake(args string, reply *string) error {
@@ -129,39 +194,10 @@ func (i *tarmakRPC) Handshake(args string, reply *string) error {
 	return nil
 }
 
-// Start starts an RPC server to serve requests from
-// the container
-func Start(t *tarmak.Tarmak) error {
+func (i *tarmakRPC) newBackOff() backoff.BackOffContext {
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.InitialInterval = time.Second
+	expBackoff.MaxElapsedTime = time.Minute
 
-	fmt.Printf("starting %s RPC server\n", serverName)
-	ln, err := net.Listen("unix", socketName)
-	if err != nil {
-		return fmt.Errorf("unable to listen on socket %s: %s", socketName, err)
-	}
-
-	for {
-		fd, err := ln.Accept()
-		if err != nil {
-			fmt.Printf("error accepting RPC request: %s", err)
-		}
-
-		go accept(fd, t)
-	}
-}
-
-func accept(conn net.Conn, tarmak *tarmak.Tarmak) {
-
-	tarmakRPC := tarmakRPC{tarmak: tarmak}
-
-	s := rpc.NewServer()
-	s.RegisterName(serverName, &tarmakRPC)
-
-	fmt.Printf("Connection made\n")
-
-	s.ServeConn(struct {
-		io.Reader
-		io.Writer
-		io.Closer
-	}{conn, conn, conn})
-
+	return backoff.WithContext(expBackoff, context.Background())
 }

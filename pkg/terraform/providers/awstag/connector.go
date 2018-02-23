@@ -71,7 +71,6 @@ func (c *ConnectorClient) ReadBytes() ([]byte, error) {
 	var buff []byte
 	b := make([]byte, 1)
 
-LOOP:
 	for {
 		_, err := c.client.Read(b)
 		if err != nil {
@@ -79,7 +78,7 @@ LOOP:
 		}
 
 		if b[0] == EOT {
-			break LOOP
+			break
 		}
 
 		buff = append(buff, b...)
