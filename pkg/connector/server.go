@@ -94,12 +94,13 @@ func (c *Connector) HandleConnection(conn net.Conn) ([]byte, error) {
 		// Reading may cause a hang, this will timeout the connection
 		ch := make(chan struct{})
 		go func() {
-			ticker := time.Tick(time.Second * 10)
+			ticker := time.NewTicker(time.Second * 10)
 
 			select {
 			case <-ch:
 				return
-			case <-ticker:
+			case <-ticker.C:
+				ticker.Stop()
 				conn.Close()
 			}
 		}()
