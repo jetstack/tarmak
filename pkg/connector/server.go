@@ -2,12 +2,14 @@
 package connector
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 )
 
 const (
 	providerSocket = "provider.sock"
+	ETX            = byte(3)
 	EOT            = byte(4)
 )
 
@@ -51,8 +53,24 @@ func (c *Connector) StartServer() {
 				c.log.Errorf("error handling connection: %v", err)
 				continue
 			}
+			c.log.Debugf("Received from provider: %s\n", bytes)
 
-			c.log.Debugf("Received from client: %s\n", bytes)
+			reply, err := c.ForwardProviderRequest(bytes)
+			if err != nil {
+				c.log.Errorf("error forwarding request to rpc server: %v", err)
+				continue
+			}
+			c.log.Debugf("Received from rpc server: %s\n", reply)
+
+			if err := c.SendProvider(conn, reply); err != nil {
+				c.log.Errorf("failed to forward response to provider: %v", err)
+				continue
+			}
+			c.log.Infof("Successfully handled provider request")
+
+			if err := conn.Close(); err != nil {
+				c.log.Errorf("failed to close connection to provider: %v", err)
+			}
 		}
 	}
 }
@@ -86,8 +104,45 @@ func (c *Connector) HandleConnection(conn net.Conn) ([]byte, error) {
 	return buff, nil
 }
 
-func (c *Connector) SendProvider(conn net.Conn, bytes []byte) error {
-	for _, b := range bytes {
+func (c *Connector) ForwardProviderRequest(b []byte) (reply string, err error) {
+	f, args, err := c.decodeMessage(b)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode message from provider: %v", err)
+	}
+
+	switch f {
+	case "BastionInstanseStatus":
+		reply, err = c.CallBastionInstanceStatus(args)
+		if err != nil {
+			return "", err
+		}
+
+	default:
+		return "", fmt.Errorf("RPC function call not supported: %s", f)
+	}
+
+	return reply, nil
+}
+
+func (c *Connector) decodeMessage(b []byte) (f string, args []string, err error) {
+	message := bytes.Split(b, []byte{ETX})
+
+	if len(message) < 1 {
+		return "", nil, fmt.Errorf("message malformed or does not contain a function: %s\n", string(b))
+	}
+
+	f = string(message[0])
+	if len(message) > 1 {
+		for _, a := range message[1:] {
+			args = append(args, string(a))
+		}
+	}
+
+	return f, args, nil
+}
+
+func (c *Connector) SendProvider(conn net.Conn, message string) error {
+	for _, b := range []byte(message) {
 		if _, err := conn.Write([]byte{b}); err != nil {
 			return fmt.Errorf("error sending byte to connection: %v", err)
 		}

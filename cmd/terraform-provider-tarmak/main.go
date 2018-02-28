@@ -4,10 +4,14 @@ package main
 import (
 	"github.com/hashicorp/terraform/plugin"
 
-	"github.com/jetstack/tarmak/pkg/terraform/providers/awstag"
+	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak"
 )
 
 func main() {
+	if err := tarmak.StartClient(); err != nil {
+		panic(err)
+	}
+
 	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: awstag.Provider})
+		ProviderFunc: tarmak.Provider})
 }

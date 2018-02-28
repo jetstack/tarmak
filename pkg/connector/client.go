@@ -41,15 +41,27 @@ func (c *Connector) NewClient() error {
 	return nil
 }
 
-func (c *Connector) CallInit() ([]byte, error) {
+func (c *Connector) CallInit() (reply string, err error) {
 	var args string
-	var reply string
 
 	if err := c.client.Call("Tarmak.Handshake", args, &reply); err != nil {
-		return nil, fmt.Errorf("failed to call handshake to tarmak rpc server: %v", err)
+		return "", fmt.Errorf("failed to call handshake to tarmak rpc server: %v", err)
 	}
 
-	return []byte(reply), nil
+	return reply, nil
+}
+
+func (c *Connector) CallBastionInstanceStatus(args []string) (reply string, err error) {
+
+	if len(args) != 2 {
+		return "", fmt.Errorf("expected 2 arguments. got=%d", len(args))
+	}
+
+	if err := c.client.Call("Tarmak.BastionInstanceStatus", args, &reply); err != nil {
+		return "", fmt.Errorf("failed to call BastionInstanceStatus to tarmak rpc server: %v", err)
+	}
+
+	return reply, nil
 }
 
 func (c *Connector) CloseClient() error {

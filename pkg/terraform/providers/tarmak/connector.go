@@ -1,5 +1,5 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-package awstag
+package tarmak
 
 import (
 	"bufio"
@@ -9,11 +9,6 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-)
-
-const (
-	providerSocket = "provider.sock"
-	EOT            = byte(4)
 )
 
 type ConnectorClient struct {
