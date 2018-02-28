@@ -8,12 +8,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const (
-	providerSocket = "provider.sock"
-	ETX            = byte(3)
-	EOT            = byte(4)
-)
-
 type BastionIntance struct {
 	name string
 
@@ -74,7 +68,7 @@ func resourceBastionInstanceCreateOrUpdate(d *schema.ResourceData, meta interfac
 	}
 	username := d.Get("username").(string)
 
-	b := buildTransmission(host, username)
+	b := client.BuildTransmittionMessage("BastionIntanceStatus", []string{host, username})
 
 	var resp []byte
 	for !bytes.Equal(resp, []byte("up")) {
@@ -105,15 +99,4 @@ func resourceBastionInstanceRead(d *schema.ResourceData, meta interface{}) error
 func resourceBastionInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	role := d.Get("role").(string)
 	return fmt.Errorf("not implemented: role=%s", role)
-}
-
-func buildTransmission(host, username string) []byte {
-	b := []byte("BastionIntanceStatus")
-
-	b = append(b, ETX)
-	b = append(b, []byte(host)...)
-	b = append(b, ETX)
-	b = append(b, []byte(username)...)
-	b = append(b, []byte{ETX, EOT}...)
-	return b
 }

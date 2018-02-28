@@ -117,6 +117,24 @@ func (c *Connector) ForwardProviderRequest(b []byte) (reply string, err error) {
 			return "", err
 		}
 
+	case "VaultClusterStatus":
+		reply, err = c.CallVaultClusterStatus(args)
+		if err != nil {
+			return "", err
+		}
+
+	case "VaultInstanceRoleStatus":
+		reply, err = c.CallVaultClusterStatus(args)
+		if err != nil {
+			return "", err
+		}
+
+	case "Handshake":
+		reply, err = c.CallHandshake()
+		if err != nil {
+			return "", err
+		}
+
 	default:
 		return "", fmt.Errorf("RPC function call not supported: %s", f)
 	}

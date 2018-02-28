@@ -17,7 +17,7 @@ func NewCommandStartConnector() *cobra.Command {
 			log := LogLevel(cmd)
 			connector := connector.NewConnector(log)
 
-			if err := connector.RunConnector(); err != nil {
+			if err := connector.StartConnector(); err != nil {
 				return fmt.Errorf("connector failed: %v", err)
 			}
 

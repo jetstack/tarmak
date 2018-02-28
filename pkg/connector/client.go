@@ -41,7 +41,7 @@ func (c *Connector) NewClient() error {
 	return nil
 }
 
-func (c *Connector) CallInit() (reply string, err error) {
+func (c *Connector) CallHandshake() (reply string, err error) {
 	var args string
 
 	if err := c.client.Call("Tarmak.Handshake", args, &reply); err != nil {
@@ -52,13 +52,32 @@ func (c *Connector) CallInit() (reply string, err error) {
 }
 
 func (c *Connector) CallBastionInstanceStatus(args []string) (reply string, err error) {
-
 	if len(args) != 2 {
-		return "", fmt.Errorf("expected 2 arguments. got=%d", len(args))
+		return "", fmt.Errorf("CallBastionInstanceStatus expects 2 arguments. got=%d", len(args))
 	}
 
 	if err := c.client.Call("Tarmak.BastionInstanceStatus", args, &reply); err != nil {
 		return "", fmt.Errorf("failed to call BastionInstanceStatus to tarmak rpc server: %v", err)
+	}
+
+	return reply, nil
+}
+
+func (c *Connector) CallVaultClusterStatus(args []string) (reply string, err error) {
+	if err := c.client.Call("Tarmak.VaultClusterStatus", args, &reply); err != nil {
+		return "", fmt.Errorf("failed to call VaultClusterStatus to tarmak rpc server: %v", err)
+	}
+
+	return reply, nil
+}
+
+func (c *Connector) CallVaultInstanceRoleStatus(args []string) (reply string, err error) {
+	if len(args) != 1 {
+		return "", fmt.Errorf("VaultInstanceRoleStatus expects 1 argument. got=%d", len(args))
+	}
+
+	if err := c.client.Call("Tarmak.VaultInstanceRoleStatus", args, &reply); err != nil {
+		return "", fmt.Errorf("failed to call VaultInstanceRoleStatus to tarmak rpc server: %v", err)
 	}
 
 	return reply, nil

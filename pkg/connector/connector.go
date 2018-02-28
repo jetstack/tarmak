@@ -37,7 +37,7 @@ func (c *Connector) InitiateConnection() error {
 		return err
 	}
 
-	reply, err := c.CallInit()
+	reply, err := c.CallHandshake()
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (c *Connector) InitiateConnection() error {
 	return c.SendProvider(conn, reply)
 }
 
-func (c *Connector) RunConnector() error {
+func (c *Connector) StartConnector() error {
 	var result *multierror.Error
 
 	if err := c.InitiateConnection(); err != nil {

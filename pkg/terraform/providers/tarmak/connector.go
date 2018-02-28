@@ -11,6 +11,12 @@ import (
 	"github.com/cenkalti/backoff"
 )
 
+const (
+	providerSocket = "provider.sock"
+	ETX            = byte(3)
+	EOT            = byte(4)
+)
+
 type ConnectorClient struct {
 	client net.Conn
 }
@@ -92,4 +98,17 @@ func (c *ConnectorClient) SendBytes(bytes []byte) error {
 	}
 
 	return nil
+}
+
+func (c *ConnectorClient) BuildTransmittionMessage(f string, args []string) []byte {
+	b := []byte(f)
+
+	for _, a := range args {
+		b = append(b, ETX)
+		b = append(b, []byte(a)...)
+	}
+
+	b = append(b, EOT)
+
+	return b
 }
