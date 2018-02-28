@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"time"
 )
 
 const (
@@ -89,10 +90,26 @@ func (c *Connector) HandleConnection(conn net.Conn) ([]byte, error) {
 	b := make([]byte, 1)
 
 	for {
+
+		// Reading may cause a hang, this will timeout the connection
+		ch := make(chan struct{})
+		go func() {
+			ticker := time.Tick(time.Second * 10)
+
+			select {
+			case <-ch:
+				return
+			case <-ticker:
+				conn.Close()
+			}
+		}()
+
 		_, err := conn.Read(b)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read byte from provider: %v", err)
 		}
+
+		close(ch)
 
 		if b[0] == EOT {
 			break
