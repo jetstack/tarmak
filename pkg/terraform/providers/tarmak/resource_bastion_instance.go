@@ -1,3 +1,4 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 package tarmak
 
 import (
@@ -68,7 +69,7 @@ func resourceBastionInstanceCreateOrUpdate(d *schema.ResourceData, meta interfac
 	}
 	username := d.Get("username").(string)
 
-	b := client.BuildTransmittionMessage("BastionIntanceStatus", []string{host, username})
+	b := client.BuildTransmissionMessage("BastionIntanceStatus", []string{host, username})
 
 	var resp []byte
 	for !bytes.Equal(resp, []byte("up")) {

@@ -100,7 +100,7 @@ func (c *ConnectorClient) SendBytes(bytes []byte) error {
 	return nil
 }
 
-func (c *ConnectorClient) BuildTransmittionMessage(f string, args []string) []byte {
+func (c *ConnectorClient) BuildTransmissionMessage(f string, args []string) []byte {
 	b := []byte(f)
 
 	for _, a := range args {

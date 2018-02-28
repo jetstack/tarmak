@@ -84,8 +84,7 @@ func (i *tarmakRPC) BastionInstanceStatus(args [2]string, reply *string) error {
 	//hostname := args[0]
 	//username := args[1]
 
-	t := i.tarmak
-	c, err := cluster.NewFromConfig(t.Environment(), t.Cluster().Config())
+	c, err := cluster.NewFromConfig(i.tarmak.Environment(), i.tarmak.Cluster().Config())
 	if err != nil {
 		*reply = "down"
 		return fmt.Errorf("failed to retreive cluster: %s", err)
@@ -113,12 +112,10 @@ func (i *tarmakRPC) VaultClusterStatus(instances []string, reply *string) error 
 
 	i.tarmak.Log().Debugf("VaultClusterStatus called.")
 
-	t := i.tarmak
-
-	vaultStack := t.Cluster().Environment().VaultStack()
+	vaultStack := i.tarmak.Cluster().Environment().VaultStack()
 
 	// load outputs from terraform
-	t.Cluster().Environment().Tarmak().Terraform().Output(vaultStack)
+	i.tarmak.Cluster().Environment().Tarmak().Terraform().Output(vaultStack)
 
 	vaultStackReal, ok := vaultStack.(*stack.VaultStack)
 	if !ok {
