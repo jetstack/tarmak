@@ -29,8 +29,13 @@ stdin
 init
 Golang
 refactoring
-kube
-ttl
+backends
+oneshot
 apiserver
+kube
 api
+ttl
+hostname
+configmap
 kubelet
+rolename
