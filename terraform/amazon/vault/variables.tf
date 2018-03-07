@@ -40,7 +40,7 @@ variable "consul_version" {
 }
 
 variable "vault_version" {
-  default = "0.9.1"
+  default = "0.9.5"
 }
 
 variable "vault_root_size" {
