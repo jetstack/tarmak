@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 |-------------|-------------------:|---------:|
 | Packer      |                    | `1.0.2`  |
 | Terraform   |                    | `0.11.2` |
-| Consul      |                    | `1.0.2`  |
+| Consul      |                    | `1.0.6`  |
 | Vault       |                    | `0.9.1`  |
 | Kubernetes  | `>= 1.6 && < 1.10` | `1.8.8`  |
 | Calico      |                    | `2.6.6`  |

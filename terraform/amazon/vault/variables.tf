@@ -36,7 +36,7 @@ variable "environment" {
 }
 
 variable "consul_version" {
-  default = "1.0.2"
+  default = "1.0.6"
 }
 
 variable "vault_version" {
