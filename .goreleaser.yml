@@ -19,18 +19,8 @@ builds:
     goarch:
       - amd64
     flags: -tags netgo
-  - main: ./cmd/terraform-provider-awstag
-    binary: terraform-provider-awstag
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-    goarch:
-      - amd64
-    flags: -tags netgo
-  - main: ./cmd/tarmak-connector
-    binary: tarmak-connector
+  - main: ./cmd/tarmak-container
+    binary: tarmak-container
     env:
       - CGO_ENABLED=0
     goos:

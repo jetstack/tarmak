@@ -18,7 +18,7 @@ var Version struct {
 var AppName string = "tarmak"
 
 func init() {
-	RootCmd.AddCommand(versionCmd)
+	subCommands = append(subCommands, versionCmd)
 }
 
 var versionCmd = &cobra.Command{

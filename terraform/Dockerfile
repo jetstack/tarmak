@@ -26,11 +26,14 @@ WORKDIR /terraform
 
 ENV TARMAK_VERSION 0.3.0
 RUN airworthy download \
-  https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/terraform-provider-awstag_${TARMAK_VERSION}_linux_amd64 \
+  https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak-container_${TARMAK_VERSION}_linux_amd64 \
   --sha256sums https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak_${TARMAK_VERSION}_checksums.txt \
   --signature-armored https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak_${TARMAK_VERSION}_checksums.txt.asc \
   chmod +x terraform-provider-awstag && \
-  mv terraform-provider-awstag_${TARMAK_VERSION}_linux_amd64 terraform-provider-awstag
+  mv terraform-provider-awstag_${TARMAK_VERSION}_linux_amd64 /usr/local/bin/tarmak-container && \
+  ln -s /usr/local/bin/tarmak-container terraform-provider-awstag && \
+  ln -s /usr/local/bin/tarmak-container terraform-provider-tarmak && \
+  ln -s tarmak-container /usr/local/bin/tarmak-connector
 
 ADD providers.tf /terraform
 RUN terraform init
