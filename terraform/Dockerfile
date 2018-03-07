@@ -11,7 +11,7 @@ RUN curl -sLo /usr/local/bin/airworthy https://github.com/jetstack/airworthy/rel
   chmod 755 /usr/local/bin/airworthy
 
 # install terraform
-ENV TERRAFORM_VERSION 0.11.2
+ENV TERRAFORM_VERSION 0.11.3
 RUN airworthy download \
   https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
   --sha256sums https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS \
