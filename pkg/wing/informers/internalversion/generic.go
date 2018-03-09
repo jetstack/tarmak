@@ -37,7 +37,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=Wing, Version=InternalVersion
+	// Group=wing.tarmak.io, Version=internalVersion
 	case wing.SchemeGroupVersion.WithResource("instances"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().InternalVersion().Instances().Informer()}, nil
 

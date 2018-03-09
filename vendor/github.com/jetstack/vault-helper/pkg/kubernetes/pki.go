@@ -117,6 +117,7 @@ func (p *PKI) generateCA() error {
 	data := map[string]interface{}{
 		"common_name": description,
 		"ttl":         p.getMaxLeaseTTL(),
+		"exclude_cn_from_sans": true,
 	}
 
 	_, err := p.kubernetes.vaultClient.Logical().Write(path, data)
