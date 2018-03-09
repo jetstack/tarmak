@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"os/exec"
-	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -16,14 +15,15 @@ import (
 )
 
 type Tunnel struct {
-	cmd       *exec.Cmd
-	running   chan struct{}
 	localPort int
 	log       *logrus.Entry
 	stdin     io.WriteCloser
 
 	retryCount int
 	retryWait  time.Duration
+
+	forwardSpec string
+	sshCommand  []string
 }
 
 var _ interfaces.Tunnel = &Tunnel{}
@@ -32,15 +32,12 @@ var _ interfaces.Tunnel = &Tunnel{}
 func (s *SSH) Tunnel(hostname string, destination string, destinationPort int) interfaces.Tunnel {
 	t := &Tunnel{
 		localPort:  utils.UnusedPort(),
-		running:    make(chan struct{}, 0),
 		log:        s.log.WithField("destination", destination),
 		retryCount: 30,
 		retryWait:  500 * time.Millisecond,
+		sshCommand: s.args(),
 	}
-
-	args := append(s.args(), "-N", fmt.Sprintf("-L%s:%d:%s:%d", t.BindAddress(), t.localPort, destination, destinationPort), "bastion")
-
-	t.cmd = exec.Command(args[0], args[1:len(args)]...)
+	t.forwardSpec = fmt.Sprintf("-L%s:%d:%s:%d", t.BindAddress(), t.localPort, destination, destinationPort)
 
 	return t
 }
@@ -49,49 +46,24 @@ func (s *SSH) Tunnel(hostname string, destination string, destinationPort int) i
 func (t *Tunnel) Start() error {
 	var err error
 
-	t.stdin, err = t.cmd.StdinPipe()
+	args := append(t.sshCommand, "-O", "forward", t.forwardSpec, "bastion")
+	cmd := exec.Command(args[0], args[1:len(args)]...)
+
+	t.log.Debugf("start tunnel cmd=%s", cmd.Args)
+	err = cmd.Start()
 	if err != nil {
 		return err
 	}
 
-	t.log.Debugf("start tunnel cmd=%s", t.cmd.Args)
-
-	err = t.cmd.Start()
+	// check for errors
+	err = cmd.Wait()
 	if err != nil {
-		return err
+		t.log.Warn("starting ssh tunnel failed with error: ", err)
 	}
-
-	// watch for a terminated SSH
-	go func() {
-		err := t.cmd.Wait()
-		if err != nil {
-			perr, ok := err.(*exec.ExitError)
-			if ok {
-				if status, ok := perr.Sys().(syscall.WaitStatus); ok && status.ExitStatus() == 255 {
-					err = nil
-				}
-			}
-		}
-
-		if err != nil {
-			t.log.Warn("ssh tunnel stopped with error: ", err)
-		} else {
-			t.log.Debug("tunnel stopped")
-		}
-		close(t.running)
-	}()
 
 	// wait for TCP socket to be reachable
 	tries := t.retryCount
 	for {
-		select {
-		case _, open := <-t.running:
-			if !open {
-				return fmt.Errorf("ssh is no longer running")
-			}
-		default:
-		}
-
 		if conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", t.Port()), t.retryWait); err != nil {
 			t.log.Debug("error connecting to tunnel: ", err)
 		} else {
@@ -110,12 +82,20 @@ func (t *Tunnel) Start() error {
 }
 
 func (t *Tunnel) Stop() error {
-	if err := t.cmd.Process.Signal(syscall.SIGTERM); err != nil {
-		t.log.Warnf("error sending signal to process failed: %s", err)
-	}
-	t.stdin.Close()
+	args := append(t.sshCommand, "-O", "cancel", t.forwardSpec, "bastion")
+	cmd := exec.Command(args[0], args[1:len(args)]...)
 
-	<-t.running
+	t.log.Debugf("stop tunnel cmd=%s", cmd.Args)
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	// check for errors
+	err = cmd.Wait()
+	if err != nil {
+		t.log.Warn("stopping ssh tunnel failed with error: ", err)
+	}
 
 	return nil
 }
