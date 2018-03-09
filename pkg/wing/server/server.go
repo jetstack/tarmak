@@ -34,7 +34,7 @@ var defaultAdmissionControllers = []string{instaceinittime.PluginName}
 
 func NewWingServerOptions(out, errOut io.Writer) *WingServerOptions {
 	o := &WingServerOptions{
-		RecommendedOptions: genericoptions.NewRecommendedOptions(defaultEtcdPathPrefix, apiserver.Scheme, apiserver.Codecs.LegacyCodec(v1alpha1.SchemeGroupVersion)),
+		RecommendedOptions: genericoptions.NewRecommendedOptions(defaultEtcdPathPrefix, apiserver.Codecs.LegacyCodec(v1alpha1.SchemeGroupVersion)),
 		Admission:          genericoptions.NewAdmissionOptions(),
 
 		StdOut: out,
@@ -110,7 +110,7 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 		return nil, err
 	}
 
-	if err := o.Admission.ApplyTo(&serverConfig.Config, serverConfig.SharedInformerFactory, admissionInitializer); err != nil {
+	if err := o.Admission.ApplyTo(&serverConfig.Config, serverConfig.SharedInformerFactory, serverConfig.LoopbackClientConfig, apiserver.Scheme, admissionInitializer); err != nil {
 		return nil, err
 	}
 

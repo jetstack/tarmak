@@ -37,7 +37,7 @@ func (self *wantInternalWingInformerFactory) SetInternalWingInformerFactory(sf i
 }
 func (self *wantInternalWingInformerFactory) Admit(a admission.Attributes) error { return nil }
 func (self *wantInternalWingInformerFactory) Handles(o admission.Operation) bool { return false }
-func (self *wantInternalWingInformerFactory) Validate() error                    { return nil }
+func (self *wantInternalWingInformerFactory) ValidateInitialization() error      { return nil }
 
 var _ admission.Interface = &wantInternalWingInformerFactory{}
 var _ winginitializer.WantsInternalWingInformerFactory = &wantInternalWingInformerFactory{}

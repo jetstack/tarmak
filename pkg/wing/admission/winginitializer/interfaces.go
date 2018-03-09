@@ -10,5 +10,5 @@ import (
 // WantsInternalWingInformerFactory defines a function which sets InformerFactory for admission plugins that need it
 type WantsInternalWingInformerFactory interface {
 	SetInternalWingInformerFactory(informers.SharedInformerFactory)
-	admission.Validator
+	admission.InitializationValidator
 }
