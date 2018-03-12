@@ -71,6 +71,12 @@ func (a *App) ImageID() (str string, err error) {
 		Name:         a.imageName,
 		OutputStream: stdoutWriter,
 		ContextDir:   contextDir,
+		BuildArgs: []docker.BuildArg{
+			docker.BuildArg{
+				Name:  "tarmak_version",
+				Value: a.tarmak.Version(),
+			},
+		},
 	})
 	stdoutReader.Close()
 	stdoutWriter.Close()
