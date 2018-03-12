@@ -338,6 +338,11 @@ func (tc *TerraformContainer) prepare() error {
 		return fmt.Errorf("error starting container: %s", err)
 	}
 
+	err = tc.ListenRPC(tc.t.tarmak, tc.stack)
+	if err != nil {
+		return fmt.Errorf("error starting container: %s", err)
+	}
+
 	return nil
 }
 
