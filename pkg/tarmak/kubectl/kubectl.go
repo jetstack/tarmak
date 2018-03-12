@@ -140,7 +140,7 @@ func (k *Kubectl) ensureConfig() error {
 	c := api.NewConfig()
 	configPath := k.ConfigPath()
 
-	// cluster name in tamrak is cluster name in kubeconfig
+	// cluster name in tarmak is cluster name in kubeconfig
 	key := k.tarmak.Cluster().ClusterName()
 
 	// load an existing config
@@ -206,8 +206,10 @@ func (k *Kubectl) ensureConfig() error {
 			if err != nil {
 				return err
 			}
-			cluster.Server = fmt.Sprintf("https://localhost:%d", tunnel.Port())
+			cluster.Server = fmt.Sprintf("https://%s:%d", tunnel.BindAddress(), tunnel.Port())
 		}
+
+		k.log.Debugf("trying to connect to %+v", cluster.Server)
 
 		version, err := k.verifyAPIVersion(*c)
 		if err == nil {
@@ -219,7 +221,7 @@ func (k *Kubectl) ensureConfig() error {
 				return err
 			}
 		} else {
-			k.log.Debugf("error connecting to cluster: %s", err)
+			k.log.Warnf("error connecting to cluster: %s", err)
 		}
 
 		retries -= 1
