@@ -12,6 +12,7 @@ var clusterSshCmd = &cobra.Command{
 	Short: "Log into an instance with SSH",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
+		defer t.Cleanup()
 		t.SSHPassThrough(args)
 	},
 }

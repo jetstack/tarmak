@@ -17,6 +17,7 @@ var clusterImagesListCmd = &cobra.Command{
 	Short: "list images",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
+		defer t.Cleanup()
 
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 8, 0, '\t', 0)
