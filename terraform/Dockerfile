@@ -24,13 +24,20 @@ RUN airworthy download \
 # install terraform plugins
 WORKDIR /terraform
 
-ENV TARMAK_VERSION 0.3.0
-RUN airworthy download \
+ARG tarmak_version=0.3.0
+ENV TARMAK_VERSION=${tarmak_version}
+# this copies in the dev version of tarmak-container in a dev build
+ADD tarmak-container_linux_amd64 /usr/local/bin/tarmak-container
+
+# download tarmak-container if not using dev version
+RUN [ "${TARMAK_VERSION}" = "dev" ] || { airworthy download \
   https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak-container_${TARMAK_VERSION}_linux_amd64 \
   --sha256sums https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak_${TARMAK_VERSION}_checksums.txt \
-  --signature-armored https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak_${TARMAK_VERSION}_checksums.txt.asc \
-  chmod +x terraform-provider-awstag && \
-  mv terraform-provider-awstag_${TARMAK_VERSION}_linux_amd64 /usr/local/bin/tarmak-container && \
+  --signature-armored https://github.com/jetstack/tarmak/releases/download/${TARMAK_VERSION}/tarmak_${TARMAK_VERSION}_checksums.txt.asc && \
+  mv tarmak-container_${TARMAK_VERSION}_linux_amd64 /usr/local/bin/tarmak-container ; }
+
+# symlink different bultin subcommands
+RUN chmod +x /usr/local/bin/tarmak-container && \
   ln -s /usr/local/bin/tarmak-container terraform-provider-awstag && \
   ln -s /usr/local/bin/tarmak-container terraform-provider-tarmak && \
   ln -s tarmak-container /usr/local/bin/tarmak-connector

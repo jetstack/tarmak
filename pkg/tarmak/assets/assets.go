@@ -1,6 +1,8 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-package assets
 
-// This package contains generated assets for
+// This should only be used when not in devmode
+// +build !devmode
+
+package assets
 
 //go:generate go-bindata -prefix ../../../ -pkg $GOPACKAGE -o assets_bindata.go ../../../terraform/... ../../../puppet/... ../../../packer/...

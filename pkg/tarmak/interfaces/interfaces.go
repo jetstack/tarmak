@@ -134,6 +134,7 @@ type Tarmak interface {
 	Puppet() Puppet
 	Config() Config
 	SSH() SSH
+	Version() string
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
 	KeepContainers() bool
