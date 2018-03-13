@@ -145,5 +145,43 @@ items:
   - apiVersion: rbac.authorization.k8s.io
     kind: User
     name: system:kube-proxy
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: default:restricted
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: psp:restricted
+  subjects:
+  - kind: Group
+    name: system:authenticated
+    apiGroup: rbac.authorization.k8s.io
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: default:privileged
+    namespace: kube-system
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: psp:privileged
+  subjects:
+  - kind: Group
+    name: system:serviceaccounts:kube-system
+    apiGroup: rbac.authorization.k8s.io
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: default:privileged
+    namespace: monitoring
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: psp:privileged
+  subjects:
+  - kind: Group
+    name: system:serviceaccounts:monitoring
+    apiGroup: rbac.authorization.k8s.io
 kind: List
 metadata: {}
