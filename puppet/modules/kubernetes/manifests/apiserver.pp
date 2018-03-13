@@ -41,30 +41,65 @@ class kubernetes::apiserver(
   # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
   if $admission_control == undef {
     if versioncmp($::kubernetes::version, '1.8.0') >= 0 {
-      $_admission_control =  [
-        'Initializers',
-        'NamespaceLifecycle',
-        'LimitRanger',
-        'ServiceAccount',
-        'DefaultStorageClass',
-        'ResourceQuota',
-        'DefaultTolerationSeconds',
-        'NodeRestriction'
-      ]
+      if $::kubernetes::_pod_security_policy {
+        $_admission_control =  [
+          'Initializers',
+          'NamespaceLifecycle',
+          'LimitRanger',
+          'ServiceAccount',
+          'DefaultStorageClass',
+          'ResourceQuota',
+          'DefaultTolerationSeconds',
+          'NodeRestriction',
+          'PodSecurityPolicy'
+        ]
+      } else {
+        $_admission_control =  [
+          'Initializers',
+          'NamespaceLifecycle',
+          'LimitRanger',
+          'ServiceAccount',
+          'DefaultStorageClass',
+          'ResourceQuota',
+          'DefaultTolerationSeconds',
+          'NodeRestriction',
+        ]
+      }
     } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
-      $_admission_control =  [
-        'NamespaceLifecycle',
-        'LimitRanger',
-        'ServiceAccount',
-        'PersistentVolumeLabel',
-        'DefaultStorageClass',
-        'ResourceQuota',
-        'DefaultTolerationSeconds'
-      ]
+      if $::kubernetes::_pod_security_policy {
+        $_admission_control =  [
+          'NamespaceLifecycle',
+          'LimitRanger',
+          'ServiceAccount',
+          'PersistentVolumeLabel',
+          'DefaultStorageClass',
+          'ResourceQuota',
+          'DefaultTolerationSeconds',
+          'PodSecurityPolicy'
+        ]
+      } else {
+        $_admission_control =  [
+          'NamespaceLifecycle',
+          'LimitRanger',
+          'ServiceAccount',
+          'PersistentVolumeLabel',
+          'DefaultStorageClass',
+          'ResourceQuota',
+          'DefaultTolerationSeconds'
+        ]
+      }
     } elsif versioncmp($::kubernetes::version, '1.4.0') >= 0 {
-      $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota']
+      if $::kubernetes::_pod_security_policy {
+        $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota', 'PodSecurityPolicy']
+      } else {
+        $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota']
+      }
     } else {
-      $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'ResourceQuota']
+      if $::kubernetes::_pod_security_policy {
+        $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'ResourceQuota', 'PodSecurityPolicy']
+      } else {
+        $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'ResourceQuota']
+      }
     }
   } else {
     $_admission_control = $admission_control
