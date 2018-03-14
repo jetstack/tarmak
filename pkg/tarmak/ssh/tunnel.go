@@ -58,7 +58,7 @@ func (t *Tunnel) Start() error {
 	// check for errors
 	err = cmd.Wait()
 	if err != nil {
-		t.log.Warn("starting ssh tunnel failed with error: ", err)
+		return fmt.Errorf("error starting SSH tunnel via bastion: %s", err)
 	}
 
 	// wait for TCP socket to be reachable

@@ -136,7 +136,7 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	return nil
 }
 
-func (k *Kubectl) ensureConfig() error {
+func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
 	c := api.NewConfig()
 	configPath := k.ConfigPath()
 
@@ -147,7 +147,7 @@ func (k *Kubectl) ensureConfig() error {
 	if _, err := os.Stat(configPath); err == nil {
 		conf, err := clientcmd.LoadFromFile(configPath)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		c = conf
 	}
@@ -182,18 +182,13 @@ func (k *Kubectl) ensureConfig() error {
 	// check if certificates are set
 	if len(authInfo.ClientCertificateData) == 0 || len(authInfo.ClientKeyData) == 0 || len(cluster.CertificateAuthorityData) == 0 {
 		if err := k.requestNewAdminCert(cluster, authInfo); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	retries := 5
 	firstRun := true
 	var tunnel interfaces.Tunnel
-	defer func() {
-		if tunnel != nil {
-			tunnel.Stop()
-		}
-	}()
 
 	for {
 
@@ -204,7 +199,7 @@ func (k *Kubectl) ensureConfig() error {
 			tunnel = k.tarmak.Cluster().APITunnel()
 			err := tunnel.Start()
 			if err != nil {
-				return err
+				return tunnel, err
 			}
 			cluster.Server = fmt.Sprintf("https://%s:%d", tunnel.BindAddress(), tunnel.Port())
 		}
@@ -218,7 +213,7 @@ func (k *Kubectl) ensureConfig() error {
 		} else if strings.Contains(err.Error(), "certificate signed by unknown authority") {
 			// TODO: this not really clean, if CA mismatched request new certificate
 			if err := k.requestNewAdminCert(cluster, authInfo); err != nil {
-				return err
+				return tunnel, err
 			}
 		} else {
 			k.log.Warnf("error connecting to cluster: %s", err)
@@ -227,19 +222,19 @@ func (k *Kubectl) ensureConfig() error {
 		retries -= 1
 		firstRun = false
 		if retries == 0 {
-			return errors.New("unable to connect to kubernetes after 5 tries")
+			return tunnel, errors.New("unable to connect to kubernetes after 5 tries")
 		}
 	}
 
 	if err := utils.EnsureDirectory(filepath.Dir(configPath), 0700); err != nil {
-		return err
+		return tunnel, err
 	}
 
 	if err := clientcmd.WriteToFile(*c, configPath); err != nil {
-		return err
+		return tunnel, err
 	}
 
-	return nil
+	return tunnel, nil
 
 }
 
@@ -265,7 +260,11 @@ func (k *Kubectl) verifyAPIVersion(c api.Config) (version string, err error) {
 }
 
 func (k *Kubectl) Kubectl(args []string) error {
-	if err := k.ensureConfig(); err != nil {
+	tunnel, err := k.ensureWorkingKubeconfig()
+	if err != nil {
+		if tunnel != nil {
+			tunnel.Stop()
+		}
 		return err
 	}
 
@@ -277,7 +276,7 @@ func (k *Kubectl) Kubectl(args []string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		return err
 	}
