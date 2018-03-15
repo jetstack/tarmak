@@ -16,6 +16,7 @@ var clusterDebugPuppetBuildTarCmd = &cobra.Command{
 	Short: "Build a puppet.tar.gz in the current working directory",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
+		defer t.Cleanup()
 
 		path := "puppet.tar.gz"
 

@@ -15,6 +15,7 @@ var environmentListCmd = &cobra.Command{
 	Short: "Print a list of environments",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
+		defer t.Cleanup()
 		varMaps := make([]map[string]string, 0)
 		for _, env := range t.Environments() {
 			varMaps = append(varMaps, env.Parameters())

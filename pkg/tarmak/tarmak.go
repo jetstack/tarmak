@@ -252,6 +252,16 @@ func (t *Tarmak) Validate() error {
 	return result
 }
 
+func (t *Tarmak) Cleanup() {
+	// clean up assets directory
+	if t.rootPath != nil {
+		if err := os.RemoveAll(*t.rootPath); err != nil {
+			t.log.Warnf("error cleaning up assets directory: %s", err)
+		}
+		t.rootPath = nil
+	}
+}
+
 func (t *Tarmak) Variables() map[string]interface{} {
 	output := map[string]interface{}{}
 	output["contact"] = t.config.Contact()
