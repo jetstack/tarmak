@@ -68,6 +68,7 @@ type ClusterKubernetes struct {
 	Tiller            *ClusterKubernetesTiller            `json:"tiller,omitempty"`
 	Dashboard         *ClusterKubernetesDashboard         `json:"dashboard,omitempty"`
 	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
+	PodSecurityPolicy *ClusterPodSecurityPolicy           `json:"podSecurityPolicy,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
@@ -129,6 +130,10 @@ type ClusterKubernetesAPIServerOIDC struct {
 	// provided, username claims other than 'email' are prefixed by the issuer
 	// URL to avoid clashes. To skip any prefixing, provide the value '-'.
 	UsernamePrefix string `json:"usernamePrefix,omitempty" hiera:"kubernetes::apiserver::oidc_username_prefix"`
+}
+
+type ClusterPodSecurityPolicy struct {
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
