@@ -69,10 +69,17 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 		}
 	}
 
-	// wait for convergance in every mode
-	err := t.Cluster().WaitForConvergance()
-	if err != nil {
-		return err
+	// only check converged against wing if tools is deployed
+	for _, stack := range t.flags.Cluster.Apply.InfrastructureStacks {
+		if stack == tarmakv1alpha1.StackNameTools {
+			// wait for convergance in every mode
+			err := t.Cluster().WaitForConvergance()
+			if err != nil {
+				return err
+			}
+
+			break
+		}
 	}
 
 	return nil
