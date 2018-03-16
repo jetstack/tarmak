@@ -10,6 +10,7 @@ class kubernetes::master (
   include ::kubernetes::dns
   include ::kubernetes::storage_classes
   include ::kubernetes::kubectl
+  include ::kubernetes::pod_security_policy
   if ! $disable_kubelet {
     class{'kubernetes::kubelet':
       role => 'master',
