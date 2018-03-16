@@ -46,8 +46,24 @@ func (s *SSH) Tunnel(hostname string, destination string, destinationPort int) i
 func (t *Tunnel) Start() error {
 	var err error
 
-	args := append(t.sshCommand, "-O", "forward", t.forwardSpec, "bastion")
+	// ensure there is connectivity to the bastion
+	args := append(t.sshCommand, "-N", "bastion", "/bin/true")
 	cmd := exec.Command(args[0], args[1:len(args)]...)
+
+	t.log.Debugf("check SSH connection to bastion cmd=%s", cmd.Args)
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	// check for errors
+	err = cmd.Wait()
+	if err != nil {
+		return fmt.Errorf("error checking SSH connecting to bastion: %s", err)
+	}
+
+	args = append(t.sshCommand, "-O", "forward", t.forwardSpec, "bastion")
+	cmd = exec.Command(args[0], args[1:len(args)]...)
 
 	t.log.Debugf("start tunnel cmd=%s", cmd.Args)
 	err = cmd.Start()
@@ -58,7 +74,7 @@ func (t *Tunnel) Start() error {
 	// check for errors
 	err = cmd.Wait()
 	if err != nil {
-		t.log.Warn("starting ssh tunnel failed with error: ", err)
+		return fmt.Errorf("error starting SSH tunnel via bastion: %s", err)
 	}
 
 	// wait for TCP socket to be reachable
