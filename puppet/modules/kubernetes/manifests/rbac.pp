@@ -3,7 +3,7 @@ class kubernetes::rbac{
   require ::kubernetes
 
   $authorization_mode = $kubernetes::_authorization_mode
-  if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') < 0 {
+  if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') >= 0 {
     kubernetes::apply{'puppernetes-rbac':
       manifests => [
         template('kubernetes/rbac-namespace-kube-public.yaml.erb'),
