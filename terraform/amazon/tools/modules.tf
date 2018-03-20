@@ -60,14 +60,8 @@ module "bastion" {
   private_zone_id = "${module.network.private_zone_id[0]}"
 }
 
-/*data "tarmak_bastion_instance" "bastion" {
-  hostname = "bastion"
-  username = "centos"
-  instance_id = "${module.bastion.bastion_instance_id}"
-}*/
-
-/*module "vault" {
-  source = "../modules/vault"
+module "vault" {
+  source = "modules/vault"
 
   name = "${var.name}"
   stack = "${var.stack}"
@@ -96,5 +90,6 @@ module "bastion" {
   private_subnets = "${module.network.private_subnets}"
   availability_zones = "${module.network.availability_zones}"
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
-  vpc_id = "${module.network.vpc_id}"  
-}*/
+  vpc_id = "${module.network.vpc_id}" 
+  bastion_instance_id = "${module.bastion.bastion_instance_id}"
+}

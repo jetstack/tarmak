@@ -72,6 +72,8 @@ variable "bastion_security_group_id" {}
 # data.terraform_remote_state.network.vpc_id
 variable "vpc_id" {}
 
+variable "bastion_instance_id" {}
+
 data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }
