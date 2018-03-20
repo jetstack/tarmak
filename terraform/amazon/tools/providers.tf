@@ -1,6 +1,6 @@
-/*provider "tarmak" {
+provider "tarmak" {
   socket_path = "/tmp/tarmak-connector.sock"
-}*/
+}
 
 provider "template" {
   version = "~> 1.0"

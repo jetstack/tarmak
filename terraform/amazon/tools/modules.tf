@@ -60,13 +60,11 @@ module "bastion" {
   private_zone_id = "${module.network.private_zone_id[0]}"
 }
 
-/*
-data "tarmak_bastion_instance" "bastion" {
+/*data "tarmak_bastion_instance" "bastion" {
   hostname = "bastion"
   username = "centos"
   instance_id = "${module.bastion.bastion_instance_id}"
-}
-*/
+}*/
 
 /*module "vault" {
   source = "../modules/vault"
