@@ -54,3 +54,6 @@ variable "private_zone" {
 variable "state_cluster_name" {
   default = "hub"
 }
+
+# data.terraform_remote_state.vpc_peer_stack.private_zone_id
+variable "private_zone_id" {}

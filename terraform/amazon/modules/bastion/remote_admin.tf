@@ -1,6 +1,7 @@
+# TODO: move all admin resources into separate module
 resource "aws_security_group" "remote_admin" {
   name        = "${data.template_file.stack_name.rendered}-remote_admin"
-  vpc_id      = "${data.terraform_remote_state.network.vpc_id}"
+  vpc_id      = "${var.vpc_id}"
   description = "Allow remote admin access to nodes for ${data.template_file.stack_name.rendered}"
 
   tags {
@@ -27,8 +28,4 @@ resource "aws_security_group_rule" "remote_admin_ingress_allow_ssh_all" {
   to_port                  = 22
   security_group_id        = "${aws_security_group.remote_admin.id}"
   source_security_group_id = "${aws_security_group.bastion.id}"
-}
-
-output "remote_admin_security_group_id" {
-  value = "${aws_security_group.remote_admin.id}"
 }
