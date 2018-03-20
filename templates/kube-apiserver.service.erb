@@ -88,6 +88,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if @_runtime_config != [] -%>
   "--runtime-config=<%= @_runtime_config.join(',') %>" \
 <% end -%>
+<% if scope['kubernetes::apiserver::ca_file'] -%>
+  "--kubelet-certificate-authority=<%= scope['kubernetes::apiserver::ca_file'] %>" \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure
