@@ -3,12 +3,12 @@ data "template_file" "vault" {
   count    = "${var.instance_count}"
 
   vars {
-    fqdn           = "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zone.0}"
+    fqdn           = "vault-${count.index + 1}.${var.private_zone}"
     environment    = "${var.environment}"
     region         = "${var.region}"
     instance_count = "${var.instance_count}"
     volume_id      = "${element(aws_ebs_volume.vault.*.id, count.index)}"
-    private_ip     = "${cidrhost(element(data.terraform_remote_state.network.private_subnets, count.index % length(data.terraform_remote_state.network.availability_zones)),(10 + (count.index/length(data.terraform_remote_state.network.availability_zones))))}"
+    private_ip     = "${cidrhost(element(var.private_subnets, count.index % length(var.availability_zones)),(10 + (count.index/length(var.availability_zones))))}"
 
     consul_version      = "${var.consul_version}"
     consul_master_token = "${random_id.consul_master_token.hex}"
@@ -17,14 +17,14 @@ data "template_file" "vault" {
     consul_encrypt = "${replace(replace(random_id.consul_encrypt.b64,"-","+"),"_","/")}=="
 
     vault_version       = "${var.vault_version}"
-    vault_tls_cert_path = "s3://${data.terraform_remote_state.state.secrets_bucket.0}/${element(aws_s3_bucket_object.node-certs.*.key, count.index)}"
-    vault_tls_key_path  = "s3://${data.terraform_remote_state.state.secrets_bucket.0}/${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
-    vault_tls_ca_path   = "s3://${data.terraform_remote_state.state.secrets_bucket.0}/${aws_s3_bucket_object.ca-cert.key}"
+    vault_tls_cert_path = "s3://${var.secrets_bucket}/${element(aws_s3_bucket_object.node-certs.*.key, count.index)}"
+    vault_tls_key_path  = "s3://${var.secrets_bucket}/${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
+    vault_tls_ca_path   = "s3://${var.secrets_bucket}/${aws_s3_bucket_object.ca-cert.key}"
 
-    vault_unsealer_kms_key_id     = "${data.terraform_remote_state.state.secrets_kms_arn.0}"
+    vault_unsealer_kms_key_id     = "${var.secrets_kms_arn}"
     vault_unsealer_ssm_key_prefix = "${data.template_file.vault_unseal_key_name.rendered}"
 
-    backup_bucket_prefix = "${data.terraform_remote_state.state.backups_bucket.0}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
+    backup_bucket_prefix = "${var.backups_bucket}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
 
     # run backup once per instance spread throughout the day
     backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.instance_count))}:00:00"
@@ -53,11 +53,11 @@ resource "aws_instance" "vault" {
   ami                  = "${var.vault_ami}"
   instance_type        = "${var.vault_instance_type}"
   key_name             = "${var.key_name}"
-  subnet_id            = "${element(data.terraform_remote_state.network.private_subnet_ids, count.index % length(data.terraform_remote_state.network.availability_zones))}"
+  subnet_id            = "${element(var.private_subnet_ids, count.index % length(var.availability_zones))}"
   count                = "${var.instance_count}"
   user_data            = "${element(data.template_file.vault.*.rendered, count.index)}"
   iam_instance_profile = "${element(aws_iam_instance_profile.vault.*.name, count.index)}"
-  private_ip           = "${cidrhost(element(data.terraform_remote_state.network.private_subnets, count.index % length(data.terraform_remote_state.network.availability_zones)),(10 + (count.index/length(data.terraform_remote_state.network.availability_zones))))}"
+  private_ip           = "${cidrhost(element(var.private_subnets, count.index % length(var.availability_zones)),(10 + (count.index/length(var.availability_zones))))}"
 
   vpc_security_group_ids = [
     "${aws_security_group.vault.id}",
@@ -85,7 +85,7 @@ resource "aws_instance" "vault" {
 resource "aws_ebs_volume" "vault" {
   count             = "${var.instance_count}"
   size              = "${var.vault_data_size}"
-  availability_zone = "${element(data.terraform_remote_state.network.availability_zones, count.index % length(data.terraform_remote_state.network.availability_zones))}"
+  availability_zone = "${element(var.availability_zones, count.index % length(var.availability_zones))}"
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"

@@ -42,8 +42,8 @@ resource "tls_cert_request" "vault" {
   }
 
   dns_names = [
-    "vault.${data.terraform_remote_state.network.private_zone.0}",
-    "vault-${count.index + 1}.${data.terraform_remote_state.network.private_zone.0}",
+    "vault.${var.private_zone}",
+    "vault-${count.index + 1}.${var.private_zone}",
     "localhost",
   ]
 

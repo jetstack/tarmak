@@ -92,3 +92,25 @@ variable "admin_ips" {
 variable "key_name" {}
 variable "public_zone" {}
 variable "public_zone_id" {}
+
+# vault
+variable "consul_version" {
+  default = "1.0.6"
+}
+variable "vault_version" {
+  default = "0.9.5"
+}
+variable "vault_root_size" {
+  default = "16"
+}
+variable "vault_data_size" {
+  default = "10"
+}
+variable "instance_count" {}
+variable "vault_instance_type" {
+  default = "t2.nano"
+}
+variable "vault_ami" {}
+
+# state 
+variable "bucket_prefix" {}

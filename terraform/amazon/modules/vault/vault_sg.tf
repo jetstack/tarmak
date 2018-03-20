@@ -1,6 +1,6 @@
 resource "aws_security_group" "vault" {
   name   = "${data.template_file.stack_name.rendered}-vault"
-  vpc_id = "${data.terraform_remote_state.network.vpc_id}"
+  vpc_id = "${var.vpc_id}"
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}-vault"
@@ -25,7 +25,7 @@ resource "aws_security_group_rule" "vault_in_allow_ssh_bastion" {
   to_port   = 22
   protocol  = "tcp"
 
-  source_security_group_id = "${data.terraform_remote_state.tools.bastion_security_group_id}"
+  source_security_group_id = "${var.bastion_security_group_id}"
   security_group_id        = "${aws_security_group.vault.id}"
 }
 
@@ -35,7 +35,7 @@ resource "aws_security_group_rule" "vault_in_allow_vault_bastion" {
   to_port   = 8200
   protocol  = "tcp"
 
-  source_security_group_id = "${data.terraform_remote_state.tools.bastion_security_group_id}"
+  source_security_group_id = "${var.bastion_security_group_id}"
   security_group_id        = "${aws_security_group.vault.id}"
 }
 
@@ -46,8 +46,4 @@ resource "aws_security_group_rule" "vault_in_allow_everything_inner_cluster" {
   protocol                 = "-1"
   security_group_id        = "${aws_security_group.vault.id}"
   source_security_group_id = "${aws_security_group.vault.id}"
-}
-
-output "vault_security_group_id" {
-  value = "${aws_security_group.vault.id}"
 }
