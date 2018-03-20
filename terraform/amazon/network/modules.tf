@@ -1,5 +1,5 @@
 module "network" {
-  source = "../modules/network"
+  source = "modules/network"
 
   network = "${var.network}"
   name = "${var.name}"
@@ -23,7 +23,7 @@ module "network" {
 }
 
 module "state" {
-  source = "../modules/state"
+  source = "modules/state"
 
   name = "${var.name}"
   project = "${var.project}"
@@ -41,7 +41,7 @@ module "state" {
 }
 
 module "bastion" {
-  source = "../modules/bastion"
+  source = "modules/bastion"
 
   public_zone = "${module.state.public_zone}"
   environment = "${var.environment}"
@@ -68,7 +68,7 @@ data "tarmak_bastion_instance" "bastion" {
 }
 */
 
-module "vault" {
+/*module "vault" {
   source = "../modules/vault"
 
   name = "${var.name}"
@@ -99,4 +99,4 @@ module "vault" {
   availability_zones = "${module.network.availability_zones}"
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
   vpc_id = "${module.network.vpc_id}"  
-}
+}*/

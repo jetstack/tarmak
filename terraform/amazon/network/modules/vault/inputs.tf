@@ -52,10 +52,14 @@ variable "secrets_kms_arn" {}
 variable "backups_bucket" {}
 
 # data.terraform_remote_state.network.private_subnet_ids
-variable "private_subnet_ids" {}
+variable "private_subnet_ids" {
+  type = "list"
+}
 
 # data.terraform_remote_state.network.private_subnets
-variable "private_subnets" {}
+variable "private_subnets" {
+  type = "list"
+}
 
 # data.terraform_remote_state.network.availability_zones
 variable "availability_zones" {
