@@ -15,6 +15,7 @@ labels:
   color: d93f0b
 - name: area/test
   color: 0052cc
+  
 - name: area/upgrade
   color: 0052cc
 - name: area/usability
