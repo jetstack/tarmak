@@ -199,7 +199,7 @@ any component. It's just setting global variables for the cluster
 ##### `etcd_overlay_version`
 
 * Type: `String`
-* Default: `'3.2.4'`
+* Default: `'3.2.17'`
 
 ##### `etcd_k8s_main_client_port`
 
@@ -219,7 +219,7 @@ any component. It's just setting global variables for the cluster
 ##### `etcd_k8s_main_version`
 
 * Type: `String`
-* Default: `'3.2.4'`
+* Default: `'3.2.17'`
 
 ##### `etcd_k8s_events_client_port`
 
@@ -239,7 +239,7 @@ any component. It's just setting global variables for the cluster
 ##### `etcd_k8s_events_version`
 
 * Type: `String`
-* Default: `'3.2.4'`
+* Default: `'3.2.17'`
 
 ##### `cloud_provider`
 
