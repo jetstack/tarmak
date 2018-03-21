@@ -20,11 +20,36 @@ var RootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func Execute(args []string) {
+	RootCmd.SetArgs(args)
+
+	// evalutate command that is gonna be run
+	command, commandArgs, err := RootCmd.Traverse(args)
+
+	// escape pass through commands (kubectl, ssh) if necessary
+	if err == nil && (command.Use == "kubectl" || command.Use == "ssh") {
+		// if no escape exists already add one
+		if !stringSliceContains(commandArgs, "--") {
+			pos := len(args) - len(commandArgs)
+			newArgs := append(args[:pos], append([]string{"--"}, args[pos:]...)...)
+			RootCmd.SetArgs(newArgs)
+			// this line helps debugging fmt.Printf("rewriting args\noriginal args=%v\ncommand  args=%v\nnew      args=%v\n", args, commandArgs, newArgs)
+		}
+	}
+
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func stringSliceContains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 func init() {
