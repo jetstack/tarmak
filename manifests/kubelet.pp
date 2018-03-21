@@ -1,4 +1,11 @@
 # class kubernetes::kubelet
+
+# @param cgroup_kubernetes_name name of cgroup slice for kubernetes related processes
+# @param cgroup_kubernetes_reserved_memory memory reserved for kubernetes related processes
+# @param cgroup_kubernetes_reserved_cpu CPU reserved for kubernetes related processes
+# @param cgroup_system_name name of cgroup slice for system processes
+# @param cgroup_system_reserved_memory memory reserved for system processes
+# @param cgroup_system_reserved_cpu CPU reserved for system processes
 class kubernetes::kubelet(
   String $role = 'worker',
   String $container_runtime = 'docker',
@@ -20,6 +27,13 @@ class kubernetes::kubelet(
     'RedHat' => 'systemd',
     default  => 'cgroupfs',
   },
+  String $cgroup_root = '/',
+  Optional[String] $cgroup_kube_name = '/podruntime.slice',
+  Optional[String] $cgroup_kube_reserved_memory = '256Mi',
+  Optional[String] $cgroup_kube_reserved_cpu = '10m',
+  Optional[String] $cgroup_system_name = '/system.slice',
+  Optional[String] $cgroup_system_reserved_memory = '128Mi',
+  Optional[String] $cgroup_system_reserved_cpu = '10m',
   Array[String] $systemd_wants = [],
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
