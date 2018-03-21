@@ -28,11 +28,17 @@ func Execute() {
 }
 
 func init() {
+	// set default tarmak config folder
+	tarmakConfigPath := "~/.tarmak"
+	if envConfigPath := os.Getenv("TARMAK_CONFIG"); envConfigPath != "" {
+		tarmakConfigPath = envConfigPath
+	}
+
 	RootCmd.PersistentFlags().StringVarP(
 		&globalFlags.ConfigDirectory,
 		"config-directory",
 		"c",
-		"~/.tarmak",
+		tarmakConfigPath,
 		"config directory for tarmak's configuration",
 	)
 
