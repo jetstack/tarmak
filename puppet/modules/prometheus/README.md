@@ -68,7 +68,7 @@ Sets up a blackbox exporter to blackbox probe in-cluster services and pods
 ##### `version`
 
 * Type: `String`
-* Default: `'0.11.0'`
+* Default: `'0.12.0'`
 
 ##### `port`
 
@@ -191,7 +191,7 @@ exporter_# Sets up a blackbox exporter to forward etcd metrics from etcd nodes
 ##### `version`
 
 * Type: `String`
-* Default: `'2.0.0'`
+* Default: `'2.2.1'`
 
 ##### `reloader_image`
 
