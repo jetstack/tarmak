@@ -26,6 +26,9 @@ func Provider() terraform.ResourceProvider {
 				Description: "Path to the unix socket",
 			},
 		},
+		ResourcesMap: map[string]*schema.Resource{
+			"tarmak_vault_cluster": resourceTarmakVaultCluster(),
+		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"tarmak_bastion_instance": dataSourceBastionInstance(),
 		},
