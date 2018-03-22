@@ -65,7 +65,16 @@ To build the documentation run the following.
   cd $GOPATH/src/github.com/jetstack/tarmak/docs
   make html
 
-You can now open `_build/html/index.html` in a browser.
+
+Or using docker:
+
+::
+
+  cd $GOPATH/src/github.com/jetstack/tarmak/docs
+  make docker_html
+
+You can now open ``_build/html/index.html`` in a browser or serve the site with
+a `web server of your choice <https://gist.github.com/willurd/5720255>`_.
 
 
 Updating puppet subtrees
