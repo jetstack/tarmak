@@ -65,3 +65,20 @@ func WaitOrCancel(f func(context.Context) error) {
 		log.WithError(err).Fatal("Tarmak exited with an error.")
 	}
 }
+
+func BasicSignalHandler(l *log.Entry) chan struct{} {
+	stopCh := make(chan struct{})
+	ch := make(chan os.Signal, 2)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
+	go func(l *log.Entry) {
+		<-ch
+		l.Infof("received interupt. shutting down...")
+		close(stopCh)
+		<-ch
+		l.Infof("force closed")
+		os.Exit(1)
+	}(l)
+
+	return stopCh
+}

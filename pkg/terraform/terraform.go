@@ -4,6 +4,7 @@ package terraform
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/sirupsen/logrus"
 
@@ -41,6 +42,9 @@ func (t *Terraform) NewContainer(stack interfaces.Stack) *TerraformContainer {
 		t:            t,
 		log:          t.log.WithField("stack", stack.Name()),
 		stack:        stack,
+	}
+	if os.Getenv("TF_LOG") != "" {
+		c.Env = []string{fmt.Sprintf("TF_LOG=%s", os.Getenv("TF_LOG"))}
 	}
 	c.AppContainer.SetLog(t.log.WithField("stack", stack.Name()))
 	return c

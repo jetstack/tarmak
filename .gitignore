@@ -4,6 +4,7 @@
 /tarmak_darwin_amd64
 /wing_linux_amd64
 /terraform-provider-awstag_linux_amd64
+/tarmak-container_linux_amd64
 /dist/
 /bin/
 .DS_Store

@@ -34,7 +34,7 @@ func newToolsStack(s *Stack) (*ToolsStack, error) {
 
 	s.name = tarmakv1alpha1.StackNameTools
 	s.verifyPreDeploy = append(s.verifyPostDeploy, s.verifyImageIDs)
-	s.verifyPostDeploy = append(s.verifyPostDeploy, t.verifyBastionAvailable)
+	s.verifyPostDeploy = append(s.verifyPostDeploy, t.VerifyBastionAvailable)
 	return t, nil
 }
 
@@ -42,7 +42,7 @@ func (s *ToolsStack) Variables() map[string]interface{} {
 	return s.Stack.Variables()
 }
 
-func (s *ToolsStack) verifyBastionAvailable() error {
+func (s *ToolsStack) VerifyBastionAvailable() error {
 
 	ssh := s.Cluster().Environment().Tarmak().SSH()
 

@@ -121,6 +121,8 @@ type Flags struct {
 	Initialize bool // run tarmak in initialize mode, don't parse config before rnning init
 
 	Cluster ClusterFlags // cluster specific flags
+
+	Version string // expose tarmak's build time version
 }
 
 // This contains the cluster specifc operation flags
