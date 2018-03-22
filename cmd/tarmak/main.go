@@ -2,6 +2,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/jetstack/tarmak/cmd/tarmak/cmd"
 )
 
@@ -15,5 +17,5 @@ func main() {
 	cmd.Version.Version = version
 	cmd.Version.Commit = commit
 	cmd.Version.BuildDate = date
-	cmd.Execute()
+	cmd.Execute(os.Args[1:])
 }

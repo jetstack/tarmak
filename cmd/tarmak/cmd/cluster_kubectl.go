@@ -15,7 +15,6 @@ var clusterKubectlCmd = &cobra.Command{
 		defer t.Cleanup()
 		t.Must(t.CmdKubectl(args))
 	},
-	DisableFlagParsing: true,
 }
 
 func init() {
