@@ -54,6 +54,14 @@ variable "state_cluster_name" {
   default = "hub"
 }
 
+variable "vault_cluster_name" {
+  default = "hub"
+}
+
+variable "tools_cluster_name" {
+  default = "hub"
+}
+
 # data.terraform_remote_state.vpc_peer_stack.vpc_net
 variable "vpc_net" {
   default = ""
@@ -114,3 +122,9 @@ variable "vault_ami" {}
 
 # state 
 variable "bucket_prefix" {}
+
+# data.terraform_remote_state.hub_state.secrets_bucket.0
+variable "secrets_bucket" {
+  default = ""
+}
+

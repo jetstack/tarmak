@@ -484,3 +484,100 @@ func (s *VaultStack) verifyVaultInit() error {
 
 	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed")
 }
+
+func (s *VaultStack) VerifyVaultInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, vaultUnsealKeyName string) error {
+
+	tunnels, err := s.createVaultTunnelsWithCA(instances, vaultCA)
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+	for pos, _ := range tunnels {
+		wg.Add(1)
+		go func(pos int) {
+			defer wg.Done()
+			err := tunnels[pos].Start()
+			if err != nil {
+				s.log.Warn(err)
+			}
+		}(pos)
+	}
+
+	// wait for all tunnel attempts
+	wg.Wait()
+
+	defer func() {
+		var wg sync.WaitGroup
+		for pos, _ := range tunnels {
+			wg.Add(1)
+			go func(pos int) {
+				defer wg.Done()
+				err := tunnels[pos].Stop()
+				if err != nil {
+					s.log.Warn(err)
+				}
+			}(pos)
+		}
+		wg.Wait()
+	}()
+
+	rootToken, err := s.Cluster().Environment().VaultRootToken()
+	if err != nil {
+		return err
+	}
+
+	kv, err := s.Cluster().Environment().Provider().VaultKVMWithParams(vaultKMSKeyID, vaultUnsealKeyName)
+	if err != nil {
+		return err
+	}
+
+	cl := tunnels[0].VaultClient()
+
+	// get state of all instances
+	retries := 5
+	for {
+
+		health, err := cl.Sys().Health()
+		if err != nil {
+			return fmt.Errorf("could not get vault health: %s", err)
+		}
+
+		if !health.Sealed {
+			return nil
+		} else if !health.Initialized {
+
+			v, err := vaultUnsealer.New(kv, cl, vaultUnsealer.Config{
+				KeyPrefix: "vault",
+
+				SecretShares:    1,
+				SecretThreshold: 1,
+
+				InitRootToken:  rootToken,
+				StoreRootToken: false,
+
+				OverwriteExisting: true,
+			})
+
+			err = v.Init()
+			if err != nil {
+				return fmt.Errorf("error initialising vault: %s", err)
+			}
+			s.log.Info("vault succesfully initialised")
+			return nil
+		} else if health.Sealed {
+			s.log.Debug("a quorum of vault instances is sealed, retrying")
+		} else {
+			s.log.Debug("a quorum of vault instances is in unknown state, retrying")
+		}
+
+		retries--
+		if retries == 0 {
+			break
+		}
+		time.Sleep(time.Second * 10)
+
+	}
+
+	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed")
+}

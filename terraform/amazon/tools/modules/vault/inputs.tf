@@ -74,6 +74,8 @@ variable "vpc_id" {}
 
 variable "bastion_instance_id" {}
 
+variable "vault_cluster_name" {}
+
 data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }

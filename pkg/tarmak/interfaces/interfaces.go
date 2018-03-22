@@ -91,6 +91,7 @@ type Provider interface {
 	Variables() map[string]interface{}
 	QueryImages(tags map[string]string) ([]tarmakv1alpha1.Image, error)
 	VaultKV() (kv.Service, error)
+	VaultKVMWithParams(kmsKeyID, unsealKeyName string) (kv.Service, error)
 	ListHosts() ([]Host, error)
 	InstanceType(string) (string, error)
 	VolumeType(string) (string, error)

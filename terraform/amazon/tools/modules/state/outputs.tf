@@ -21,3 +21,12 @@ output "jenkins_data_volume_id" {
 output "bucket_prefix" {
   value = "${var.bucket_prefix}"
 }
+
+output "secrets_bucket" {
+  value = "${aws_s3_bucket.secrets.*.bucket}"
+}
+
+output "secrets_kms_arn" {
+  value = "${aws_kms_key.secrets.*.arn}"
+}
+

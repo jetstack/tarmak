@@ -92,9 +92,36 @@ module "vault" {
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
   vpc_id = "${module.network.vpc_id}" 
   bastion_instance_id = "${module.bastion.bastion_instance_id}"
+  vault_cluster_name = "${var.vault_cluster_name}"
 }
 
 resource "tarmak_vault_cluster" "vault" {
   internal_fqdns = ["${module.vault.instance_fqdns}"]
   vault_ca = "${module.vault.vault_ca}"
+  vault_kms_key_id = "${module.vault.vault_kms_key_id}"
+  vault_unseal_key_name = "${module.vault.vault_unseal_key_name}"
+}
+
+module "kubernetes" {
+  source = "modules/kubernetes"
+
+  name = "${var.name}"
+  project = "${var.project}"
+  contact = "${var.contact}"
+  key_name = "${var.key_name}"
+  region = "${var.region}"
+  stack = "${var.stack}"
+  state_bucket = "${var.state_bucket}"
+  stack_name_prefix = "${var.stack_name_prefix}"
+  allowed_account_ids = "${var.allowed_account_ids}"
+  environment = "${var.environment}"
+  vault_init_token_master = "${module.vault.vault_instance_role_master}"
+  vault_init_token_worker = "${module.vault.vault_instance_role_worker}"
+  vault_init_token_etcd = "${module.vault.vault_instance_role_etcd}"
+  state_cluster_name = "${var.state_cluster_name}"
+  vault_cluster_name = "${var.vault_cluster_name}"
+  tools_cluster_name = "${var.tools_cluster_name}"
+  secrets_bucket = "${module.state.secrets_bucket[0]}"
+  private_subnet_ids = ["${module.network.private_subnet_ids}"]
+  public_subnet_ids = ["${module.network.public_subnet_ids}"]
 }

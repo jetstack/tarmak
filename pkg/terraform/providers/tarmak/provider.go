@@ -27,7 +27,8 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"tarmak_vault_cluster": resourceTarmakVaultCluster(),
+			"tarmak_vault_cluster":       resourceTarmakVaultCluster(),
+			"tarmak_vault_instance_role": resourceTarmakVaultInstanceRole(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"tarmak_bastion_instance": dataSourceBastionInstance(),

@@ -21,3 +21,15 @@ output "instance_fqdns" {
 output "vault_security_group_id" {
   value = "${aws_security_group.vault.id}"
 }
+
+output "vault_instance_role_master" {  
+  value = "${tarmak_vault_instance_role.master.init_token}"
+}
+
+output "vault_instance_role_worker" {  
+  value = "${tarmak_vault_instance_role.worker.init_token}"
+}
+
+output "vault_instance_role_etcd" {  
+  value = "${tarmak_vault_instance_role.etcd.init_token}"
+}

@@ -91,3 +91,22 @@ func (a *Amazon) VaultKV() (kv.Service, error) {
 
 	return kms, nil
 }
+
+func (a *Amazon) VaultKVMWithParams(kmsKeyID, unsealKeyName string) (kv.Service, error) {
+	session, err := a.Session()
+	if err != nil {
+		return nil, err
+	}
+
+	ssm, err := aws_ssm.NewWithSession(session, unsealKeyName)
+	if err != nil {
+		return nil, fmt.Errorf("error creating Amazon SSM kv store: %s", err.Error())
+	}
+
+	kms, err := aws_kms.NewWithSession(session, ssm, kmsKeyID)
+	if err != nil {
+		return nil, fmt.Errorf("error creating Amazon KMS ID kv store: %s", err.Error())
+	}
+
+	return kms, nil
+}

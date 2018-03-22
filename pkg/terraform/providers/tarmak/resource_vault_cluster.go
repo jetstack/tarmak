@@ -32,6 +32,16 @@ func resourceTarmakVaultCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"vault_kms_key_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"vault_unseal_key_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -51,10 +61,14 @@ func resourceTarmakVaultClusterCreate(d *schema.ResourceData, meta interface{}) 
 		vaultInternalFQDNs = append(vaultInternalFQDNs, internalFQDN.(string))
 	}
 	vaultCA := d.Get("vault_ca").(string)
+	vaultKMSKeyID := d.Get("vault_kms_key_id").(string)
+	vaultUnsealKeyName := d.Get("vault_unseal_key_name").(string)
 
 	args := &tarmakRPC.VaultClusterStatusArgs{
 		VaultInternalFQDNs: vaultInternalFQDNs,
 		VaultCA:            vaultCA,
+		VaultKMSKeyID:      vaultKMSKeyID,
+		VaultUnsealKeyName: vaultUnsealKeyName,
 	}
 
 	log.Print("[DEBUG] calling rpc vault cluster status")

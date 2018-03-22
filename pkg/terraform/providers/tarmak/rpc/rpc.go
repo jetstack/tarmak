@@ -36,6 +36,7 @@ type Tarmak interface {
 	BastionInstanceStatus(*BastionInstanceStatusArgs, *BastionInstanceStatusReply) error
 	VaultClusterStatus(*VaultClusterStatusArgs, *VaultClusterStatusReply) error
 	VaultClusterInitStatus(*VaultClusterStatusArgs, *VaultClusterStatusReply) error
+	VaultInstanceRole(*VaultInstanceRoleArgs, *VaultInstanceRoleReply) error
 	Ping(*PingArgs, *PingReply) error
 }
 
