@@ -172,6 +172,86 @@ func (s *VaultStack) VaultTunnel() (*vaultTunnel, error) {
 	return tunnels[activePos], nil
 }
 
+// This returns the active vault tunnel for the whole cluster with provided FQDNs
+func (s *VaultStack) VaultTunnelFromFQDNs(vaultInternalFQDNs []string, vaultCA string) (*vaultTunnel, error) {
+
+	tunnels, err := s.createVaultTunnelsWithCA(vaultInternalFQDNs, vaultCA)
+	if err != nil {
+		return nil, err
+	}
+
+	activeNode := make(chan int, 0)
+
+	var wg sync.WaitGroup
+	for pos, _ := range tunnels {
+		wg.Add(1)
+		go func(pos int) {
+			defer wg.Done()
+			err := tunnels[pos].Start()
+			if err != nil {
+				s.log.Warn(err)
+				return
+			}
+			health, err := tunnels[pos].VaultClient().Sys().Health()
+			if err != nil {
+				s.log.Warn(err)
+				return
+			}
+
+			if health.Standby == false && health.Sealed == false {
+				activeNode <- pos
+
+			}
+
+		}(pos)
+	}
+
+	activePos := <-activeNode
+
+	go func(activePos int) {
+
+		// wait for all tunnel attempts
+		wg.Wait()
+
+		// stop tunnels
+		for pos, _ := range tunnels {
+			if pos == activePos {
+				continue
+			}
+			tunnels[pos].Stop()
+		}
+
+	}(activePos)
+
+	return tunnels[activePos], nil
+}
+
+func (s *VaultStack) createVaultTunnelsWithCA(instances []string, vaultCA string) ([]*vaultTunnel, error) {
+	certpool := x509.NewCertPool()
+	ok := certpool.AppendCertsFromPEM([]byte(vaultCA))
+	if !ok {
+		return nil, fmt.Errorf("failed to parse vault CA. %q", vaultCA)
+	}
+	output := make([]*vaultTunnel, len(instances))
+	for pos := range instances {
+		fqdn := instances[pos]
+		sshTunnel := s.Cluster().Environment().Tarmak().SSH().Tunnel(
+			"bastion", fqdn, 8200,
+		)
+		vaultTunnel, err := NewVaultTunnel(
+			sshTunnel,
+			fqdn,
+			certpool,
+		)
+		if err != nil {
+			return output, err
+		}
+		output[pos] = vaultTunnel
+	}
+
+	return output, nil
+}
+
 // This returns a vault tunnel per instance
 func (s *VaultStack) VaultTunnels() ([]*vaultTunnel, error) {
 	vaultInstances, err := s.vaultInstanceFQDNs()

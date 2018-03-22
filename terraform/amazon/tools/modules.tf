@@ -93,3 +93,8 @@ module "vault" {
   vpc_id = "${module.network.vpc_id}" 
   bastion_instance_id = "${module.bastion.bastion_instance_id}"
 }
+
+resource "tarmak_vault_cluster" "vault" {
+  internal_fqdns = ["${module.vault.instance_fqdns}"]
+  vault_ca = "${module.vault.vault_ca}"
+}

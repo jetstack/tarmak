@@ -17,6 +17,7 @@ var (
 
 type VaultClusterStatusArgs struct {
 	VaultInternalFQDNs []string
+	VaultCA            string
 }
 
 type VaultClusterStatusReply struct {
@@ -24,13 +25,15 @@ type VaultClusterStatusReply struct {
 }
 
 func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
+	return fmt.Errorf("TEEEESSTTT")
+
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
 	// TODO: if destroying cluster just return unknown here
 
-	vaultClient, err := initVaultClient(r)
+	vaultClient, err := initVaultClient(r, args.VaultInternalFQDNs, args.VaultCA)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initialise vault client: %s", err)
 	}
 
 	k := kubernetes.New(vaultClient, r.tarmak.Log())
@@ -49,7 +52,7 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
-	vaultClient, err := initVaultClient(r)
+	vaultClient, err := initVaultClient(r, args.VaultInternalFQDNs, args.VaultCA)
 	if err != nil {
 		return err
 	}
@@ -71,7 +74,7 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 	return nil
 }
 
-func initVaultClient(r *tarmakRPC) (*vault.Client, error) {
+func initVaultClient(r *tarmakRPC, vaultInternalFQDNs []string, vaultCA string) (*vault.Client, error) {
 	//vaultStack := r.tarmak.Cluster().Environment().Stack(tarmakv1alpha1.StackNameVault)
 	vaultStack := r.tarmak.Cluster().Environment().VaultStack()
 
@@ -85,7 +88,7 @@ func initVaultClient(r *tarmakRPC) (*vault.Client, error) {
 		return nil, err
 	}
 
-	vaultTunnel, err := vaultStackReal.VaultTunnel()
+	vaultTunnel, err := vaultStackReal.VaultTunnelFromFQDNs(vaultInternalFQDNs, vaultCA)
 	if err != nil {
 		err = fmt.Errorf("failed to create vault tunnel: %s", err)
 		r.tarmak.Log().Error(err)

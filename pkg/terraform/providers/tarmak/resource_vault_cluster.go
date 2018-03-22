@@ -14,14 +14,21 @@ import (
 
 func resourceTarmakVaultCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTarmakVaultClusterCreateUpdate,
-		Update: resourceTarmakVaultClusterCreateUpdate,
+		Create: resourceTarmakVaultClusterCreate,
 		Read:   resourceTarmakVaultClusterRead,
 		Delete: resourceTarmakVaultClusterDelete,
 
 		Schema: map[string]*schema.Schema{
 			"internal_fqdns": {
-				Type:     schema.TypeList,
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Required: true,
+				ForceNew: true,
+			},
+			"vault_ca": {
+				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
@@ -33,11 +40,21 @@ func resourceTarmakVaultCluster() *schema.Resource {
 	}
 }
 
-func resourceTarmakVaultClusterCreateUpdate(d *schema.ResourceData, meta interface{}) (err error) {
+func resourceTarmakVaultClusterCreate(d *schema.ResourceData, meta interface{}) (err error) {
 	client := meta.(*rpc.Client)
 
+	vaultInternalFQDNs := []string{}
+
+	//return fmt.Errorf("DEBUG: %#v", d.Get("internal_fqdns").([]interface{})[0])
+
+	for _, internalFQDN := range d.Get("internal_fqdns").([]interface{}) {
+		vaultInternalFQDNs = append(vaultInternalFQDNs, internalFQDN.(string))
+	}
+	vaultCA := d.Get("vault_ca").(string)
+
 	args := &tarmakRPC.VaultClusterStatusArgs{
-		VaultInternalFQDNs: d.Get("internal_fqdns").([]string),
+		VaultInternalFQDNs: vaultInternalFQDNs,
+		VaultCA:            vaultCA,
 	}
 
 	log.Print("[DEBUG] calling rpc vault cluster status")
@@ -45,14 +62,17 @@ func resourceTarmakVaultClusterCreateUpdate(d *schema.ResourceData, meta interfa
 	err = client.Call(tarmakRPC.VaultClusterStatusCall, args, &reply)
 	if err != nil {
 		d.SetId("")
-		return err
+		return fmt.Errorf("call to %s failed: %s", tarmakRPC.VaultClusterStatusCall, err)
 	}
 
 	d.Set("status", reply.Status)
 
 	// generate ID
 	hasher := md5.New()
-	hasher.Write([]byte(fmt.Sprintf("%v", args.VaultInternalFQDNs)))
+	_, err = hasher.Write([]byte(fmt.Sprintf("%v", args.VaultInternalFQDNs)))
+	if err != nil {
+		return fmt.Errorf("failed to hash FQDNs: %s", err)
+	}
 	d.SetId(hex.EncodeToString(hasher.Sum(nil)))
 
 	return nil
@@ -61,8 +81,15 @@ func resourceTarmakVaultClusterCreateUpdate(d *schema.ResourceData, meta interfa
 func resourceTarmakVaultClusterRead(d *schema.ResourceData, meta interface{}) (err error) {
 	client := meta.(*rpc.Client)
 
+	vaultInternalFQDNs := []string{}
+	for _, internalFQDN := range d.Get("internal_fqdns").([]interface{}) {
+		vaultInternalFQDNs = append(vaultInternalFQDNs, internalFQDN.(string))
+	}
+	vaultCA := d.Get("vault_ca").(string)
+
 	args := &tarmakRPC.VaultClusterStatusArgs{
-		VaultInternalFQDNs: d.Get("internal_fqdns").([]string),
+		VaultInternalFQDNs: vaultInternalFQDNs,
+		VaultCA:            vaultCA,
 	}
 
 	log.Print("[DEBUG] calling rpc vault cluster init status")

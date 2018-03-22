@@ -34,6 +34,8 @@ func NewTarmak(tarmak interfaces.Tarmak, stack interfaces.Stack) Tarmak {
 
 type Tarmak interface {
 	BastionInstanceStatus(*BastionInstanceStatusArgs, *BastionInstanceStatusReply) error
+	VaultClusterStatus(*VaultClusterStatusArgs, *VaultClusterStatusReply) error
+	VaultClusterInitStatus(*VaultClusterStatusArgs, *VaultClusterStatusReply) error
 	Ping(*PingArgs, *PingReply) error
 }
 
