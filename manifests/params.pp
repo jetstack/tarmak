@@ -5,7 +5,7 @@ class etcd::params {
   $group = 'etcd'
   $uid = 873
   $gid = 873
-  $version = '3.2.9'
+  $version = '3.2.17'
   $bin_dir = '/opt/bin'
   $dest_dir = '/opt'
   $config_dir = '/etc/etcd'
