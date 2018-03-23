@@ -13,7 +13,6 @@ describe 'kubernetes::kubelet' do
   context 'defaults' do
     it do
       should contain_file(service_file).with_content(/--register-node=true/)
-      should contain_file(service_file).with_content(/--register-schedulable=true/)
       should contain_file(service_file).with_content(/--node-labels=role=worker/)
       should contain_file(service_file).with_content(/--cluster-dns=10.254.0.10/)
       should contain_file(service_file).with_content(/--cluster-domain=cluster.local/)
@@ -21,7 +20,6 @@ describe 'kubernetes::kubelet' do
       should_not contain_file(service_file).with_content(/--network-plugin/)
       should contain_file(service_file).with_content(/--container-runtime=docker/)
       should contain_file(service_file).with_content(%r{--kubeconfig=/etc/kubernetes/kubeconfig-kubelet})
-      should contain_file(service_file).with_content(%r{--require-kubeconfig})
     end
   end
 
@@ -110,7 +108,6 @@ describe 'kubernetes::kubelet' do
 
     it do
       have_service_file = contain_file('/etc/systemd/system/kubelet.service')
-      should have_service_file.with_content(/--register-schedulable=true/)
       should have_service_file.with_content(/--node-labels=role=worker/)
     end
   end
