@@ -128,3 +128,9 @@ variable "secrets_bucket" {
   default = ""
 }
 
+variable "kubernetes_master_ami" {}
+
+variable "kubernetes_worker_ami" {}
+
+variable "kubernetes_etcd_ami" {}
+

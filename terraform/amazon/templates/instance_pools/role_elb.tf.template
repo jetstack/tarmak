@@ -2,7 +2,7 @@
 {{ if .AWS.ELBAPI -}}
 resource "aws_elb" "{{.TFName}}" {
   name         = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
-  subnets      = ["${data.terraform_remote_state.network.private_subnet_ids}"]
+  subnets      = ["${var.private_subnet_ids}"]
   internal     = true
   idle_timeout = 3600
 
@@ -34,7 +34,7 @@ resource "aws_elb" "{{.TFName}}" {
 }
 
 resource "aws_route53_record" "{{.TFName}}_api" {
-  zone_id = "${data.terraform_remote_state.hub_network.private_zone_id.0}"
+  zone_id = "${var.private_zone_id}"
   name    = "api.${data.template_file.stack_name.rendered}"
   type    = "A"
 
@@ -53,12 +53,12 @@ output "ingress_wildcard_fqdn" {
 
 # TODO: Enable me again
 #data "aws_acm_certificate" "wildcard" {
-#  domain   = "*.${var.name}.${data.terraform_remote_state.hub_state.public_zone}"
+#  domain   = "*.${var.name}.${var.public_zone}"
 #  statuses = ["ISSUED"]
 #}
 
 resource "aws_route53_record" "{{.TFName}}" {
-  zone_id = "${data.terraform_remote_state.hub_state.public_zone_id}"
+  zone_id = "${var.public_zone_id}"
   name    = "*.${var.name}"
   type    = "A"
 
@@ -71,7 +71,7 @@ resource "aws_route53_record" "{{.TFName}}" {
 
 resource "aws_elb" "{{.TFName}}" {
   name         = "${format("%.20s-ingress", data.template_file.stack_name.rendered)}"
-  subnets      = ["${data.terraform_remote_state.network.public_subnet_ids}"]
+  subnets      = ["${var.public_subnet_ids}"]
   idle_timeout = 600
 
   security_groups = [

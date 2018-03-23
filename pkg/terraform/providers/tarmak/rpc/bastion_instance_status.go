@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
-)
-
-const (
-	retries = 30
 )
 
 var (
@@ -27,19 +24,21 @@ type BastionInstanceStatusReply struct {
 
 func (r *tarmakRPC) BastionInstanceStatus(args *BastionInstanceStatusArgs, result *BastionInstanceStatusReply) error {
 	r.tarmak.Log().Debug("received rpc bastion status")
-	toolsStack, ok := r.stack.(*stack.ToolsStack)
 
 	// TODO: if destroying cluster just return unknown here
 
+	toolsStack := r.tarmak.Cluster().Stack(tarmakv1alpha1.StackNameTools)
+
+	toolsStackReal, ok := toolsStack.(*stack.ToolsStack)
 	if !ok {
-		err := fmt.Errorf("stack is not a tools stack")
+		err := fmt.Errorf("unexpected type for tools stack: %T", toolsStack)
 		r.tarmak.Log().Error(err)
 		return err
 	}
 
 	var err error
-	for i := 1; i <= retries; i++ {
-		if err = toolsStack.VerifyBastionAvailable(); err != nil {
+	for i := 1; i <= Retries; i++ {
+		if err = toolsStackReal.VerifyBastionAvailable(); err != nil {
 			r.tarmak.Log().Error(err)
 			time.Sleep(time.Second)
 		} else {

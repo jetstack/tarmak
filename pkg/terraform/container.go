@@ -19,7 +19,6 @@ import (
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type TerraformContainer struct {
@@ -101,7 +100,7 @@ func (tc *TerraformContainer) Shell() (err error) {
 
 func (tc *TerraformContainer) writeTfvars() (err error) {
 	// adds parameters as CLI args
-	terraformVars := utils.MergeMaps(
+	/*terraformVars := utils.MergeMaps(
 		tc.stack.Cluster().Environment().Tarmak().Variables(),
 		tc.stack.Cluster().Environment().Variables(),
 		tc.stack.Cluster().Variables(),
@@ -122,7 +121,7 @@ func (tc *TerraformContainer) writeTfvars() (err error) {
 	err = tc.UploadToContainer(remoteStateTar, "/terraform")
 	if err != nil {
 		return err
-	}
+	}*/
 
 	return nil
 }
@@ -327,7 +326,7 @@ func (tc *TerraformContainer) prepare() error {
 			return err
 		}
 
-		err = tc.UploadToContainer(templateTfTar, "/terraform")
+		err = tc.UploadToContainer(templateTfTar, "/terraform/modules/kubernetes")
 		if err != nil {
 			return err
 		}

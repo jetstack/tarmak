@@ -3,6 +3,7 @@ package rpc
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
@@ -62,16 +63,22 @@ func (r *tarmakRPC) VaultInstanceRole(args *VaultInstanceRoleArgs, result *Vault
 	k.SetClusterID(r.tarmak.Cluster().ClusterName())
 
 	token := ""
-	if args.Create {
-		token, err = k.EnsureInitToken(roleName)
-		if err != nil {
-			return fmt.Errorf("could not get init token for role %s: %s", roleName, err)
+	for i := 1; i <= Retries; i++ {
+		if args.Create {
+			token, err = k.EnsureInitToken(roleName)
+			if err == nil {
+				break
+			}
+		} else {
+			token, err = k.GetInitToken(roleName)
+			if err == nil {
+				break
+			}
 		}
-	} else {
-		token, err = k.GetInitToken(roleName)
-		if err != nil {
-			return fmt.Errorf("could not get init token for role %s: %s", roleName, err)
-		}
+		time.Sleep(time.Second)
+	}
+	if err != nil {
+		return fmt.Errorf("could not get init token for role %s: %s", roleName, err)
 	}
 
 	result.InitToken = token

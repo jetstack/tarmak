@@ -1,3 +1,21 @@
+module "state" {
+  source = "modules/state"
+
+  name = "${var.name}"
+  project = "${var.project}"
+  contact = "${var.contact}"
+  region = "${var.region}"
+  availability_zones = "${var.availability_zones}"
+  stack = "${var.stack}"
+  public_zone = "${var.public_zone}"
+  public_zone_id = "${var.public_zone_id}"
+  state_bucket = "${var.state_bucket}"
+  stack_name_prefix = "${var.stack_name_prefix}"
+  allowed_account_ids = "${var.allowed_account_ids}"
+  environment = "${var.environment}"
+  bucket_prefix = "${var.bucket_prefix}"
+}
+
 module "network" {
   source = "modules/network"
 
@@ -20,24 +38,6 @@ module "network" {
   route_table_public_ids = "${var.route_table_public_ids}"
   route_table_private_ids = "${var.route_table_private_ids}"
   private_zone_id = "${var.private_zone_id}"
-}
-
-module "state" {
-  source = "modules/state"
-
-  name = "${var.name}"
-  project = "${var.project}"
-  contact = "${var.contact}"
-  region = "${var.region}"
-  availability_zones = "${var.availability_zones}"
-  stack = "${var.stack}"
-  public_zone = "${var.public_zone}"
-  public_zone_id = "${var.public_zone_id}"
-  state_bucket = "${var.state_bucket}"
-  stack_name_prefix = "${var.stack_name_prefix}"
-  allowed_account_ids = "${var.allowed_account_ids}"
-  environment = "${var.environment}"
-  bucket_prefix = "${var.bucket_prefix}"
 }
 
 module "bastion" {
@@ -86,20 +86,13 @@ module "vault" {
   secrets_bucket = "${module.state.secrets_bucket[0]}"
   secrets_kms_arn = "${module.state.secrets_kms_arn[0]}"
   backups_bucket = "${module.state.backups_bucket[0]}"  
-  private_subnet_ids = "${module.network.private_subnet_ids}"
-  private_subnets = "${module.network.private_subnets}"
-  availability_zones = "${module.network.availability_zones}"
+  private_subnet_ids = ["${module.network.private_subnet_ids}"]
+  private_subnets = ["${module.network.private_subnets}"]
+  availability_zones = ["${module.network.availability_zones}"]
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
   vpc_id = "${module.network.vpc_id}" 
   bastion_instance_id = "${module.bastion.bastion_instance_id}"
   vault_cluster_name = "${var.vault_cluster_name}"
-}
-
-resource "tarmak_vault_cluster" "vault" {
-  internal_fqdns = ["${module.vault.instance_fqdns}"]
-  vault_ca = "${module.vault.vault_ca}"
-  vault_kms_key_id = "${module.vault.vault_kms_key_id}"
-  vault_unseal_key_name = "${module.vault.vault_unseal_key_name}"
 }
 
 module "kubernetes" {
@@ -115,13 +108,27 @@ module "kubernetes" {
   stack_name_prefix = "${var.stack_name_prefix}"
   allowed_account_ids = "${var.allowed_account_ids}"
   environment = "${var.environment}"
-  vault_init_token_master = "${module.vault.vault_instance_role_master}"
-  vault_init_token_worker = "${module.vault.vault_instance_role_worker}"
-  vault_init_token_etcd = "${module.vault.vault_instance_role_etcd}"
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
   tools_cluster_name = "${var.tools_cluster_name}"
   secrets_bucket = "${module.state.secrets_bucket[0]}"
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
+  kubernetes_master_ami = "${var.kubernetes_master_ami}"
+  kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
+  kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
+  internal_fqdns = ["${module.vault.instance_fqdns}"]
+  vault_kms_key_id = "${module.vault.vault_kms_key_id}"
+  vault_unseal_key_name = "${module.vault.vault_unseal_key_name}"
+  # template variables
+  availability_zones = ["${module.network.availability_zones}"]
+  vpc_id = "${module.network.vpc_id}"
+  private_zone_id = "${module.network.private_zone_id[0]}"
+  private_zone = "${module.network.private_zone[0]}"
+  vault_ca = "${module.vault.vault_ca}"
+  vault_url = "${module.vault.vault_url}"
+  public_zone = "${module.state.public_zone}"
+  public_zone_id = "${module.state.public_zone_id}"
+  vault_security_group_id = "${module.vault.vault_security_group_id}"
+  bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
 }

@@ -31,9 +31,9 @@ type AWSSGRule struct {
 func awsGroupID(role string) string {
 	switch role {
 	case "vault":
-		return "${data.terraform_remote_state.hub_vault.vault_security_group_id}"
+		return "${var.vault_security_group_id}"
 	case "bastion":
-		return "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
+		return "${var.bastion_security_group_id}"
 	default:
 		return fmt.Sprintf("${aws_security_group.kubernetes_%s.id}", role)
 	}

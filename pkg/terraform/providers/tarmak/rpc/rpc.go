@@ -14,10 +14,10 @@ import (
 const (
 	ConnectorSocket = "/tmp/tarmak-connector.sock"
 	RPCName         = "Tarmak"
+	Retries         = 120
 )
 
-type tarmakInterface struct {
-}
+type tarmakInterface struct{}
 
 type tarmakRPC struct {
 	tarmak interfaces.Tarmak
@@ -54,6 +54,7 @@ func Bind(log *logrus.Entry, tarmak Tarmak, reader io.Reader, writer io.Writer, 
 		io.Closer
 	}{reader, writer, closer},
 	)
+
 	for {
 		c, err := mx.Accept()
 		if err != nil {

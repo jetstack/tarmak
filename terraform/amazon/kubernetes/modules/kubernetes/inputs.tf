@@ -20,12 +20,6 @@ variable "allowed_account_ids" {
 
 variable "environment" {}
 
-variable "vault_init_token_master" {}
-
-variable "vault_init_token_worker" {}
-
-variable "vault_init_token_etcd" {}
-
 variable "state_cluster_name" {}
 
 variable "vault_cluster_name" {}
@@ -48,3 +42,34 @@ variable "public_subnet_ids" {
 data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }
+
+variable "internal_fqdns" {
+  type = "list"
+}
+
+variable "vault_kms_key_id" {}
+
+variable "vault_unseal_key_name" {}
+
+# template variables
+variable "availability_zones" {
+  type = "list"
+}
+
+variable "vpc_id" {}
+
+variable "private_zone_id" {}
+
+variable "vault_ca" {}
+
+variable "vault_url" {}
+
+variable "private_zone" {}
+
+variable "public_zone" {}
+
+variable "public_zone_id" {}
+
+variable "vault_security_group_id" {}
+
+variable "bastion_security_group_id" {}
