@@ -27,9 +27,12 @@ help:
 
 # Make the site's html in docker
 docker_html:
-	mkdir -p _build
-	docker build -t tarmakdocs:latest .
-	docker run -it -v "$$(pwd):/site" -u `stat -c "%u:%g" _build` -w /site tarmakdocs:latest
+	set -x; mkdir -p _build; \
+	docker build -t tarmakdocs:latest .; \
+	container=$$(docker create tarmakdocs:latest); \
+	docker cp . $$container:/site; \
+	docker start -a $$container; \
+	docker cp $$container:/site/_build .
 
 .venv:
 	virtualenv -p $(shell which python3) $(VENV_PATH)
