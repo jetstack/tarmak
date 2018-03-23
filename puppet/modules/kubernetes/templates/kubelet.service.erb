@@ -75,6 +75,10 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --kubelet-cgroups=/systemd/system.slice \
 <% end -%>
 <% end -%>
+<% if @cert_file and @key_file -%>
+  "--tls-cert-file=<%= @cert_file %>" \
+  "--tls-private-key-file=<%= @key_file %>" \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure

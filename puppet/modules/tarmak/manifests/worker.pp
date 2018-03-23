@@ -23,6 +23,7 @@ class tarmak::worker {
     common_name => "system:node:${::fqdn}",
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kubelet",
     uid         => $::tarmak::kubernetes_uid,
+    alt_names   => [$::fqdn],
     require     => [
       User[$::tarmak::kubernetes_user],
       Class['vault_client']

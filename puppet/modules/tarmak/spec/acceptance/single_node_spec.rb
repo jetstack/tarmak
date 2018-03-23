@@ -13,7 +13,7 @@ describe '::pupperentes::single_node' do
   end
 
   let :kubernetes_version do
-    ENV['KUBERNETES_VERSION'] || '1.5.7'
+    ENV['KUBERNETES_VERSION'] || '1.8.10'
   end
 
   let :kubernetes_authorization_mode do
