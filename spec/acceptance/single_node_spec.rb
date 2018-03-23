@@ -44,7 +44,16 @@ class{'kubernetes::worker':
       hosts.each do |host|
         ip = host.host_hash[:ip]
         on host, "ip addr add #{ip}/24 dev eth1"
+
+        # clear firewall
         on host, "iptables -F INPUT"
+
+        # setup kubectl in path with correct kubeconfig
+        on host, "echo -e '#!/bin/sh\nKUBECONFIG=/etc/kubernetes/kubeconfig-kubectl exec /opt/bin/kubectl $@' > /usr/bin/kubectl"
+        on host, "chmod +x /usr/bin/kubectl"
+
+        # ensure no swap space is mounted
+        on host, "swapoff -a"
       end
 
       # Ensure etcd is setup
@@ -96,7 +105,7 @@ class{'kubernetes::worker':
     context 'test kubectl::apply manifest, no tls' do
       let :manifest_apply_pp do
 "
-include kubernetes::apiserver
+#{pp}
 
 kubernetes::apply { 'hello':
   type      => 'manifests',
@@ -126,7 +135,7 @@ kubernetes::apply { 'hello':
     context 'test invalid kubectl::apply manifest, no tls' do
       let :invalid_manifest_apply_pp do
 "
-include kubernetes::apiserver
+#{pp}
 
 kubernetes::apply { 'hello-invalid-namespace':
   type      => 'manifests',
@@ -145,7 +154,7 @@ kubernetes::apply { 'hello-invalid-namespace':
     context 'test configmap kubectl::apply manifest, no tls' do
       let :configmap_manifest_apply_pp do
 "
-include kubernetes::apiserver
+#{pp}
 
 kubernetes::apply { 'configmap':
   type      => 'manifests',
@@ -175,7 +184,7 @@ kubernetes::apply { 'configmap':
     context 'test kubectl::apply_fragment manifest, no tls' do
       let :fragment_apply_pp do
 "
-include kubernetes::apiserver
+#{pp}
 
 kubernetes::apply { 'hello2':
   type      => 'concat',
