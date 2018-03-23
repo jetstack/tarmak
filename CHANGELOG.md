@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Kubernetes  | `>= 1.6 && < 1.10` | `1.8.8`  |
 | Calico      |                    | `2.6.6`  |
 | Vault Helper|                    | `0.9.7`  |
+| Etcd        |                    | `3.2.17` |
 
 ## [0.3.0]: 0.3.0 - 2018-02-20
 
