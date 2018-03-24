@@ -12,7 +12,7 @@ built from the ground-up to be cloud provider-agnostic and hence provides a
 means for consistent and reliable cluster deployment and management, across
 clouds and on-premises environments.
 
-Tarmak and its underlying components are the product of Jetstack_'s work with 
+Tarmak and its underlying components are the product of Jetstack_'s work with
 its customers to build and deploy Kubernetes in production at scale.
 
 .. _Jetstack: https://www.jetstack.io/
@@ -84,7 +84,7 @@ accounts. A Provider can be used for many Environments, while every Environment
 has to be associated with exactly one Provider.
 
 Currently the only supported Provider is **Amazon**. A Provider object for
-Amazon is referencing credentials to log in as an AWS account. 
+Amazon is referencing credentials to log in as an AWS account.
 
 .. _environments_resource:
 
@@ -97,7 +97,7 @@ in such an environments also contains the Environment-wide tooling.
 
 For Multi-Cluster Environments, this tooling is placed into a special
 Cluster resource that is called ``hub``. This allows to reuse the Environment-
-wide tooling like bastion nodes and Vault throughout all Clusters 
+wide tooling like bastion nodes and Vault throughout all Clusters
 
 .. _clusters_resource:
 
@@ -106,7 +106,7 @@ Clusters
 
 A Cluster resource represents exactly one Kubernetes cluster. The only
 exception for that rule is the ``hub`` in Multi Cluster Environment: Hubs don't
-contain a Kubernetes cluster, as they are just the place where the Environment-wide 
+contain a Kubernetes cluster, as they are just the place where the Environment-wide
 tooling is placed.
 
 All instances in a Cluster are defined by an InstancePool_.
@@ -116,9 +116,9 @@ All instances in a Cluster are defined by an InstancePool_.
 Stacks
 ^^^^^^
 
-The Cluster-specific Terraform code is broken down into separate, self-contained Stacks. 
-The Stacks use Terraform's remote state feature to share outputs between them. 
-The execution order of Stacks is important some depend on the actions of other Stacks. 
+The Cluster-specific Terraform code is broken down into separate, self-contained Stacks.
+The Stacks use Terraform's remote state feature to share outputs between them.
+The execution order of Stacks is important some depend on the actions of other Stacks.
 Tarmak currently uses these Stacks:
 
 
@@ -145,7 +145,7 @@ InstancePools
 
 Every Cluster contains InstancePools that group instances of a similar type
 together. Every InstancePool has a name and a role attached to it. Other
-parameters allow to customise the instances regarding size, count and location, 
+parameters allow to customise the instances regarding size, count and location,
 for example.
 
 These roles are defined:
@@ -156,7 +156,7 @@ These roles are defined:
 * ``vault``: Vault instance within the ``vault`` stack. Has persistent disks,
   that back a Consul cluster, which backs Vault itself.
 * ``etcd``: Stateful instances within ``kubernetes`` stack. Etcd is the
-  key-value store backing Kubernetes and possibly other components, including 
+  key-value store backing Kubernetes and possibly other components, including
   overlay networks (i.e. Calico).
 * ``master``: Stateless Kubernetes master instances.
 * ``worker``: Stateless Kubernetes worker instances.
