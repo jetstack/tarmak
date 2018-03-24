@@ -32,7 +32,8 @@ docker_html:
 	container=$$(docker create tarmakdocs:latest); \
 	docker cp . $$container:/site; \
 	docker start -a $$container; \
-	docker cp $$container:/site/_build .
+	docker cp $$container:/site/_build .; \
+	docker rm $$container
 
 .venv:
 	virtualenv -p $(shell which python3) $(VENV_PATH)
