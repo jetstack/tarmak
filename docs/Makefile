@@ -25,6 +25,16 @@ help:
 %: Makefile .venv
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+# Make the site's html in docker
+docker_html:
+	set -x; mkdir -p _build; \
+	docker build -t tarmakdocs:latest .; \
+	container=$$(docker create tarmakdocs:latest); \
+	docker cp . $$container:/site; \
+	docker start -a $$container; \
+	docker cp $$container:/site/_build .; \
+	docker rm $$container
+
 .venv:
 	virtualenv -p $(shell which python3) $(VENV_PATH)
 	$(VENV_PATH)/bin/pip install -r requirements.txt
