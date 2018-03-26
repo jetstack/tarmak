@@ -1,3 +1,4 @@
+# Copyright Jetstack Ltd. See LICENSE for details.
 FROM jfloff/alpine-python:3.4-slim
 
 WORKDIR /site
