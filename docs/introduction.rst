@@ -84,7 +84,7 @@ accounts. A single Provider can be used for many Environments, while every
 Environment has to be associated with exactly one Provider.
 
 Currently, the only supported Provider is **Amazon**. An Amazon Provider object
-references credentials to make use of an AWS account to privision resources.
+references credentials to make use of an AWS account to provision resources.
 
 .. _environments_resource:
 
