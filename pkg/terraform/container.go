@@ -19,6 +19,7 @@ import (
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type TerraformContainer struct {
@@ -77,6 +78,11 @@ func MapToTerraformTfvars(input map[string]interface{}) (output string, err erro
 			if err != nil {
 				return "", err
 			}
+		case int:
+			_, err := buf.WriteString(fmt.Sprintf("%s = %d\n", key, v))
+			if err != nil {
+				return "", err
+			}
 		case *net.IPNet:
 			_, err := buf.WriteString(fmt.Sprintf("%s = \"%s\"\n", key, v.String()))
 			if err != nil {
@@ -99,13 +105,19 @@ func (tc *TerraformContainer) Shell() (err error) {
 }
 
 func (tc *TerraformContainer) writeTfvars() (err error) {
-	// adds parameters as CLI args
-	/*terraformVars := utils.MergeMaps(
+	// TODO: Fix this properly, this just gets bastion,vault,kubernetes stack
+	// variables to allow single stack to function
+	variables := []map[string]interface{}{
 		tc.stack.Cluster().Environment().Tarmak().Variables(),
 		tc.stack.Cluster().Environment().Variables(),
 		tc.stack.Cluster().Variables(),
-		tc.stack.Variables(),
-	)
+	}
+	for _, stack := range tc.stack.Cluster().Stacks() {
+		variables = append(variables, stack.Variables())
+	}
+
+	// adds parameters as CLI args
+	terraformVars := utils.MergeMaps(tc.stack.Cluster().Environment().Tarmak().Variables(), variables...)
 	tc.log.WithFields(terraformVars).Debug("terraform vars generated")
 
 	terraformVarsFile, err := MapToTerraformTfvars(terraformVars)
@@ -121,7 +133,7 @@ func (tc *TerraformContainer) writeTfvars() (err error) {
 	err = tc.UploadToContainer(remoteStateTar, "/terraform")
 	if err != nil {
 		return err
-	}*/
+	}
 
 	return nil
 }

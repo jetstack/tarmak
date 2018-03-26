@@ -160,6 +160,7 @@ func (s *Stack) Variables() map[string]interface{} {
 		if ok {
 			vars[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
 		}
+		vars[fmt.Sprintf("%s_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
 	}
 	return vars
 

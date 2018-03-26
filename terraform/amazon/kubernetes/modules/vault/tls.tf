@@ -26,14 +26,14 @@ resource "tls_self_signed_cert" "ca" {
 
 # Per instance certs
 resource "tls_private_key" "vault" {
-  count = "${var.instance_count}"
+  count = "${var.vault_instance_count}"
 
   algorithm = "RSA"
   rsa_bits  = "2048"
 }
 
 resource "tls_cert_request" "vault" {
-  count           = "${var.instance_count}"
+  count           = "${var.vault_instance_count}"
   key_algorithm   = "${element(tls_private_key.vault.*.algorithm, count.index)}"
   private_key_pem = "${element(tls_private_key.vault.*.private_key_pem, count.index)}"
 
@@ -53,7 +53,7 @@ resource "tls_cert_request" "vault" {
 }
 
 resource "tls_locally_signed_cert" "vault" {
-  count = "${var.instance_count}"
+  count = "${var.vault_instance_count}"
 
   cert_request_pem = "${element(tls_cert_request.vault.*.cert_request_pem, count.index)}"
 

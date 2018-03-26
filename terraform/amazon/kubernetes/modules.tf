@@ -78,7 +78,7 @@ module "vault" {
   vault_version = "${var.vault_version}"
   vault_root_size = "${var.vault_root_size}"
   vault_data_size = "${var.vault_data_size}"
-  instance_count = "${var.instance_count}"
+  vault_instance_count = "${var.vault_instance_count}"
   vault_instance_type = "${var.vault_instance_type}"
   state_cluster_name = "${var.state_cluster_name}"
   private_zone = "${module.network.private_zone[0]}"
