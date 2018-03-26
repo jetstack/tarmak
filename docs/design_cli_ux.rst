@@ -147,7 +147,7 @@ Usage::
 Flags::
 
   --infrastructure-stacks [state,network,tools,vault,kubernetes]
-      target exactlyone piece of the infrastructure (aka terraform stack). This implies (--infrastructure-only) 
+      target exactlyone piece of the infrastructure (aka terraform stack). This implies (--infrastructure-only)
   --infrastructure-only   [default=false]
       only apply infrastructure (aka terraform)
   --configuration-only    [default=false]
@@ -167,7 +167,7 @@ Usage::
 Flags::
 
   --infrastructure-stacks     [state,network,tools,vault,kubernetes]
-      target exactlyone piece of the infrastructure (aka terraform stack). This implies (--infrastructure-only) 
+      target exactlyone piece of the infrastructure (aka terraform stack). This implies (--infrastructure-only)
   --force-destroy-state-stack [default=false]
       force destroy the state stack, this is unreversible
   --dry-run                   [default=false]

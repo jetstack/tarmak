@@ -39,3 +39,4 @@ hostname
 configmap
 kubelet
 rolename
+macOS
