@@ -111,6 +111,13 @@ func (i *InitToken) InitToken() (string, error) {
 	return token, nil
 }
 
+func (i *InitToken) GetInitToken() (string, error) {
+	if i.token != nil {
+		return *i.token, nil
+	}
+	return "", fmt.Errorf("could not get init token")
+}
+
 func (i *InitToken) secretsGeneric() *Generic {
 	return i.kubernetes.secretsGeneric
 }
