@@ -20,7 +20,7 @@ describe 'kubernetes::kubelet' do
       should_not contain_file(service_file).with_content(/--network-plugin/)
       should contain_file(service_file).with_content(/--container-runtime=docker/)
       should contain_file(service_file).with_content(%r{--kubeconfig=/etc/kubernetes/kubeconfig-kubelet})
-      should contain_file(service_file).with_content(%r{--eviction-hard=memory.available<200Mi})
+      should contain_file(service_file).with_content(%r{--eviction-hard="memory.available<191Mi"})
     end
   end
 

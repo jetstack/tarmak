@@ -4,7 +4,7 @@ Puppet::Functions.create_function(:five_percent_of_total_ram) do
   end
 
   def five_percent_of_total_ram(total_bytes)
-    five_percent = (total_bytes * 0.05 / 1_000_000).round
+    five_percent = (total_bytes * 0.05 / 1024**2).round
     default = 100
 
     if five_percent < default
