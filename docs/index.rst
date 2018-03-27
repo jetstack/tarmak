@@ -50,3 +50,4 @@ build and deploy Kubernetes in production at scale.
    existing-vpc
    vault-setup-config
    vault-helper-guide
+   aws-centos-guide
