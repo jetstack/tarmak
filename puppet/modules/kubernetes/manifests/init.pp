@@ -65,7 +65,7 @@ class kubernetes (
     } else {
       $_pod_security_policy = false
     }
-  } else {    
+  } else {
     if $pod_security_policy and versioncmp($version, '1.6.0') >= 0 {
       $_pod_security_policy = $pod_security_policy
     } else {
