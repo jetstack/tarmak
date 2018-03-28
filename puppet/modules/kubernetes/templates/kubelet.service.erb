@@ -4,6 +4,7 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 <%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
+Slice=podruntime.slice
 WorkingDirectory=<%= @kubelet_dir %>
 <% if @cloud_provider == 'aws' -%>
 # prevent metadata service access on AWS
@@ -70,9 +71,32 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% end -%>
 <% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
   --cgroup-driver=<%= @cgroup_driver %> \
-<% if not @osfamily.nil? and @osfamily == 'RedHat' -%>
-  --runtime-cgroups=/systemd/system.slice \
-  --kubelet-cgroups=/systemd/system.slice \
+  --cgroup-root=<%= @cgroup_root %> \
+<% if @cgroup_kube_name -%>
+  --kube-reserved-cgroup=<%= @cgroup_kube_name %> \
+  --runtime-cgroups=<%= @cgroup_kube_name %> \
+  --kubelet-cgroups=<%= @cgroup_kube_name %> \
+<%
+    # build kube reserved command line
+    @cgroup_kube_reserved = []
+    @cgroup_kube_reserved << "cpu=#{@cgroup_kube_reserved_cpu}" unless @cgroup_kube_reserved_cpu.nil? or @cgroup_kube_reserved_cpu == 'nil'
+    @cgroup_kube_reserved << "memory=#{@cgroup_kube_reserved_memory}" unless @cgroup_kube_reserved_memory.nil? or @cgroup_kube_reserved_memory == 'nil'
+    if @cgroup_kube_reserved.length > 0
+-%>
+  "--kube-reserved=<%= @cgroup_kube_reserved.join(',') %>" \
+<% end -%>
+<% end -%>
+<% if @cgroup_system_name -%>
+  --system-reserved-cgroup=<%= @cgroup_system_name %> \
+<%
+    # build system reserved command line
+    @cgroup_system_reserved = []
+    @cgroup_system_reserved << "cpu=#{@cgroup_system_reserved_cpu}" unless @cgroup_system_reserved_cpu.nil? or @cgroup_system_reserved_cpu == 'nil'
+    @cgroup_system_reserved << "memory=#{@cgroup_system_reserved_memory}" unless @cgroup_system_reserved_memory.nil? or @cgroup_system_reserved_memory == 'nil'
+    if @cgroup_system_reserved.length > 0
+-%>
+  "--system-reserved=<%= @cgroup_system_reserved.join(',') %>" \
+<% end -%>
 <% end -%>
 <% end -%>
 <% if @cert_file and @key_file -%>

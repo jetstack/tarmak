@@ -185,13 +185,62 @@ describe 'kubernetes::kubelet' do
       context 'on redhat family os' do
         let(:facts) { {'osfamily' => 'RedHat' } }
         it { should contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
-        it { should contain_file(service_file).with_content(%r{--runtime-cgroups=/systemd/system.slice}) }
-        it { should contain_file(service_file).with_content(%r{--kubelet-cgroups=/systemd/system.slice}) }
       end
 
       context 'on anything but redhat family os' do
         let(:facts) { {'osfamily' => 'Debian' } }
         it { should contain_file(service_file).with_content(%r{--cgroup-driver=cgroupfs}) }
+      end
+    end
+  end
+
+  ['kube', 'system'].each do |cgroup_type|
+    context 'runtime cgroups reserved' do
+      let(:facts) { {'kernelversion' => '4.14.1' } }
+      let(:pre_condition) {[
+        """
+          class{'kubernetes': version => '1.9.5'}
+        """
+      ]}
+
+      context 'with both cpu and memory a supplied' do
+        let(:params) { {
+          "cgroup_#{cgroup_type}_reserved_cpu"    => '100m',
+          "cgroup_#{cgroup_type}_reserved_memory" => '128Mi',
+        }}
+        it do 
+          should contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=cpu=100m,memory=128Mi})
+        end
+      end
+
+      context 'with only cpu supplied' do
+        let(:params) { {
+          "cgroup_#{cgroup_type}_reserved_cpu"    => '100m',
+          "cgroup_#{cgroup_type}_reserved_memory" => nil,
+        }}
+        it do
+          should contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=cpu=100m})
+        end
+      end
+
+      context 'with only memory supplied' do
+        let(:params) { {
+          "cgroup_#{cgroup_type}_reserved_cpu"    => nil,
+          "cgroup_#{cgroup_type}_reserved_memory" => '128Mi',
+        }}
+        it do
+          should contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=memory=128Mi})
+        end
+      end
+
+      context 'with nothing supplied' do
+        let(:params) { {
+          "cgroup_#{cgroup_type}_reserved_cpu"    => nil,
+          "cgroup_#{cgroup_type}_reserved_memory" => nil,
+        }}
+        it do
+          should_not contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=})
+        end
       end
     end
   end
