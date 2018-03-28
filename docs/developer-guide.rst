@@ -27,7 +27,7 @@ First we will clone the Tarmak repository and build the `tarmak` binary. Make su
   git clone git@github.com:jetstack/tarmak.git
   cd tarmak
   make build
-  ln -s $PWD/tarmak_darwin_amd64 /usr/local/bin/tarmak
+  ln -s $PWD/tarmak_$(uname -s | tr '[:upper:]' '[:lower:]')_amd64 /usr/local/bin/tarmak
 
 You should now be able to run `tarmak` to view the available commands.
 
