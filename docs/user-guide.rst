@@ -6,15 +6,15 @@ User guide
 Getting started with AWS
 ------------------------
 
-In this getting started guide, we walk through how to use initialise Tarmak with a new Provider (AWS) and Environment and provision a Kubernetes cluster. 
-This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and a bastion node with a public IP address 
+In this getting started guide, we walk through how to use initialise Tarmak with a new Provider (AWS) and Environment and provision a Kubernetes cluster.
+This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and a bastion node with a public IP address
 (see :ref:`Architecture overview <architecture_overview>` for details of cluster components)
 
 Prerequisites
 ~~~~~~~~~~~~~
 
 * Docker
-* An AWS account
+* An AWS account that has `accepted the CentOS licence terms <aws-centos-guide.html>`_
 * A public DNS zone that can be delegated to AWS Route 53
 * Optional: Vault with the `AWS secret backend <https://www.vaultproject.io/docs/secrets/aws/index.html>`_ configured
 
