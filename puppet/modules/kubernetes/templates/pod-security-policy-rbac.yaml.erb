@@ -1,63 +1,69 @@
 apiVersion: v1
-items:
-- apiVersion: rbac.authorization.k8s.io/v1
+kind: Namespace
+metadata:
+  labels:
+    app: prometheus
+  name: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:restricted
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:privileged
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  metadata:
-    name: psp:restricted
-  rules:
-  - apiGroups: ['extensions']
-    resources: ['podsecuritypolicies']
-    verbs:     ['use']
-    resourceNames:
-    - restricted
-- apiVersion: rbac.authorization.k8s.io/v1
+  name: psp:restricted
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: default:privileged
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  metadata:
-    name: psp:privileged
-  rules:
-  - apiGroups: ['extensions']
-    resources: ['podsecuritypolicies']
-    verbs:     ['use']
-    resourceNames:
-    - privileged
-- apiVersion: rbac.authorization.k8s.io/v1
-  kind: ClusterRoleBinding
-  metadata:
-    name: default:restricted
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: psp:restricted
-  subjects:
-  - kind: Group
-    name: system:authenticated
-    apiGroup: rbac.authorization.k8s.io
-- apiVersion: rbac.authorization.k8s.io/v1
-  kind: RoleBinding
-  metadata:
-    name: default:privileged
-    namespace: kube-system
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: psp:privileged
-  subjects:
-  - kind: Group
-    name: system:serviceaccounts:kube-system
-    apiGroup: rbac.authorization.k8s.io
-- apiVersion: rbac.authorization.k8s.io/v1
-  kind: RoleBinding
-  metadata:
-    name: default:privileged
-    namespace: monitoring
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: psp:privileged
-  subjects:
-  - kind: Group
-    name: system:serviceaccounts:monitoring
-    apiGroup: rbac.authorization.k8s.io
-kind: List
-metadata: {}
-    
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:serviceaccounts:kube-system
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: default:privileged
+  namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:serviceaccounts:monitoring
+  apiGroup: rbac.authorization.k8s.io
