@@ -4,6 +4,7 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 <%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
+Slice=podruntime.slice
 User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
 <%- if scope['kubernetes::_service_account_key_file'] and scope['kubernetes::service_account_key_generate'] -%>
