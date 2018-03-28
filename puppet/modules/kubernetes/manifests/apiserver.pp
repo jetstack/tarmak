@@ -45,69 +45,28 @@ class kubernetes::apiserver(
   $_systemd_after = ['network.target'] + $systemd_after
   $_systemd_before = $systemd_before
 
+  $post_1_9 = versioncmp($::kubernetes::version, '1.9.0') >= 0
+  $post_1_8 = versioncmp($::kubernetes::version, '1.8.0') >= 0
+  $post_1_7 = versioncmp($::kubernetes::version, '1.7.0') >= 0
+  $post_1_6 = versioncmp($::kubernetes::version, '1.6.0') >= 0
+  $post_1_5 = versioncmp($::kubernetes::version, '1.5.0') >= 0
+  $post_1_4 = versioncmp($::kubernetes::version, '1.4.0') >= 0
+
   # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
   if $admission_control == undef {
-    if versioncmp($::kubernetes::version, '1.8.0') >= 0 {
-      if $::kubernetes::_pod_security_policy {
-        $_admission_control =  [
-          'Initializers',
-          'NamespaceLifecycle',
-          'LimitRanger',
-          'ServiceAccount',
-          'DefaultStorageClass',
-          'ResourceQuota',
-          'DefaultTolerationSeconds',
-          'NodeRestriction',
-          'PodSecurityPolicy'
-        ]
-      } else {
-        $_admission_control =  [
-          'Initializers',
-          'NamespaceLifecycle',
-          'LimitRanger',
-          'ServiceAccount',
-          'DefaultStorageClass',
-          'ResourceQuota',
-          'DefaultTolerationSeconds',
-          'NodeRestriction',
-        ]
-      }
-    } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
-      if $::kubernetes::_pod_security_policy {
-        $_admission_control =  [
-          'NamespaceLifecycle',
-          'LimitRanger',
-          'ServiceAccount',
-          'PersistentVolumeLabel',
-          'DefaultStorageClass',
-          'ResourceQuota',
-          'DefaultTolerationSeconds',
-          'PodSecurityPolicy'
-        ]
-      } else {
-        $_admission_control =  [
-          'NamespaceLifecycle',
-          'LimitRanger',
-          'ServiceAccount',
-          'PersistentVolumeLabel',
-          'DefaultStorageClass',
-          'ResourceQuota',
-          'DefaultTolerationSeconds'
-        ]
-      }
-    } elsif versioncmp($::kubernetes::version, '1.4.0') >= 0 {
-      if $::kubernetes::_pod_security_policy {
-        $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota', 'PodSecurityPolicy']
-      } else {
-        $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'DefaultStorageClass', 'ResourceQuota']
-      }
-    } else {
-      if $::kubernetes::_pod_security_policy {
-        $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'ResourceQuota', 'PodSecurityPolicy']
-      } else {
-        $_admission_control =  ['NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'ResourceQuota']
-      }
-    }
+    $_admission_control = delete_undef_values([
+      $post_1_8 ? { true => 'Initializers', default => undef },
+      'NamespaceLifecycle',
+      'LimitRanger',
+      'ServiceAccount',
+      $post_1_4 ? { true => 'DefaultStorageClass', default => undef },
+      $post_1_6 ? { true => 'DefaultTolerationSeconds', default => undef },
+      $post_1_9 ? { true => 'MutatingAdmissionWebhook', default => undef },
+      $post_1_9 ? { true => 'ValidatingAdmissionWebhook', default => undef },
+      'ResourceQuota',
+      $::kubernetes::_pod_security_policy ? { true => 'PodSecurityPolicy', default => undef },
+      $post_1_8 ? { true => 'NodeRestriction', default => undef },
+    ])
   } else {
     $_admission_control = $admission_control
   }
