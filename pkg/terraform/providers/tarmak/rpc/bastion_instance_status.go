@@ -25,7 +25,10 @@ type BastionInstanceStatusReply struct {
 func (r *tarmakRPC) BastionInstanceStatus(args *BastionInstanceStatusArgs, result *BastionInstanceStatusReply) error {
 	r.tarmak.Log().Debug("received rpc bastion status")
 
-	// TODO: if destroying cluster just return unknown here
+	if r.tarmak.Cluster().GetState() == "destroy" {
+		result.Status = "unknown"
+		return nil
+	}
 
 	toolsStack := r.tarmak.Cluster().Stack(tarmakv1alpha1.StackNameTools)
 

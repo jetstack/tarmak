@@ -49,6 +49,8 @@ type Cluster interface {
 	WaitForConvergance() error
 	// This upload the puppet.tar.gz to the cluster, warning there is some duplication as terraform is also uploading this puppet.tar.gz
 	UploadConfiguration() error
+	GetState() string
+	SetState(string)
 }
 
 type Environment interface {

@@ -14,7 +14,7 @@ import (
 const (
 	ConnectorSocket = "/tmp/tarmak-connector.sock"
 	RPCName         = "Tarmak"
-	Retries         = 120
+	Retries         = 60
 )
 
 type tarmakInterface struct{}

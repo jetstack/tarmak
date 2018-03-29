@@ -36,6 +36,7 @@ type Cluster struct {
 	imageIDs      map[string]string
 	instancePools []interfaces.InstancePool
 	roles         map[string]*role.Role
+	state         string
 }
 
 var _ interfaces.Cluster = &Cluster{}
@@ -404,4 +405,12 @@ func (c *Cluster) Variables() map[string]interface{} {
 	output["name"] = c.Name()
 
 	return output
+}
+
+func (c *Cluster) SetState(state string) {
+	c.state = state
+}
+
+func (c *Cluster) GetState() string {
+	return c.state
 }

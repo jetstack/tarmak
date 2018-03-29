@@ -321,32 +321,6 @@ func (k *Kubernetes) InitTokens() map[string]string {
 	return output
 }
 
-func (k *Kubernetes) EnsureInitToken(roleName string) (string, error) {
-	for _, initToken := range k.initTokens {
-		if initToken.Role == roleName {
-			token, err := initToken.InitToken()
-			if err != nil {
-				return "", err
-			}
-			return token, nil
-		}
-	}
-	return "", fmt.Errorf("could not ensure init token for role %s", roleName)
-}
-
-func (k *Kubernetes) GetInitToken(roleName string) (string, error) {
-	for _, initToken := range k.initTokens {
-		if initToken.Role == roleName {
-			token, err := initToken.GetInitToken()
-			if err != nil {
-				return "", err
-			}
-			return token, nil
-		}
-	}
-	return "", fmt.Errorf("could not get init token for role %s", roleName)
-}
-
 func (k *Kubernetes) SetInitFlags(flags FlagInitTokens) {
 	k.FlagInitTokens = flags
 }

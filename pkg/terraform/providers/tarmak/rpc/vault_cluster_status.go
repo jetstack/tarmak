@@ -3,7 +3,9 @@ package rpc
 
 import (
 	"fmt"
+	"time"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
 )
@@ -29,9 +31,7 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 
 	// TODO: if destroying cluster just return unknown here
 
-	///CUSTOM
-	vaultStack := r.tarmak.Cluster().Environment().VaultStack()
-	//vaultStack := r.tarmak.Cluster().Environment().Stack(tarmakv1alpha1.StackNameVault)
+	vaultStack := r.tarmak.Cluster().Stack(tarmakv1alpha1.StackNameVault)
 
 	vaultStackReal, ok := vaultStack.(*stack.VaultStack)
 	if !ok {
@@ -45,12 +45,6 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 		r.tarmak.Log().Error(err)
 		return err
 	}
-	///CUSTOM
-
-	//initVaultClient
-
-	// load outputs from terraform
-	r.tarmak.Cluster().Environment().Tarmak().Terraform().Output(vaultStack)
 
 	vaultTunnel, err := vaultStackReal.VaultTunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
 	if err != nil {
@@ -70,8 +64,6 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 	}
 
 	vaultClient.SetToken(vaultRootToken)
-
-	//initVaultClient
 
 	k := kubernetes.New(vaultClient, r.tarmak.Log())
 	k.SetClusterID(r.tarmak.Cluster().ClusterName())
@@ -89,9 +81,7 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
-	//initVaultClient
-	vaultStack := r.tarmak.Cluster().Environment().VaultStack()
-	//vaultStack := r.tarmak.Cluster().Environment().Stack(tarmakv1alpha1.StackNameVault)
+	vaultStack := r.tarmak.Cluster().Stack(tarmakv1alpha1.StackNameVault)
 
 	vaultStackReal, ok := vaultStack.(*stack.VaultStack)
 	if !ok {
@@ -99,9 +89,6 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 		r.tarmak.Log().Error(err)
 		return err
 	}
-
-	// load outputs from terraform
-	r.tarmak.Cluster().Environment().Tarmak().Terraform().Output(vaultStack)
 
 	vaultTunnel, err := vaultStackReal.VaultTunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
 	if err != nil {
@@ -122,17 +109,23 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 
 	vaultClient.SetToken(vaultRootToken)
 
-	//initVaultClient
-
-	up, err := vaultClient.Sys().InitStatus()
+	up := false
+	err = nil
+	for i := 1; i <= Retries; i++ {
+		up, err = vaultClient.Sys().InitStatus()
+		if err != nil {
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve init status: %s", err)
 		r.tarmak.Log().Error(err)
 		return err
 	}
-
 	if !up {
-		err = fmt.Errorf("vault cluster has not been initialised: %s", err)
+		err = fmt.Errorf("failed to initialised vault cluster")
 		r.tarmak.Log().Error(err)
 		return err
 	}

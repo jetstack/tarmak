@@ -18,6 +18,10 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
+const (
+	Retries = 60
+)
+
 type VaultStack struct {
 	*Stack
 }
@@ -431,7 +435,7 @@ func (s *VaultStack) verifyVaultInit() error {
 	}()
 
 	// get state of all instances
-	retries := 60
+	retries := Retries
 	for {
 		clusterState, instances := s.vaultInstanceState(tunnels)
 
@@ -535,49 +539,47 @@ func (s *VaultStack) VerifyVaultInitFromFQDNs(instances []string, vaultCA, vault
 	cl := tunnels[0].VaultClient()
 
 	// get state of all instances
-	retries := 5
-	for {
+	err = nil
+	for retries := Retries; retries > 0; retries-- {
+
+		time.Sleep(time.Second * 1)
 
 		health, err := cl.Sys().Health()
-		if err != nil {
-			return fmt.Errorf("could not get vault health: %s", err)
-		}
+		if err == nil {
+			if !health.Sealed {
+				return nil
+			} else if !health.Initialized {
 
-		if !health.Sealed {
-			return nil
-		} else if !health.Initialized {
+				v, err := vaultUnsealer.New(kv, cl, vaultUnsealer.Config{
+					KeyPrefix: "vault",
 
-			v, err := vaultUnsealer.New(kv, cl, vaultUnsealer.Config{
-				KeyPrefix: "vault",
+					SecretShares:    1,
+					SecretThreshold: 1,
 
-				SecretShares:    1,
-				SecretThreshold: 1,
+					InitRootToken:  rootToken,
+					StoreRootToken: false,
 
-				InitRootToken:  rootToken,
-				StoreRootToken: false,
+					OverwriteExisting: true,
+				})
+				if err != nil {
+					err = fmt.Errorf("error creating new unsealer: %s", err)
+					continue
+				}
 
-				OverwriteExisting: true,
-			})
-
-			err = v.Init()
-			if err != nil {
-				return fmt.Errorf("error initialising vault: %s", err)
+				err = v.Init()
+				if err != nil {
+					err = fmt.Errorf("error initialising vault: %s", err)
+					continue
+				}
+				s.log.Info("vault succesfully initialised")
+				return nil
+			} else if health.Sealed {
+				s.log.Debug("a quorum of vault instances is sealed, retrying")
+			} else {
+				s.log.Debug("a quorum of vault instances is in unknown state, retrying")
 			}
-			s.log.Info("vault succesfully initialised")
-			return nil
-		} else if health.Sealed {
-			s.log.Debug("a quorum of vault instances is sealed, retrying")
-		} else {
-			s.log.Debug("a quorum of vault instances is in unknown state, retrying")
 		}
-
-		retries--
-		if retries == 0 {
-			break
-		}
-		time.Sleep(time.Second * 10)
-
 	}
 
-	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed")
+	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed: %s", err)
 }

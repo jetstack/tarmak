@@ -119,6 +119,7 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 	c := t.NewContainer(stack)
 
 	if destroy {
+		t.tarmak.Cluster().SetState("destroy")
 		if err := stack.VerifyPreDestroy(); err != nil {
 			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
 		}
