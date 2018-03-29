@@ -3,19 +3,13 @@ kind: PodSecurityPolicy
 metadata:
   name: restricted
   annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'docker/default'
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: 'runtime/default'
-    seccomp.security.alpha.kubernetes.io/defaultProfileNames: 'docker/default'
-    apparmor.security.beta.kubernetes.io/defaultProfileNames: 'runtime/default'
 spec:
   hostPID: false
   hostIPC: false
   hostNetwork: false
   privileged: false
-  allowPrivilegeEscalation: false
+  allowPrivilegeEscalation: nil
   readOnlyRootFilesystem: false
-  requiredDropCapabilities:
-    - ALL
   volumes:
     - configMap
     - emptyDir
