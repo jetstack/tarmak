@@ -147,6 +147,7 @@ Concerns
 
 -  Huge part of security critical code in our hands
 -  Clean up of roles and templates once they are no longer used
+-  Work will be needed for each additional cloud provider we want to support.
 
 Out of scope
 ============
