@@ -8,7 +8,7 @@ bundle_install:
 
 acceptance: acceptance-1-8-centos
 
-acceptance-1-10-centos: export KUBERNETES_VERSION = 1.10.0-rc.1
+acceptance-1-10-centos: export KUBERNETES_VERSION = 1.10.0
 acceptance-1-10-centos: bundle_install
 	bundle exec rake beaker:default
 
