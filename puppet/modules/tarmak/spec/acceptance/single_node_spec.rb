@@ -124,5 +124,56 @@ class{'tarmak::single_node':
       expect(result.stdout.scan(/Running/m).size).to eq(1)
       expect(result.stdout.scan(/1\/1/m).size).to eq(1)
     end
+
+    context 'with podsecuritypolicy enabled' do
+      before(:all) do
+        begin
+          shell('grep PodSecurityPolicy /etc/systemd/system/kube-apiserver.service')
+        rescue Beaker::Host::CommandFailure
+          skip('PodSecurityPoliciy is not enabled')
+        end
+
+        result = shell('kubectl create namespace developer')
+        expect(result.exit_code).to eq(0)
+
+        result = shell('kubectl create rolebinding developer-admin-binding --clusterrole=admin --user=developer --namespace=developer')
+        expect(result.exit_code).to eq(0)
+
+        result = shell('kubectl create rolebinding kubeadmin-admin-binding --clusterrole=admin --user=kubeadmin --namespace=kube-system')
+        expect(result.exit_code).to eq(0)
+      end
+
+      after(:all) do
+        begin
+          shell('kubectl delete namespace developer')
+        rescue Beaker::Host::CommandFailure
+        end
+
+        begin
+          shell('kubectl delete rolebinding kubeadmin-admin-binding -n kube-system')
+        rescue Beaker::Host::CommandFailure
+        end
+      end
+
+      it 'allows developer to run unprivileged pods in namespace developer' do
+        result = shell('kubectl --as=developer run busybox --image=busybox --restart=Never -n developer --rm --attach  -- uname -a')
+        expect(result.exit_code).to eq(0)
+      end
+
+      it 'forbids developer to run privileged pods in namespace developer' do
+        if Gem::Version.new(kubernetes_version) >= Gem::Version.new('1.10.0') and Gem::Version.new(kubernetes_version) < Gem::Version.new('1.11.0')
+          skip('issue #61713 prevents this test from working with 1.10')
+        end
+
+        expect {
+          shell('kubectl --as=developer run busybox-priv --image=busybox --restart=Never -n developer --overrides \'{"spec":{"containers":[{"name":"busybox","image":"busybox","command":["uname","-a"],"securityContext":{"privileged":true}}]}}\' --rm --attach')
+        }.to raise_error(Beaker::Host::CommandFailure, /forbidden/)
+      end
+
+      it 'allows kubeadmins to run privileged pods in namespace kube-system' do
+        result = shell('kubectl --as=kubeadmin run busybox-priv --image=busybox --restart=Never -n kube-system --overrides \'{"spec":{"containers":[{"name":"busybox","image":"busybox","command":["uname","-a"],"securityContext":{"privileged":true}}]}}\' --rm --attach')
+        expect(result.exit_code).to eq(0)
+      end
+    end
   end
 end
