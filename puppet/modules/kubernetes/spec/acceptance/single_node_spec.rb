@@ -43,7 +43,7 @@ class{'kubernetes::worker':
       # assign private ip addresses
       hosts.each do |host|
         ip = host.host_hash[:ip]
-        on host, "ip addr add #{ip}/24 dev eth1"
+        on host, "ip addr add #{ip}/24 dev eth1 || true"
 
         # clear firewall
         on host, "iptables -F INPUT"
@@ -244,6 +244,7 @@ kubernetes::apply_fragment { 'hello2-metadata-labelname':
         expect(result.stdout.scan(/Active/m).size).to eq(1)
         shell("/opt/bin/kubectl delete namespace testing2")
       end
+
     end
   end
 end
