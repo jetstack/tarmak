@@ -1,16 +1,13 @@
 # Copyright Jetstack Ltd. See LICENSE for details.
-FROM jfloff/alpine-python:3.4-slim
+FROM python:3
 
 WORKDIR /site
 
-RUN apk update && apk add enchant make
-
-RUN pip install --upgrade pip virtualenv
-RUN virtualenv venv
-RUN source venv/bin/activate
+RUN apt-get update && apt-get install -y python-enchant wbritish
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
+RUN mkdir -p venv/bin && ln -s $(which python) venv/bin/python && touch .venv
 
 ENTRYPOINT ["make"]
-CMD ["html"]
+CMD ["spelling", "linkcheck", "html"]

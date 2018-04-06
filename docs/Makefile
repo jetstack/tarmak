@@ -30,7 +30,7 @@ docker_html:
 	set -x; mkdir -p _build; \
 	docker build -t tarmakdocs:latest .; \
 	container=$$(docker create tarmakdocs:latest); \
-	docker cp . $$container:/site; \
+	git ls-files -z | xargs -0 tar -czvf - | docker cp - $$container:/site; \
 	docker start -a $$container; \
 	docker cp $$container:/site/_build .; \
 	docker rm $$container
