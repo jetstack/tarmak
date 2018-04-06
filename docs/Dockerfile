@@ -1,9 +1,9 @@
 # Copyright Jetstack Ltd. See LICENSE for details.
-FROM jfloff/alpine-python:3.4-slim
+FROM python:3
 
 WORKDIR /site
 
-RUN apk update && apk add enchant make
+RUN apt-get update && apt-get install -y python-enchant wbritish
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
