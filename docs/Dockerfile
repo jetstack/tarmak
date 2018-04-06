@@ -5,12 +5,9 @@ WORKDIR /site
 
 RUN apk update && apk add enchant make
 
-RUN pip install --upgrade pip virtualenv
-RUN virtualenv venv
-RUN source venv/bin/activate
-
 COPY requirements.txt .
 RUN pip install -r requirements.txt
+RUN mkdir -p venv/bin && ln -s $(which python) venv/bin/python && touch .venv
 
 ENTRYPOINT ["make"]
-CMD ["html"]
+CMD ["spelling", "linkcheck", "html"]
