@@ -1,3 +1,4 @@
+{{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeHub)}}
 module "state" {
   source = "modules/state"
 
@@ -17,14 +18,26 @@ module "state" {
 }
 
 module "network" {
+{{ if .ExistingVPC }}
+  source = "modules/network-existing-vpc"
+
+  public_subnets = "${var.public_subnets}"
+  private_subnets = "${var.private_subnets}"
+  vpc_id = "${var.vpc_id}"
+{{else}}
   source = "modules/network"
+
+  route_table_public_ids = "${var.route_table_public_ids}"
+  route_table_private_ids = "${var.route_table_private_ids}"
+  peer_vpc_id = "${var.peer_vpc_id}"
+  vpc_net = "${var.vpc_net}"
+{{ end }}
 
   network = "${var.network}"
   name = "${var.name}"
   project = "${var.project}"
   contact = "${var.contact}"
   region = "${var.region}"
-  peer_vpc_id = "${var.peer_vpc_id}"
   availability_zones = "${var.availability_zones}"
   stack = "${var.stack}"
   state_bucket = "${var.state_bucket}"
@@ -34,9 +47,6 @@ module "network" {
   environment = "${var.environment}"
   private_zone = "${var.private_zone}"
   state_cluster_name = "${var.state_cluster_name}"
-  vpc_net = "${var.vpc_net}"
-  route_table_public_ids = "${var.route_table_public_ids}"
-  route_table_private_ids = "${var.route_table_private_ids}"
   private_zone_id = "${var.private_zone_id}"
 }
 
@@ -94,6 +104,63 @@ module "vault" {
   bastion_instance_id = "${module.bastion.bastion_instance_id}"
   vault_cluster_name = "${var.vault_cluster_name}"
 }
+{{end}}
+
+{{ if eq .ClusterType .ClusterTypeClusterSingle}}
+module "kubernetes" {
+  source = "modules/kubernetes"
+
+  name = "${var.name}"
+  project = "${var.project}"
+  contact = "${var.contact}"
+  key_name = "${var.key_name}"
+  region = "${var.region}"
+  stack = "${var.stack}"
+  state_bucket = "${var.state_bucket}"
+  stack_name_prefix = "${var.stack_name_prefix}"
+  allowed_account_ids = "${var.allowed_account_ids}"
+  environment = "${var.environment}"
+  state_cluster_name = "${var.state_cluster_name}"
+  vault_cluster_name = "${var.vault_cluster_name}"
+  tools_cluster_name = "${var.tools_cluster_name}"
+
+  {{ if .InstancePools }}
+  kubernetes_master_ami = "${var.kubernetes_master_ami}"
+  kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
+  kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
+  {{end}}
+  
+  secrets_bucket = "${module.state.secrets_bucket[0]}"
+  private_subnet_ids = ["${module.network.private_subnet_ids}"]
+  public_subnet_ids = ["${module.network.public_subnet_ids}"]
+  internal_fqdns = ["${module.vault.instance_fqdns}"]
+  vault_kms_key_id = "${module.vault.vault_kms_key_id}"
+  vault_unseal_key_name = "${module.vault.vault_unseal_key_name}"
+  # template variables
+  availability_zones = ["${module.network.availability_zones}"]
+  vpc_id = "${module.network.vpc_id}"
+  private_zone_id = "${module.network.private_zone_id[0]}"
+  private_zone = "${module.network.private_zone[0]}"
+  vault_ca = "${module.vault.vault_ca}"
+  vault_url = "${module.vault.vault_url}"
+  public_zone = "${module.state.public_zone}"
+  public_zone_id = "${module.state.public_zone_id}"
+  vault_security_group_id = "${module.vault.vault_security_group_id}"
+  bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
+}
+{{end}}
+
+{{ if eq .ClusterType .ClusterTypeClusterMulti}}
+
+data "terraform_remote_state" "hub_state" {
+  backend = "s3"
+
+  config {
+    region = "${var.region}"
+    bucket = "${var.state_bucket}"
+    key    = "${var.environment}/${var.state_cluster_name}/kubernetes.tfstate"
+  }
+}
 
 module "kubernetes" {
   source = "modules/kubernetes"
@@ -111,24 +178,28 @@ module "kubernetes" {
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
   tools_cluster_name = "${var.tools_cluster_name}"
-  secrets_bucket = "${module.state.secrets_bucket[0]}"
-  private_subnet_ids = ["${module.network.private_subnet_ids}"]
-  public_subnet_ids = ["${module.network.public_subnet_ids}"]
+  
+  {{ if .InstancePools }}
   kubernetes_master_ami = "${var.kubernetes_master_ami}"
   kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
   kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
-  internal_fqdns = ["${module.vault.instance_fqdns}"]
-  vault_kms_key_id = "${module.vault.vault_kms_key_id}"
-  vault_unseal_key_name = "${module.vault.vault_unseal_key_name}"
-  # template variables
-  availability_zones = ["${module.network.availability_zones}"]
-  vpc_id = "${module.network.vpc_id}"
-  private_zone_id = "${module.network.private_zone_id[0]}"
-  private_zone = "${module.network.private_zone[0]}"
-  vault_ca = "${module.vault.vault_ca}"
-  vault_url = "${module.vault.vault_url}"
-  public_zone = "${module.state.public_zone}"
-  public_zone_id = "${module.state.public_zone_id}"
-  vault_security_group_id = "${module.vault.vault_security_group_id}"
-  bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
+  {{end}}
+
+  bastion_security_group_id = "${data.terraform_remote_state.hub_state.bastion_bastion_security_group_id}"
+  secrets_bucket = "${data.terraform_remote_state.hub_state.state_secrets_bucket}"
+  public_zone = "${data.terraform_remote_state.hub_state.state_public_zone}"
+  public_zone_id = "${data.terraform_remote_state.hub_state.state_public_zone_id}"
+  private_subnet_ids = ["${data.terraform_remote_state.hub_state.network_private_subnet_ids}"]
+  public_subnet_ids = ["${data.terraform_remote_state.hub_state.network_public_subnet_ids}"]
+  availability_zones = ["${data.terraform_remote_state.hub_state.network_availability_zones}"]
+  vpc_id = "${data.terraform_remote_state.hub_state.network_vpc_id}"
+  private_zone_id = "${data.terraform_remote_state.hub_state.network_private_zone_id}"
+  private_zone = "${data.terraform_remote_state.hub_state.network_private_zone}"
+  internal_fqdns = ["${data.terraform_remote_state.hub_state.vault_instance_fqdns}"]
+  vault_kms_key_id = "${data.terraform_remote_state.hub_state.vault_vault_kms_key_id}"
+  vault_unseal_key_name = "${data.terraform_remote_state.hub_state.vault_vault_unseal_key_name}"
+  vault_ca = "${data.terraform_remote_state.hub_state.vault_vault_ca}"
+  vault_url = "${data.terraform_remote_state.hub_state.vault_vault_url}"
+  vault_security_group_id = "${data.terraform_remote_state.hub_state.vault_vault_security_group_id}"
 }
+{{end}}

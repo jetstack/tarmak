@@ -30,7 +30,8 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 			return err
 		}
 
-		stacks := t.Cluster().Stacks()
+		//stacks := t.Cluster().Stacks()
+		stacks := []interfaces.Stack{t.Cluster().Stack(tarmakv1alpha1.StackNameKubernetes)}
 		for _, stack := range stacks {
 
 			if len(selectStacks) > 0 {
@@ -82,7 +83,8 @@ func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
 	selectStacks := t.flags.Cluster.Destroy.InfrastructureStacks
 	forceDestroyStateStack := t.flags.Cluster.Destroy.ForceDestroyStateStack
 
-	stacks := t.Cluster().Stacks()
+	//stacks := t.Cluster().Stacks()
+	stacks := []interfaces.Stack{t.Cluster().Stack(tarmakv1alpha1.StackNameKubernetes)}
 	for posStack, _ := range stacks {
 		stack := stacks[len(stacks)-posStack-1]
 		if !forceDestroyStateStack && stack.Name() == tarmakv1alpha1.StackNameState {
@@ -118,7 +120,8 @@ func (t *Tarmak) CmdTerraformShell(args []string) error {
 	}
 
 	// find matching stacks
-	stacks := t.Cluster().Stacks()
+	//stacks := t.Cluster().Stacks()
+	stacks := []interfaces.Stack{t.Cluster().Stack(tarmakv1alpha1.StackNameKubernetes)}
 	stackNames := make([]string, len(stacks))
 	for pos, stack := range stacks {
 		stackNames[pos] = stack.Name()

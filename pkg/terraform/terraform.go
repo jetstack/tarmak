@@ -66,7 +66,7 @@ func (t *Terraform) Output(stack interfaces.Stack) (map[string]interface{}, erro
 	c := t.NewContainer(stack)
 
 	if err := c.prepare(); err != nil {
-		return nil, fmt.Errorf("error preparing container: %s", err)
+		return nil, fmt.Errorf("Output: error preparing container: %s", err)
 	}
 	defer c.CleanUpSilent(t.log)
 
@@ -94,7 +94,7 @@ func (t *Terraform) Shell(stack interfaces.Stack, args []string) error {
 	c := t.NewContainer(stack)
 
 	if err := c.prepare(); err != nil {
-		return fmt.Errorf("error preparing container: %s", err)
+		return fmt.Errorf("Shell: error preparing container: %s", err)
 	}
 	defer c.CleanUpSilent(t.log)
 
@@ -129,7 +129,7 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 		}
 	}
 	if err := c.prepare(); err != nil {
-		return fmt.Errorf("error preparing container: %s", err)
+		return fmt.Errorf("planApply: error preparing container: %s", err)
 	}
 	defer c.CleanUpSilent(t.log)
 

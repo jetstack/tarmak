@@ -69,6 +69,7 @@ type Environment interface {
 	Log() *logrus.Entry
 	StateStack() Stack
 	VaultStack() Stack
+	KubernetesStack() Stack
 	VaultRootToken() (string, error)
 	Parameters() map[string]string
 	VaultTunnel() (VaultTunnel, error)

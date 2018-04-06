@@ -27,6 +27,11 @@ type VaultInstanceRoleReply struct {
 func (r *tarmakRPC) VaultInstanceRole(args *VaultInstanceRoleArgs, result *VaultInstanceRoleReply) error {
 	r.tarmak.Log().Debug("received rpc vault instance role")
 
+	if r.tarmak.Cluster().GetState() == "destroy" {
+		result.InitToken = ""
+		return nil
+	}
+
 	roleName := args.RoleName
 
 	// TODO: if destroying cluster just return unknown here

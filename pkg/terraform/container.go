@@ -16,6 +16,7 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	log "github.com/sirupsen/logrus"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
@@ -300,6 +301,9 @@ func (tc *TerraformContainer) prepare() error {
 	tc.log.Debug("copied terraform manifests into container")
 
 	// if instance pools exist, execute template
+	// cluster.instancePools = list of instance poods in tarmak.yaml
+	// stack.instancePools = list of active instancePools (master, worker, etcd for kubernetes) ANDed with cluster instance pools
+	// kubernetes has all roles (master, worker, etcd)
 	instancePools := tc.stack.InstancePools()
 	if len(instancePools) > 0 {
 		awsSGRules, err := tc.GenerateAWSSecurityGroup()
@@ -341,6 +345,104 @@ func (tc *TerraformContainer) prepare() error {
 		err = tc.UploadToContainer(templateTfTar, "/terraform/modules/kubernetes")
 		if err != nil {
 			return err
+		}
+	}
+
+	if true {
+		templateFile := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Cluster().Environment().Provider().Cloud(), "templates/modules.tf.template"))
+		template := template.Must(template.New("modules").ParseFiles(templateFile))
+
+		tpl := template.Lookup("modules.tf.template")
+
+		buf := new(bytes.Buffer)
+
+		_, existingVPC := tc.t.tarmak.Cluster().Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]
+		if err = tpl.Execute(
+			buf,
+			map[string]interface{}{
+				"ClusterTypeClusterSingle": clusterv1alpha1.ClusterTypeClusterSingle,
+				"ClusterTypeHub":           clusterv1alpha1.ClusterTypeHub,
+				"ClusterTypeClusterMulti":  clusterv1alpha1.ClusterTypeClusterMulti,
+				"ClusterType":              tc.t.tarmak.Cluster().Type(),
+				"InstancePools":            len(instancePools) > 0,
+				"ExistingVPC":              existingVPC,
+			},
+		); err != nil {
+			return fmt.Errorf("failed to create bytes: %s", err)
+		}
+
+		modulesTfTar, err := tarmakDocker.TarStreamFromFile("modules.tf", buf.String())
+		if err != nil {
+			return fmt.Errorf("failed to stream from file: %s", err)
+		}
+
+		err = tc.UploadToContainer(modulesTfTar, "/terraform")
+		if err != nil {
+			return fmt.Errorf("failed to upload to container: %s", err)
+		}
+	}
+
+	if true {
+		templateFile := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Cluster().Environment().Provider().Cloud(), "templates/inputs.tf.template"))
+		template := template.Must(template.New("inputs").ParseFiles(templateFile))
+
+		tpl := template.Lookup("inputs.tf.template")
+
+		buf := new(bytes.Buffer)
+
+		_, existingVPC := tc.t.tarmak.Cluster().Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]
+		if err = tpl.Execute(
+			buf,
+			map[string]interface{}{
+				"ClusterTypeClusterSingle": clusterv1alpha1.ClusterTypeClusterSingle,
+				"ClusterTypeHub":           clusterv1alpha1.ClusterTypeHub,
+				"ClusterTypeClusterMulti":  clusterv1alpha1.ClusterTypeClusterMulti,
+				"ClusterType":              tc.t.tarmak.Cluster().Type(),
+				"ExistingVPC":              existingVPC,
+			},
+		); err != nil {
+			return fmt.Errorf("failed to create bytes: %s", err)
+		}
+
+		inputsTfTar, err := tarmakDocker.TarStreamFromFile("inputs.tf", buf.String())
+		if err != nil {
+			return fmt.Errorf("failed to stream from file: %s", err)
+		}
+
+		err = tc.UploadToContainer(inputsTfTar, "/terraform")
+		if err != nil {
+			return fmt.Errorf("failed to upload to container: %s", err)
+		}
+	}
+
+	if true {
+		templateFile := filepath.Clean(filepath.Join(rootPath, "terraform", tc.t.tarmak.Cluster().Environment().Provider().Cloud(), "templates/outputs.tf.template"))
+		template := template.Must(template.New("outputs").ParseFiles(templateFile))
+
+		tpl := template.Lookup("outputs.tf.template")
+
+		buf := new(bytes.Buffer)
+
+		if err = tpl.Execute(
+			buf,
+			map[string]interface{}{
+				"ClusterTypeClusterSingle": clusterv1alpha1.ClusterTypeClusterSingle,
+				"ClusterTypeHub":           clusterv1alpha1.ClusterTypeHub,
+				"ClusterTypeClusterMulti":  clusterv1alpha1.ClusterTypeClusterMulti,
+				"ClusterType":              tc.t.tarmak.Cluster().Type(),
+			},
+		); err != nil {
+			return fmt.Errorf("failed to create bytes: %s", err)
+		}
+
+		inputsTfTar, err := tarmakDocker.TarStreamFromFile("outputs.tf", buf.String())
+		if err != nil {
+			return fmt.Errorf("failed to stream from file: %s", err)
+		}
+
+		err = tc.UploadToContainer(inputsTfTar, "/terraform")
+		if err != nil {
+			return fmt.Errorf("failed to upload to container: %s", err)
 		}
 	}
 

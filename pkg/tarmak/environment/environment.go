@@ -36,7 +36,7 @@ type Environment struct {
 
 	sshKeyPrivate interface{}
 
-	hubCluster interfaces.Cluster // this is the cluster that contains state/vault/tools
+	HubCluster interfaces.Cluster // this is the cluster that contains state/vault/tools
 	provider   interfaces.Provider
 	tarmak     interfaces.Tarmak
 
@@ -77,7 +77,7 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 		}
 		e.clusters = append(e.clusters, clusterIntf)
 		if len(clusters) == 1 || clusterConf.Name == "hub" {
-			e.hubCluster = clusterIntf
+			e.HubCluster = clusterIntf
 		}
 	}
 	if result != nil {
@@ -152,9 +152,9 @@ func (e *Environment) Variables() map[string]interface{} {
 	}
 
 	output["state_bucket"] = e.Provider().RemoteStateBucketName()
-	output["state_cluster_name"] = e.hubCluster.Name()
-	output["tools_cluster_name"] = e.hubCluster.Name()
-	output["vault_cluster_name"] = e.hubCluster.Name()
+	output["state_cluster_name"] = e.HubCluster.Name()
+	output["tools_cluster_name"] = e.HubCluster.Name()
+	output["vault_cluster_name"] = e.HubCluster.Name()
 	return output
 }
 
@@ -285,7 +285,7 @@ func (e *Environment) Validate() error {
 }
 
 func (e *Environment) BucketPrefix() string {
-	stackState := e.hubCluster.Stack(tarmakv1alpha1.StackNameState)
+	stackState := e.HubCluster.Stack(tarmakv1alpha1.StackNameState)
 	if stackState == nil {
 		return ""
 	}
@@ -301,11 +301,15 @@ func (e *Environment) BucketPrefix() string {
 }
 
 func (e *Environment) StateStack() interfaces.Stack {
-	return e.hubCluster.Stack(tarmakv1alpha1.StackNameState)
+	return e.HubCluster.Stack(tarmakv1alpha1.StackNameState)
 }
 
 func (e *Environment) VaultStack() interfaces.Stack {
-	return e.hubCluster.Stack(tarmakv1alpha1.StackNameVault)
+	return e.HubCluster.Stack(tarmakv1alpha1.StackNameVault)
+}
+
+func (e *Environment) KubernetesStack() interfaces.Stack {
+	return e.HubCluster.Stack(tarmakv1alpha1.StackNameKubernetes)
 }
 
 func (e *Environment) vaultRootTokenPath() string {
@@ -339,7 +343,7 @@ func (e *Environment) VaultRootToken() (string, error) {
 }
 
 func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
-	stackVault := e.hubCluster.Stack(tarmakv1alpha1.StackNameVault)
+	stackVault := e.HubCluster.Stack(tarmakv1alpha1.StackNameVault)
 	if stackVault == nil {
 		return nil, errors.New("could not find vault stack")
 	}

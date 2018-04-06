@@ -29,7 +29,10 @@ type VaultClusterStatusReply struct {
 func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
-	// TODO: if destroying cluster just return unknown here
+	if r.tarmak.Cluster().GetState() == "destroy" {
+		result.Status = "unknown"
+		return nil
+	}
 
 	vaultStack := r.tarmak.Cluster().Stack(tarmakv1alpha1.StackNameVault)
 
@@ -80,6 +83,11 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 
 func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
 	r.tarmak.Log().Debug("received rpc vault cluster status")
+
+	if r.tarmak.Cluster().GetState() == "destroy" {
+		result.Status = "unknown"
+		return nil
+	}
 
 	vaultStack := r.tarmak.Cluster().Stack(tarmakv1alpha1.StackNameVault)
 
