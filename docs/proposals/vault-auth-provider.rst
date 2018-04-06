@@ -1,7 +1,8 @@
 .. vim:set ft=rst spell:
 
+#########################################################
 Custom Vault Auth Provider for EC2 Instances - A Proposal
-=========================================================
+#########################################################
 
 This proposal suggests writing a custom authentication provider for Vault.
 This provider would allow access privileges, especially to the PKI secrets
