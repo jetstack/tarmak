@@ -21,7 +21,7 @@ type vaultTunnel struct {
 
 var _ interfaces.Tunnel = &vaultTunnel{}
 
-func NewVaultTunnel(
+func NewTunnel(
 	tunnel interfaces.Tunnel, fqdn string, vaultCA *x509.CertPool,
 ) (*vaultTunnel, error) {
 	httpTransport := cleanhttp.DefaultTransport()

@@ -146,7 +146,7 @@ func (v *Vault) createTunnelsWithCA(instances []string, vaultCA string) ([]*vaul
 		sshTunnel := v.cluster.Environment().Tarmak().SSH().Tunnel(
 			"bastion", fqdn, 8200,
 		)
-		vaultTunnel, err := NewVaultTunnel(
+		vaultTunnel, err := NewTunnel(
 			sshTunnel,
 			fqdn,
 			certpool,
