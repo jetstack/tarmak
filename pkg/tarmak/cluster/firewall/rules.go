@@ -1,5 +1,5 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-package stack
+package firewall
 
 import (
 	"net"
@@ -24,7 +24,7 @@ type Port struct {
 	Single     *uint16
 }
 
-type FirewallRule struct {
+type Rule struct {
 	Comment      string
 	Services     []Service
 	Direction    string
@@ -199,11 +199,11 @@ func cidrAll() *net.IPNet {
 	return ipNet
 }
 
-func FirewallRules() (rules []*FirewallRule) {
+func Rules() (rules []*Rule) {
 
-	return []*FirewallRule{
+	return []*Rule{
 		// All egress
-		&FirewallRule{
+		&Rule{
 			Comment:   "allow all instance to egress to anywhere",
 			Services:  []Service{newAllServices()},
 			Direction: "egress",
@@ -218,7 +218,7 @@ func FirewallRules() (rules []*FirewallRule) {
 		},
 
 		// All ingress with same role
-		&FirewallRule{
+		&Rule{
 			Comment:   "all components should be able to communicate with each other",
 			Services:  []Service{newAllServices()},
 			Direction: "ingress",
@@ -233,7 +233,7 @@ func FirewallRules() (rules []*FirewallRule) {
 		},
 
 		//// Bastion
-		&FirewallRule{
+		&Rule{
 			Comment:   "allow everyone to connect to the bastion via SSH",
 			Services:  []Service{newSSHService()},
 			Direction: "ingress",
@@ -242,14 +242,14 @@ func FirewallRules() (rules []*FirewallRule) {
 			Sources:      []Host{Host{Name: "admin_ips", CIDR: cidrAll()}},
 			Destinations: []Host{Host{Role: "bastion"}},
 		},
-		&FirewallRule{
+		&Rule{
 			Comment:      "allow instances to access wing server",
 			Services:     []Service{newWingService()},
 			Direction:    "ingress",
 			Sources:      []Host{Host{Role: "bastion"}},
 			Destinations: []Host{Host{Name: "all"}},
 		},
-		&FirewallRule{
+		&Rule{
 			Comment:   "allow bastion to connect to all instances via SSH",
 			Services:  []Service{newSSHService()},
 			Direction: "ingress",
@@ -263,7 +263,7 @@ func FirewallRules() (rules []*FirewallRule) {
 		},
 
 		//// Vault
-		&FirewallRule{
+		&Rule{
 			Comment:   "allow all instances to connect to vault",
 			Services:  []Service{newVaultService()},
 			Direction: "ingress",
@@ -272,7 +272,7 @@ func FirewallRules() (rules []*FirewallRule) {
 			},
 			Destinations: []Host{Host{Name: "all"}},
 		},
-		&FirewallRule{
+		&Rule{
 			Comment: "allow vault instances to connect to each other's consul",
 			Services: []Service{
 				newConsulTCPService(),
@@ -284,7 +284,7 @@ func FirewallRules() (rules []*FirewallRule) {
 		},
 
 		//// Etcd
-		&FirewallRule{
+		&Rule{
 			Comment:      "allow prometheus connections to node_exporter and blackbox_exporter",
 			Services:     []Service{newEtcdOverlayService()},
 			Direction:    "ingress",
@@ -292,7 +292,7 @@ func FirewallRules() (rules []*FirewallRule) {
 			Destinations: []Host{Host{Role: "etcd"}},
 		},
 
-		&FirewallRule{
+		&Rule{
 			Comment:      "allow prometheus connections to node_exporter and blackbox_exporter",
 			Services:     []Service{newBlackboxExporterService(), newNodeExporterService()},
 			Direction:    "ingress",
@@ -301,7 +301,7 @@ func FirewallRules() (rules []*FirewallRule) {
 		},
 
 		//// Master
-		&FirewallRule{
+		&Rule{
 			Comment:   "allow workers/master to connect to calico's service + api server",
 			Services:  []Service{newBGPService(), newIPIPService(), newCalicoMetricsService(), newAPIService()},
 			Direction: "ingress",
@@ -311,14 +311,14 @@ func FirewallRules() (rules []*FirewallRule) {
 			},
 			Destinations: []Host{Host{Role: "master"}},
 		},
-		&FirewallRule{
+		&Rule{
 			Comment:      "allow ELB to connect to API server",
 			Services:     []Service{newAPIService()},
 			Direction:    "ingress",
 			Sources:      []Host{Host{Role: "master_elb"}},
 			Destinations: []Host{Host{Role: "master"}},
 		},
-		&FirewallRule{
+		&Rule{
 			Comment:   "allow ELB to connect to API server",
 			Services:  []Service{newAPIService()},
 			Direction: "ingress",
@@ -330,7 +330,7 @@ func FirewallRules() (rules []*FirewallRule) {
 			},
 			Destinations: []Host{Host{Role: "master_elb"}},
 		},
-		&FirewallRule{
+		&Rule{
 			Comment:      "allow ELB to connect to API server",
 			Services:     []Service{newAPIService()},
 			Direction:    "egress",
@@ -339,7 +339,7 @@ func FirewallRules() (rules []*FirewallRule) {
 		},
 
 		//// Worker
-		&FirewallRule{
+		&Rule{
 			Comment:   "allow master and workers to connect to anything on workers",
 			Services:  []Service{newAllServices()},
 			Direction: "ingress",

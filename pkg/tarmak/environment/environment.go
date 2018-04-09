@@ -11,9 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -24,8 +22,8 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider"
-	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/tarmak/vault"
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
@@ -36,9 +34,11 @@ type Environment struct {
 
 	sshKeyPrivate interface{}
 
-	HubCluster interfaces.Cluster // this is the cluster that contains state/vault/tools
+	// this is the cluster that contains state/vault/tools
+	HubCluster interfaces.Cluster
 	provider   interfaces.Provider
 	tarmak     interfaces.Tarmak
+	vault      interfaces.Vault
 
 	log *logrus.Entry
 }
@@ -82,6 +82,13 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 	}
 	if result != nil {
 		return nil, result
+	}
+
+	if e.HubCluster != nil {
+		e.vault, err = vault.NewFromCluster(e.HubCluster)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return e, nil
@@ -284,77 +291,6 @@ func (e *Environment) Validate() error {
 	return result
 }
 
-func (e *Environment) BucketPrefix() string {
-	stackState := e.HubCluster.Stack(tarmakv1alpha1.StackNameState)
-	if stackState == nil {
-		return ""
-	}
-	bucketPrefix, ok := stackState.Variables()["bucket_prefix"]
-	if !ok {
-		return ""
-	}
-	bucketPrefixString, ok := bucketPrefix.(string)
-	if !ok {
-		return ""
-	}
-	return bucketPrefixString
-}
-
-func (e *Environment) StateStack() interfaces.Stack {
-	return e.HubCluster.Stack(tarmakv1alpha1.StackNameState)
-}
-
-func (e *Environment) VaultStack() interfaces.Stack {
-	return e.HubCluster.Stack(tarmakv1alpha1.StackNameVault)
-}
-
-func (e *Environment) KubernetesStack() interfaces.Stack {
-	return e.HubCluster.Stack(tarmakv1alpha1.StackNameKubernetes)
-}
-
-func (e *Environment) vaultRootTokenPath() string {
-	return filepath.Join(e.ConfigPath(), "vault_root_token")
-}
-
-func (e *Environment) VaultRootToken() (string, error) {
-	path := e.vaultRootTokenPath()
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := utils.EnsureDirectory(filepath.Dir(path), 0700); err != nil {
-			return "", fmt.Errorf("error creating directory: %s", err)
-		}
-
-		uuidValue := uuid.New()
-
-		err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%s\n", uuidValue.String())), 0600)
-		if err != nil {
-			return "", err
-		}
-
-		return uuidValue.String(), nil
-	}
-
-	uuidBytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", fmt.Errorf("unable to read vault root token %s: %s", path, err)
-	}
-
-	return strings.TrimSpace(string(uuidBytes)), nil
-}
-
-func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
-	stackVault := e.HubCluster.Stack(tarmakv1alpha1.StackNameVault)
-	if stackVault == nil {
-		return nil, errors.New("could not find vault stack")
-	}
-	vaultStack, ok := stackVault.(*stack.VaultStack)
-	if !ok {
-		return nil, fmt.Errorf("could not convert stack to VaultStack: %T", stackVault)
-	}
-
-	return vaultStack.VaultTunnel()
-}
-
 func (e *Environment) WingTunnel() interfaces.Tunnel {
 	return e.Tarmak().SSH().Tunnel(
 		"bastion",
@@ -390,4 +326,12 @@ func (e *Environment) Parameters() map[string]string {
 		"location": e.Location(),
 		"provider": e.Provider().String(),
 	}
+}
+
+func (e *Environment) Hub() interfaces.Cluster {
+	return e.HubCluster
+}
+
+func (e *Environment) Vault() interfaces.Vault {
+	return e.vault
 }

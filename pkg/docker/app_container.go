@@ -9,8 +9,6 @@ import (
 	"os"
 
 	"github.com/fsouza/go-dockerclient"
-	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 	logrus "github.com/sirupsen/logrus"
 )
 
@@ -199,67 +197,4 @@ func (ac *AppContainer) Capture(cmd string, args []string) (stdOut string, stdEr
 
 func (ac *AppContainer) Start() error {
 	return ac.app.dockerClient.StartContainer(ac.dockerContainer.ID, &docker.HostConfig{})
-}
-
-// launch tarmak connector and attach an RPC server to it
-func (ac *AppContainer) ListenRPC(tarmak interfaces.Tarmak, stack interfaces.Stack) (err error) {
-
-	// create exec
-	exec, err := ac.app.dockerClient.CreateExec(docker.CreateExecOptions{
-		Cmd:          []string{"tarmak-connector"},
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    ac.dockerContainer.ID,
-		Tty:          false,
-	})
-	if err != nil {
-		return err
-	}
-
-	containerR, rpcW := io.Pipe()
-	rpcR, containerW := io.Pipe()
-	stderrReader, stderrWriter := io.Pipe()
-
-	stderrScanner := bufio.NewScanner(stderrReader)
-	go func() {
-		for stderrScanner.Scan() {
-			ac.log.WithField("app", "connector").Debug(stderrScanner.Text())
-		}
-	}()
-
-	execWaiter, err := ac.app.dockerClient.StartExecNonBlocking(exec.ID, docker.StartExecOptions{
-		InputStream:  containerR,
-		ErrorStream:  stderrWriter,
-		OutputStream: containerW,
-	})
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		rpc.Bind(ac.log, rpc.NewTarmak(tarmak, stack), rpcR, rpcW, &execCloser{})
-	}()
-
-	go func() {
-		if err := execWaiter.Wait(); err != nil {
-			ac.log.Warnf("error waiting for termination of tarmak connector: %s", err)
-		}
-
-		state, err := ac.app.dockerClient.InspectExec(exec.ID)
-		if err != nil {
-			ac.log.Warnf("error getting status of tarmak connector: %s", err)
-		}
-		ac.log.Debugf("tarmak connector exited (code %d)", state.ExitCode)
-	}()
-
-	return nil
-}
-
-type execCloser struct {
-}
-
-func (c *execCloser) Close() error {
-	// TODO: kill tarmak connector
-	return nil
 }

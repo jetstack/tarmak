@@ -1,5 +1,5 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-package stack
+package environment
 
 import (
 	"context"
@@ -11,40 +11,11 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-
-	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
-	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
-	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
-type ToolsStack struct {
-	*Stack
-}
+func (e *Environment) VerifyBastionAvailable() error {
 
-var _ interfaces.Stack = &ToolsStack{}
-
-func newToolsStack(s *Stack) (*ToolsStack, error) {
-	t := &ToolsStack{
-		Stack: s,
-	}
-
-	s.roles = make(map[string]bool)
-	s.roles[clusterv1alpha1.InstancePoolTypeJenkins] = true
-	s.roles[clusterv1alpha1.InstancePoolTypeBastion] = true
-
-	s.name = tarmakv1alpha1.StackNameTools
-	s.verifyPreDeploy = append(s.verifyPostDeploy, s.verifyImageIDs)
-	s.verifyPostDeploy = append(s.verifyPostDeploy, t.VerifyBastionAvailable)
-	return t, nil
-}
-
-func (s *ToolsStack) Variables() map[string]interface{} {
-	return s.Stack.Variables()
-}
-
-func (s *ToolsStack) VerifyBastionAvailable() error {
-
-	ssh := s.Cluster().Environment().Tarmak().SSH()
+	ssh := e.Tarmak().SSH()
 
 	if err := ssh.WriteConfig(); err != nil {
 		return err
@@ -87,12 +58,12 @@ func (s *ToolsStack) VerifyBastionAvailable() error {
 		msg := "error while connecting to bastion host"
 		if err != nil {
 			err = fmt.Errorf("%s: %v", msg, err)
-			s.log.Warnf(err.Error())
+			e.log.Warnf(err.Error())
 			return err
 		}
 		if retCode != 0 {
 			err = fmt.Errorf("%s unexpected return code: %d", msg, retCode)
-			s.log.Warn(err.Error())
+			e.log.Warn(err.Error())
 			return err
 		}
 

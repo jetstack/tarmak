@@ -2,7 +2,6 @@
 package cluster
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -11,11 +10,9 @@ import (
 	"github.com/sirupsen/logrus"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
-	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/instance_pool"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
-	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
@@ -23,12 +20,9 @@ import (
 type Cluster struct {
 	conf *clusterv1alpha1.Cluster
 
-	stacks []interfaces.Stack
-
-	stackNetwork interfaces.Stack
-	environment  interfaces.Environment
-	networkCIDR  *net.IPNet
-	log          *logrus.Entry
+	environment interfaces.Environment
+	networkCIDR *net.IPNet
+	log         *logrus.Entry
 
 	wingClientset *wingclient.Clientset
 	wingTunnel    interfaces.Tunnel
@@ -36,7 +30,7 @@ type Cluster struct {
 	imageIDs      map[string]string
 	instancePools []interfaces.InstancePool
 	roles         map[string]*role.Role
-	state         string
+	state         string // TODO: add what the state is for
 }
 
 var _ interfaces.Cluster = &Cluster{}
@@ -48,8 +42,13 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		log:         environment.Log().WithField("cluster", conf.Name),
 	}
 
-	// validate server pools and setup stacks
+	// validate instance pools
 	if err := cluster.validateInstancePools(); err != nil {
+		return nil, err
+	}
+
+	// validate network setup
+	if err := cluster.validateNetwork(); err != nil {
 		return nil, err
 	}
 
@@ -124,6 +123,10 @@ func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, cl
 
 // validate server pools
 func (c *Cluster) validateInstancePools() (result error) {
+	return fmt.Errorf("refactore me!")
+}
+
+/*
 	//poolMap := c.InstancePoolsMap()
 	clusterType := c.Type()
 	//allowedTypes := make(map[string]bool)
@@ -136,7 +139,7 @@ func (c *Cluster) validateInstancePools() (result error) {
 		c.stacks = append(c.stacks, s)
 	}
 
-	return result*/
+	return result
 
 	// Validate hub for cluster-single and hub
 	if true || clusterType == clusterv1alpha1.ClusterTypeClusterSingle || clusterType == clusterv1alpha1.ClusterTypeHub {
@@ -146,27 +149,12 @@ func (c *Cluster) validateInstancePools() (result error) {
 		}
 		allowedTypes[clusterv1alpha1.InstancePoolTypeJenkins] = true
 		allowedTypes[clusterv1alpha1.InstancePoolTypeBastion] = true
-		allowedTypes[clusterv1alpha1.InstancePoolTypeVault] = true*/
+		allowedTypes[clusterv1alpha1.InstancePoolTypeVault] = true
 
 		if s, err := stack.New(c, tarmakv1alpha1.StackNameState); err != nil {
 			result = multierror.Append(result, err)
 		} else {
 			c.stacks = append(c.stacks, s)
-		}
-
-		// make the choice between deploying into existing VPC or creating a new one
-		if _, ok := c.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]; ok {
-			if s, err := stack.New(c, tarmakv1alpha1.StackNameExistingNetwork); err != nil {
-				result = multierror.Append(result, err)
-			} else {
-				c.stacks = append(c.stacks, s)
-			}
-		} else {
-			if s, err := stack.New(c, tarmakv1alpha1.StackNameNetwork); err != nil {
-				result = multierror.Append(result, err)
-			} else {
-				c.stacks = append(c.stacks, s)
-			}
 		}
 
 		if s, err := stack.New(c, tarmakv1alpha1.StackNameTools); err != nil {
@@ -190,7 +178,7 @@ func (c *Cluster) validateInstancePools() (result error) {
 		}
 		allowedTypes[clusterv1alpha1.InstancePoolTypeEtcd] = true
 		allowedTypes[clusterv1alpha1.InstancePoolTypeMaster] = true
-		allowedTypes[clusterv1alpha1.InstancePoolTypeWorker] = true*/
+		allowedTypes[clusterv1alpha1.InstancePoolTypeWorker] = true
 
 		if s, err := stack.New(c, tarmakv1alpha1.StackNameKubernetes); err != nil {
 			result = multierror.Append(result, err)
@@ -205,9 +193,25 @@ func (c *Cluster) validateInstancePools() (result error) {
 			continue
 		}
 		result = multierror.Append(result, fmt.Errorf("the pool type %s is not supported for a %s", poolType, clusterType))
-	}*/
-
+	}
 	return result
+}
+*/
+
+// validate network configuration
+func (c *Cluster) validateNetwork() (result error) {
+	// make the choice between deploying into existing VPC or creating a new one
+	if _, ok := c.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]; ok {
+		// TODO: handle existing vpc
+	} else {
+		_, net, err := net.ParseCIDR(c.Config().Network.CIDR)
+		if err != nil {
+			return fmt.Errorf("error parsing network: %s", err)
+		}
+		c.networkCIDR = net
+	}
+
+	return nil
 }
 
 // Determine if this Cluster is a cluster or hub, single or multi environment
@@ -225,13 +229,8 @@ func (c *Cluster) Type() string {
 	return clusterv1alpha1.ClusterTypeClusterMulti
 }
 
-func (c *Cluster) RemoteState(stackName string) string {
-	// special case for the existing network stack, allows other stacks to not
-	// care which is deployed
-	if stackName == "network-existing-vpc" {
-		stackName = "network"
-	}
-	return c.Environment().Provider().RemoteState(c.Environment().Name(), c.Name(), stackName)
+func (c *Cluster) RemoteState() string {
+	return c.Environment().Provider().RemoteState(c.Environment().Name(), c.Name(), "main")
 }
 
 func (c *Cluster) Region() string {
@@ -281,24 +280,6 @@ func (c *Cluster) ImageIDs() (map[string]string, error) {
 	return c.imageIDs, nil
 }
 
-func (c *Cluster) getNetworkCIDR() (*net.IPNet, error) {
-	if c.stackNetwork == nil {
-		return nil, errors.New("no network stack found")
-	}
-
-	netIntf, ok := c.stackNetwork.Variables()["network"]
-	if !ok {
-		return nil, errors.New("no network variable in stack network found")
-	}
-
-	net, ok := netIntf.(*net.IPNet)
-	if !ok {
-		return nil, errors.New("network variable has unexpected typ")
-	}
-
-	return net, nil
-}
-
 func (c *Cluster) NetworkCIDR() *net.IPNet {
 	return c.networkCIDR
 }
@@ -312,19 +293,6 @@ func (c *Cluster) APITunnel() interfaces.Tunnel {
 }
 
 func (c *Cluster) Validate() error {
-	return nil
-}
-
-func (c *Cluster) Stacks() []interfaces.Stack {
-	return c.stacks
-}
-
-func (c *Cluster) Stack(name string) interfaces.Stack {
-	for _, stack := range c.stacks {
-		if stack.Name() == name {
-			return stack
-		}
-	}
 	return nil
 }
 
@@ -395,6 +363,35 @@ func (c *Cluster) Parameters() map[string]string {
 func (c *Cluster) Variables() map[string]interface{} {
 	output := c.environment.Variables()
 
+	imageIDs, err := c.ImageIDs()
+	if err != nil {
+		c.log.Fatalf("error getting image IDs: %s", err)
+	}
+
+	// publish instance count and ami ids per instance pool
+	for _, instancePool := range c.InstancePools() {
+		image := instancePool.Image()
+		ids, ok := imageIDs[image]
+		if ok {
+			output[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
+		}
+		output[fmt.Sprintf("%s_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
+	}
+
+	// set network cidr
+	if c.networkCIDR != nil {
+		output["network"] = c.networkCIDR
+	}
+
+	// publish changed private zone
+	if privateZone := c.Environment().Config().PrivateZone; privateZone != "" {
+		output["private_zone"] = privateZone
+	}
+
+	output["name"] = c.Name()
+
+	return output
+
 	// TODO: refactor me
 	/*
 		if c.conf.Contact != "" {
@@ -410,16 +407,18 @@ func (c *Cluster) Variables() map[string]interface{} {
 			}
 		}
 	*/
-
-	output["name"] = c.Name()
-
-	return output
 }
 
+// TODO: add comment what this state is for
 func (c *Cluster) SetState(state string) {
 	c.state = state
 }
 
 func (c *Cluster) GetState() string {
 	return c.state
+}
+
+// get the terrform output from this cluster
+func (c *Cluster) TerraformOutput() (map[string]interface{}, error) {
+	return c.Environment().Tarmak().Terraform().Output(c)
 }

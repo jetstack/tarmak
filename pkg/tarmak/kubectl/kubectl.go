@@ -14,8 +14,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/environment"
-	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -55,31 +53,18 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 		k.log.Fatal("could not validate config: ", err)
 	}
 
+	vault := k.tarmak.Environment().Vault()
+
 	// read vault root token
-	vaultRootToken, err := k.tarmak.Cluster().Environment().VaultRootToken()
+	vaultRootToken, err := vault.RootToken()
 	if err != nil {
 		return err
 	}
 
 	// get kubernetes outputs
-	outputs, err := k.tarmak.Terraform().Output(k.tarmak.Cluster().Environment().KubernetesStack())
+	outputs, err := k.tarmak.Environment().Hub().TerraformOutput()
 	if err != nil {
 		return err
-	}
-
-	/*vaultTunnel, err := k.tarmak.Cluster().Environment().VaultTunnel
-	if err != nil {
-		return err
-	}
-	defer vaultTunnel.Stop()*/
-
-	stackVault := k.tarmak.Cluster().Environment().(*environment.Environment).HubCluster.Stack(tarmakv1alpha1.StackNameVault)
-	if stackVault == nil {
-		return errors.New("could not find vault stack")
-	}
-	vaultStack, ok := stackVault.(*stack.VaultStack)
-	if !ok {
-		return fmt.Errorf("could not convert stack to VaultStack: %T", stackVault)
 	}
 
 	interfaceInstanceFQDNs := outputs["instance_fqdns"].([]interface{})
@@ -88,7 +73,7 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 		instanceFQDNs[i] = interfaceInstanceFQDNs[i].(string)
 	}
 
-	vaultTunnel, err := vaultStack.VaultTunnelFromFQDNs(instanceFQDNs, outputs["vault_ca"].(string))
+	vaultTunnel, err := vault.TunnelFromFQDNs(instanceFQDNs, outputs["vault_ca"].(string))
 	if err != nil {
 		return err
 	}

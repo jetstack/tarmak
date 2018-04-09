@@ -2,15 +2,23 @@
 package terraform
 
 import (
-	"context"
+	"bytes"
 	"fmt"
+	"net"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
+	"strings"
 
+	"github.com/hashicorp/terraform/command"
+	"github.com/kardianos/osext"
 	"github.com/sirupsen/logrus"
 
-	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
 
 type Terraform struct {
@@ -22,198 +30,240 @@ type Terraform struct {
 func New(tarmak interfaces.Tarmak) *Terraform {
 	log := tarmak.Log().WithField("module", "terraform")
 
-	app := tarmakDocker.NewApp(
-		tarmak,
-		log,
-		"jetstack/tarmak-terraform",
-		"terraform",
-	)
-
 	return &Terraform{
-		App:    app,
 		log:    log,
 		tarmak: tarmak,
 	}
 }
 
-func (t *Terraform) NewContainer(stack interfaces.Stack) *TerraformContainer {
-	c := &TerraformContainer{
-		AppContainer: t.Container(),
-		t:            t,
-		log:          t.log.WithField("stack", stack.Name()),
-		stack:        stack,
-	}
-	if os.Getenv("TF_LOG") != "" {
-		c.Env = []string{fmt.Sprintf("TF_LOG=%s", os.Getenv("TF_LOG"))}
-	}
-	c.AppContainer.SetLog(t.log.WithField("stack", stack.Name()))
-	return c
-}
-
-func (t *Terraform) Apply(stack interfaces.Stack, args []string, ctx context.Context) error {
-	return t.planApply(stack, args, false, ctx)
-}
-
-func (t *Terraform) Destroy(stack interfaces.Stack, args []string, ctx context.Context) error {
-	return t.planApply(stack, args, true, ctx)
-}
-
-func (t *Terraform) Output(stack interfaces.Stack) (map[string]interface{}, error) {
-	if output := stack.Output(); output != nil {
-		return output, nil
-	}
-
-	c := t.NewContainer(stack)
-
-	if err := c.prepare(); err != nil {
-		return nil, fmt.Errorf("Output: error preparing container: %s", err)
-	}
-	defer c.CleanUpSilent(t.log)
-
-	err := c.CopyRemoteState(stack.RemoteState())
+// this method perpares the terraform plugins folder. This folder contains terraform providers and provisioners in general. We are pointing through symlinks to the tarmak binary, which contains all relevant providers
+func (t *Terraform) preparePlugins(c interfaces.Cluster) error {
+	binaryPath, err := osext.Executable()
 	if err != nil {
-		return nil, fmt.Errorf("error while copying remote state: %s", err)
-	}
-	c.log.Debug("copied remote state into container")
-
-	if err := c.Init(); err != nil {
-		return nil, fmt.Errorf("error while terraform init: %s", err)
+		return fmt.Errorf("error finding tarmak executable: %s", err)
 	}
 
-	output, err := c.Output()
-	stack.SetOutput(output)
-	if err != nil {
-		return nil, fmt.Errorf("error while getting terraform output: %s", err)
+	pluginPath := t.pluginPath(c)
+	if err := utils.EnsureDirectory(pluginPath, 0755); err != nil {
+		return err
 	}
 
-	return output, nil
+	for providerName, _ := range InternalProviders {
+		destPath := filepath.Join(pluginPath, fmt.Sprintf("terraform-provider-%s", providerName))
+		if stat, err := os.Lstat(destPath); err != nil && !os.IsNotExist(err) {
+			return err
+		} else if err == nil {
+			if (stat.Mode() & os.ModeSymlink) == 0 {
+				return fmt.Errorf("%s is not a symbolic link", destPath)
+			}
 
-}
+			if linkPath, err := os.Readlink(destPath); err != nil {
+				return err
+			} else if linkPath == binaryPath {
+				// link points to correct destination
+				continue
+			}
 
-func (t *Terraform) Shell(stack interfaces.Stack, args []string) error {
-	c := t.NewContainer(stack)
-
-	if err := c.prepare(); err != nil {
-		return fmt.Errorf("Shell: error preparing container: %s", err)
-	}
-	defer c.CleanUpSilent(t.log)
-
-	if err := c.CopyRemoteState(stack.RemoteState()); err != nil {
-		return fmt.Errorf("error while copying remote state: %s", err)
-	}
-	c.log.Debug("copied remote state into container")
-
-	if err := c.Init(); err != nil {
-		return fmt.Errorf("error while terraform init: %s", err)
-	}
-
-	return c.Shell()
-}
-
-func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy bool, ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-	c := t.NewContainer(stack)
-
-	if destroy {
-		t.tarmak.Cluster().SetState("destroy")
-		if err := stack.VerifyPreDestroy(); err != nil {
-			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
+			err := os.Remove(destPath)
+			if err != nil {
+				return err
+			}
 		}
-	} else {
-		if err := stack.VerifyPreDeploy(); err != nil {
-			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
-		}
-	}
-	if err := c.prepare(); err != nil {
-		return fmt.Errorf("planApply: error preparing container: %s", err)
-	}
-	defer c.CleanUpSilent(t.log)
 
-	err := c.CopyRemoteState(stack.RemoteState())
-
-	if err != nil {
-		return fmt.Errorf("error while copying remote state: %s", err)
-	}
-	c.log.Debug("copied remote state into container")
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-	if err := c.Init(); err != nil {
-		return fmt.Errorf("error while terraform init: %s", err)
-	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-	// check for destroying the state stack
-	if destroy && stack.Name() == tarmakv1alpha1.StackNameState {
-		c.log.Infof("moving remote state to local")
-
-		err := c.CopyRemoteState("")
+		err := os.Symlink(
+			binaryPath,
+			destPath,
+		)
 		if err != nil {
-			return fmt.Errorf("error while copying empty remote state: %s", err)
+			return err
 		}
-		c.log.Debug("copied empty remote state into container")
-
-		if err := c.InitForceCopy(); err != nil {
-			return fmt.Errorf("error while terraform init -force-copy: %s", err)
-		}
-	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-	changesNeeded, err := c.Plan(args, destroy)
-	if err != nil {
-		return fmt.Errorf("error while terraform plan: %s", err)
-	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-	if changesNeeded {
-		if err := c.Apply(); err != nil {
-			return fmt.Errorf("error while terraform apply: %s", err)
-		}
-	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-
-	// verify that state has been run successfully
-	if !destroy {
-		output, err := c.Output()
-		stack.SetOutput(output)
-		if err != nil {
-			return fmt.Errorf("error while getting terraform output: %s", err)
-		}
-		t.log.WithFields(output).Debug("terraform output")
-
-		if err := stack.VerifyPostDeploy(); err != nil {
-			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
-		}
-	} else {
-		if err := stack.VerifyPostDestroy(); err != nil {
-			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
-		}
-
 	}
 
 	return nil
+}
+
+// plugin path that stores terraform providers binaries
+func (t *Terraform) pluginPath(c interfaces.Cluster) string {
+	return filepath.Join(t.codePath(c), command.DefaultPluginVendorDir)
+}
+
+// code path to store terraform modules and files
+func (t *Terraform) codePath(c interfaces.Cluster) string {
+	return filepath.Join(c.ConfigPath(), "terraform")
+}
+
+// socket path for the tarmak provider socket
+func tarmakSocketPath(clusterConfig string) string {
+	return filepath.Join(clusterConfig, "tarmak.sock")
+}
+func (t *Terraform) socketPath(c interfaces.Cluster) string {
+	return tarmakSocketPath(c.ConfigPath())
+}
+
+func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string, args []string) error {
+
+	// generate tf code
+	if err := t.GenerateCode(cluster); err != nil {
+		return err
+	}
+	terraformCodePath := t.codePath(cluster)
+
+	// symlink tarmak plugins into folder
+	if err := t.preparePlugins(cluster); err != nil {
+		return err
+	}
+
+	binaryPath, err := osext.Executable()
+	if err != nil {
+		return fmt.Errorf("error finding tarmak executable: %s", err)
+	}
+
+	// listen to rpc
+	if err := rpc.ListenUnixSocket(
+		t.log,
+		rpc.New(t.tarmak.Cluster()),
+		t.socketPath(cluster),
+	); err != nil {
+		return err
+	}
+
+	envVars := []string{
+		"TF_IN_AUTOMATION=1",
+	}
+
+	// get environment variables necessary for provider
+	if environmentProvider, err := cluster.Environment().Provider().Environment(); err != nil {
+		return fmt.Errorf("error getting environment secrets from provider: %s", err)
+	} else {
+		envVars = append(envVars, environmentProvider...)
+	}
+
+	// run init
+	cmdInit := exec.Command(
+		binaryPath,
+		"terraform",
+		"init",
+		"-get-plugins=false",
+		"-input=false",
+	)
+	cmdInit.Dir = terraformCodePath
+	cmdInit.Stdout = os.Stdout
+	cmdInit.Stderr = os.Stderr
+	cmdInit.Stdin = os.Stdin
+	cmdInit.Env = envVars
+	if err := cmdInit.Run(); err != nil {
+		return err
+	}
+
+	// plan
+	cmdArgs := []string{
+		"terraform",
+		command,
+	}
+	cmdArgs = append(cmdArgs, args...)
+
+	cmdPlan := exec.Command(
+		binaryPath,
+		cmdArgs...,
+	)
+	cmdPlan.Stdout = os.Stdout
+	cmdPlan.Stderr = os.Stderr
+	cmdPlan.Stdin = os.Stdin
+	cmdPlan.Dir = terraformCodePath
+	cmdInit.Env = envVars
+	if err := cmdPlan.Run(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *Terraform) Plan(cluster interfaces.Cluster) error {
+	return t.terraformWrapper(
+		cluster,
+		"plan",
+		[]string{"-detailed-exitcode", "-input=false"},
+	)
+}
+
+func (t *Terraform) Apply(cluster interfaces.Cluster) error {
+	return t.terraformWrapper(
+		cluster,
+		"apply",
+		[]string{"-input=false"},
+	)
+}
+
+func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
+	return t.terraformWrapper(
+		cluster,
+		"destroy",
+		[]string{"-input=false"},
+	)
+}
+
+func (t *Terraform) Shell(cluster interfaces.Cluster) error {
+	// TODO: needs to be implemented
+	return fmt.Errorf("unimplemented")
+}
+
+// convert interface map to terraform.tfvars format
+func MapToTerraformTfvars(input map[string]interface{}) (output string, err error) {
+	var buf bytes.Buffer
+
+	for key, value := range input {
+		switch v := value.(type) {
+		case map[string]string:
+			_, err := buf.WriteString(fmt.Sprintf("%s = {\n", key))
+			if err != nil {
+				return "", err
+			}
+
+			keys := make([]string, len(v))
+			pos := 0
+			for key, _ := range v {
+				keys[pos] = key
+				pos++
+			}
+			sort.Strings(keys)
+			for _, key := range keys {
+				_, err := buf.WriteString(fmt.Sprintf("  %s = \"%s\"\n", key, v[key]))
+				if err != nil {
+					return "", err
+				}
+			}
+
+			_, err = buf.WriteString("}\n")
+			if err != nil {
+				return "", err
+			}
+		case []string:
+			values := make([]string, len(v))
+			for pos, _ := range v {
+				values[pos] = fmt.Sprintf(`"%s"`, v[pos])
+			}
+			_, err := buf.WriteString(fmt.Sprintf("%s = [%s]\n", key, strings.Join(values, ", ")))
+			if err != nil {
+				return "", err
+			}
+		case string:
+			_, err := buf.WriteString(fmt.Sprintf("%s = \"%s\"\n", key, v))
+			if err != nil {
+				return "", err
+			}
+		case int:
+			_, err := buf.WriteString(fmt.Sprintf("%s = %d\n", key, v))
+			if err != nil {
+				return "", err
+			}
+		case *net.IPNet:
+			_, err := buf.WriteString(fmt.Sprintf("%s = \"%s\"\n", key, v.String()))
+			if err != nil {
+				return "", err
+			}
+		default:
+			return "", fmt.Errorf("ignoring unknown var key='%s' type='%#+v'", key, v)
+		}
+	}
+	return buf.String(), nil
 }

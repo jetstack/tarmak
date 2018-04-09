@@ -3,7 +3,9 @@ package rpc
 
 import (
 	"io"
+	"net"
 	"net/rpc"
+	"os"
 
 	"github.com/alecthomas/multiplex"
 	"github.com/sirupsen/logrus"
@@ -20,16 +22,19 @@ const (
 type tarmakInterface struct{}
 
 type tarmakRPC struct {
-	tarmak interfaces.Tarmak
-	stack  interfaces.Stack
+	cluster interfaces.Cluster
+	tarmak  interfaces.Tarmak
 }
 
 func (r *tarmakRPC) log() *logrus.Entry {
 	return r.tarmak.Log()
 }
 
-func NewTarmak(tarmak interfaces.Tarmak, stack interfaces.Stack) Tarmak {
-	return &tarmakRPC{tarmak: tarmak, stack: stack}
+func New(cluster interfaces.Cluster) Tarmak {
+	return &tarmakRPC{
+		tarmak:  cluster.Environment().Tarmak(),
+		cluster: cluster,
+	}
 }
 
 type Tarmak interface {
@@ -69,4 +74,30 @@ func Bind(log *logrus.Entry, tarmak Tarmak, reader io.Reader, writer io.Writer, 
 	}
 
 	log.Debugf("rpc server stopped")
+}
+
+// listen to a unix socket
+func ListenUnixSocket(log *logrus.Entry, tarmak Tarmak, socketPath string) error {
+	s := rpc.NewServer()
+	s.RegisterName(RPCName, tarmak)
+	log.Debugf("rpc server started")
+
+	err := os.Remove(socketPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	unixListener, err := net.Listen("unix", socketPath)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			s.Accept(unixListener)
+		}
+		log.Debugf("rpc server stopped")
+	}()
+
+	return nil
 }

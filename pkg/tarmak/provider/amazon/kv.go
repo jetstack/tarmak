@@ -10,10 +10,9 @@ import (
 )
 
 func (a *Amazon) secretsKMSKeyID() (string, error) {
-	tf := a.tarmak.Terraform()
-	output, err := tf.Output(a.tarmak.Cluster().Environment().StateStack())
+	output, err := a.tarmak.Cluster().Environment().Hub().TerraformOutput()
 	if err != nil {
-		return "", fmt.Errorf("error getting state stack output: %s", err)
+		return "", fmt.Errorf("error getting hub terraform output: %s", err)
 	}
 
 	key := "secrets_kms_arn"
@@ -49,7 +48,12 @@ func (a *Amazon) secretsKMSKeyID() (string, error) {
 func (a *Amazon) vaultUnsealKeyName() (string, error) {
 	key := "vault_unseal_key_name"
 
-	keyNameIntf, ok := a.tarmak.Cluster().Environment().VaultStack().Output()[key]
+	output, err := a.tarmak.Cluster().Environment().Hub().TerraformOutput()
+	if err != nil {
+		return "", fmt.Errorf("error getting hub terraform output: %s", err)
+	}
+
+	keyNameIntf, ok := output[key]
 	if !ok {
 		return "", fmt.Errorf("error could not find '%s' in terraform vault output", key)
 	}
@@ -92,7 +96,7 @@ func (a *Amazon) VaultKV() (kv.Service, error) {
 	return kms, nil
 }
 
-func (a *Amazon) VaultKVMWithParams(kmsKeyID, unsealKeyName string) (kv.Service, error) {
+func (a *Amazon) VaultKVWithParams(kmsKeyID, unsealKeyName string) (kv.Service, error) {
 	session, err := a.Session()
 	if err != nil {
 		return nil, err

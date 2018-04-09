@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
-	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
 )
 
@@ -29,27 +27,22 @@ type VaultClusterStatusReply struct {
 func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
+	// TODO: state should use contants
 	if r.tarmak.Cluster().GetState() == "destroy" {
 		result.Status = "unknown"
 		return nil
 	}
 
-	vaultStack := r.tarmak.Cluster().Stack(tarmakv1alpha1.StackNameVault)
+	vault := r.cluster.Environment().Vault()
 
-	vaultStackReal, ok := vaultStack.(*stack.VaultStack)
-	if !ok {
-		err := fmt.Errorf("unexpected type for vault stack: %T", vaultStack)
-		r.tarmak.Log().Error(err)
-		return err
-	}
-	err := vaultStackReal.VerifyVaultInitFromFQDNs(args.VaultInternalFQDNs, args.VaultCA, args.VaultKMSKeyID, args.VaultUnsealKeyName)
+	err := vault.VerifyInitFromFQDNs(args.VaultInternalFQDNs, args.VaultCA, args.VaultKMSKeyID, args.VaultUnsealKeyName)
 	if err != nil {
 		err = fmt.Errorf("failed to initialise vault cluster: %s", err)
 		r.tarmak.Log().Error(err)
 		return err
 	}
 
-	vaultTunnel, err := vaultStackReal.VaultTunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
+	vaultTunnel, err := vault.TunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
 	if err != nil {
 		err = fmt.Errorf("failed to create vault tunnel: %s", err)
 		r.tarmak.Log().Error(err)
@@ -59,7 +52,7 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 
 	vaultClient := vaultTunnel.VaultClient()
 
-	vaultRootToken, err := r.tarmak.Cluster().Environment().VaultRootToken()
+	vaultRootToken, err := vault.RootToken()
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve vault root token: %s", err)
 		r.tarmak.Log().Error(err)
@@ -89,16 +82,9 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 		return nil
 	}
 
-	vaultStack := r.tarmak.Cluster().Stack(tarmakv1alpha1.StackNameVault)
+	vault := r.cluster.Environment().Vault()
 
-	vaultStackReal, ok := vaultStack.(*stack.VaultStack)
-	if !ok {
-		err := fmt.Errorf("unexpected type for vault stack: %T", vaultStack)
-		r.tarmak.Log().Error(err)
-		return err
-	}
-
-	vaultTunnel, err := vaultStackReal.VaultTunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
+	vaultTunnel, err := vault.TunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
 	if err != nil {
 		err = fmt.Errorf("failed to create vault tunnel: %s", err)
 		r.tarmak.Log().Error(err)
@@ -108,7 +94,7 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 
 	vaultClient := vaultTunnel.VaultClient()
 
-	vaultRootToken, err := r.tarmak.Cluster().Environment().VaultRootToken()
+	vaultRootToken, err := vault.RootToken()
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve vault root token: %s", err)
 		r.tarmak.Log().Error(err)

@@ -4,7 +4,6 @@ package rpc
 import (
 	"fmt"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
 )
 
@@ -36,15 +35,8 @@ func (r *tarmakRPC) VaultInstanceRole(args *VaultInstanceRoleArgs, result *Vault
 
 	// TODO: if destroying cluster just return unknown here
 
-	vaultStack := r.tarmak.Cluster().Environment().VaultStack()
-
-	vaultStackReal, ok := vaultStack.(*stack.VaultStack)
-	if !ok {
-		err := fmt.Errorf("unexpected type for vault stack: %T", vaultStack)
-		r.tarmak.Log().Error(err)
-		return err
-	}
-	vaultTunnel, err := vaultStackReal.VaultTunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
+	vault := r.cluster.Environment().Vault()
+	vaultTunnel, err := vault.TunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
 	if err != nil {
 		err := fmt.Errorf("failed to create vault tunnel: %s", err)
 		r.tarmak.Log().Error(err)
@@ -54,7 +46,7 @@ func (r *tarmakRPC) VaultInstanceRole(args *VaultInstanceRoleArgs, result *Vault
 
 	vaultClient := vaultTunnel.VaultClient()
 
-	vaultRootToken, err := r.tarmak.Cluster().Environment().VaultRootToken()
+	vaultRootToken, err := vault.RootToken()
 	if err != nil {
 		err := fmt.Errorf("failed to retrieve root token: %s", err)
 		r.tarmak.Log().Error(err)
