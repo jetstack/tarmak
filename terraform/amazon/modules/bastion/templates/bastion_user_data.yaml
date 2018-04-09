@@ -1,0 +1,96 @@
+#cloud-config
+repo_update: true
+repo_upgrade: all
+
+preserve_hostname: true
+
+write_files:
+- path: /etc/hosts
+  permissions: '0644'
+  content: |
+    127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+    ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+    127.0.1.1   ${fqdn}
+
+- path: /etc/systemd/system/etcd.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Etcd server
+    After=network.target
+
+    [Service]
+    Environment=ETCD_VERSION=3.2.17
+    Environment=ETCD_HASH=0a75e794502e2e76417b19da2807a9915fa58dcbf0985e397741d570f4f305cd
+    Environment=ETCD_DATA_DIR=/var/lib/etcd
+    PermissionsStartOnly=true
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -x /opt/etcd-$${ETCD_VERSION}/etcd && exit 0 ;\
+      mkdir -p /opt/etcd-$${ETCD_VERSION} ;\
+      curl -sLo /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz https://github.com/coreos/etcd/releases/download/v$${ETCD_VERSION}/etcd-v$${ETCD_VERSION}-linux-amd64.tar.gz ;\
+      echo "$${ETCD_HASH}  /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz" | sha256sum -c ;\
+      tar xvf /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz -C /opt/etcd-$${ETCD_VERSION}/ --strip-components 1'
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -d $${ETCD_DATA_DIR} && exit 0 ;\
+      mkdir -p $${ETCD_DATA_DIR} ;\
+      chown etcd:etcd $${ETCD_DATA_DIR} ;\
+      chmod 750 $${ETCD_DATA_DIR}'
+    ExecStart=/bin/sh -c 'exec /opt/etcd-$${ETCD_VERSION}/etcd'
+    Type=notify
+    User=etcd
+    Group=etcd
+
+    [Install]
+    WantedBy=multi-user.target
+
+- path: /etc/systemd/system/wing-server.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Tarmak's wing server
+    After=network.target etcd.service
+    Requires=etcd.service
+
+    [Service]
+    Environment=AIRWORTHY_VERSION=0.2.0
+    Environment=AIRWORTHY_HASH=2d69cfe0b92f86481805c28d0b8ae47a8ffa6bb2373217e7c5215d61fc9efa1d
+    Environment=WING_VERSION=0.3.0
+    Environment=WING_DATA_DIR=/var/lib/wing
+    PermissionsStartOnly=true
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
+      if [ ! -x /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy ]; then \
+        mkdir -p /opt/airworthy-$${AIRWORTHY_VERSION} ;\
+        curl -sLo /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy https://github.com/jetstack/airworthy/releases/download/$${AIRWORTHY_VERSION}/airworthy_$${AIRWORTHY_VERSION}_linux_amd64 ;\
+        echo "$${AIRWORTHY_HASH}  /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy" | sha256sum -c ;\
+        chmod 755 /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy ;\
+      fi ;\
+      /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy download --output /opt/wing-$${WING_VERSION}/wing --sha256sums https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt  --signature-armored https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt.asc https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/wing_$${WING_VERSION}_linux_amd64'
+    ExecStartPre=/bin/sh -c '\
+      set -e ;\
+      test -d $${WING_DATA_DIR} && exit 0 ;\
+      mkdir -p $${WING_DATA_DIR} ;\
+      chown wing:wing $${WING_DATA_DIR} ;\
+      chmod 750 $${WING_DATA_DIR}'
+    ExecStart=/bin/sh -c 'cd $${WING_DATA_DIR} && exec /opt/wing-$${WING_VERSION}/wing server --secure-port 9443 --etcd-servers http://127.0.0.1:2379'
+    Type=notify
+    User=wing
+    Group=wing
+
+    [Install]
+    WantedBy=multi-user.target
+
+runcmd:
+- hostnamectl set-hostname "${fqdn}"
+- yum -y update
+- yum -y install vim
+- useradd --system etcd
+- useradd --system wing
+- systemctl enable etcd.service
+- systemctl enable wing-server.service
+- systemctl start wing-server.service
+
+output : { all : '| tee -a /var/log/cloud-init-output.log' }
