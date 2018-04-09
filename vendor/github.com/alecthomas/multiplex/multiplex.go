@@ -91,7 +91,7 @@ const (
 
 const (
 	// FragmentSize (in bytes) of packet fragments.
-	FragmentSize = 8092
+	FragmentSize = 1024
 )
 
 var (
