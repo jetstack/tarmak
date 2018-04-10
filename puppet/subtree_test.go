@@ -29,6 +29,7 @@ func TestSubtreeUpstreamedPuppetModuleEtcd(t *testing.T) {
 }
 
 func TestSubtreeUpstreamedPuppetModuleKubernetes(t *testing.T) {
+	t.Skip("skip module kubernetes check, as it's tested in tarmak")
 	subtree.New(
 		"puppet/modules/kubernetes",
 		"https://github.com/jetstack/puppet-module-kubernetes.git",
@@ -50,6 +51,7 @@ func TestSubtreeUpstreamedPuppetModulePrometheus(t *testing.T) {
 }
 
 func TestSubtreeUpstreamedPuppetModuleTarmak(t *testing.T) {
+	t.Skip("skip module tarmak check, as it's tested in tarmak")
 	subtree.New(
 		"puppet/modules/tarmak",
 		"https://github.com/jetstack/puppet-module-tarmak.git",
