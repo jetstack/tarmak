@@ -10,6 +10,8 @@ class kubernetes::kubelet(
   String $role = 'worker',
   String $container_runtime = 'docker',
   String $kubelet_dir = '/var/lib/kubelet',
+  String $hard_eviction_memory_threshold =
+    five_percent_of_total_ram(dig44($facts, ['memory', 'system', 'total_bytes'], 1)),
   Optional[String] $network_plugin = undef,
   Integer $network_plugin_mtu = 1460,
   Boolean $allow_privileged = true,

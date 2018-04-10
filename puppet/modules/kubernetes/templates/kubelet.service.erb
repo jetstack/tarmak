@@ -103,6 +103,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   "--tls-cert-file=<%= @cert_file %>" \
   "--tls-private-key-file=<%= @key_file %>" \
 <% end -%>
+  "--eviction-hard=memory.available<<%= @hard_eviction_memory_threshold %>" \
   --logtostderr=true
 
 Restart=on-failure
