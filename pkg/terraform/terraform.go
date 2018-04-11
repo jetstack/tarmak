@@ -2,8 +2,10 @@
 package terraform
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -36,7 +38,9 @@ func New(tarmak interfaces.Tarmak) *Terraform {
 	}
 }
 
-// this method perpares the terraform plugins folder. This folder contains terraform providers and provisioners in general. We are pointing through symlinks to the tarmak binary, which contains all relevant providers
+// this method perpares the terraform plugins folder. This folder contains
+// terraform providers and provisioners in general. We are pointing through
+// symlinks to the tarmak binary, which contains all relevant providers
 func (t *Terraform) preparePlugins(c interfaces.Cluster) error {
 	binaryPath, err := osext.Executable()
 	if err != nil {
@@ -106,16 +110,10 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	if err := t.GenerateCode(cluster); err != nil {
 		return err
 	}
-	terraformCodePath := t.codePath(cluster)
 
 	// symlink tarmak plugins into folder
 	if err := t.preparePlugins(cluster); err != nil {
 		return err
-	}
-
-	binaryPath, err := osext.Executable()
-	if err != nil {
-		return fmt.Errorf("error finding tarmak executable: %s", err)
 	}
 
 	// listen to rpc
@@ -127,31 +125,19 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		return err
 	}
 
-	envVars := []string{
-		"TF_IN_AUTOMATION=1",
-	}
-
-	// get environment variables necessary for provider
-	if environmentProvider, err := cluster.Environment().Provider().Environment(); err != nil {
-		return fmt.Errorf("error getting environment secrets from provider: %s", err)
-	} else {
-		envVars = append(envVars, environmentProvider...)
-	}
-
 	// run init
-	cmdInit := exec.Command(
-		binaryPath,
-		"terraform",
-		"init",
-		"-get-plugins=false",
-		"-input=false",
-	)
-	cmdInit.Dir = terraformCodePath
-	cmdInit.Stdout = os.Stdout
-	cmdInit.Stderr = os.Stderr
-	cmdInit.Stdin = os.Stdin
-	cmdInit.Env = envVars
-	if err := cmdInit.Run(); err != nil {
+	if err := t.command(
+		cluster,
+		[]string{
+			"terraform",
+			"init",
+			"-get-plugins=false",
+			"-input=false",
+		},
+		nil,
+		nil,
+		nil,
+	); err != nil {
 		return err
 	}
 
@@ -162,17 +148,89 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	}
 	cmdArgs = append(cmdArgs, args...)
 
-	cmdPlan := exec.Command(
-		binaryPath,
-		cmdArgs...,
-	)
-	cmdPlan.Stdout = os.Stdout
-	cmdPlan.Stderr = os.Stderr
-	cmdPlan.Stdin = os.Stdin
-	cmdPlan.Dir = terraformCodePath
-	cmdPlan.Env = envVars
+	if err := t.command(
+		cluster,
+		cmdArgs,
+		nil,
+		nil,
+		nil,
+	); err != nil {
+		return err
+	}
 
-	if err := cmdPlan.Run(); err != nil {
+	return nil
+}
+
+func (t *Terraform) envVars(cluster interfaces.Cluster) ([]string, error) {
+	envVars := []string{
+		"TF_IN_AUTOMATION=1",
+	}
+
+	// get environment variables necessary for provider
+	if environmentProvider, err := cluster.Environment().Provider().Environment(); err != nil {
+		return []string{}, fmt.Errorf("error getting environment secrets from provider: %s", err)
+	} else {
+		envVars = append(envVars, environmentProvider...)
+	}
+
+	return envVars, nil
+}
+
+func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
+	envVars, err := t.envVars(cluster)
+	if err != nil {
+		return err
+	}
+
+	binaryPath, err := osext.Executable()
+	if err != nil {
+		return fmt.Errorf("error finding tarmak executable: %s", err)
+	}
+
+	cmd := exec.Command(
+		binaryPath,
+		args...,
+	)
+
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+
+	// forward stdout
+	if stdout == nil {
+		stdoutScanner := bufio.NewScanner(stdoutPipe)
+		go func() {
+			for stdoutScanner.Scan() {
+				t.log.WithField("std", "out").Debug(stdoutScanner.Text())
+			}
+		}()
+	} else {
+		cmd.Stdout = stdout
+	}
+
+	// forward stderr
+	if stderr == nil {
+		stderrScanner := bufio.NewScanner(stderrPipe)
+		go func() {
+			for stderrScanner.Scan() {
+				t.log.WithField("std", "err").Debug(stderrScanner.Text())
+			}
+		}()
+	} else {
+		cmd.Stderr = stderr
+	}
+
+	cmd.Stdin = stdin
+	cmd.Dir = t.codePath(cluster)
+	cmd.Env = envVars
+
+	if err := cmd.Run(); err != nil {
 		return err
 	}
 

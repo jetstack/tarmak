@@ -29,17 +29,17 @@ var InternalProviders = map[string]plugin.ProviderFunc{
 }
 
 // create new terraform ui
-func newUI(out io.Writer) cli.Ui {
+func newUI(out io.Writer, err io.Writer) cli.Ui {
 
-	outPrefix := "OUT"
-	errPrefix := "ERR"
+	outPrefix := ""
+	errPrefix := ""
 
 	return &cli.PrefixedUi{
 		AskPrefix:    outPrefix,
 		OutputPrefix: outPrefix,
 		InfoPrefix:   outPrefix,
 		ErrorPrefix:  errPrefix,
-		Ui:           &cli.BasicUi{Writer: out},
+		Ui:           &cli.BasicUi{Writer: out, ErrorWriter: err},
 	}
 }
 
@@ -112,21 +112,21 @@ func InternalPlugin(args []string) int {
 
 func Plan(args []string) int {
 	c := &command.PlanCommand{
-		Meta: newMeta(newUI(os.Stdout)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
 	}
 	return c.Run(args)
 }
 
 func Apply(args []string) int {
 	c := &command.ApplyCommand{
-		Meta: newMeta(newUI(os.Stdout)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
 	}
 	return c.Run(args)
 }
 
 func Destroy(args []string) int {
 	c := &command.ApplyCommand{
-		Meta:    newMeta(newUI(os.Stdout)),
+		Meta:    newMeta(newUI(os.Stdout, os.Stderr)),
 		Destroy: true,
 	}
 	return c.Run(args)
@@ -134,21 +134,21 @@ func Destroy(args []string) int {
 
 func Init(args []string) int {
 	c := &command.InitCommand{
-		Meta: newMeta(newUI(os.Stdout)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
 	}
 	return c.Run(args)
 }
 
 func Output(args []string) int {
 	c := &command.OutputCommand{
-		Meta: newMeta(newUI(os.Stdout)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
 	}
 	return c.Run(args)
 }
 
 func Unlock(args []string) int {
 	c := &command.UnlockCommand{
-		Meta: newMeta(newUI(os.Stdout)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
 	}
 	return c.Run(args)
 }
