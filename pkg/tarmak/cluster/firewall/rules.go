@@ -139,7 +139,7 @@ func newConsulTCPService() Service {
 		Name:     "consul-tcp",
 		Protocol: "tcp",
 		Ports: []Port{
-			Port{Single: &consulRCPPort},
+			//Port{Single: &consulRCPPort},
 			Port{Single: &consulSerfPort},
 		},
 	}
