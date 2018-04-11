@@ -4,6 +4,8 @@ package rpc
 import (
 	"fmt"
 	"time"
+
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 )
 
 var (
@@ -22,7 +24,7 @@ type BastionInstanceStatusReply struct {
 func (r *tarmakRPC) BastionInstanceStatus(args *BastionInstanceStatusArgs, result *BastionInstanceStatusReply) error {
 	r.tarmak.Log().Debug("received rpc bastion status")
 
-	if r.tarmak.Cluster().GetState() == "destroy" {
+	if r.tarmak.Cluster().GetState() == cluster.StateDestroy {
 		result.Status = "unknown"
 		return nil
 	}

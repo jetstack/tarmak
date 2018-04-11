@@ -16,6 +16,12 @@ import (
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
+const (
+	// represents Terraform in a destroy state
+	StateDestroy             = "destroy"
+	ExistingVPCAnnotationKey = "tarmak.io/existing-vpc-id"
+)
+
 // returns a server
 type Cluster struct {
 	conf *clusterv1alpha1.Cluster
@@ -30,7 +36,10 @@ type Cluster struct {
 	imageIDs      map[string]string
 	instancePools []interfaces.InstancePool
 	roles         map[string]*role.Role
-	state         string // TODO: add what the state is for
+	// state records the state of Terraform to determine
+	// whether we are destroying or applying. This allows other
+	// components of Tarmak to make better decisions
+	state string
 }
 
 var _ interfaces.Cluster = &Cluster{}
@@ -123,7 +132,8 @@ func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, cl
 
 // validate server pools
 func (c *Cluster) validateInstancePools() (result error) {
-	return fmt.Errorf("refactore me!")
+	return nil
+	//return fmt.Errorf("refactore me!")
 }
 
 /*
@@ -201,7 +211,7 @@ func (c *Cluster) validateInstancePools() (result error) {
 // validate network configuration
 func (c *Cluster) validateNetwork() (result error) {
 	// make the choice between deploying into existing VPC or creating a new one
-	if _, ok := c.Config().Network.ObjectMeta.Annotations["tarmak.io/existing-vpc-id"]; ok {
+	if _, ok := c.Config().Network.ObjectMeta.Annotations[ExistingVPCAnnotationKey]; ok {
 		// TODO: handle existing vpc
 	} else {
 		_, net, err := net.ParseCIDR(c.Config().Network.CIDR)
@@ -409,11 +419,12 @@ func (c *Cluster) Variables() map[string]interface{} {
 	*/
 }
 
-// TODO: add comment what this state is for
+// SetState records the state of Terraform
 func (c *Cluster) SetState(state string) {
 	c.state = state
 }
 
+// GetState retreives the state of Terraform
 func (c *Cluster) GetState() string {
 	return c.state
 }

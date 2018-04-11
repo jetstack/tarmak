@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
 )
 
@@ -27,8 +28,7 @@ type VaultClusterStatusReply struct {
 func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
-	// TODO: state should use contants
-	if r.tarmak.Cluster().GetState() == "destroy" {
+	if r.tarmak.Cluster().GetState() == cluster.StateDestroy {
 		result.Status = "unknown"
 		return nil
 	}
@@ -77,7 +77,7 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
-	if r.tarmak.Cluster().GetState() == "destroy" {
+	if r.tarmak.Cluster().GetState() == cluster.StateDestroy {
 		result.Status = "unknown"
 		return nil
 	}

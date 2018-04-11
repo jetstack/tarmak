@@ -4,6 +4,7 @@ package rpc
 import (
 	"fmt"
 
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
 )
 
@@ -26,14 +27,12 @@ type VaultInstanceRoleReply struct {
 func (r *tarmakRPC) VaultInstanceRole(args *VaultInstanceRoleArgs, result *VaultInstanceRoleReply) error {
 	r.tarmak.Log().Debug("received rpc vault instance role")
 
-	if r.tarmak.Cluster().GetState() == "destroy" {
+	if r.tarmak.Cluster().GetState() == cluster.StateDestroy {
 		result.InitToken = ""
 		return nil
 	}
 
 	roleName := args.RoleName
-
-	// TODO: if destroying cluster just return unknown here
 
 	vault := r.cluster.Environment().Vault()
 	vaultTunnel, err := vault.TunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
