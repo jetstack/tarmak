@@ -73,6 +73,14 @@ func (s *Stack) Cluster() interfaces.Cluster {
 	return s.cluster
 }
 
+func (s *Stack) SetCluster(in interfaces.Cluster) {
+	s.cluster = in
+}
+
+func (s *Stack) SetLog(in *logrus.Entry) {
+	s.log = in
+}
+
 func (s *Stack) RemoteState() string {
 	return s.Cluster().RemoteState(s.Name())
 }

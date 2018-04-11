@@ -12,7 +12,7 @@ import (
 	wingclientv1alpha1 "github.com/jetstack/tarmak/pkg/wing/client/typed/wing/v1alpha1"
 )
 
-func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, error) {
+func (c *Cluster) WingInstanceClient() (wingclientv1alpha1.InstanceInterface, error) {
 	var err error
 
 	if c.wingClientset == nil {
@@ -28,7 +28,7 @@ func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, er
 
 func (c *Cluster) listInstances() (instances []*wingv1alpha1.Instance, err error) {
 	// connect to wing
-	client, err := c.wingInstanceClient()
+	client, err := c.WingInstanceClient()
 	if err != nil {
 		return instances, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
 	}
