@@ -74,7 +74,7 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t.log.Out = os.Stderr
 
 	// read config, unless we are initialising the config
-	t.config, err = config.New(t)
+	t.config, err = config.New(t, flags)
 	if err != nil {
 		t.log.Fatal("unable to create tarmak: ", err)
 	}

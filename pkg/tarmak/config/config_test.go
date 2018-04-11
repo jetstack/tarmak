@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
 )
 
@@ -54,7 +55,7 @@ func newFakeConfig(t *testing.T) *fakeConfig {
 	}
 	c.fakeTarmak.EXPECT().Log().AnyTimes().Return(logger.WithField("app", "tarmak"))
 
-	c.Config, err = New(c.fakeTarmak)
+	c.Config, err = New(c.fakeTarmak, &tarmakv1alpha1.Flags{})
 
 	if err != nil {
 		t.Error("unexpected error: ", err)

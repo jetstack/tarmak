@@ -154,7 +154,11 @@ type Config interface {
 	Environments() (environments []*tarmakv1alpha1.Environment)
 	AppendEnvironment(*tarmakv1alpha1.Environment) error
 	UniqueEnvironmentName(name string) error
+	// currently selected <env name>-<cluster name>
+	CurrentCluster() string
+	// currently selected cluster name
 	CurrentClusterName() string
+	// currently selected env name
 	CurrentEnvironmentName() string
 	Contact() string
 	Project() string

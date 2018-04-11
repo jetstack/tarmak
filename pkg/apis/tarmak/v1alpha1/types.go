@@ -120,6 +120,8 @@ type Flags struct {
 
 	Initialize bool // run tarmak in initialize mode, don't parse config before rnning init
 
+	CurrentCluster string // override the current cluster set in tarmak config
+
 	Cluster ClusterFlags // cluster specific flags
 }
 

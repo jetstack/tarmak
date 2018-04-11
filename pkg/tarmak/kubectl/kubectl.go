@@ -19,6 +19,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
@@ -260,6 +261,10 @@ func (k *Kubectl) verifyAPIVersion(c api.Config) (version string, err error) {
 }
 
 func (k *Kubectl) Kubectl(args []string) error {
+	if k.tarmak.Cluster().Type() == clusterv1alpha1.ClusterTypeHub {
+		return fmt.Errorf("the current cluster '%s' is a hub and therefore does not contain a Kubernetes cluster", k.tarmak.Config().CurrentCluster())
+	}
+
 	tunnel, err := k.ensureWorkingKubeconfig()
 	if err != nil {
 		if tunnel != nil {
