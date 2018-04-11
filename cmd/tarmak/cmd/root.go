@@ -81,4 +81,11 @@ func init() {
 		false,
 		"do not clean-up terraform/packer containers after running them",
 	)
+
+	RootCmd.PersistentFlags().StringVar(
+		&globalFlags.CurrentCluster,
+		"current-cluster",
+		"",
+		"override the current cluster set in the config",
+	)
 }

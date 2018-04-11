@@ -24,7 +24,8 @@ import (
 type Config struct {
 	tarmak interfaces.Tarmak
 
-	conf *tarmakv1alpha1.Config
+	conf  *tarmakv1alpha1.Config
+	flags *tarmakv1alpha1.Flags
 
 	scheme *runtime.Scheme
 	codecs serializer.CodecFactory
@@ -33,10 +34,11 @@ type Config struct {
 
 var _ interfaces.Config = &Config{}
 
-func New(tarmak interfaces.Tarmak) (*Config, error) {
+func New(tarmak interfaces.Tarmak, flags *tarmakv1alpha1.Flags) (*Config, error) {
 	c := &Config{
 		tarmak: tarmak,
 		log:    tarmak.Log().WithField("module", "config"),
+		flags:  flags,
 		scheme: runtime.NewScheme(),
 	}
 	c.codecs = serializer.NewCodecFactory(c.scheme)
@@ -119,13 +121,22 @@ func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
 	return nil
 }
 
+func (c *Config) CurrentCluster() string {
+	// override current cluster if flags are set accordingly
+	if c.flags.CurrentCluster != "" {
+		return c.flags.CurrentCluster
+	}
+
+	return c.conf.CurrentCluster
+}
+
 func (c *Config) SetCurrentCluster(clusterName string) error {
 	c.conf.CurrentCluster = clusterName
 	return c.writeYAML(c.conf)
 }
 
 func (c *Config) CurrentClusterName() string {
-	split := strings.Split(c.conf.CurrentCluster, "-")
+	split := strings.Split(c.CurrentCluster(), "-")
 	if len(split) < 2 {
 		return ""
 	}
@@ -133,7 +144,7 @@ func (c *Config) CurrentClusterName() string {
 }
 
 func (c *Config) CurrentEnvironmentName() string {
-	split := strings.Split(c.conf.CurrentCluster, "-")
+	split := strings.Split(c.CurrentCluster(), "-")
 	return split[0]
 }
 
