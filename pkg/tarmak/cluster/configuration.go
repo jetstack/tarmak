@@ -34,7 +34,7 @@ func (c *Cluster) ReapplyConfiguration() error {
 	c.log.Infof("making sure all instances apply the latest manifest")
 
 	// connect to wing
-	client, err := c.wingInstanceClient()
+	client, err := c.WingInstanceClient()
 	if err != nil {
 		return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
 	}
