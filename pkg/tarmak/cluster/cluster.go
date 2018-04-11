@@ -86,6 +86,15 @@ func (c *Cluster) InstancePools() []interfaces.InstancePool {
 	return c.instancePools
 }
 
+func (c *Cluster) InstancePool(roleName string) interfaces.InstancePool {
+	for _, instancePool := range c.instancePools {
+		if instancePool.Role().Name() == roleName {
+			return instancePool
+		}
+	}
+	return nil
+}
+
 func (c *Cluster) ListHosts() ([]interfaces.Host, error) {
 	return c.Environment().Provider().ListHosts()
 }

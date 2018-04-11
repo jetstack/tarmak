@@ -40,6 +40,7 @@ type Cluster interface {
 	Role(string) *role.Role
 	Roles() []*role.Role
 	InstancePools() []InstancePool
+	InstancePool(string) InstancePool
 	ImageIDs() (map[string]string, error)
 	Parameters() map[string]string
 	Type() string
