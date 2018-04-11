@@ -60,6 +60,15 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 	defineVaultRoles(cluster.roles)
 	defineKubernetesRoles(cluster.roles)
 
+	// populate role information if the API server should be public
+	if k := cluster.Config().Kubernetes; k != nil {
+		if apiServer := k.APIServer; apiServer != nil && apiServer.Public == true {
+			if master := cluster.Role("master"); master != nil {
+				master.AWS.ELBAPIPublic = true
+			}
+		}
+	}
+
 	// setup instance pools
 	var result error
 	for pos, _ := range cluster.conf.InstancePools {

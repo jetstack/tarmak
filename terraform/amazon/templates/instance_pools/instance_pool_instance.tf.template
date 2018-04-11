@@ -78,7 +78,12 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
   desired_capacity          = "${var.{{.TFName}}_count}"
   vpc_zone_identifier       = ["${var.private_subnet_ids}"]
   launch_configuration      = "${aws_launch_configuration.{{.TFName}}.name}"
-  load_balancers            = ["${aws_elb.{{.Role.TFName}}.name}"]
+  load_balancers            = [
+    "${aws_elb.{{.Role.TFName}}.name}",
+{{ if .Role.AWS.ELBAPIPublic -}}
+    "${aws_elb.{{.Role.TFName}}_public.name}",
+{{ end -}}
+  ]
 
   tag {
     key                 = "Name"

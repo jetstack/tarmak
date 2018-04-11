@@ -67,6 +67,7 @@ type ClusterKubernetes struct {
 	ClusterAutoscaler *ClusterKubernetesClusterAutoscaler `json:"clusterAutoscaler,omitempty"`
 	Tiller            *ClusterKubernetesTiller            `json:"tiller,omitempty"`
 	Dashboard         *ClusterKubernetesDashboard         `json:"dashboard,omitempty"`
+	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
@@ -85,6 +86,11 @@ type ClusterKubernetesDashboard struct {
 	Enabled bool   `json:"enabled,omitempty"`
 	Image   string `json:"image,omitempty"`
 	Version string `json:"version,omitempty"`
+}
+
+type ClusterKubernetesAPIServer struct {
+	// expose the API server through a public load balancer
+	Public bool `json:"public,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
