@@ -170,7 +170,8 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	cmdPlan.Stderr = os.Stderr
 	cmdPlan.Stdin = os.Stdin
 	cmdPlan.Dir = terraformCodePath
-	cmdInit.Env = envVars
+	cmdPlan.Env = envVars
+
 	if err := cmdPlan.Run(); err != nil {
 		return err
 	}
@@ -198,13 +199,13 @@ func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
 	return t.terraformWrapper(
 		cluster,
 		"destroy",
-		[]string{"-input=false"},
+		[]string{"-force"},
 	)
 }
 
 func (t *Terraform) Shell(cluster interfaces.Cluster) error {
 	// TODO: needs to be implemented
-	return fmt.Errorf("unimplemented")
+	return fmt.Errorf("Shell unimplemented")
 }
 
 // convert interface map to terraform.tfvars format

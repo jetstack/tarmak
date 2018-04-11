@@ -43,6 +43,20 @@ func newUI(out io.Writer) cli.Ui {
 	}
 }
 
+func newErrUI(out io.Writer, errOut io.Writer) cli.Ui {
+
+	outPrefix := "OUT"
+	errPrefix := "ERR"
+
+	return &cli.PrefixedUi{
+		AskPrefix:    outPrefix,
+		OutputPrefix: outPrefix,
+		InfoPrefix:   outPrefix,
+		ErrorPrefix:  errPrefix,
+		Ui:           &cli.BasicUi{Writer: out, ErrorWriter: errOut},
+	}
+}
+
 func newMeta(ui cli.Ui) command.Meta {
 	if os.Getenv("TF_LOG") == "" {
 		log.SetOutput(ioutil.Discard)
@@ -106,6 +120,14 @@ func Plan(args []string) int {
 func Apply(args []string) int {
 	c := &command.ApplyCommand{
 		Meta: newMeta(newUI(os.Stdout)),
+	}
+	return c.Run(args)
+}
+
+func Destroy(args []string) int {
+	c := &command.ApplyCommand{
+		Meta:    newMeta(newUI(os.Stdout)),
+		Destroy: true,
 	}
 	return c.Run(args)
 }

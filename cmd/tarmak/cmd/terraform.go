@@ -42,6 +42,15 @@ var terraformApplyCmd = &cobra.Command{
 	DisableFlagParsing: true,
 }
 
+var terraformDestroyCmd = &cobra.Command{
+	Use: "destroy",
+	Run: func(cmd *cobra.Command, args []string) {
+		os.Exit(terraform.Destroy(args))
+	},
+	Hidden:             true,
+	DisableFlagParsing: true,
+}
+
 var terraformOutputCmd = &cobra.Command{
 	Use: "output",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -74,6 +83,7 @@ func init() {
 	terraformCmd.AddCommand(terraformInitCmd)
 	terraformCmd.AddCommand(terraformPlanCmd)
 	terraformCmd.AddCommand(terraformApplyCmd)
+	terraformCmd.AddCommand(terraformDestroyCmd)
 	terraformCmd.AddCommand(terraformForceUnlockCmd)
 	terraformCmd.AddCommand(terraformOutputCmd)
 	RootCmd.AddCommand(terraformCmd)
