@@ -14,6 +14,9 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
+	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
@@ -52,6 +55,21 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 		return err
 	}
 
+	// create puppet.tar.gz
+	puppetTarGzFilename := filepath.Clean(
+		filepath.Join(
+			terraformCodePath,
+			"puppet.tar.gz",
+		),
+	)
+	file, err := os.OpenFile(puppetTarGzFilename, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return fmt.Errorf("error creating %s: %s", puppetTarGzFilename, err)
+	}
+	if err = t.tarmak.Cluster().Environment().Tarmak().Puppet().TarGz(file); err != nil {
+		return fmt.Errorf("error writing to %s: %s", puppetTarGzFilename, err)
+	}
+
 	// generate templates
 	templ := &terraformTemplate{
 		cluster:  c,
@@ -73,6 +91,7 @@ type terraformTemplate struct {
 }
 
 func (t *terraformTemplate) Generate() error {
+
 	var result error
 	if err := t.generateRemoteStateConfig(); err != nil {
 		result = multierror.Append(result, err)
@@ -100,19 +119,22 @@ func (t *terraformTemplate) Generate() error {
 }
 
 func (t *terraformTemplate) data() map[string]interface{} {
-	// TODO: existing VPC key should come from constant
-	_, existingVPC := t.cluster.Config().Network.ObjectMeta.Annotations["tarmak.io/iexisting-vpc-id"]
+
+	_, existingVPC := t.cluster.Config().Network.ObjectMeta.Annotations[cluster.ExistingVPCAnnotationKey]
 
 	return map[string]interface{}{
 		"ClusterTypeClusterSingle": clusterv1alpha1.ClusterTypeClusterSingle,
 		"ClusterTypeHub":           clusterv1alpha1.ClusterTypeHub,
 		"ClusterTypeClusterMulti":  clusterv1alpha1.ClusterTypeClusterMulti,
 		"ClusterType":              t.cluster.Type(),
-		"InstancePools":            t.cluster.InstancePools(),
-		"InstancePoolsExist":       len(t.cluster.InstancePools()) > 0,
-		"ExistingVPC":              existingVPC,
-		"Roles":                    t.cluster.Roles(),
-		"SocketPath":               tarmakSocketPath(t.cluster.ConfigPath()),
+		//"InstancePools":            t.cluster.InstancePools(),
+		"InstancePools":      []interfaces.InstancePool{t.cluster.InstancePool("worker"), t.cluster.InstancePool("master"), t.cluster.InstancePool("etcd")},
+		"InstancePoolsExist": len(t.cluster.InstancePools()) > 0,
+		"ExistingVPC":        existingVPC,
+		// cluster.Roles() returns a list of roles based off of the types of instancePools in tarmak.yaml
+		//"Roles":      t.cluster.Roles(),
+		"Roles":      []*role.Role{t.cluster.Role("worker"), t.cluster.Role("master"), t.cluster.Role("etcd")},
+		"SocketPath": tarmakSocketPath(t.cluster.ConfigPath()),
 	}
 }
 
@@ -168,6 +190,14 @@ func (t *terraformTemplate) generateInstanceTemplates() error {
 	// generate instance pools security group rules
 	if len(t.cluster.InstancePools()) > 0 {
 		awsSGRules, err := t.generateAWSSecurityGroup()
+
+		/*errString := ""
+		for _, awsRule := range awsSGRules["vault"] {
+			errString = fmt.Sprintf("%s \n %#v \n", errString, *awsRule)
+		}
+		strings.Replace(errString, "\n", `\n`, -1)
+		return fmt.Errorf("HERERERRER %s", errString)*/
+
 		if err != nil {
 			return err
 		}
@@ -218,6 +248,11 @@ func (t *terraformTemplate) generateInstanceTemplates() error {
 func (t *terraformTemplate) generateAWSSecurityGroup() (rules map[string][]*amazon.AWSSGRule, err error) {
 	rules = make(map[string][]*amazon.AWSSGRule)
 	for _, role := range t.cluster.Roles() {
+
+		if role.Name() == "vault" || role.Name() == "bastion" {
+			continue
+		}
+
 		roleRules, err := amazon.GenerateAWSRules(role)
 		if err != nil {
 			return nil, err
