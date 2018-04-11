@@ -27,8 +27,8 @@ module "network" {
 {{else}}
   source = "modules/network"
 
-  route_table_public_ids = "${var.route_table_public_ids}"
-  route_table_private_ids = "${var.route_table_private_ids}"
+  route_table_public_ids = ["${var.route_table_public_ids}"]
+  route_table_private_ids = ["${var.route_table_private_ids}"]
   peer_vpc_id = "${var.peer_vpc_id}"
   vpc_net = "${var.vpc_net}"
 {{ end }}
@@ -38,11 +38,11 @@ module "network" {
   project = "${var.project}"
   contact = "${var.contact}"
   region = "${var.region}"
-  availability_zones = "${var.availability_zones}"
+  availability_zones = ["${var.availability_zones}"]
   stack = "${var.stack}"
   state_bucket = "${var.state_bucket}"
   stack_name_prefix = "${var.stack_name_prefix}"
-  allowed_account_ids = "${var.allowed_account_ids}"
+  allowed_account_ids = ["${var.allowed_account_ids}"]
   vpc_peer_stack = "${var.vpc_peer_stack}"
   environment = "${var.environment}"
   private_zone = "${var.private_zone}"
@@ -158,7 +158,7 @@ data "terraform_remote_state" "hub_state" {
   config {
     region = "${var.region}"
     bucket = "${var.state_bucket}"
-    key    = "${var.environment}/${var.state_cluster_name}/kubernetes.tfstate"
+    key    = "${var.environment}/${var.state_cluster_name}/main.tfstate"
   }
 }
 
