@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
@@ -208,16 +207,6 @@ func (t *Tarmak) RootPath() (string, error) {
 	err = assets.RestoreAssets(dir, "")
 	if err != nil {
 		return "", err
-	}
-
-	tarmakContainerPath := filepath.Join(dir, "terraform/tarmak-container_linux_amd64")
-	if t.Version() == "dev" {
-		tarmakContainerOrigPath := filepath.Join(dir, filepath.Base(tarmakContainerPath))
-		// move tarmak container binary into terraform subfolder
-		err := os.Rename(tarmakContainerOrigPath, tarmakContainerPath)
-		if err != nil {
-			return "", fmt.Errorf("failed to move development snapshot of tarmak-container from %s to %s: %s", tarmakContainerOrigPath, tarmakContainerPath, err)
-		}
 	}
 
 	t.log.Debugf("restored assets into directory: %s", dir)
