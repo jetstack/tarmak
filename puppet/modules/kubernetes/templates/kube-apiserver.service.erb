@@ -96,6 +96,27 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if scope['kubernetes::apiserver::ca_file'] -%>
   "--kubelet-certificate-authority=<%= scope['kubernetes::apiserver::ca_file'] %>" \
 <% end -%>
+<% if @oidc_client_id -%>
+  "--oidc-client-id=<%= @oidc_client_id %>" \
+<% end -%>
+<% if @oidc_groups_claim -%>
+  "--oidc-groups-claim=<%= @oidc_groups_claim %>" \
+<% end -%>
+<% if @oidc_groups_prefix -%>
+  "--oidc-groups-prefix=<%= @oidc_groups_prefix %>" \
+<% end -%>
+<% if @oidc_issuer_url -%>
+  "--oidc-issuer-url=<%= @oidc_issuer_url %>" \
+<% end -%>
+<% if @oidc_signing_algs.length > 0 -%>
+  "--oidc-signing-algs=<%= @oidc_signing_algs.join(',') %>" \
+<% end -%>
+<% if @oidc_username_claim -%>
+  "--oidc-username-claim=<%= @oidc_username_claim %>" \
+<% end -%>
+<% if @oidc_username_prefix -%>
+  "--oidc-username-prefix=<%= @oidc_username_prefix %>" \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure

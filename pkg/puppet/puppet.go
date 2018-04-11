@@ -2,11 +2,13 @@
 package puppet
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/docker/docker/pkg/archive"
@@ -80,6 +82,44 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	}
 	if conf.Version != "" {
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
+	}
+
+	// forward oidc settings
+	if conf.APIServer != nil && conf.APIServer.OIDC != nil {
+		oidc := conf.APIServer.OIDC
+		t := reflect.TypeOf(oidc).Elem()
+		v := reflect.ValueOf(oidc).Elem()
+		for i := 0; i < t.NumField(); i++ {
+			tagValue := t.Field(i).Tag.Get("hiera")
+
+			// skip fields without hiera tag
+			if tagValue == "" {
+				continue
+			}
+
+			val := v.Field(i)
+			switch val.Kind() {
+			case reflect.String:
+				// skip empty string
+				if val.String() == "" {
+					continue
+				}
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`%s: "%s"`, tagValue, val.String()))
+			case reflect.Slice:
+				// skip empty slice
+				if val.Len() == 0 {
+					continue
+				}
+
+				data, err := json.Marshal(val.Interface())
+				if err != nil {
+					panic(err)
+				}
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf("%s: %s", tagValue, string(data)))
+			default:
+				panic(fmt.Sprintf("unknown type: %v", val.Kind()))
+			}
+		}
 	}
 	return
 }
