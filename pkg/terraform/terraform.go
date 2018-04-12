@@ -249,7 +249,7 @@ func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 	return t.terraformWrapper(
 		cluster,
 		"apply",
-		[]string{"-input=false"},
+		[]string{"-input=false", "-auto-approve=true"},
 	)
 }
 
