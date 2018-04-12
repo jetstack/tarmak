@@ -34,7 +34,7 @@ func (t *Terraform) Output(c interfaces.Cluster) (map[string]interface{}, error)
 		stdErrBuf,
 	); err != nil {
 		t.log.Error(stdErrBuf.String())
-		return nil, fmt.Errorf("error getting terraform output: %s")
+		return nil, fmt.Errorf("error getting terraform output: %s", err)
 	}
 
 	var values map[string]terraformOutputValue

@@ -30,7 +30,7 @@ type Tarmak struct {
 	flags           *tarmakv1alpha1.Flags
 	configDirectory string
 
-	config    *config.Config
+	config    interfaces.Config
 	terraform *terraform.Terraform
 	puppet    *puppet.Puppet
 	packer    *packer.Packer
@@ -40,15 +40,22 @@ type Tarmak struct {
 
 	environment interfaces.Environment
 	cluster     interfaces.Cluster
+
+	// function pointers for easier testing
+	environmentByName func(string) (interfaces.Environment, error)
+	providerByName    func(string) (interfaces.Provider, error)
 }
 
 var _ interfaces.Tarmak = &Tarmak{}
 
+// allocate a new tarmak struct
 func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
 		log:   logrus.New(),
 		flags: flags,
 	}
+
+	t.initializeModules()
 
 	// set log level
 	if flags.Verbose {
@@ -97,26 +104,31 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 		return t
 	}
 
-	err = t.initialize()
+	err = t.initializeConfig()
 	if err != nil {
 		t.log.Fatal("unable to initialize tarmak: ", err)
 	}
 
+	return t
+}
+
+// this initializes tarmak modules, they can be overridden in tests
+func (t *Tarmak) initializeModules() {
+	t.environmentByName = t.environmentByNameReal
+	t.providerByName = t.providerByNameReal
 	t.terraform = terraform.New(t)
 	t.packer = packer.New(t)
 	t.ssh = ssh.New(t)
 	t.puppet = puppet.New(t)
 	t.kubectl = kubectl.New(t)
-
-	return t
 }
 
 // Initialize default cluster, its environment and provider
-func (t *Tarmak) initialize() error {
+func (t *Tarmak) initializeConfig() error {
 	var err error
 
 	// get current environment
-	t.environment, err = t.newEnvironment(t.config.CurrentEnvironmentName())
+	t.environment, err = t.EnvironmentByName(t.config.CurrentEnvironmentName())
 	if err != nil {
 		return err
 	}

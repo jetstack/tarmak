@@ -21,7 +21,6 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/provider"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/tarmak/vault"
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
@@ -53,14 +52,10 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 	}
 
 	var result error
-
-	providerConf, err := tarmak.Config().Provider(conf.Provider)
-	if err != nil {
-		return nil, fmt.Errorf("error finding provider '%s'", conf.Provider)
-	}
+	var err error
 
 	// init provider
-	e.provider, err = provider.NewFromConfig(tarmak, providerConf)
+	e.provider, err = tarmak.ProviderByName(conf.Provider)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing provider '%s'", conf.Provider)
 	}

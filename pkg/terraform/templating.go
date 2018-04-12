@@ -21,7 +21,6 @@ import (
 
 func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 
-	// create temporary directory for code
 	terraformCodePath := t.codePath(c)
 	if err := utils.EnsureDirectory(
 		terraformCodePath,

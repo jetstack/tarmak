@@ -141,6 +141,11 @@ type Tarmak interface {
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
 	KeepContainers() bool
+
+	// get a provider by name
+	ProviderByName(string) (Provider, error)
+	// get an environment by name
+	EnvironmentByName(string) (Environment, error)
 }
 
 type Config interface {
@@ -166,6 +171,7 @@ type Config interface {
 	CurrentEnvironmentName() string
 	Contact() string
 	Project() string
+	SetCurrentCluster(string) error
 }
 
 type Packer interface {
