@@ -123,13 +123,9 @@ module "kubernetes" {
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
   tools_cluster_name = "${var.tools_cluster_name}"
-
-  {{ if .InstancePools }}
   kubernetes_master_ami = "${var.kubernetes_master_ami}"
   kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
   kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
-  {{end}}
-  
   secrets_bucket = "${module.state.secrets_bucket[0]}"
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
@@ -177,14 +173,10 @@ module "kubernetes" {
   environment = "${var.environment}"
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
-  tools_cluster_name = "${var.tools_cluster_name}"
-  
-  {{ if .InstancePools }}
+  tools_cluster_name = "${var.tools_cluster_name}"  
   kubernetes_master_ami = "${var.kubernetes_master_ami}"
   kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
   kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
-  {{end}}
-
   bastion_security_group_id = "${data.terraform_remote_state.hub_state.bastion_bastion_security_group_id}"
   secrets_bucket = "${data.terraform_remote_state.hub_state.state_secrets_bucket}"
   public_zone = "${data.terraform_remote_state.hub_state.state_public_zone}"

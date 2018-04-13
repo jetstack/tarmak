@@ -16,7 +16,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
-	"github.com/jetstack/tarmak/pkg/tarmak/role"
 )
 
 func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
@@ -126,13 +125,12 @@ func (t *terraformTemplate) data() map[string]interface{} {
 		"ClusterTypeHub":           clusterv1alpha1.ClusterTypeHub,
 		"ClusterTypeClusterMulti":  clusterv1alpha1.ClusterTypeClusterMulti,
 		"ClusterType":              t.cluster.Type(),
-		//"InstancePools":            t.cluster.InstancePools(),
-		"InstancePools":      []interfaces.InstancePool{t.cluster.InstancePool("worker"), t.cluster.InstancePool("master"), t.cluster.InstancePool("etcd")},
-		"InstancePoolsExist": len(t.cluster.InstancePools()) > 0,
-		"ExistingVPC":        existingVPC,
+		"InstancePools":            t.cluster.InstancePools(),
+		//"InstancePools":      []interfaces.InstancePool{t.cluster.InstancePool("worker"), t.cluster.InstancePool("master"), t.cluster.InstancePool("etcd")},
+		"ExistingVPC": existingVPC,
 		// cluster.Roles() returns a list of roles based off of the types of instancePools in tarmak.yaml
-		//"Roles":      t.cluster.Roles(),
-		"Roles":      []*role.Role{t.cluster.Role("worker"), t.cluster.Role("master"), t.cluster.Role("etcd")},
+		"Roles": t.cluster.Roles(),
+		//"Roles":      []*role.Role{t.cluster.Role("worker"), t.cluster.Role("master"), t.cluster.Role("etcd")},
 		"SocketPath": tarmakSocketPath(t.cluster.ConfigPath()),
 	}
 }
