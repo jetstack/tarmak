@@ -18,8 +18,10 @@ import (
 
 const (
 	// represents Terraform in a destroy state
-	StateDestroy             = "destroy"
-	ExistingVPCAnnotationKey = "tarmak.io/existing-vpc-id"
+	StateDestroy                          = "destroy"
+	ExistingVPCAnnotationKey              = "tarmak.io/existing-vpc-id"
+	ExistingPublicSubnetIDsAnnotationKey  = "tarmak.io/existing-public-subnet-ids"
+	ExistingPrivateSubnetIDsAnnotationKey = "tarmak.io/existing-private-subnet-ids"
 )
 
 // returns a server
@@ -222,6 +224,11 @@ func (c *Cluster) validateNetwork() (result error) {
 	// make the choice between deploying into existing VPC or creating a new one
 	if _, ok := c.Config().Network.ObjectMeta.Annotations[ExistingVPCAnnotationKey]; ok {
 		// TODO: handle existing vpc
+		_, net, err := net.ParseCIDR(c.Config().Network.CIDR)
+		if err != nil {
+			return fmt.Errorf("error parsing network: %s", err)
+		}
+		c.networkCIDR = net
 	} else {
 		_, net, err := net.ParseCIDR(c.Config().Network.CIDR)
 		if err != nil {
@@ -400,6 +407,21 @@ func (c *Cluster) Variables() map[string]interface{} {
 	// set network cidr
 	if c.networkCIDR != nil {
 		output["network"] = c.networkCIDR
+	}
+
+	key, ok := c.Config().Network.ObjectMeta.Annotations[ExistingVPCAnnotationKey]
+	if ok {
+		output["vpc_id"] = key
+	}
+
+	privateSubnetIDs, ok := c.Config().Network.ObjectMeta.Annotations[ExistingPrivateSubnetIDsAnnotationKey]
+	if ok {
+		output["private_subnets"] = privateSubnetIDs
+	}
+
+	publicSubnetIDs, ok := c.Config().Network.ObjectMeta.Annotations[ExistingPublicSubnetIDsAnnotationKey]
+	if ok {
+		output["public_subnets"] = publicSubnetIDs
 	}
 
 	// publish changed private zone
