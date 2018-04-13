@@ -5,9 +5,20 @@ variable "{{.TFName}}_instance_type" {
 
 variable "{{.TFName}}_ami" {}
 
+{{ if .Role.Stateful -}}
 variable "{{.TFName}}_count" {
-  default = {{.Count}}
+  default = {{.MinCount}}
 }
+
+{{ else -}}
+variable "{{.TFName}}_min_count" {
+  default = {{.MinCount}}
+}
+
+variable "{{.TFName}}_max_count" {
+  default = {{.MaxCount}}
+}
+{{ end -}}
 
 variable "{{.TFName}}_root_volume_size" {
   default = 32

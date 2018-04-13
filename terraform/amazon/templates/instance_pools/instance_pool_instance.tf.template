@@ -23,7 +23,7 @@ data "template_file" "{{.TFName}}_user_data" {
     tarmak_environment   = "${var.environment}"
 {{ if not .Role.Stateful -}}
     tarmak_hostname      = "{{.Role.Name}}"
-    tarmak_desired_count = "${var.{{.TFName}}_count}"
+    tarmak_desired_count = ""
     tarmak_volume_id     = ""
 {{ else -}}
     tarmak_hostname      = "{{.Role.Name}}-${count.index+1}"
@@ -71,11 +71,10 @@ resource "aws_launch_configuration" "{{.TFName}}" {
 
 resource "aws_autoscaling_group" "{{.TFName}}" {
   name                      = "${data.template_file.stack_name.rendered}-{{.DNSName}}"
-  max_size                  = "${var.{{.TFName}}_count}"
-  min_size                  = "${var.{{.TFName}}_count}"
+  max_size                  = "${var.{{.TFName}}_max_count}"
+  min_size                  = "${var.{{.TFName}}_min_count}"
   health_check_grace_period = 600
   health_check_type         = "EC2"
-  desired_capacity          = "${var.{{.TFName}}_count}"
   vpc_zone_identifier       = ["${data.terraform_remote_state.network.private_subnet_ids}"]
   launch_configuration      = "${aws_launch_configuration.{{.TFName}}.name}"
   load_balancers            = ["${aws_elb.{{.Role.TFName}}.name}"]
