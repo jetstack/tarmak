@@ -6,8 +6,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/hashicorp/go-plugin"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
+
+// ensure plugin clients get closed after subcommand run
+func terraformPassthrough(args []string, f func([]string) int) int {
+	defer plugin.CleanupClients()
+	return f(args)
+}
 
 var internalPluginCmd = &cobra.Command{
 	Use: "internal-plugin",
@@ -27,7 +34,7 @@ var terraformCmd = &cobra.Command{
 var terraformPlanCmd = &cobra.Command{
 	Use: "plan",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraform.Plan(args))
+		os.Exit(terraformPassthrough(args, terraform.Plan))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -36,7 +43,7 @@ var terraformPlanCmd = &cobra.Command{
 var terraformApplyCmd = &cobra.Command{
 	Use: "apply",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraform.Apply(args))
+		os.Exit(terraformPassthrough(args, terraform.Apply))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -45,7 +52,7 @@ var terraformApplyCmd = &cobra.Command{
 var terraformDestroyCmd = &cobra.Command{
 	Use: "destroy",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraform.Destroy(args))
+		os.Exit(terraformPassthrough(args, terraform.Destroy))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -54,7 +61,7 @@ var terraformDestroyCmd = &cobra.Command{
 var terraformOutputCmd = &cobra.Command{
 	Use: "output",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraform.Output(args))
+		os.Exit(terraformPassthrough(args, terraform.Output))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -63,7 +70,7 @@ var terraformOutputCmd = &cobra.Command{
 var terraformInitCmd = &cobra.Command{
 	Use: "init",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraform.Init(args))
+		os.Exit(terraformPassthrough(args, terraform.Init))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -72,7 +79,7 @@ var terraformInitCmd = &cobra.Command{
 var terraformForceUnlockCmd = &cobra.Command{
 	Use: "force-unlock",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraform.Unlock(args))
+		os.Exit(terraformPassthrough(args, terraform.Unlock))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
