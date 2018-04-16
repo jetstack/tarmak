@@ -133,12 +133,6 @@
   version = "v1.2.1"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/alecthomas/multiplex"
-  packages = ["."]
-  revision = "e565e6fcbcd0f7f3aa83820717e47abd194483a6"
-
-[[projects]]
   name = "github.com/aokoli/goutils"
   packages = ["."]
   revision = "3391d3790d23d03408670993e957e8f408993c34"
@@ -1661,12 +1655,6 @@
   revision = "b08cc8dc5450981530af3e6f6ad1159ae8ea8705"
 
 [[projects]]
-  branch = "v1"
-  name = "gopkg.in/tomb.v1"
-  packages = ["."]
-  revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
-
-[[projects]]
   name = "gopkg.in/warnings.v0"
   packages = ["."]
   revision = "ec4a0fea49c7b46c2aeb0b51aac55779c607e52b"
@@ -2047,6 +2035,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3262377e6eb7d081658a1f492dbe49e0ee170255b195df5e7ec4d47b99dcc742"
+  inputs-digest = "942a69e8f8bd3b3b71423ae5cead730bac3313bb1d43c923535d6a23137bd063"
   solver-name = "gps-cdcl"
   solver-version = 1
