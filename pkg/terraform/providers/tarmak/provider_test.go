@@ -3,6 +3,7 @@ package tarmak
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"sync"
 	"testing"
@@ -64,7 +65,11 @@ func newRPCServer(t *testing.T) *rpcServer {
 	}
 
 	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	if testing.Verbose() {
+		logger.SetLevel(logrus.DebugLevel)
+	} else {
+		logger.Out = ioutil.Discard
+	}
 	log := logger.WithField("app", "test")
 
 	r.fakeTarmak = mocks.NewMockTarmak(r.ctrl)
