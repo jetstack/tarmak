@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/terraform/command"
 	"github.com/kardianos/osext"
@@ -117,13 +118,19 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	}
 
 	// listen to rpc
-	if err := rpc.ListenUnixSocket(
-		t.log,
-		rpc.New(t.tarmak.Cluster()),
-		t.socketPath(cluster),
-	); err != nil {
-		return err
-	}
+	stopCh := make(chan struct{})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := rpc.ListenUnixSocket(
+			rpc.New(t.tarmak.Cluster()),
+			t.socketPath(cluster),
+			stopCh,
+		); err != nil {
+			t.log.Fatalf("error listening to unix socket: %s", err)
+		}
+	}()
 
 	// run init
 	if err := t.command(
@@ -157,6 +164,9 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	); err != nil {
 		return err
 	}
+
+	close(stopCh)
+	wg.Wait()
 
 	return nil
 }

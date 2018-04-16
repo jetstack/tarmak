@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/rpc"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -17,14 +18,12 @@ const (
 	Retries         = 60
 )
 
-type tarmakInterface struct{}
-
 type tarmakRPC struct {
 	cluster interfaces.Cluster
 	tarmak  interfaces.Tarmak
 }
 
-func (r *tarmakRPC) log() *logrus.Entry {
+func (r *tarmakRPC) Log() *logrus.Entry {
 	return r.tarmak.Log()
 }
 
@@ -41,13 +40,14 @@ type Tarmak interface {
 	VaultClusterInitStatus(*VaultClusterStatusArgs, *VaultClusterStatusReply) error
 	VaultInstanceRole(*VaultInstanceRoleArgs, *VaultInstanceRoleReply) error
 	Ping(*PingArgs, *PingReply) error
+	Log() *logrus.Entry
 }
 
 // listen to a unix socket
-func ListenUnixSocket(log *logrus.Entry, tarmak Tarmak, socketPath string, stopCh chan struct{}) error {
+func ListenUnixSocket(tarmak Tarmak, socketPath string, stopCh chan struct{}) error {
 	s := rpc.NewServer()
 	s.RegisterName(RPCName, tarmak)
-	log.Debugf("rpc server started")
+	tarmak.Log().Debugf("rpc server started")
 
 	err := os.Remove(socketPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -63,25 +63,23 @@ func ListenUnixSocket(log *logrus.Entry, tarmak Tarmak, socketPath string, stopC
 		<-stopCh
 		err := unixListener.Close()
 		if err != nil {
-			log.Debugf("error stoppingn rpc server: %s", err)
+			tarmak.Log().Debugf("error stoppingn rpc server: %s", err)
 		}
 	}()
 
-	go func() {
-		for {
-			fd, err := unixListener.Accept()
-			if err != nil {
-				log.Errorf("failed to accept unix socket: %s", err)
-				break
+	for {
+		fd, err := unixListener.Accept()
+		if err != nil {
+			if !strings.HasSuffix(err.Error(), "use of closed network connection") {
+				tarmak.Log().Errorf("failed to accept unix socket: %s", err)
 			}
-
-			// handle new connection in new go routine
-			go s.ServeConn(fd)
-
-			s.Accept(unixListener)
+			break
 		}
-		log.Debugf("rpc server stopped")
-	}()
+
+		// handle new connection in new go routine
+		go s.ServeConn(fd)
+	}
+	tarmak.Log().Debugf("rpc server stopped")
 
 	return nil
 }

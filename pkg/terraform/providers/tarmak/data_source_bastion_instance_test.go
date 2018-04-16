@@ -7,24 +7,41 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 )
-
-/*
-func TestDataSourceBastionInstance(t *testing.T) {
-	err := dataSourceBastionInstanceRead(nil, nil)
-	if err != nil {
-		t.Fatal("unexpected error: ", err)
-	}
-}
-*/
 
 func TestAccDataSourceTarmakBastionInstance(t *testing.T) {
 	s := newRPCServer(t)
+
+	s.fakeEnvironment.EXPECT().VerifyBastionAvailable().MinTimes(1).Return(nil)
+	s.fakeCluster.EXPECT().GetState().MinTimes(1).Return("")
+
 	s.Start()
-	defer s.Stop()
+	defer s.Finish()
 
 	resource.Test(t, resource.TestCase{
-		//PreCheck:  func() { testAccPreCheck(t) },
+		Providers:  testAccProviders,
+		IsUnitTest: true,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccDataSourceTarmakBastionStatusBase, s.socketPath),
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceTarmakBastionInstance("data.tarmak_bastion_instance.bastion"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceTarmakBastionInstanceDuringDestroy(t *testing.T) {
+	s := newRPCServer(t)
+
+	s.fakeCluster.EXPECT().GetState().AnyTimes().Return(cluster.StateDestroy)
+
+	s.Start()
+	defer s.Finish()
+
+	resource.Test(t, resource.TestCase{
 		Providers:  testAccProviders,
 		IsUnitTest: true,
 		Steps: []resource.TestStep{

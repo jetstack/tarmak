@@ -24,7 +24,7 @@ type BastionInstanceStatusReply struct {
 func (r *tarmakRPC) BastionInstanceStatus(args *BastionInstanceStatusArgs, result *BastionInstanceStatusReply) error {
 	r.tarmak.Log().Debug("received rpc bastion status")
 
-	if r.tarmak.Cluster().GetState() == cluster.StateDestroy {
+	if r.cluster.GetState() == cluster.StateDestroy {
 		result.Status = "unknown"
 		return nil
 	}

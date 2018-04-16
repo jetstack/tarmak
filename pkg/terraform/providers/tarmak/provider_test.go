@@ -3,8 +3,8 @@ package tarmak
 
 import (
 	"fmt"
-	"io"
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/sirupsen/logrus"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/connector"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
@@ -46,45 +45,60 @@ func (f *fakeCalls) BastionInstanceStatus(args *rpc.BastionInstanceStatusArgs, r
 }
 
 type rpcServer struct {
-	proxy      *connector.Proxy
-	containerR io.Reader
-	containerW io.Writer
-
 	socketPath string
 
-	ctrl       *gomock.Controller
-	fakeTarmak *mocks.MockTarmak
+	ctrl            *gomock.Controller
+	fakeTarmak      *mocks.MockTarmak
+	fakeEnvironment *mocks.MockEnvironment
+	fakeCluster     *mocks.MockCluster
+
+	stopCh    chan struct{}
+	waitGroup sync.WaitGroup
 }
 
 func newRPCServer(t *testing.T) *rpcServer {
 	r := &rpcServer{
+		stopCh:     make(chan struct{}),
 		ctrl:       gomock.NewController(t),
 		socketPath: fmt.Sprintf("tarmak-connector-%s.sock", randStringRunes(6)),
 	}
-	r.proxy = connector.NewProxy(r.socketPath)
 
-	r.proxy.Reader, r.containerW = io.Pipe()
-	r.containerR, r.proxy.Writer = io.Pipe()
+	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+	log := logger.WithField("app", "test")
+
+	r.fakeTarmak = mocks.NewMockTarmak(r.ctrl)
+	r.fakeEnvironment = mocks.NewMockEnvironment(r.ctrl)
+	r.fakeCluster = mocks.NewMockCluster(r.ctrl)
+
+	r.fakeEnvironment.EXPECT().Tarmak().AnyTimes().Return(r.fakeTarmak)
+	r.fakeCluster.EXPECT().Environment().AnyTimes().Return(r.fakeEnvironment)
+	r.fakeTarmak.EXPECT().Log().AnyTimes().Return(log)
 
 	return r
 }
 
+func (r *rpcServer) Finish() {
+	r.Stop()
+	r.ctrl.Finish()
+}
+
 func (r *rpcServer) Start() error {
-	log := logrus.WithField("app", "test")
-	r.proxy.Start()
-	go rpc.Bind(log, &fakeCalls{}, r.containerR, r.containerW, &testClose{})
+	t := rpc.New(r.fakeCluster)
+	r.waitGroup.Add(1)
+	go func() {
+		defer r.waitGroup.Done()
+		rpc.ListenUnixSocket(t, r.socketPath, r.stopCh)
+	}()
 	return nil
 }
 
 func (r *rpcServer) Stop() error {
-	r.proxy.Stop()
-	return nil
-}
-
-type testClose struct {
-}
-
-func (t *testClose) Close() error {
+	if r.stopCh != nil {
+		close(r.stopCh)
+		r.stopCh = nil
+	}
+	r.waitGroup.Wait()
 	return nil
 }
 
