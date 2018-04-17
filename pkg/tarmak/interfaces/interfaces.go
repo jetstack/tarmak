@@ -22,11 +22,12 @@ type Cluster interface {
 	Environment() Environment
 	Name() string
 	Validate() error
-	Stacks() []Stack
-	Stack(name string) Stack
 	NetworkCIDR() *net.IPNet
-	RemoteState(stackName string) string
+	RemoteState() string
+
+	// get the absolute config path to cluster's config folder
 	ConfigPath() string
+
 	Config() *clusterv1alpha1.Cluster
 	Images() []string // This returns all neccessary base images
 	SSHConfigPath() string
@@ -39,6 +40,7 @@ type Cluster interface {
 	Role(string) *role.Role
 	Roles() []*role.Role
 	InstancePools() []InstancePool
+	InstancePool(string) InstancePool
 	ImageIDs() (map[string]string, error)
 	Parameters() map[string]string
 	Type() string
@@ -49,6 +51,13 @@ type Cluster interface {
 	WaitForConvergance() error
 	// This upload the puppet.tar.gz to the cluster, warning there is some duplication as terraform is also uploading this puppet.tar.gz
 	UploadConfiguration() error
+
+	// This state is either destroy or apply
+	GetState() string
+	SetState(string)
+
+	// get the terrform output for this cluster
+	TerraformOutput() (map[string]interface{}, error)
 }
 
 type Environment interface {
@@ -59,21 +68,28 @@ type Environment interface {
 	Validate() error
 	Name() string
 	HubName() string
-	BucketPrefix() string
 	Clusters() []Cluster
 	Cluster(name string) (cluster Cluster, err error)
 	SSHPrivateKeyPath() string
 	SSHPrivateKey() (signer interface{})
 	Log() *logrus.Entry
-	StateStack() Stack
-	VaultStack() Stack
-	VaultRootToken() (string, error)
 	Parameters() map[string]string
-	VaultTunnel() (VaultTunnel, error)
 	Config() *tarmakv1alpha1.Environment
 	Type() string
 	WingTunnel() Tunnel
 	WingClientset() (*wingclient.Clientset, Tunnel, error)
+
+	// get the absolute config path to the environment's config folder
+	ConfigPath() string
+
+	// this verifies if the connection to the bastion instance is working
+	VerifyBastionAvailable() error
+
+	// return the cluster which is the hub
+	Hub() Cluster
+
+	// return the vaullt for the environment
+	Vault() Vault
 }
 
 type Provider interface {
@@ -91,6 +107,7 @@ type Provider interface {
 	Variables() map[string]interface{}
 	QueryImages(tags map[string]string) ([]tarmakv1alpha1.Image, error)
 	VaultKV() (kv.Service, error)
+	VaultKVWithParams(kmsKeyID, unsealKeyName string) (kv.Service, error)
 	ListHosts() ([]Host, error)
 	InstanceType(string) (string, error)
 	VolumeType(string) (string, error)
@@ -101,28 +118,14 @@ type Provider interface {
 	VerifyInstanceTypes(intstancePools []InstancePool) error
 }
 
-type Stack interface {
-	Variables() map[string]interface{}
-	Name() string
-	Validate() error
-	Cluster() Cluster
-	RemoteState() string
-	Log() *logrus.Entry
-	VerifyPreDeploy() error
-	VerifyPreDestroy() error
-	VerifyPostDeploy() error
-	VerifyPostDestroy() error
-	SetOutput(map[string]interface{})
-	Output() map[string]interface{}
-	Roles() []*role.Role
-	InstancePools() []InstancePool
-}
-
 type Tarmak interface {
 	Variables() map[string]interface{}
 	Log() *logrus.Entry
 	RootPath() (string, error)
+
+	// get the absolute config path to tarmak's config folder
 	ConfigPath() string
+
 	Clusters() []Cluster
 	Cluster() Cluster
 	Environments() []Environment
@@ -134,9 +137,15 @@ type Tarmak interface {
 	Puppet() Puppet
 	Config() Config
 	SSH() SSH
+	Version() string
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
 	KeepContainers() bool
+
+	// get a provider by name
+	ProviderByName(string) (Provider, error)
+	// get an environment by name
+	EnvironmentByName(string) (Environment, error)
 }
 
 type Config interface {
@@ -162,6 +171,7 @@ type Config interface {
 	CurrentEnvironmentName() string
 	Contact() string
 	Project() string
+	SetCurrentCluster(string) error
 }
 
 type Packer interface {
@@ -171,7 +181,7 @@ type Packer interface {
 }
 
 type Terraform interface {
-	Output(stack Stack) (map[string]interface{}, error)
+	Output(cluster Cluster) (map[string]interface{}, error)
 }
 
 type SSH interface {
@@ -207,6 +217,13 @@ type Puppet interface {
 }
 
 type Kubectl interface {
+}
+
+type Vault interface {
+	Tunnel() (VaultTunnel, error)
+	RootToken() (string, error)
+	TunnelFromFQDNs(vaultInternalFQDNs []string, vaultCA string) (VaultTunnel, error)
+	VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, vaultUnsealKeyName string) error
 }
 
 type InstancePool interface {

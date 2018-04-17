@@ -1,0 +1,90 @@
+{{ if eq .ClusterType .ClusterTypeClusterSingle }}
+output "bastion_instance_id" {
+  value = "${module.bastion.bastion_instance_id}"
+}
+output "instance_fqdns" {
+  value = ["${module.vault.instance_fqdns}"]
+}
+output "vault_ca" {
+  value = "${module.vault.vault_ca}"
+}
+{{end}}
+
+{{ if eq .ClusterType .ClusterTypeHub }}
+
+output "bastion_bastion_security_group_id" {
+  value = "${module.bastion.bastion_security_group_id}"
+}
+output "bastion_bastion_instance_id" {
+  value = "${module.bastion.bastion_instance_id}"
+}
+
+output "state_secrets_bucket" {
+  value = "${module.state.secrets_bucket[0]}"
+}
+output "state_public_zone" {
+  value = "${module.state.public_zone}"
+}
+output "state_public_zone_id" {
+  value = "${module.state.public_zone_id}"
+}
+
+output "network_private_subnet_ids" {
+  value = ["${module.network.private_subnet_ids}"]
+}
+output "network_public_subnet_ids" {
+  value = ["${module.network.public_subnet_ids}"]
+}
+output "network_availability_zones" {
+  value = ["${module.network.availability_zones}"]
+}
+output "network_vpc_id" {
+  value = "${module.network.vpc_id}"
+}
+output "network_private_zone_id" {
+  value = "${module.network.private_zone_id[0]}"
+}
+output "network_private_zone" {
+  value = "${module.network.private_zone[0]}"
+}
+
+output "vault_instance_fqdns" {
+  value = ["${module.vault.instance_fqdns}"]
+}
+output "vault_vault_kms_key_id" {
+  value = "${module.vault.vault_kms_key_id}"
+}
+output "vault_vault_unseal_key_name" {
+  value = "${module.vault.vault_unseal_key_name}"
+}
+output "vault_vault_ca" {
+  value = "${module.vault.vault_ca}"
+}
+output "vault_vault_url" {
+  value = "${module.vault.vault_url}"
+}
+output "vault_vault_security_group_id" {
+  value = "${module.vault.vault_security_group_id}"
+}
+
+
+
+output "instance_fqdns" {
+  value = ["${module.vault.instance_fqdns}"]
+}
+output "vault_ca" {
+  value = "${module.vault.vault_ca}"
+}
+{{end}}
+
+{{ if eq .ClusterType .ClusterTypeClusterMulti }}
+output "bastion_instance_id" {
+  value = "${data.terraform_remote_state.hub_state.bastion_bastion_instance_id}"
+}
+output "instance_fqdns" {
+  value = ["${data.terraform_remote_state.hub_state.vault_instance_fqdns}"]
+}
+output "vault_ca" {
+  value = "${data.terraform_remote_state.hub_state.vault_vault_ca}"
+}
+{{end}}

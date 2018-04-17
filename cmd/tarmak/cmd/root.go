@@ -4,10 +4,13 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
 var globalFlags = &tarmakv1alpha1.Flags{}
@@ -21,6 +24,19 @@ var RootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(args []string) {
+	// take build version and publish it to tarmak
+	globalFlags.Version = Version.Version
+
+	// become a terraform provider if required
+	prefix := "terraform-provider-"
+	basename := filepath.Base(os.Args[0])
+	if strings.HasPrefix(basename, prefix) && len(prefix) < len(basename) {
+		providerName := strings.TrimPrefix(basename, prefix)
+		if _, ok := terraform.InternalProviders[providerName]; ok {
+			os.Exit(terraform.InternalPlugin([]string{"provider", providerName}))
+		}
+	}
+
 	RootCmd.SetArgs(args)
 
 	// evalutate command that is gonna be run

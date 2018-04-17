@@ -33,6 +33,11 @@ const (
 	ClusterTypeClusterMulti  = "cluster-multi"
 )
 
+const (
+	// represents Terraform in a destroy state
+	StateDestroy = "destroy"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +resource:path=clusters
 

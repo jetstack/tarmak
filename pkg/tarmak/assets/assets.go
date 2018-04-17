@@ -1,6 +1,8 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
+
+// this package contains generated assets from the repository for use during
+// tarmak runtime
+
 package assets
 
-// This package contains generated assets for
-
-//go:generate go-bindata -prefix ../../../ -pkg $GOPACKAGE -o assets_bindata.go ../../../terraform/... ../../../puppet/... ../../../packer/...
+//go:generate go-bindata -prefix ../../../ -pkg $GOPACKAGE -o assets_bindata.go ../../../terraform/amazon/modules/... ../../../terraform/amazon/templates/... ../../../puppet/... ../../../packer/...

@@ -90,6 +90,54 @@ required = [
   name = "github.com/docker/go-connections"
   revision = "7beb39f0b969b075d1325fecb092faf27fd357b6"
 
+[[constraint]]
+  name = "github.com/hashicorp/terraform"
+  version = "0.11.5"
+
+[[constraint]]
+  name = "github.com/terraform-providers/terraform-provider-aws"
+  version = "1.13.0"
+
+[[constraint]]
+  name = "github.com/terraform-providers/terraform-provider-random"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/terraform-providers/terraform-provider-tls"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/terraform-providers/terraform-provider-template"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/terraform-providers/terraform-provider-openstack"
+  version = "0.1.0"
+
+[[override]]
+  name = "github.com/Azure/azure-sdk-for-go"
+  version = "10.3.0-beta"
+
+[[override]]
+  name = "cloud.google.com/go"
+  version = "0.20.0"
+
+[[override]]
+  name = "github.com/masterzen/winrm"
+  revision = "7e40f93ae939004a1ef3bd5ff5c88c756ee762bb"
+
+[[override]]
+  name = "github.com/masterzen/azure-sdk-for-go"
+  revision = "ee4f0065d00cd12b542f18f5bc45799e88163b12"
+
+[[override]]
+  name = "github.com/gophercloud/gophercloud"
+  revision = "3027adb1ce72bc52b87b2decccc7852574b90031"
+
+[[override]]
+  name = "github.com/chzyer/readline"
+  revision = "c914be64f07d9998f52bf0d598ec26d457168c0f"
+
 [prune]
   non-go = true
   go-tests = true

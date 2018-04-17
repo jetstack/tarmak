@@ -123,6 +123,8 @@ type Flags struct {
 	CurrentCluster string // override the current cluster set in tarmak config
 
 	Cluster ClusterFlags // cluster specific flags
+
+	Version string // expose tarmak's build time version
 }
 
 // This contains the cluster specifc operation flags

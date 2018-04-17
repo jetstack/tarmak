@@ -19,6 +19,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// exisiting VPC annotations
+const (
+	ExistingVPCAnnotationKey              = "tarmak.io/existing-vpc-id"
+	ExistingPublicSubnetIDsAnnotationKey  = "tarmak.io/existing-public-subnet-ids"
+	ExistingPrivateSubnetIDsAnnotationKey = "tarmak.io/existing-private-subnet-ids"
+)
+
 const (
 	NetworkTypeLocal   = "local"
 	NetworkTypePublic  = "public"

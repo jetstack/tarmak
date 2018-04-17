@@ -8,7 +8,11 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/provider"
 )
 
-func (t *Tarmak) newProvider(providerName string) (interfaces.Provider, error) {
+func (t *Tarmak) ProviderByName(providerName string) (interfaces.Provider, error) {
+	return t.providerByName(providerName)
+}
+
+func (t *Tarmak) providerByNameReal(providerName string) (interfaces.Provider, error) {
 	providerConfig, err := t.config.Provider(providerName)
 	if err != nil {
 		return nil, fmt.Errorf("error finding provider '%s'", providerName)
@@ -27,7 +31,7 @@ func (t *Tarmak) Provider() interfaces.Provider {
 
 func (t *Tarmak) Providers() (providers []interfaces.Provider) {
 	for _, provConfig := range t.Config().Providers() {
-		prov, err := t.newProvider(provConfig.Name)
+		prov, err := t.ProviderByName(provConfig.Name)
 		if err != nil {
 			t.log.Warnf("error listing provider '%s': %s", provConfig.Name, err)
 			continue

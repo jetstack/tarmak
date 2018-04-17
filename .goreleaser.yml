@@ -19,16 +19,6 @@ builds:
     goarch:
       - amd64
     flags: -tags netgo
-  - main: ./cmd/terraform-provider-awstag
-    binary: terraform-provider-awstag
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-    goarch:
-      - amd64
-    flags: -tags netgo
 archive:
   format: binary
 release:

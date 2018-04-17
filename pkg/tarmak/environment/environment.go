@@ -11,9 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -23,9 +21,8 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/provider"
-	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/tarmak/vault"
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
@@ -36,9 +33,11 @@ type Environment struct {
 
 	sshKeyPrivate interface{}
 
-	hubCluster interfaces.Cluster // this is the cluster that contains state/vault/tools
+	// this is the cluster that contains state/vault/tools
+	HubCluster interfaces.Cluster
 	provider   interfaces.Provider
 	tarmak     interfaces.Tarmak
+	vault      interfaces.Vault
 
 	log *logrus.Entry
 }
@@ -53,14 +52,10 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 	}
 
 	var result error
-
-	providerConf, err := tarmak.Config().Provider(conf.Provider)
-	if err != nil {
-		return nil, fmt.Errorf("error finding provider '%s'", conf.Provider)
-	}
+	var err error
 
 	// init provider
-	e.provider, err = provider.NewFromConfig(tarmak, providerConf)
+	e.provider, err = tarmak.ProviderByName(conf.Provider)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing provider '%s'", conf.Provider)
 	}
@@ -77,11 +72,18 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 		}
 		e.clusters = append(e.clusters, clusterIntf)
 		if len(clusters) == 1 || clusterConf.Name == "hub" {
-			e.hubCluster = clusterIntf
+			e.HubCluster = clusterIntf
 		}
 	}
 	if result != nil {
 		return nil, result
+	}
+
+	if e.HubCluster != nil {
+		e.vault, err = vault.NewFromCluster(e.HubCluster)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return e, nil
@@ -152,9 +154,9 @@ func (e *Environment) Variables() map[string]interface{} {
 	}
 
 	output["state_bucket"] = e.Provider().RemoteStateBucketName()
-	output["state_cluster_name"] = e.hubCluster.Name()
-	output["tools_cluster_name"] = e.hubCluster.Name()
-	output["vault_cluster_name"] = e.hubCluster.Name()
+	output["state_cluster_name"] = e.HubCluster.Name()
+	output["tools_cluster_name"] = e.HubCluster.Name()
+	output["vault_cluster_name"] = e.HubCluster.Name()
 	return output
 }
 
@@ -284,73 +286,6 @@ func (e *Environment) Validate() error {
 	return result
 }
 
-func (e *Environment) BucketPrefix() string {
-	stackState := e.hubCluster.Stack(tarmakv1alpha1.StackNameState)
-	if stackState == nil {
-		return ""
-	}
-	bucketPrefix, ok := stackState.Variables()["bucket_prefix"]
-	if !ok {
-		return ""
-	}
-	bucketPrefixString, ok := bucketPrefix.(string)
-	if !ok {
-		return ""
-	}
-	return bucketPrefixString
-}
-
-func (e *Environment) StateStack() interfaces.Stack {
-	return e.hubCluster.Stack(tarmakv1alpha1.StackNameState)
-}
-
-func (e *Environment) VaultStack() interfaces.Stack {
-	return e.hubCluster.Stack(tarmakv1alpha1.StackNameVault)
-}
-
-func (e *Environment) vaultRootTokenPath() string {
-	return filepath.Join(e.ConfigPath(), "vault_root_token")
-}
-
-func (e *Environment) VaultRootToken() (string, error) {
-	path := e.vaultRootTokenPath()
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := utils.EnsureDirectory(filepath.Dir(path), 0700); err != nil {
-			return "", fmt.Errorf("error creating directory: %s", err)
-		}
-
-		uuidValue := uuid.New()
-
-		err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%s\n", uuidValue.String())), 0600)
-		if err != nil {
-			return "", err
-		}
-
-		return uuidValue.String(), nil
-	}
-
-	uuidBytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", fmt.Errorf("unable to read vault root token %s: %s", path, err)
-	}
-
-	return strings.TrimSpace(string(uuidBytes)), nil
-}
-
-func (e *Environment) VaultTunnel() (interfaces.VaultTunnel, error) {
-	stackVault := e.hubCluster.Stack(tarmakv1alpha1.StackNameVault)
-	if stackVault == nil {
-		return nil, errors.New("could not find vault stack")
-	}
-	vaultStack, ok := stackVault.(*stack.VaultStack)
-	if !ok {
-		return nil, fmt.Errorf("could not convert stack to VaultStack: %T", stackVault)
-	}
-
-	return vaultStack.VaultTunnel()
-}
-
 func (e *Environment) WingTunnel() interfaces.Tunnel {
 	return e.Tarmak().SSH().Tunnel(
 		"bastion",
@@ -386,4 +321,12 @@ func (e *Environment) Parameters() map[string]string {
 		"location": e.Location(),
 		"provider": e.Provider().String(),
 	}
+}
+
+func (e *Environment) Hub() interfaces.Cluster {
+	return e.HubCluster
+}
+
+func (e *Environment) Vault() interfaces.Vault {
+	return e.vault
 }

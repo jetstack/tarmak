@@ -53,19 +53,27 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 		k.log.Fatal("could not validate config: ", err)
 	}
 
+	vault := k.tarmak.Environment().Vault()
+
 	// read vault root token
-	vaultRootToken, err := k.tarmak.Cluster().Environment().VaultRootToken()
+	vaultRootToken, err := vault.RootToken()
 	if err != nil {
 		return err
 	}
 
-	// init vault statck
-	_, err = k.tarmak.Terraform().Output(k.tarmak.Cluster().Environment().VaultStack())
+	// get kubernetes outputs
+	outputs, err := k.tarmak.Environment().Hub().TerraformOutput()
 	if err != nil {
 		return err
 	}
 
-	vaultTunnel, err := k.tarmak.Cluster().Environment().VaultTunnel()
+	interfaceInstanceFQDNs := outputs["instance_fqdns"].([]interface{})
+	instanceFQDNs := make([]string, len(interfaceInstanceFQDNs))
+	for i := range interfaceInstanceFQDNs {
+		instanceFQDNs[i] = interfaceInstanceFQDNs[i].(string)
+	}
+
+	vaultTunnel, err := vault.TunnelFromFQDNs(instanceFQDNs, outputs["vault_ca"].(string))
 	if err != nil {
 		return err
 	}

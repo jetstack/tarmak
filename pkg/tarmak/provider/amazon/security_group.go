@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster/firewall"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
-	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
 
 const masterELB = "master_elb"
@@ -31,9 +31,9 @@ type AWSSGRule struct {
 func awsGroupID(role string) string {
 	switch role {
 	case "vault":
-		return "${data.terraform_remote_state.hub_vault.vault_security_group_id}"
+		return "${var.vault_security_group_id}"
 	case "bastion":
-		return "${data.terraform_remote_state.hub_tools.bastion_security_group_id}"
+		return "${var.bastion_security_group_id}"
 	default:
 		return fmt.Sprintf("${aws_security_group.kubernetes_%s.id}", role)
 	}
@@ -41,7 +41,7 @@ func awsGroupID(role string) string {
 
 func GenerateAWSRules(role *role.Role) (awsRules []*AWSSGRule, err error) {
 	// Get all firewall rules where the role is mentioned in the destination
-	for _, rule := range stack.FirewallRules() {
+	for _, rule := range firewall.Rules() {
 		for _, destination := range rule.Destinations {
 			if destination.Role == role.Name() || (role.Name() == "master" && destination.Role == masterELB) {
 				awsRules = append(awsRules, generateFromRule(rule, role, &destination)...)
@@ -52,7 +52,7 @@ func GenerateAWSRules(role *role.Role) (awsRules []*AWSSGRule, err error) {
 	return awsRules, nil
 }
 
-func generateFromRule(rule *stack.FirewallRule, role *role.Role, destination *stack.Host) []*AWSSGRule {
+func generateFromRule(rule *firewall.Rule, role *role.Role, destination *firewall.Host) []*AWSSGRule {
 	var awsRules []*AWSSGRule
 
 	for _, source := range rule.Sources {

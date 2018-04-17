@@ -1,0 +1,22 @@
+provider "tarmak" {
+  socket_path = "{{ .SocketPath }}"
+}
+
+provider "template" {
+}
+
+provider "random" {
+}
+
+provider "tls" {
+}
+
+provider "aws" {
+  region              = "${var.region}"
+  allowed_account_ids = ["${var.allowed_account_ids}"]
+}
+
+provider "awstag" {
+  region              = "${var.region}"
+  allowed_account_ids = ["${var.allowed_account_ids}"]
+}
