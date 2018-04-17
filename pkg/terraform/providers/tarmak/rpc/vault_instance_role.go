@@ -4,8 +4,9 @@ package rpc
 import (
 	"fmt"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
+
+	cluster "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 )
 
 var (

@@ -14,8 +14,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
-
-	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 )
 
 func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
@@ -118,7 +116,7 @@ func (t *terraformTemplate) Generate() error {
 
 func (t *terraformTemplate) data() map[string]interface{} {
 
-	_, existingVPC := t.cluster.Config().Network.ObjectMeta.Annotations[cluster.ExistingVPCAnnotationKey]
+	_, existingVPC := t.cluster.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingVPCAnnotationKey]
 
 	return map[string]interface{}{
 		"ClusterTypeClusterSingle": clusterv1alpha1.ClusterTypeClusterSingle,

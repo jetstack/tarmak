@@ -16,14 +16,6 @@ import (
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
-const (
-	// represents Terraform in a destroy state
-	StateDestroy                          = "destroy"
-	ExistingVPCAnnotationKey              = "tarmak.io/existing-vpc-id"
-	ExistingPublicSubnetIDsAnnotationKey  = "tarmak.io/existing-public-subnet-ids"
-	ExistingPrivateSubnetIDsAnnotationKey = "tarmak.io/existing-private-subnet-ids"
-)
-
 // returns a server
 type Cluster struct {
 	conf *clusterv1alpha1.Cluster
@@ -222,7 +214,7 @@ func (c *Cluster) validateInstancePools() (result error) {
 // validate network configuration
 func (c *Cluster) validateNetwork() (result error) {
 	// make the choice between deploying into existing VPC or creating a new one
-	if _, ok := c.Config().Network.ObjectMeta.Annotations[ExistingVPCAnnotationKey]; ok {
+	if _, ok := c.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingVPCAnnotationKey]; ok {
 		// TODO: handle existing vpc
 		_, net, err := net.ParseCIDR(c.Config().Network.CIDR)
 		if err != nil {
@@ -409,17 +401,17 @@ func (c *Cluster) Variables() map[string]interface{} {
 		output["network"] = c.networkCIDR
 	}
 
-	key, ok := c.Config().Network.ObjectMeta.Annotations[ExistingVPCAnnotationKey]
+	key, ok := c.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingVPCAnnotationKey]
 	if ok {
 		output["vpc_id"] = key
 	}
 
-	privateSubnetIDs, ok := c.Config().Network.ObjectMeta.Annotations[ExistingPrivateSubnetIDsAnnotationKey]
+	privateSubnetIDs, ok := c.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingPrivateSubnetIDsAnnotationKey]
 	if ok {
 		output["private_subnets"] = privateSubnetIDs
 	}
 
-	publicSubnetIDs, ok := c.Config().Network.ObjectMeta.Annotations[ExistingPublicSubnetIDsAnnotationKey]
+	publicSubnetIDs, ok := c.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingPublicSubnetIDsAnnotationKey]
 	if ok {
 		output["public_subnets"] = publicSubnetIDs
 	}

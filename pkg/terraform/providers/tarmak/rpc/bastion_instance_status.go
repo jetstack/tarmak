@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
+	cluster "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 )
 
 var (
