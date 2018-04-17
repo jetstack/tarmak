@@ -16,6 +16,15 @@ import (
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
+const (
+	// represents Terraform in a destroy state
+	StateDestroy                          = "destroy"
+	ExistingVPCAnnotationKey              = "tarmak.io/existing-vpc-id"
+	ExistingPublicSubnetIDsAnnotationKey  = "tarmak.io/existing-public-subnet-ids"
+	ExistingPrivateSubnetIDsAnnotationKey = "tarmak.io/existing-private-subnet-ids"
+	JenkinsCertificateARNAnnotationKey    = "tarmak.io/jenkins-certificate-arn"
+)
+
 // returns a server
 type Cluster struct {
 	conf *clusterv1alpha1.Cluster
@@ -423,6 +432,16 @@ func (c *Cluster) Variables() map[string]interface{} {
 	publicSubnetIDs, ok := c.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingPublicSubnetIDsAnnotationKey]
 	if ok {
 		output["public_subnets"] = publicSubnetIDs
+	}
+
+	for _, instancePool := range c.InstancePools() {
+		if instancePool.Role().Name() == "jenkins" {
+			jenkinsCertificateARN, ok := instancePool.Config().Annotations[JenkinsCertificateARNAnnotationKey]
+			if ok {
+				output["jenkins_certificate_arn"] = jenkinsCertificateARN
+				break
+			}
+		}
 	}
 
 	// publish changed private zone
