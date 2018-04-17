@@ -186,13 +186,6 @@ func (t *terraformTemplate) generateInstanceTemplates() error {
 	if len(t.cluster.InstancePools()) > 0 {
 		awsSGRules, err := t.generateAWSSecurityGroup()
 
-		/*errString := ""
-		for _, awsRule := range awsSGRules["vault"] {
-			errString = fmt.Sprintf("%s \n %#v \n", errString, *awsRule)
-		}
-		strings.Replace(errString, "\n", `\n`, -1)
-		return fmt.Errorf("HERERERRER %s", errString)*/
-
 		if err != nil {
 			return err
 		}

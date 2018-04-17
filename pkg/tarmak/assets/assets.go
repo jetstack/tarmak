@@ -1,7 +1,7 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
 
-// This should only be used when not in devmode
-// +build !devmode
+// this package contains generated assets from the repository for use during
+// tarmak runtime
 
 package assets
 
