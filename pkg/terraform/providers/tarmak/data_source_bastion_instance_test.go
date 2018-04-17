@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 )
 
 func TestAccDataSourceTarmakBastionInstance(t *testing.T) {
@@ -36,7 +36,7 @@ func TestAccDataSourceTarmakBastionInstance(t *testing.T) {
 func TestAccDataSourceTarmakBastionInstanceDuringDestroy(t *testing.T) {
 	s := newRPCServer(t)
 
-	s.fakeCluster.EXPECT().GetState().AnyTimes().Return(cluster.StateDestroy)
+	s.fakeCluster.EXPECT().GetState().AnyTimes().Return(clusterv1alpha1.StateDestroy)
 
 	s.Start()
 	defer s.Finish()
