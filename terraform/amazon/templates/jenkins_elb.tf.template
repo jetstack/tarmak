@@ -1,0 +1,102 @@
+resource "aws_elb" "jenkins" {
+  name            = "${replace(data.template_file.stack_name.rendered,"_","-")}-jenkins"
+  subnets         = ["${var.public_subnet_ids}"]
+  security_groups = ["${aws_security_group.jenkins_elb.id}"]
+
+{{ if .JenkinsCertificateARN }}
+  listener {
+    instance_port      = 8080
+    instance_protocol  = "http"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = "${var.certificate_arn}"
+  }
+{{ else }}
+  listener {
+    instance_port      = 8080
+    instance_protocol  = "http"
+    lb_port            = 80
+    lb_protocol        = "http"
+  }
+{{ end }}
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "TCP:8080"
+    interval            = 30
+  }
+
+  cross_zone_load_balancing = true
+  idle_timeout              = 600
+
+  tags {
+    Name        = "${data.template_file.stack_name.rendered}-jenkins"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+
+resource "aws_elb_attachment" "jenkins" {
+  elb      = "${aws_elb.jenkins.name}"
+  instance = "${aws_instance.jenkins.id}"
+}
+
+resource "aws_security_group" "jenkins_elb" {
+  name        = "${data.template_file.stack_name.rendered}-jenkins-elb"
+  vpc_id      = "${var.vpc_id}"
+  description = "ELB for ${data.template_file.stack_name.rendered}-jenkins"
+
+  tags {
+    Name        = "${data.template_file.stack_name.rendered}-jenkins-elb"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+
+resource "aws_security_group_rule" "jenkins_elb_ingress_allow_admins" {
+  type              = "ingress"
+  protocol          = "tcp"
+{{ if .JenkinsCertificateARN }}
+  from_port         = 443
+  to_port           = 443
+{{ else }}
+  from_port         = 80
+  to_port           = 80
+{{ end }}
+  cidr_blocks       = ["${var.admin_ips}"]
+  security_group_id = "${aws_security_group.jenkins_elb.id}"
+}
+
+resource "aws_security_group_rule" "jenkins_elb_egress_allow_all" {
+  type              = "egress"
+  protocol          = "tcp"
+  from_port         = 0
+  to_port           = 65535
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = "${aws_security_group.jenkins_elb.id}"
+}
+
+resource "aws_security_group_rule" "jenkins_ingress_allow_jenkins_elb" {
+  type                     = "ingress"
+  protocol                 = "tcp"
+  from_port                = 8080
+  to_port                  = 8080
+  source_security_group_id = "${aws_security_group.jenkins_elb.id}"
+  security_group_id        = "${aws_security_group.jenkins.id}"
+}
+
+resource "aws_route53_record" "jenkins_elb" {
+  zone_id = "${var.public_zone_id}"
+  name    = "jenkins.${var.environment}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.jenkins.dns_name}"
+    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    evaluate_target_health = false
+  }
+}

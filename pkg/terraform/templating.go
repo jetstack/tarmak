@@ -11,6 +11,7 @@ import (
 	"github.com/Masterminds/sprig"
 	multierror "github.com/hashicorp/go-multierror"
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
@@ -95,16 +96,19 @@ func (t *terraformTemplate) Generate() error {
 	if err := t.generateInstanceTemplates(); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("modules"); err != nil {
+	if err := t.generateTemplate("modules", "modules"); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("inputs"); err != nil {
+	if err := t.generateTemplate("inputs", "inputs"); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("outputs"); err != nil {
+	if err := t.generateTemplate("outputs", "outputs"); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("providers"); err != nil {
+	if err := t.generateTemplate("providers", "providers"); err != nil {
+		result = multierror.Append(result, err)
+	}
+	if err := t.generateTemplate("jenkins_elb", "modules/jenkins/jenkins_elb"); err != nil {
 		result = multierror.Append(result, err)
 	}
 	if err := t.generateTerraformVariables(); err != nil {
@@ -118,18 +122,25 @@ func (t *terraformTemplate) data() map[string]interface{} {
 
 	_, existingVPC := t.cluster.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingVPCAnnotationKey]
 
+	jenkinsCertificateARN := ""
+	for _, instancePool := range t.cluster.InstancePools() {
+		if instancePool.Role().Name() == "jenkins" {
+			jenkinsCertificateARN, _ = instancePool.Config().Annotations[cluster.JenkinsCertificateARNAnnotationKey]
+			break
+		}
+	}
+
 	return map[string]interface{}{
 		"ClusterTypeClusterSingle": clusterv1alpha1.ClusterTypeClusterSingle,
 		"ClusterTypeHub":           clusterv1alpha1.ClusterTypeHub,
 		"ClusterTypeClusterMulti":  clusterv1alpha1.ClusterTypeClusterMulti,
 		"ClusterType":              t.cluster.Type(),
 		"InstancePools":            t.cluster.InstancePools(),
-		//"InstancePools":      []interfaces.InstancePool{t.cluster.InstancePool("worker"), t.cluster.InstancePool("master"), t.cluster.InstancePool("etcd")},
-		"ExistingVPC": existingVPC,
+		"ExistingVPC":              existingVPC,
 		// cluster.Roles() returns a list of roles based off of the types of instancePools in tarmak.yaml
-		"Roles": t.cluster.Roles(),
-		//"Roles":      []*role.Role{t.cluster.Role("worker"), t.cluster.Role("master"), t.cluster.Role("etcd")},
-		"SocketPath": tarmakSocketPath(t.cluster.ConfigPath()),
+		"Roles":                 t.cluster.Roles(),
+		"SocketPath":            tarmakSocketPath(t.cluster.ConfigPath()),
+		"JenkinsCertificateARN": jenkinsCertificateARN,
 	}
 }
 
@@ -141,7 +152,7 @@ func (t *terraformTemplate) funcs() template.FuncMap {
 }
 
 // generate single file templates
-func (t *terraformTemplate) generateTemplate(name string) error {
+func (t *terraformTemplate) generateTemplate(name string, target string) error {
 	templateFile := filepath.Clean(
 		filepath.Join(
 			t.rootPath,
@@ -161,7 +172,7 @@ func (t *terraformTemplate) generateTemplate(name string) error {
 	file, err := os.OpenFile(
 		filepath.Join(
 			t.destDir,
-			fmt.Sprintf("%s.tf", name),
+			fmt.Sprintf("%s.tf", target),
 		),
 		os.O_RDWR|os.O_CREATE,
 		0644,
@@ -169,6 +180,7 @@ func (t *terraformTemplate) generateTemplate(name string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	if err := mainTemplate.Execute(
 		file,

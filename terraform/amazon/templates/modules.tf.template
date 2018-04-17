@@ -62,12 +62,37 @@ module "bastion" {
   contact = "${var.contact}"
   bastion_ami = "${var.bastion_ami}"
   bastion_instance_type = "${var.bastion_instance_type}"
-  public_subnet_ids = "${module.network.public_subnet_ids}"
+  public_subnet_ids = ["${module.network.public_subnet_ids}"]
   key_name = "${var.key_name}"
   bastion_root_size = "${var.bastion_root_size}"
-  admin_ips = "${var.admin_ips}"
+  admin_ips = ["${var.admin_ips}"]
   public_zone_id = "${module.state.public_zone_id}"
   private_zone_id = "${module.network.private_zone_id[0]}"
+}
+
+module "jenkins" {
+  source = "modules/jenkins"
+
+  vpc_id = "${module.network.vpc_id}"
+  environment = "${var.environment}"
+  project = "${var.project}"
+  contact = "${var.contact}"
+  bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
+  region = "${var.region}"
+  private_zone = "${var.private_zone}"
+  private_zone_id = "${module.network.private_zone_id[0]}"
+  jenkins_ami = "${var.jenkins_ami}"
+  jenkins_instance_type = "${var.jenkins_instance_type}"
+  public_subnet_ids = ["${module.network.public_subnet_ids}"]
+  private_subnet_ids = ["${module.network.private_subnet_ids}"]
+  key_name = "${var.key_name}"
+  jenkins_root_size = "${var.jenkins_root_size}"
+  jenkins_ebs_size = "${var.jenkins_ebs_size}"
+  certificate_arn = "${var.jenkins_certificate_arn}"
+  admin_ips = ["${var.admin_ips}"]
+  public_zone_id = "${module.state.public_zone_id}"
+  stack_name_prefix = "${var.stack_name_prefix}"
+  name = "${var.name}"
 }
 
 module "vault" {
