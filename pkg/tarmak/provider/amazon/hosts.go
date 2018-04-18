@@ -3,6 +3,7 @@ package amazon
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -57,6 +58,7 @@ func (h *host) Parameters() map[string]string {
 	}
 }
 
+// TODO: this is not too provider specific and should live somewhere else
 func (h *host) SSHConfig() string {
 	config := fmt.Sprintf(`host %s
     User %s
@@ -80,7 +82,7 @@ func (h *host) SSHConfig() string {
 		h.User(),
 		h.Hostname(),
 		h.cluster.SSHHostKeysPath(),
-		h.cluster.ConfigPath(),
+		os.TempDir(),
 		h.cluster.Environment().SSHPrivateKeyPath(),
 	)
 
