@@ -279,17 +279,22 @@ func (t *Terraform) Shell(cluster interfaces.Cluster) error {
 		return err
 	}
 
-	cmd := exec.Command(
-		"/bin/sh",
-	)
-
+	dir := t.codePath(cluster)
 	envVars, err := t.envVars(cluster)
 	if err != nil {
 		return err
 	}
 
-	cmd.Dir = t.codePath(cluster)
-	cmd.Env = append(envVars, fmt.Sprintf("PS1=[%s]$ ", cmd.Dir))
+	// use $SHELL if available, fall back to /bin/sh
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "/bin/sh"
+		envVars = append(envVars, fmt.Sprintf("PS1=[%s]$ ", dir))
+	}
+
+	cmd := exec.Command(shell)
+	cmd.Dir = dir
+	cmd.Env = envVars
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
