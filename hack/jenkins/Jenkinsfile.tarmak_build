@@ -1,0 +1,11 @@
+node {
+    stage('checkout tarmak code') {
+        checkout scm
+    }
+    stage('build') {
+        sh 'make docker_build'
+    }
+    stage('archive') {
+        archiveArtifacts 'tarmak_linux_amd64'
+    }
+}

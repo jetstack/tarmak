@@ -1,5 +1,7 @@
 # Copyright Jetstack Ltd. See LICENSE for details.
 PACKAGE_NAME ?= github.com/jetstack/tarmak
+CONTAINER_DIR := /go/src/$(PACKAGE_NAME)
+GO_VERSION := 1.9.5
 
 BINDIR ?= $(CURDIR)/bin
 PATH   := $(BINDIR):$(PATH)
@@ -191,3 +193,27 @@ endif
 	git add -p terraform/Dockerfile docs/conf.py terraform/amazon/tools/templates/bastion_user_data.yaml terraform/amazon/kubernetes/templates/puppet_agent_user_data.yaml README.md
 	git commit -m "Release $(VERSION)"
 	git tag $(VERSION)
+
+
+docker_%:
+	# create a container
+	$(eval CONTAINER_ID := $(shell docker create \
+		-i \
+		-w $(CONTAINER_DIR) \
+		golang:${GO_VERSION} \
+		/bin/bash -c "make $*" \
+	))
+
+	# copy stuff into container
+	git ls-files | tar cf -  -T - | docker cp - $(CONTAINER_ID):$(CONTAINER_DIR)
+	
+	# run build inside container
+	docker start -a -i $(CONTAINER_ID)
+
+	# copy artifacts over
+	docker cp $(CONTAINER_ID):$(CONTAINER_DIR)/tarmak_linux_amd64 tarmak_linux_amd64
+	docker cp $(CONTAINER_ID):$(CONTAINER_DIR)/tarmak_darwin_amd64 tarmak_darwin_amd64
+	docker cp $(CONTAINER_ID):$(CONTAINER_DIR)/wing_linux_amd64 wing_linux_amd64
+
+	# remove container
+	docker rm $(CONTAINER_ID)
