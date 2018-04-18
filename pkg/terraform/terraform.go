@@ -294,7 +294,8 @@ func (t *Terraform) Shell(cluster interfaces.Cluster) error {
 
 	cmd := exec.Command(shell)
 	cmd.Dir = dir
-	cmd.Env = envVars
+	// envVars variables will override any shell envs will equal key
+	cmd.Env = append(os.Environ(), envVars...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
