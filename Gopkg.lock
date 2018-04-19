@@ -930,8 +930,8 @@
 [[projects]]
   name = "github.com/jetstack/vault-helper"
   packages = ["pkg/kubernetes"]
-  revision = "9ef86ddaab8853e14ee1461d632403199f56ef2c"
-  version = "0.9.7"
+  revision = "f309627094849a76622dfeb49da4ff44a335a559"
+  version = "0.9.9"
 
 [[projects]]
   name = "github.com/jetstack/vault-unsealer"
@@ -2035,6 +2035,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "942a69e8f8bd3b3b71423ae5cead730bac3313bb1d43c923535d6a23137bd063"
+  inputs-digest = "0c932c65202ef877b7fca57c597265adf7dbbccd3d9daedfedc8ec6db15e4213"
   solver-name = "gps-cdcl"
   solver-version = 1
