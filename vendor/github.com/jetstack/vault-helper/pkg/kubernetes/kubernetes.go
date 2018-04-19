@@ -1,3 +1,4 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 package kubernetes
 
 import (
@@ -144,9 +145,7 @@ func isValidClusterID(clusterID string) error {
 		return errors.New("Invalid cluster ID - contains uppercase")
 	}
 
-	f = func(r rune) bool {
-		return ((r < 'a' || r > 'z') && (r < '0' || r > '9')) && r != '-'
-	}
+	f = func(r rune) bool { return ((r < 'a' || r > 'z') && (r < '0' || r > '9')) && r != '-' }
 
 	if strings.IndexFunc(clusterID, f) != -1 {
 		return errors.New("Not a valid cluster ID name")
