@@ -9,7 +9,10 @@ import (
 func defineToolsRoles(roleMap map[string]*role.Role) {
 	jenkinsRole := &role.Role{
 		Stateful: true,
-		AWS:      &role.RoleAWS{},
+		AWS: &role.RoleAWS{
+			ELBIngress:    true,
+			ELBIngressTLS: true,
+		},
 	}
 	jenkinsRole.WithName("jenkins")
 	roleMap[clusterv1alpha1.InstancePoolTypeJenkins] = jenkinsRole
