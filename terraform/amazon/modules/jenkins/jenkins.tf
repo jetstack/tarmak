@@ -89,7 +89,7 @@ data "aws_subnet" "private_subnet" {
   id = "${var.private_subnet_ids[0]}"
 }
 
-resource "aws_route53_record" "jenkins" {
+resource "aws_route53_record" "jenkins_private" {
   zone_id = "${var.private_zone_id}"
   name    = "jenkins.${var.environment}"
   type    = "A"

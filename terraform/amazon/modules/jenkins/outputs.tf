@@ -11,5 +11,5 @@ output "jenkins_dns_name" {
 }
 
 output "jenkins_url" {
-  value = "https://${aws_route53_record.jenkins_elb.fqdn}"
+  value = "https://${aws_route53_record.jenkins.fqdn}"
 }

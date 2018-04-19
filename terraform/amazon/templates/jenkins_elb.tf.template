@@ -1,3 +1,4 @@
+/*
 resource "aws_elb" "jenkins" {
   name            = "${replace(data.template_file.stack_name.rendered,"_","-")}-jenkins"
   subnets         = ["${var.public_subnet_ids}"]
@@ -38,6 +39,19 @@ resource "aws_elb" "jenkins" {
     Contact     = "${var.contact}"
   }
 }
+
+resource "aws_route53_record" "jenkins_elb" {
+  zone_id = "${var.public_zone_id}"
+  name    = "jenkins.${var.environment}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.jenkins.dns_name}"
+    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    evaluate_target_health = false
+  }
+}
+*/
 
 resource "aws_elb_attachment" "jenkins" {
   elb      = "${aws_elb.jenkins.name}"
@@ -87,16 +101,4 @@ resource "aws_security_group_rule" "jenkins_ingress_allow_jenkins_elb" {
   to_port                  = 8080
   source_security_group_id = "${aws_security_group.jenkins_elb.id}"
   security_group_id        = "${aws_security_group.jenkins.id}"
-}
-
-resource "aws_route53_record" "jenkins_elb" {
-  zone_id = "${var.public_zone_id}"
-  name    = "jenkins.${var.environment}"
-  type    = "A"
-
-  alias {
-    name                   = "${aws_elb.jenkins.dns_name}"
-    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
-    evaluate_target_health = false
-  }
 }

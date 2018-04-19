@@ -14,6 +14,9 @@ variable "availability_zones" {
 variable "stack_name_prefix" {
   default = ""
 }
+variable "jenkins_stack_name_prefix" {
+  default = "jenkins-"
+}
 variable "allowed_account_ids" {
   type    = "list"
   default = []
