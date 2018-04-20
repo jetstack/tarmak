@@ -39,4 +39,16 @@
 {{ end }}
 {{ end }}
 
+{{range .InstancePools}}
+{{ if eq .Name "jenkins" }}
+## {{.TFName}}
+# Variables for {{.TFName}}
+{{template "instance_pool_variables.tf.template" .}}
+# Instance for {{.TFName}}
+{{template "instance_pool_instance.tf.template" .}}
+# IAM role for {{.TFName}}
+{{template "instance_pool_iam.tf.template" .}}
+{{ end }}
+{{ end }}
+
 {{ end }}
