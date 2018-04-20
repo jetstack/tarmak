@@ -140,6 +140,10 @@ func (t *Tarmak) initializeConfig() error {
 		return fmt.Errorf("error finding current cluster '%s': %s", clusterName, err)
 	}
 
+	if err := t.ssh.WriteConfig(); err != nil {
+		return fmt.Errorf("failed to write ssh config for current cluster '%s': %v", clusterName, err)
+	}
+
 	return nil
 }
 
