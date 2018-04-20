@@ -107,16 +107,41 @@ func (t *Terraform) socketPath(c interfaces.Cluster) string {
 	return tarmakSocketPath(c.ConfigPath())
 }
 
-func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string, args []string) error {
+func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 
 	// generate tf code
 	if err := t.GenerateCode(cluster); err != nil {
-		return err
+		return fmt.Errorf("failed to generate code: %s", err)
 	}
 
 	// symlink tarmak plugins into folder
 	if err := t.preparePlugins(cluster); err != nil {
-		return err
+		return fmt.Errorf("failed to prepare plugins: %s", err)
+	}
+
+	// run init
+	if err := t.command(
+		cluster,
+		[]string{
+			"terraform",
+			"init",
+			"-get-plugins=false",
+			"-input=false",
+		},
+		nil,
+		nil,
+		nil,
+	); err != nil {
+		return fmt.Errorf("failed to run terraform init: %s", err)
+	}
+
+	return nil
+}
+
+func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string, args []string) error {
+
+	if err := t.Prepare(cluster); err != nil {
+		return fmt.Errorf("failed to prepare terraform: %s", err)
 	}
 
 	// listen to rpc
@@ -133,22 +158,6 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 			t.log.Fatalf("error listening to unix socket: %s", err)
 		}
 	}()
-
-	// run init
-	if err := t.command(
-		cluster,
-		[]string{
-			"terraform",
-			"init",
-			"-get-plugins=false",
-			"-input=false",
-		},
-		nil,
-		nil,
-		nil,
-	); err != nil {
-		return err
-	}
 
 	// command
 	if command == debugShell {
