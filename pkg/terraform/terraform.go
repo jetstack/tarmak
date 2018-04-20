@@ -148,7 +148,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		return err
 	}
 
-	// plan
+	// command
 	cmdArgs := []string{
 		"terraform",
 		command,
