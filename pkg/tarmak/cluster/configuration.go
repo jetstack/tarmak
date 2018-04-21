@@ -9,6 +9,10 @@ import (
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 )
 
+const (
+	retries = 100
+)
+
 // This upload the puppet.tar.gz to the cluster, warning there is some duplication as terraform is also uploading this puppet.tar.gz
 func (c *Cluster) UploadConfiguration() error {
 
@@ -67,7 +71,7 @@ func (c *Cluster) ReapplyConfiguration() error {
 func (c *Cluster) WaitForConvergance() error {
 	c.log.Debugf("making sure all instances have converged using puppet")
 
-	retries := 50
+	retries := retries
 	for {
 		instances, err := c.listInstances()
 		if err != nil {
@@ -103,7 +107,7 @@ func (c *Cluster) WaitForConvergance() error {
 			c.log.Debug(err)
 		}
 
-		retries -= 1
+		retries--
 		if retries == 0 {
 			break
 		}
