@@ -78,12 +78,50 @@ resource "aws_elb" "{{.TFName}}" {
     "${aws_security_group.{{.TFName}}_elb.id}",
   ]
 
+{{ if eq .Name "jenkins" }}
+  cross_zone_load_balancing = true
+
+{{ if .AWS.ELBIngressTLS }}
+  listener {
+    instance_port      = "${var.jenkins_elb_instance_port_http}"
+    instance_protocol  = "http"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = "${var.certificate_arn}"
+  }
+{{ else }}
+  listener {
+    instance_port      = "${var.jenkins_elb_instance_port_http}"
+    instance_protocol  = "http"
+    lb_port            = 80
+    lb_protocol        = "http"
+  }
+{{ end }}
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "TCP:${var.jenkins_elb_instance_port_http}"
+    interval            = 30
+  }
+
+{{ else }}
   listener {
     instance_port     = "${var.ingress_elb_nodeport_http}"
     instance_protocol = "http"
     lb_port           = 80
     lb_protocol       = "http"
   }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
+    timeout             = 3
+    target              = "TCP:${var.ingress_elb_nodeport_http}"
+    interval            = 10
+  }
+{{ end }}
 
   #listener {
   #  instance_port      = "${var.ingress_elb_nodeport_http}"
@@ -93,13 +131,6 @@ resource "aws_elb" "{{.TFName}}" {
   #  ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
   #}
 
-  health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 5
-    timeout             = 3
-    target              = "TCP:${var.ingress_elb_nodeport_http}"
-    interval            = 10
-  }
   tags {
     Environment = "${var.environment}"
     Project     = "${var.project}"

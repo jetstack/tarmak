@@ -8,6 +8,9 @@ output "instance_fqdns" {
 output "vault_ca" {
   value = "${module.vault.vault_ca}"
 }
+output "jenkins_url" {
+  value = "${module.jenkins.jenkins_url}"
+}
 {{end}}
 
 {{ if eq .ClusterType .ClusterTypeHub }}
@@ -17,6 +20,10 @@ output "bastion_bastion_security_group_id" {
 }
 output "bastion_bastion_instance_id" {
   value = "${module.bastion.bastion_instance_id}"
+}
+
+output "jenkins_url" {
+  value = "${module.jenkins.jenkins_url}"
 }
 
 output "state_secrets_bucket" {
