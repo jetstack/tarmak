@@ -4,6 +4,7 @@ package utils
 import (
 	"context"
 	"os"
+	"os/exec"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -62,7 +63,14 @@ func WaitOrCancel(f func(context.Context) error) {
 	case nil:
 		log.Info("Tarmak performed all tasks successfully.")
 	default:
-		log.WithError(err).Fatal("Tarmak exited with an error.")
+		exitError, ok := err.(*exec.ExitError)
+		if ok {
+			status := exitError.ProcessState.Sys().(syscall.WaitStatus)
+			exitStatus := status.ExitStatus()
+			log.WithError(err).Errorf("Tarmak exited with an error: %s", err)
+			log.Exit(exitStatus)
+		}
+		log.WithError(err).Fatalf("Tarmak exited with an error: %s", err)
 	}
 }
 
