@@ -67,6 +67,7 @@ type ClusterKubernetes struct {
 	ClusterAutoscaler *ClusterKubernetesClusterAutoscaler `json:"clusterAutoscaler,omitempty"`
 	Tiller            *ClusterKubernetesTiller            `json:"tiller,omitempty"`
 	Dashboard         *ClusterKubernetesDashboard         `json:"dashboard,omitempty"`
+	PodSecurityPolicy *ClusterPodSecurityPolicy           `json:"podSecurityPolicy,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
@@ -85,6 +86,10 @@ type ClusterKubernetesDashboard struct {
 	Enabled bool   `json:"enabled,omitempty"`
 	Image   string `json:"image,omitempty"`
 	Version string `json:"version,omitempty"`
+}
+
+type ClusterPodSecurityPolicy struct {
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

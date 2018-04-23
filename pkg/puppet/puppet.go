@@ -81,6 +81,15 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	if conf.Version != "" {
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
 	}
+
+	if conf.PodSecurityPolicy != nil {
+		if conf.PodSecurityPolicy.Enabled {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_pod_security_policy: true`))
+		} else {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_pod_security_policy: false`))
+		}
+	}
+
 	return
 }
 

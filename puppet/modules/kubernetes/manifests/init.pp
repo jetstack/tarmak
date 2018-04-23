@@ -25,6 +25,7 @@ class kubernetes (
   $service_ip_range_mask = '16',
   $leader_elect = true,
   $allow_privileged = true,
+  $pod_security_policy = undef,
   $service_account_key_file = undef,
   $service_account_key_generate = false,
   Integer[-1,65535] $apiserver_insecure_port = -1,
@@ -55,6 +56,21 @@ class kubernetes (
     $_apiserver_insecure_port = 0
   } else {
     $_apiserver_insecure_port = $::kubernetes::apiserver_insecure_port
+  }
+
+  # apply pod security policy by default for 1.8.0 or higher
+  if $pod_security_policy == undef {
+    if versioncmp($version, '1.8.0') >= 0 {
+      $_pod_security_policy = true
+    } else {
+      $_pod_security_policy = false
+    }
+  } else {
+    if $pod_security_policy and versioncmp($version, '1.6.0') >= 0 {
+      $_pod_security_policy = $pod_security_policy
+    } else {
+      $_pod_security_policy = false
+    }
   }
 
   # build a good default master URL

@@ -114,3 +114,18 @@ To destroy the cluster, run ``tarmak clusters destroy``.
    Tarmak will not exit immediately.
    It will wait for the currently running step to finish and then exit.
    You can complete the process by re-running the command.
+
+Pod Security Policy
+~~~~~~~~~~~~~~~~~~~
+To enable Pod Security Policy to an environment, include the following to the
+configuration file under the kubernetes field of that environment:
+
+::
+
+    kubernetes:
+        podSecurityPolicy:
+            enabled: true
+
+The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
+The Pod Security Policy can be found within the tarmak directory at
+``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``
