@@ -1,34 +1,54 @@
+# Etcd, Master, Worker
+{{ if eq .Module "kubernetes" }}
+
 {{range .Roles}}
 {{ if or (eq .Name "etcd") ( or (eq .Name "worker") (eq .Name "master") )  }}
-
 ## TODO: Role definitions for {{.TFName}}
-
 # Variables for {{.TFName}}
-{{template "role_variables.tf.template" .}}
-
+{{ template "role_variables.tf.template" .}}
 # ELB for {{.TFName}}
 {{template "role_elb.tf.template" .}}
-
 {{ end }}
-{{end}}
+{{ end }}
 
 # Security Groups for {{.TFName}}
 {{template "role_security_group.tf.template" .}}
 
 {{range .InstancePools}}
-
 {{ if or (eq .Name "etcd") ( or (eq .Name "worker") (eq .Name "master") )  }}
-
 ## {{.TFName}}
 # Variables for {{.TFName}}
 {{template "instance_pool_variables.tf.template" .}}
-
 # Instance for {{.TFName}}
 {{template "instance_pool_instance.tf.template" .}}
-
 # IAM role for {{.TFName}}
 {{template "instance_pool_iam.tf.template" .}}
+{{ end }}
+{{ end }}
 
 {{ end }}
 
-{{end}}
+
+# Jenkins
+{{ if eq .Module "jenkins" }}
+
+{{range .Roles}}
+{{ if eq .Name "jenkins" }}
+{{template "role_elb.tf.template" .}}
+{{template "role_variables.tf.template" .}}
+{{ end }}
+{{ end }}
+
+{{range .InstancePools}}
+{{ if eq .Name "jenkins" }}
+## {{.TFName}}
+# Variables for {{.TFName}}
+{{template "instance_pool_variables.tf.template" .}}
+# Instance for {{.TFName}}
+{{template "instance_pool_instance.tf.template" .}}
+# IAM role for {{.TFName}}
+{{template "instance_pool_iam.tf.template" .}}
+{{ end }}
+{{ end }}
+
+{{ end }}
