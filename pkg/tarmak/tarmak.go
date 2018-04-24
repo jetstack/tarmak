@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
@@ -75,6 +76,12 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t.configDirectory, err = homedir.Expand(flags.ConfigDirectory)
 	if err != nil {
 		t.log.Fatalf("unable to expand config directory ('%s'): %s", flags.ConfigDirectory, err)
+	}
+
+	// expand relative config path
+	t.configDirectory, err = filepath.Abs(flags.ConfigDirectory)
+	if err != nil {
+		t.log.Fatalf("unable to expand relative config directory ('%s'): %s", flags.ConfigDirectory, err)
 	}
 
 	t.log.Level = logrus.DebugLevel
