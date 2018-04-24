@@ -7,5 +7,6 @@ node {
     }
     stage('archive') {
         archiveArtifacts 'tarmak_linux_amd64'
+        archiveArtifacts 'tarmak_darwin_amd64'
     }
 }
