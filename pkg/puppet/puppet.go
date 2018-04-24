@@ -2,11 +2,13 @@
 package puppet
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/docker/docker/pkg/archive"
@@ -81,6 +83,44 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	if conf.Version != "" {
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
 	}
+
+	// forward oidc settings
+	if conf.APIServer != nil && conf.APIServer.OIDC != nil {
+		oidc := conf.APIServer.OIDC
+		t := reflect.TypeOf(oidc).Elem()
+		v := reflect.ValueOf(oidc).Elem()
+		for i := 0; i < t.NumField(); i++ {
+			tagValue := t.Field(i).Tag.Get("hiera")
+
+			// skip fields without hiera tag
+			if tagValue == "" {
+				continue
+			}
+
+			val := v.Field(i)
+			switch val.Kind() {
+			case reflect.String:
+				// skip empty string
+				if val.String() == "" {
+					continue
+				}
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`%s: "%s"`, tagValue, val.String()))
+			case reflect.Slice:
+				// skip empty slice
+				if val.Len() == 0 {
+					continue
+				}
+
+				data, err := json.Marshal(val.Interface())
+				if err != nil {
+					panic(err)
+				}
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf("%s: %s", tagValue, string(data)))
+			default:
+				panic(fmt.Sprintf("unknown type: %v", val.Kind()))
+			}
+		}
+	}
 	return
 }
 
@@ -132,10 +172,18 @@ func kubernetesInstancePoolConfig(conf *clusterv1alpha1.InstancePoolKubernetes, 
 	return
 }
 
-func contentClusterConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
+func contentClusterConfig(cluster interfaces.Cluster) (lines []string) {
 
 	hieraData := &hieraData{}
-	kubernetesClusterConfig(conf.Kubernetes, hieraData)
+	if publicAPIHostname := cluster.PublicAPIHostname(); publicAPIHostname != "" {
+		sans := []string{publicAPIHostname}
+		sansJSON, err := json.Marshal(&sans)
+		if err != nil {
+			panic(err)
+		}
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf("tarmak::master::apiserver_additional_san_domains: %s", string(sansJSON)))
+	}
+	kubernetesClusterConfig(cluster.Config().Kubernetes, hieraData)
 
 	classes, variables := serialiseHieraData(hieraData)
 
@@ -206,7 +254,7 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 	// write cluster config
 	err := p.writeLines(
 		filepath.Join(hieraPath, "tarmak.yaml"),
-		contentClusterConfig(cluster.Config()),
+		contentClusterConfig(cluster),
 	)
 	if err != nil {
 		return fmt.Errorf("error writing global hiera config: %s", err)

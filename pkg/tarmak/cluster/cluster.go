@@ -60,6 +60,15 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 	defineVaultRoles(cluster.roles)
 	defineKubernetesRoles(cluster.roles)
 
+	// populate role information if the API server should be public
+	if k := cluster.Config().Kubernetes; k != nil {
+		if apiServer := k.APIServer; apiServer != nil && apiServer.Public == true {
+			if master := cluster.Role("master"); master != nil {
+				master.AWS.ELBAPIPublic = true
+			}
+		}
+	}
+
 	// setup instance pools
 	var result error
 	for pos, _ := range cluster.conf.InstancePools {
@@ -455,4 +464,18 @@ func (c *Cluster) GetState() string {
 // get the terrform output from this cluster
 func (c *Cluster) TerraformOutput() (map[string]interface{}, error) {
 	return c.Environment().Tarmak().Terraform().Output(c)
+}
+
+// get API server public hostname
+func (c *Cluster) PublicAPIHostname() string {
+	if c.conf.Kubernetes == nil || c.conf.Kubernetes.APIServer == nil || c.conf.Kubernetes.APIServer.Public == false {
+		return ""
+	}
+
+	return fmt.Sprintf(
+		"api.%s-%s.%s",
+		c.Environment().Name(),
+		c.Name(),
+		c.Environment().Provider().PublicZone(),
+	)
 }

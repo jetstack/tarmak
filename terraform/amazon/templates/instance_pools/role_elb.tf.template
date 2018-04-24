@@ -45,6 +45,53 @@ resource "aws_route53_record" "{{.TFName}}_api" {
   }
 }
 
+{{ if .AWS.ELBAPIPublic -}}
+resource "aws_elb" "{{.TFName}}_public" {
+  name         = "${format("%.19s-api-pub", data.template_file.stack_name.rendered)}"
+  subnets      = ["${var.public_subnet_ids}"]
+  idle_timeout = 3600
+
+  security_groups = [
+    "${aws_security_group.{{.TFName}}_elb.id}",
+    "${aws_security_group.{{.TFName}}_elb_public.id}",
+  ]
+
+  listener {
+    instance_port     = 6443
+    instance_protocol = "tcp"
+    lb_port           = 443
+    lb_protocol       = "tcp"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "TCP:6443"
+    interval            = 30
+  }
+
+  tags {
+    Name        = "${format("%s-api-pub", data.template_file.stack_name.rendered)}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+  }
+}
+
+resource "aws_route53_record" "{{.TFName}}_api_public" {
+  zone_id = "${var.public_zone_id}"
+  name    = "api.${data.template_file.stack_name.rendered}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.{{.TFName}}_public.dns_name}"
+    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    evaluate_target_health = true
+  }
+}
+{{ end -}}
+
 {{ end -}}
 {{ if .AWS.ELBIngress -}}
 output "ingress_wildcard_fqdn" {
