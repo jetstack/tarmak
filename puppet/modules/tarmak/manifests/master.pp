@@ -1,6 +1,8 @@
 class tarmak::master(
   $disable_kubelet = true,
   $disable_proxy = true,
+  Array[String] $apiserver_additional_san_domains = [],
+  Array[String] $apiserver_additional_san_ips = [],
 ){
   include ::tarmak
   include ::vault_client
@@ -12,12 +14,12 @@ class tarmak::master(
     'kubernetes.default.svc',
     'kubernetes.default.svc.cluster.local',
     'localhost'
-  ])
+  ] + $apiserver_additional_san_domains)
   $apiserver_ip_sans = unique([
     $::tarmak::ipaddress,
     '10.254.0.1',
     '127.0.0.1'
-  ])
+  ] + $apiserver_additional_san_ips)
 
   Class['vault_client'] -> Class['tarmak::master']
 

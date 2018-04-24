@@ -172,10 +172,18 @@ func kubernetesInstancePoolConfig(conf *clusterv1alpha1.InstancePoolKubernetes, 
 	return
 }
 
-func contentClusterConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
+func contentClusterConfig(cluster interfaces.Cluster) (lines []string) {
 
 	hieraData := &hieraData{}
-	kubernetesClusterConfig(conf.Kubernetes, hieraData)
+	if publicAPIHostname := cluster.PublicAPIHostname(); publicAPIHostname != "" {
+		sans := []string{publicAPIHostname}
+		sansJSON, err := json.Marshal(&sans)
+		if err != nil {
+			panic(err)
+		}
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf("tarmak::master::apiserver_additional_san_domains: %s", string(sansJSON)))
+	}
+	kubernetesClusterConfig(cluster.Config().Kubernetes, hieraData)
 
 	classes, variables := serialiseHieraData(hieraData)
 
@@ -246,7 +254,7 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 	// write cluster config
 	err := p.writeLines(
 		filepath.Join(hieraPath, "tarmak.yaml"),
-		contentClusterConfig(cluster.Config()),
+		contentClusterConfig(cluster),
 	)
 	if err != nil {
 		return fmt.Errorf("error writing global hiera config: %s", err)

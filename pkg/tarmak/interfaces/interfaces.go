@@ -58,6 +58,9 @@ type Cluster interface {
 
 	// get the terrform output for this cluster
 	TerraformOutput() (map[string]interface{}, error)
+
+	// return public api hostname
+	PublicAPIHostname() string
 }
 
 type Environment interface {

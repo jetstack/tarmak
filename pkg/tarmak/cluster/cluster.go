@@ -465,3 +465,17 @@ func (c *Cluster) GetState() string {
 func (c *Cluster) TerraformOutput() (map[string]interface{}, error) {
 	return c.Environment().Tarmak().Terraform().Output(c)
 }
+
+// get API server public hostname
+func (c *Cluster) PublicAPIHostname() string {
+	if c.conf.Kubernetes == nil || c.conf.Kubernetes.APIServer == nil || c.conf.Kubernetes.APIServer.Public == false {
+		return ""
+	}
+
+	return fmt.Sprintf(
+		"api.%s-%s.%s",
+		c.Environment().Name(),
+		c.Name(),
+		c.Environment().Provider().PublicZone(),
+	)
+}
