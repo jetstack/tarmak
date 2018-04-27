@@ -32,16 +32,15 @@ func New(tarmak interfaces.Tarmak) *SSH {
 	return s
 }
 
-func (s *SSH) WriteConfig() error {
-	ctx := s.tarmak.Cluster()
+func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 
-	hosts, err := ctx.Environment().Provider().ListHosts()
+	hosts, err := c.ListHosts()
 	if err != nil {
 		return err
 	}
 
 	var sshConfig bytes.Buffer
-	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", ctx.ClusterName()))
+	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
 
 	for _, host := range hosts {
 		_, err = sshConfig.WriteString(host.SSHConfig())
@@ -50,12 +49,12 @@ func (s *SSH) WriteConfig() error {
 		}
 	}
 
-	err = utils.EnsureDirectory(filepath.Dir(ctx.SSHConfigPath()), 0700)
+	err = utils.EnsureDirectory(filepath.Dir(c.SSHConfigPath()), 0700)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(ctx.SSHConfigPath(), sshConfig.Bytes(), 0600)
+	err = ioutil.WriteFile(c.SSHConfigPath(), sshConfig.Bytes(), 0600)
 	if err != nil {
 		return err
 	}
