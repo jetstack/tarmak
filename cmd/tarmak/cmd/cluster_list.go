@@ -27,7 +27,7 @@ var clusterListCmd = &cobra.Command{
 				}
 
 				current := "false"
-				if t.Cluster().Name() == cluster.Name() && t.Cluster().Environment().Name() == t.Cluster().Environment().Name() {
+				if t.Cluster().Name() == cluster.Name() && t.Cluster().Environment().Name() == cluster.Environment().Name() {
 					current = "true"
 				}
 
