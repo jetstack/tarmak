@@ -96,7 +96,7 @@ func (h *host) SSHConfig() string {
 	return config
 }
 
-func (a *Amazon) ListHosts() ([]interfaces.Host, error) {
+func (a *Amazon) ListHosts(c interfaces.Cluster) ([]interfaces.Host, error) {
 	filters := []*ec2.Filter{
 		&ec2.Filter{
 			Name:   aws.String("instance-state-name"),
@@ -104,7 +104,7 @@ func (a *Amazon) ListHosts() ([]interfaces.Host, error) {
 		},
 		&ec2.Filter{
 			Name:   aws.String("tag:Environment"),
-			Values: []*string{aws.String(a.tarmak.Cluster().Environment().Name())},
+			Values: []*string{aws.String(c.Environment().Name())},
 		},
 	}
 	svc, err := a.EC2()
@@ -120,6 +120,7 @@ func (a *Amazon) ListHosts() ([]interfaces.Host, error) {
 	hosts := []*host{}
 
 	for _, reservation := range instances.Reservations {
+	instancesLoop:
 		for _, instance := range reservation.Instances {
 			if instance.PrivateIpAddress == nil || instance.InstanceId == nil {
 				continue
@@ -141,8 +142,22 @@ func (a *Amazon) ListHosts() ([]interfaces.Host, error) {
 				if *tag.Key == "tarmak_role" {
 					host.roles = strings.Split(*tag.Value, ",")
 				}
+
+				// TODO cluster name needs to be tagged on instances using a tarmak_cluster tag
+				if *tag.Key == "Name" {
+					// skip if we need to be either my cluster or its hub
+					if val := *tag.Value; !strings.HasPrefix(val, c.ClusterName()) && strings.HasPrefix(val, c.Environment().HubName()) {
+						continue instancesLoop
+					}
+				}
 			}
 
+			// skip non-tarmak instances
+			if len(host.roles) == 0 {
+				continue instancesLoop
+			}
+
+			// make sure
 			hosts = append(hosts, host)
 		}
 	}

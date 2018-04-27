@@ -17,7 +17,7 @@ func (e *Environment) VerifyBastionAvailable() error {
 
 	ssh := e.Tarmak().SSH()
 
-	if err := ssh.WriteConfig(); err != nil {
+	if err := ssh.WriteConfig(e.Hub()); err != nil {
 		return err
 	}
 
