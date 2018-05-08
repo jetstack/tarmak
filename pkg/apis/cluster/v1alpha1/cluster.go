@@ -104,7 +104,7 @@ type ClusterKubernetesAPIServerOIDC struct {
 	// user groups. The claim value is expected to be a string or array of
 	// strings. This flag is experimental, please see the authentication
 	// documentation for further details.
-	GroupsClaim string `json:"groupsClaims,omitempty" hiera:"kubernetes::apiserver::oidc_groups_claim"`
+	GroupsClaim string `json:"groupsClaim,omitempty" hiera:"kubernetes::apiserver::oidc_groups_claim"`
 
 	// If provided, all groups will be prefixed with this value to prevent
 	// conflicts with other authentication strategies.
