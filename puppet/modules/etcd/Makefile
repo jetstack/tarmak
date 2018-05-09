@@ -9,5 +9,8 @@ bundle_install:
 acceptance: bundle_install
 	bundle exec rake beaker:default
 
-acceptance_three_node: bundle_install
+# provide backwards compatiblity
+acceptance_three_node: acceptance-three-node
+
+acceptance-three-node: bundle_install
 	bundle exec rake beaker:3n-cluster
