@@ -154,6 +154,9 @@ spec:
             - mountPath: /var/run/calico
               name: var-run-calico
               readOnly: false
+            - mountPath: /var/lib/calico
+              name: var-lib-calico
+              readOnly: false
 <% if @etcd_proto == 'https' -%>
             - mountPath: <%= @etcd_cert_path %>
               name: etcd-certs
