@@ -43,7 +43,8 @@ describe 'kubernetes_addons::nginx_ingress' do
       end
 
       it 'deploy healthy app', :minikube => true do
-        @minikube_cleanup = false
+        skip "minikube unstable"
+        @minikube_cleanup = true
         expect(
           minikube_apply(default_backend_manifests)
         ).to eq(0)
