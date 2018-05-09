@@ -1,6 +1,5 @@
 fixtures:
   symlinks:
-    vault_client: "#{source_dir}"
-    archive: "#{source_dir}/../archive"
+    aws_ebs: "#{source_dir}"
     concat: "#{source_dir}/../concat"
     stdlib: "#{source_dir}/../stdlib"

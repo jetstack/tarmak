@@ -1,6 +1,6 @@
 fixtures:
   symlinks:
-    kubernetes: "#{source_dir}"
+    calico: "#{source_dir}"
     stdlib: "#{source_dir}/../stdlib"
     concat: "#{source_dir}/../concat"
     kubernetes: "#{source_dir}/../kubernetes"
