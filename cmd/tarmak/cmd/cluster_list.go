@@ -36,7 +36,7 @@ var clusterListCmd = &cobra.Command{
 					"environment": cluster.Environment().Name(),
 					"version":     kubernetesVersion,
 					"type":        cluster.Type(),
-					"zone":        cluster.Variables()["public_zone"].(string),
+					"zone":        env.Provider().PublicZone(),
 					"current":     current,
 				})
 			}
