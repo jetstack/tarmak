@@ -373,7 +373,7 @@ runcmd:
 - chown vault:vault /etc/vault/vault.hcl
 - hostnamectl set-hostname "${fqdn}"
 - yum -y install epel-release
-- yum -y install unzip jq curl gpg awscli
+- yum -y install unzip jq curl gpg
 - /usr/local/bin/download-vault-consul.sh
 - /usr/local/bin/download-vault-unsealer.sh
 - /usr/local/bin/download-consul-backinator.sh

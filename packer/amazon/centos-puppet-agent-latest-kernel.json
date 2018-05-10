@@ -13,21 +13,21 @@
       "secret_key": "{{user `aws_secret_key`}}",
       "region": "{{user `region`}}",
       "source_ami_filter": {
-          "filters": {
-              "owner-alias": "aws-marketplace",
-              "product-code": "aw0evgkw8e5c1q413zgy5pjce",
-              "virtualization-type": "hvm"
-          },
-          "most_recent": true
+        "filters": {
+          "owner-alias": "aws-marketplace",
+          "product-code": "aw0evgkw8e5c1q413zgy5pjce",
+          "virtualization-type": "hvm"
+        },
+        "most_recent": true
       },
       "instance_type": "c4.xlarge",
       "ssh_username": "centos",
       "ssh_pty": "true",
       "ami_name": "Tarmak CentOS 7 x86_64 with puppet-agent and latest upstream kernel{{isotime \"2006-01-02_030405\"}}",
       "tags": {
-          "Name": "tarmak_{{user `tarmak_environment`}}_{{user `tarmak_base_image_name`}}",
-          "tarmak_environment": "{{user `tarmak_environment`}}",
-          "tarmak_base_image_name": "{{user `tarmak_base_image_name`}}"
+        "Name": "tarmak_{{user `tarmak_environment`}}_{{user `tarmak_base_image_name`}}",
+        "tarmak_environment": "{{user `tarmak_environment`}}",
+        "tarmak_base_image_name": "{{user `tarmak_base_image_name`}}"
       },
       "associate_public_ip_address": true
     }
@@ -42,7 +42,7 @@
         "yum update -y",
         "yum install -y epel-release",
         "yum install -y git puppet-agent vim tmux socat python-pip at jq unzip",
-        "pip install awscli",
+        "pip install awscli==1.15.17 --ignore-installed",
         "rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org",
         "rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm",
         "yum --enablerepo=elrepo-kernel install -y kernel-ml",
