@@ -107,8 +107,12 @@ class kubernetes::kubelet(
     $_ca_file = $ca_file
   }
 
+  if versioncmp($facts["operatingsystemrelease"], '7.5') >= 0 {
+    $seltype = 'container_file_t'
+  } else {
+    $seltype = 'svirt_sandbox_file_t'
+  }
 
-  $seltype = 'svirt_sandbox_file_t'
   file{$kubelet_dir:
     ensure  => 'directory',
     mode    => '0750',
