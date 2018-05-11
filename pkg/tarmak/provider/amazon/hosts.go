@@ -143,10 +143,9 @@ func (a *Amazon) ListHosts(c interfaces.Cluster) ([]interfaces.Host, error) {
 					host.roles = strings.Split(*tag.Value, ",")
 				}
 
-				// TODO cluster name needs to be tagged on instances using a tarmak_cluster tag
+				// skip if instance is not from the hub or current cluster
 				if *tag.Key == "Name" {
-					// skip if we need to be either my cluster or its hub
-					if val := *tag.Value; !strings.HasPrefix(val, c.ClusterName()) && strings.HasPrefix(val, c.Environment().HubName()) {
+					if val := *tag.Value; !strings.HasPrefix(val, c.ClusterName()) && !strings.HasPrefix(val, c.Environment().HubName()) {
 						continue instancesLoop
 					}
 				}
