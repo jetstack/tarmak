@@ -62,17 +62,35 @@ describe 'kubernetes::kubelet' do
 
     it 'should have seltype set on parent dir' do
       should contain_file(parent_dir).with_ensure('directory')
-      should contain_file(parent_dir).with_seltype('svirt_sandbox_file_t')
+      should contain_file(parent_dir).with_seltype('container_file_t')
+    end
+
+    context 'earlier OS release' do
+      let :facts do
+        {
+          'ec2_metadata' => {
+            'placement' => {
+              'availability-zone' => 'my-zone-1z',
+            },
+          },
+          operatingsystemrelease: "7.4"
+        }
+      end
+
+      it 'should have the older seltype set on parent dir' do
+        should contain_file(parent_dir).with_seltype('svirt_sandbox_file_t')
+      end
     end
   end
 
 
   context 'network_plugin enabled' do
     let(:params) { {'network_plugin' => 'kubenet' } }
-      it do
-        should contain_file(service_file).with_content(/--network-plugin=kubenet/)
-        should contain_file(service_file).with_content(/--network-plugin-mtu=1460/)
-      end
+
+    it do
+      should contain_file(service_file).with_content(/--network-plugin=kubenet/)
+      should contain_file(service_file).with_content(/--network-plugin-mtu=1460/)
+    end
   end
 
   context 'with role master' do
@@ -209,7 +227,7 @@ describe 'kubernetes::kubelet' do
           "cgroup_#{cgroup_type}_reserved_cpu"    => '100m',
           "cgroup_#{cgroup_type}_reserved_memory" => '128Mi',
         }}
-        it do 
+        it do
           should contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=cpu=100m,memory=128Mi})
         end
       end

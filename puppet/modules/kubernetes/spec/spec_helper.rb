@@ -9,6 +9,11 @@ RSpec.configure do |config|
       :system => {
         :total_bytes => 4_000_000_000,
       }
-    }
+    },
+    :operatingsystemrelease => "7.5"
   }
+
+  config.before(:each) do
+    Puppet::Util::Log.newdestination(:console) if ENV.fetch("PUPPET_DEBUG", false)
+  end
 end
