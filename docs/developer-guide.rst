@@ -110,3 +110,26 @@ release of Tarmak:
 After release job has run:
 
 * Make sure we update the generated `releases <https://github.com/jetstack/tarmak/releases>`_ page
+
+Setting up a Puppet Development Environment
+-----------------------------------------
+
+In order to develop the Puppet modules for configuring Tarmak instances we need to set up our environment properly. The following instructions will walk through the process on a fresh Ubuntu 16.04 LTS instance.
+
+Install Ruby dev tools:
+- sudo apt-get install build-essential patch ruby-dev zlib1g-dev liblzma-dev (http://www.nokogiri.org/tutorials/installing_nokogiri.html)
+- sudo gem install bundler
+To test your envrionment, verify a module:
+- cd puppet/modules/kubernetes
+- make verify
+Install the latest version of vagrant:
+- wget https://releases.hashicorp.com/vagrant/2.1.1/vagrant_2.1.1_x86_64.deb
+- sudo dpkg -i vagrant_2.1.1_x86_64.deb
+Install vagrant-libvirt:
+- https://github.com/vagrant-libvirt/vagrant-libvirt
+You should now be able to run the acceptance tests
+- make acceptance
+
+To keep any VMs around for debugging purposes, use the following commands instead of the acceptance target:
+- BEAKER_provision=yes BEAKER_destroy=no bundle exec rake beaker
+- bundle exec rake beaker:ssh
