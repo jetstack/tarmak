@@ -47,6 +47,7 @@ build and deploy Kubernetes in production at scale.
    :maxdepth: 1
 
    known-issues
+   troubleshooting
    existing-vpc
    vault-setup-config
    vault-helper-guide
