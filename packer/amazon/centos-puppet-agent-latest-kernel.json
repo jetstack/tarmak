@@ -46,6 +46,8 @@
         "rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org",
         "rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm",
         "yum --enablerepo=elrepo-kernel install -y kernel-ml",
+        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=auto console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/sysconfig/grub",
+        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=auto console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/default/grub",
         "grub2-set-default 0",
         "grub2-mkconfig -o /boot/grub2/grub.cfg"
       ]
