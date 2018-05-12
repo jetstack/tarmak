@@ -107,8 +107,8 @@ class kubernetes::kubelet(
     $_ca_file = $ca_file
   }
 
-
-  $seltype = 'svirt_sandbox_file_t'
+  $seltype = 'container_file_t'
+  $seltype_old = 'svirt_sandbox_file_t'
   file{$kubelet_dir:
     ensure  => 'directory',
     mode    => '0750',
@@ -119,7 +119,8 @@ class kubernetes::kubelet(
 
   if dig44($facts, ['os', 'selinux', 'enabled'], false) {
     exec { 'semanage_fcontext_kubelet_dir':
-      command => "semanage fcontext -a -t ${seltype} \"${kubelet_dir}(/.*)?\"",
+      # fall back to old seltype, if command fails
+      command => "semanage fcontext -a -t ${seltype} \"${kubelet_dir}(/.*)?\" || semanage fcontext -a -t ${seltype_old} \"${kubelet_dir}(/.*)?\"",
       unless  => "semanage fcontext -l | grep \"${kubelet_dir}(/.*).*:${seltype}\"",
       require => File[$kubelet_dir],
       path    => $::kubernetes::path

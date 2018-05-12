@@ -62,7 +62,7 @@ describe 'kubernetes::kubelet' do
 
     it 'should have seltype set on parent dir' do
       should contain_file(parent_dir).with_ensure('directory')
-      should contain_file(parent_dir).with_seltype('svirt_sandbox_file_t')
+      should contain_file(parent_dir).with_seltype('container_file_t')
     end
   end
 
