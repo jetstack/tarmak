@@ -7,6 +7,7 @@ After=network.target
 [Service]
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/proxy \
   --v=<%= scope['kubernetes::log_level'] %> \
+  --cluster-cidr=<%= scope['kubernetes::pod_network'] %> \
   --resource-container=podruntime.slice \
 <% if @kubeconfig_path -%>
   --kubeconfig=<%= @kubeconfig_path %> \
