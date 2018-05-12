@@ -5,6 +5,8 @@ After=network.target
 <%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
+ExecStartPre=/sbin/sysctl -w net.bridge.bridge-nf-call-iptables=1
+ExecStartPre=/sbin/sysctl -w net.bridge.bridge-nf-call-ip6tables=1
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/proxy \
   --v=<%= scope['kubernetes::log_level'] %> \
   --resource-container=podruntime.slice \
