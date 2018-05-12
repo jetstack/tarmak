@@ -17,6 +17,12 @@ class kubernetes::proxy(
   $_systemd_requires = $systemd_after
   $_systemd_before = $systemd_before
 
+  # ensure ipvsadm and contrack installed (for kube-proxy)
+  $conntrack_package_name = 'conntrack'
+  ensure_resource('package', [$conntrack_package_name,'ipvsadm'],{
+    ensure => 'present',
+  })
+
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-proxy"
   file{$kubeconfig_path:
     ensure  => file,
@@ -42,7 +48,8 @@ class kubernetes::proxy(
     refreshonly => true,
   }
   -> service{ "${service_name}.service":
-    ensure => running,
-    enable => true,
+    ensure  => running,
+    enable  => true,
+    require => Package[$conntrack_package_name],
   }
 }
