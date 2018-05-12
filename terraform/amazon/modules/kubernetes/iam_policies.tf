@@ -12,10 +12,10 @@ resource "aws_iam_policy" "tarmak_bucket_read" {
   policy = "${data.template_file.iam_tarmak_bucket_read.rendered}"
 }
 
-resource "aws_iam_policy" "ec2_full" {
-  name   = "kubernetes.${data.template_file.stack_name.rendered}.ec2_full"
+resource "aws_iam_policy" "ec2_controller" {
+  name   = "kubernetes.${data.template_file.stack_name.rendered}.ec2_controller"
   path   = "/"
-  policy = "${file("${path.module}/templates/iam_ec2_full.json")}"
+  policy = "${file("${path.module}/templates/iam_ec2_controller.json")}"
 }
 
 resource "aws_iam_policy" "ec2_read" {
@@ -36,8 +36,14 @@ resource "aws_iam_policy" "ecr_read" {
   policy = "${file("${path.module}/templates/iam_ecr_read.json")}"
 }
 
-resource "aws_iam_policy" "elb_full" {
-  name   = "kubernetes.${data.template_file.stack_name.rendered}.elb_full"
+resource "aws_iam_policy" "elb_controller" {
+  name   = "kubernetes.${data.template_file.stack_name.rendered}.elb_controller"
   path   = "/"
-  policy = "${file("${path.module}/templates/iam_elb_full.json")}"
+  policy = "${file("${path.module}/templates/iam_elb_controller.json")}"
+}
+
+resource "aws_iam_policy" "cluster_autoscaler" {
+  name   = "kubernetes.${data.template_file.stack_name.rendered}.cluster_autoscaler"
+  path   = "/"
+  policy = "${file("${path.module}/templates/iam_cluster_autoscaler.json")}"
 }
