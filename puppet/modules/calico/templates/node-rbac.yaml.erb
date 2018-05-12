@@ -50,16 +50,24 @@ metadata:
   name: calico-policy-controller
   namespace: <%= @namespace %>
 rules:
-- apiGroups:
-  - ""
-  - extensions
-  resources:
-    - pods
-    - namespaces
-    - networkpolicies
-  verbs:
-    - watch
-    - list
+  - apiGroups:
+    - ""
+    - extensions
+    resources:
+      - pods
+      - namespaces
+      - networkpolicies
+      - nodes
+    verbs:
+      - watch
+      - list
+  - apiGroups:
+    - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - watch
+      - list
 ---
 <%- if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1

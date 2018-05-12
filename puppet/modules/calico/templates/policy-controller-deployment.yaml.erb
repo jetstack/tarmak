@@ -54,6 +54,9 @@ spec:
                 configMapKeyRef:
                   name: calico-config
                   key: etcd_endpoints
+            # Choose which controllers to run.
+            - name: ENABLED_CONTROLLERS
+              value: policy,profile,workloadendpoint,node
 <% if @tls -%>
             # Location of the CA certificate for etcd.
             - name: ETCD_CA_CERT_FILE

@@ -43,7 +43,7 @@ describe 'calico::config' do
 
     it 'has valid cni_network_config json' do
       cni = JSON.load(cni_network_config)
-      expect(cni['mtu']).to eq(1480)
+      expect(cni['plugins'].first['mtu']).to eq(1480)
     end
   end
 
@@ -57,7 +57,7 @@ describe 'calico::config' do
 
     it 'has valid cni_network_config json' do
       cni = JSON.load(cni_network_config)
-      expect(cni['mtu']).to eq(8981)
+      expect(cni['plugins'].first['mtu']).to eq(8981)
     end
   end
 
