@@ -1,6 +1,6 @@
 class prometheus::server (
   String $image = 'prom/prometheus',
-  String $version = '2.0.0',
+  String $version = '2.2.1',
   String $reloader_image = 'jimmidyson/configmap-reload',
   String $reloader_version = '0.1',
   String $retention = '720h',  # 30 days
