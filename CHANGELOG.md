@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Consul      |                    | `1.0.6`  |
 | Vault       |                    | `0.9.5`  |
 | Kubernetes  | `>= 1.6 && < 1.10` | `1.8.8`  |
-| Calico      |                    | `2.6.6`  |
+| Calico      |                    | `3.1.1`  |
 | Vault Helper|                    | `0.9.7`  |
 | Etcd        |                    | `3.2.17` |
 
