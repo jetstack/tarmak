@@ -27,7 +27,7 @@ class aws_ebs(
     mode =>  '0755',
   })
 
-  ensure_resource('package', ['curl', 'gawk', 'util-linux', 'awscli', 'xfsprogs'],{
+  ensure_resource('package', ['curl', 'gawk', 'util-linux', 'xfsprogs'],{
     ensure => present
   })
 
