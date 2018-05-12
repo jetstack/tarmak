@@ -20,8 +20,9 @@ type RoleAWS struct {
 	ELBAPIPublic bool // ELB public or internal
 
 	// IAM Permissions
-	IAMELBFull                     bool // Full access to ELB loadbalancer config
-	IAMEC2Full                     bool // Full access to all EC2 resources
+	IAMELBController               bool // Controller access to ELB loadbalancers
+	IAMEC2Controller               bool // Controller access to all EC2 resources
+	IAMClusterAutoscaler           bool // IAM for cluster autoscaler
 	IAMEC2Read                     bool // Read access to all EC2 resources
 	IAMEC2ModifyInstanceAttributes bool // Allow Instance to modify all instances parameters, TODO: This should only be allowed on the masters
 }

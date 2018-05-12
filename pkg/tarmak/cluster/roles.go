@@ -35,9 +35,10 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 	masterRole := &role.Role{
 		Stateful: false,
 		AWS: &role.RoleAWS{
-			ELBAPI:     true,
-			IAMEC2Full: true,
-			IAMELBFull: true,
+			ELBAPI:               true,
+			IAMEC2Controller:     true,
+			IAMELBController:     true,
+			IAMClusterAutoscaler: true,
 		},
 	}
 	masterRole.WithName("master").WithPrefix("kubernetes")
@@ -64,9 +65,10 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 	masterEtcdRole := &role.Role{
 		Stateful: false,
 		AWS: &role.RoleAWS{
-			ELBAPI:     true,
-			IAMEC2Full: true,
-			IAMELBFull: true,
+			ELBAPI:               true,
+			IAMEC2Controller:     true,
+			IAMELBController:     true,
+			IAMClusterAutoscaler: true,
 		},
 	}
 	masterEtcdRole.WithName("etcd-master").WithPrefix("kubernetes")
