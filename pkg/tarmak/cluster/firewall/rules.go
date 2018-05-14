@@ -107,7 +107,7 @@ func newCalicoMetricsService() Service {
 func newIPIPService() Service {
 	return Service{
 		Name:     "ipip",
-		Protocol: "94",
+		Protocol: "4",
 		Ports: []Port{
 			Port{Single: &zeroPort},
 		},
