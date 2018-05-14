@@ -194,7 +194,7 @@ func kubernetesInstancePoolConfig(conf *clusterv1alpha1.InstancePoolKubernetes, 
 	return
 }
 
-func contentClusterConfig(cluster interfaces.Cluster) (lines []string) {
+func contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
 
 	hieraData := &hieraData{}
 	if publicAPIHostname := cluster.PublicAPIHostname(); publicAPIHostname != "" {
@@ -207,9 +207,22 @@ func contentClusterConfig(cluster interfaces.Cluster) (lines []string) {
 	}
 	kubernetesClusterConfig(cluster.Config().Kubernetes, hieraData)
 
+	hieraData.classes = append(hieraData.classes, `fluent_bit`)
+	if cluster.Config().LoggingSinks != nil && len(cluster.Config().LoggingSinks) > 0 {
+		fluentBitConfig := []string{}
+		for _, loggingSink := range cluster.Config().LoggingSinks {
+			jsonLoggingSink, err := json.Marshal(loggingSink)
+			if err != nil {
+				return nil, fmt.Errorf("unable to marshall logging sink: %s", err)
+			}
+			fluentBitConfig = append(fluentBitConfig, fmt.Sprintf("%s", jsonLoggingSink))
+		}
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::fluent_bit_config: %s`, fluentBitConfig))
+	}
+
 	classes, variables := serialiseHieraData(hieraData)
 
-	return append(classes, variables...)
+	return append(classes, variables...), nil
 }
 
 func contentInstancePoolConfig(clusterConf *clusterv1alpha1.Cluster, instanceConf *clusterv1alpha1.InstancePool, roleName string) (classes, variables []string) {
@@ -273,10 +286,14 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 		"hieradata",
 	)
 
+	clusterConfig, err := contentClusterConfig(cluster)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve cluster config: %s", err)
+	}
 	// write cluster config
-	err := p.writeLines(
+	err = p.writeLines(
 		filepath.Join(hieraPath, "tarmak.yaml"),
-		contentClusterConfig(cluster),
+		clusterConfig,
 	)
 	if err != nil {
 		return fmt.Errorf("error writing global hiera config: %s", err)

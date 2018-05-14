@@ -1,0 +1,18 @@
+[Unit]
+Description=AWS Elasticsearch Proxy
+Documentation=https://github.com/abutaha/aws-es-proxy
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=<%= scope['proxy_path'] %> \
+  -listen localhost:<%= scope['listen_port'] %> \
+  -endpoint <%= scope['endpoint'] %> \
+  -verbose \
+  -pretty
+
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

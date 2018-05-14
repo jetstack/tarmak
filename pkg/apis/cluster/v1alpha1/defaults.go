@@ -70,6 +70,49 @@ func SetDefaults_Cluster(obj *Cluster) {
 	if obj.Kubernetes.Dashboard == nil {
 		obj.Kubernetes.Dashboard = &ClusterKubernetesDashboard{}
 	}
+
+	// logging
+	if obj.LoggingSinks == nil {
+		obj.LoggingSinks = []*LoggingSink{}
+	}
+	for _, loggingSink := range obj.LoggingSinks {
+		if loggingSink.ElasticSearch != nil {
+			if loggingSink.ElasticSearch.Host == "" {
+				loggingSink.ElasticSearch.Host = "127.0.0.1"
+			}
+			if loggingSink.ElasticSearch.Port == 0 {
+				loggingSink.ElasticSearch.Port = 9200
+			}
+			if loggingSink.ElasticSearch.AWSESProxy != nil {
+				if loggingSink.ElasticSearch.AWSESProxy.Port == 0 {
+					loggingSink.ElasticSearch.AWSESProxy.Port = allocateAWSESProxyPort(obj.LoggingSinks)
+				}
+			}
+		}
+	}
+
+}
+
+func allocateAWSESProxyPort(loggingSinks []*LoggingSink) int {
+
+	allocatedPorts := make(map[int]struct{})
+	for _, loggingSink := range loggingSinks {
+		if loggingSink.ElasticSearch != nil {
+			if loggingSink.ElasticSearch.AWSESProxy != nil {
+				allocatedPorts[loggingSink.ElasticSearch.AWSESProxy.Port] = struct{}{}
+			}
+		}
+	}
+
+	currentPort := 9200
+	for {
+		if _, ok := allocatedPorts[currentPort]; ok {
+			currentPort++
+			continue
+		}
+		return currentPort
+	}
+
 }
 
 func SetDefaults_Volume(obj *Volume) {

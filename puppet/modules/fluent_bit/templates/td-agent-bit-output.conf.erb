@@ -1,0 +1,25 @@
+[OUTPUT]
+<% if @elasticsearch -%>
+    Name es
+    Match *
+    Index fluent-bit
+    Type flb_type
+<% if @elasticsearch["awsESProxy"] -%>
+    Host localhost
+    Port <%= @elasticsearch["awsESProxy"]["port"] %>
+<%- else -%>
+    Host <%= @elasticsearch["host"] %>
+    Port <%= @elasticsearch["port"] %>
+<% if @elasticsearch["tls"] -%>
+    tls On
+<% if @elasticsearch["tlsVerify"] -%>
+    tls.verify On
+<%- else -%>
+    tls.verify Off
+<% end -%>
+<% end -%>
+<% end -%>
+<%- else -%>
+    Name null
+    Match *
+<% end -%>

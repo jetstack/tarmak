@@ -1,0 +1,41 @@
+[SERVICE]
+    # Flush
+    # =====
+    # Set an interval of seconds before to flush records to a destination
+    Flush        5
+
+    # Daemon
+    # ======
+    # Instruct Fluent Bit to run in foreground or background mode.
+    Daemon       Off
+
+    # Log_Level
+    # =========
+    # Set the verbosity level of the service, values can be:
+    #
+    # - error
+    # - warning
+    # - info
+    # - debug
+    # - trace
+    #
+    # By default 'info' is set, that means it includes 'error' and 'warning'.
+    Log_Level    info
+
+    # Parsers_File
+    # ============
+    # Specify an optional 'Parsers' configuration file
+    Parsers_File parsers.conf
+
+[INPUT]
+    Name   kmsg
+    Tag    kernel
+
+<% if @elasticsearch -%>
+[INPUT]
+    Name            systemd
+    Tag             host.*
+    Systemd_Filter  _SYSTEMD_UNIT=docker.service
+<% end -%>
+
+@INCLUDE td-agent-bit-output*.conf

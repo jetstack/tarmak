@@ -1,0 +1,6 @@
+fixtures:
+  symlinks:
+    fluent_bit: "#{source_dir}"
+    concat: "#{source_dir}/../concat"
+    stdlib: "#{source_dir}/../stdlib"
+    aws_es_proxy: "#{source_dir}/../aws_es_proxy"
