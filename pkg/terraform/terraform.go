@@ -24,6 +24,8 @@ import (
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
 
+const debugShell = "debug-shell"
+
 type Terraform struct {
 	*tarmakDocker.App
 	log    *logrus.Entry
@@ -149,7 +151,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	}
 
 	// command
-	if command == "debugshell" {
+	if command == debugShell {
 		dir := t.codePath(cluster)
 		envVars, err := t.envVars(cluster)
 		if err != nil {
@@ -298,7 +300,7 @@ func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
 
 func (t *Terraform) Shell(cluster interfaces.Cluster) error {
 
-	if err := t.terraformWrapper(cluster, "debugshell", nil); err != nil {
+	if err := t.terraformWrapper(cluster, debugShell, nil); err != nil {
 		return err
 	}
 	return nil
