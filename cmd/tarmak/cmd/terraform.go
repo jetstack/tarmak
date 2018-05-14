@@ -4,9 +4,9 @@ package cmd
 import (
 	"os"
 
+	"github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
-	"github.com/hashicorp/go-plugin"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
