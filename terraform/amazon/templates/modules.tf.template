@@ -98,7 +98,7 @@ module "vault" {
   backups_bucket = "${module.state.backups_bucket[0]}"  
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   private_subnets = ["${module.network.private_subnets}"]
-  availability_zones = ["${module.network.availability_zones}"]
+  availability_zones = ["${var.availability_zones}"]
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
   vpc_id = "${module.network.vpc_id}" 
   bastion_instance_id = "${module.bastion.bastion_instance_id}"
