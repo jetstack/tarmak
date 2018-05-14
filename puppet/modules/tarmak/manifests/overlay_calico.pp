@@ -24,6 +24,7 @@ class tarmak::overlay_calico {
     etcd_ca_file   => "${etcd_overlay_base_path}-ca.pem",
     etcd_cert_file => "${etcd_overlay_base_path}.pem",
     etcd_key_file  => "${etcd_overlay_base_path}-key.pem",
+    pod_network    => $::tarmak::kubernetes_pod_network,
   }
 
   File[$::tarmak::etcd_home] -> File[$::tarmak::etcd_ssl_dir] -> Service['etcd-overlay-cert.service']

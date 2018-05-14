@@ -27,6 +27,7 @@ class kubernetes (
   $allow_privileged = true,
   $service_account_key_file = undef,
   $service_account_key_generate = false,
+  Optional[String] $pod_network = undef,
   Integer[-1,65535] $apiserver_insecure_port = -1,
   Integer[0,65535] $apiserver_secure_port = 6443,
   Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $authorization_mode = [],

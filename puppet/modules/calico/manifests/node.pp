@@ -8,7 +8,6 @@ class calico::node (
   String $node_version = '3.1.1',
   String $cni_image = 'quay.io/calico/cni',
   String $cni_version = '3.1.1',
-  String $ipv4_pool_cidr = '10.231.0.0/16',
   Enum['always', 'cross-subnet', 'off'] $ipv4_pool_ipip_mode = 'always',
   Integer[0,65535] $metrics_port = 9091,
 )
@@ -18,6 +17,7 @@ class calico::node (
 
   $namespace = $::calico::namespace
   $mtu = $::calico::mtu
+  $ipv4_pool_cidr = $::calico::pod_network
   $etcd_cert_path = $::calico::etcd_cert_path
   $etcd_proto = $::calico::etcd_proto
 

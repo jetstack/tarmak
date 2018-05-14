@@ -7,6 +7,7 @@ class kubernetes::controller_manager(
   $systemd_requires = [],
   $systemd_after = [],
   $systemd_before = [],
+  Boolean $allocate_node_cidrs = false,
 )  {
   require ::kubernetes
 

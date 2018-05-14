@@ -84,6 +84,19 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Version))
 	}
 
+	// forward pod CIDR settings
+	if conf.PodCIDR != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_pod_network: "%s"`, conf.PodCIDR))
+	}
+
+	// forward service IP settings
+	if conf.ServiceCIDR != "" {
+		if parts := strings.Split(conf.ServiceCIDR, "/"); len(parts) == 2 {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::service_ip_range_network: "%s"`, parts[0]))
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::service_ip_range_mask: "%s"`, parts[1]))
+		}
+	}
+
 	// forward oidc settings
 	if conf.APIServer != nil && conf.APIServer.OIDC != nil {
 		oidc := conf.APIServer.OIDC

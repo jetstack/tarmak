@@ -117,5 +117,6 @@ class tarmak (
     gid                => $kubernetes_gid,
     version            => $kubernetes_version,
     authorization_mode => $kubernetes_authorization_mode,
+    pod_network        => $kubernetes_pod_network,
   }
 }

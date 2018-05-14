@@ -15,6 +15,10 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/controller-manager \
 <% if scope['kubernetes::cloud_provider'] != '' -%>
   --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
 <% end -%>
+<% if @allocate_node_cidrs -%>
+  --cluster-cidr=<%= scope['kubernetes::pod_network'] %> \
+  --allocate-node-cidrs=true \
+<% end -%>
   --kubeconfig=<%= @kubeconfig_path %> \
 <% if scope['kubernetes::controller_manager::ca_file'] -%>
   --root-ca-file=<%= scope['kubernetes::controller_manager::ca_file'] %> \
