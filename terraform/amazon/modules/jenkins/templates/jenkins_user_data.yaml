@@ -1,0 +1,91 @@
+#cloud-config
+repo_update: true
+repo_upgrade: all
+
+preserve_hostname: true
+
+write_files:
+- path: /etc/hosts
+  permissions: '0644'
+  content: |
+    127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+    ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+    127.0.1.1   ${fqdn}
+
+- path: /etc/systemd/system/ensure-ebs-volume-formatted.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Format EBS volume if needed
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/bin/bash -c 'blkid /dev/xvdd || (wipefs -fa /dev/xvdd && mkfs.ext4 /dev/xvdd)'
+
+    [Install]
+    WantedBy=multi-user.target
+
+- path: /etc/systemd/system/var-lib-jenkins.mount
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Mount jenkins data
+    After=ensure-ebs-volume-formatted.service
+    Requires=ensure-ebs-volume-formatted.service
+
+    [Mount]
+    What=/dev/xvdd
+    Where=/var/lib/jenkins
+    Type=ext4
+
+    [Install]
+    WantedBy=multi-user.target
+
+- path: /etc/systemd/system/jenkins.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Jenkins
+    After=var-lib-jenkins.mount
+    Requires=var-lib-jenkins.mount
+    After=docker.service
+    Requires=docker.service
+
+    [Service]
+    TimeoutStartSec=0
+    ExecStartPre=-/usr/bin/docker kill jenkins
+    ExecStartPre=-/usr/bin/docker rm jenkins
+    ExecStartPre=/usr/bin/docker pull dippynark/jenkins
+    ExecStartPre=/usr/bin/mkdir -p /var/lib/jenkins
+    ExecStartPre=/usr/bin/chown -R 1000:1000 /var/lib/jenkins
+    ExecStartPre=/bin/mount --make-shared /var/lib/jenkins
+    ExecStartPre=/bin/chcon -Rt svirt_sandbox_file_t /var/lib/jenkins
+    ExecStart=/usr/bin/docker run --name jenkins --privileged \
+      -p 8080:8080 \
+      -p 50000:50000 \
+      -e JENKINS_HOME=/var/lib/jenkins \
+      -v /var/lib/jenkins:/var/lib/jenkins:shared \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      dippynark/jenkins
+    ExecStop=/usr/bin/docker stop jenkins
+    Restart=always
+    RestartSec=10
+
+    [Install]
+    WantedBy=multi-user.target
+- path: /etc/systemd/system/docker.service.d/mount-flags-shared.conf
+  permissions: '0644'
+  content: |
+    [Service]
+    MountFlags=shared
+
+runcmd:
+- hostnamectl set-hostname "${fqdn}"
+- yum -y update
+- yum -y install vim docker
+- useradd --system jenkins
+- systemctl enable format-jenkins-home.service var-jenkins_home.mount jenkins.service
+- systemctl start format-jenkins-home.service var-jenkins_home.mount jenkins.service
+
+output : { all : '| tee -a /var/log/cloud-init-output.log' }
