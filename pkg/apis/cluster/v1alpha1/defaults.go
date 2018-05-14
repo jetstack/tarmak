@@ -92,7 +92,7 @@ func SetDefaults_InstancePool(obj *InstancePool) {
 
 	// set image to default image
 	if obj.Image == "" {
-		obj.Image = "centos-puppet-agent-latest-kernel"
+		obj.Image = "centos-puppet-agent"
 	}
 
 	// set a default size for volumes
