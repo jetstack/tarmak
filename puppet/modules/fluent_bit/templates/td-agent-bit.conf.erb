@@ -28,14 +28,20 @@
     Parsers_File parsers.conf
 
 [INPUT]
-    Name   kmsg
-    Tag    kernel
+    Name    kmsg
+    Tag     platform
 
-<% if @elasticsearch -%>
 [INPUT]
-    Name            systemd
-    Tag             host.*
-    Systemd_Filter  _SYSTEMD_UNIT=docker.service
-<% end -%>
+    Name                tail
+    Path                /var/log/audit/kubernetes-audit.log
+    DB                  /var/log/flb_kubernetes-audit.db
+    Mem_Buf_Limit       5MB
+    Skip_Long_Lines     On
+    Refresh_Interval    10
+    Tag                 audit
+
+[INPUT]
+    Name systemd
+    Tag  platform.*
 
 @INCLUDE td-agent-bit-output*.conf

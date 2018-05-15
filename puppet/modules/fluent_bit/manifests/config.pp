@@ -8,6 +8,7 @@ class fluent_bit::config {
     content => template('fluent_bit/td-agent-bit.conf.erb'),
   }
 
+  $types = ['all']
   file { '/etc/td-agent-bit/td-agent-bit-output.conf':
     ensure  => file,
     mode    => '0644',

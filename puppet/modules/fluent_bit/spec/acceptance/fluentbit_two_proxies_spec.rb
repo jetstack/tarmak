@@ -13,7 +13,7 @@ fluent_bit::output{"test1":
         "port" => 9200
       },
     },
-    "type" => "all",
+    "types" => ["all"],
   },
 }
 fluent_bit::output{"test2":
@@ -27,7 +27,7 @@ fluent_bit::output{"test2":
         "port" => 9201
       },
     },
-    "type" => "all",
+    "types" => ["all"],
   },
 }
 EOS

@@ -6,6 +6,8 @@ define fluent_bit::output (
   validate_hash($config)
   $path = $::fluent_bit::path
 
+  $types = $config['types']
+
   if $config['elasticsearch'] {
 
     $elasticsearch = $config['elasticsearch']
@@ -21,23 +23,22 @@ define fluent_bit::output (
 
     }
 
-    file { "/etc/td-agent-bit/td-agent-bit-output-${name}.conf":
-      ensure  => file,
-      mode    => '0644',
-      owner   => 'root',
-      group   => 'root',
-      content => template('fluent_bit/td-agent-bit-output.conf.erb'),
-    }
-
-  } else {
-
-    file { "/etc/td-agent-bit/td-agent-bit-${name}.conf":
-      ensure  => file,
-      mode    => '0644',
-      owner   => 'root',
-      group   => 'root',
-      content => template('fluent_bit/td-agent-bit-output.conf.erb'),
-    }
-
   }
+
+  file { "/etc/td-agent-bit/td-agent-bit-output-${name}.conf":
+    ensure  => file,
+    mode    => '0644',
+    owner   => 'root',
+    group   => 'root',
+    content => template('fluent_bit/td-agent-bit-output.conf.erb'),
+  }
+
+  file { "/etc/td-agent-bit/daemonset/td-agent-bit-output-${name}.conf":
+    ensure  => file,
+    mode    => '0644',
+    owner   => 'root',
+    group   => 'root',
+    content => template('fluent_bit/td-agent-bit-output.conf.erb'),
+  }
+
 }

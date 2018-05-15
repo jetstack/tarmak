@@ -207,7 +207,7 @@ func contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
 	}
 	kubernetesClusterConfig(cluster.Config().Kubernetes, hieraData)
 
-	hieraData.classes = append(hieraData.classes, `fluent_bit`)
+	hieraData.classes = append(hieraData.classes, `tarmak::fluent_bit`)
 	if cluster.Config().LoggingSinks != nil && len(cluster.Config().LoggingSinks) > 0 {
 		fluentBitConfig := []string{}
 		for _, loggingSink := range cluster.Config().LoggingSinks {
@@ -215,9 +215,9 @@ func contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
 			if err != nil {
 				return nil, fmt.Errorf("unable to marshall logging sink: %s", err)
 			}
-			fluentBitConfig = append(fluentBitConfig, fmt.Sprintf("%s", jsonLoggingSink))
+			fluentBitConfig = append(fluentBitConfig, fmt.Sprintf(`'%s'`, jsonLoggingSink))
 		}
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::fluent_bit_config: %s`, fluentBitConfig))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::fluent_bit_configs: %s`, fluentBitConfig))
 	}
 
 	classes, variables := serialiseHieraData(hieraData)

@@ -16,14 +16,17 @@
 package v1alpha1
 
 const (
-	LoggingSinkTypePlatform    = "platform"    // kernel, systemd, platform namespaces
-	LoggingSinkTypeApplication = "application" // all other namespaces
-	LoggingSinkTypeAll         = "all"
+	LoggingSinkTypePlatform    = LoggingSinkType("platform")    // kernel, systemd, platform namespaces
+	LoggingSinkTypeApplication = LoggingSinkType("application") // all other namespaces
+	LoggingSinkTypeAudit       = LoggingSinkType("audit")       // api server audit logs
+	LoggingSinkTypeAll         = LoggingSinkType("all")
 )
+
+type LoggingSinkType string
 
 type LoggingSink struct {
 	ElasticSearch *LoggingSinkElasticSearch `json:"elasticsearch,omitempty"`
-	Type          string                    `json:"type,omitempty"`
+	Types         []LoggingSinkType         `json:"types,omitempty"`
 }
 
 type LoggingSinkElasticSearch struct {

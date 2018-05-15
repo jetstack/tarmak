@@ -34,5 +34,9 @@ class fluent_bit::install {
     }
   }
   -> Package[$::fluent_bit::package_name]
+  -> file { '/etc/td-agent-bit/daemonset':
+    ensure => directory,
+    mode   => '0755',
+  }
 
 }

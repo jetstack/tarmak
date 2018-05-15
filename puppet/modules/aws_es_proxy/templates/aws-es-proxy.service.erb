@@ -12,6 +12,7 @@ ExecStart=<%= scope['proxy_path'] %> \
   -pretty
 
 Restart=on-failure
+User=nobody
 LimitNOFILE=65536
 
 [Install]

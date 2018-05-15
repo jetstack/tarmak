@@ -89,6 +89,10 @@ func SetDefaults_Cluster(obj *Cluster) {
 				}
 			}
 		}
+
+		if len(loggingSink.Types) == 0 {
+			loggingSink.Types = []LoggingSinkType{"all"}
+		}
 	}
 
 }

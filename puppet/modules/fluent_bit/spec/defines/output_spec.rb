@@ -7,7 +7,7 @@ describe 'fluent_bit::output', :type => :define do
   }
 
   let(:output) {
-    contain_file('/etc/td-agent-bit/td-agent-bit-test.conf')
+    contain_file('/etc/td-agent-bit/td-agent-bit-output-test.conf')
   }
 
   let(:aws_es_proxy_service_unit) {
@@ -23,11 +23,8 @@ describe 'fluent_bit::output', :type => :define do
             "port" => 443,
             "tls" => true,
             "tlsVerify" => true,
-            "awsESProxy" => {
-              "port" => 9201
-            },
         },
-          "type" => "all",
+          "types" => ["all"],
         },
       }
     }
@@ -41,9 +38,9 @@ describe 'fluent_bit::output', :type => :define do
     end
 
     it 'should configure output right' do
-      should output.with_content(/tls On/)
-      should output.with_content(/tls.verify On/)
-      should output.with_content(/Host elastic.example.com/)
+      should output.with_content(/#{Regexp.escape('tls On')}/)
+      should output.with_content(/#{Regexp.escape('tls.verify On')}/)
+      should output.with_content(/#{Regexp.escape('Host elastic.example.com')}/)
     end
 
   end
@@ -61,7 +58,7 @@ describe 'fluent_bit::output', :type => :define do
               "port" => 9201
             },
           },
-          "type" => "all",
+          "types" => ["all"],
         },
       }
     }
@@ -78,13 +75,13 @@ describe 'fluent_bit::output', :type => :define do
       should output.without_content(/#{Regexp.escape('tls On')}/)
       should output.without_content(/#{Regexp.escape('tls.verify On')}/)
       should output.with_content(/#{Regexp.escape('Host localhost')}/)
-      should output.with_content(/#{Regexp.escape('Port 9200')}/)
+      should output.with_content(/#{Regexp.escape('Port 9201')}/)
     end
 
     it 'should configure aws-es-proxy service unit right' do
       should aws_es_proxy_service_unit.with_content(/#{Regexp.escape('ExecStart=/opt/aws-es-proxy-0.8/aws-es-proxy')}/)
       should aws_es_proxy_service_unit.with_content(/#{Regexp.escape('-endpoint https://elastic.example.com')}/)
-      should aws_es_proxy_service_unit.with_content(/#{Regexp.escape('-listen localhost:9200')}/)
+      should aws_es_proxy_service_unit.with_content(/#{Regexp.escape('-listen localhost:9201')}/)
     end
 
   end
