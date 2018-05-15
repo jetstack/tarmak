@@ -81,7 +81,11 @@ func SetDefaults_Cluster(obj *Cluster) {
 				loggingSink.ElasticSearch.Host = "127.0.0.1"
 			}
 			if loggingSink.ElasticSearch.Port == 0 {
-				loggingSink.ElasticSearch.Port = 9200
+				if loggingSink.ElasticSearch.TLS {
+					loggingSink.ElasticSearch.Port = 443
+				} else {
+					loggingSink.ElasticSearch.Port = 80
+				}
 			}
 			if loggingSink.ElasticSearch.AWSESProxy != nil {
 				if loggingSink.ElasticSearch.AWSESProxy.Port == 0 {
