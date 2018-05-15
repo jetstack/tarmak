@@ -9,8 +9,8 @@ class fluent_bit (
   }
 
   # load daemonset if this is a master
-  if ! defined(Class['kubernetes::apiserver']) {
-    class {'::fluent_bit::daemonset'} -> Class['::fluent_bit']
+  if defined(Class['kubernetes::apiserver']) {
+    class {'::fluent_bit::daemonset':} -> Class['::fluent_bit']
   }
 
   class { '::fluent_bit::install': }
