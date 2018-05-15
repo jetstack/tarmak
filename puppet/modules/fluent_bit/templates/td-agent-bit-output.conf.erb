@@ -6,7 +6,7 @@
     Type flb_type
     Logstash_Format On
 <% if @elasticsearch["awsESProxy"] -%>
-    Host localhost
+    Host 127.0.0.1
     Port <%= @elasticsearch["awsESProxy"]["port"] %>
 <%- else -%>
     Host <%= @elasticsearch["host"] %>

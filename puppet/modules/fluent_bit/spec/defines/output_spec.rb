@@ -74,7 +74,7 @@ describe 'fluent_bit::output', :type => :define do
     it 'should configure output right' do
       should output.without_content(/#{Regexp.escape('tls On')}/)
       should output.without_content(/#{Regexp.escape('tls.verify On')}/)
-      should output.with_content(/#{Regexp.escape('Host localhost')}/)
+      should output.with_content(/#{Regexp.escape('Host 127.0.0.1')}/)
       should output.with_content(/#{Regexp.escape('Port 9201')}/)
     end
 
