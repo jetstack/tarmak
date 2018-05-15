@@ -117,7 +117,7 @@ class kubernetes::kubelet(
     seltype => $seltype,
   }
 
-  if dig44($facts, ['os', 'selinux', 'enabled'], false) and $::osfamily == "Redhat" {
+  if dig44($facts, ['os', 'selinux', 'enabled'], false) and $::osfamily == 'Redhat' {
     $policy_package = 'selinux-policy-targeted'
     ensure_resource('package', $policy_package, {
       ensure => 'latest',
