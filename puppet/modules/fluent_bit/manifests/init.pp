@@ -8,6 +8,11 @@ class fluent_bit (
     true    => $::path,
   }
 
+  # load daemonset if this is a master
+  if ! defined(Class['kubernetes::apiserver']) {
+    class {'::fluent_bit::daemonset'} -> Class['::fluent_bit']
+  }
+
   class { '::fluent_bit::install': }
   -> class { '::fluent_bit::config': }
   ~> class { '::fluent_bit::service': }

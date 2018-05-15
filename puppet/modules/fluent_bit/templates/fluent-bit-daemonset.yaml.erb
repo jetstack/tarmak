@@ -1,0 +1,104 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: <%= @namespace %>
+  labels:
+    k8s-app: fluent-bit-logging
+    version: v1
+    kubernetes.io/cluster-service: "true"
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        k8s-app: fluent-bit-logging
+        version: v1
+        kubernetes.io/cluster-service: "true"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "2021"
+        prometheus.io/path: /api/v1/metrics/prometheus
+    spec:
+      hostNetwork: true
+      containers:
+      - name: fluent-bit
+        image: "<%= @fluent_bit_image %>:<%= @fluent_bit_version %>"
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 2021
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: fluent-bit-config
+          mountPath: /fluent-bit/etc/
+        - name: fluent-bit-outputs
+          mountPath: /fluent-bit/etc/outputs
+          readOnly: true
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: fluent-bit-config
+        configMap:
+          name: fluent-bit-config
+      - name: fluent-bit-outputs
+        hostPath:
+          path: /etc/td-agent-bit/daemonset/
+<%- if @rbac_enabled -%>
+      serviceAccountName: fluent-bit
+<%- end -%>
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+<%- if @rbac_enabled -%>
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluent-bit
+  namespace: <%= @namespace %>
+---
+<%- if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<%- else -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<%- end -%>
+kind: ClusterRole
+metadata:
+  name: fluent-bit-read
+rules:
+- apiGroups: [""]
+  resources:
+  - namespaces
+  - pods
+  verbs: ["get", "list", "watch"]
+---
+<%- if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<%- else -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<%- end -%>
+kind: ClusterRoleBinding
+metadata:
+  name: fluent-bit-read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fluent-bit-read
+subjects:
+- kind: ServiceAccount
+  name: fluent-bit
+  namespace: <%= @namespace %>
+<% end -%>
