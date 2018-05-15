@@ -3,7 +3,6 @@ define fluent_bit::output (
 ){
   include ::fluent_bit
 
-  validate_hash($config)
   $path = $::fluent_bit::path
 
   $types = $config['types']

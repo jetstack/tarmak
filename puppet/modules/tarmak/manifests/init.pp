@@ -69,7 +69,7 @@ class tarmak (
   Enum['aws', ''] $cloud_provider = '',
   String $helper_path = $tarmak::params::helper_path,
   String $systemd_dir = '/etc/systemd/system',
-  Array[String] $fluent_bit_configs = $tarmak::params::fluent_bit_configs
+  Array[Hash] $fluent_bit_configs = $tarmak::params::fluent_bit_configs
 ) inherits ::tarmak::params {
   $ipaddress = $::ipaddress
 

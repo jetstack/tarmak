@@ -215,7 +215,7 @@ func contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
 			if err != nil {
 				return nil, fmt.Errorf("unable to marshall logging sink: %s", err)
 			}
-			fluentBitConfig = append(fluentBitConfig, fmt.Sprintf(`'%s'`, jsonLoggingSink))
+			fluentBitConfig = append(fluentBitConfig, fmt.Sprintf(`%s`, jsonLoggingSink))
 		}
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::fluent_bit_configs: %s`, fluentBitConfig))
 	}
