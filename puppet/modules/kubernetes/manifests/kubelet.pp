@@ -117,7 +117,12 @@ class kubernetes::kubelet(
     seltype => $seltype,
   }
 
-  if dig44($facts, ['os', 'selinux', 'enabled'], false) {
+  if dig44($facts, ['os', 'selinux', 'enabled'], false) and $::osfamily == "Redhat" {
+    $policy_package = 'selinux-policy-targeted'
+    ensure_resource('package', $policy_package, {
+      ensure => 'latest',
+    })
+
     exec { 'semanage_fcontext_kubelet_dir':
       # fall back to old seltype, if command fails
       command => "semanage fcontext -a -t ${seltype} \"${kubelet_dir}(/.*)?\" || semanage fcontext -a -t ${seltype_old} \"${kubelet_dir}(/.*)?\"",
@@ -125,63 +130,63 @@ class kubernetes::kubelet(
       require => File[$kubelet_dir],
       path    => $::kubernetes::path
     }
-  }
 
-  file{"${kubelet_dir}/pods":
-    ensure  => 'directory',
-    mode    => '0750',
-    owner   => 'root',
-    group   => 'root',
-    seltype => $seltype,
-    require => File[$kubelet_dir],
-  }
+    file{"${kubelet_dir}/pods":
+      ensure  => 'directory',
+      mode    => '0750',
+      owner   => 'root',
+      group   => 'root',
+      seltype => $seltype,
+      require => [File[$kubelet_dir], Package[$policy_package]],
+    }
 
-  file{"${kubelet_dir}/plugins":
-    ensure  => 'directory',
-    mode    => '0750',
-    owner   => 'root',
-    group   => 'root',
-    seltype => $seltype,
-    require => File[$kubelet_dir],
-  }
+    file{"${kubelet_dir}/plugins":
+      ensure  => 'directory',
+      mode    => '0750',
+      owner   => 'root',
+      group   => 'root',
+      seltype => $seltype,
+      require => [File[$kubelet_dir], Package[$policy_package]],
+    }
 
-  $availability_zone = dig44($facts, ['ec2_metadata', 'placement', 'availability-zone'])
-  if $cloud_provider == 'aws' and $availability_zone != undef {
-    file{"${kubelet_dir}/plugins/kubernetes.io":
-      ensure  => 'directory',
-      mode    => '0750',
-      owner   => 'root',
-      group   => 'root',
-      seltype => $seltype,
-      require => File["${kubelet_dir}/plugins"],
-    }
-    -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs":
-      ensure  => 'directory',
-      mode    => '0750',
-      owner   => 'root',
-      group   => 'root',
-      seltype => $seltype,
-    }
-    -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts":
-      ensure  => 'directory',
-      mode    => '0750',
-      owner   => 'root',
-      group   => 'root',
-      seltype => $seltype,
-    }
-    -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws":
-      ensure  => 'directory',
-      mode    => '0750',
-      owner   => 'root',
-      group   => 'root',
-      seltype => $seltype,
-    }
-    -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws/${availability_zone}":
-      ensure  => 'directory',
-      mode    => '0750',
-      owner   => 'root',
-      group   => 'root',
-      seltype => $seltype,
+    $availability_zone = dig44($facts, ['ec2_metadata', 'placement', 'availability-zone'])
+    if $cloud_provider == 'aws' and $availability_zone != undef {
+      file{"${kubelet_dir}/plugins/kubernetes.io":
+        ensure  => 'directory',
+        mode    => '0750',
+        owner   => 'root',
+        group   => 'root',
+        seltype => $seltype,
+        require => File["${kubelet_dir}/plugins"],
+      }
+      -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs":
+        ensure  => 'directory',
+        mode    => '0750',
+        owner   => 'root',
+        group   => 'root',
+        seltype => $seltype,
+      }
+      -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts":
+        ensure  => 'directory',
+        mode    => '0750',
+        owner   => 'root',
+        group   => 'root',
+        seltype => $seltype,
+      }
+      -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws":
+        ensure  => 'directory',
+        mode    => '0750',
+        owner   => 'root',
+        group   => 'root',
+        seltype => $seltype,
+      }
+      -> file{"${kubelet_dir}/plugins/kubernetes.io/aws-ebs/mounts/aws/${availability_zone}":
+        ensure  => 'directory',
+        mode    => '0750',
+        owner   => 'root',
+        group   => 'root',
+        seltype => $seltype,
+      }
     }
   }
 

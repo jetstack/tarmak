@@ -46,6 +46,11 @@ describe 'kubernetes::kubelet' do
           'placement' => {
             'availability-zone' => 'my-zone-1z',
           },
+        },
+        'os' => {
+          'selinux' => {
+            'enabled' => true
+          }
         }
       }
     end
@@ -209,7 +214,7 @@ describe 'kubernetes::kubelet' do
           "cgroup_#{cgroup_type}_reserved_cpu"    => '100m',
           "cgroup_#{cgroup_type}_reserved_memory" => '128Mi',
         }}
-        it do 
+        it do
           should contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=cpu=100m,memory=128Mi})
         end
       end
