@@ -1,6 +1,10 @@
 # class kubernetes::master
 class kubernetes::apiserver(
   $allow_privileged = true,
+  Boolean $audit_enabled = true,
+  String $audit_log_directory = '/etc/kubernetes/audit',
+  String $audit_log_path = '/etc/kubernetes/audit/kubernetes-audit.log',
+  String $audit_policy_file = '/etc/kubernetes/audit/audit-policy.yaml',
   $admission_control = undef,
   $count = 1,
   $storage_backend = undef,
@@ -163,6 +167,26 @@ class kubernetes::apiserver(
       require => Kubernetes::Symlink['apiserver'],
       notify  => Service["${service_name}.service"],
     }
+  }
+
+  if $audit_enabled {
+
+    file {$audit_log_directory:
+      ensure => directory,
+      mode    => '0750',
+      owner   => $::kubernetes::params::user,
+      group   => $::kubernetes::params::group,
+    }
+    ->file{$audit_policy_file:
+      ensure  => file,
+      mode    => '0640',
+      owner   => 'root',
+      group   => $::kubernetes::params::group,
+      content => file('kubernetes/audit-policy.yaml'),
+      require => Kubernetes::Symlink['apiserver'],
+      notify  => Service["${service_name}.service"],
+    }
+
   }
 
   kubernetes::symlink{'apiserver':}
