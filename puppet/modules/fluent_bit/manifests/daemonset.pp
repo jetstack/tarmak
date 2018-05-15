@@ -7,6 +7,9 @@ class fluent_bit::daemonset(
 
   $namespace = 'kube-system'
 
+  $_sir_parts = $::kubernetes::service_ip_range_network.split('\.')
+  $kubernetes_service_ip = "${_sir_parts[0]}.${_sir_parts[1]}.${_sir_parts[2]}.1"
+
   $authorization_mode = $::kubernetes::_authorization_mode
   if member($authorization_mode, 'RBAC'){
     $rbac_enabled = true

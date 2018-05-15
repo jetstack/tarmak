@@ -20,7 +20,7 @@ data:
 
     @INCLUDE input-kubernetes.conf
     @INCLUDE filter-kubernetes.conf
-    @INCLUDE outputs/td-agent-bit-output-*.conf
+    @INCLUDE td-agent-bit-output-*.conf
 
   input-kubernetes.conf: |
 <% @platform_namespaces.each do |ns| -%>
