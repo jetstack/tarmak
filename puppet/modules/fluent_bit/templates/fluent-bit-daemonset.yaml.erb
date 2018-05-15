@@ -30,7 +30,7 @@ spec:
         - /bin/sh
         - -c
         - |-
-            echo "<%= @kubernetes_svc_ip %> kubernetes.default.svc.cluster.local" >> /etc/hosts &&
+            echo "<%= @kubernetes_service_ip %> kubernetes.default.svc.cluster.local" >> /etc/hosts &&
             mkdir -p /tmp/config &&
             cp /fluent-bit/etc/..data/* /tmp/config &&
             cp /fluent-bit/outputs/* /tmp/config &&

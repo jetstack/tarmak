@@ -21,6 +21,7 @@ describe 'fluent_bit::daemonset' do
 
     it 'should write manifests' do
       should contain_file(manifests_file).with_content(/#{Regexp.escape('*_kube-system_*,*_service-broker_*,*_monitoring_*')}/)
+      should contain_file(manifests_file).with_content(/#{Regexp.escape('10.254.0.1 kubernetes.default.svc.cluster.local')}/)
     end
   end
 end
