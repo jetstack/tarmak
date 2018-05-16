@@ -4,6 +4,7 @@ package terraform
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -50,6 +51,24 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 		return err
 	}
 	if err := utils.CopyDir(sourceModulesPath, destModulesPath); err != nil {
+		return err
+	}
+
+	// move in wing binary for terraform bucket object
+	sourceWingBinary, err := os.Open(filepath.Join(rootPath, "wing_linux_amd64"))
+	if err != nil {
+		return err
+	}
+	defer sourceWingBinary.Close()
+
+	destWingBinary, err := os.Create(filepath.Join(terraformCodePath, "wing_linux_amd64"))
+	if err != nil {
+		return err
+	}
+	defer destWingBinary.Close()
+
+	_, err = io.Copy(destWingBinary, sourceWingBinary)
+	if err != nil {
 		return err
 	}
 
