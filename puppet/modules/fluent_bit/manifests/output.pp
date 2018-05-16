@@ -40,6 +40,7 @@ define fluent_bit::output (
     owner   => 'root',
     group   => 'root',
     content => template('fluent_bit/td-agent-bit-output.conf.erb'),
+    notify  => Service[$::fluent_bit::service_name],
   }
 
   file { "/etc/td-agent-bit/daemonset/td-agent-bit-output-${name}.conf":
