@@ -31,14 +31,16 @@
     Name    kmsg
     Tag     platform
 
+<% if @audit_enabled -%>
 [INPUT]
     Name                tail
-    Path                /etc/kubernetes/audit/kubernetes-audit.log
-    DB                  /etc/kubernetes/audit/flb_kubernetes-audit.db
+    Path                <%= @audit_log_path %>
+    DB                  <%= @audit_log_path %>.flb
     Mem_Buf_Limit       5MB
     Skip_Long_Lines     On
     Refresh_Interval    10
     Tag                 audit
+<% end -%>
 
 [INPUT]
     Name systemd
