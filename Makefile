@@ -205,8 +205,8 @@ docker_%:
 	))
 
 	# copy stuff into container
-	git ls-files | tar cf -  -T - | docker cp - $(CONTAINER_ID):$(CONTAINER_DIR)
-	
+	(git ls-files && git ls-files --others --exclude-standard) | tar cf -  -T - | docker cp - $(CONTAINER_ID):$(CONTAINER_DIR)
+
 	# run build inside container
 	docker start -a -i $(CONTAINER_ID)
 
