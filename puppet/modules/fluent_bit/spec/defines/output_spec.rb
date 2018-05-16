@@ -86,4 +86,65 @@ describe 'fluent_bit::output', :type => :define do
 
   end
 
+  context 'elasticsearch cluster with multiple logging types' do
+    let(:title) { 'test' }
+    let(:params) {
+      {
+        :config => {"elasticsearch" => {
+            "host" => "elastic.example.com",
+            "port" => 443,
+            "tls" => true,
+            "tlsVerify" => true,
+          },
+          "types" => ["platform", "application"],
+        },
+      }
+    }
+
+    it do
+      should contain_class('fluent_bit')
+    end
+
+    it do
+      should_not contain_class('aws_es_proxy')
+    end
+
+    it 'should configure output right' do
+      should output.with_content(/#{Regexp.escape('Match platform*')}/)
+      should output.with_content(/#{Regexp.escape('Match application*')}/)
+      should output.without_content(/#{Regexp.escape('Match *')}/)
+    end
+
+  end
+
+  context 'elasticsearch cluster with multiple logging types with all' do
+    let(:title) { 'test' }
+    let(:params) {
+      {
+        :config => {"elasticsearch" => {
+            "host" => "elastic.example.com",
+            "port" => 443,
+            "tls" => true,
+            "tlsVerify" => true,
+          },
+          "types" => ["all", "platform"],
+        },
+      }
+    }
+
+    it do
+      should contain_class('fluent_bit')
+    end
+
+    it do
+      should_not contain_class('aws_es_proxy')
+    end
+
+    it 'should configure output right' do
+      should output.without_content(/#{Regexp.escape('Match platform*')}/)
+      should output.with_content(/#{Regexp.escape('Match *')}/)
+    end
+
+  end
+
 end
