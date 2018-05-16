@@ -56,7 +56,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 	}
 
 	//validate logging
-	if err := cluster.validateLogging(); err != nil {
+	if err := cluster.validateLoggingSinks(); err != nil {
 		return nil, err
 	}
 
@@ -247,12 +247,17 @@ func (c *Cluster) validateNetwork() (result error) {
 }
 
 // validate logging configuration
-func (c *Cluster) validateLogging() (result error) {
+func (c *Cluster) validateLoggingSinks() (result error) {
 
 	if c.Config().LoggingSinks != nil {
 		for index, loggingSink := range c.Config().LoggingSinks {
-			if loggingSink.ElasticSearch != nil && loggingSink.ElasticSearch.HTTPBasicAuth != nil && loggingSink.ElasticSearch.AWSESProxy != nil {
-				return fmt.Errorf("cannot have both HTTP basic auth and AWS elasticsearch proxy configured for logging sink %d", index)
+			if loggingSink.ElasticSearch != nil && loggingSink.ElasticSearch.AWSESProxy != nil {
+				if loggingSink.ElasticSearch.HTTPBasicAuth != nil {
+					return fmt.Errorf("cannot enable AWS elasticsearch proxy and HTTP basic auth for logging sink %d", index)
+				}
+				if loggingSink.ElasticSearch.TLSCA != "" {
+					return fmt.Errorf("cannot enable AWS elasticsearch proxy and specify a custom CA for logging sink %d", index)
+				}
 			}
 		}
 	}
