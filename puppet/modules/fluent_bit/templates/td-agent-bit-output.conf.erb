@@ -11,6 +11,14 @@
 <%- else -%>
     Host <%= @elasticsearch["host"] %>
     Port <%= @elasticsearch["port"] %>
+<% if @elasticsearch["httpBasicAuth"] -%>
+<% if @elasticsearch["httpBasicAuth"]["username"] -%>
+    HTTP_User <%= @elasticsearch["httpBasicAuth"]["username"] %>
+<% end -%>
+<% if @elasticsearch["httpBasicAuth"]["password"] -%>
+    HTTP_Passwd <%= @elasticsearch["httpBasicAuth"]["password"] %>
+<% end -%>
+<% end -%>
 <% if @elasticsearch["tls"] -%>
     tls On
 <% if @elasticsearch["tlsVerify"] -%>

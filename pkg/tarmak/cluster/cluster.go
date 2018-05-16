@@ -55,6 +55,11 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		return nil, err
 	}
 
+	//validate logging
+	if err := cluster.validateLogging(); err != nil {
+		return nil, err
+	}
+
 	cluster.roles = make(map[string]*role.Role)
 	defineToolsRoles(cluster.roles)
 	defineVaultRoles(cluster.roles)
@@ -236,6 +241,20 @@ func (c *Cluster) validateNetwork() (result error) {
 			return fmt.Errorf("error parsing network: %s", err)
 		}
 		c.networkCIDR = net
+	}
+
+	return nil
+}
+
+// validate logging configuration
+func (c *Cluster) validateLogging() (result error) {
+
+	if c.Config().LoggingSinks != nil {
+		for index, loggingSink := range c.Config().LoggingSinks {
+			if loggingSink.ElasticSearch != nil && loggingSink.ElasticSearch.HTTPBasicAuth != nil && loggingSink.ElasticSearch.AWSESProxy != nil {
+				return fmt.Errorf("cannot have both HTTP basic auth and AWS elasticsearch proxy configured for logging sink %d", index)
+			}
+		}
 	}
 
 	return nil
