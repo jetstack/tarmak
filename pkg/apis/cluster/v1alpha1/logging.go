@@ -31,11 +31,12 @@ type LoggingSink struct {
 
 type LoggingSinkElasticSearch struct {
 	// https://fluentbit.io/documentation/0.12/output/elasticsearch.html
-	Host       string      `json:"host,omitempty"`
-	Port       int         `json:"port,omitempty"`
-	TLS        bool        `json:"tls,omitempty"`
-	TLSVerify  bool        `json:"tlsVerify,omitempty"`
-	AWSESProxy *AWSESProxy `json:"awsESProxy,omitempty"`
+	Host           string      `json:"host,omitempty"`
+	Port           int         `json:"port,omitempty"`
+	LogstashPrefix string      `json:"logstashPrefix,omitempty"`
+	TLS            bool        `json:"tls,omitempty"`
+	TLSVerify      bool        `json:"tlsVerify,omitempty"`
+	AWSESProxy     *AWSESProxy `json:"awsESProxy,omitempty"`
 }
 
 type AWSESProxy struct {

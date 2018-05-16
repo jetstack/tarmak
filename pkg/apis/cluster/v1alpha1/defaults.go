@@ -87,6 +87,9 @@ func SetDefaults_Cluster(obj *Cluster) {
 					loggingSink.ElasticSearch.Port = 80
 				}
 			}
+			if loggingSink.ElasticSearch.LogstashPrefix == "" {
+				loggingSink.ElasticSearch.LogstashPrefix = "logstash"
+			}
 			if loggingSink.ElasticSearch.AWSESProxy != nil {
 				if loggingSink.ElasticSearch.AWSESProxy.Port == 0 {
 					loggingSink.ElasticSearch.AWSESProxy.Port = allocateAWSESProxyPort(obj.LoggingSinks)
