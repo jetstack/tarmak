@@ -11,6 +11,16 @@ define fluent_bit::output (
 
     $elasticsearch = $config['elasticsearch']
 
+    if $elasticsearch['tlsCA'] and $elasticsearch['tlsCA'] != '' {
+      file { "/etc/td-agent-bit/ssl/${name}-ca.pem":
+        ensure  => file,
+        mode    => '0640',
+        owner   => 'root',
+        group   => 'root',
+        content => $elasticsearch['tlsCA'],
+      }
+    }
+
     if $elasticsearch['awsESProxy'] {
 
       ::aws_es_proxy::instance{ $name:
@@ -26,7 +36,7 @@ define fluent_bit::output (
 
   file { "/etc/td-agent-bit/td-agent-bit-output-${name}.conf":
     ensure  => file,
-    mode    => '0644',
+    mode    => '0640',
     owner   => 'root',
     group   => 'root',
     content => template('fluent_bit/td-agent-bit-output.conf.erb'),
@@ -34,7 +44,7 @@ define fluent_bit::output (
 
   file { "/etc/td-agent-bit/daemonset/td-agent-bit-output-${name}.conf":
     ensure  => file,
-    mode    => '0644',
+    mode    => '0640',
     owner   => 'root',
     group   => 'root',
     content => template('fluent_bit/td-agent-bit-output.conf.erb'),

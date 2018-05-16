@@ -26,6 +26,9 @@
 <%- else -%>
     tls.verify Off
 <% end -%>
+<% if @elasticsearch["tlsCA"] and @elasticsearch["tlsCA"] != "" -%>
+    tls.ca_file /etc/td-agent-bit/ssl/<%= @name %>-ca.pem
+<% end -%>
 <% end -%>
 <% end -%>
 <%- else -%>

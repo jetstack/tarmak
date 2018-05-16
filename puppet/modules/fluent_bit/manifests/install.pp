@@ -39,4 +39,9 @@ class fluent_bit::install {
     mode   => '0755',
   }
 
+  file { '/etc/td-agent-bit/ssl':
+    ensure => directory,
+    mode   => '0755',
+  }
+
 }
