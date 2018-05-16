@@ -7,9 +7,7 @@ After=network-online.target
 [Service]
 ExecStart=<%= scope['proxy_path'] %> \
   -listen localhost:<%= scope['listen_port'] %> \
-  -endpoint <%= scope['endpoint'] %> \
-  -verbose \
-  -pretty
+  -endpoint <%= scope['endpoint'] %>
 
 Restart=on-failure
 User=nobody
