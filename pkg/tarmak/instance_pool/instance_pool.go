@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
@@ -158,4 +159,26 @@ func (n *InstancePool) InstanceType() string {
 
 func (n *InstancePool) SpotPrice() string {
 	return n.conf.SpotPrice
+}
+
+func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
+	policies := []string{}
+
+	// add cluster wide policies
+	if a := n.cluster.Config().Amazon; a != nil {
+		policies = append(policies, a.AdditionalIAMPolicies...)
+	}
+
+	// add instance template specfic policies
+	if a := n.Config().Amazon; a != nil {
+		policies = append(policies, a.AdditionalIAMPolicies...)
+	}
+
+	// TODO: check for duplicates here
+
+	for pos, _ := range policies {
+		policies[pos] = fmt.Sprintf(`"%s"`, policies[pos])
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(policies, ","))
 }

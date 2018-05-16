@@ -57,6 +57,16 @@ type Cluster struct {
 	Kubernetes  *ClusterKubernetes `json:"kubernetes,omitempty"`
 
 	Type string `json:"-"` // This specifies if a cluster is a hub, single or multi
+
+	// Amazon specific options
+	Amazon *ClusterAmazon `json:"amazon"`
+}
+
+// Amazon specific settings for that instance pool
+type ClusterAmazon struct {
+	// This fields contains ARNs for additional IAM policies to be added to this
+	// instance pool
+	AdditionalIAMPolicies []string `json:"additionalIAMPolicies,omitempty"`
 }
 
 type ClusterKubernetes struct {
