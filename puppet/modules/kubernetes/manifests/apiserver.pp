@@ -1,7 +1,7 @@
 # class kubernetes::master
 class kubernetes::apiserver(
   $allow_privileged = true,
-  Boolean $audit_enabled = true,
+  Optional[Boolean] $audit_enabled = undef,
   String $audit_log_directory = '/etc/kubernetes/audit',
   String $audit_log_path = '/etc/kubernetes/audit/kubernetes-audit.log',
   String $audit_policy_file = '/etc/kubernetes/audit/audit-policy.yaml',
@@ -55,6 +55,13 @@ class kubernetes::apiserver(
   $post_1_6 = versioncmp($::kubernetes::version, '1.6.0') >= 0
   $post_1_5 = versioncmp($::kubernetes::version, '1.5.0') >= 0
   $post_1_4 = versioncmp($::kubernetes::version, '1.4.0') >= 0
+
+  # Enable Audit after 1.8
+  if $audit_enabled == undef {
+    $_audit_enabled = $post_1_8
+  } else {
+    $_audit_enabled = $audit_enabled
+  }
 
   # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
   if $admission_control == undef {
@@ -169,15 +176,15 @@ class kubernetes::apiserver(
     }
   }
 
-  if $audit_enabled {
+  if $_audit_enabled {
 
     file {$audit_log_directory:
       ensure => directory,
-      mode    => '0750',
-      owner   => $::kubernetes::params::user,
-      group   => $::kubernetes::params::group,
+      mode   => '0750',
+      owner  => $::kubernetes::params::user,
+      group  => $::kubernetes::params::group,
     }
-    ->file{$audit_policy_file:
+    -> file{$audit_policy_file:
       ensure  => file,
       mode    => '0640',
       owner   => 'root',
