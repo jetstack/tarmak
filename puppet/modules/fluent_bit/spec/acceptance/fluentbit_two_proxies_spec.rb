@@ -9,7 +9,7 @@ fluent_bit::output{"test1":
       "port" => 443,
       "tls" => true,
       "tlsVerify" => true,
-      "awsESProxy" => {
+      "amazonESProxy" => {
         "port" => 9200
       },
     },
@@ -23,7 +23,7 @@ fluent_bit::output{"test2":
       "port" => 443,
       "tls" => true,
       "tlsVerify" => true,
-      "awsESProxy" => {
+      "amazonESProxy" => {
         "port" => 9201
       },
     },

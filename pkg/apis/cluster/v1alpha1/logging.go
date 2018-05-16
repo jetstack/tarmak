@@ -38,10 +38,10 @@ type LoggingSinkElasticSearch struct {
 	TLSVerify      bool           `json:"tlsVerify,omitempty"`
 	TLSCA          string         `json:"tlsCA,omitempty"`
 	HTTPBasicAuth  *HTTPBasicAuth `json:"httpBasicAuth,omitempty"`
-	AWSESProxy     *AWSESProxy    `json:"awsESProxy,omitempty"`
+	AmazonESProxy  *AmazonESProxy `json:"amazonESProxy,omitempty"`
 }
 
-type AWSESProxy struct {
+type AmazonESProxy struct {
 	Port int `json:"port,omitempty"`
 }
 

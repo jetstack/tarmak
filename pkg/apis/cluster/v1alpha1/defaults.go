@@ -90,9 +90,9 @@ func SetDefaults_Cluster(obj *Cluster) {
 			if loggingSink.ElasticSearch.LogstashPrefix == "" {
 				loggingSink.ElasticSearch.LogstashPrefix = "logstash"
 			}
-			if loggingSink.ElasticSearch.AWSESProxy != nil {
-				if loggingSink.ElasticSearch.AWSESProxy.Port == 0 {
-					loggingSink.ElasticSearch.AWSESProxy.Port = allocateAWSESProxyPort(obj.LoggingSinks)
+			if loggingSink.ElasticSearch.AmazonESProxy != nil {
+				if loggingSink.ElasticSearch.AmazonESProxy.Port == 0 {
+					loggingSink.ElasticSearch.AmazonESProxy.Port = allocateAmazonESProxyPort(obj.LoggingSinks)
 				}
 			}
 		}
@@ -104,13 +104,13 @@ func SetDefaults_Cluster(obj *Cluster) {
 
 }
 
-func allocateAWSESProxyPort(loggingSinks []*LoggingSink) int {
+func allocateAmazonESProxyPort(loggingSinks []*LoggingSink) int {
 
 	allocatedPorts := make(map[int]struct{})
 	for _, loggingSink := range loggingSinks {
 		if loggingSink.ElasticSearch != nil {
-			if loggingSink.ElasticSearch.AWSESProxy != nil {
-				allocatedPorts[loggingSink.ElasticSearch.AWSESProxy.Port] = struct{}{}
+			if loggingSink.ElasticSearch.AmazonESProxy != nil {
+				allocatedPorts[loggingSink.ElasticSearch.AmazonESProxy.Port] = struct{}{}
 			}
 		}
 	}

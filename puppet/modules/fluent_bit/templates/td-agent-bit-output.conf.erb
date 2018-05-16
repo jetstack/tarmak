@@ -5,9 +5,9 @@
     Type flb_type
     Logstash_Format On
     Logstash_Prefix <%= @elasticsearch["logstashPrefix"] %>
-<% if @elasticsearch["awsESProxy"] -%>
+<% if @elasticsearch["amazonESProxy"] -%>
     Host 127.0.0.1
-    Port <%= @elasticsearch["awsESProxy"]["port"] %>
+    Port <%= @elasticsearch["amazonESProxy"]["port"] %>
 <%- else -%>
     Host <%= @elasticsearch["host"] %>
     Port <%= @elasticsearch["port"] %>

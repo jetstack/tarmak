@@ -21,13 +21,13 @@ define fluent_bit::output (
       }
     }
 
-    if $elasticsearch['awsESProxy'] {
+    if $elasticsearch['amazonESProxy'] {
 
       ::aws_es_proxy::instance{ $name:
         tls          => $elasticsearch['tls'],
         dest_port    => $elasticsearch['port'],
         dest_address => $elasticsearch['host'],
-        listen_port  => $elasticsearch['awsESProxy']['port'],
+        listen_port  => $elasticsearch['amazonESProxy']['port'],
       }
 
     }
