@@ -31,8 +31,8 @@ Overview of steps to follow
 Initialise configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Simply run ``tarmak init`` to initialise configuration for the first time. You will be prompted for the necessary configuration 
-to set-up a new :ref:`Provider <providers_resource>` (AWS) and :ref:`Environment <environments_resource>`. The list below describes 
+Simply run ``tarmak init`` to initialise configuration for the first time. You will be prompted for the necessary configuration
+to set-up a new :ref:`Provider <providers_resource>` (AWS) and :ref:`Environment <environments_resource>`. The list below describes
 the questions you will be asked.
 
 .. note::
@@ -114,3 +114,21 @@ To destroy the cluster, run ``tarmak clusters destroy``.
    Tarmak will not exit immediately.
    It will wait for the currently running step to finish and then exit.
    You can complete the process by re-running the command.
+
+Pod Security Policy
+~~~~~~~~~~~~~~~~~~~
+**Note:** For cluster versions greater than 1.8.0 this is applied by default.
+For cluster versions before 1.6.0 is it not applied.
+
+To enable Pod Security Policy to an environment, include the following to the
+configuration file under the kubernetes field of that environment:
+
+::
+
+    kubernetes:
+        podSecurityPolicy:
+            enabled: true
+
+The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
+The Pod Security Policy manifests can be found within the tarmak directory at
+``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``

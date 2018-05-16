@@ -50,7 +50,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
         @proxy_client_cert_file and \
         @proxy_client_key_file -%>
   --requestheader-allowed-names=<%= @requestheader_allowed_names %> \
-  --requestheader-extra-headers-prefix=<%= @requestheader_extra_headers %> \
+  --requestheader-extra-headers-prefix=<%= @requestheader_extra_headers_prefix %> \
   --requestheader-group-headers=<%= @requestheader_group_headers %> \
   --requestheader-username-headers=<%= @requestheader_username_headers %> \
   --requestheader-client-ca-file=<%= @requestheader_client_ca_file %> \
