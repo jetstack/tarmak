@@ -115,6 +115,11 @@ To destroy the cluster, run ``tarmak clusters destroy``.
    It will wait for the currently running step to finish and then exit.
    You can complete the process by re-running the command.
 
+Configuration Options
+---------------------
+
+After generating your `tarmak.yaml` configuration file there are a number of options you can set that are not exposed via `tarmak init`.
+
 Pod Security Policy
 ~~~~~~~~~~~~~~~~~~~
 **Note:** For cluster versions greater than 1.8.0 this is applied by default.
@@ -132,3 +137,59 @@ configuration file under the kubernetes field of that environment:
 The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
 The Pod Security Policy manifests can be found within the tarmak directory at
 ``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``
+
+Logging
+~~~~~~~
+
+Each Kubernetes cluster can be configured with a number of logging sinks. The only sink currently supported is Elasticsearch. An example configuration is shown below:
+
+::
+
+    apiVersion: api.tarmak.io/v1alpha1
+    kind: Config
+    clusters:
+    - loggingSinks:
+    - types:
+      - application
+      - platform
+      elasticsearch:
+        host: example.amazonaws.com
+        port: 443
+        logstashPrefix: test
+        tls: true
+        tlsVerify: false
+        httpBasicAuth:
+          username: administrator
+          password: mypassword
+    - types:
+      - all
+      elasticsearch:
+        host: example2.amazonaws.com
+        port: 443
+        tls: true
+        amazonESProxy:
+          port: 9200
+    ...
+
+
+A full list of the configuration parameters are shown below:
+
+* General configuration parameters
+    * ``types`` - the types of logs to ship. The accepted values are:
+        * platform (kernel, systemd and platform namespace logs)
+        * application (all other namespaces)
+        * audit (apiserver audit logs)
+        * all
+
+* Elasticsearch configuration parameters
+    * ``host`` - IP address or hostname of the target Elasticsearch instance
+    * ``port`` - TCP port of the target Elasticsearch instance
+    * ``logstashPrefix`` - Shipped logs are in a Logstash compatible format. This field specifies the Logstash index prefix
+    * ``tls`` - enable or disable TLS support
+    * ``tlsVerify`` - force certificate validation (only valid when not using the AWS ES Proxy)
+    * ``tlsCA`` - Custom CA certificate for Elasticsearch instance (only valid when not using the AWS ES Proxy)
+    * ``httpBasicAuth`` - configure basic auth (only valid when not using the AWS ES Proxy)
+        * ``username``
+        * ``password``
+    * ``amazonESProxy`` - configure AWS ES Proxy
+        * ``port`` - Port to listen on (a free port will be chosen for you if omitted)
