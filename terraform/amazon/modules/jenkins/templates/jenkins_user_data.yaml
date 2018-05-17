@@ -11,12 +11,36 @@ write_files:
     127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
     ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
     127.0.1.1   ${fqdn}
+- path: /etc/systemd/system/attach-ebs-volume.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Attach EBS volume if needed
 
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/bin/bash -c ' \
+      test -e /dev/xvdd && exit 0; \
+      aws ec2 attach-volume --region ${region} --volume-id ${volume_id} --instance-id $(curl -sL http://169.254.169.254/latest/meta-data/instance-id) --device /dev/xvdd \
+    '
+    ExecStart=/bin/bash -c ' \
+      until test -e /dev/xvdd; do \
+        echo "Waiting for device /dev/xvdd ..."; \
+        sleep 1; \
+      done \
+    '
+    ExecStop=/bin/bash -c ' \
+      test -e /dev/xvdd || exit 0 \
+      aws ec2 detach-volume --region ${region} --volume-id ${volume_id} --instance-id $(curl -sl http://169.254.169.254/latest/meta-data/instance-id) \
+    '
 - path: /etc/systemd/system/ensure-ebs-volume-formatted.service
   permissions: '0644'
   content: |
     [Unit]
     Description=Format EBS volume if needed
+    After=attach-ebs-volume.service
+    Requires=attach-ebs-volume.service
 
     [Service]
     Type=oneshot
