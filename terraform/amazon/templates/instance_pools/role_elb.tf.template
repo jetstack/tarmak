@@ -95,7 +95,7 @@ resource "aws_route53_record" "{{.TFName}}_api_public" {
 {{ end -}}
 {{ if .AWS.ELBIngress -}}
 output "ingress_wildcard_fqdn" {
-  value = "${aws_route53_record.{{.TFName}}.fqdn}"
+  value = "${aws_route53_record.{{.TFName}}_elb.fqdn}"
 }
 
 # TODO: Enable me again
@@ -104,7 +104,7 @@ output "ingress_wildcard_fqdn" {
 #  statuses = ["ISSUED"]
 #}
 
-resource "aws_route53_record" "{{.TFName}}" {
+resource "aws_route53_record" "{{.TFName}}_elb" {
   zone_id = "${var.public_zone_id}"
   name    = "*.${var.name}"
   type    = "A"
