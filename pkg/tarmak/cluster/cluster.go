@@ -104,7 +104,7 @@ func (c *Cluster) InstancePool(roleName string) interfaces.InstancePool {
 }
 
 func (c *Cluster) ListHosts() ([]interfaces.Host, error) {
-	return c.Environment().Provider().ListHosts()
+	return c.Environment().Provider().ListHosts(c)
 }
 
 func (c *Cluster) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1alpha1.InstancePool) {
@@ -152,78 +152,6 @@ func (c *Cluster) validateInstancePools() (result error) {
 	return nil
 	//return fmt.Errorf("refactore me!")
 }
-
-/*
-	//poolMap := c.InstancePoolsMap()
-	clusterType := c.Type()
-	//allowedTypes := make(map[string]bool)
-	c.stacks = []interfaces.Stack{}
-
-	// only and always add kubernetes stack
-	/*if s, err := stack.New(c, tarmakv1alpha1.StackNameKubernetes); err != nil {
-		result = multierror.Append(result, err)
-	} else {
-		c.stacks = append(c.stacks, s)
-	}
-
-	return result
-
-	// Validate hub for cluster-single and hub
-	if true || clusterType == clusterv1alpha1.ClusterTypeClusterSingle || clusterType == clusterv1alpha1.ClusterTypeHub {
-		/*err := validateHubTypes(poolMap, clusterType)
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-		allowedTypes[clusterv1alpha1.InstancePoolTypeJenkins] = true
-		allowedTypes[clusterv1alpha1.InstancePoolTypeBastion] = true
-		allowedTypes[clusterv1alpha1.InstancePoolTypeVault] = true
-
-		if s, err := stack.New(c, tarmakv1alpha1.StackNameState); err != nil {
-			result = multierror.Append(result, err)
-		} else {
-			c.stacks = append(c.stacks, s)
-		}
-
-		if s, err := stack.New(c, tarmakv1alpha1.StackNameTools); err != nil {
-			result = multierror.Append(result, err)
-		} else {
-			c.stacks = append(c.stacks, s)
-		}
-
-		if s, err := stack.New(c, tarmakv1alpha1.StackNameVault); err != nil {
-			result = multierror.Append(result, err)
-		} else {
-			c.stacks = append(c.stacks, s)
-		}
-	}
-
-	// validate cluster for cluster-*
-	if true || clusterType == clusterv1alpha1.ClusterTypeClusterSingle || clusterType == clusterv1alpha1.ClusterTypeClusterMulti {
-		/*err := validateClusterTypes(poolMap, clusterType)
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-		allowedTypes[clusterv1alpha1.InstancePoolTypeEtcd] = true
-		allowedTypes[clusterv1alpha1.InstancePoolTypeMaster] = true
-		allowedTypes[clusterv1alpha1.InstancePoolTypeWorker] = true
-
-		if s, err := stack.New(c, tarmakv1alpha1.StackNameKubernetes); err != nil {
-			result = multierror.Append(result, err)
-		} else {
-			c.stacks = append(c.stacks, s)
-		}
-	}
-
-	// check for unsupported pool types
-	/*for poolType := range poolMap {
-		if _, ok := allowedTypes[poolType]; ok {
-			continue
-		}
-		result = multierror.Append(result, fmt.Errorf("the pool type %s is not supported for a %s", poolType, clusterType))
-	}
-	return result
-}
-*/
 
 // validate network configuration
 func (c *Cluster) validateNetwork() (result error) {
