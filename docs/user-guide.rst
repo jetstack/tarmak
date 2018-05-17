@@ -141,55 +141,118 @@ The Pod Security Policy manifests can be found within the tarmak directory at
 Logging
 ~~~~~~~
 
-Each Kubernetes cluster can be configured with a number of logging sinks. The only sink currently supported is Elasticsearch. An example configuration is shown below:
+Each Kubernetes cluster can be configured with a number of logging sinks. The
+only sink currently supported is Elasticsearch. An example configuration is
+shown below:
 
-::
+.. code-block:: yaml
 
-    apiVersion: api.tarmak.io/v1alpha1
-    kind: Config
-    clusters:
-    - loggingSinks:
-    - types:
-      - application
-      - platform
-      elasticsearch:
-        host: example.amazonaws.com
-        port: 443
-        logstashPrefix: test
-        tls: true
-        tlsVerify: false
-        httpBasicAuth:
-          username: administrator
-          password: mypassword
-    - types:
-      - all
-      elasticsearch:
-        host: example2.amazonaws.com
-        port: 443
-        tls: true
-        amazonESProxy:
-          port: 9200
-    ...
+  apiVersion: api.tarmak.io/v1alpha1
+  kind: Config
+  clusters:
+  - loggingSinks:
+  - types:
+    - application
+    - platform
+    elasticsearch:
+      host: example.amazonaws.com
+      port: 443
+      logstashPrefix: test
+      tls: true
+      tlsVerify: false
+      httpBasicAuth:
+        username: administrator
+        password: mypassword
+  - types:
+    - all
+    elasticsearch:
+      host: example2.amazonaws.com
+      port: 443
+      tls: true
+      amazonESProxy:
+        port: 9200
+  ...
 
 
 A full list of the configuration parameters are shown below:
 
 * General configuration parameters
+
     * ``types`` - the types of logs to ship. The accepted values are:
+
         * platform (kernel, systemd and platform namespace logs)
+
         * application (all other namespaces)
+
         * audit (apiserver audit logs)
+
         * all
 
 * Elasticsearch configuration parameters
     * ``host`` - IP address or hostname of the target Elasticsearch instance
+
     * ``port`` - TCP port of the target Elasticsearch instance
-    * ``logstashPrefix`` - Shipped logs are in a Logstash compatible format. This field specifies the Logstash index prefix
-    * ``tls`` - enable or disable TLS support
-    * ``tlsVerify`` - force certificate validation (only valid when not using the AWS ES Proxy)
-    * ``tlsCA`` - Custom CA certificate for Elasticsearch instance (only valid when not using the AWS ES Proxy)
-    * ``httpBasicAuth`` - configure basic auth (only valid when not using the AWS ES Proxy)
+
+    * ``logstashPrefix`` - Shipped logs are in a Logstash compatible format.
+      This field specifies the Logstash index prefix * ``tls`` - enable or
+      disable TLS support
+
+    * ``tlsVerify`` - force certificate validation (only valid when not using
+      the AWS ES Proxy)
+
+    * ``tlsCA`` - Custom CA certificate for Elasticsearch instance (only valid
+      when not using the AWS ES Proxy)
+
+    * ``httpBasicAuth`` - configure basic auth (only valid when not using the
+      AWS ES Proxy)
+
         * ``username``
+
         * ``password``
+
     * ``amazonESProxy`` - configure AWS ES Proxy
-        * ``port`` - Port to listen on (a free port will be chosen for you if omitted)
+
+        * ``port`` - Port to listen on (a free port will be chosen for you if
+          omitted)
+
+
+Setting up an AWS hosted Elasticsearch Cluster
+++++++++++++++++++++++++++++++++++++++++++++++
+
+AWS provides a hosted Elasticsearch cluster that can be used for log
+aggregation. This snippet will setup an Elasticsearch domain in your account
+and create a policy along with it that will allow shipping of logs into the
+cluster:
+
+
+.. literalinclude:: user-guide/aws-elasticsearch/elasticsearch.tf
+
+
+Once terraform has been successfully run it will output, the resulting AWS
+Elasticsearch endpoint and the policy that allow shipping to it:
+
+::
+
+  Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+  
+  Outputs:
+  
+  elasticsearch_endpoint = search-tarmak-logs-xyz.eu-west-1.es.amazonaws.com
+  elasticsearch_shipping_policy_arn = arn:aws:iam::1234:policy/tarmak-logs-shipping
+
+Both of those outputs can then be used in the tarmak configuration:
+
+.. code-block:: yaml
+
+  apiVersion: api.tarmak.io/v1alpha1
+  clusters:
+  - name: cluster
+    loggingSinks:
+    - types: ["all"]
+      elasticsearch:
+        host: ${elasticsearch_endpoint}
+        tls: true
+        amazonESProxy: {}
+    amazon:
+      additionalIAMPolicies:
+      - ${elasticsearch_shipping_policy_arn}
