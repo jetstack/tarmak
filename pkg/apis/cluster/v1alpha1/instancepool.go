@@ -55,8 +55,18 @@ type InstancePool struct {
 	Firewalls         []*Firewall             `json:"firewalls,omitempty"`
 	Volumes           []Volume                `json:"volumes,omitempty"`
 	Kubernetes        *InstancePoolKubernetes `json:"kubernetes,omitempty"`
+
+	// Amazon specific settings for that instance pool
+	Amazon *InstancePoolAmazon `json:"amazon,omitempty"`
 }
 
 type InstancePoolKubernetes struct {
 	Version string `json:"version,omitempty"`
+}
+
+// Amazon specific settings for that instance pool
+type InstancePoolAmazon struct {
+	// This fields contains ARNs for additional IAM policies to be added to
+	// this instance pool
+	AdditionalIAMPolicies []string `json:"additionalIAMPolicies,omitempty"`
 }

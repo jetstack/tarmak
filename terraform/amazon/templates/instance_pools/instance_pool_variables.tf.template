@@ -21,6 +21,10 @@ variable "{{.TFName}}_spot_price" {
   default = "{{.SpotPrice}}"
 }
 
+variable "{{.TFName}}_iam_additional_policy_arns" {
+  default = {{.AmazonAdditionalIAMPolicies}}
+}
+
 {{ $instancePool := . }}
 {{ range .Volumes }}
 variable "{{$instancePool.TFName}}_{{.Name}}_volume_size" {
