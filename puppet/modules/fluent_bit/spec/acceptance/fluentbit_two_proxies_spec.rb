@@ -23,6 +23,7 @@ fluent_bit::output{"test2":
       "port" => 443,
       "tls" => true,
       "tlsVerify" => true,
+      "logstashPrefix" => "testprefix",
       "amazonESProxy" => {
         "port" => 9201
       },

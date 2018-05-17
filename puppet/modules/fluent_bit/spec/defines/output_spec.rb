@@ -14,7 +14,7 @@ describe 'fluent_bit::output', :type => :define do
     contain_file('/etc/systemd/system/aws-es-proxy-test.service')
   }
 
-  context 'elasticsearch cluster' do
+  context 'elasticsearch cluster with logstash prefix' do
     let(:title) { 'test' }
     let(:params) {
       {
@@ -23,6 +23,7 @@ describe 'fluent_bit::output', :type => :define do
             "port" => 443,
             "tls" => true,
             "tlsVerify" => true,
+            "logstashPrefix" =>, "myprefix",
         },
           "types" => ["all"],
         },
@@ -41,6 +42,7 @@ describe 'fluent_bit::output', :type => :define do
       should output.with_content(/#{Regexp.escape('tls On')}/)
       should output.with_content(/#{Regexp.escape('tls.verify On')}/)
       should output.with_content(/#{Regexp.escape('Host elastic.example.com')}/)
+      should output.with_content(/#{Regexp.escape('Logstash_Prefix myprefix')}/)
     end
 
   end
