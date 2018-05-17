@@ -217,3 +217,6 @@ docker_%:
 
 	# remove container
 	docker rm $(CONTAINER_ID)
+
+local_build: go_generate
+	go build -o tarmak_local_build ./cmd/tarmak
