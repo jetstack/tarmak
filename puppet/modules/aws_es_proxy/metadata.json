@@ -1,8 +1,8 @@
 {
-  "name": "jetstack-fluent_bit",
+  "name": "jetstack-aws_es_proxy",
   "version": "0.1.0",
   "author": "jetstack",
-  "summary": "Jetstack module to configure fluent-bit",
+  "summary": "Jetstack module to configure aws-es-proxy",
   "license": "Apache-2.0",
   "source": "https://github.com/puppernetes/module-kubernetes",
   "project_page": "https://github.com/puppernetes/module-kubernetes",
