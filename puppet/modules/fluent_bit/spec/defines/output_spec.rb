@@ -23,7 +23,7 @@ describe 'fluent_bit::output', :type => :define do
             "port" => 443,
             "tls" => true,
             "tlsVerify" => true,
-            "logstashPrefix" =>, "myprefix",
+            "logstashPrefix" => "myprefix",
         },
           "types" => ["all"],
         },
