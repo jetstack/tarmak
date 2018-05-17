@@ -55,6 +55,11 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		return nil, err
 	}
 
+	//validate logging
+	if err := cluster.validateLoggingSinks(); err != nil {
+		return nil, err
+	}
+
 	cluster.roles = make(map[string]*role.Role)
 	defineToolsRoles(cluster.roles)
 	defineVaultRoles(cluster.roles)
@@ -236,6 +241,28 @@ func (c *Cluster) validateNetwork() (result error) {
 			return fmt.Errorf("error parsing network: %s", err)
 		}
 		c.networkCIDR = net
+	}
+
+	return nil
+}
+
+// validate logging configuration
+func (c *Cluster) validateLoggingSinks() (result error) {
+
+	if c.Config().LoggingSinks != nil {
+		for index, loggingSink := range c.Config().LoggingSinks {
+			if loggingSink.ElasticSearch != nil && loggingSink.ElasticSearch.AmazonESProxy != nil {
+				if loggingSink.ElasticSearch.HTTPBasicAuth != nil {
+					return fmt.Errorf("cannot enable AWS elasticsearch proxy and HTTP basic auth for logging sink %d", index)
+				}
+				if loggingSink.ElasticSearch.TLSVerify {
+					return fmt.Errorf("cannot enable AWS elasticsearch proxy and force certificate validation for logging sink %d", index)
+				}
+				if loggingSink.ElasticSearch.TLSCA != "" {
+					return fmt.Errorf("cannot enable AWS elasticsearch proxy and specify a custom CA for logging sink %d", index)
+				}
+			}
+		}
 	}
 
 	return nil

@@ -19,4 +19,7 @@ class tarmak::params{
   ## etcd
   $etcd_advertise_client_network = '172.16.0.0/12'
 
+  ## fluent-bit
+  $fluent_bit_configs = []
+
 }

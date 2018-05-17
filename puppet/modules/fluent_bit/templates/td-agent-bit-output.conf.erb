@@ -1,0 +1,46 @@
+<% @types.each do |type| -%>
+[OUTPUT]
+<% if @elasticsearch -%>
+    Name es
+    Type flb_type
+    Logstash_Format On
+<% if @elasticsearch["logstashPrefix"] and @elasticsearch["logstashPrefix"] != "" -%>
+    Logstash_Prefix <%= @elasticsearch["logstashPrefix"] %>
+<% end -%>
+<% if @elasticsearch["amazonESProxy"] -%>
+    Host 127.0.0.1
+    Port <%= @elasticsearch["amazonESProxy"]["port"] %>
+<%- else -%>
+    Host <%= @elasticsearch["host"] %>
+    Port <%= @elasticsearch["port"] %>
+<% if @elasticsearch["httpBasicAuth"] -%>
+<% if @elasticsearch["httpBasicAuth"]["username"] -%>
+    HTTP_User <%= @elasticsearch["httpBasicAuth"]["username"] %>
+<% end -%>
+<% if @elasticsearch["httpBasicAuth"]["password"] -%>
+    HTTP_Passwd <%= @elasticsearch["httpBasicAuth"]["password"] %>
+<% end -%>
+<% end -%>
+<% if @elasticsearch["tls"] -%>
+    tls On
+<% if @elasticsearch["tlsVerify"] -%>
+    tls.verify On
+<%- else -%>
+    tls.verify Off
+<% end -%>
+<% if @elasticsearch["tlsCA"] and @elasticsearch["tlsCA"] != "" -%>
+    tls.ca_file /etc/td-agent-bit/ssl/<%= @name %>-ca.pem
+<% end -%>
+<% end -%>
+<% end -%>
+<%- else -%>
+    Name null
+<% end -%>
+<% if @types.include? "all" -%>
+    Match *
+<% break -%>
+<%- else -%>
+    Match <%= type %>*
+<% end -%>
+
+<% end -%>

@@ -1,0 +1,6 @@
+[td-agent-bit]
+name = TD Agent Bit
+baseurl = https://packages.fluentbit.io/centos/7
+gpgcheck=1
+gpgkey=https://packages.fluentbit.io/fluentbit.key
+enabled=1

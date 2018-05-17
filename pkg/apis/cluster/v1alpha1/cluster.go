@@ -49,6 +49,7 @@ type Cluster struct {
 	Cloud             string         `json:"cloud,omitempty"`
 	Location          string         `json:"location,omitempty"`
 	Network           *Network       `json:"network,omitempty"`
+	LoggingSinks      []*LoggingSink `json:"loggingSinks,omitempty"`
 	Values            *Values        `json:"values,omitempty"`
 	KubernetesAPI     *KubernetesAPI `json:"kubernetesAPI,omitempty"`
 	GroupIdentifier   string         `json:"groupIdentifier,omitempty"`

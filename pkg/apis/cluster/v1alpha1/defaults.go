@@ -70,6 +70,60 @@ func SetDefaults_Cluster(obj *Cluster) {
 	if obj.Kubernetes.Dashboard == nil {
 		obj.Kubernetes.Dashboard = &ClusterKubernetesDashboard{}
 	}
+
+	// logging
+	if obj.LoggingSinks == nil {
+		obj.LoggingSinks = []*LoggingSink{}
+	}
+	for _, loggingSink := range obj.LoggingSinks {
+		if loggingSink.ElasticSearch != nil {
+			if loggingSink.ElasticSearch.Host == "" {
+				loggingSink.ElasticSearch.Host = "127.0.0.1"
+			}
+			if loggingSink.ElasticSearch.Port == 0 {
+				if loggingSink.ElasticSearch.TLS {
+					loggingSink.ElasticSearch.Port = 443
+				} else {
+					loggingSink.ElasticSearch.Port = 80
+				}
+			}
+			if loggingSink.ElasticSearch.LogstashPrefix == "" {
+				loggingSink.ElasticSearch.LogstashPrefix = "logstash"
+			}
+			if loggingSink.ElasticSearch.AmazonESProxy != nil {
+				if loggingSink.ElasticSearch.AmazonESProxy.Port == 0 {
+					loggingSink.ElasticSearch.AmazonESProxy.Port = allocateAmazonESProxyPort(obj.LoggingSinks)
+				}
+			}
+		}
+
+		if len(loggingSink.Types) == 0 {
+			loggingSink.Types = []LoggingSinkType{"all"}
+		}
+	}
+
+}
+
+func allocateAmazonESProxyPort(loggingSinks []*LoggingSink) int {
+
+	allocatedPorts := make(map[int]struct{})
+	for _, loggingSink := range loggingSinks {
+		if loggingSink.ElasticSearch != nil {
+			if loggingSink.ElasticSearch.AmazonESProxy != nil {
+				allocatedPorts[loggingSink.ElasticSearch.AmazonESProxy.Port] = struct{}{}
+			}
+		}
+	}
+
+	currentPort := 9200
+	for {
+		if _, ok := allocatedPorts[currentPort]; ok {
+			currentPort++
+			continue
+		}
+		return currentPort
+	}
+
 }
 
 func SetDefaults_Volume(obj *Volume) {
