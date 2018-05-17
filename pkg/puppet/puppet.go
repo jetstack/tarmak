@@ -209,15 +209,11 @@ func contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
 
 	hieraData.classes = append(hieraData.classes, `tarmak::fluent_bit`)
 	if cluster.Config().LoggingSinks != nil && len(cluster.Config().LoggingSinks) > 0 {
-		fluentBitConfig := []string{}
-		for _, loggingSink := range cluster.Config().LoggingSinks {
-			jsonLoggingSink, err := json.Marshal(loggingSink)
-			if err != nil {
-				return nil, fmt.Errorf("unable to marshall logging sink: %s", err)
-			}
-			fluentBitConfig = append(fluentBitConfig, fmt.Sprintf(`%s`, jsonLoggingSink))
+		jsonLoggingSink, err := json.Marshal(cluster.Config().LoggingSinks)
+		if err != nil {
+			return nil, fmt.Errorf("unable to marshall logging sinks: %s", err)
 		}
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::fluent_bit_configs: %s`, fluentBitConfig))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::fluent_bit_configs: %s`, string(jsonLoggingSink)))
 	}
 
 	classes, variables := serialiseHieraData(hieraData)
