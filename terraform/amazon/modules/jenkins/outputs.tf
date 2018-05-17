@@ -1,5 +1,5 @@
 output "jenkins_fqdn" {
-  value = "${aws_route53_record.jenkins.fqdn}"
+  value = "${aws_route53_record.jenkins_elb.fqdn}"
 }
 
 output "jenkins_security_group_id" {
@@ -11,5 +11,5 @@ output "jenkins_dns_name" {
 }
 
 output "jenkins_url" {
-  value = "https://${aws_route53_record.jenkins.fqdn}"
+  value = "https://${aws_route53_record.jenkins_elb.fqdn}"
 }

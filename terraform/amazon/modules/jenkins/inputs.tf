@@ -14,10 +14,6 @@ variable "private_zone" {}
 
 variable "private_zone_id" {}
 
-variable "jenkins_ami" {}
-
-variable "jenkins_instance_type" {}
-
 variable "public_subnet_ids" {
   type = "list"
 }
@@ -44,4 +40,6 @@ variable "stack_name_prefix" {}
 
 variable "name" {}
 
-
+variable "availability_zones" {
+  type = "list"
+}
