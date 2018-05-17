@@ -2,6 +2,7 @@
 /.generate_files
 /tarmak_linux_amd64
 /tarmak_darwin_amd64
+/tarmak_local_build
 /wing_linux_amd64
 /dist/
 /bin/
