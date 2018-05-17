@@ -1,12 +1,13 @@
 require 'spec_helper_acceptance'
 
 describe '::fluent_bit' do
-  let :pp do
-    "
-class{'fluent_bit':
+    pp = <<-EOS
+fluent_bit::output{"test":
+    config => { 
+        "types" => ["all"],
+    },
 }
-"
-  end
+EOS
 
   before(:all) do
     # assign private ip addresses
