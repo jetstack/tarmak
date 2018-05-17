@@ -255,6 +255,9 @@ func (c *Cluster) validateLoggingSinks() (result error) {
 				if loggingSink.ElasticSearch.HTTPBasicAuth != nil {
 					return fmt.Errorf("cannot enable AWS elasticsearch proxy and HTTP basic auth for logging sink %d", index)
 				}
+				if loggingSink.ElasticSearch.TLSVerify {
+					return fmt.Errorf("cannot enable AWS elasticsearch proxy and force certificate validation for logging sink %d", index)
+				}
 				if loggingSink.ElasticSearch.TLSCA != "" {
 					return fmt.Errorf("cannot enable AWS elasticsearch proxy and specify a custom CA for logging sink %d", index)
 				}
