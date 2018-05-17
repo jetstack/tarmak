@@ -1,0 +1,4 @@
+fixtures:
+  symlinks:
+    aws_es_proxy: "#{source_dir}"
+    stdlib: "#{source_dir}/../stdlib"
