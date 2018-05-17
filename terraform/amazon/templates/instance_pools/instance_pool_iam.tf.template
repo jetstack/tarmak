@@ -115,5 +115,3 @@ resource "aws_iam_role_policy_attachment" "{{.TFName}}_additional_policy" {
   policy_arn = "${element(var.{{.TFName}}_iam_additional_policy_arns, count.index)}"
 }
 {{ end -}}
-
->>>>>>> Make sure Terraform runs
