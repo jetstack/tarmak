@@ -142,11 +142,11 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 		"InstancePools":            t.cluster.InstancePools(),
 		"ExistingVPC":              existingVPC,
 		// cluster.Roles() returns a list of roles based off of the types of instancePools in tarmak.yaml
-		"Roles":                 	t.cluster.Roles(),
-		"SocketPath":            	tarmakSocketPath(t.cluster.ConfigPath()),
-		"JenkinsCertificateARN": 	jenkinsCertificateARN,
-		"JenkinsInstall":			jenkinsInstall,
-		"Module":                	module,
+		"Roles":                 t.cluster.Roles(),
+		"SocketPath":            tarmakSocketPath(t.cluster.ConfigPath()),
+		"JenkinsCertificateARN": jenkinsCertificateARN,
+		"JenkinsInstall":        jenkinsInstall,
+		"Module":                module,
 	}
 }
 
