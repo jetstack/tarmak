@@ -164,13 +164,13 @@ resource "aws_instance" "{{.TFName}}" {
   }
 
   tags {
-    Name               = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
+    Name               = "${data.template_file.stack_name.rendered}-k8s-{{.TFName}}-${count.index+1}"
     Environment        = "${var.environment}"
     Project            = "${var.project}"
     Contact            = "${var.contact}"
-    Etcd_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
-    Role               = "etcd"
-    tarmak_role        = "etcd-${count.index+1}"
+    {{.TFName}}_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-{{.TFName}}-${count.index+1}"
+    Role               = "{{.TFName}}"
+    tarmak_role        = "{{.TFName}}-${count.index+1}"
   }
 
   user_data = "${element(data.template_file.{{.TFName}}_user_data.*.rendered, count.index)}"

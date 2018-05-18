@@ -62,7 +62,7 @@ data "template_file" "iam_{{$instancePool.TFName}}_ebs_attach_{{.Name}}" {
 
 resource "aws_iam_policy" "{{$instancePool.TFName}}_ec2_ebs_attach_{{.Name}}" {
   name        = "${data.template_file.stack_name.rendered}-{{$instancePool.DNSName}}"
-  description = "Allows etcd nodes to attach/detach EBS volumes"
+  description = "Allows {{$instancePool.TFName}} nodes to attach/detach EBS volumes"
 
   policy      = <<EOF
 {
