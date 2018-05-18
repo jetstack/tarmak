@@ -70,6 +70,7 @@ module "bastion" {
   private_zone_id = "${module.network.private_zone_id[0]}"
 }
 
+{{ if .JenkinsInstall -}}
 module "jenkins" {
   source = "modules/jenkins"
 
@@ -95,6 +96,7 @@ module "jenkins" {
   availability_zones = ["${var.availability_zones}"]
   name = "${var.name}"
 }
+{{ end -}}
 
 module "vault" {
   source = "modules/vault"

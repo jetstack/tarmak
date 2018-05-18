@@ -125,8 +125,10 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 	_, existingVPC := t.cluster.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingVPCAnnotationKey]
 
 	jenkinsCertificateARN := ""
+	jenkinsInstall := false
 	for _, instancePool := range t.cluster.InstancePools() {
 		if instancePool.Role().Name() == "jenkins" {
+			jenkinsInstall = true
 			jenkinsCertificateARN, _ = instancePool.Config().Annotations[cluster.JenkinsCertificateARNAnnotationKey]
 			break
 		}
@@ -140,10 +142,11 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 		"InstancePools":            t.cluster.InstancePools(),
 		"ExistingVPC":              existingVPC,
 		// cluster.Roles() returns a list of roles based off of the types of instancePools in tarmak.yaml
-		"Roles":                 t.cluster.Roles(),
-		"SocketPath":            tarmakSocketPath(t.cluster.ConfigPath()),
-		"JenkinsCertificateARN": jenkinsCertificateARN,
-		"Module":                module,
+		"Roles":                 	t.cluster.Roles(),
+		"SocketPath":            	tarmakSocketPath(t.cluster.ConfigPath()),
+		"JenkinsCertificateARN": 	jenkinsCertificateARN,
+		"JenkinsInstall":			jenkinsInstall,
+		"Module":                	module,
 	}
 }
 
