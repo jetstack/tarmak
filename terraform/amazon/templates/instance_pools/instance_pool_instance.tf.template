@@ -18,6 +18,7 @@ data "template_file" "{{.TFName}}_user_data" {
     region = "${var.region}"
 
     puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+    wing_binary_path          = "${var.secrets_bucket}/${aws_s3_bucket_object.wing-binary.key}"
 
     vault_token = "${tarmak_vault_instance_role.{{.Role.Name}}.init_token}"
     vault_ca    = "${base64encode(var.vault_ca)}"
@@ -41,6 +42,11 @@ data "template_file" "{{.TFName}}_user_data" {
 {{ end -}}
 {{ end -}}
   }
+
+  # The template file makes reference to wing binary filename which is based
+  # on a hash of the binary itself. This means that the binary must be uploaded
+  # first in order to get the correct filename.
+  depends_on = ["aws_s3_bucket_object.wing-binary"]
 }
 
 {{if not .Role.Stateful -}}
