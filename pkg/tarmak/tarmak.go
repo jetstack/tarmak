@@ -153,7 +153,7 @@ func (t *Tarmak) initializeConfig() error {
 }
 
 func (t *Tarmak) writeSSHConfigForClusterHosts() error {
-	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
+	if err := t.ssh.WriteConfig(); err != nil {
 		return fmt.Errorf("failed to write ssh config for current cluster '%s': %v", t.config.CurrentClusterName(), err)
 	}
 	return nil
