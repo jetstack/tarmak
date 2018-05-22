@@ -10,7 +10,7 @@ func defineToolsRoles(roleMap map[string]*role.Role) {
 	jenkinsRole := &role.Role{
 		Stateful: true,
 		AWS: &role.RoleAWS{
-			ELBIngress:    true,
+			ELBIngress: true,
 		},
 	}
 	jenkinsRole.WithName("jenkins")
