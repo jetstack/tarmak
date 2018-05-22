@@ -136,10 +136,3 @@ func (t *Tarmak) verifyImageExists() error {
 
 	return nil
 }
-
-func (t *Tarmak) writeSSHConfigForClusterHosts() error {
-	if err := t.ssh.WriteConfig(); err != nil {
-		return fmt.Errorf("failed to write ssh config for current cluster '%s': %v", t.config.CurrentClusterName(), err)
-	}
-	return nil
-}
