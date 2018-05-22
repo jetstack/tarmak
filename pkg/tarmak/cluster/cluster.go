@@ -428,6 +428,8 @@ func (c *Cluster) Variables() map[string]interface{} {
 		ids, ok := imageIDs[image]
 		if ok {
 			output[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
+		} else {
+			c.log.Fatalf("error getting the image ID of %s", instancePool.TFName())
 		}
 		output[fmt.Sprintf("%s_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
 	}
