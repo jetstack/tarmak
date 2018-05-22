@@ -58,7 +58,11 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 			"puppet.tar.gz",
 		),
 	)
-	file, err := os.OpenFile(puppetTarGzFilename, os.O_RDWR|os.O_CREATE, 0600)
+	file, err := os.OpenFile(
+		puppetTarGzFilename,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
+		0600,
+	)
 	if err != nil {
 		return fmt.Errorf("error creating %s: %s", puppetTarGzFilename, err)
 	}
@@ -163,7 +167,7 @@ func (t *terraformTemplate) generateTemplate(name string) error {
 			t.destDir,
 			fmt.Sprintf("%s.tf", name),
 		),
-		os.O_RDWR|os.O_CREATE,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
 		0644,
 	)
 	if err != nil {
@@ -214,7 +218,7 @@ func (t *terraformTemplate) generateInstanceTemplates() error {
 			t.destDir,
 			fmt.Sprintf("modules/kubernetes/%s.tf", name),
 		),
-		os.O_RDWR|os.O_CREATE,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
 		0644,
 	)
 	if err != nil {
@@ -271,7 +275,7 @@ func (t *terraformTemplate) generateTerraformVariables() error {
 			t.destDir,
 			"terraform.tfvars",
 		),
-		os.O_RDWR|os.O_CREATE,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
 		0644,
 	)
 	if err != nil {
@@ -293,7 +297,7 @@ func (t *terraformTemplate) generateRemoteStateConfig() error {
 			t.destDir,
 			"terraform_remote_state.tf",
 		),
-		os.O_RDWR|os.O_CREATE,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
 		0644,
 	)
 	if err != nil {
