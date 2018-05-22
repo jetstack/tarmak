@@ -1,5 +1,4 @@
 {{/* vim: set ft=tf: */}}
-{{ $ }}
 {{ if .Role.AWS.ELBAPI -}}
 resource "aws_elb" "{{.Role.TFName}}" {
   name         = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
