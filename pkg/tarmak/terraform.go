@@ -22,6 +22,10 @@ func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
+	if err := t.Cluster().Verify(); err != nil {
+		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
+	}
+
 	t.cluster.Log().Info("running plan")
 	err := t.terraform.Plan(t.Cluster())
 	if err != nil {
@@ -38,6 +42,10 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
+	}
+
+	if err := t.Cluster().Verify(); err != nil {
+		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
 	}
 
 	t.cluster.Log().Info("running apply")
@@ -77,6 +85,10 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
+	}
+
+	if err := t.Cluster().Verify(); err != nil {
+		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
 	}
 
 	t.cluster.Log().Info("running destroy")

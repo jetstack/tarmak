@@ -153,6 +153,26 @@ func (c *Cluster) validateInstancePools() (result error) {
 	//return fmt.Errorf("refactore me!")
 }
 
+func (c *Cluster) Verify() (result error) {
+	return c.VerifyInstancePools()
+}
+
+func (c *Cluster) VerifyInstancePools() (result error) {
+	imageIDs, err := c.ImageIDs()
+	if err != nil {
+		return fmt.Errorf("error getting image IDs: %s]", err)
+	}
+
+	for _, instancePool := range c.InstancePools() {
+		image := instancePool.Image()
+		_, ok := imageIDs[image]
+		if !ok {
+			return fmt.Errorf("error getting the image ID of %s", instancePool.TFName())
+		}
+	}
+	return nil
+}
+
 /*
 	//poolMap := c.InstancePoolsMap()
 	clusterType := c.Type()
@@ -428,8 +448,6 @@ func (c *Cluster) Variables() map[string]interface{} {
 		ids, ok := imageIDs[image]
 		if ok {
 			output[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
-		} else {
-			c.log.Fatalf("error getting the image ID of %s", instancePool.TFName())
 		}
 		output[fmt.Sprintf("%s_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
 	}
