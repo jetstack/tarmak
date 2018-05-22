@@ -24,6 +24,8 @@ import (
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
 
+const debugShell = "debug-shell"
+
 type Terraform struct {
 	*tarmakDocker.App
 	log    *logrus.Entry
@@ -149,20 +151,45 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	}
 
 	// command
-	cmdArgs := []string{
-		"terraform",
-		command,
-	}
-	cmdArgs = append(cmdArgs, args...)
+	if command == debugShell {
+		dir := t.codePath(cluster)
+		envVars, err := t.envVars(cluster)
+		if err != nil {
+			return err
+		}
 
-	if err := t.command(
-		cluster,
-		cmdArgs,
-		nil,
-		nil,
-		nil,
-	); err != nil {
-		return err
+		// use $SHELL if available, fall back to /bin/sh
+		shell := os.Getenv("SHELL")
+		if shell == "" {
+			shell = "/bin/sh"
+			envVars = append(envVars, fmt.Sprintf("PS1=[%s]$ ", dir))
+		}
+
+		cmd := exec.Command(shell)
+		cmd.Dir = dir
+		// envVars variables will override any shell envs will equal key
+		cmd.Env = append(os.Environ(), envVars...)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		cmd.Run()
+	} else if command != "" {
+		cmdArgs := []string{
+			"terraform",
+			command,
+		}
+		cmdArgs = append(cmdArgs, args...)
+
+		if err := t.command(
+			cluster,
+			cmdArgs,
+			nil,
+			nil,
+			nil,
+		); err != nil {
+			return err
+		}
 	}
 
 	close(stopCh)
@@ -272,8 +299,11 @@ func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
 }
 
 func (t *Terraform) Shell(cluster interfaces.Cluster) error {
-	// TODO: needs to be implemented
-	return fmt.Errorf("Shell unimplemented")
+
+	if err := t.terraformWrapper(cluster, debugShell, nil); err != nil {
+		return err
+	}
+	return nil
 }
 
 // convert interface map to terraform.tfvars format
