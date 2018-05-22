@@ -128,7 +128,7 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 	jenkinsCertificateARN := ""
 	jenkinsInstall := false
 	for _, instancePool := range t.cluster.InstancePools() {
-		if instancePool.Role().Name() == "jenkins" {
+		if instancePool.Role().Name() == clusterv1alpha1.InstancePoolTypeJenkins {
 			jenkinsInstall = true
 			jenkinsCertificateARN, _ = instancePool.Config().Annotations[cluster.JenkinsCertificateARNAnnotationKey]
 			break
