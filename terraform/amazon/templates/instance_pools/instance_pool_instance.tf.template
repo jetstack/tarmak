@@ -5,6 +5,13 @@ data "template_file" "{{.TFName}}_user_data" {
 {{ if .Role.Stateful -}}
   count    = "${var.{{.TFName}}_count}"
 {{ end -}}
+{{ if eq .Name "jenkins" -}}
+  template = "${file("${path.module}/templates/jenkins_user_data.yaml")}"
+  vars {
+    region = "${var.region}"
+    fqdn   = "jenkins.${var.private_zone}"
+    volume_id = "${element(aws_ebs_volume.jenkins_data.*.id, 0)}"
+{{ else -}}
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
   vars {
@@ -30,6 +37,7 @@ data "template_file" "{{.TFName}}_user_data" {
     tarmak_desired_count = "${var.{{.TFName}}_count}"
 {{if gt (len .Volumes) 0 -}}
     tarmak_volume_id     = "${element(aws_ebs_volume.{{.TFName}}_{{(index .Volumes 0).Name}}.*.id, count.index)}"
+{{ end -}}
 {{ end -}}
 {{ end -}}
   }
@@ -156,13 +164,13 @@ resource "aws_instance" "{{.TFName}}" {
   }
 
   tags {
-    Name               = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
+    Name               = "${data.template_file.stack_name.rendered}-k8s-{{.TFName}}-${count.index+1}"
     Environment        = "${var.environment}"
     Project            = "${var.project}"
     Contact            = "${var.contact}"
-    Etcd_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-etcd-${count.index+1}"
-    Role               = "etcd"
-    tarmak_role        = "etcd-${count.index+1}"
+    {{.TFName}}_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-{{.TFName}}-${count.index+1}"
+    Role               = "{{.TFName}}"
+    tarmak_role        = "{{.TFName}}-${count.index+1}"
   }
 
   user_data = "${element(data.template_file.{{.TFName}}_user_data.*.rendered, count.index)}"
@@ -218,7 +226,7 @@ resource "aws_ebs_volume" "{{$instancePool.TFName}}_{{.Name}}" {
 {{ end -}}
 resource "aws_route53_record" "{{.TFName}}" {
   zone_id = "${var.private_zone_id}"
-  name    = "etcd-${count.index+1}.${data.template_file.stack_name.rendered}"
+  name    = "{{.Role.Name}}-${count.index+1}.${data.template_file.stack_name.rendered}"
   type    = "A"
   ttl     = "300"
   records = ["${element(aws_instance.{{.TFName}}.*.private_ip, count.index)}"]
