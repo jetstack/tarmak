@@ -16,7 +16,6 @@ type Role struct {
 
 type RoleAWS struct {
 	ELBIngress    bool // enable ELB API internal
-	ELBIngressTLS bool // enable TLS
 	ELBAPI        bool // enable ELB ingress external
 	ELBAPIPublic  bool // ELB public or internal
 
