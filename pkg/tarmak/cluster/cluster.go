@@ -16,6 +16,15 @@ import (
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
 )
 
+const (
+	// represents Terraform in a destroy state
+	StateDestroy                          = "destroy"
+	ExistingVPCAnnotationKey              = "tarmak.io/existing-vpc-id"
+	ExistingPublicSubnetIDsAnnotationKey  = "tarmak.io/existing-public-subnet-ids"
+	ExistingPrivateSubnetIDsAnnotationKey = "tarmak.io/existing-private-subnet-ids"
+	JenkinsCertificateARNAnnotationKey    = "tarmak.io/jenkins-certificate-arn"
+)
+
 // returns a server
 type Cluster struct {
 	conf *clusterv1alpha1.Cluster
@@ -104,7 +113,7 @@ func (c *Cluster) InstancePool(roleName string) interfaces.InstancePool {
 }
 
 func (c *Cluster) ListHosts() ([]interfaces.Host, error) {
-	return c.Environment().Provider().ListHosts()
+	return c.Environment().Provider().ListHosts(c)
 }
 
 func (c *Cluster) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1alpha1.InstancePool) {
@@ -153,10 +162,12 @@ func (c *Cluster) validateInstancePools() (result error) {
 	//return fmt.Errorf("refactore me!")
 }
 
+// Verify cluster
 func (c *Cluster) Verify() (result error) {
 	return c.VerifyInstancePools()
 }
 
+// Verify instance pools
 func (c *Cluster) VerifyInstancePools() (result error) {
 	imageIDs, err := c.ImageIDs()
 	if err != nil {
@@ -470,6 +481,16 @@ func (c *Cluster) Variables() map[string]interface{} {
 	publicSubnetIDs, ok := c.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingPublicSubnetIDsAnnotationKey]
 	if ok {
 		output["public_subnets"] = publicSubnetIDs
+	}
+
+	for _, instancePool := range c.InstancePools() {
+		if instancePool.Role().Name() == "jenkins" {
+			jenkinsCertificateARN, ok := instancePool.Config().Annotations[JenkinsCertificateARNAnnotationKey]
+			if ok {
+				output["jenkins_certificate_arn"] = jenkinsCertificateARN
+				break
+			}
+		}
 	}
 
 	// publish changed private zone

@@ -80,6 +80,24 @@ variable "bastion_instance_type" {
 variable "bastion_root_size" {
   default = "16"
 }
+{{ if .JenkinsInstall -}}
+variable "jenkins_ami" {}
+variable "jenkins_stack_name_prefix" {
+  default = "jenkins-"
+}
+variable "jenkins_instance_type" {
+  default = "t2.large"
+}
+variable "jenkins_root_size" {
+  default = "16"
+}
+variable "jenkins_ebs_size" {
+  default = "16"
+}
+variable "jenkins_certificate_arn" {
+  default = ""
+}
+{{ end -}}
 # TODO: restrict to admin IPs
 variable "admin_ips" {
   type    = "list"

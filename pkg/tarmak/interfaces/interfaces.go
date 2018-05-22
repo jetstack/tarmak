@@ -113,7 +113,7 @@ type Provider interface {
 	QueryImages(tags map[string]string) ([]tarmakv1alpha1.Image, error)
 	VaultKV() (kv.Service, error)
 	VaultKVWithParams(kmsKeyID, unsealKeyName string) (kv.Service, error)
-	ListHosts() ([]Host, error)
+	ListHosts(Cluster) ([]Host, error)
 	InstanceType(string) (string, error)
 	VolumeType(string) (string, error)
 	String() string
@@ -190,7 +190,7 @@ type Terraform interface {
 }
 
 type SSH interface {
-	WriteConfig() error
+	WriteConfig(Cluster) error
 	PassThrough([]string)
 	Tunnel(hostname string, destination string, destinationPort int) Tunnel
 	Execute(host string, cmd string, args []string) (returnCode int, err error)

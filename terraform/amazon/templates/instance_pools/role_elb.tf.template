@@ -1,13 +1,13 @@
 {{/* vim: set ft=tf: */}}
-{{ if .AWS.ELBAPI -}}
-resource "aws_elb" "{{.TFName}}" {
+{{ if .Role.AWS.ELBAPI -}}
+resource "aws_elb" "{{.Role.TFName}}" {
   name         = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
   subnets      = ["${var.private_subnet_ids}"]
   internal     = true
   idle_timeout = 3600
 
   security_groups = [
-    "${aws_security_group.{{.TFName}}_elb.id}",
+    "${aws_security_group.{{.Role.TFName}}_elb.id}",
   ]
 
   listener {
@@ -33,27 +33,27 @@ resource "aws_elb" "{{.TFName}}" {
   }
 }
 
-resource "aws_route53_record" "{{.TFName}}_api" {
+resource "aws_route53_record" "{{.Role.TFName}}_api" {
   zone_id = "${var.private_zone_id}"
   name    = "api.${data.template_file.stack_name.rendered}"
   type    = "A"
 
   alias {
-    name                   = "${aws_elb.{{.TFName}}.dns_name}"
+    name                   = "${aws_elb.{{.Role.TFName}}.dns_name}"
     zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
     evaluate_target_health = true
   }
 }
 
-{{ if .AWS.ELBAPIPublic -}}
-resource "aws_elb" "{{.TFName}}_public" {
+{{ if .Role.AWS.ELBAPIPublic -}}
+resource "aws_elb" "{{.Role.TFName}}_public" {
   name         = "${format("%.19s-api-pub", data.template_file.stack_name.rendered)}"
   subnets      = ["${var.public_subnet_ids}"]
   idle_timeout = 3600
 
   security_groups = [
-    "${aws_security_group.{{.TFName}}_elb.id}",
-    "${aws_security_group.{{.TFName}}_elb_public.id}",
+    "${aws_security_group.{{.Role.TFName}}_elb.id}",
+    "${aws_security_group.{{.Role.TFName}}_elb_public.id}",
   ]
 
   listener {
@@ -79,13 +79,13 @@ resource "aws_elb" "{{.TFName}}_public" {
   }
 }
 
-resource "aws_route53_record" "{{.TFName}}_api_public" {
+resource "aws_route53_record" "{{.Role.TFName}}_api_public" {
   zone_id = "${var.public_zone_id}"
   name    = "api.${data.template_file.stack_name.rendered}"
   type    = "A"
 
   alias {
-    name                   = "${aws_elb.{{.TFName}}_public.dns_name}"
+    name                   = "${aws_elb.{{.Role.TFName}}_public.dns_name}"
     zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
     evaluate_target_health = true
   }
@@ -93,9 +93,9 @@ resource "aws_route53_record" "{{.TFName}}_api_public" {
 {{ end -}}
 
 {{ end -}}
-{{ if .AWS.ELBIngress -}}
+{{ if .Role.AWS.ELBIngress -}}
 output "ingress_wildcard_fqdn" {
-  value = "${aws_route53_record.{{.TFName}}.fqdn}"
+  value = "${aws_route53_record.{{.Role.TFName}}_elb.fqdn}"
 }
 
 # TODO: Enable me again
@@ -104,33 +104,75 @@ output "ingress_wildcard_fqdn" {
 #  statuses = ["ISSUED"]
 #}
 
-resource "aws_route53_record" "{{.TFName}}" {
+resource "aws_route53_record" "{{.Role.TFName}}_elb" {
   zone_id = "${var.public_zone_id}"
+{{ if eq .Role.Name "jenkins" -}}
+  name    = "jenkins.${var.environment}"
+{{ else -}}
   name    = "*.${var.name}"
+{{ end -}}
   type    = "A"
 
   alias {
-    name                   = "${aws_elb.{{.TFName}}.dns_name}"
+    name                   = "${aws_elb.{{.Role.TFName}}.dns_name}"
     zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
     evaluate_target_health = true
   }
 }
 
-resource "aws_elb" "{{.TFName}}" {
+resource "aws_elb" "{{.Role.TFName}}" {
   name         = "${format("%.20s-ingress", data.template_file.stack_name.rendered)}"
   subnets      = ["${var.public_subnet_ids}"]
   idle_timeout = 600
 
   security_groups = [
-    "${aws_security_group.{{.TFName}}_elb.id}",
+    "${aws_security_group.{{.Role.TFName}}_elb.id}",
   ]
 
+{{ if eq .Role.Name "jenkins" }}
+  cross_zone_load_balancing = true
+
+{{ if .JenkinsCertificateARN }}
+  listener {
+    instance_port      = "${var.jenkins_elb_instance_port_http}"
+    instance_protocol  = "http"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = "${var.certificate_arn}"
+  }
+{{ else }}
+  listener {
+    instance_port      = "${var.jenkins_elb_instance_port_http}"
+    instance_protocol  = "http"
+    lb_port            = 80
+    lb_protocol        = "http"
+  }
+{{ end }}
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "TCP:${var.jenkins_elb_instance_port_http}"
+    interval            = 30
+  }
+
+{{ else }}
   listener {
     instance_port     = "${var.ingress_elb_nodeport_http}"
     instance_protocol = "http"
     lb_port           = 80
     lb_protocol       = "http"
   }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
+    timeout             = 3
+    target              = "TCP:${var.ingress_elb_nodeport_http}"
+    interval            = 10
+  }
+{{ end }}
 
   #listener {
   #  instance_port      = "${var.ingress_elb_nodeport_http}"
@@ -140,13 +182,6 @@ resource "aws_elb" "{{.TFName}}" {
   #  ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
   #}
 
-  health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 5
-    timeout             = 3
-    target              = "TCP:${var.ingress_elb_nodeport_http}"
-    interval            = 10
-  }
   tags {
     Environment = "${var.environment}"
     Project     = "${var.project}"

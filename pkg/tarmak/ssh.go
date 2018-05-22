@@ -10,7 +10,7 @@ func (t *Tarmak) SSH() interfaces.SSH {
 }
 
 func (t *Tarmak) SSHPassThrough(argsAdditional []string) {
-	if err := t.ssh.WriteConfig(); err != nil {
+	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
 		t.log.Fatal(err)
 	}
 	t.ssh.PassThrough(argsAdditional)

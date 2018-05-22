@@ -14,6 +14,10 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 }
 
 func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return err
+	}
+
 	if err := t.verifyImageExists(); err != nil {
 		return err
 	}
@@ -36,6 +40,10 @@ func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return err
+	}
+
 	if err := t.verifyImageExists(); err != nil {
 		return err
 	}
@@ -83,6 +91,10 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return err
+	}
+
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
@@ -101,6 +113,10 @@ func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformShell(args []string) error {
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return err
+	}
+
 	err := t.terraform.Shell(t.Cluster())
 	if err != nil {
 		return err

@@ -152,6 +152,13 @@ func (t *Tarmak) initializeConfig() error {
 	return nil
 }
 
+func (t *Tarmak) writeSSHConfigForClusterHosts() error {
+	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
+		return fmt.Errorf("failed to write ssh config for current cluster '%s': %v", t.config.CurrentClusterName(), err)
+	}
+	return nil
+}
+
 // This initializes a new tarmak cluster
 func (t *Tarmak) CmdClusterInit() error {
 	i := initialize.New(t, os.Stdin, os.Stdout)
@@ -301,5 +308,8 @@ func (t *Tarmak) Must(err error) {
 }
 
 func (t *Tarmak) CmdKubectl(args []string) error {
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return err
+	}
 	return t.kubectl.Kubectl(args)
 }
