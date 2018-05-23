@@ -2,6 +2,11 @@
 {{ $instancePool := . -}}
 
 data "template_file" "{{.TFName}}_user_data" {
+  # Even though this resource references the wing binary resource in the vars
+  # below, this is still required to ensure that terraform also updates the
+  # instances and launch_configurations.
+  depends_on = ["aws_s3_bucket_object.wing-binary"]
+
 {{ if .Role.Stateful -}}
   count    = "${var.{{.TFName}}_count}"
 {{ end -}}
