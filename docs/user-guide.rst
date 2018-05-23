@@ -222,7 +222,7 @@ You can install Jenkins as part of your hub. This can be achieved by adding an e
 This instance pool can be extended with an annotation ``tarmak.io/jenkins-certificate-arn``. The value of this annotation will be an arn pointing to an Amazon Certificate.
 When you set this annotation, your Jenkins will be secured with https. You need to make sure your SSL certificate is valid for jenkins.<environment>.<zone>.
 
-``` code-block:: yaml
+.. code-block:: yaml
 
   - image: centos-puppet-agent
     maxCount: 1
@@ -245,7 +245,7 @@ When you set this annotation, your Jenkins will be secured with https. You need 
         name: data
       size: 16Gi
       type: ssd
-```
+  ...
 
 Setting up an AWS hosted Elasticsearch Cluster
 ++++++++++++++++++++++++++++++++++++++++++++++
