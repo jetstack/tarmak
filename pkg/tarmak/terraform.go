@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os/exec"
+	"syscall"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
@@ -29,6 +31,14 @@ func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
 	t.cluster.Log().Info("running plan")
 	err := t.terraform.Plan(t.Cluster())
 	if err != nil {
+		exitError, ok := err.(*exec.ExitError)
+		if ok {
+			status := exitError.ProcessState.Sys().(syscall.WaitStatus)
+			if status.ExitStatus() == 2 {
+				t.cluster.Log().Info("plan calculated changes are required")
+				return nil
+			}
+		}
 		return err
 	}
 
