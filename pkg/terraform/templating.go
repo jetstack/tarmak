@@ -20,7 +20,6 @@ import (
 )
 
 func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
-
 	terraformCodePath := t.codePath(c)
 	if err := utils.EnsureDirectory(
 		terraformCodePath,
@@ -96,6 +95,7 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 		cluster:  c,
 		destDir:  terraformCodePath,
 		rootPath: rootPath,
+		wingHash: wingHash,
 	}
 	if err := templ.Generate(); err != nil {
 		return err
@@ -109,6 +109,7 @@ type terraformTemplate struct {
 	cluster  interfaces.Cluster
 	destDir  string
 	rootPath string
+	wingHash string
 }
 
 func (t *terraformTemplate) Generate() error {
@@ -135,6 +136,10 @@ func (t *terraformTemplate) Generate() error {
 		result = multierror.Append(result, err)
 	}
 	if err := t.generateTemplate("jenkins_elb", "modules/jenkins/jenkins_elb"); err != nil {
+		result = multierror.Append(result, err)
+	}
+	// TODO time for a loop over an array of pairs?
+	if err := t.generateTemplate("wing_s3", "modules/kubernetes/wing_s3"); err != nil {
 		result = multierror.Append(result, err)
 	}
 	if err := t.generateTerraformVariables(); err != nil {
@@ -171,6 +176,7 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 		"JenkinsCertificateARN": jenkinsCertificateARN,
 		"JenkinsInstall":        jenkinsInstall,
 		"Module":                module,
+		"WingHash":              t.wingHash,
 	}
 }
 

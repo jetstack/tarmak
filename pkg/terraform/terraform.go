@@ -26,6 +26,9 @@ import (
 
 const debugShell = "debug-shell"
 
+// wingHash is set by a linker flag to the hash of the lastest wing binary
+var wingHash string
+
 type Terraform struct {
 	*tarmakDocker.App
 	log    *logrus.Entry

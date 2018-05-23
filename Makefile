@@ -76,13 +76,17 @@ go_vet:
 
 go_build:
 	# make sure you add all binaries to the .goreleaser.yml as well
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o tarmak_linux_amd64           ./cmd/tarmak
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o tarmak_darwin_amd64          ./cmd/tarmak
+	# The hash of this binary is used to test if wing has changed in the s3 object etag
+	$(eval WING_HASH := $(shell md5sum wing_linux_amd64_unversioned | awk '{print $$1}'))
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH)' -o tarmak_linux_amd64 ./cmd/tarmak
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) -X pkg/terraform/templating.wingHash=$$WING_HASH -X main.wingHash=$(WING_HASH)' -o tarmak_darwin_amd64 ./cmd/tarmak
 
-# wing is must come first as it's used in the go-bindata
+# wing binaries are used in the go-bindata
 go_build_wing:
-	# make sure you add all binaries to the .goreleaser.yml as well
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o wing_linux_amd64             ./cmd/wing
+	# Build a version of the wing binary without build variables
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -o wing_linux_amd64_unversioned ./cmd/wing
+	# Build a release wing binary
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o wing_linux_amd64 ./cmd/wing
 
 $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
