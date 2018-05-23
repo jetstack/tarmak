@@ -1,6 +1,8 @@
 resource "aws_s3_bucket_object" "wing-binary" {
   source = "wing_linux_amd64"
   bucket = "${var.secrets_bucket}"
+
+  # The binary's key changes when the binary hash does, this means we don't use
+  # etag to trigger updates
   key    = "${data.template_file.stack_name.rendered}/wing-{{ .WingHash }}"
-  etag   = "{{ .WingHash }}"
 }
