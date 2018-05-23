@@ -42,11 +42,6 @@ data "template_file" "{{.TFName}}_user_data" {
 {{ end -}}
 {{ end -}}
   }
-
-  # The template file makes reference to wing binary filename which is based
-  # on a hash of the binary itself. This means that the binary must be uploaded
-  # first in order to get the correct filename.
-  depends_on = ["aws_s3_bucket_object.wing-binary"]
 }
 
 {{if not .Role.Stateful -}}
