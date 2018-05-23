@@ -167,7 +167,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 
 		cmd := exec.Command(shell)
 		cmd.Dir = dir
-		// envVars variables will override any shell envs will equal key
+		// envVars variables will override any shell envs with equal key
 		cmd.Env = append(os.Environ(), envVars...)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
@@ -209,6 +209,8 @@ func (t *Terraform) envVars(cluster interfaces.Cluster) ([]string, error) {
 	} else {
 		envVars = append(envVars, environmentProvider...)
 	}
+
+	envVars = append(envVars, fmt.Sprintf("TF_LOG=%s", os.Getenv("TF_LOG")))
 
 	return envVars, nil
 }
