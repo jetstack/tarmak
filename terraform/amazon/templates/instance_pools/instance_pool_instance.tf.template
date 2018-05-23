@@ -2,11 +2,6 @@
 {{ $instancePool := . -}}
 
 data "template_file" "{{.TFName}}_user_data" {
-  # Even though this resource references the wing binary resource in the vars
-  # below, this is still required to ensure that terraform also updates the
-  # instances and launch_configurations.
-  depends_on = ["aws_s3_bucket_object.wing-binary"]
-
 {{ if .Role.Stateful -}}
   count    = "${var.{{.TFName}}_count}"
 {{ end -}}
@@ -23,7 +18,7 @@ data "template_file" "{{.TFName}}_user_data" {
     region = "${var.region}"
 
     puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
-    wing_binary_path          = "${var.secrets_bucket}/${aws_s3_bucket_object.wing-binary.key}"
+    wing_binary_path          = "${var.secrets_bucket}/${var.wing_binary_path}"
 
     vault_token = "${tarmak_vault_instance_role.{{.Role.Name}}.init_token}"
     vault_ca    = "${base64encode(var.vault_ca)}"
