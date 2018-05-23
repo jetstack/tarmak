@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	commit   string = "unknown"
-	date     string = ""
-	version  string = "dev"
-	wingHash string = "unknown"
+	commit   = "unknown"
+	date     = ""
+	version  = "dev"
+	wingHash = "unknown"
 )
 
 func main() {
