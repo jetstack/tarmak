@@ -53,22 +53,24 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 		return err
 	}
 
-	// move in wing binary for terraform bucket object
-	sourceWingBinary, err := os.Open(filepath.Join(rootPath, "wing_linux_amd64"))
-	if err != nil {
-		return err
-	}
-	defer sourceWingBinary.Close()
+	if t.tarmak.Config().WingDevMode() {
+		// move in wing binary for terraform bucket object
+		sourceWingBinary, err := os.Open(filepath.Join(rootPath, "wing_linux_amd64"))
+		if err != nil {
+			return err
+		}
+		defer sourceWingBinary.Close()
 
-	destWingBinary, err := os.Create(filepath.Join(terraformCodePath, "wing_linux_amd64"))
-	if err != nil {
-		return err
-	}
-	defer destWingBinary.Close()
+		destWingBinary, err := os.Create(filepath.Join(terraformCodePath, "wing_linux_amd64"))
+		if err != nil {
+			return err
+		}
+		defer destWingBinary.Close()
 
-	_, err = io.Copy(destWingBinary, sourceWingBinary)
-	if err != nil {
-		return err
+		_, err = io.Copy(destWingBinary, sourceWingBinary)
+		if err != nil {
+			return err
+		}
 	}
 
 	// create puppet.tar.gz
