@@ -46,7 +46,8 @@ help:
 
 test: go_test
 
-verify: generate go_verify verify_boilerplate verify_client_gen verify_vendor
+# wing binary is required at the generate step
+verify: go_build_wing generate go_verify verify_boilerplate verify_client_gen verify_vendor
 
 all: verify test build
 
