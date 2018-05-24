@@ -18,8 +18,10 @@ data "template_file" "{{.TFName}}_user_data" {
     region = "${var.region}"
 
     puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
-    # This is only used in the template when running in Wing dev mode
+
+    # These are only used in the template when running in Wing dev mode
     wing_binary_path          = "${var.secrets_bucket}/${var.wing_binary_path}"
+    wing_version              = "${var.wing_version}"
 
     vault_token = "${tarmak_vault_instance_role.{{.Role.Name}}.init_token}"
     vault_ca    = "${base64encode(var.vault_ca)}"

@@ -1,3 +1,7 @@
+variable "wing_version" {
+  default = "{{ .WingHash }}"
+}
+
 variable "wing_binary_path" {
   default = "wing-{{ .WingHash }}"
 }
