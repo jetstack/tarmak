@@ -104,4 +104,11 @@ func init() {
 		"",
 		"override the current cluster set in the config",
 	)
+
+	RootCmd.PersistentFlags().BoolVar(
+		&globalFlags.WingDevMode,
+		"wing-dev-mode",
+		false,
+		"use a bundled wing version rather than a tagged release from GitHub",
+	)
 }

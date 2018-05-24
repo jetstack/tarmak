@@ -323,3 +323,7 @@ func (c *Config) Contact() string {
 func (c *Config) Project() string {
 	return c.conf.Project
 }
+
+func (c *Config) WingDevMode() bool {
+	return c.flags.WingDevMode
+}

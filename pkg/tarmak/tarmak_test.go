@@ -112,6 +112,7 @@ func newTestTarmak(t *testing.T) *testTarmak {
 	tt.fakeConfig = mocks.NewMockConfig(tt.ctrl)
 	tt.fakeConfig.EXPECT().Contact().AnyTimes().Return("tech+testing@jetstack.io")
 	tt.fakeConfig.EXPECT().Project().AnyTimes().Return("testing")
+	tt.fakeConfig.EXPECT().WingDevMode().AnyTimes().Return(false)
 
 	tt.fakeProvider = mocks.NewMockProvider(tt.ctrl)
 	tt.tarmak.config = tt.fakeConfig

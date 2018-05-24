@@ -2,6 +2,7 @@ variable "wing_binary_path" {
   default = "wing-{{ .WingHash }}"
 }
 
+{{ if .WingDevMode -}}
 resource "aws_s3_bucket_object" "wing-binary" {
   source = "wing_linux_amd64"
   bucket = "${var.secrets_bucket}"
@@ -10,3 +11,4 @@ resource "aws_s3_bucket_object" "wing-binary" {
   # etag to trigger updates
   key    = "${data.template_file.stack_name.rendered}/${var.wing_binary_path}"
 }
+{{- end }}
