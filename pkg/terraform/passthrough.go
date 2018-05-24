@@ -60,6 +60,7 @@ func newErrUI(out io.Writer, errOut io.Writer) cli.Ui {
 func newMeta(ui cli.Ui) command.Meta {
 	if os.Getenv("TF_LOG") == "" {
 		log.SetOutput(ioutil.Discard)
+		os.Stderr = nil
 	}
 
 	var inAutomation bool
