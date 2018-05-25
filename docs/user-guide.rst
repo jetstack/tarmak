@@ -247,6 +247,28 @@ When you set this annotation, your Jenkins will be secured with HTTPS. You need 
       type: ssd
   ...
 
+OIDC Authentication
+~~~~~~~~~~~~~~~~~~~
+
+Tarmak supports authentication using OIDC. The following snippet demonstrates how you would configure OIDC authenication in `tarmak.yaml`. For details on the configuration options, visit the Kubernetes documentation [here](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens). Note that if the version of your cluster is less than 1.10.0, the `signingAlgs` parameter is ignored.
+
+.. code-block:: yaml
+
+    kubernetes:
+        apiServer:
+            oidc:
+                clientID: 0oaf5lzw2vmWkNeST0h7
+                groupsClaim: groups
+                groupsPrefix: "okta:"
+                issuerURL: https://dev-932361.oktapreview.com/oauth2/ausf5nwi4pzMmSdvh0h7
+                signingAlgs:
+                - RS256
+                usernameClaim: preferred_username
+                usernamePrefix: "okta:"
+    ...
+
+For the above setup, ID tokens presented to the apiserver will need to contain claims called `preferred_username` and `groups` representing the username and groups associated with the client. These values will then be prepended with `okta:` before authorisation rules are applied, so it is important that this is taken into account when configuring cluster authorisation.
+
 Setting up an AWS hosted Elasticsearch Cluster
 ++++++++++++++++++++++++++++++++++++++++++++++
 
