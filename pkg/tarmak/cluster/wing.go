@@ -4,7 +4,10 @@ package cluster
 import (
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/cenkalti/backoff"
+	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
@@ -17,10 +20,26 @@ func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, er
 
 	if c.wingClientset == nil {
 		// connect to wing
-		c.wingClientset, c.wingTunnel, err = c.Environment().WingClientset()
-		if err != nil {
-			return nil, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+
+		wingClientsetTry := func() error {
+			c.wingClientset, c.wingTunnel, err = c.Environment().WingClientset()
+			if err != nil {
+				return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+			}
+
+			return nil
 		}
+
+		expBackoff := backoff.NewExponentialBackOff()
+		expBackoff.InitialInterval = time.Second
+		expBackoff.MaxElapsedTime = time.Minute * 2
+
+		b := backoff.WithContext(expBackoff, context.Background())
+
+		if err := backoff.Retry(wingClientsetTry, b); err != nil {
+			return nil, err
+		}
+
 	}
 
 	return c.wingClientset.WingV1alpha1().Instances(c.ClusterName()), nil

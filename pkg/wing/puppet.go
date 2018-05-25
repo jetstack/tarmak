@@ -17,15 +17,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cenkalti/backoff"
+	"github.com/docker/docker/pkg/archive"
+	"golang.org/x/net/context"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cenkalti/backoff"
-	"github.com/docker/docker/pkg/archive"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/wing/provider/file"
 	"github.com/jetstack/tarmak/pkg/wing/provider/s3"
-	"golang.org/x/net/context"
 )
 
 // This make sure puppet is converged when neccessary
