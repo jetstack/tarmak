@@ -31,12 +31,19 @@ spec:
           requests:
             cpu: <%= @request_cpu %>
             memory: <%= @request_mem %>
+        livenessProbe:
+          httpGet:
+            path: "/health-check"
+            port: 8085
         command:
         - ./cluster-autoscaler
         - --v=4
         - --cloud-provider=<%= @cloud_provider %>
         - --skip-nodes-with-local-storage=false
         - --nodes=<%= @min_instances %>:<%= @max_instances %>:<%= @asg_name %>
+<% if @balance_similar_node_groups -%>
+        - --balance-similar-node-groups
+<% end -%>
 <% if @aws_region -%>
         env:
         - name: AWS_REGION

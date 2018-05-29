@@ -27,7 +27,13 @@ class kubernetes_addons::cluster_autoscaler(
   }
 
   if $version == '' {
-    if versioncmp($::kubernetes::version, '1.7.0') >= 0 {
+    if versioncmp($::kubernetes::version, '1.10.0') >= 0 {
+      $_version = '1.2.0'
+    } elsif versioncmp($::kubernetes::version, '1.9.0') >= 0 {
+      $_version = '1.1.0'
+    } elsif versioncmp($::kubernetes::version, '1.8.0') >= 0 {
+      $_version = '1.0.0'
+    } elsif versioncmp($::kubernetes::version, '1.7.0') >= 0 {
       $_version = '0.6.0'
     } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
       $_version = '0.5.4'
@@ -38,6 +44,10 @@ class kubernetes_addons::cluster_autoscaler(
     }
   } else {
     $_version = $version
+  }
+
+  if versioncmp($_version, '0.6.0') >= 0 {
+    $balance_similar_node_groups = true
   }
 
   if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
