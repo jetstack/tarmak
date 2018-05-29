@@ -45,7 +45,7 @@ func (e *Environment) VerifyBastionAvailable() error {
 
 	expBackoff := backoff.NewExponentialBackOff()
 	expBackoff.InitialInterval = time.Second
-	expBackoff.MaxElapsedTime = time.Minute * 1
+	expBackoff.MaxElapsedTime = time.Minute * 2
 	b := backoff.WithContext(expBackoff, ctx)
 
 	executeSSH := func() error {
