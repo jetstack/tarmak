@@ -31,7 +31,7 @@ func GetContext() (context.Context, func()) {
 	return ctx, cancel
 }
 
-func WaitOrCancel(f func(context.Context) error) {
+func WaitOrCancel(f func(context.Context) error, ignoredExitStatuses ...int) {
 	ctx, cancel := GetContext()
 	defer cancel()
 	wg := &sync.WaitGroup{}
@@ -67,7 +67,17 @@ func WaitOrCancel(f func(context.Context) error) {
 		if ok {
 			status := exitError.ProcessState.Sys().(syscall.WaitStatus)
 			exitStatus := status.ExitStatus()
-			log.WithError(err).Errorf("Tarmak exited with an error: %s", err)
+
+			errorOk := false
+			for _, status := range ignoredExitStatuses {
+				if exitStatus == status {
+					errorOk = true
+					break
+				}
+			}
+			if !errorOk {
+				log.WithError(err).Errorf("Tarmak exited with an error: %s", err)
+			}
 			log.Exit(exitStatus)
 		}
 		log.WithError(err).Fatalf("Tarmak exited with an error: %s", err)
