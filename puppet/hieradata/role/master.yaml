@@ -5,6 +5,5 @@ classes:
 - kubernetes_addons::heapster
 - kubernetes_addons::influxdb
 - kubernetes_addons::grafana
-- prometheus
 
 kubernetes::kubelet::role: master
