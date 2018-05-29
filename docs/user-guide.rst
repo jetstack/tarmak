@@ -138,6 +138,22 @@ The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
 The Pod Security Policy manifests can be found within the tarmak directory at
 ``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``
 
+Dashboard, Cluster Autoscaler and Tiller
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tarmak supports a number of Kubernetes addons including Kubernetes Dashboard, Cluster Autoscaler and Tiller. The following `tarmak.yaml` snippet shows how you would enable Cluster Autoscaler.
+
+.. code-block:: yaml
+
+    kubernetes:
+      clusterAutoscaler:
+        enabled: true
+    ...
+
+The above configuration would deploy Cluster Autoscaler with an image of `gcr.io/google_containers/cluster-autoscaler` using the recommend version based on the version of your Kubernetes cluster. The configuration block also accepts two optional fields of `image` and `version` allowing you to change these defaults. Note that the final image tag used when deploying the autoscaler will be the configured version prepended with the letter `v`.
+
+This configuration works similarly for Dashboard and Tiller using images of `gcr.io/google_containers/kubernetes-dashboard-amd64` and `gcr.io/kubernetes-helm/tiller` respectively by default.
+
 Logging
 ~~~~~~~
 
