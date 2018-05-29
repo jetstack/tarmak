@@ -10,6 +10,7 @@ class prometheus::server (
   Integer $persistent_volume_size = 15,
   String $kubernetes_token_file = '/var/run/secrets/kubernetes.io/serviceaccount/token',
   String $kubernetes_ca_file = '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt',
+  Hash[String,String] $external_labels = {},
 )
 {
   require ::kubernetes
