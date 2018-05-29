@@ -83,7 +83,9 @@ class kubernetes::apiserver(
   }
 
   # check OIDC configuration parameters
-  if $oidc_signing_algs.length > 0 and versioncmp($::kubernetes::version, '1.10.0') < 0   {
+  if $oidc_signing_algs.length > 0 and versioncmp($::kubernetes::version, '1.10.0') >= 0 {
+    $_oidc_signing_algs = $oidc_signing_algs
+  } else {
     $_oidc_signing_algs = []
   }
 
