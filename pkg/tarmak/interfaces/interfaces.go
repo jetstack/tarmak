@@ -185,6 +185,7 @@ type Packer interface {
 
 type Terraform interface {
 	Output(cluster Cluster) (map[string]interface{}, error)
+	Prepare(cluster Cluster) error
 }
 
 type SSH interface {
