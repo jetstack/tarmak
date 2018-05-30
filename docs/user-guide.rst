@@ -6,10 +6,10 @@ User guide
 Getting started with AWS
 ------------------------
 
-In this getting started guide, we walk through how to use initialise Tarmak
-with a new Provider (AWS) and Environment and provision a Kubernetes cluster.
-This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and
-a bastion node with a public IP address (see :ref:`Architecture overview
+In this getting started guide, we walk through how to initialise Tarmak with a
+new Provider (AWS), a new Environment and then provision a Kubernetes cluster.
+This will comprise of Kubernetes master and worker nodes, etcd clusters, Vault
+and a bastion node with a public IP address (see :ref:`Architecture overview
 <architecture_overview>` for details of cluster components)
 
 Prerequisites
@@ -354,7 +354,7 @@ allows to override the deployed version:
   kubernetes:
     tiller:
       enabled: true
-      version: 2.9.0
+      version: 2.9.1
 
 .. warning::
    Tiller is deployed with full ``cluster-admin`` ClusterRole bound to its
