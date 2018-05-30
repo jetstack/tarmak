@@ -361,3 +361,30 @@ allows to override the deployed version:
    service account and has therefore quiet far reaching privileges. Also
    consider Helm's `security best practices
    <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_.
+
+
+Prometheus
+~~~~~~~~~~
+
+By default Tarmak will deploy a `Prometheus <https://prometheus.io/>`_ and some
+exporters into the ``monitoring`` namespace. Using this config Prometheus could
+be disabled all together:
+
+.. code-block:: yaml
+
+  kubernetes:
+    prometheus:
+      enabled: false
+
+Another possibility would be to use The Tarmak provisioned Prometheus only for
+scraping exporters on instances that are not part of the Kubernetes cluster.
+Using federation those metrics could then be integrated into an already
+existing Prometheus deployment. Get that behaviour you needs to set the
+configuration like that:
+
+.. code-block:: yaml
+
+  kubernetes:
+    prometheus:
+      enabled: true
+      externalScrapeTargetsOnly: true
