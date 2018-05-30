@@ -176,6 +176,7 @@ type Config interface {
 	CurrentEnvironmentName() string
 	Contact() string
 	Project() string
+	WingDevMode() bool
 	SetCurrentCluster(string) error
 }
 

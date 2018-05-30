@@ -4,6 +4,7 @@ package terraform
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -19,7 +20,6 @@ import (
 )
 
 func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
-
 	terraformCodePath := t.codePath(c)
 	if err := utils.EnsureDirectory(
 		terraformCodePath,
@@ -53,6 +53,26 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 		return err
 	}
 
+	if t.tarmak.Config().WingDevMode() {
+		// move in wing binary for terraform bucket object
+		sourceWingBinary, err := os.Open(filepath.Join(rootPath, "wing_linux_amd64"))
+		if err != nil {
+			return err
+		}
+		defer sourceWingBinary.Close()
+
+		destWingBinary, err := os.Create(filepath.Join(terraformCodePath, "wing_linux_amd64"))
+		if err != nil {
+			return err
+		}
+		defer destWingBinary.Close()
+
+		_, err = io.Copy(destWingBinary, sourceWingBinary)
+		if err != nil {
+			return err
+		}
+	}
+
 	// create puppet.tar.gz
 	puppetTarGzFilename := filepath.Clean(
 		filepath.Join(
@@ -74,9 +94,11 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 
 	// generate templates
 	templ := &terraformTemplate{
-		cluster:  c,
-		destDir:  terraformCodePath,
-		rootPath: rootPath,
+		cluster:     c,
+		destDir:     terraformCodePath,
+		rootPath:    rootPath,
+		wingHash:    wingHash,
+		wingDevMode: t.tarmak.Config().WingDevMode(),
 	}
 	if err := templ.Generate(); err != nil {
 		return err
@@ -87,9 +109,11 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 }
 
 type terraformTemplate struct {
-	cluster  interfaces.Cluster
-	destDir  string
-	rootPath string
+	cluster     interfaces.Cluster
+	destDir     string
+	rootPath    string
+	wingHash    string
+	wingDevMode bool
 }
 
 func (t *terraformTemplate) Generate() error {
@@ -103,19 +127,27 @@ func (t *terraformTemplate) Generate() error {
 			result = multierror.Append(result, err)
 		}
 	}
-	if err := t.generateTemplate("modules", "modules"); err != nil {
+	if err := t.generateTemplate("modules", "modules", "tf"); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("inputs", "inputs"); err != nil {
+	if err := t.generateTemplate("inputs", "inputs", "tf"); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("outputs", "outputs"); err != nil {
+	if err := t.generateTemplate("outputs", "outputs", "tf"); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("providers", "providers"); err != nil {
+	if err := t.generateTemplate("providers", "providers", "tf"); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("jenkins_elb", "modules/jenkins/jenkins_elb"); err != nil {
+	if err := t.generateTemplate("jenkins_elb", "modules/jenkins/jenkins_elb", "tf"); err != nil {
+		result = multierror.Append(result, err)
+	}
+	// TODO time for a loop over an array of pairs?
+	if err := t.generateTemplate("wing_s3", "modules/kubernetes/wing_s3", "tf"); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml"); err != nil {
 		result = multierror.Append(result, err)
 	}
 	if err := t.generateTerraformVariables(); err != nil {
@@ -152,6 +184,8 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 		"JenkinsCertificateARN": jenkinsCertificateARN,
 		"JenkinsInstall":        jenkinsInstall,
 		"Module":                module,
+		"WingHash":              t.wingHash,
+		"WingDevMode":           t.wingDevMode,
 	}
 }
 
@@ -177,27 +211,27 @@ func (t *terraformTemplate) funcs() template.FuncMap {
 }
 
 // generate single file templates
-func (t *terraformTemplate) generateTemplate(name string, target string) error {
+func (t *terraformTemplate) generateTemplate(name string, target string, fileType string) error {
 	templateFile := filepath.Clean(
 		filepath.Join(
 			t.rootPath,
 			"terraform",
 			t.cluster.Environment().Provider().Cloud(),
-			fmt.Sprintf("templates/%s.tf.template", name),
+			fmt.Sprintf("templates/%s.%s.template", name, fileType),
 		),
 	)
 
 	templatesParsed, err := template.New(name).Funcs(t.funcs()).ParseFiles(templateFile)
 	if err != nil {
-		return fmt.Errorf("failed to parse template '%s'", name)
+		return fmt.Errorf("failed to parse template '%s': %s", name, err)
 	}
 
-	mainTemplate := templatesParsed.Lookup(fmt.Sprintf("%s.tf.template", name))
+	mainTemplate := templatesParsed.Lookup(fmt.Sprintf("%s.%s.template", name, fileType))
 
 	file, err := os.OpenFile(
 		filepath.Join(
 			t.destDir,
-			fmt.Sprintf("%s.tf", target),
+			fmt.Sprintf("%s.%s", target, fileType),
 		),
 		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
 		0644,
