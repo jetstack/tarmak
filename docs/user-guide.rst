@@ -335,3 +335,29 @@ certificate is valid for ``jenkins.<environment>.<zone>``.
       size: 16Gi
       type: ssd
   ...
+
+
+Tiller
+~~~~~~
+
+Another configuration option allows to deploy Tiller the server-side of `Helm
+<https://github.com/kubernetes/helm>`_. Tiller is listening for request on the
+loopback device only. This makes sure that no other Pod in the cluster can
+speak to it, while Helm clients are still able to access it using a port
+forwarding through the API server.
+
+As Helm and Tiller minor version need to match, the tarmak configuration also
+allows to override the deployed version:
+
+.. code-block:: yaml
+
+  kubernetes:
+    tiller:
+      enabled: true
+      version: 2.9.0
+
+.. warning::
+   Tiller is deployed with full ``cluster-admin`` ClusterRole bound to its
+   service account and has therefore quiet far reaching privileges. Also
+   consider Helm's `security best practices
+   <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_.
