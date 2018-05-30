@@ -287,9 +287,10 @@ func (k *Kubectl) Kubectl(args []string) error {
 	}
 
 	cmd := exec.Command("kubectl", args...)
-	cmd.Env = []string{
+	cmd.Env = append(
+		os.Environ(),
 		fmt.Sprintf("KUBECONFIG=%s", k.ConfigPath()),
-	}
+	)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
