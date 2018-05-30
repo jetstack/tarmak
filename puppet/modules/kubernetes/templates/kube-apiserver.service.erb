@@ -114,8 +114,8 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if @oidc_issuer_url -%>
   "--oidc-issuer-url=<%= @oidc_issuer_url %>" \
 <% end -%>
-<% if @oidc_signing_algs.length > 0 -%>
-  "--oidc-signing-algs=<%= @oidc_signing_algs.join(',') %>" \
+<% if @_oidc_signing_algs != [] -%>
+  "--oidc-signing-algs=<%= @_oidc_signing_algs.join(',') %>" \
 <% end -%>
 <% if @oidc_username_claim -%>
   "--oidc-username-claim=<%= @oidc_username_claim %>" \

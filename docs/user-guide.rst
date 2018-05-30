@@ -215,6 +215,28 @@ A full list of the configuration parameters are shown below:
         * ``port`` - Port to listen on (a free port will be chosen for you if
           omitted)
 
+OIDC Authentication
+~~~~~~~~~~~~~~~~~~~
+
+Tarmak supports authentication using OIDC. The following snippet demonstrates how you would configure OIDC authentication in `tarmak.yaml`. For details on the configuration options, visit the Kubernetes documentation `here <https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens>`_. Note that if the version of your cluster is less than 1.10.0, the `signingAlgs` parameter is ignored.
+
+.. code-block:: yaml
+
+    kubernetes:
+        apiServer:
+            oidc:
+                clientID: 1a2b3c4d5e6f7g8h
+                groupsClaim: groups
+                groupsPrefix: "oidc:"
+                issuerURL: https://domain/application-server
+                signingAlgs:
+                - RS256
+                usernameClaim: preferred_username
+                usernamePrefix: "oidc:"
+    ...
+
+For the above setup, ID tokens presented to the apiserver will need to contain claims called `preferred_username` and `groups` representing the username and groups associated with the client. These values will then be prepended with `oidc:` before authorisation rules are applied, so it is important that this is taken into account when configuring cluster authorisation.
+
 Jenkins
 ~~~~~~~
 
