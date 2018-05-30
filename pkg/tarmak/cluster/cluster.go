@@ -162,6 +162,28 @@ func (c *Cluster) validateInstancePools() (result error) {
 	//return fmt.Errorf("refactore me!")
 }
 
+// Verify cluster
+func (c *Cluster) Verify() (result error) {
+	return c.VerifyInstancePools()
+}
+
+// Verify instance pools
+func (c *Cluster) VerifyInstancePools() (result error) {
+	imageIDs, err := c.ImageIDs()
+	if err != nil {
+		return fmt.Errorf("error getting image IDs: %s]", err)
+	}
+
+	for _, instancePool := range c.InstancePools() {
+		image := instancePool.Image()
+		_, ok := imageIDs[image]
+		if !ok {
+			return fmt.Errorf("error getting the image ID of %s", instancePool.TFName())
+		}
+	}
+	return nil
+}
+
 // validate network configuration
 func (c *Cluster) validateNetwork() (result error) {
 	// make the choice between deploying into existing VPC or creating a new one
