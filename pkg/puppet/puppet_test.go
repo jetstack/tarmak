@@ -2,6 +2,7 @@
 package puppet
 
 import (
+	"strings"
 	"testing"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
@@ -26,8 +27,15 @@ func TestOIDCFields(t *testing.T) {
 
 	kubernetesClusterConfig(&c, &d)
 
-	if len(d.variables) != 7 {
-		t.Fatalf("unexpected number of variables: %d", len(d.variables))
+	count := 0
+	for _, v := range d.variables {
+		if strings.Contains(v, "oidc") {
+			count += 1
+		}
+	}
+
+	if act, exp := count, 7; act != exp {
+		t.Fatalf("unexpected number of variables: exp:%d act:%d", exp, act)
 	}
 
 }

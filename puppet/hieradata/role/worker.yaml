@@ -3,4 +3,3 @@ classes:
 - site_module::docker_storage
 - tarmak::worker
 - tarmak::overlay_calico
-- prometheus

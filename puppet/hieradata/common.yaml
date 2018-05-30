@@ -30,3 +30,6 @@ vault_client::init_role: "%{::tarmak_cluster}-%{::tarmak_role}"
 vault_client::ca_cert_path: /etc/vault/ca.pem
 vault_client::init_policies:
 - "%{::tarmak_cluster}/%{::tarmak_role}"
+
+prometheus::server::external_labels:
+  cluster: "%{::tarmak_cluster}"

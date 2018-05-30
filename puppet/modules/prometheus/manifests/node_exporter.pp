@@ -55,32 +55,6 @@ class prometheus::node_exporter (
       description => '{{$labels.instance}}: Memory usage usage is above 80% (current value is: {{ $value }})',
     }
 
-    # scrape node exporter running on every kubernetes node (through api proxy)
-    prometheus::scrape_config { 'kubernetes-nodes-exporter':
-      order  =>  130,
-      config => {
-        'kubernetes_sd_configs' => [{
-          'role' => 'node',
-        }],
-        'tls_config'            => {
-          'ca_file' => $kubernetes_ca_file,
-        },
-        'bearer_token_file'     => $kubernetes_token_file,
-        'scheme'                => 'https',
-        'relabel_configs'       => [{
-          'action' => 'labelmap',
-          'regex'  => '__meta_kubernetes_node_label_(.+)',
-          },{
-            'target_label' => '__address__',
-            'replacement'  => 'kubernetes.default.svc:443',
-            }, {
-              'source_labels' => ['__meta_kubernetes_node_name'],
-              'regex'         => '(.+)',
-              'target_label'  => '__metrics_path__',
-              'replacement'   => "/api/v1/nodes/\${1}:${port}/proxy/metrics",
-            }],
-      }
-    }
 
     # scrape node exporter running on etcd nodes
     $etcd_node_exporters = $::prometheus::etcd_cluster.map |$node| { "${node}:${port}" }
@@ -94,11 +68,41 @@ class prometheus::node_exporter (
       }
     }
 
-    kubernetes::apply{'node-exporter':
-      manifests => [
-        template('prometheus/prometheus-ns.yaml.erb'),
-        template('prometheus/node-exporter-ds.yaml.erb'),
-      ],
+    $external_scrape_targets_only = $::prometheus::external_scrape_targets_only
+    if ! $external_scrape_targets_only {
+      kubernetes::apply{'node-exporter':
+        manifests => [
+          template('prometheus/prometheus-ns.yaml.erb'),
+          template('prometheus/node-exporter-ds.yaml.erb'),
+        ],
+      }
+
+      # scrape node exporter running on every kubernetes node (through api proxy)
+      prometheus::scrape_config { 'kubernetes-nodes-exporter':
+        order  =>  130,
+        config => {
+          'kubernetes_sd_configs' => [{
+            'role' => 'node',
+          }],
+          'tls_config'            => {
+            'ca_file' => $kubernetes_ca_file,
+          },
+          'bearer_token_file'     => $kubernetes_token_file,
+          'scheme'                => 'https',
+          'relabel_configs'       => [{
+            'action' => 'labelmap',
+            'regex'  => '__meta_kubernetes_node_label_(.+)',
+            },{
+              'target_label' => '__address__',
+              'replacement'  => 'kubernetes.default.svc:443',
+              }, {
+                'source_labels' => ['__meta_kubernetes_node_name'],
+                'regex'         => '(.+)',
+                'target_label'  => '__metrics_path__',
+                'replacement'   => "/api/v1/nodes/\${1}:${port}/proxy/metrics",
+              }],
+        }
+      }
     }
   }
 

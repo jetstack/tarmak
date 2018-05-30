@@ -1,4 +1,5 @@
     global:
       scrape_interval:     15s
       evaluation_interval: 30s
-      # scrape_timeout is set to the global default (10s).
+      # scrape_timeout is set to the global default (10s)
+      external_labels: <%= @external_labels.to_json %>
