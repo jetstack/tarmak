@@ -36,6 +36,8 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 		clusterType = tarmakv1alpha1.EnvironmentTypeMulti
 	}
 
+	availabilityZones, err := init.CurrentEnvironment().Provider().AskInstancePoolZones(init)
+
 	// add single cluster
 
 	if clusterType == tarmakv1alpha1.EnvironmentTypeMulti {
@@ -54,7 +56,9 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 			}
 		}
 		if !hubExists {
-			err := init.Config().AppendCluster(config.NewHub(environment.Name()))
+			clusterHub := config.NewHub(environment.Name())
+			addAvailabilityZones(clusterHub, availabilityZones)
+			err := init.Config().AppendCluster(clusterHub)
 			if err != nil {
 				return nil, err
 			}
@@ -65,7 +69,6 @@ func Init(init interfaces.Initialize) (cluster *clusterv1alpha1.Cluster, err err
 		cluster = config.NewClusterSingle(environment.Name(), "cluster")
 	}
 
-	availabilityZones, err := init.CurrentEnvironment().Provider().AskInstancePoolZones(init)
 	if err != nil {
 		return nil, err
 	}
