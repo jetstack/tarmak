@@ -1,7 +1,7 @@
 resource "aws_vpc_peering_connection" "peering" {
   count       = "${signum(length(var.vpc_peer_stack))}"
   peer_vpc_id = "${var.peer_vpc_id}"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = "${aws_vpc.main.0.id}"
   auto_accept = true
 
   accepter {
@@ -44,5 +44,5 @@ resource "aws_route" "them_peering_private" {
 resource "aws_route53_zone_association" "hub_zone" {
   count   = "${signum(length(var.vpc_peer_stack))}"
   zone_id = "${var.private_zone_id}"
-  vpc_id  = "${aws_vpc.main.id}"
+  vpc_id  = "${aws_vpc.main.0.id}"
 }

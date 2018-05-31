@@ -1,5 +1,5 @@
 resource "aws_internet_gateway" "main" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = "${aws_vpc.main.0.id}"
 
   tags {
     Name        = "vpc.${data.template_file.stack_name.rendered}"

@@ -8,6 +8,7 @@ resource "aws_route53_record" "per-instance" {
 }
 
 resource "aws_route53_record" "endpoint" {
+  count   = 1
   zone_id = "${var.private_zone_id}"
   name    = "vault"
   type    = "A"
