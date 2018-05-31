@@ -64,3 +64,4 @@ Logstash
 Jenkins
 prepended
 username
+loopback

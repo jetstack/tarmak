@@ -6,9 +6,11 @@ User guide
 Getting started with AWS
 ------------------------
 
-In this getting started guide, we walk through how to use initialise Tarmak with a new Provider (AWS) and Environment and provision a Kubernetes cluster.
-This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and a bastion node with a public IP address
-(see :ref:`Architecture overview <architecture_overview>` for details of cluster components)
+In this getting started guide, we walk through how to initialise Tarmak with a
+new Provider (AWS), a new Environment and then provision a Kubernetes cluster.
+This will comprise of Kubernetes master and worker nodes, etcd clusters, Vault
+and a bastion node with a public IP address (see :ref:`Architecture overview
+<architecture_overview>` for details of cluster components)
 
 Prerequisites
 ~~~~~~~~~~~~~
@@ -31,9 +33,10 @@ Overview of steps to follow
 Initialise configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Simply run ``tarmak init`` to initialise configuration for the first time. You will be prompted for the necessary configuration
-to set-up a new :ref:`Provider <providers_resource>` (AWS) and :ref:`Environment <environments_resource>`. The list below describes
-the questions you will be asked.
+Simply run ``tarmak init`` to initialise configuration for the first time. You
+will be prompted for the necessary configuration to set-up a new :ref:`Provider
+<providers_resource>` (AWS) and :ref:`Environment <environments_resource>`. The
+list below describes the questions you will be asked.
 
 .. note::
    If you are not using Vault's AWS secret backend, you can authenticate with AWS in the same way as the AWS CLI. More details can be found at `Configuring the AWS CLI <http://docs.aws.amazon.com /cli/latest/userguide/cli-chap-getting-started.html>`_.
@@ -61,7 +64,9 @@ Once initialised, the configuration will be created at ``$HOME/.tarmak/tarmak.ya
 
 Create an AMI
 ~~~~~~~~~~~~~
-Next we create an AMI for this environment by running ``tarmak clusters images build`` (this is the step that requires Docker to be installed locally).
+
+Next we create an AMI for this environment by running ``tarmak clusters images
+build`` (this is the step that requires Docker to be installed locally).
 
 ::
 
@@ -80,13 +85,19 @@ To create the cluster, run ``tarmak clusters apply``.
   <output omitted>
 
 .. warning::
-   The first time this command is run, Tarmak will create a `hosted zone <http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html>`_ and then fail with the following error.
+   The first time this command is run, Tarmak will create a `hosted zone
+   <http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html>`_
+   and then fail with the following error.
 
    ::
 
       * failed verifying delegation of public zone 5 times, make sure the zone k8s.jetstack.io is delegated to nameservers [ns-100.awsdns-12.com ns-1283.awsdns-32.org ns-1638.awsdns-12.co.uk ns-842.awsdns-41.net]
 
-You should now change the nameservers of your domain to the four listed in the error. If you only wish to delegate a subdomain containing your zone to AWS without delegating the parent domain see `Creating a Subdomain That Uses Amazon Route 53 as the DNS Service without Migrating the Parent Domain <http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingNewSubdomain.html>`_.
+You should now change the nameservers of your domain to the four listed in the
+error. If you only wish to delegate a subdomain containing your zone to AWS
+without delegating the parent domain see `Creating a Subdomain That Uses Amazon
+Route 53 as the DNS Service without Migrating the Parent Domain
+<http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingNewSubdomain.html>`_.
 
 To complete the cluster provisioning, run ``tarmak clusters apply`` once again.
 
@@ -118,7 +129,8 @@ To destroy the cluster, run ``tarmak clusters destroy``.
 Configuration Options
 ---------------------
 
-After generating your `tarmak.yaml` configuration file there are a number of options you can set that are not exposed via `tarmak init`.
+After generating your `tarmak.yaml` configuration file there are a number of
+options you can set that are not exposed via `tarmak init`.
 
 Pod Security Policy
 ~~~~~~~~~~~~~~~~~~~
@@ -215,59 +227,6 @@ A full list of the configuration parameters are shown below:
         * ``port`` - Port to listen on (a free port will be chosen for you if
           omitted)
 
-OIDC Authentication
-~~~~~~~~~~~~~~~~~~~
-
-Tarmak supports authentication using OIDC. The following snippet demonstrates how you would configure OIDC authentication in `tarmak.yaml`. For details on the configuration options, visit the Kubernetes documentation `here <https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens>`_. Note that if the version of your cluster is less than 1.10.0, the `signingAlgs` parameter is ignored.
-
-.. code-block:: yaml
-
-    kubernetes:
-        apiServer:
-            oidc:
-                clientID: 1a2b3c4d5e6f7g8h
-                groupsClaim: groups
-                groupsPrefix: "oidc:"
-                issuerURL: https://domain/application-server
-                signingAlgs:
-                - RS256
-                usernameClaim: preferred_username
-                usernamePrefix: "oidc:"
-    ...
-
-For the above setup, ID tokens presented to the apiserver will need to contain claims called `preferred_username` and `groups` representing the username and groups associated with the client. These values will then be prepended with `oidc:` before authorisation rules are applied, so it is important that this is taken into account when configuring cluster authorisation.
-
-Jenkins
-~~~~~~~
-
-You can install Jenkins as part of your hub. This can be achieved by adding an extra instance pool to your hub.
-This instance pool can be extended with an annotation ``tarmak.io/jenkins-certificate-arn``. The value of this annotation will be ARN pointing to an Amazon Certificate.
-When you set this annotation, your Jenkins will be secured with HTTPS. You need to make sure your SSL certificate is valid for ``jenkins.<environment>.<zone>``.
-
-.. code-block:: yaml
-
-  - image: centos-puppet-agent
-    maxCount: 1
-    metadata:
-      annotations:
-        tarmak.io/jenkins-certificate-arn: "arn:aws:acm:eu-west-1:228615251467:certificate/81e0c595-f5ad-40b2-8062-683b215bedcf"
-      creationTimestamp: null
-      name: jenkins
-    minCount: 1
-    size: large
-    type: jenkins
-    volumes:
-    - metadata:
-        creationTimestamp: null
-        name: root
-      size: 16Gi
-      type: ssd
-    - metadata:
-        creationTimestamp: null
-        name: data
-      size: 16Gi
-      type: ssd
-  ...
 
 Setting up an AWS hosted Elasticsearch Cluster
 ++++++++++++++++++++++++++++++++++++++++++++++
@@ -309,3 +268,123 @@ Both of those outputs can then be used in the tarmak configuration:
     amazon:
       additionalIAMPolicies:
       - ${elasticsearch_shipping_policy_arn}
+
+
+OIDC Authentication
+~~~~~~~~~~~~~~~~~~~
+
+Tarmak supports authentication using OIDC. The following snippet demonstrates
+how you would configure OIDC authentication in `tarmak.yaml`. For details on
+the configuration options, visit the Kubernetes documentation `here
+<https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens>`_.
+Note that if the version of your cluster is less than 1.10.0, the `signingAlgs`
+parameter is ignored.
+
+.. code-block:: yaml
+
+    kubernetes:
+        apiServer:
+            oidc:
+                clientID: 1a2b3c4d5e6f7g8h
+                groupsClaim: groups
+                groupsPrefix: "oidc:"
+                issuerURL: https://domain/application-server
+                signingAlgs:
+                - RS256
+                usernameClaim: preferred_username
+                usernamePrefix: "oidc:"
+    ...
+
+For the above setup, ID tokens presented to the apiserver will need to contain
+claims called `preferred_username` and `groups` representing the username and
+groups associated with the client. These values will then be prepended with
+`oidc:` before authorisation rules are applied, so it is important that this is
+taken into account when configuring cluster authorisation.
+
+Jenkins
+~~~~~~~
+
+You can install Jenkins as part of your hub. This can be achieved by adding an
+extra instance pool to your hub.  This instance pool can be extended with an
+annotation ``tarmak.io/jenkins-certificate-arn``. The value of this annotation
+will be ARN pointing to an Amazon Certificate.  When you set this annotation,
+your Jenkins will be secured with HTTPS. You need to make sure your SSL
+certificate is valid for ``jenkins.<environment>.<zone>``.
+
+.. code-block:: yaml
+
+  - image: centos-puppet-agent
+    maxCount: 1
+    metadata:
+      annotations:
+        tarmak.io/jenkins-certificate-arn: "arn:aws:acm:eu-west-1:228615251467:certificate/81e0c595-f5ad-40b2-8062-683b215bedcf"
+      creationTimestamp: null
+      name: jenkins
+    minCount: 1
+    size: large
+    type: jenkins
+    volumes:
+    - metadata:
+        creationTimestamp: null
+        name: root
+      size: 16Gi
+      type: ssd
+    - metadata:
+        creationTimestamp: null
+        name: data
+      size: 16Gi
+      type: ssd
+  ...
+
+
+Tiller
+~~~~~~
+
+Another configuration option allows to deploy Tiller the server-side of `Helm
+<https://github.com/kubernetes/helm>`_. Tiller is listening for request on the
+loopback device only. This makes sure that no other Pod in the cluster can
+speak to it, while Helm clients are still able to access it using a port
+forwarding through the API server.
+
+As Helm and Tiller minor version need to match, the tarmak configuration also
+allows to override the deployed version:
+
+.. code-block:: yaml
+
+  kubernetes:
+    tiller:
+      enabled: true
+      version: 2.9.1
+
+.. warning::
+   Tiller is deployed with full ``cluster-admin`` ClusterRole bound to its
+   service account and has therefore quiet far reaching privileges. Also
+   consider Helm's `security best practices
+   <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_.
+
+
+Prometheus
+~~~~~~~~~~
+
+By default Tarmak will deploy a `Prometheus <https://prometheus.io/>`_ and some
+exporters into the ``monitoring`` namespace. Using this config Prometheus could
+be disabled all together:
+
+.. code-block:: yaml
+
+  kubernetes:
+    prometheus:
+      enabled: false
+
+Another possibility would be to use The Tarmak provisioned Prometheus only for
+scraping exporters on instances that are not part of the Kubernetes cluster.
+Using federation those metrics could then be integrated into an already
+existing Prometheus deployment. Get that behaviour you needs to set the
+configuration like that:
+
+.. code-block:: yaml
+
+  kubernetes:
+    prometheus:
+      enabled: true
+      externalScrapeTargetsOnly: true
