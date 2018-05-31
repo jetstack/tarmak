@@ -17,9 +17,9 @@ resource "aws_s3_bucket_object" "node-keys" {
 }
 
 resource "aws_s3_bucket_object" "ca-cert" {
-  key          = "vault/ca.pem-${md5(tls_self_signed_cert.ca.cert_pem)}"
+  key          = "vault/ca.pem-${md5(tls_self_signed_cert.ca.0.cert_pem)}"
   bucket       = "${var.secrets_bucket}"
   kms_key_id   = "${var.secrets_kms_arn}"
-  content      = "${tls_self_signed_cert.ca.cert_pem}"
+  content      = "${tls_self_signed_cert.ca.0.cert_pem}"
   content_type = "text/plain"
 }

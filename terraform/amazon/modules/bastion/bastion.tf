@@ -11,6 +11,7 @@ data "template_file" "stack_name" {
 }
 
 resource "aws_security_group" "bastion" {
+  count       = 1
   name        = "${data.template_file.stack_name.rendered}-bastion"
   vpc_id      = "${var.vpc_id}"
   description = "Bastion instance in ${data.template_file.stack_name.rendered}"
@@ -24,11 +25,12 @@ resource "aws_security_group" "bastion" {
 }
 
 resource "aws_instance" "bastion" {
+  count                  = 1
   ami                    = "${var.bastion_ami}"
   instance_type          = "${var.bastion_instance_type}"
   subnet_id              = "${var.public_subnet_ids[0]}"
   key_name               = "${var.key_name}"
-  vpc_security_group_ids = ["${aws_security_group.bastion.id}"]
+  vpc_security_group_ids = ["${aws_security_group.bastion.0.id}"]
 
   root_block_device = {
     volume_type = "gp2"
@@ -48,7 +50,7 @@ resource "aws_instance" "bastion" {
 
 resource "aws_eip" "bastion" {
   vpc      = true
-  instance = "${aws_instance.bastion.id}"
+  instance = "${aws_instance.bastion.0.id}"
 }
 
 resource "aws_security_group_rule" "egress_allow_all" {
@@ -57,7 +59,7 @@ resource "aws_security_group_rule" "egress_allow_all" {
   from_port         = 0
   to_port           = 65535
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.bastion.id}"
+  security_group_id = "${aws_security_group.bastion.0.id}"
 }
 
 resource "aws_security_group_rule" "ingress_allow_ssh_all" {
@@ -66,7 +68,7 @@ resource "aws_security_group_rule" "ingress_allow_ssh_all" {
   from_port         = 22
   to_port           = 22
   cidr_blocks       = ["${var.admin_ips}"]
-  security_group_id = "${aws_security_group.bastion.id}"
+  security_group_id = "${aws_security_group.bastion.0.id}"
 }
 
 resource "aws_route53_record" "bastion" {
@@ -82,5 +84,5 @@ resource "aws_route53_record" "bastion_private" {
   name    = "bastion.${var.environment}"
   type    = "A"
   ttl     = "60"
-  records = ["${aws_instance.bastion.private_ip}"]
+  records = ["${aws_instance.bastion.0.private_ip}"]
 }

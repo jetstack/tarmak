@@ -1,9 +1,9 @@
 output "vault_ca" {
-  value = "${tls_self_signed_cert.ca.cert_pem}"
+  value = "${element(concat(tls_self_signed_cert.ca.*.cert_pem, list("")), 0)}"
 }
 
 output "vault_url" {
-  value = "https://${aws_route53_record.endpoint.fqdn}:8200"
+  value = "https://${element(concat(aws_route53_record.endpoint.*.fqdn, list("")), 0)}:8200"
 }
 
 output "vault_kms_key_id" {
@@ -19,7 +19,7 @@ output "instance_fqdns" {
 }
 
 output "vault_security_group_id" {
-  value = "${aws_security_group.vault.id}"
+  value = "${element(concat(aws_security_group.vault.*.id, list("")), 0)}"
 }
 
 output "vault_aws_caller_identity_current_account_id" {

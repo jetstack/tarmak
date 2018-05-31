@@ -1,5 +1,6 @@
 # CA certificate
 resource "tls_private_key" "ca" {
+  count     = 1
   algorithm = "RSA"
   rsa_bits  = "4096"
 }
@@ -57,9 +58,9 @@ resource "tls_locally_signed_cert" "vault" {
 
   cert_request_pem = "${element(tls_cert_request.vault.*.cert_request_pem, count.index)}"
 
-  ca_key_algorithm   = "${tls_self_signed_cert.ca.key_algorithm}"
+  ca_key_algorithm   = "${tls_self_signed_cert.ca.0.key_algorithm}"
   ca_private_key_pem = "${tls_private_key.ca.private_key_pem}"
-  ca_cert_pem        = "${tls_self_signed_cert.ca.cert_pem}"
+  ca_cert_pem        = "${tls_self_signed_cert.ca.0.cert_pem}"
 
   # 1 year
   validity_period_hours = 8766

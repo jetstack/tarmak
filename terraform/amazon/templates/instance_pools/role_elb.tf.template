@@ -105,6 +105,7 @@ output "ingress_wildcard_fqdn" {
 #}
 
 resource "aws_route53_record" "{{.Role.TFName}}_elb" {
+  count   = 1
   zone_id = "${var.public_zone_id}"
 {{ if eq .Role.Name "jenkins" -}}
   name    = "jenkins.${var.environment}"

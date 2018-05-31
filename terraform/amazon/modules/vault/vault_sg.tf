@@ -1,4 +1,5 @@
 resource "aws_security_group" "vault" {
+  count  = 1
   name   = "${data.template_file.stack_name.rendered}-vault"
   vpc_id = "${var.vpc_id}"
 
@@ -16,7 +17,7 @@ resource "aws_security_group_rule" "vault_out_allow_all" {
   to_port           = 0
   protocol          = "-1"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.vault.id}"
+  security_group_id = "${aws_security_group.vault.0.id}"
 }
 
 resource "aws_security_group_rule" "vault_in_allow_ssh_bastion" {
@@ -26,7 +27,7 @@ resource "aws_security_group_rule" "vault_in_allow_ssh_bastion" {
   protocol  = "tcp"
 
   source_security_group_id = "${var.bastion_security_group_id}"
-  security_group_id        = "${aws_security_group.vault.id}"
+  security_group_id        = "${aws_security_group.vault.0.id}"
 }
 
 resource "aws_security_group_rule" "vault_in_allow_vault_bastion" {
@@ -36,7 +37,7 @@ resource "aws_security_group_rule" "vault_in_allow_vault_bastion" {
   protocol  = "tcp"
 
   source_security_group_id = "${var.bastion_security_group_id}"
-  security_group_id        = "${aws_security_group.vault.id}"
+  security_group_id        = "${aws_security_group.vault.0.id}"
 }
 
 resource "aws_security_group_rule" "vault_in_allow_everything_inner_cluster" {
@@ -44,6 +45,6 @@ resource "aws_security_group_rule" "vault_in_allow_everything_inner_cluster" {
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
-  security_group_id        = "${aws_security_group.vault.id}"
-  source_security_group_id = "${aws_security_group.vault.id}"
+  security_group_id        = "${aws_security_group.vault.0.id}"
+  source_security_group_id = "${aws_security_group.vault.0.id}"
 }

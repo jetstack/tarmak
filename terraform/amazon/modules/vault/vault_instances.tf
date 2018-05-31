@@ -66,7 +66,7 @@ resource "aws_instance" "vault" {
   private_ip           = "${cidrhost(element(var.private_subnets, count.index % length(var.availability_zones)),(10 + (count.index/length(var.availability_zones))))}"
 
   vpc_security_group_ids = [
-    "${aws_security_group.vault.id}",
+    "${aws_security_group.vault.0.id}",
   ]
 
   root_block_device = {
