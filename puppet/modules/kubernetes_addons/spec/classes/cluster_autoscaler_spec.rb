@@ -49,15 +49,11 @@ describe 'kubernetes_addons::cluster_autoscaler' do
     end
 
     it 'has asg configured' do
-      expect(manifests[0]).to match(%{3:6:kubernetes-cluster1-worker})
+      expect(manifests[0]).to match(%{3:6:cluster1-kubernetes-worker})
     end
 
     it 'has cloud_provider configured' do
       expect(manifests[0]).to match(%{cloud-provider=aws})
-    end
-
-    it 'has cert path set' do
-      expect(manifests[0]).to match(%{path: /etc/ssl/certs})
     end
 
     it 'has AWS_REGION set' do
