@@ -5,8 +5,8 @@ class kubernetes_addons::cluster_autoscaler(
   String $limit_mem='500Mi',
   String $request_cpu='100m',
   String $request_mem='300Mi',
-  Integer $min_instances=undef,
-  Integer $max_instances=undef,
+  Integer $min_instances=3,
+  Integer $max_instances=6,
   $ca_mounts=$::kubernetes_addons::params::ca_mounts,
   $cloud_provider=$::kubernetes_addons::params::cloud_provider,
   $aws_region=$::kubernetes_addons::params::aws_region,
@@ -24,13 +24,6 @@ class kubernetes_addons::cluster_autoscaler(
     $asg_name="${::kubernetes::cluster_name}-kubernetes-worker"
   } else {
     $asg_name=undef
-  }
-
-  if ! $min_instances {
-    fail('You must define min instances')
-  }
-  if ! $max_instances {
-    fail('You must define max instances')
   }
 
   if $version == '' {
