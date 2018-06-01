@@ -308,7 +308,7 @@ func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
 	return t.terraformWrapper(
 		cluster,
 		"destroy",
-		[]string{"-force"},
+		[]string{"-force", "-refresh=false"},
 	)
 }
 
