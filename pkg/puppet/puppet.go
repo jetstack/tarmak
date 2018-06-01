@@ -143,6 +143,17 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		}
 	}
 
+	// enabling prometheus if requested, default is to enable prometheus
+	if conf.Prometheus == nil || conf.Prometheus.Enabled {
+		// check if mode external scrape targets only is enabled
+		if conf.Prometheus != nil && conf.Prometheus.ExternalScrapeTargetsOnly {
+			hieraData.variables = append(hieraData.variables, "prometheus::external_scrape_targets_only: true")
+		} else {
+			hieraData.variables = append(hieraData.variables, "prometheus::external_scrape_targets_only: false")
+		}
+		hieraData.classes = append(hieraData.classes, `prometheus`)
+	}
+
 	return
 }
 
@@ -295,10 +306,26 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 		return fmt.Errorf("error writing global hiera config: %s", err)
 	}
 
+	var workerMinCount int
+	var workerMaxCount int
+	if cluster.Config().Kubernetes.ClusterAutoscaler != nil && cluster.Config().Kubernetes.ClusterAutoscaler.Enabled {
+		for _, instancePool := range cluster.InstancePools() {
+			if instancePool.Role().Name() == clusterv1alpha1.KubernetesWorkerRoleName {
+				workerMinCount = instancePool.MinCount()
+				workerMaxCount = instancePool.MaxCount()
+			}
+		}
+	}
+
 	// loop through instance pools
 	for _, instancePool := range cluster.InstancePools() {
 
 		classes, variables := contentInstancePoolConfig(cluster.Config(), instancePool.Config(), instancePool.Role().Name())
+
+		if instancePool.Role().Name() == clusterv1alpha1.KubernetesMasterRoleName && cluster.Config().Kubernetes.ClusterAutoscaler != nil && cluster.Config().Kubernetes.ClusterAutoscaler.Enabled {
+			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::min_instances: %d`, workerMinCount))
+			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::max_instances: %d`, workerMaxCount))
+		}
 
 		//  classes
 		err = p.writeLines(

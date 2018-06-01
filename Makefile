@@ -75,10 +75,20 @@ go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/fake | grep -v pkg/wing/clients/internalclientset/fake)
 
 go_build:
-	# make sure you add all binaries to the .goreleaser.yml as well
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o wing_linux_amd64             ./cmd/wing
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o tarmak_linux_amd64           ./cmd/tarmak
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o tarmak_darwin_amd64          ./cmd/tarmak
+	# Build a wing binary
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o wing_linux_amd64 ./cmd/wing
+ifeq ($(CI_COMMIT_TAG),dev)
+	# Building in Dev mode
+	# Build a hashable version of the wing binary without build variables
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -o wing_linux_amd64_unversioned ./cmd/wing
+	# The hash of this binary is used to test if wing has changed in the s3 object key name
+	$(eval WING_HASH := $(shell md5sum wing_linux_amd64_unversioned | awk '{print $$1}'))
+	# Include binaries into devmode build of tarmak
+	go generate -tags devmode $$(go list ./pkg/... ./cmd/...)
+endif
+	# Make sure you add all binaries to the .goreleaser.yml as well
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH) -X github.com/jetstack/tarmak/cmd/tarmak/cmd.version=$(CI_COMMIT_TAG)' -o tarmak_linux_amd64 ./cmd/tarmak
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH) -X github.com/jetstack/tarmak/cmd/tarmak/cmd.version=$(CI_COMMIT_TAG)' -o tarmak_darwin_amd64 ./cmd/tarmak
 
 $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
@@ -211,9 +221,9 @@ docker_%:
 	docker start -a -i $(CONTAINER_ID)
 
 	# copy artifacts over
+	docker cp $(CONTAINER_ID):$(CONTAINER_DIR)/wing_linux_amd64 wing_linux_amd64
 	docker cp $(CONTAINER_ID):$(CONTAINER_DIR)/tarmak_linux_amd64 tarmak_linux_amd64
 	docker cp $(CONTAINER_ID):$(CONTAINER_DIR)/tarmak_darwin_amd64 tarmak_darwin_amd64
-	docker cp $(CONTAINER_ID):$(CONTAINER_DIR)/wing_linux_amd64 wing_linux_amd64
 
 	# remove container
 	docker rm $(CONTAINER_ID)

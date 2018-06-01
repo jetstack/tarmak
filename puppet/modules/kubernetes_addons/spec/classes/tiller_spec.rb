@@ -2,7 +2,10 @@ require 'spec_helper'
 describe 'kubernetes_addons::tiller' do
   let(:pre_condition) do
     "
-      class kubernetes{}
+      class kubernetes{
+        $_authorization_mode = ['RBAC']
+        $version = '1.9.7'
+      }
       define kubernetes::apply(
         $manifests,
       ){}

@@ -7,6 +7,7 @@ metadata:
   labels:
     app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
+    version: <%= @_version %>
 spec:
   replicas: 1
   selector:
@@ -18,9 +19,29 @@ spec:
         app: cluster-autoscaler
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
+<%- if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+<%- end -%>
     spec:
+      tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
+<%- unless @version_before_1_6 -%>
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"      
+<%- end -%>
+<%- if @rbac_enabled -%>
+      serviceAccountName: cluster-autoscaler
+<%- end -%>
       hostNetwork: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.kubernetes.io/master"
+                operator: "Exists"
       containers:
       - image: "<%= @image %>:v<%= @_version %>"
         name: cluster-autoscaler
@@ -50,15 +71,3 @@ spec:
           value: <%= @aws_region %>
 <% end -%>
         imagePullPolicy: Always
-        volumeMounts:
-<% @ca_mounts.each do |ca| -%>
-        - name: <%= ca['name'] %>
-          readOnly: <%= ca['readOnly'] %>
-          mountPath: <%= ca['mountPath'] %>
-<% end -%>
-      volumes:
-<% @ca_mounts.each do |ca| -%>
-      - name: <%= ca['name'] %>
-        hostPath:
-          path: <%= ca['mountPath'] %>
-<% end -%>

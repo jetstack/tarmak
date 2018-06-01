@@ -51,6 +51,8 @@ type Cluster interface {
 	WaitForConvergance() error
 	// This upload the puppet.tar.gz to the cluster, warning there is some duplication as terraform is also uploading this puppet.tar.gz
 	UploadConfiguration() error
+	// Verify the cluster (these contain more expensive calls like AWS calls
+	Verify() error
 
 	// This state is either destroy or apply
 	GetState() string
@@ -174,6 +176,7 @@ type Config interface {
 	CurrentEnvironmentName() string
 	Contact() string
 	Project() string
+	WingDevMode() bool
 	SetCurrentCluster(string) error
 }
 
@@ -185,6 +188,7 @@ type Packer interface {
 
 type Terraform interface {
 	Output(cluster Cluster) (map[string]interface{}, error)
+	Prepare(cluster Cluster) error
 }
 
 type SSH interface {
@@ -237,6 +241,8 @@ type InstancePool interface {
 	Role() *role.Role
 	Volumes() []Volume
 	Zones() []string
+	MinCount() int
+	MaxCount() int
 }
 
 type Volume interface {

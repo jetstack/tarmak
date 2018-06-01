@@ -82,6 +82,13 @@ class kubernetes::apiserver(
     $_admission_control = $admission_control
   }
 
+  # check OIDC configuration parameters
+  if $oidc_signing_algs.length > 0 and versioncmp($::kubernetes::version, '1.10.0') >= 0 {
+    $_oidc_signing_algs = $oidc_signing_algs
+  } else {
+    $_oidc_signing_algs = []
+  }
+
   # Do not insecure bind the API server on kubernetes 1.6+
   $insecure_port = $::kubernetes::_apiserver_insecure_port
   $secure_port = $::kubernetes::apiserver_secure_port

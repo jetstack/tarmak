@@ -1,5 +1,6 @@
 # CA certificate
 resource "tls_private_key" "ca" {
+  count     = 1
   algorithm = "RSA"
   rsa_bits  = "4096"
 }
@@ -26,14 +27,14 @@ resource "tls_self_signed_cert" "ca" {
 
 # Per instance certs
 resource "tls_private_key" "vault" {
-  count = "${var.vault_instance_count}"
+  count = "${var.vault_min_instance_count}"
 
   algorithm = "RSA"
   rsa_bits  = "2048"
 }
 
 resource "tls_cert_request" "vault" {
-  count           = "${var.vault_instance_count}"
+  count           = "${var.vault_min_instance_count}"
   key_algorithm   = "${element(tls_private_key.vault.*.algorithm, count.index)}"
   private_key_pem = "${element(tls_private_key.vault.*.private_key_pem, count.index)}"
 
@@ -53,13 +54,13 @@ resource "tls_cert_request" "vault" {
 }
 
 resource "tls_locally_signed_cert" "vault" {
-  count = "${var.vault_instance_count}"
+  count = "${var.vault_min_instance_count}"
 
   cert_request_pem = "${element(tls_cert_request.vault.*.cert_request_pem, count.index)}"
 
-  ca_key_algorithm   = "${tls_self_signed_cert.ca.key_algorithm}"
+  ca_key_algorithm   = "${tls_self_signed_cert.ca.0.key_algorithm}"
   ca_private_key_pem = "${tls_private_key.ca.private_key_pem}"
-  ca_cert_pem        = "${tls_self_signed_cert.ca.cert_pem}"
+  ca_cert_pem        = "${tls_self_signed_cert.ca.0.cert_pem}"
 
   # 1 year
   validity_period_hours = 8766

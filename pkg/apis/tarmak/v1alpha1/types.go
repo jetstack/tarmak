@@ -124,6 +124,8 @@ type Flags struct {
 	Cluster ClusterFlags // cluster specific flags
 
 	Version string // expose tarmak's build time version
+
+	WingDevMode bool // use a bundled wing version rather than a tagged release from GitHub
 }
 
 // This contains the cluster specifc operation flags

@@ -20,6 +20,7 @@ var clusterPlanCmd = &cobra.Command{
 			func(ctx context.Context) error {
 				return t.CmdTerraformPlan(args, ctx)
 			},
+			2,
 		)
 	},
 }

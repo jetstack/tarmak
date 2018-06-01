@@ -80,6 +80,7 @@ type ClusterKubernetes struct {
 	Dashboard         *ClusterKubernetesDashboard         `json:"dashboard,omitempty"`
 	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
 	PodSecurityPolicy *ClusterPodSecurityPolicy           `json:"podSecurityPolicy,omitempty"`
+	Prometheus        *ClusterKubernetesPrometheus        `json:"prometheus,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
@@ -145,6 +146,14 @@ type ClusterKubernetesAPIServerOIDC struct {
 
 type ClusterPodSecurityPolicy struct {
 	Enabled bool `json:"enabled,omitempty"`
+}
+
+// Configure the cluster internal deployment of prometheus
+type ClusterKubernetesPrometheus struct {
+	// Enable a cluster internal prometheus deployment, default: true
+	Enabled bool `json:"enabled,omitempty"`
+	// Only deploy/scrape Kubernetes external exporters, default: false
+	ExternalScrapeTargetsOnly bool `json:"externalScrapeTargetsOnly,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

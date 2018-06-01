@@ -1,7 +1,6 @@
 ---
 classes:
 - tarmak::etcd
-- prometheus
 - airworthy::install
 
 tarmak::hostname: "%{::tarmak_hostname}"

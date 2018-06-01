@@ -1,9 +1,9 @@
 output "vpc_id" {
-  value = "${aws_vpc.main.id}"
+  value = "${element(concat(aws_vpc.main.*.id, list("")), 0)}"
 }
 
 output "vpc_net" {
-  value = "${aws_vpc.main.cidr_block}"
+  value = "${element(concat(aws_vpc.main.*.id, list("")), 0)}"
 }
 
 output "stack_name" {

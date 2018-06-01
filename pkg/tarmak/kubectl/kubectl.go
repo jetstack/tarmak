@@ -190,6 +190,11 @@ func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
 
 	// check if certificates are set
 	if len(authInfo.ClientCertificateData) == 0 || len(authInfo.ClientKeyData) == 0 || len(cluster.CertificateAuthorityData) == 0 {
+
+		if err := k.tarmak.Terraform().Prepare(k.tarmak.Environment().Hub()); err != nil {
+			return nil, fmt.Errorf("failed to prepare terraform: %s", err)
+		}
+
 		if err := k.requestNewAdminCert(cluster, authInfo); err != nil {
 			return nil, err
 		}
@@ -282,9 +287,10 @@ func (k *Kubectl) Kubectl(args []string) error {
 	}
 
 	cmd := exec.Command("kubectl", args...)
-	cmd.Env = []string{
+	cmd.Env = append(
+		os.Environ(),
 		fmt.Sprintf("KUBECONFIG=%s", k.ConfigPath()),
-	}
+	)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin

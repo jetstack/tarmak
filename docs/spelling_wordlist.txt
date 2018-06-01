@@ -62,3 +62,6 @@ calicoctl
 Elasticsearch
 Logstash
 Jenkins
+prepended
+username
+loopback
