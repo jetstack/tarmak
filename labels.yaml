@@ -2,7 +2,7 @@
 repo: jetstack/tarmak
 labels:
 - name: approved
-  color: 0ffa16
+  color: 0ffa15
 - name: approved-for-milestone
   color: fef2c0
 - name: area/wing
