@@ -1,5 +1,5 @@
 resource "aws_route53_record" "per-instance" {
-  count   = "${var.vault_instance_count}"
+  count   = "${var.vault_min_instance_count}"
   zone_id = "${var.private_zone_id}"
   name    = "vault-${count.index + 1}"
   type    = "A"

@@ -15,10 +15,6 @@ tarmak::kubernetes_api_url: "https://api.%{::tarmak_cluster}.%{::tarmak_dns_root
 # TODO: This should come from terraform
 tarmak::etcd_instances: 3
 
-# cluster scaler config
-kubernetes_addons::cluster_autoscaler::min_instances: 3
-kubernetes_addons::cluster_autoscaler::max_instances: 10
-
 # point heapster to influxdb
 kubernetes_addons::heapster::sink: influxdb:http://monitoring-influxdb.kube-system:8086
 
