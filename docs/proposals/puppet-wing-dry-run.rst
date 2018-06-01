@@ -39,7 +39,7 @@ Verify puppet will make sensible and expected changes to the cluster when runnin
 
     $ tarmak cluster puppet-plan
 
-which complements ``cluster puppet-plan`` verifying Terraform changes.
+which complements ``cluster plan`` verifying Terraform changes.
 
 Changes
 =======
@@ -82,18 +82,18 @@ field for each type of source. For example, something like this in ``types.go``:
     }
 
 
-``PuppetJob``
+``WingJob``
 *************
 
 A resource representing the application of a ``PuppetManifest`` on an instance:
 
 .. code-block:: yaml
 
-    kind: PuppetJob
+    kind: WingJob
     metadata:
       name: example-job
     spec:
-      manifestRef:
+      puppetManifestRef:
         name: example-manifest
       operation: "dry-run"
       instanceID: 1234
@@ -104,10 +104,17 @@ A resource representing the application of a ``PuppetManifest`` on an instance:
 This references a pre-existing ``PuppetManifest``, and performs the specified
 action on an instance.
 
+If, in the future, we support other configuration management tools (ansible,
+chef, etc), these would be represented by separate fields.
+
+Performing updates to puppet manifests will leave ``WingJob`` and
+``PuppetManifest`` resources hanging around. To prevent this, wing should only
+keep the last 15 (or some other number) WingJobs for each instance.
+
 Changes to existing API objects
 -------------------------------
 
-``InstanceSpec`` will have a ``manifestRef`` field also linking to a ``PuppetManifest`` resource.
+``InstanceSpec`` will have a ``puppetManifestRef`` field also linking to a ``PuppetManifest`` resource.
 This will be the manifest applied to the instance.
 
 Changes to tarmak CLI
@@ -120,9 +127,9 @@ The planned workflow is to run::
 
     $ tarmak cluster puppet-plan
 
-which creates ``PuppetJob`` resources for either a subset of instances of each
+which creates ``WingJob`` resources for either a subset of instances of each
 type in the current cluster, or all instances. This blocks until
-``PuppetJob.Status.ExitCode`` for each created job is populated.
+``WingJob.Status.ExitCode`` for each created job is populated.
 
 It would be nice to filter and only display results based on the exit code of puppet, but it seems the exit code is always ``0`` when ``--noop`` is enabled::
 
@@ -134,7 +141,4 @@ Notable items
 Concerns
 --------
 
-- Performing updates to puppet manifests will leave ``PuppetJob`` and
-  ``PuppetManifest`` resources hanging around. Should there be an automated clean
-  up process for stale items?
-- We need to think about how to handle ``PuppetJob`` resources timing out in the case of an instance failure during a plan.
+- We need to think about how to handle ``WingJob`` resources timing out in the case of an instance failure during a plan.
