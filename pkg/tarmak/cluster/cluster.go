@@ -388,8 +388,8 @@ func (c *Cluster) Variables() map[string]interface{} {
 		if ok {
 			output[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
 		}
-		output[fmt.Sprintf("%s_instance_min_count", instancePool.TFName())] = instancePool.Config().MinCount
-		output[fmt.Sprintf("%s_instance_max_count", instancePool.TFName())] = instancePool.Config().MaxCount
+		output[fmt.Sprintf("%s_min_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
+		output[fmt.Sprintf("%s_max_instance_count", instancePool.TFName())] = instancePool.Config().MaxCount
 	}
 
 	// set network cidr
