@@ -65,3 +65,11 @@ Jenkins
 prepended
 username
 loopback
+addons
+autoscaler
+prometheus
+ubuntu
+offline
+admin
+plugin
+checklist
