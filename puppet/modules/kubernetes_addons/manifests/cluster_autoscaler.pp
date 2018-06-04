@@ -5,6 +5,7 @@ class kubernetes_addons::cluster_autoscaler(
   String $limit_mem='500Mi',
   String $request_cpu='100m',
   String $request_mem='300Mi',
+  String $instance_pool_name='worker',
   Integer $min_instances=3,
   Integer $max_instances=6,
   $ca_mounts=$::kubernetes_addons::params::ca_mounts,
@@ -21,7 +22,7 @@ class kubernetes_addons::cluster_autoscaler(
   }
 
   if defined('$kubernetes::cluster_name') {
-    $asg_name="${::kubernetes::cluster_name}-kubernetes-worker"
+    $asg_name="${::kubernetes::cluster_name}-kubernetes-${instance_pool_name}"
   } else {
     $asg_name=undef
   }
