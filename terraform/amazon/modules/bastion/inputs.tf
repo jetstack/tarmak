@@ -16,7 +16,7 @@ variable "public_subnet_ids" {
 variable "key_name" {}
 variable "bastion_root_size" {}
 # TODO: restrict to admin IPs
-variable "admin_cidrs" {
+variable "bastion_admin_cidrs" {
   type    = "list"
 }
 # data.terraform_remote_state.state.public_zone_id

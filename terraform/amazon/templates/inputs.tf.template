@@ -97,12 +97,12 @@ variable "jenkins_ebs_size" {
 variable "jenkins_certificate_arn" {
   default = ""
 }
-variable "jenkins_cidrs" {
+variable "jenkins_admin_cidrs" {
   type    = "list"
 }
 {{ end -}}
 
-variable "admin_cidrs" {
+variable "bastion_admin_cidrs" {
   type    = "list"
 }
 

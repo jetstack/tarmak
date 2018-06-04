@@ -65,7 +65,7 @@ module "bastion" {
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
   key_name = "${var.key_name}"
   bastion_root_size = "${var.bastion_root_size}"
-  admin_ips = ["${var.admin_ips}"]
+  bastion_admin_cidrs = ["${var.bastion_admin_cidrs}"]
   public_zone_id = "${module.state.public_zone_id}"
   private_zone_id = "${module.network.private_zone_id[0]}"
 }
@@ -90,7 +90,7 @@ module "jenkins" {
   jenkins_root_size = "${var.jenkins_root_size}"
   jenkins_ebs_size = "${var.jenkins_ebs_size}"
   certificate_arn = "${var.jenkins_certificate_arn}"
-  admin_ips = ["${var.admin_ips}"]
+  jenkins_admin_cidrs = "${var.jenkins_admin_cidrs}"
   public_zone_id = "${module.state.public_zone_id}"
   stack_name_prefix = "${var.jenkins_stack_name_prefix}"
   availability_zones = ["${var.availability_zones}"]

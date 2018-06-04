@@ -30,9 +30,6 @@ variable "jenkins_ebs_size" {}
 
 variable "certificate_arn" {}
 
-variable "admin_ips" {
-  type = "list"
-}
 
 variable "public_zone_id" {}
 
@@ -44,6 +41,6 @@ variable "availability_zones" {
   type = "list"
 }
 
-variable "jenkins_cidrs" {
+variable "jenkins_admin_cidrs" {
   type = "list"
 }
