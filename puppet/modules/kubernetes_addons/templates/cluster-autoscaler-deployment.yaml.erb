@@ -18,6 +18,8 @@ spec:
       labels:
         app: cluster-autoscaler
       annotations:
+        prometheus.io/port: "8085"
+        prometheus.io/scrape: "true"
         scheduler.alpha.kubernetes.io/critical-pod: ''
 <%- if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
