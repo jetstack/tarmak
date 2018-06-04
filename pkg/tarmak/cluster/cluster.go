@@ -393,6 +393,7 @@ func (c *Cluster) Variables() map[string]interface{} {
 			output[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
 		}
 		output[fmt.Sprintf("%s_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
+		output[fmt.Sprintf("%s_admin_cidrs", instancePool.TFName())] = instancePool.Config().AllowCIDRs
 	}
 
 	// set network cidr
