@@ -18,7 +18,7 @@ spec:
       serviceAccountName: tiller
 <%- end -%>
       containers:
-      - image: <%= @image %>:v<%= @version %>
+      - image: <%= @image %>:<%= @version %>
         args:
         - /tiller
         - --listen=localhost:44134
