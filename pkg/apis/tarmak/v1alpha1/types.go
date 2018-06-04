@@ -90,6 +90,7 @@ type Environment struct {
 	Location    string               `json:"location,omitempty"`
 	SSH         *clusterv1alpha1.SSH `json:"ssh,omitempty"`
 	PrivateZone string               `json:"privateZone,omitempty"`
+	AdminCIDRs  []string             `json:"omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
