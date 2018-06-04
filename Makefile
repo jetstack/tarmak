@@ -191,16 +191,14 @@ ifndef VERSION
 	$(error VERSION is undefined)
 endif
 	# replace wing version in terraform
-	sed -i 's/Environment=WING_VERSION=.*$$/Environment=WING_VERSION=$(VERSION)/g' terraform/amazon/tools/templates/bastion_user_data.yaml terraform/amazon/kubernetes/templates/puppet_agent_user_data.yaml
+	sed -i 's/Environment=WING_VERSION=[[:digit:]].*$$/Environment=WING_VERSION=$(VERSION)/g' terraform/amazon/modules/bastion/templates/bastion_user_data.yaml terraform/amazon/templates/puppet_agent_user_data.yaml.template
 	# replace major version in docs
 	sed -i 's#^version = u.*$$#version = u"$(shell echo "$(VERSION)" | grep -oe "^[0-9]\{1,\}\\.[0-9]\{1,\}")"#g' docs/conf.py
 	sed -i 's#^release = u.*$$#release = u"$(shell echo "$(VERSION)" | grep -oe "^[0-9]\{1,\}\\.[0-9]\{1,\}")"#g' docs/conf.py
 	# replace version in README
 	sed -i 's#wget https://github.com/jetstack/tarmak/releases/download/.*$$#wget https://github.com/jetstack/tarmak/releases/download/$(VERSION)/tarmak_$(VERSION)_linux_amd64#g' README.md
 	sed -i 's/mv tarmak_.*$$/mv tarmak_$(VERSION)_linux_amd64 tarmak/g' README.md
-	# replace version in Dockerfile
-	sed -i 's#^ENV TARMAK_VERSION .*$$#ENV TARMAK_VERSION $(VERSION)#g' terraform/Dockerfile
-	git add -p terraform/Dockerfile docs/conf.py terraform/amazon/tools/templates/bastion_user_data.yaml terraform/amazon/kubernetes/templates/puppet_agent_user_data.yaml README.md
+	git add -p docs/conf.py terraform/amazon/modules/bastion/templates/bastion_user_data.yaml terraform/amazon/templates/puppet_agent_user_data.yaml.template README.md
 	git commit -m "Release $(VERSION)"
 	git tag $(VERSION)
 
