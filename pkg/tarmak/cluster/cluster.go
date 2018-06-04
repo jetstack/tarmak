@@ -54,18 +54,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		log:         environment.Log().WithField("cluster", conf.Name),
 	}
 
-	// validate instance pools
-	if err := cluster.validateInstancePools(); err != nil {
-		return nil, err
-	}
-
-	// validate network setup
-	if err := cluster.validateNetwork(); err != nil {
-		return nil, err
-	}
-
-	//validate logging
-	if err := cluster.validateLoggingSinks(); err != nil {
+	if err := cluster.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -182,6 +171,25 @@ func (c *Cluster) VerifyInstancePools() (result error) {
 		}
 	}
 	return nil
+}
+
+func (c *Cluster) Validate() (result error) {
+	// validate instance pools
+	if err := c.validateInstancePools(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	// validate network setup
+	if err := c.validateNetwork(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	//validate logging
+	if err := c.validateLoggingSinks(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result
 }
 
 // validate network configuration
@@ -303,10 +311,6 @@ func (c *Cluster) APITunnel() interfaces.Tunnel {
 		fmt.Sprintf("api.%s.%s", c.ClusterName(), c.Environment().Config().PrivateZone),
 		6443,
 	)
-}
-
-func (c *Cluster) Validate() error {
-	return nil
 }
 
 func (c *Cluster) Environment() interfaces.Environment {
