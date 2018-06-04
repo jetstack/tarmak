@@ -43,3 +43,7 @@ variable "name" {}
 variable "availability_zones" {
   type = "list"
 }
+
+variable "jenkins_cidrs" {
+  type = "list"
+}

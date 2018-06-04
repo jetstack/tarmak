@@ -97,11 +97,13 @@ variable "jenkins_ebs_size" {
 variable "jenkins_certificate_arn" {
   default = ""
 }
-{{ end -}}
-# TODO: restrict to admin IPs
-variable "admin_ips" {
+variable "jenkins_cidrs" {
   type    = "list"
-  default = ["0.0.0.0/0"]
+}
+{{ end -}}
+
+variable "admin_cidrs" {
+  type    = "list"
 }
 
 # vault
