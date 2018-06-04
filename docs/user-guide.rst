@@ -150,10 +150,10 @@ The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
 The Pod Security Policy manifests can be found within the tarmak directory at
 ``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``
 
-Dashboard, Cluster Autoscaler and Tiller
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cluster Autoscaler
+~~~~~~~~~~~~~~~~~~
 
-Tarmak supports a number of Kubernetes addons including Kubernetes Dashboard, Cluster Autoscaler and Tiller. The following `tarmak.yaml` snippet shows how you would enable Cluster Autoscaler.
+Tarmak supports deploying `Cluster Autoscaler <https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler>`_ when spinning up a Kubernetes cluster. The following `tarmak.yaml` snippet shows how you would enable Cluster Autoscaler. 
 
 .. code-block:: yaml
 
@@ -162,9 +162,37 @@ Tarmak supports a number of Kubernetes addons including Kubernetes Dashboard, Cl
         enabled: true
     ...
 
-The above configuration would deploy Cluster Autoscaler with an image of `gcr.io/google_containers/cluster-autoscaler` using the recommend version based on the version of your Kubernetes cluster. The configuration block also accepts two optional fields of `image` and `version` allowing you to change these defaults. Note that the final image tag used when deploying the autoscaler will be the configured version prepended with the letter `v`.
+The above configuration would deploy Cluster Autoscaler with an image of `gcr.io/google_containers/cluster-autoscaler` using the recommend version based on the version of your Kubernetes cluster. The configuration block accepts two optional fields of `image` and `version` allowing you to change these defaults. Note that the final image tag used when deploying Cluster Autoscaler will be the configured version prepended with the letter `v`.
 
-This configuration works similarly for Dashboard and Tiller using images of `gcr.io/google_containers/kubernetes-dashboard-amd64` and `gcr.io/kubernetes-helm/tiller` respectively by default.
+The current implementation will configure the first instance pool of type worker in your cluster configuration to scale between `minCount` and `maxCount`. We plan to add support for an arbitrary number of worker instance pools.
+
+Dashboard
+~~~~~~~~~
+
+Tarmak supports deploying `Kubernetes Dashboard <https://github.com/kubernetes/dashboard>`_ when spinning up a Kubernetes cluster. The following `tarmak.yaml` snippet shows how you would enable Kubernetes Dashboard. 
+
+.. code-block:: yaml
+
+    kubernetes:
+      dashboard:
+        enabled: true
+    ...
+
+The above configuration would deploy Kubernetes Dashboard with an image of `gcr.io/google_containers/kubernetes-dashboard-amd64` with a fixed tag. The configuration block accepts two optional fields of `image` and `version` allowing you to change these defaults. The `version` field directly translates to the image tag used.
+
+Tiller
+~~~~~~
+
+Tarmak supports deploying `Tiller <https://github.com/kubernetes/helm>`_ when spinning up a Kubernetes cluster. The following `tarmak.yaml` snippet shows how you would enable Tiller. 
+
+.. code-block:: yaml
+
+    kubernetes:
+      tiller:
+        enabled: true
+    ...
+
+The above configuration would deploy Tiller with an image of `gcr.io/kubernetes-helm/tiller` with a fixed tag. The configuration block accepts two optional fields of `image` and `version` allowing you to change these defaults. The `version` field directly translates to the image tag used.
 
 Logging
 ~~~~~~~
