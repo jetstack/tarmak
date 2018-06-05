@@ -21,10 +21,10 @@ class kubernetes_addons::cluster_autoscaler(
     $rbac_enabled = false
   }
 
-  if defined('$kubernetes::cluster_name') {
+  if defined('$kubernetes::cluster_name') and $instance_pool_name != '' {
     $asg_name="${::kubernetes::cluster_name}-kubernetes-${instance_pool_name}"
   } else {
-    $asg_name=undef
+    fail('asg name must be set')
   }
 
   if $version == '' {
