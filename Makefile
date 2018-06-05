@@ -131,7 +131,8 @@ $(BINDIR)/dep:
 $(BINDIR)/upx:
 ifeq ($(UNAME_S),Linux)
 	curl -sL -o $@.tar.xz https://github.com/upx/upx/releases/download/v3.94/upx-3.94-amd64_linux.tar.xz
-	echo "e1fc0d55c88865ef758c7e4fabbc439e4b5693b9328d219e0b9b3604186abe20 $@.tar.xz" | $(SHASUM)
+	echo "e1fc0d55c88865ef758c7e4fabbc439e4b5693b9328d219e0b9b3604186abe20  $@.tar.xz" | $(SHASUM)
+	which xz || ( apt-get update && apt-get -y install xz-utils)
 	cd $(BINDIR) && tar xvf $(shell basename $@).tar.xz upx-3.94-amd64_linux/upx --strip-components=1
 	rm $@.tar.xz
 else
@@ -141,7 +142,7 @@ endif
 
 $(BINDIR)/goreleaser:
 	curl -sL -o $@.tar.gz $(GORELEASER_URL)
-	echo "$(GORELEASER_HASH) $@.tar.gz" | $(SHASUM)
+	echo "$(GORELEASER_HASH)  $@.tar.gz" | $(SHASUM)
 	cd $(BINDIR) && tar xzvf $(shell basename $@).tar.gz goreleaser
 	rm $@.tar.gz
 
