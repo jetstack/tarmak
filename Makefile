@@ -29,7 +29,7 @@ endif
 ifeq ($(UNAME_S),Darwin)
 	SHASUM := shasum -a 256 -c
 	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-darwin-amd64
-	DEP_HASH := f170008e2bf8b196779c361a4eaece1b03450d23bbf32d1a0beaa9b00b6a5ab4
+	DEP_HASH := 1544afdd4d543574ef8eabed343d683f7211202a65380f8b32035d07ce0c45ef
 	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.77.0/goreleaser_Darwin_x86_64.tar.gz
 	GORELEASER_HASH := bc6cdf2dfe506f2cce5abceb30da009bfd5bcdb3e52608c536e6c2ceea1f24fe
 endif
