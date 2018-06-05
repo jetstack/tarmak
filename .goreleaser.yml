@@ -19,6 +19,8 @@ builds:
     goarch:
       - amd64
     flags: -tags netgo
+    hooks:
+      post: hack/minify-binaries.sh
 archive:
   format: binary
 release:
