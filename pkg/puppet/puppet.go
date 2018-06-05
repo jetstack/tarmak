@@ -316,8 +316,8 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 				workerMinCount = instancePool.MinCount()
 				workerMaxCount = instancePool.MaxCount()
 				workerInstancePoolName = instancePool.Name()
+				break
 			}
-			break
 		}
 	}
 
