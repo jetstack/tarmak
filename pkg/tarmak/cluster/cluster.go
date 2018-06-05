@@ -194,6 +194,15 @@ func (c *Cluster) Validate() (result error) {
 		result = multierror.Append(result, err)
 	}
 
+	//validate apiserver
+	if k := c.Config().Kubernetes; k != nil {
+		if apiServer := k.APIServer; apiServer != nil {
+			if err := c.validateAPIServer(); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
+	}
+
 	return result
 }
 
@@ -238,6 +247,18 @@ func (c *Cluster) validateLoggingSinks() (result error) {
 	}
 
 	return nil
+}
+
+// Validate APIServer
+func (c *Cluster) validateAPIServer() (result error) {
+	for _, cidr := range c.Config().Kubernetes.APIServer.AllowCIDRs {
+		_, _, err := net.ParseCIDR(cidr)
+		if err != nil {
+			result = multierror.Append(result, fmt.Errorf("%s is not a valid CIDR format", cidr))
+		}
+	}
+
+	return result
 }
 
 // Determine if this Cluster is a cluster or hub, single or multi environment
