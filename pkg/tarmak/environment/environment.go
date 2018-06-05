@@ -286,6 +286,10 @@ func (e *Environment) Validate() error {
 	return result
 }
 
+func (e *Environment) Verify() (result error) {
+	return result
+}
+
 func (e *Environment) WingTunnel() interfaces.Tunnel {
 	return e.Tarmak().SSH().Tunnel(
 		"bastion",

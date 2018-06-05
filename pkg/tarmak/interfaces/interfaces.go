@@ -21,7 +21,6 @@ type Cluster interface {
 	Variables() map[string]interface{}
 	Environment() Environment
 	Name() string
-	Validate() error
 	NetworkCIDR() *net.IPNet
 	RemoteState() string
 
@@ -53,6 +52,8 @@ type Cluster interface {
 	UploadConfiguration() error
 	// Verify the cluster (these contain more expensive calls like AWS calls
 	Verify() error
+	// Validate the cluster (these contain less expensive local calls)
+	Validate() error
 
 	// This state is either destroy or apply
 	GetState() string
@@ -70,6 +71,9 @@ type Environment interface {
 	Location() string // this returns the location of the environment (e.g. the region)
 	Variables() map[string]interface{}
 	Provider() Provider
+	// Verify the cluster (these contain more expensive calls like AWS calls
+	Verify() error
+	// Validate the cluster (these contain less expensive local calls)
 	Validate() error
 	Name() string
 	HubName() string
@@ -102,6 +106,9 @@ type Provider interface {
 	Name() string
 	Parameters() map[string]string
 	Region() string
+	// Verify the cluster (these contain more expensive calls like AWS calls
+	Verify() error
+	// Validate the cluster (these contain less expensive local calls)
 	Validate() error
 	Reset() // reset all caches within the provider
 	RemoteStateBucketName() string
