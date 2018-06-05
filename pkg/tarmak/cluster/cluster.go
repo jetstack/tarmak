@@ -147,8 +147,13 @@ func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, cl
 
 // validate server pools
 func (c *Cluster) validateInstancePools() (result error) {
-	return nil
-	//return fmt.Errorf("refactore me!")
+	for _, instancePool := range c.InstancePools() {
+		err := instancePool.Validate()
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+	return result
 }
 
 // Verify cluster

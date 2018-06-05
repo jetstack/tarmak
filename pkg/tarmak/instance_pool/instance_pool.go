@@ -14,6 +14,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"net"
 )
 
 var _ interfaces.InstancePool = &InstancePool{}
@@ -181,4 +182,19 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
 	}
 
 	return fmt.Sprintf("[%s]", strings.Join(policies, ","))
+}
+
+func (n *InstancePool) Validate() (result error) {
+	return n.ValidateAllowCIDRs()
+}
+
+func (e *InstancePool) ValidateAllowCIDRs() (result error) {
+	for _, cidr := range e.Config().AllowCIDRs {
+		_, _, err := net.ParseCIDR(cidr)
+		if err != nil {
+			result = multierror.Append(result, fmt.Errorf("%s is not a valid CIDR format", cidr))
+		}
+	}
+
+	return result
 }
