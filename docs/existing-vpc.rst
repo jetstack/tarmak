@@ -62,9 +62,10 @@ For example, if we have the following infrastructure (notation in terraform)::
 		}
 
 		resource "aws_nat_gateway" "main" {
+		  count         = "${length(aws_subnet.public)}"
 		  depends_on    = ["aws_internet_gateway.main"]
 		  allocation_id = "${aws_eip.nat.id}"
-		  subnet_id     = "${aws_subnet.public.1.id}"
+		  subnet_id     = "${aws_subnet.public.*.id[count.index]}"
 		}
 
 		resource "aws_route_table" "public" {
