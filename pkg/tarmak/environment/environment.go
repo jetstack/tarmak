@@ -17,6 +17,8 @@ import (
 	"golang.org/x/crypto/ssh"
 	"k8s.io/client-go/rest"
 
+	"net"
+
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
@@ -275,12 +277,25 @@ func (e *Environment) Log() *logrus.Entry {
 	return e.log
 }
 
-func (e *Environment) Validate() error {
-	var result error
+func (e *Environment) Validate() (result error) {
 
-	err := e.Provider().Validate()
-	if err != nil {
+	if err := e.Provider().Validate(); err != nil {
 		result = multierror.Append(result, err)
+	}
+
+	if err := e.ValidateAdminCIDRs(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result
+}
+
+func (e *Environment) ValidateAdminCIDRs() (result error) {
+	for _, cidr := range e.Config().AdminCIDRs {
+		_, _, err := net.ParseCIDR(cidr)
+		if err != nil {
+			result = multierror.Append(result, fmt.Errorf("%s is not a valid CIDR format", cidr))
+		}
 	}
 
 	return result
