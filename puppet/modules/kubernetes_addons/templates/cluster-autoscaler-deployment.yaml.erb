@@ -64,6 +64,7 @@ spec:
         - --cloud-provider=<%= @cloud_provider %>
         - --skip-nodes-with-local-storage=false
         - --nodes=<%= @min_instances %>:<%= @max_instances %>:<%= @asg_name %>
+        - --skip-nodes-with-system-pods=false
 <% if @balance_similar_node_groups -%>
         - --balance-similar-node-groups
 <% end -%>
