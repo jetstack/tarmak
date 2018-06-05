@@ -20,18 +20,18 @@ GOPATH ?= /tmp/go
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-	SHASUM := "sha256sum -c"
+	SHASUM := sha256sum -c
 	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64
 	DEP_HASH := 31144e465e52ffbc0035248a10ddea61a09bf28b00784fd3fdd9882c8cbb2315
-	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.54.0/goreleaser_Linux_x86_64.tar.gz
-	GORELEASER_HASH := 895df4293580dd8f9b0daf0ef5456f2238a2fbfc51d9f75dde6e2c63ca4fccc2
+	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.77.0/goreleaser_Linux_x86_64.tar.gz
+	GORELEASER_HASH := aae3c5bb76b282e29940f2654b48b13e51f664368c7589d0e86b391b7ef51cc8
 endif
 ifeq ($(UNAME_S),Darwin)
-	SHASUM := "shasum -a 256 -c"
+	SHASUM := shasum -a 256 -c
 	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-darwin-amd64
-	DEP_HASH := f170008e2bf8b196779c361a4eaece1b03450d23bbf32d1a0beaa9b00b6a5ab4
-	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.54.0/goreleaser_Darwin_x86_64.tar.gz
-	GORELEASER_HASH := 9d927528a599174eed4d0d6a1ce6bdc810463c4cb105b0d2319c7c63ec642c9b
+	DEP_HASH := 1544afdd4d543574ef8eabed343d683f7211202a65380f8b32035d07ce0c45ef
+	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.77.0/goreleaser_Darwin_x86_64.tar.gz
+	GORELEASER_HASH := bc6cdf2dfe506f2cce5abceb30da009bfd5bcdb3e52608c536e6c2ceea1f24fe
 endif
 
 
@@ -124,15 +124,29 @@ $(BINDIR)/informer-gen:
 
 $(BINDIR)/dep:
 	curl -sL -o $@ $(DEP_URL)
-	echo "$(DEP_HASH)  $@" | $$SHASUM
+	echo "$(DEP_HASH)  $@" | $(SHASUM)
 	chmod +x $@
+
+# upx binary packer, only supported on Linux
+$(BINDIR)/upx:
+ifeq ($(UNAME_S),Linux)
+	curl -sL -o $@.tar.xz https://github.com/upx/upx/releases/download/v3.94/upx-3.94-amd64_linux.tar.xz
+	echo "e1fc0d55c88865ef758c7e4fabbc439e4b5693b9328d219e0b9b3604186abe20  $@.tar.xz" | $(SHASUM)
+	which xz || ( apt-get update && apt-get -y install xz-utils)
+	cd $(BINDIR) && tar xvf $(shell basename $@).tar.xz upx-3.94-amd64_linux/upx --strip-components=1
+	rm $@.tar.xz
+else
+	echo -e "#/bin/sh\nexit 0" > $@
+	chmod +x $@
+endif
 
 $(BINDIR)/goreleaser:
 	curl -sL -o $@.tar.gz $(GORELEASER_URL)
-	echo "$(GORELEASER_HASH) $@.tar.gz" | $$SHASUM
+	echo "$(GORELEASER_HASH)  $@.tar.gz" | $(SHASUM)
 	cd $(BINDIR) && tar xzvf $(shell basename $@).tar.gz goreleaser
+	rm $@.tar.gz
 
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
