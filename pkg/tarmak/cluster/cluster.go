@@ -456,6 +456,15 @@ func (c *Cluster) Variables() map[string]interface{} {
 		}
 	}
 
+	// Get Apiserver valid admin cidrs
+	if k := c.Config().Kubernetes; k != nil {
+		if apiServer := k.APIServer; apiServer != nil && apiServer.AllowCIDRs != nil {
+			output["api_admin_cidrs"] = apiServer.AllowCIDRs
+		} else {
+			output["api_admin_cidrs"] = c.environment.Config().AdminCIDRs
+		}
+	}
+
 	// publish changed private zone
 	if privateZone := c.Environment().Config().PrivateZone; privateZone != "" {
 		output["private_zone"] = privateZone

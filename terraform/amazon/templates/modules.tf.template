@@ -205,6 +205,7 @@ module "kubernetes" {
   kubernetes_master_ami = "${var.kubernetes_master_ami}"
   kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
   kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
+  api_admin_cidrs = "${var.api_admin_cidrs}"
   bastion_security_group_id = "${data.terraform_remote_state.hub_state.bastion_bastion_security_group_id}"
   secrets_bucket = "${data.terraform_remote_state.hub_state.state_secrets_bucket}"
   public_zone = "${data.terraform_remote_state.hub_state.state_public_zone}"

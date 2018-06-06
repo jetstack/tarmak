@@ -56,7 +56,7 @@ variable "availability_zones" {
   type = "list"
 }
 
-variable "api_cidrs" {
+variable "api_admin_cidrs" {
   type = "list"
 }
 
