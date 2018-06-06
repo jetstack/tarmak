@@ -56,7 +56,7 @@ resource "aws_security_group_rule" "{{.TFName}}_elb_public_ingress_allow_all_api
   protocol          = "tcp"
   from_port         = 443
   to_port           = 443
-  cidr_blocks       = ["${var.{{.TFName}}_cidrs}"]
+  cidr_blocks       = ["${var.api_admin_cidrs}"]
   security_group_id = "${aws_security_group.{{.TFName}}_elb_public.id}"
 }
 {{ end -}}
