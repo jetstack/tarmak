@@ -133,7 +133,9 @@ variable "bucket_prefix" {}
 variable "kubernetes_master_ami" {}
 variable "kubernetes_worker_ami" {}
 variable "kubernetes_etcd_ami" {}
-variable "api_admin_cidrs" {}
+variable "api_admin_cidrs" {
+    type = "list"
+}
 variable "tools_cluster_name" {
   default = "hub"
 }
