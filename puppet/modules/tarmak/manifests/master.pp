@@ -31,6 +31,14 @@ class tarmak::master(
     uid         => $::tarmak::kubernetes_uid,
   }
 
+  $encryption_config_path = "${::tarmak::kubernetes_config_dir}/encryption-config.yaml"
+  vault_client::secret_service { 'kube-encryption-config-file':
+    field       => 'content',
+    secret_path => "${::tarmak::cluster_name}/secrets/encryption-config",
+    dest_path   => $encryption_config_path,
+    uid         => $::tarmak::kubernetes_uid,
+  }
+
   $controller_manager_base_path = "${::tarmak::kubernetes_ssl_dir}/kube-controller-manager"
   vault_client::cert_service { 'kube-controller-manager':
     base_path   => $controller_manager_base_path,
