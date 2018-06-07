@@ -393,7 +393,7 @@ Secure public endpoints
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Public endpoints (Jenkins, bastion host and if enabled apiserver) can be secured
-by limiting the access to a list of cidr blocks. This can be configured on a
+by limiting the access to a list of CIDR blocks. This can be configured on a
 environment level for all public endpoint and if wanted can be overwritten on a
 specific public endpoint.
 

@@ -65,3 +65,4 @@ Jenkins
 prepended
 username
 loopback
+CIDR
