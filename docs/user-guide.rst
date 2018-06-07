@@ -400,7 +400,8 @@ specific public endpoint.
 Environment level
 +++++++++++++++++
 
-This can be done by adding an ``adminCIDRs`` list to an environments block:
+This can be done by adding an ``adminCIDRs`` list to an environments block,
+if nothing has been set, the default is 0.0.0.0/0:
 
 .. code-block:: yaml
 
