@@ -107,7 +107,7 @@ You can deploy it with the following command:
 
 We set ``iptables`` to false and ``host-ip`` to 127.0.0.1 as Tarmak already created
 the iptables rule and forward it to ``127.0.0.1:8181``.
-Specific kube2iam options can be found in the `documentation <https://github.com/jtblin/kube2iam#options>`_ of kube2iam.
+Specific kube2iam options can be found in the `documentation <https://github.com/jtblin/kube2iam>`_ of kube2iam.
 
 Usage
 ~~~~~
