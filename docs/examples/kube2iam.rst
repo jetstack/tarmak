@@ -19,7 +19,7 @@ It also has 2 outputs defined the ``ARN`` and ``path`` of the policy.
 The ARN is what you need to give to Tarmak and the path is needed to be
 able to deploy your roles for the pods in the correct path.
 
-.. code-block:: hcl
+.. code-block:: yaml
 
     terraform {}
 
@@ -117,7 +117,7 @@ and policies to give your pods access to AWS resources.
 
 An example creation of an IAM policy and role:
 
-.. code-block:: hcl
+.. code-block:: yaml
 
     resource "aws_iam_role" "test_role" {
     name = "test_role"
