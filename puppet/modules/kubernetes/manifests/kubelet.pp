@@ -10,8 +10,21 @@ class kubernetes::kubelet(
   String $role = 'worker',
   String $container_runtime = 'docker',
   String $kubelet_dir = '/var/lib/kubelet',
-  String $hard_eviction_memory_threshold =
-    five_percent_of_total_ram(dig44($facts, ['memory', 'system', 'total_bytes'], 1)),
+  Optional[String] $eviction_hard_memory_available_threshold = '5%',
+  Optional[String] $eviction_hard_nodefs_available_threshold = '10%',
+  Optional[String] $eviction_hard_nodefs_inodes_free_threshold = '5%',
+  Boolean $eviction_soft_enabled = true,
+  Optional[String] $eviction_soft_memory_available_threshold = '10%',
+  Optional[String] $eviction_soft_nodefs_available_threshold = '15%',
+  Optional[String] $eviction_soft_nodefs_inodes_free_threshold = '10%',
+  Optional[String] $eviction_soft_memory_available_grace_period = '0m',
+  Optional[String] $eviction_soft_nodefs_available_grace_period = '0m',
+  Optional[String] $eviction_soft_nodefs_inodes_free_grace_period = '0m',
+  String $eviction_max_pod_grace_period = '-1',
+  String $eviction_pressure_transition_period = '2m',
+  Optional[String] $eviction_minimum_reclaim_memory_available = '100Mi',
+  Optional[String] $eviction_minimum_reclaim_nodefs_available = '1Gi',
+  Optional[String] $eviction_minimum_reclaim_nodefs_inodes_free = undef,
   Optional[String] $network_plugin = undef,
   Integer $network_plugin_mtu = 1460,
   Boolean $allow_privileged = true,
@@ -43,6 +56,30 @@ class kubernetes::kubelet(
   Array[String] $systemd_before = [],
 ){
   require ::kubernetes
+
+  if ! $eviction_soft_memory_available_threshold or ! $eviction_soft_memory_available_grace_period {
+    $_eviction_soft_memory_available_threshold = undef
+    $_eviction_soft_memory_available_grace_period = undef
+  } else {
+    $_eviction_soft_memory_available_threshold = $eviction_soft_memory_available_threshold
+    $_eviction_soft_memory_available_grace_period = $eviction_soft_memory_available_grace_period
+  }
+
+  if ! $eviction_soft_nodefs_available_threshold or ! $eviction_soft_nodefs_available_grace_period {
+    $_eviction_soft_nodefs_available_threshold = undef
+    $_eviction_soft_nodefs_available_grace_period = undef
+  } else {
+    $_eviction_soft_nodefs_available_threshold = $eviction_soft_nodefs_available_threshold
+    $_eviction_soft_nodefs_available_grace_period = $eviction_soft_nodefs_available_grace_period
+  }
+
+  if ! $eviction_soft_nodefs_inodes_free_threshold or ! $eviction_soft_nodefs_inodes_free_grace_period {
+    $_eviction_soft_nodefs_inodes_free_threshold = undef
+    $_eviction_soft_nodefs_inodes_free_grace_period = undef
+  } else {
+    $_eviction_soft_nodefs_inodes_free_threshold = $eviction_soft_nodefs_inodes_free_threshold
+    $_eviction_soft_nodefs_inodes_free_grace_period = $eviction_soft_nodefs_inodes_free_grace_period
+  }
 
   $_systemd_wants = $systemd_wants
   if $container_runtime == 'docker' {

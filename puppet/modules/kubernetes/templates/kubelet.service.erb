@@ -103,7 +103,53 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   "--tls-cert-file=<%= @cert_file %>" \
   "--tls-private-key-file=<%= @key_file %>" \
 <% end -%>
-  "--eviction-hard=memory.available<<%= @hard_eviction_memory_threshold %>" \
+<%
+    # build eviction hard command line
+    @eviction_hard = []
+    @eviction_hard << "memory.available<#{@eviction_hard_memory_available_threshold}" unless @eviction_hard_memory_available_threshold.nil? or @eviction_hard_memory_available_threshold == 'nil'
+    @eviction_hard << "nodefs.available<#{@eviction_hard_nodefs_available_threshold}" unless @eviction_hard_nodefs_available_threshold.nil? or @eviction_hard_nodefs_available_threshold == 'nil'
+    @eviction_hard << "nodefs.inodesFree<#{@eviction_hard_nodefs_inodes_free_threshold}" unless @eviction_hard_nodefs_inodes_free_threshold.nil? or @eviction_hard_nodefs_inodes_free_threshold == 'nil'
+-%>
+<% if @eviction_hard.length > 0 -%>
+  "--eviction-hard=<%= @eviction_hard.join(',') %>" \
+<% end -%>
+<% if @eviction_soft_enabled -%>
+<%
+    # build eviction soft command line
+    @eviction_soft = []
+
+    @eviction_soft << "memory.available<#{@_eviction_soft_memory_available_threshold}" unless @_eviction_soft_memory_available_threshold.nil? or @_eviction_soft_memory_available_threshold == 'nil'
+    @eviction_soft << "nodefs.available<#{@_eviction_soft_nodefs_available_threshold}" unless @_eviction_soft_nodefs_available_threshold.nil? or @_eviction_soft_nodefs_available_threshold == 'nil'
+    @eviction_soft << "nodefs.inodesFree<#{@_eviction_soft_nodefs_inodes_free_threshold}" unless @_eviction_soft_nodefs_inodes_free_threshold.nil? or @_eviction_soft_nodefs_inodes_free_threshold == 'nil'
+-%>
+<%    if @eviction_soft.length > 0 -%>
+<%
+    # build eviction soft grace period command line
+    @eviction_soft_grace_period = []
+
+    @eviction_soft_grace_period << "memory.available=#{@_eviction_soft_memory_available_grace_period}" unless @_eviction_soft_memory_available_grace_period.nil? or @_eviction_soft_memory_available_grace_period == 'nil'
+    @eviction_soft_grace_period << "nodefs.available=#{@_eviction_soft_nodefs_available_grace_period}" unless @_eviction_soft_nodefs_available_grace_period.nil? or @_eviction_soft_nodefs_available_grace_period == 'nil'
+    @eviction_soft_grace_period << "nodefs.inodesFree=#{@_eviction_soft_nodefs_inodes_free_grace_period}" unless @_eviction_soft_nodefs_inodes_free_grace_period.nil? or @_eviction_soft_nodefs_inodes_free_grace_period == 'nil'
+-%>
+<%        if @eviction_soft_grace_period.length > 0 -%>
+  --eviction-soft=<%= @eviction_soft.join(',') %> \
+  --eviction-soft-grace-period=<%= @eviction_soft_grace_period.join(',') %> \
+  --eviction-max-pod-grace-period=<%= @eviction_max_pod_grace_period %> \
+  --eviction-pressure-transition-period=<%= @eviction_pressure_transition_period %> \
+<%        end -%>
+<%    end -%>
+<% end -%>
+<%
+  # build minumum reclaim command line
+  @eviction_minimum_reclaim = []
+
+  @eviction_minimum_reclaim << "memory.available=#{@eviction_minimum_reclaim_memory_available}" unless @eviction_minimum_reclaim_memory_available.nil? or @eviction_minimum_reclaim_memory_available == 'nil'
+  @eviction_minimum_reclaim << "nodefs.available=#{@eviction_minimum_reclaim_nodefs_available}" unless @eviction_minimum_reclaim_nodefs_available.nil? or @eviction_minimum_reclaim_nodefs_available == 'nil'
+  @eviction_minimum_reclaim << "nodefs.inodesFree=#{@eviction_minimum_reclaim_nodefs_inodes_free}" unless @eviction_minimum_reclaim_nodefs_inodes_free.nil? or @eviction_minimum_reclaim_nodefs_inodes_free == 'nil'
+-%>
+<% if @eviction_minimum_reclaim.length > 0 -%>
+  "--eviction-minimum-reclaim=<%= @eviction_minimum_reclaim.join(',') %>" \
+<% end -%>
 <% if @_feature_gates != [] -%>
   --feature-gates=<%= @_feature_gates.join(',') %> \
 <% end -%>
