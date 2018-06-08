@@ -11,12 +11,12 @@ Every instance that will run the kube2iam pod needs to have an specific
 IAM policy attached to the IAM role of that instance.
 
 The following little Terraform project creates an IAM policy that will
-give instances the abbility to assume roles. We limit the access to which
+give instances the ability to assume roles. We limit the access to which
 roles the instances has access, by only allowing it to access roles in a 
 restricted path in AWS IAM.
 The Terraform project has 2 inputs ``aws_region`` and ``cluster_name``.
 It also has 2 outputs defined the ``ARN`` and ``path`` of the policy.
-The arn is what you need to give to Tarmak and the path is needed to be
+The ARN is what you need to give to Tarmak and the path is needed to be
 able to deploy your roles for the pods in the correct path.
 
 .. code-block:: hcl
@@ -82,7 +82,7 @@ Attach instance policy
 ++++++++++++++++++++++
 
 Add the created IAM policy ARN to your tarmak config. You can do this by
-adding additional IAM polcies.
+adding additional IAM policies.
 
 Deploy kube2iam
 +++++++++++++++
@@ -105,7 +105,7 @@ You can deploy it with the following command:
     --set=host.iptables=false
 
 
-We set iptables to false and host-ip to 127.0.0.1 as Tarmak already created
+We set ``iptables`` to false and ``host-ip`` to 127.0.0.1 as Tarmak already created
 the iptables rule and forward it to ``127.0.0.1:8181``.
 Specific kube2iam options can be found in the `documentation <https://github.com/jtblin/kube2iam#options>`_ of kube2iam.
 
