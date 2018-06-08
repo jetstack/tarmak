@@ -10,7 +10,17 @@ ExecStartPre=/sbin/sysctl -w net.bridge.bridge-nf-call-ip6tables=1
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/proxy \
   --v=<%= scope['kubernetes::log_level'] %> \
   --cluster-cidr=<%= scope['kubernetes::pod_network'] %> \
-  --resource-container=podruntime.slice \
+<%
+  if scope['kubernetes::kubelet::cgroup_kube_name']
+  @cgroup_kube_basename = scope.call_function('regsubst', [scope['kubernetes::kubelet::cgroup_kube_name'], '^\/', ''])
+-%>
+  --resource-container=<%= @cgroup_kube_basename %> \
+<%
+  elsif scope['kubernetes::kubelet::cgroup_system_name']
+  @cgroup_system_basename = scope.call_function('regsubst', [scope['kubernetes::kubelet::cgroup_system_name'], '^\/', ''])
+-%>
+  --resource-container=<%= @cgroup_system_basename %> \
+<% end -%>
 <% if @kubeconfig_path -%>
   --kubeconfig=<%= @kubeconfig_path %> \
 <% end -%>

@@ -30,7 +30,7 @@ class kubernetes::kubelet(
     default  => 'cgroupfs',
   },
   String $cgroup_root = '/',
-  Optional[String] $cgroup_kube_name = '/podruntime.slice',
+  Optional[String] $cgroup_kube_name = undef,
   Optional[String] $cgroup_kube_reserved_memory = '256Mi',
   Optional[String] $cgroup_kube_reserved_cpu = '10m',
   Optional[String] $cgroup_system_name = '/system.slice',

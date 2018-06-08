@@ -4,7 +4,12 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 <%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
-Slice=podruntime.slice
+<%
+  if scope['kubernetes::kubelet::cgroup_kube_name']
+  @cgroup_kube_basename = scope.call_function('regsubst', [scope['kubernetes::kubelet::cgroup_kube_name'], '^\/', ''])
+-%>
+  Slice=<%= @cgroup_kube_basename %>
+<% end -%>
 User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
 <%- if scope['kubernetes::_service_account_key_file'] and scope['kubernetes::service_account_key_generate'] -%>
