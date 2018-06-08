@@ -393,7 +393,7 @@ configuration like that:
 Additional IAM policies
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Additional IAM policies can be added by adding those ARNs to the tarmak.yaml
+Additional IAM policies can be added by adding those ARNs to the ``tarmak.yaml``
 config. You can add additional IAM policies to the ``cluster`` and
 ``instance pool`` blocks. When you define additional IAM policies on both
 levels, they will be merged when applied to a specific instance pool.
@@ -401,7 +401,7 @@ levels, they will be merged when applied to a specific instance pool.
 Cluster
 ~~~~~~~
 
-You can add additional IAM polcies that will be added to all the instance pools of
+You can add additional IAM policies that will be added to all the instance pools of
 the whole cluster.
 
 .. code-block:: yaml
