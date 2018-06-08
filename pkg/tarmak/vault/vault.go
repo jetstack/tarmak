@@ -24,7 +24,7 @@ const (
 	VaultStateUnsealed
 	VaultStateUnintialised
 	VaultStateErr
-	vaultTunnelCreationTimeoutSeconds = 5
+	vaultTunnelCreationTimeoutSeconds = 100
 )
 
 const (
@@ -108,7 +108,7 @@ func (v *Vault) TunnelFromFQDNs(vaultInternalFQDNs []string, vaultCA string) (in
 				return
 			}
 
-			if health.Standby == false && health.Sealed == false {
+			if health.Standby == false && health.Sealed == false && health.Initialized == true {
 				activeNode <- pos
 			}
 
