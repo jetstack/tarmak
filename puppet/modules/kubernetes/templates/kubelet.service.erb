@@ -80,7 +80,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
     # build kube reserved command line
     @cgroup_kube_reserved = []
     @cgroup_kube_reserved << "cpu=#{@cgroup_kube_reserved_cpu}" unless @cgroup_kube_reserved_cpu.nil? or @cgroup_kube_reserved_cpu == 'nil'
-    @cgroup_kube_reserved << "memory=#{@cgroup_kube_reserved_memory}" unless @cgroup_kube_reserved_memory.nil? or @cgroup_kube_reserved_memory == 'nil'
+    @cgroup_kube_reserved << "memory=#{@_cgroup_kube_reserved_memory}" unless @_cgroup_kube_reserved_memory.nil? or @_cgroup_kube_reserved_memory == 'nil'
     if @cgroup_kube_reserved.length > 0
 -%>
   "--kube-reserved=<%= @cgroup_kube_reserved.join(',') %>" \
