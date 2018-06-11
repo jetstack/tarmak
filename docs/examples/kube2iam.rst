@@ -3,7 +3,7 @@ Kube2IAM
 
 Kube2IAM is an extension to kubernetes that will allow you to give
 fine grained AWS access to pods without. More information about the
-project can be found on the `project page<https://github.com/jtblin/kube2iam>`_.
+project can be found on the `project page <https://github.com/jtblin/kube2iam>`_.
 
 Setup
 ~~~~~
@@ -16,7 +16,7 @@ IAM policy attached to the IAM instance role of that instance.
 
 The following Terraform project creates an IAM policy that will give 
 instances the ability to assume roles. The assume role is restricted to
-only have access to roles deployed in a specifc path. By doing this, we can
+only have access to roles deployed in a specific path. By doing this, we can
 limit the amount of roles an instance can assume to only the roles that it really
 needs to.
 The Terraform project has 2 inputs ``aws_region`` and ``cluster_name``.
@@ -192,7 +192,7 @@ An example creation of an IAM policy and role:
     value = "${aws_iam_role.test_role.arn}"
     }
 
-Now you can run this terraforn project the following way:
+Now you can run this Terraform project the following way:
 
 .. code-block:: bash
 
@@ -204,4 +204,4 @@ When you create a role, you need to make sure you deploy it in the correct
 ``path`` and also add an assume role policy to it. That assume role policy
 needs to grant access to the role ARN that is attached to the instances.
 In our example Terraform project above we solved that by adding a variable for
-the ``instance_arn`` and the ``cluster_anem``
+the ``instance_arn`` and the ``cluster_name``
