@@ -154,6 +154,7 @@ module "kubernetes" {
   kubernetes_master_ami = "${var.kubernetes_master_ami}"
   kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
   kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
+  api_admin_cidrs = "${var.api_admin_cidrs}"
   secrets_bucket = "${module.state.secrets_bucket[0]}"
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   public_subnet_ids = ["${module.network.public_subnet_ids}"]

@@ -463,6 +463,8 @@ func (c *Cluster) Variables() map[string]interface{} {
 		} else {
 			output["api_admin_cidrs"] = c.environment.Config().AdminCIDRs
 		}
+	} else {
+		output["api_admin_cidrs"] = c.environment.Config().AdminCIDRs
 	}
 
 	// publish changed private zone
