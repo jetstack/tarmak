@@ -47,7 +47,7 @@ func (t *Tunnel) Start() error {
 	var err error
 
 	// ensure there is connectivity to the bastion
-	args := append(t.sshCommand, "-N", "bastion", "/bin/true")
+	args := append(t.sshCommand, "bastion", "/bin/true")
 	cmd := exec.Command(args[0], args[1:len(args)]...)
 
 	t.log.Debugf("check SSH connection to bastion cmd=%s", cmd.Args)
