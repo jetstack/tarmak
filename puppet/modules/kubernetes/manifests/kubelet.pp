@@ -83,8 +83,8 @@ class kubernetes::kubelet(
   if $cgroup_kube_reserved_memory == undef {
     $cgroup_kube_reserved_memory_default_mi_bytes = 1024
     $node_memory_total_mi_bytes = dig44($facts, ['memory', 'system', 'total_bytes'], 1) / ( 1024 * 1024 )
-    if $node_memory_total_mi_bytes / 2 < $cgroup_kube_reserved_memory_default_mi_bytes {
-      $cgroup_kube_reserved_memory_mi_bytes = $node_memory_total_mi_bytes / 2
+    if $node_memory_total_mi_bytes / 4 < $cgroup_kube_reserved_memory_default_mi_bytes {
+      $cgroup_kube_reserved_memory_mi_bytes = $node_memory_total_mi_bytes / 4
     } else {
       $cgroup_kube_reserved_memory_mi_bytes = $cgroup_kube_reserved_memory_default_mi_bytes
     }
