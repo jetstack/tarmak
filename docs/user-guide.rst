@@ -450,3 +450,50 @@ to the kubernetes block
       public: true
         allowCIDRs:
         - y.y.y.y/24
+
+Additional IAM policies
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Additional IAM policies can be added by adding those ARNs to the ``tarmak.yaml``
+config. You can add additional IAM policies to the ``cluster`` and
+``instance pool`` blocks. When you define additional IAM policies on both
+levels, they will be merged when applied to a specific instance pool.
+
+Cluster
+~~~~~~~
+
+You can add additional IAM policies that will be added to all the instance pools of
+the whole cluster.
+
+.. code-block:: yaml
+
+    apiVersion: api.tarmak.io/v1alpha1
+    clusters:
+    - amazon:
+        additionalIAMPolicies:
+        - "arn:aws:iam::xxxxxxx:policy/policy_name"
+
+Instance pool
+~~~~~~~~~~~~~
+
+It is possible to add extra policies to only a specific instance pool.
+
+.. code-block:: yaml
+
+  - image: centos-puppet-agent
+    amazon:
+      additionalIAMPolicies:
+      - "arn:aws:iam::xxxxxxx:policy/policy_name"
+    maxCount: 3
+    metadata:
+      name: worker
+    minCount: 3
+    size: medium
+    subnets:
+    - metadata:
+      zone: eu-west-1a
+    - metadata:
+      zone: eu-west-1b
+    - metadata:
+      zone: eu-west-1c
+    type: worker
