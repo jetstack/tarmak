@@ -5,7 +5,7 @@ HOSTS:
       - master
     platform: el-7-x86_64
     box: centos/7
-    box_version: 1710.01
+    box_version: 1804.02
     hypervisor: vagrant_libvirt
 CONFIG:
   type: foss
