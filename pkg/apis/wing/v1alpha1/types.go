@@ -21,30 +21,11 @@ type Instance struct {
 
 // InstanceSpec defines the desired state of Instance
 type InstanceSpec struct {
-	Converge *InstanceSpecManifest `json:"converge,omitempty"`
-	DryRun   *InstanceSpecManifest `json:"dryRun,omitempty"`
-}
-
-//  InstaceSpecManifest defines location and hash for a specific manifest
-type InstanceSpecManifest struct {
-	Path             string      `json:"path,omitempty"`             // PATH to manifests (tar.gz)
-	Hash             string      `json:"hash,omitempty"`             // hash of manifests, prefixed with type (eg: sha256:xyz)
-	RequestTimestamp metav1.Time `json:"requestTimestamp,omitempty"` // timestamp when a converge was requested
+	PuppetManifestRef string `json:"puppetManifestRef"`
 }
 
 // InstanceStatus defines the observed state of Instance
 type InstanceStatus struct {
-	Converge *InstanceStatusManifest `json:"converge,omitempty"`
-	DryRun   *InstanceStatusManifest `json:"dryRun,omitempty"`
-}
-
-//  InstaceSpecManifest defines the state and hash of a run manifest
-type InstanceStatusManifest struct {
-	State               InstanceManifestState `json:"state,omitempty"`
-	Hash                string                `json:"hash,omitempty"`                // hash of manifests, prefixed with type (eg: sha256:xyz)
-	LastUpdateTimestamp metav1.Time           `json:"lastUpdateTimestamp,omitempty"` // timestamp when a converge was requested
-	Messages            []string              `json:"messages,omitempty"`            // contains output of the retries
-	ExitCodes           []int                 `json:"exitCodes,omitempty"`           // return code of the retries
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -54,4 +35,65 @@ type InstanceList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []Instance `json:"items"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type PuppetTarget struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Source           ManifestSource `json:"source"`
+	Hash             string         `json:"hash,omitempty"`             // hash of manifests, prefixed with type (eg: sha256:xyz)
+	RequestTimestamp metav1.Time    `json:"requestTimestamp,omitempty"` // timestamp when a converge was requested
+}
+
+type ManifestSource struct {
+	S3 *S3ManifestSource `json:"s3"`
+}
+
+type S3ManifestSource struct {
+	BucketName string `json:"bucketName"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type PuppetTargetList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []PuppetTarget `json:"items"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type WingJob struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   *WingJobSpec   `json:"spec,omitempty"`
+	Status *WingJobStatus `json:"status,omitempty"`
+}
+
+type WingJobSpec struct {
+	InstanceID       string         `json:"instanceID,omitempty"`
+	Source           ManifestSource `json:"source"`
+	Operation        string         `json:"operation"`
+	RequestTimestamp metav1.Time    `json:"requestTimestamp,omitempty"`
+}
+
+type WingJobStatus struct {
+	Messages string `json:"messages,omitempty"`
+	ExitCode int    `json:"exitCode,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type WingJobList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []WingJob `json:"items"`
 }

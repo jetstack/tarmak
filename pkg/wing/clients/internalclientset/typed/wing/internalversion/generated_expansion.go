@@ -2,3 +2,7 @@
 package internalversion
 
 type InstanceExpansion interface{}
+
+type PuppetTargetExpansion interface{}
+
+type WingJobExpansion interface{}

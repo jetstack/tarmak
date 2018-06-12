@@ -15,6 +15,14 @@ func (c *FakeWing) Instances(namespace string) internalversion.InstanceInterface
 	return &FakeInstances{c, namespace}
 }
 
+func (c *FakeWing) PuppetTargets(namespace string) internalversion.PuppetTargetInterface {
+	return &FakePuppetTargets{c, namespace}
+}
+
+func (c *FakeWing) WingJobs(namespace string) internalversion.WingJobInterface {
+	return &FakeWingJobs{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeWing) RESTClient() rest.Interface {
