@@ -447,7 +447,7 @@ to the kubernetes block
 
   kubernetes:
     apiServer:
-      public: true
+        public: true
         allowCIDRs:
         - y.y.y.y/24
 
