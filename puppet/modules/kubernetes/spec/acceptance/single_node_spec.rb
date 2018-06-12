@@ -66,6 +66,9 @@ class{'kubernetes::worker':
       # Ensure docker is setup
       hosts_as('master').each do |host|
         on host, 'yum install -y docker'
+        on host, 'cp -a /usr/lib/systemd/system/docker.service /etc/systemd/system/docker.service'
+        on host, 'sed -i -e \'s/systemd/cgroupfs/g\' /etc/systemd/system/docker.service'
+        on host, 'systemctl daemon-reload'
         on host, 'systemctl start docker.service'
       end
     end

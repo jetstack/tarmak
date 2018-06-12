@@ -26,7 +26,6 @@ class kubernetes::kubelet(
   $pod_cidr = undef,
   $hostname_override = undef,
   Enum['systemd', 'cgroupfs'] $cgroup_driver =  $::osfamily ? {
-    'RedHat' => 'systemd',
     default  => 'cgroupfs',
   },
   String $cgroup_root = '/',
