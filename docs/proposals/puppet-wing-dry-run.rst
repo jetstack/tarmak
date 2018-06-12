@@ -37,7 +37,7 @@ Objective
 
 Verify puppet will make sensible and expected changes to the cluster when running::
 
-    $ tarmak cluster puppet-plan
+    $ tarmak cluster config-plan
 
 which complements ``cluster plan`` verifying Terraform changes.
 
@@ -49,17 +49,18 @@ To implement this, new objects will be added to Wing's API.
 New API objects
 ---------------
 
-``PuppetManifest``
-******************
+``PuppetTarget``
+****************
 
-A resource representing a set of puppet manifests to apply to an instance.
+A resource representing a set of puppet modules and additional information
+(hieradata etc) to apply to an instance.
 
 This bundles together the source (S3, google Cloud Storage, etc) and
 verification of the source (a hash, PGP signature, etc).
 
 .. code-block:: yaml
 
-    kind: PuppetManifest
+    kind: PuppetTarget
     metadata:
       name: example-manifest
     hash: sha256:34242343
@@ -74,7 +75,7 @@ field for each type of source. For example, something like this in ``types.go``:
 .. code-block:: go
 
     type ManifestSource struct {
-           S3 *S3ManifestSource `json:"s3ManifestSource"`
+           S3 *S3ManifestSource `json:"s3"`
     }
 
     type S3ManifestSource struct {
@@ -85,7 +86,7 @@ field for each type of source. For example, something like this in ``types.go``:
 ``WingJob``
 *************
 
-A resource representing the application of a ``PuppetManifest`` on an instance:
+A resource representing the application of a ``PuppetTarget`` on an instance:
 
 .. code-block:: yaml
 
@@ -93,7 +94,7 @@ A resource representing the application of a ``PuppetManifest`` on an instance:
     metadata:
       name: example-job
     spec:
-      puppetManifestRef:
+      puppetTargetRef:
         name: example-manifest
       operation: "dry-run"
       instanceID: 1234
@@ -101,31 +102,40 @@ A resource representing the application of a ``PuppetManifest`` on an instance:
       exitCode: 1
       messages: ""
 
-This references a pre-existing ``PuppetManifest``, and performs the specified
+This references a pre-existing ``PuppetTarget``, and performs the specified
 action on an instance.
 
 If, in the future, we support other configuration management tools (ansible,
 chef, etc), these would be represented by separate fields.
 
 Performing updates to puppet manifests will leave ``WingJob`` and
-``PuppetManifest`` resources hanging around. To prevent this, wing should only
+``PuppetTarget`` resources hanging around. To prevent this, wing should only
 keep the last 15 (or some other number) WingJobs for each instance.
 
 Changes to existing API objects
 -------------------------------
 
-``InstanceSpec`` will have a ``puppetManifestRef`` field also linking to a ``PuppetManifest`` resource.
-This will be the manifest applied to the instance.
+``InstanceSpec`` will have a ``spec.puppetTargetRef`` field also linking to a
+``PuppetTarget`` resource.  This will be the manifest applied to the instance.
+A corresponding ``status.puppetTargetRef`` will also be added to record the
+latest known applied ``PuppetTarget``.
+
+When the ``spec.puppetTargetRef`` field is updated on an instance, a new
+``WingJob`` is created with ``operation`` set to ``apply``.
+
+If a ``WingJob`` applies a different ``PuppetTarget``, the
+``spec.puppetTargetRef`` will not be updated, however
+``status.puppetTargetRef`` will be.
 
 Changes to tarmak CLI
 ---------------------
 
 The tarmak CLI needs modification to add support for creating
-``PuppetManifest`` and ``PuppetJob`` resources.
+``PuppetTarget`` and ``PuppetJob`` resources.
 
 The planned workflow is to run::
 
-    $ tarmak cluster puppet-plan
+    $ tarmak cluster config-plan
 
 which creates ``WingJob`` resources for either a subset of instances of each
 type in the current cluster, or all instances. This blocks until
