@@ -5,6 +5,20 @@ Kube2IAM is an extension to kubernetes that will allow you to give
 fine grained AWS access to pods without. More information about the
 project can be found on the `project page <https://github.com/jtblin/kube2iam>`_.
 
+Prerequisite
+~~~~~~~~~~~~
+
+Make sure `HELM <https://www.helm.sh/>`_ is `activated <https://docs.tarmak.io/user-guide.html#tiller>` on the Tarmak cluster.
+You also need to make sure you can connect to the cluster with your HELM install.
+
+.. code-block:: bash
+
+    helm version
+    Client: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
+    Server: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
+
+
+
 Setup
 ~~~~~
 
