@@ -4,7 +4,12 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 <%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
-Slice=podruntime.slice
+<%
+  if @cgroup_kube_name
+  @cgroup_kube_basename = scope.call_function('regsubst', [@cgroup_kube_name, '^\/', ''])
+-%>
+Slice=<%= @cgroup_kube_basename %>
+<% end -%>
 WorkingDirectory=<%= @kubelet_dir %>
 <% if @cloud_provider == 'aws' -%>
 # prevent metadata service access on AWS
@@ -73,9 +78,6 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --cgroup-driver=<%= @cgroup_driver %> \
   --cgroup-root=<%= @cgroup_root %> \
 <% if @cgroup_kube_name -%>
-  --kube-reserved-cgroup=<%= @cgroup_kube_name %> \
-  --runtime-cgroups=<%= @cgroup_kube_name %> \
-  --kubelet-cgroups=<%= @cgroup_kube_name %> \
 <%
     # build kube reserved command line
     @cgroup_kube_reserved = []
@@ -83,6 +85,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
     @cgroup_kube_reserved << "memory=#{@cgroup_kube_reserved_memory}" unless @cgroup_kube_reserved_memory.nil? or @cgroup_kube_reserved_memory == 'nil'
     if @cgroup_kube_reserved.length > 0
 -%>
+  --kube-reserved-cgroup=<%= @cgroup_kube_name %> \
+  --runtime-cgroups=<%= @cgroup_kube_name %> \
+  --kubelet-cgroups=<%= @cgroup_kube_name %> \
   "--kube-reserved=<%= @cgroup_kube_reserved.join(',') %>" \
 <% end -%>
 <% end -%>

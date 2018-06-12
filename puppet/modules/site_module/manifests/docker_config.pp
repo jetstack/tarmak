@@ -3,10 +3,17 @@ class site_module::docker_config {
     ensure  => file,
     content => template('site_module/docker.erb'),
   }
-  file { '/etc/systemd/system/docker.service.d':
-    ensure  => directory,
-  } -> file { '/etc/systemd/system/docker.service.d/10-slice.conf':
-    ensure  => directory,
-    content => '[Service]\nSlice=podruntime.slice\n',
+
+  if $kubernetes::kubelet::cgroup_kube_name {
+
+    $cgroup_kube_basename = regsubst( $kubernetes::kubelet::cgroup_kube_name, '^\/', '')
+
+    file { '/etc/systemd/system/docker.service.d':
+      ensure  => directory,
+    } -> file { '/etc/systemd/system/docker.service.d/10-slice.conf':
+      ensure  => directory,
+      content => "[Service]\nSlice=${cgroup_kube_basename}\n",
+    }
+
   }
 }

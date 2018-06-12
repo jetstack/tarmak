@@ -211,6 +211,7 @@ describe 'kubernetes::kubelet' do
 
       context 'with both cpu and memory a supplied' do
         let(:params) { {
+          "cgroup_kube_name" => "/podruntime.slice",
           "cgroup_#{cgroup_type}_reserved_cpu"    => '100m',
           "cgroup_#{cgroup_type}_reserved_memory" => '128Mi',
         }}
@@ -221,6 +222,7 @@ describe 'kubernetes::kubelet' do
 
       context 'with only cpu supplied' do
         let(:params) { {
+          "cgroup_kube_name" => "/podruntime.slice",
           "cgroup_#{cgroup_type}_reserved_cpu"    => '100m',
           "cgroup_#{cgroup_type}_reserved_memory" => nil,
         }}
@@ -231,6 +233,7 @@ describe 'kubernetes::kubelet' do
 
       context 'with only memory supplied' do
         let(:params) { {
+          "cgroup_kube_name" => "/podruntime.slice",
           "cgroup_#{cgroup_type}_reserved_cpu"    => nil,
           "cgroup_#{cgroup_type}_reserved_memory" => '128Mi',
         }}
@@ -241,6 +244,7 @@ describe 'kubernetes::kubelet' do
 
       context 'with nothing supplied' do
         let(:params) { {
+          "cgroup_kube_name" => "/podruntime.slice",
           "cgroup_#{cgroup_type}_reserved_cpu"    => nil,
           "cgroup_#{cgroup_type}_reserved_memory" => nil,
         }}
