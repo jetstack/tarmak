@@ -12,4 +12,4 @@ if [ ! -x /bin/jq ]; then
     chmod +x /bin/jq
 fi
 
-vault read -format=json test/pki/k8s/roles/kubelet | jq ".data.allowed_domains += [\"$(hostname)\"]" | vault write test/pki/k8s/roles/kubelet -
+vault read -format=json test/pki/k8s/roles/kubelet | jq ".data | .allowed_domains += [\"$(hostname)\"]" | vault write test/pki/k8s/roles/kubelet -
