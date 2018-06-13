@@ -168,13 +168,13 @@ resource "aws_instance" "{{.TFName}}" {
   }
 
   tags {
-    Name               = "${data.template_file.stack_name.rendered}-k8s-{{.TFName}}-${count.index+1}"
+    Name               = "${data.template_file.stack_name.rendered}-{{.DNSName}}-${count.index+1}"
     Environment        = "${var.environment}"
     Project            = "${var.project}"
     Contact            = "${var.contact}"
     {{.TFName}}_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-{{.TFName}}-${count.index+1}"
-    Role               = "{{.TFName}}"
-    tarmak_role        = "{{.TFName}}-${count.index+1}"
+    Role               = "{{.Role.Name}}"
+    tarmak_role        = "{{.Role.Name}}-${count.index+1}"
   }
 
   user_data = "${element(data.template_file.{{.TFName}}_user_data.*.rendered, count.index)}"
