@@ -92,7 +92,7 @@ module "jenkins" {
   certificate_arn = "${var.jenkins_certificate_arn}"
   admin_ips = ["${var.admin_ips}"]
   public_zone_id = "${module.state.public_zone_id}"
-  stack_name_prefix = "${var.jenkins_stack_name_prefix}"
+  stack_name_prefix = "${var.stack_name_prefix}"
   availability_zones = ["${var.availability_zones}"]
   name = "${var.name}"
 }
