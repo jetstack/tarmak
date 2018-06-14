@@ -306,10 +306,31 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 		return fmt.Errorf("error writing global hiera config: %s", err)
 	}
 
+	// retrieve details for first worker instance pool
+	workerMinCount := 0
+	workerMaxCount := 0
+	workerInstancePoolName := ""
+	if cluster.Config().Kubernetes.ClusterAutoscaler != nil && cluster.Config().Kubernetes.ClusterAutoscaler.Enabled {
+		for _, instancePool := range cluster.InstancePools() {
+			if instancePool.Role().Name() == clusterv1alpha1.KubernetesWorkerRoleName {
+				workerMinCount = instancePool.MinCount()
+				workerMaxCount = instancePool.MaxCount()
+				workerInstancePoolName = instancePool.Name()
+				break
+			}
+		}
+	}
+
 	// loop through instance pools
 	for _, instancePool := range cluster.InstancePools() {
 
 		classes, variables := contentInstancePoolConfig(cluster.Config(), instancePool.Config(), instancePool.Role().Name())
+
+		if instancePool.Role().Name() == clusterv1alpha1.KubernetesMasterRoleName && cluster.Config().Kubernetes.ClusterAutoscaler != nil && cluster.Config().Kubernetes.ClusterAutoscaler.Enabled {
+			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::min_instances: %d`, workerMinCount))
+			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::max_instances: %d`, workerMaxCount))
+			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::instance_pool_name: "%s"`, workerInstancePoolName))
+		}
 
 		//  classes
 		err = p.writeLines(

@@ -248,6 +248,8 @@ type InstancePool interface {
 	Role() *role.Role
 	Volumes() []Volume
 	Zones() []string
+	MinCount() int
+	MaxCount() int
 }
 
 type Volume interface {

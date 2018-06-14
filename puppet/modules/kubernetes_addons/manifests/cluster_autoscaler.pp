@@ -5,6 +5,7 @@ class kubernetes_addons::cluster_autoscaler(
   String $limit_mem='500Mi',
   String $request_cpu='100m',
   String $request_mem='300Mi',
+  String $instance_pool_name='worker',
   Integer $min_instances=3,
   Integer $max_instances=6,
   $ca_mounts=$::kubernetes_addons::params::ca_mounts,
@@ -20,14 +21,20 @@ class kubernetes_addons::cluster_autoscaler(
     $rbac_enabled = false
   }
 
-  if defined('$kubernetes::cluster_name') {
-    $asg_name="kubernetes-${::kubernetes::cluster_name}-worker"
+  if defined('$kubernetes::cluster_name') and $instance_pool_name != '' {
+    $asg_name="${::kubernetes::cluster_name}-kubernetes-${instance_pool_name}"
   } else {
-    $asg_name=undef
+    fail('asg name must be set')
   }
 
   if $version == '' {
-    if versioncmp($::kubernetes::version, '1.7.0') >= 0 {
+    if versioncmp($::kubernetes::version, '1.10.0') >= 0 {
+      $_version = '1.2.0'
+    } elsif versioncmp($::kubernetes::version, '1.9.0') >= 0 {
+      $_version = '1.1.0'
+    } elsif versioncmp($::kubernetes::version, '1.8.0') >= 0 {
+      $_version = '1.0.0'
+    } elsif versioncmp($::kubernetes::version, '1.7.0') >= 0 {
       $_version = '0.6.0'
     } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
       $_version = '0.5.4'
@@ -40,6 +47,10 @@ class kubernetes_addons::cluster_autoscaler(
     $_version = $version
   }
 
+  if versioncmp($_version, '0.6.0') >= 0 {
+    $balance_similar_node_groups = true
+  }
+
   if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
     $version_before_1_6 = false
   } else {
@@ -50,6 +61,7 @@ class kubernetes_addons::cluster_autoscaler(
   kubernetes::apply{'cluster-autoscaler':
     manifests => [
       template('kubernetes_addons/cluster-autoscaler-deployment.yaml.erb'),
+      template('kubernetes_addons/cluster-autoscaler-rbac.yaml.erb'),
     ],
   }
 }
