@@ -67,7 +67,7 @@ resource "aws_security_group_rule" "ingress_allow_ssh_all" {
   protocol          = "tcp"
   from_port         = 22
   to_port           = 22
-  cidr_blocks       = ["${var.admin_ips}"]
+  cidr_blocks       = ["${var.bastion_admin_cidrs}"]
   security_group_id = "${aws_security_group.bastion.0.id}"
 }
 

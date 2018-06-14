@@ -56,6 +56,10 @@ variable "availability_zones" {
   type = "list"
 }
 
+variable "api_admin_cidrs" {
+  type = "list"
+}
+
 variable "vpc_id" {}
 
 variable "private_zone_id" {}

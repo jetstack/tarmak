@@ -55,6 +55,7 @@ type InstancePool struct {
 	Firewalls         []*Firewall             `json:"firewalls,omitempty"`
 	Volumes           []Volume                `json:"volumes,omitempty"`
 	Kubernetes        *InstancePoolKubernetes `json:"kubernetes,omitempty"`
+	AllowCIDRs        []string                `json:"allowCIDRs,omitempty"`
 
 	// Amazon specific settings for that instance pool
 	Amazon *InstancePoolAmazon `json:"amazon,omitempty"`

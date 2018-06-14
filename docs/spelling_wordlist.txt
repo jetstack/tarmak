@@ -65,6 +65,7 @@ Jenkins
 prepended
 username
 loopback
+CIDR
 addons
 autoscaler
 prometheus

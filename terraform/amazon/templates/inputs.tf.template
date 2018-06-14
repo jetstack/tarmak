@@ -94,11 +94,13 @@ variable "jenkins_ebs_size" {
 variable "jenkins_certificate_arn" {
   default = ""
 }
-{{ end -}}
-# TODO: restrict to admin IPs
-variable "admin_ips" {
+variable "jenkins_admin_cidrs" {
   type    = "list"
-  default = ["0.0.0.0/0"]
+}
+{{ end -}}
+
+variable "bastion_admin_cidrs" {
+  type    = "list"
 }
 
 # vault
@@ -128,6 +130,9 @@ variable "bucket_prefix" {}
 variable "kubernetes_master_ami" {}
 variable "kubernetes_worker_ami" {}
 variable "kubernetes_etcd_ami" {}
+variable "api_admin_cidrs" {
+    type = "list"
+}
 variable "tools_cluster_name" {
   default = "hub"
 }
