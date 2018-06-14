@@ -83,7 +83,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --service-account-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>
 <%- if @encryption_config_file -%>
-  --experimental-encryption-provider-config=<%= scope['kubernetes::_encryption_config_file'] %> \
+  --experimental-encryption-provider-config=<%= @encryption_config_file %> \
 <% end -%>
 <%- if scope.function_versioncmp([scope['kubernetes::version'], '1.9.0']) >= 0 -%>
   --endpoint-reconciler-type=lease \
