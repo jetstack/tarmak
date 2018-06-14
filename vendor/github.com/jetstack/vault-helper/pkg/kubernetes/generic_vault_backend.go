@@ -167,6 +167,7 @@ apiVersion: v1
 resources:
   - resources:
     - secrets
+    - configmaps
     providers:
     - aescbc:
         keys:
