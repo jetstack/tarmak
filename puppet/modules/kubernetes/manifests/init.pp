@@ -27,7 +27,6 @@ class kubernetes (
   $allow_privileged = true,
   $pod_security_policy = undef,
   $service_account_key_file = undef,
-  $encryption_config_file = undef,
   $service_account_key_generate = false,
   Optional[String] $pod_network = undef,
   Integer[-1,65535] $apiserver_insecure_port = -1,
@@ -106,11 +105,6 @@ class kubernetes (
     $_service_account_key_file = $service_account_key_file
   }
 
-  if $encryption_config_file == undef {
-    $_encryption_config_file = "${config_dir}/encryption-config.yaml"
-  } else {
-    $_encryption_config_file = $encryption_config_file
-  }
 
   if $cluster_dns == undef {
     $_sir_parts = $service_ip_range_network.split('\.')

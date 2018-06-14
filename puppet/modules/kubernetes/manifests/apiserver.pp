@@ -8,6 +8,7 @@ class kubernetes::apiserver(
   $admission_control = undef,
   $count = 1,
   $storage_backend = undef,
+  Optional[String] $encryption_config_file = undef,
   $etcd_nodes = ['localhost'],
   $etcd_port = 2379,
   $etcd_events_port = undef,
