@@ -7,7 +7,7 @@ export VAULT_ADDR=http://127.0.0.1:8200
 
 #Download vault binary
 if [ ! -x /bin/vault  ]; then
-    curl -sL -o /tmp/vault-dev.zip https://releases.hashicorp.com/vault/0.7.2/vault_0.7.2_linux_amd64.zip
+    curl -sL -o /tmp/vault-dev.zip https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip
     unzip /tmp/vault-dev.zip -d /tmp
     mv /tmp/vault /bin/vault
     chmod +x /bin/vault

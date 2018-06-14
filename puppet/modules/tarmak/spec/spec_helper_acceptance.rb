@@ -34,8 +34,6 @@ RSpec.configure do |c|
 
       # install myself
       install_dev_puppet_module_on(host, :source => module_root, :module_name => 'tarmak', :target_module_path => $module_path)
-
-
     end
   end
 end

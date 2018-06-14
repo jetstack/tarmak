@@ -40,8 +40,6 @@ class{'tarmak::single_node':
   kubernetes_version            => '#{kubernetes_version}',
   kubernetes_authorization_mode => #{kubernetes_authorization_mode},
 }
-
-
 "
     end
 
