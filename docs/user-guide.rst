@@ -150,6 +150,32 @@ The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
 The Pod Security Policy manifests can be found within the tarmak directory at
 ``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``
 
+Cluster Autoscaler
+~~~~~~~~~~~~~~~~~~
+
+Tarmak supports deploying `Cluster Autoscaler
+<https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler>`_ when
+spinning up a Kubernetes cluster. The following `tarmak.yaml` snippet shows how
+you would enable Cluster Autoscaler. 
+
+.. code-block:: yaml
+
+    kubernetes:
+      clusterAutoscaler:
+        enabled: true
+    ...
+
+The above configuration would deploy Cluster Autoscaler with an image of
+`gcr.io/google_containers/cluster-autoscaler` using the recommend version based
+on the version of your Kubernetes cluster. The configuration block accepts two
+optional fields of `image` and `version` allowing you to change these defaults.
+Note that the final image tag used when deploying Cluster Autoscaler will be the
+configured version prepended with the letter `v`.
+
+The current implementation will configure the first instance pool of type worker
+in your cluster configuration to scale between `minCount` and `maxCount`. We
+plan to add support for an arbitrary number of worker instance pools.
+
 Logging
 ~~~~~~~
 
@@ -336,7 +362,6 @@ certificate is valid for ``jenkins.<environment>.<zone>``.
       type: ssd
   ...
 
-
 Tiller
 ~~~~~~
 
@@ -361,7 +386,6 @@ allows to override the deployed version:
    service account and has therefore quiet far reaching privileges. Also
    consider Helm's `security best practices
    <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_.
-
 
 Prometheus
 ~~~~~~~~~~

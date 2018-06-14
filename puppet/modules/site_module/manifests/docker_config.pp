@@ -6,7 +6,7 @@ class site_module::docker_config {
   file { '/etc/systemd/system/docker.service.d':
     ensure  => directory,
   } -> file { '/etc/systemd/system/docker.service.d/10-slice.conf':
-    ensure  => directory,
-    content => '[Service]\nSlice=podruntime.slice\n',
+    ensure  => file,
+    content => "[Service]\nSlice=podruntime.slice\n",
   }
 }

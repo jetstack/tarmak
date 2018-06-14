@@ -82,9 +82,6 @@ variable "bastion_root_size" {
 }
 {{ if .JenkinsInstall -}}
 variable "jenkins_ami" {}
-variable "jenkins_stack_name_prefix" {
-  default = "jenkins-"
-}
 variable "jenkins_instance_type" {
   default = "t2.large"
 }
@@ -119,7 +116,7 @@ variable "vault_root_size" {
 variable "vault_data_size" {
   default = "10"
 }
-variable "vault_instance_count" {}
+variable "vault_min_instance_count" {}
 
 variable "vault_instance_type" {
   default = "t2.nano"

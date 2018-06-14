@@ -66,3 +66,12 @@ prepended
 username
 loopback
 CIDR
+addons
+autoscaler
+prometheus
+ubuntu
+offline
+admin
+plugin
+checklist
+localhost
