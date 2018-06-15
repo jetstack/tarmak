@@ -82,9 +82,6 @@ variable "bastion_root_size" {
 }
 {{ if .JenkinsInstall -}}
 variable "jenkins_ami" {}
-variable "jenkins_stack_name_prefix" {
-  default = "jenkins-"
-}
 variable "jenkins_instance_type" {
   default = "t2.large"
 }
@@ -97,11 +94,13 @@ variable "jenkins_ebs_size" {
 variable "jenkins_certificate_arn" {
   default = ""
 }
-{{ end -}}
-# TODO: restrict to admin IPs
-variable "admin_ips" {
+variable "jenkins_admin_cidrs" {
   type    = "list"
-  default = ["0.0.0.0/0"]
+}
+{{ end -}}
+
+variable "bastion_admin_cidrs" {
+  type    = "list"
 }
 
 # vault
@@ -117,7 +116,7 @@ variable "vault_root_size" {
 variable "vault_data_size" {
   default = "10"
 }
-variable "vault_instance_count" {}
+variable "vault_min_instance_count" {}
 
 variable "vault_instance_type" {
   default = "t2.nano"
@@ -131,6 +130,9 @@ variable "bucket_prefix" {}
 variable "kubernetes_master_ami" {}
 variable "kubernetes_worker_ami" {}
 variable "kubernetes_etcd_ami" {}
+variable "api_admin_cidrs" {
+    type = "list"
+}
 variable "tools_cluster_name" {
   default = "hub"
 }

@@ -147,8 +147,13 @@ func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, cl
 
 // validate server pools
 func (c *Cluster) validateInstancePools() (result error) {
-	return nil
-	//return fmt.Errorf("refactore me!")
+	for _, instancePool := range c.InstancePools() {
+		err := instancePool.Validate()
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+	return result
 }
 
 // Verify cluster
@@ -187,6 +192,15 @@ func (c *Cluster) Validate() (result error) {
 	//validate logging
 	if err := c.validateLoggingSinks(); err != nil {
 		result = multierror.Append(result, err)
+	}
+
+	//validate apiserver
+	if k := c.Config().Kubernetes; k != nil {
+		if apiServer := k.APIServer; apiServer != nil {
+			if err := c.validateAPIServer(); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
 	}
 
 	return result
@@ -233,6 +247,18 @@ func (c *Cluster) validateLoggingSinks() (result error) {
 	}
 
 	return nil
+}
+
+// Validate APIServer
+func (c *Cluster) validateAPIServer() (result error) {
+	for _, cidr := range c.Config().Kubernetes.APIServer.AllowCIDRs {
+		_, _, err := net.ParseCIDR(cidr)
+		if err != nil {
+			result = multierror.Append(result, fmt.Errorf("%s is not a valid CIDR format", cidr))
+		}
+	}
+
+	return result
 }
 
 // Determine if this Cluster is a cluster or hub, single or multi environment
@@ -392,7 +418,13 @@ func (c *Cluster) Variables() map[string]interface{} {
 		if ok {
 			output[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
 		}
-		output[fmt.Sprintf("%s_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
+		if instancePool.Config().AllowCIDRs != nil {
+			output[fmt.Sprintf("%s_admin_cidrs", instancePool.TFName())] = instancePool.Config().AllowCIDRs
+		} else {
+			output[fmt.Sprintf("%s_admin_cidrs", instancePool.TFName())] = c.environment.Config().AdminCIDRs
+		}
+		output[fmt.Sprintf("%s_min_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
+		output[fmt.Sprintf("%s_max_instance_count", instancePool.TFName())] = instancePool.Config().MaxCount
 	}
 
 	// set network cidr
@@ -423,6 +455,17 @@ func (c *Cluster) Variables() map[string]interface{} {
 				break
 			}
 		}
+	}
+
+	// Get Apiserver valid admin cidrs
+	if k := c.Config().Kubernetes; k != nil {
+		if apiServer := k.APIServer; apiServer != nil && apiServer.AllowCIDRs != nil {
+			output["api_admin_cidrs"] = apiServer.AllowCIDRs
+		} else {
+			output["api_admin_cidrs"] = c.environment.Config().AdminCIDRs
+		}
+	} else {
+		output["api_admin_cidrs"] = c.environment.Config().AdminCIDRs
 	}
 
 	// publish changed private zone

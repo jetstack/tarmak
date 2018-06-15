@@ -103,7 +103,8 @@ type ClusterKubernetesDashboard struct {
 
 type ClusterKubernetesAPIServer struct {
 	// expose the API server through a public load balancer
-	Public bool `json:"public,omitempty"`
+	Public     bool     `json:"public,omitempty"`
+	AllowCIDRs []string `json:"allowCIDRs,omitempty"`
 
 	// OIDC
 	OIDC *ClusterKubernetesAPIServerOIDC `json:"oidc,omitempty"`

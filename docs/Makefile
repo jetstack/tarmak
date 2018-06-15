@@ -27,13 +27,14 @@ help:
 
 # Make the site's html in docker
 docker_html:
-	set -x; mkdir -p _build; \
-	docker build -t tarmakdocs:latest .; \
-	container=$$(docker create tarmakdocs:latest); \
-	git ls-files -z | xargs -0 tar -czvf - | docker cp - $$container:/site; \
-	docker start -a $$container; \
-	docker cp $$container:/site/_build .; \
-	docker rm $$container
+	# create sphinx image
+	$(eval IMAGE_ID := $(shell docker build -q .))
+	# start documentaion build
+	$(eval CONTAINER_ID := $(shell docker create $(IMAGE_ID)))
+	(git ls-files && git ls-files --others --exclude-standard) | tar cf -  -T - | docker cp - $(CONTAINER_ID):/site
+	docker start -a $(CONTAINER_ID)
+	docker cp $(CONTAINER_ID):/site/_build - | tar xf -
+	docker rm $(CONTAINER_ID)
 
 .venv:
 	virtualenv -p $(shell which python3) $(VENV_PATH)

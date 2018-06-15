@@ -150,6 +150,32 @@ The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
 The Pod Security Policy manifests can be found within the tarmak directory at
 ``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``
 
+Cluster Autoscaler
+~~~~~~~~~~~~~~~~~~
+
+Tarmak supports deploying `Cluster Autoscaler
+<https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler>`_ when
+spinning up a Kubernetes cluster. The following `tarmak.yaml` snippet shows how
+you would enable Cluster Autoscaler. 
+
+.. code-block:: yaml
+
+    kubernetes:
+      clusterAutoscaler:
+        enabled: true
+    ...
+
+The above configuration would deploy Cluster Autoscaler with an image of
+`gcr.io/google_containers/cluster-autoscaler` using the recommend version based
+on the version of your Kubernetes cluster. The configuration block accepts two
+optional fields of `image` and `version` allowing you to change these defaults.
+Note that the final image tag used when deploying Cluster Autoscaler will be the
+configured version prepended with the letter `v`.
+
+The current implementation will configure the first instance pool of type worker
+in your cluster configuration to scale between `minCount` and `maxCount`. We
+plan to add support for an arbitrary number of worker instance pools.
+
 Logging
 ~~~~~~~
 
@@ -336,7 +362,6 @@ certificate is valid for ``jenkins.<environment>.<zone>``.
       type: ssd
   ...
 
-
 Tiller
 ~~~~~~
 
@@ -361,7 +386,6 @@ allows to override the deployed version:
    service account and has therefore quiet far reaching privileges. Also
    consider Helm's `security best practices
    <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_.
-
 
 Prometheus
 ~~~~~~~~~~
@@ -388,3 +412,112 @@ configuration like that:
     prometheus:
       enabled: true
       externalScrapeTargetsOnly: true
+
+Secure public endpoints
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Public endpoints (Jenkins, bastion host and if enabled apiserver) can be secured
+by limiting the access to a list of CIDR blocks. This can be configured on a
+environment level for all public endpoint and if wanted can be overwritten on a
+specific public endpoint.
+
+Environment level
++++++++++++++++++
+
+This can be done by adding an ``adminCIDRs`` list to an environments block,
+if nothing has been set, the default is 0.0.0.0/0:
+
+.. code-block:: yaml
+
+    environments:
+    - contact: hello@example.com
+      location: eu-west-1
+      metadata:
+        name: example
+      privateZone: example.local
+      project: example-project
+      provider: aws
+      adminCIDRs:
+      - x.x.x.x/32
+      - y.y.y.y/24
+
+Jenkins and bastion host
+++++++++++++++++++++++++
+
+The environment level can be overwritten for Jenkins and bastion host
+by adding ``allowCIDRs`` in the instance pool block:
+
+.. code-block:: yaml
+
+  instancePools:
+  - image: centos-puppet-agent
+    allowCIDRs:
+    - x.x.x.x/32
+    maxCount: 1
+    metadata:
+      name: jenkins
+    minCount: 1
+    size: large
+    type: jenkins
+
+
+API Server
+++++++++++
+
+For API server you can overwrite the environment level by adding ``allowCIDRs``
+to the kubernetes block
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+        public: true
+        allowCIDRs:
+        - y.y.y.y/24
+
+Additional IAM policies
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Additional IAM policies can be added by adding those ARNs to the ``tarmak.yaml``
+config. You can add additional IAM policies to the ``cluster`` and
+``instance pool`` blocks. When you define additional IAM policies on both
+levels, they will be merged when applied to a specific instance pool.
+
+Cluster
++++++++
+
+You can add additional IAM policies that will be added to all the instance pools of
+the whole cluster.
+
+.. code-block:: yaml
+
+    apiVersion: api.tarmak.io/v1alpha1
+    clusters:
+    - amazon:
+        additionalIAMPolicies:
+        - "arn:aws:iam::xxxxxxx:policy/policy_name"
+
+Instance pool
++++++++++++++
+
+It is possible to add extra policies to only a specific instance pool.
+
+.. code-block:: yaml
+
+  - image: centos-puppet-agent
+    amazon:
+      additionalIAMPolicies:
+      - "arn:aws:iam::xxxxxxx:policy/policy_name"
+    maxCount: 3
+    metadata:
+      name: worker
+    minCount: 3
+    size: medium
+    subnets:
+    - metadata:
+      zone: eu-west-1a
+    - metadata:
+      zone: eu-west-1b
+    - metadata:
+      zone: eu-west-1c
+    type: worker

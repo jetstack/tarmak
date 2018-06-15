@@ -24,6 +24,10 @@ func SetDefaults_Environment(obj *Environment) {
 	if obj.PrivateZone == "" {
 		obj.PrivateZone = "tarmak.local"
 	}
+
+	if obj.AdminCIDRs == nil {
+		obj.AdminCIDRs = append(obj.AdminCIDRs, "0.0.0.0/0")
+	}
 }
 
 func SetDefaults_Config(obj *Config) {

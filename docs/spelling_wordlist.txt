@@ -67,3 +67,13 @@ username
 loopback
 iptables
 ons
+CIDR
+addons
+autoscaler
+prometheus
+ubuntu
+offline
+admin
+plugin
+checklist
+localhost

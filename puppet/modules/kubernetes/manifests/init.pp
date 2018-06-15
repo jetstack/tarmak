@@ -105,6 +105,7 @@ class kubernetes (
     $_service_account_key_file = $service_account_key_file
   }
 
+
   if $cluster_dns == undef {
     $_sir_parts = $service_ip_range_network.split('\.')
     $_cluster_dns = "${_sir_parts[0]}.${_sir_parts[1]}.${_sir_parts[2]}.10"

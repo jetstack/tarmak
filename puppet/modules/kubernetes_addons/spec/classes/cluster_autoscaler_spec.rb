@@ -49,25 +49,37 @@ describe 'kubernetes_addons::cluster_autoscaler' do
     end
 
     it 'has asg configured' do
-      expect(manifests[0]).to match(%{3:6:kubernetes-cluster1-worker})
+      expect(manifests[0]).to match(%{3:6:cluster1-kubernetes-worker})
     end
 
     it 'has cloud_provider configured' do
       expect(manifests[0]).to match(%{cloud-provider=aws})
     end
 
-    it 'has cert path set' do
-      expect(manifests[0]).to match(%{path: /etc/ssl/certs})
-    end
-
     it 'has AWS_REGION set' do
       expect(manifests[0]).to match(%r{value: eu-west-1$})
+    end
+
+    it 'has host network set' do
+      expect(manifests[0]).to match(%r{hostNetwork: true$})
+    end
+
+    it 'has master toleration set' do
+      expect(manifests[0]).to match(%r{tolerations:\s+- key: "node-role\.kubernetes\.io\/master"\s+operator: "Exists"\s+effect: "NoSchedule"})
+    end
+
+    it 'has critical addon toleration set' do
+      expect(manifests[0]).to match(%r{- key: "CriticalAddonsOnly"\s+operator: "Exists"})
+    end
+
+    it 'has master node affinity set' do
+      expect(manifests[0]).to match(%r{nodeAffinity:\s+requiredDuringSchedulingIgnoredDuringExecution:\s+nodeSelectorTerms:\s+- matchExpressions:\s+- key: "node-role\.kubernetes\.io\/master"\s+operator: "Exists"})
     end
   end
 
   context 'with kubernetes 1.5' do
     let(:kubernetes_version) do
-      '1.5.6'
+      '1.5.0'
     end
     it 'uses correct image version' do
       expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v0.4.0})
@@ -76,7 +88,7 @@ describe 'kubernetes_addons::cluster_autoscaler' do
 
   context 'with kubernetes 1.6' do
     let(:kubernetes_version) do
-      '1.6.6'
+      '1.6.0'
     end
     it 'uses correct image version' do
       expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v0.5.4})
@@ -85,10 +97,37 @@ describe 'kubernetes_addons::cluster_autoscaler' do
 
   context 'with kubernetes 1.7' do
     let(:kubernetes_version) do
-      '1.7.1'
+      '1.7.0'
     end
     it 'uses correct image version' do
       expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v0.6.0})
+    end
+  end
+
+  context 'with kubernetes 1.8' do
+    let(:kubernetes_version) do
+      '1.8.0'
+    end
+    it 'uses correct image version' do
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.0.0})
+    end
+  end
+
+  context 'with kubernetes 1.9' do
+    let(:kubernetes_version) do
+      '1.9.0'
+    end
+    it 'uses correct image version' do
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.1.0})
+    end
+  end
+
+  context 'with kubernetes 1.10' do
+    let(:kubernetes_version) do
+      '1.10.0'
+    end
+    it 'uses correct image version' do
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.2.0})
     end
   end
 end

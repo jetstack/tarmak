@@ -1,12 +1,12 @@
 data "template_file" "vault" {
   template = "${file("${path.module}/templates/vault_user_data.yaml")}"
-  count    = "${var.vault_instance_count}"
+  count    = "${var.vault_min_instance_count}"
 
   vars {
     fqdn           = "vault-${count.index + 1}.${var.private_zone}"
     environment    = "${var.environment}"
     region         = "${var.region}"
-    instance_count = "${var.vault_instance_count}"
+    instance_count = "${var.vault_min_instance_count}"
     volume_id      = "${element(aws_ebs_volume.vault.*.id, count.index)}"
     private_ip     = "${cidrhost(element(var.private_subnets, count.index % length(var.availability_zones)),(10 + (count.index/length(var.availability_zones))))}"
 
@@ -27,12 +27,12 @@ data "template_file" "vault" {
     backup_bucket_prefix = "${var.backups_bucket}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
 
     # run backup once per instance spread throughout the day
-    backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.vault_instance_count))}:00:00"
+    backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.vault_min_instance_count))}:00:00"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "vault-autorecover" {
-  count               = "${var.vault_instance_count}"
+  count               = "${var.vault_min_instance_count}"
   alarm_name          = "vault-autorecover-${var.environment}-${count.index+1}"
   namespace           = "AWS/EC2"
   evaluation_periods  = "2"
@@ -60,7 +60,7 @@ resource "aws_instance" "vault" {
   instance_type        = "${var.vault_instance_type}"
   key_name             = "${var.key_name}"
   subnet_id            = "${element(var.private_subnet_ids, count.index % length(var.availability_zones))}"
-  count                = "${var.vault_instance_count}"
+  count                = "${var.vault_min_instance_count}"
   user_data            = "${element(data.template_file.vault.*.rendered, count.index)}"
   iam_instance_profile = "${element(aws_iam_instance_profile.vault.*.name, count.index)}"
   private_ip           = "${cidrhost(element(var.private_subnets, count.index % length(var.availability_zones)),(10 + (count.index/length(var.availability_zones))))}"
@@ -91,7 +91,7 @@ resource "aws_instance" "vault" {
 }
 
 resource "aws_ebs_volume" "vault" {
-  count             = "${var.vault_instance_count}"
+  count             = "${var.vault_min_instance_count}"
   size              = "${var.vault_data_size}"
   availability_zone = "${element(var.availability_zones, count.index % length(var.availability_zones))}"
 
