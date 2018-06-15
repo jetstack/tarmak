@@ -484,7 +484,7 @@ config. You can add additional IAM policies to the ``cluster`` and
 levels, they will be merged when applied to a specific instance pool.
 
 Cluster
-~~~~~~~
++++++++
 
 You can add additional IAM policies that will be added to all the instance pools of
 the whole cluster.
@@ -498,7 +498,7 @@ the whole cluster.
         - "arn:aws:iam::xxxxxxx:policy/policy_name"
 
 Instance pool
-~~~~~~~~~~~~~
++++++++++++++
 
 It is possible to add extra policies to only a specific instance pool.
 
