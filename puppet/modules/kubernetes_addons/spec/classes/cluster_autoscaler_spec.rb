@@ -130,4 +130,108 @@ describe 'kubernetes_addons::cluster_autoscaler' do
       expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.2.0})
     end
   end
+
+  context 'with overprovisioning with defaults' do
+    let(:params) do
+      {
+        'enable_overprovisioning': true,
+      }
+    end
+
+    let(:manifests) do
+      catalogue.resource('Kubernetes::Apply', 'cluster-autoscaler-overprovisioning').send(:parameters)[:manifests]
+    end
+
+    context 'with kubernetes 1.9' do
+
+      let(:kubernetes_version) do
+        '1.9.0'
+      end
+
+      it 'has replicas set' do
+        expect(manifests[0]).to match(%r{replicas: 1$})
+      end
+
+    end
+  end
+
+  context 'with fixed overprovisioning' do
+    let(:params) do
+      {
+        'enable_overprovisioning': true,
+        'replica_count': 10,
+        'reserved_millicores_per_replica': 100,
+        'reserved_megabytes_per_replica': 100,
+      }
+    end
+
+    let(:manifests) do
+      catalogue.resource('Kubernetes::Apply', 'cluster-autoscaler-overprovisioning').send(:parameters)[:manifests]
+    end
+
+    context 'with kubernetes 1.9' do
+
+      let(:kubernetes_version) do
+        '1.9.0'
+      end
+
+      it 'has replicas set' do
+        expect(manifests[0]).to match(%r{replicas: 10$})
+      end
+
+      it 'has reserved millicores set' do 
+        expect(manifests[0]).to match(%r{cpu: "100m"$})
+      end
+
+      it 'has reserved megabytes set' do 
+        expect(manifests[0]).to match(%r{memory: "100Mi"$})
+      end
+
+      it 'does not deploy proportional autoscaler' do
+        expect(manifests[0]).to_not match(%r{autoscaler})
+      end
+
+    end
+  end
+
+  context 'with proportional overprovisioning' do
+    let(:params) do
+      {
+        'enable_overprovisioning': true,
+        'cores_per_replica': 4,
+        'nodes_per_replica': 1,
+        'reserved_millicores_per_replica': 100,
+        'reserved_megabytes_per_replica': 100,
+      }
+    end
+
+    let(:manifests) do
+      catalogue.resource('Kubernetes::Apply', 'cluster-autoscaler-overprovisioning').send(:parameters)[:manifests]
+    end
+
+    context 'with kubernetes 1.9' do
+
+      let(:kubernetes_version) do
+        '1.9.0'
+      end
+
+      it 'does not have replicas set' do
+        expect(manifests[0]).to_not match(%r{replicas})
+      end
+
+      it 'has reserved millicores set' do 
+        expect(manifests[0]).to match(%r{cpu: "100m"$})
+      end
+
+      it 'has reserved megabytes set' do 
+        expect(manifests[0]).to match(%r{memory: "100Mi"$})
+      end
+      
+      it 'has autoscaler configured' do
+        expect(manifests[0]).to match(%r{"coresPerReplica": 4,$})
+        expect(manifests[0]).to match(%r{"nodesPerReplica": 1,$})
+      end
+
+    end
+  end
 end

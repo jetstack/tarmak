@@ -21,6 +21,7 @@ class kubernetes::kubelet(
   Optional[String] $cert_file = undef,
   Optional[String] $key_file = undef,
   Optional[String] $client_ca_file = undef,
+  $feature_gates = [],
   $node_labels = undef,
   $node_taints = undef,
   $pod_cidr = undef,
@@ -62,6 +63,14 @@ class kubernetes::kubelet(
     }
   } else {
     $_register_schedulable = $register_schedulable
+  }
+
+  if $feature_gates == [] {
+    $_feature_gates = delete_undef_values([
+      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
+    ])
+  } else {
+    $_feature_gates = $feature_gates
   }
 
   if $node_taints == undef {

@@ -104,6 +104,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   "--tls-private-key-file=<%= @key_file %>" \
 <% end -%>
   "--eviction-hard=memory.available<<%= @hard_eviction_memory_threshold %>" \
+<% if @_feature_gates != [] -%>
+  --feature-gates=<%= @_feature_gates.join(',') %> \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure

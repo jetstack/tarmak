@@ -170,6 +170,29 @@ func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, rol
 		if conf.ClusterAutoscaler.Version != "" {
 			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::version: "%s"`, conf.ClusterAutoscaler.Version))
 		}
+		if conf.ClusterAutoscaler.Overprovisioning != nil && conf.ClusterAutoscaler.Overprovisioning.Enabled {
+			hieraData.variables = append(hieraData.variables, `kubernetes_addons::cluster_autoscaler::enable_overprovisioning: true`)
+			hieraData.variables = append(hieraData.variables, `kubernetes::enable_pod_priority: true`)
+
+			if conf.ClusterAutoscaler.Overprovisioning.Image != "" {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::proportional_image: "%s"`, conf.ClusterAutoscaler.Overprovisioning.Image))
+			}
+			if conf.ClusterAutoscaler.Overprovisioning.Version != "" {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::proportional_version: "%s"`, conf.ClusterAutoscaler.Overprovisioning.Version))
+			}
+
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::reserved_millicores_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica))
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::reserved_megabytes_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.ReservedMegabytesPerReplica))
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::cores_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.CoresPerReplica))
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::nodes_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.NodesPerReplica))
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::replica_count: %d`, conf.ClusterAutoscaler.Overprovisioning.ReplicaCount))
+		}
+	}
+
+	if roleName == clusterv1alpha1.KubernetesWorkerRoleName && conf.ClusterAutoscaler != nil && conf.ClusterAutoscaler.Enabled {
+		if conf.ClusterAutoscaler.Overprovisioning != nil && conf.ClusterAutoscaler.Overprovisioning.Enabled {
+			hieraData.variables = append(hieraData.variables, `kubernetes::enable_pod_priority: true`)
+		}
 	}
 
 	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.Tiller != nil && conf.Tiller.Enabled {

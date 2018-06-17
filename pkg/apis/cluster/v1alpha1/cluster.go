@@ -84,9 +84,21 @@ type ClusterKubernetes struct {
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
-	Enabled bool   `json:"enabled,omitempty"`
-	Image   string `json:"image,omitempty"`
-	Version string `json:"version,omitempty"`
+	Enabled          bool                                                `json:"enabled,omitempty"`
+	Image            string                                              `json:"image,omitempty"`
+	Version          string                                              `json:"version,omitempty"`
+	Overprovisioning *ClusterKubernetesClusterAutoscalerOverprovisioning `json:"overprovisioning,omitempty"`
+}
+
+type ClusterKubernetesClusterAutoscalerOverprovisioning struct {
+	Enabled                      bool   `json:"enabled,omitempty"`
+	Image                        string `json:"image,omitempty"`
+	Version                      string `json:"version,omitempty"`
+	ReservedMillicoresPerReplica int    `json:"reservedMillicoresPerReplica,omitempty"`
+	ReservedMegabytesPerReplica  int    `json:"reservedMegabytesPerReplica,omitempty"`
+	CoresPerReplica              int    `json:"coresPerReplica,omitempty"`
+	NodesPerReplica              int    `json:"nodesPerReplica,omitempty"`
+	ReplicaCount                 int    `json:"replicaCount,omitempty"`
 }
 
 type ClusterKubernetesTiller struct {
