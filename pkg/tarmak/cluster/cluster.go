@@ -85,7 +85,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 	}
 
 	// setup instance pools
-	var result error
+	var result *multierror.Error
 	for pos, _ := range cluster.conf.InstancePools {
 		instancePool := cluster.conf.InstancePools[pos]
 		// create instance pools
@@ -97,7 +97,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		cluster.instancePools = append(cluster.instancePools, pool)
 	}
 
-	return cluster, result
+	return cluster, result.ErrorOrNil()
 }
 
 func (c *Cluster) InstancePools() []interfaces.InstancePool {
@@ -204,6 +204,17 @@ func (c *Cluster) validateSingleInstancePoolMap(poolMap map[string][]*clusterv1a
 	return result.ErrorOrNil()
 }
 
+// validate cluster instancePool types
+func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, clusterType string) error {
+	var result *multierror.Error
+
+	if len(poolMap[clusterv1alpha1.InstancePoolTypeEtcd]) != 1 {
+		result = multierror.Append(result, fmt.Errorf("a %s needs to have exactly one '%s' server pool", clusterType, clusterv1alpha1.InstancePoolTypeEtcd))
+	}
+
+	return result.ErrorOrNil()
+}
+
 func (c *Cluster) validateMultiInstancePoolMap(poolMap map[string][]*clusterv1alpha1.InstancePool, instanceType string) error {
 	if len(poolMap[instanceType]) < 1 {
 		return fmt.Errorf("cluster type '%s' requires one or more instance pool of type '%s'", c.Type(), instanceType)
@@ -303,6 +314,10 @@ func (c *Cluster) validateInstancePools() error {
 		return err
 	}
 
+	if err := c.Environment().Provider().ValidateInstanceTypes(c.InstancePools()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -374,6 +389,7 @@ func (c *Cluster) verifyHubState() error {
 
 // Verify instance pools
 func (c *Cluster) VerifyInstancePools() (result error) {
+	// Verify instance pools
 	imageIDs, err := c.ImageIDs()
 	if err != nil {
 		return fmt.Errorf("error getting image IDs: %s]", err)
@@ -386,6 +402,7 @@ func (c *Cluster) VerifyInstancePools() (result error) {
 			return fmt.Errorf("error getting the image ID of %s", instancePool.TFName())
 		}
 	}
+
 	return nil
 }
 
@@ -453,7 +470,7 @@ func (c *Cluster) validateNetwork() (result error) {
 }
 
 // validate logging configuration
-func (c *Cluster) validateLoggingSinks() (result error) {
+func (c *Cluster) validateLoggingSinks() error {
 
 	if c.Config().LoggingSinks != nil {
 		for index, loggingSink := range c.Config().LoggingSinks {
@@ -506,7 +523,9 @@ func (c *Cluster) validateClusterAutoscaler() (result error) {
 }
 
 // Validate APIServer
-func (c *Cluster) validateAPIServer() (result error) {
+func (c *Cluster) validateAPIServer() error {
+	var result *multierror.Error
+
 	for _, cidr := range c.Config().Kubernetes.APIServer.AllowCIDRs {
 		_, _, err := net.ParseCIDR(cidr)
 		if err != nil {
@@ -533,7 +552,7 @@ func (c *Cluster) validateAPIServer() (result error) {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (c *Cluster) validatePrometheusMode() error {

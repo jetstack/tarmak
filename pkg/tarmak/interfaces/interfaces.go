@@ -126,7 +126,7 @@ type Provider interface {
 	AskEnvironmentLocation(Initialize) (string, error)
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
-	VerifyInstanceTypes(intstancePools []InstancePool) error
+	ValidateInstanceTypes(intstancePools []InstancePool) error
 }
 
 type Tarmak interface {

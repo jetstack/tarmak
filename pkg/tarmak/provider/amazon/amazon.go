@@ -528,7 +528,7 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 	return sess, nil
 }
 
-func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) error {
+func (a *Amazon) ValidateInstanceTypes(instancePools []interfaces.InstancePool) error {
 	var result *multierror.Error
 
 	svc, err := a.EC2()
