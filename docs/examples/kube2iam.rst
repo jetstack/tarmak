@@ -151,8 +151,8 @@ An example creation of an IAM policy and role:
         description = "Name of the cluster"
     }
 
-    variable "instance_arn" {
-        description = "ARN of the instance
+    variable "instance_iam_role_arn" {
+        description = "ARN of the instance IAM role
     }
 
 
@@ -168,7 +168,7 @@ An example creation of an IAM policy and role:
             "Action": "sts:AssumeRole",
             "Principal": {
             "AWS": [
-                "${instance_arn}"
+                "${instance_iam_role_arn}"
             ]
             },
             "Effect": "Allow"
@@ -217,3 +217,26 @@ When you create a role, you need to make sure you deploy it in the correct
 needs to grant access to the role ARN that is attached to the instances.
 In our example Terraform project above we solved that by adding a variable for
 the ``instance_arn`` and the ``cluster_name``
+
+With the output of the test role, you can add that as an annotation to your deployment.
+
+.. code-block:: yaml
+
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    metadata:
+        name: nginx-deployment
+    spec:
+        replicas: 3
+        template:
+            metadata:
+                annotations:
+                    iam.amazonaws.com/role: role-arn
+                labels:
+                    app: nginx
+            spec:
+                containers:
+                - name: nginx
+                  image: nginx:1.9.1
+                  ports:
+                  - containerPort: 80
