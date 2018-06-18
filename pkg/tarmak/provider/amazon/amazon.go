@@ -598,7 +598,18 @@ func (a *Amazon) InstanceType(typeIn string) (typeOut string, err error) {
 		return "m4.xlarge", nil
 	}
 
-	// TODO: Validate custom instance type here
+	found := false
+	for _, t := range a.instanceTypes() {
+		if t == typeIn {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return "", fmt.Errorf("'%s' is not a supported intance type", typeIn)
+	}
+
 	return typeIn, nil
 }
 
@@ -613,4 +624,46 @@ func (a *Amazon) VolumeType(typeIn string) (typeOut string, err error) {
 	}
 	// TODO: Validate custom instance type here
 	return typeIn, nil
+}
+
+func (a *Amazon) instanceTypes() []string {
+	return []string{
+		"c1.medium",
+		"c1.xlarge",
+		"c3.2xlarge",
+		"c3.4xlarge",
+		"c3.8xlarge",
+		"c3.large",
+		"c3.xlarge",
+		"cc2.8xlarge",
+		"cg1.4xlarge",
+		"cr1.8xlarge",
+		"g2.2xlarge",
+		"hi1.4xlarge",
+		"hs1.8xlarge",
+		"i2.2xlarge",
+		"i2.4xlarge",
+		"i2.8xlarge",
+		"i2.xlarge",
+		"m1.large",
+		"m1.medium",
+		"m1.small",
+		"m1.xlarge",
+		"m2.2xlarge",
+		"m2.4xlarge",
+		"m2.xlarge",
+		"m3.2xlarge",
+		"m3.large",
+		"m3.medium",
+		"m3.xlarge",
+		"r3.2xlarge",
+		"r3.4xlarge",
+		"r3.8xlarge",
+		"r3.large",
+		"r3.xlarge",
+		"t1.micro",
+		"t2.medium",
+		"t2.micro",
+		"t2.small",
+	}
 }
