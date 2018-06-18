@@ -317,16 +317,7 @@ func (a *Amazon) readVaultToken() (string, error) {
 }
 
 func (a *Amazon) Validate() error {
-	return nil
-}
-
-func (a *Amazon) Verify() error {
 	var result *multierror.Error
-
-	// If this fails we don't want to verify any of the other steps as they will have the same error
-	if err := a.VerifyAWSCredentials(); err != nil {
-		return err
-	}
 
 	// These checks only make sense with an environment given
 	if a.tarmak.Environment() != nil {
@@ -346,9 +337,25 @@ func (a *Amazon) Verify() error {
 			result = multierror.Append(result, err)
 		}
 	}
+	if err := a.validateRemoteStateBucket(); err != nil {
+		result = multierror.Append(result, err)
+	}
 
 	if err := a.validatePublicZone(); err != nil {
 		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
+}
+
+func (a *Amazon) Verify() error {
+	var result *multierror.Error
+
+	if a.tarmak.Environment() != nil {
+		// If this fails we don't want to verify any of the other steps as they will have the same error
+		if err := a.VerifyAWSCredentials(); err != nil {
+			return err
+		}
 	}
 
 	return result.ErrorOrNil()
@@ -522,7 +529,7 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 }
 
 func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) error {
-	var result error
+	var result *multierror.Error
 
 	svc, err := a.EC2()
 	if err != nil {
@@ -532,20 +539,35 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 	for _, instance := range instancePools {
 		instanceType, err := a.InstanceType(instance.Config().Size)
 		if err != nil {
-			return err
+			result = multierror.Append(result, err)
+			continue
 		}
 
 		if err := a.verifyInstanceType(instanceType, instance.Zones(), svc); err != nil {
 			result = multierror.Append(result, err)
 		}
+
+		if instance.Name() == "master" {
+			found := false
+			for _, s := range a.nonMasterType() {
+				if s == instanceType {
+					found = true
+					break
+				}
+			}
+
+			if found {
+				err := fmt.Errorf("type '%s' is not supported for master instance")
+				result = multierror.Append(result, err)
+			}
+		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2) error {
-	var result error
-	var available bool
+	var result *multierror.Error
 
 	//Request offering, filter by given instance type
 	request := &ec2.DescribeReservedInstancesOfferingsInput{
@@ -563,7 +585,7 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 
 	//Loop through the given zones
 	for _, zone := range zones {
-		available = false
+		available := false
 
 		//Loop through every offer given. Check the zone against the current looped zone.
 		for _, offer := range response.ReservedInstancesOfferings {
@@ -579,7 +601,7 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 // This methods converts and possibly validates a generic instance type to a
@@ -599,7 +621,7 @@ func (a *Amazon) InstanceType(typeIn string) (typeOut string, err error) {
 	}
 
 	found := false
-	for _, t := range a.instanceTypes() {
+	for _, t := range a.awsInstanceTypes() {
 		if t == typeIn {
 			found = true
 			break
@@ -622,48 +644,30 @@ func (a *Amazon) VolumeType(typeIn string) (typeOut string, err error) {
 	if typeIn == clusterv1alpha1.VolumeTypeSSD {
 		return "gp2", nil
 	}
-	// TODO: Validate custom instance type here
+
+	found := false
+	for _, t := range a.awsVolumeTypes() {
+		if t == typeIn {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return "", fmt.Errorf("'%s' is not a supported volume type", typeIn)
+	}
+
 	return typeIn, nil
 }
 
-func (a *Amazon) instanceTypes() []string {
-	return []string{
-		"c1.medium",
-		"c1.xlarge",
-		"c3.2xlarge",
-		"c3.4xlarge",
-		"c3.8xlarge",
-		"c3.large",
-		"c3.xlarge",
-		"cc2.8xlarge",
-		"cg1.4xlarge",
-		"cr1.8xlarge",
-		"g2.2xlarge",
-		"hi1.4xlarge",
-		"hs1.8xlarge",
-		"i2.2xlarge",
-		"i2.4xlarge",
-		"i2.8xlarge",
-		"i2.xlarge",
-		"m1.large",
-		"m1.medium",
-		"m1.small",
-		"m1.xlarge",
-		"m2.2xlarge",
-		"m2.4xlarge",
-		"m2.xlarge",
-		"m3.2xlarge",
-		"m3.large",
-		"m3.medium",
-		"m3.xlarge",
-		"r3.2xlarge",
-		"r3.4xlarge",
-		"r3.8xlarge",
-		"r3.large",
-		"r3.xlarge",
-		"t1.micro",
-		"t2.medium",
-		"t2.micro",
-		"t2.small",
-	}
+func (a *Amazon) awsVolumeTypes() []string {
+	return []string{"io1", "gp2", "st1", "sc1"}
+}
+
+func (a *Amazon) awsInstanceTypes() []string {
+	return []string{"c1.medium", "c1.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge", "c3.large", "c3.xlarge", "cc2.8xlarge", "cg1.4xlarge", "cr1.8xlarge", "g2.2xlarge", "hi1.4xlarge", "hs1.8xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge", "i2.xlarge", "m1.large", "m1.medium", "m1.small", "m1.xlarge", "m2.2xlarge", "m2.4xlarge", "m2.xlarge", "m3.2xlarge", "m3.large", "m3.medium", "m3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge", "r3.large", "r3.xlarge", "t1.micro", "t2.medium", "t2.micro", "t2.small", "t2.nano", "t2.micro"}
+}
+
+func (a *Amazon) nonMasterType() []string {
+	return []string{"t2.nano", "t2.micro"}
 }
