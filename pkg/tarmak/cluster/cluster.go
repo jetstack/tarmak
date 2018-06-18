@@ -157,8 +157,18 @@ func (c *Cluster) validateInstancePools() (result error) {
 }
 
 // Verify cluster
-func (c *Cluster) Verify() (result error) {
-	return c.VerifyInstancePools()
+func (c *Cluster) Verify() error {
+	var result *multierror.Error
+
+	if err := c.VerifyInstancePools(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if err := c.Environment().Verify(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
 }
 
 // Verify instance pools

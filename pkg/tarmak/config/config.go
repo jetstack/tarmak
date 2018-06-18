@@ -351,3 +351,7 @@ func (c *Config) Project() string {
 func (c *Config) WingDevMode() bool {
 	return c.flags.WingDevMode
 }
+
+func (c *Config) KeyName() string {
+	return c.flags.KeyPairName
+}

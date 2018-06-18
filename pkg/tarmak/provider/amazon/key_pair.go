@@ -40,7 +40,42 @@ func fingerprintAWSStyle(signer interface{}) (string, error) {
 	}
 }
 
-func (a *Amazon) validateAWSKeyPair() error {
+func (a *Amazon) getExisitingKeyPair(name string) (*ec2.KeyPairInfo, error) {
+	svc, err := a.EC2()
+	if err != nil {
+		return nil, err
+	}
+
+	keypairs, err := svc.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
+		KeyNames: []*string{aws.String(name)},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get exisiting key pair: %v", err)
+	}
+
+	if len(keypairs.KeyPairs) == 0 {
+		return nil, fmt.Errorf("key pair '%s' does not exist", name)
+	}
+	if len(keypairs.KeyPairs) != 1 {
+		return nil, fmt.Errorf("received an unexpected number of key pairs: %d", len(keypairs.KeyPairs))
+	}
+
+	return keypairs.KeyPairs[0], nil
+}
+
+func (a *Amazon) verifyAWSKeyPair() error {
+	// if key pair has been given
+	if name := a.tarmak.Config().KeyName(); name != "" {
+		_, err := a.getExisitingKeyPair(name)
+		if err != nil {
+			return err
+		}
+
+		a.conf.Amazon.KeyName = name
+
+		return nil
+	}
+
 	svc, err := a.EC2()
 	if err != nil {
 		return err
