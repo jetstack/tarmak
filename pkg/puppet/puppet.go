@@ -332,6 +332,11 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::instance_pool_name: "%s"`, workerInstancePoolName))
 		}
 
+		// etcd
+		if instancePool.Role().Name() == clusterv1alpha1.KubernetesEtcdRoleName {
+			variables = append(variables, fmt.Sprintf(`tarmak::etcd_instances: %d`, instancePool.MinCount()))
+		}
+
 		//  classes
 		err = p.writeLines(
 			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s_classes.yaml", instancePool.Name())), classes,
