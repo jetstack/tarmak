@@ -8,7 +8,7 @@ project can be found on the `project page <https://github.com/jtblin/kube2iam>`_
 Prerequisite
 ~~~~~~~~~~~~
 
-Make sure `HELM <https://www.helm.sh/>`_ is `activated <https://docs.tarmak.io/user-guide.html#tiller>` on the Tarmak cluster.
+Make sure `HELM <https://www.helm.sh/>`_ is `activated <https://docs.tarmak.io/user-guide.html#tiller>`_ on the Tarmak cluster.
 You also need to make sure you can connect to the cluster with your HELM install.
 
 .. code-block:: bash
