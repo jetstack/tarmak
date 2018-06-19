@@ -5,9 +5,17 @@ class kubernetes_addons::cluster_autoscaler(
   String $limit_mem='500Mi',
   String $request_cpu='100m',
   String $request_mem='300Mi',
-  String $instance_pool_name='worker',
-  Integer $min_instances=3,
-  Integer $max_instances=6,
+  Array[String] $instance_pool_names=[],
+  Array[Integer] $min_instances=[],
+  Array[Integer] $max_instances=[],
+  Optional[Boolean] $enable_overprovisioning=undef,
+  Optional[String] $proportional_image=undef,
+  Optional[String] $proportional_version=undef,
+  Integer $reserved_millicores_per_replica = 0,
+  Integer $reserved_megabytes_per_replica = 0,
+  Integer $cores_per_replica = 0,
+  Integer $nodes_per_replica = 0,
+  Integer $replica_count = 0,
   $ca_mounts=$::kubernetes_addons::params::ca_mounts,
   $cloud_provider=$::kubernetes_addons::params::cloud_provider,
   $aws_region=$::kubernetes_addons::params::aws_region,
@@ -21,10 +29,10 @@ class kubernetes_addons::cluster_autoscaler(
     $rbac_enabled = false
   }
 
-  if defined('$kubernetes::cluster_name') and $instance_pool_name != '' {
-    $asg_name="${::kubernetes::cluster_name}-kubernetes-${instance_pool_name}"
+  if defined('$kubernetes::cluster_name') {
+    $asg_name_prefix="${::kubernetes::cluster_name}-kubernetes-"
   } else {
-    fail('asg name must be set')
+    fail('cluster name must be defined')
   }
 
   if $version == '' {

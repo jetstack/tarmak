@@ -150,9 +150,12 @@ module "kubernetes" {
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
   tools_cluster_name = "${var.tools_cluster_name}"
-  kubernetes_master_ami = "${var.kubernetes_master_ami}"
-  kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
-  kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
+{{range .InstancePools}}
+{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
+  {{.TFName}}_ami = "${var.{{.TFName}}_ami}"
+{{ end }}
+{{ end }}
+  api_admin_cidrs = "${var.api_admin_cidrs}"
   secrets_bucket = "${module.state.secrets_bucket[0]}"
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
@@ -202,9 +205,12 @@ module "kubernetes" {
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
   tools_cluster_name = "${var.tools_cluster_name}"  
-  kubernetes_master_ami = "${var.kubernetes_master_ami}"
-  kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
-  kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
+{{range .InstancePools}}
+{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
+  {{.TFName}}_ami = "${var.{{.TFName}}_ami}"
+{{ end }}
+{{ end }}
+  api_admin_cidrs = "${var.api_admin_cidrs}"
   bastion_security_group_id = "${data.terraform_remote_state.hub_state.bastion_bastion_security_group_id}"
   secrets_bucket = "${data.terraform_remote_state.hub_state.state_secrets_bucket}"
   public_zone = "${data.terraform_remote_state.hub_state.state_public_zone}"
