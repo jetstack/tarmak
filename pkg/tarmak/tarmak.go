@@ -3,6 +3,7 @@ package tarmak
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -387,4 +388,11 @@ func (t *Tarmak) verifyImageExists() error {
 	}
 
 	return nil
+}
+
+func (t *Tarmak) CmdKubeconfig(flags *flag.FlagSet) (string, error) {
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return "", err
+	}
+	return t.kubectl.KubeConfig(flags)
 }

@@ -204,9 +204,17 @@ func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
 	firstRun := true
 	var tunnel interfaces.Tunnel
 
+	publicApiserver := false
+
+	if k := k.tarmak.Cluster().Config().Kubernetes; k != nil {
+		if apiServer := k.APIServer; apiServer != nil && apiServer.Public {
+			publicApiserver = true
+		}
+	}
+
 	for {
 
-		if !firstRun || cluster.Server == "" {
+		if (!firstRun || cluster.Server == "") && !publicApiserver {
 			if tunnel != nil {
 				tunnel.Stop()
 			}
@@ -216,6 +224,8 @@ func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
 				return tunnel, err
 			}
 			cluster.Server = fmt.Sprintf("https://%s:%d", tunnel.BindAddress(), tunnel.Port())
+		} else if publicApiserver {
+			cluster.Server = fmt.Sprintf("https://api.%s-%s.%s", k.tarmak.Environment().Name(), k.tarmak.Cluster().Name(), k.tarmak.Provider().PublicZone())
 		}
 
 		k.log.Debugf("trying to connect to %+v", cluster.Server)
@@ -307,4 +317,26 @@ func (k *Kubectl) Kubectl(args []string) error {
 	cmd.Wait()
 
 	return nil
+}
+
+func (k *Kubectl) KubeConfig() (string, error) {
+	if k.tarmak.Cluster().Type() == clusterv1alpha1.ClusterTypeHub {
+		return "", fmt.Errorf("the current cluster '%s' is a hub and therefore does not contain a Kubernetes cluster", k.tarmak.Config().CurrentCluster())
+	}
+	if k := k.tarmak.Cluster().Config().Kubernetes; k == nil {
+		return "", fmt.Errorf("APIServer is not public and we are not able to connect to the APIserver without SSH tunnel, please use tarmak cluster kubectl")
+	} else if apiServer := k.APIServer; apiServer == nil || !apiServer.Public {
+		return "", fmt.Errorf("APIServer is not public and we are not able to connect to the APIserver without SSH tunnel, please use tarmak cluster kubectl")
+	}
+
+	tunnel, err := k.ensureWorkingKubeconfig()
+	if err != nil {
+		if tunnel != nil {
+			tunnel.Stop()
+		}
+		return "", err
+	}
+
+	configPath := fmt.Sprintf("KUBECONFIG=%s", k.ConfigPath())
+	return configPath, nil
 }
