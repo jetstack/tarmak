@@ -126,9 +126,11 @@ variable "bucket_prefix" {}
 {{end}}
 
 {{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeClusterMulti)}}
-variable "kubernetes_master_ami" {}
-variable "kubernetes_worker_ami" {}
-variable "kubernetes_etcd_ami" {}
+{{range .InstancePools}}
+{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
+variable "{{.TFName}}_ami" {}
+{{ end }}
+{{ end }}
 variable "api_admin_cidrs" {
     type = "list"
 }

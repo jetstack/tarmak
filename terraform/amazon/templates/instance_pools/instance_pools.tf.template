@@ -15,7 +15,7 @@
 {{template "role_security_group.tf.template" .}}
 
 {{range .InstancePools}}
-{{ if or (eq .Name "etcd") ( or (eq .Name "worker") (eq .Name "master") )  }}
+{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
 ## {{.TFName}}
 # Variables for {{.TFName}}
 {{template "instance_pool_variables.tf.template" .}}
@@ -41,7 +41,7 @@
 {{ end }}
 
 {{range .InstancePools}}
-{{ if eq .Name "jenkins" }}
+{{ if eq .Role.Name "jenkins" }}
 ## {{.TFName}}
 # Variables for {{.TFName}}
 {{template "instance_pool_variables.tf.template" .}}
