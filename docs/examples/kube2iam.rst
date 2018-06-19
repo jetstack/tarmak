@@ -84,7 +84,7 @@ able to deploy your roles for the pods in the correct path.
     }
 
     output "kube2iam_path" {
-        value = "${aws_iam_policy.kube2iam.path}"
+        value = "/kube2iam_${var.cluster_name}/"
     }
 
 
@@ -152,56 +152,54 @@ An example creation of an IAM policy and role:
     }
 
     variable "instance_iam_role_arn" {
-        description = "ARN of the instance IAM role
+        description = "ARN of the instance IAM role"
     }
-
 
     resource "aws_iam_role" "test_role" {
         name = "test_role"
         path = "/kube2iam_${var.cluster_name}/"
 
-        assume_role_policy = <<EOF
-        {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-            "AWS": [
-                "${instance_iam_role_arn}"
+        assume_role_policy = "${data.aws_iam_policy_document.test_role.json}"
+    }
+
+    data "aws_iam_policy_document" "test_role" {
+        statement {
+            sid = "1"
+
+            actions = [
+                "sts:AssumeRole",
             ]
-            },
-            "Effect": "Allow"
+
+            principals {
+                type        = "AWS"
+                identifiers = ["${var.instance_iam_role_arn}"]
             }
-        ]
         }
-        EOF
     }
 
     resource "aws_iam_role_policy" "test_role_policy" {
         name = "test_policy"
         role = "${aws_iam_role.test_role.id}"
 
-        policy = <<EOF
-        {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-            "Effect": "Allow",
-            "Action": [
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "*"
+        policy = "${data.aws_iam_policy_document.test_role_policy.json}"
+    }
+
+    data "aws_iam_policy_document" "test_role_policy" {
+        statement {
+            sid = "1"
+
+            actions = [
+                "s3:ListBucket",
             ]
-            }
-        ]
+
+            resources = [
+                "*",
+            ]
         }
-        EOF
     }
 
     output "test_role" {
-    value = "${aws_iam_role.test_role.arn}"
+        value = "${aws_iam_role.test_role.arn}"
     }
 
 Now you can run this Terraform project the following way:
