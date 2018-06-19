@@ -113,7 +113,7 @@ You can deploy it with the following command:
 
     helm upgrade kube2iam stable/kube2iam \
     --install \
-    --version 0.10.0 \
+    --version 0.9.0 \
     --namespace kube-system \
     --set=extraArgs.host-ip=127.0.0.1 \
     --set=extraArgs.log-format=json \
