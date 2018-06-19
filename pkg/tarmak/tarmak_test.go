@@ -69,14 +69,14 @@ func (tt *testTarmak) fakeAWSProvider(name string) {
 func (tt *testTarmak) addEnvironment(env *tarmakv1alpha1.Environment) {
 	tt.environments = append(tt.environments, env)
 	tt.fakeConfig.EXPECT().Environment(env.Name).Return(env, nil)
-	tt.fakeConfig.EXPECT().CurrentEnvironmentName().Return(env.Name)
+	tt.fakeConfig.EXPECT().CurrentEnvironmentName().Return(env.Name, nil)
 	tt.fakeConfig.EXPECT().Environments().AnyTimes().Return(tt.environments)
 }
 
 func (tt *testTarmak) addCluster(cluster *clusterv1alpha1.Cluster) {
 	tt.clusters = append(tt.clusters, cluster)
 	tt.fakeConfig.EXPECT().Cluster(cluster.Environment, cluster.Name).AnyTimes().Return(cluster, nil)
-	tt.fakeConfig.EXPECT().CurrentClusterName().Return(cluster.Name)
+	tt.fakeConfig.EXPECT().CurrentClusterName().Return(cluster.Name, nil)
 	// TODO: support multiple environments
 	tt.fakeConfig.EXPECT().Clusters(cluster.Environment).AnyTimes().Return(tt.clusters)
 }
