@@ -207,7 +207,7 @@ Now you can run this Terraform project the following way:
 .. code-block:: bash
 
     terraform init
-    terraform apply -var cluster_name=example -var region=eu-west-1 -var instance_arn=arn:aws:iam::xxxxxxx:role/my-instance-role
+    terraform apply -var cluster_name=example -var region=eu-west-1 -var instance_iam_role_arn=arn:aws:iam::xxxxxxx:role/my-instance-role
 
 
 When you create a role, you need to make sure you deploy it in the correct
