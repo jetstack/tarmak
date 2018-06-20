@@ -56,7 +56,7 @@ spec:
         app: overprovisioning-autoscaler
     spec:
       containers:
-        - image: "<%= @proportional_image %>:<%= @_proportional_version %>"
+        - image: "<%= @_proportional_image %>:<%= @_proportional_version %>"
           name: proportional-autoscaler
           command:
             - /cluster-proportional-autoscaler

@@ -8,9 +8,9 @@ class kubernetes_addons::cluster_autoscaler(
   String $instance_pool_name='worker',
   Integer $min_instances=3,
   Integer $max_instances=6,
-  Boolean $enable_overprovisioning = false,
-  String $proportional_image='k8s.gcr.io/cluster-proportional-autoscaler-amd64',
-  String $proportional_version='',
+  Optional[Boolean] $enable_overprovisioning=undef,
+  Optional[String] $proportional_image=undef,
+  Optional[String] $proportional_version=undef,
   Integer $reserved_millicores_per_replica = 0,
   Integer $reserved_megabytes_per_replica = 0,
   Integer $cores_per_replica = 0,
@@ -73,13 +73,25 @@ class kubernetes_addons::cluster_autoscaler(
     }
   }
 
-  if $proportional_version == '' {
+  if $enable_overprovisioning == undef {
+    $_enable_overprovisioning = false
+  } else {
+    $_enable_overprovisioning = $enable_overprovisioning
+  }
+
+  if $proportional_version == undef {
     $_proportional_version = '1.1.2'
   } else {
     $_proportional_version = $proportional_version
   }
 
-  if $enable_overprovisioning and versioncmp($::kubernetes::version, '1.9.0') >= 0 {
+  if $proportional_image == undef {
+    $_proportional_image = 'k8s.gcr.io/cluster-proportional-autoscaler-amd64'
+  } else {
+    $_proportional_image = $proportional_image
+  }
+
+  if $_enable_overprovisioning and versioncmp($::kubernetes::version, '1.9.0') >= 0 {
     kubernetes::apply{'cluster-autoscaler-overprovisioning':
       manifests => [
         template('kubernetes_addons/cluster-autoscaler-overprovisioning.yaml.erb'),

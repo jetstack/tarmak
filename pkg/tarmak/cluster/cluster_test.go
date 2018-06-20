@@ -163,6 +163,56 @@ func TestCluster_NewMinimalHub(t *testing.T) {
 	}
 }
 
+func TestValidateClusterAutoscaler(t *testing.T) {
+	clusterConfig := config.NewClusterSingle("single", "cluster")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Kubernetes.ClusterAutoscaler.Enabled = true
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning = &clusterv1alpha1.ClusterKubernetesClusterAutoscalerOverprovisioning{}
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled = true
+
+	cluster := &Cluster{
+		conf: clusterConfig,
+	}
+
+	// reservations not set
+	if cluster.validateClusterAutoscaler() == nil {
+		t.Errorf("validation should fail when no reservations are set")
+	}
+
+	// autoscaler and overprovisioning enabled
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica = 1
+	if err := cluster.validateClusterAutoscaler(); err != nil {
+		t.Errorf("validation should pass when cluster autoscaler and overprovisioning are enabled: %s", err)
+	}
+
+	// autoscaler disabled with overprovisioning enabled
+	clusterConfig.Kubernetes.ClusterAutoscaler.Enabled = false
+	if cluster.validateClusterAutoscaler() == nil {
+		t.Errorf("validation should fail when cluster autoscaler is disabled and overprovisioning is enabled")
+	}
+	clusterConfig.Kubernetes.ClusterAutoscaler.Enabled = true
+
+	// negative reserved millicores
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica = -1
+	if cluster.validateClusterAutoscaler() == nil {
+		t.Errorf("validation should fail when reserving negative millicores")
+	}
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica = 1
+
+	// static overprovisioning with propoertional autoscaler
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.Image = "image"
+	if cluster.validateClusterAutoscaler() == nil {
+		t.Errorf("validation should fail when configuring static overprovisioning and proportional autoscaler")
+	}
+
+	// static and proportional overprovisioning
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.CoresPerReplica = 1
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.ReplicaCount = 1
+	if cluster.validateClusterAutoscaler() == nil {
+		t.Errorf("validation should fail when configuring static and proportional overprovisioning")
+	}
+}
+
 /*
 func testDefaultClusterConfig() *config.Cluster {
 	return &config.Cluster{

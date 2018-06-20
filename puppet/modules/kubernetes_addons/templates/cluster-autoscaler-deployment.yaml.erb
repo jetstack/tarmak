@@ -68,7 +68,7 @@ spec:
 <% if @balance_similar_node_groups -%>
         - --balance-similar-node-groups
 <% end -%>
-<% if @enable_overprovisioning -%>
+<% if @_enable_overprovisioning -%>
         - --expendable-pods-priority-cutoff=-10
 <% end -%>
 <% if @aws_region -%>

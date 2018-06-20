@@ -196,7 +196,7 @@ func (c *Cluster) Validate() (result error) {
 
 	// validate overprovisioning
 	if err := c.validateClusterAutoscaler(); err != nil {
-		result = multierror.Append(result, err)
+		result = multierror.Append(result, fmt.Errorf("invalid overprovisioning configuration: %s", err))
 	}
 
 	//validate apiserver
@@ -259,23 +259,23 @@ func (c *Cluster) validateClusterAutoscaler() (result error) {
 
 	if c.Config().Kubernetes != nil && c.Config().Kubernetes.ClusterAutoscaler != nil && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning != nil {
 		if c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled && !c.Config().Kubernetes.ClusterAutoscaler.Enabled {
-			return fmt.Errorf("invalid overprovisioning configuration: cannot enable overprovisioning if cluster autoscaling is disabled")
+			return fmt.Errorf("cannot enable overprovisioning if cluster autoscaling is disabled")
 		}
 		if c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMegabytesPerReplica < 0 ||
 			c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica < 0 ||
 			c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.CoresPerReplica < 0 ||
 			c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.NodesPerReplica < 0 ||
 			c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReplicaCount < 0 {
-			return fmt.Errorf("invalid overprovisioning configuration: cannot set negative overprovisioning parameters")
+			return fmt.Errorf("cannot set negative overprovisioning parameters")
 		}
 		if c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMegabytesPerReplica == 0 && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica == 0 {
-			return fmt.Errorf("invalid overprovisioning configuration: one of reservedMillicoresPerReplica and reservedMegabytesPerReplica must be set")
+			return fmt.Errorf("one of reservedMillicoresPerReplica and reservedMegabytesPerReplica must be set")
 		}
 		if (c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.CoresPerReplica > 0 || c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.NodesPerReplica > 0) && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReplicaCount > 0 {
-			return fmt.Errorf("invalid overprovisioning configuration: cannot configure both static and per replica overprovisioning rules")
+			return fmt.Errorf("cannot configure both static and per replica overprovisioning rules")
 		}
 		if (c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Image != "" || c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Version != "") && (c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.CoresPerReplica == 0 && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.NodesPerReplica == 0) {
-			return fmt.Errorf("invalid overprovisioning configuration: setting overprovisioning image or version is only valid when proportional overprovisioning is enabled")
+			return fmt.Errorf("setting overprovisioning image or version is only valid when proportional overprovisioning is enabled")
 		}
 	}
 
