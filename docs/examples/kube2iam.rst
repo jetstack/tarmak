@@ -189,7 +189,7 @@ An example creation of an IAM policy and role:
             sid = "1"
 
             actions = [
-                "s3:ListBucket",
+                "s3:ListAllMyBuckets",
             ]
 
             resources = [
@@ -222,25 +222,26 @@ the ``instance_iam_role_arn`` and the ``cluster_name``.
    IAM role ARN through the AWS console.
    Don't confuse this with the earlier created IAM policy. 
 
-With the output of the test role, you can add that as an annotation to your deployment.
+With the output ``test_role``, you can add that ARN as an annotation to 
+your Pod/Deployment/ReplicaSet etc. 
+In the following example we spin up a pod to list all buckets:
 
 .. code-block:: yaml
 
-    apiVersion: extensions/v1beta1
-    kind: Deployment
+    apiVersion: v1
+    kind: Pod
     metadata:
-        name: nginx-deployment
+        name: aws-cli
+    labels:
+        name: aws-cli
+    annotations:
+        iam.amazonaws.com/role: role-arn
     spec:
-        replicas: 3
-        template:
-            metadata:
-                annotations:
-                    iam.amazonaws.com/role: role-arn
-                labels:
-                    app: nginx
-            spec:
-                containers:
-                - name: nginx
-                  image: nginx:1.9.1
-                  ports:
-                  - containerPort: 80
+        containers:
+        - image: fstab/aws-cli
+          command:
+            - "/home/aws/aws/env/bin/aws"
+            - "s3"
+            - "ls"
+            - "some-bucket"
+          name: aws-cli
