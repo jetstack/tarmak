@@ -232,16 +232,15 @@ In the following example we spin up a pod to list all buckets:
     kind: Pod
     metadata:
         name: aws-cli
-    labels:
-        name: aws-cli
-    annotations:
-        iam.amazonaws.com/role: role-arn
+        labels:
+            name: aws-cli
+        annotations:
+            iam.amazonaws.com/role: role-arn
     spec:
+        name: aws-cli
         containers:
         - image: fstab/aws-cli
           command:
             - "/home/aws/aws/env/bin/aws"
             - "s3"
             - "ls"
-            - "some-bucket"
-          name: aws-cli
