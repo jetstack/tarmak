@@ -109,7 +109,7 @@ func init() {
 		&globalFlags.KeyPairName,
 		"key-pair",
 		"",
-		"name of an existing key pair to use",
+		"name of an existing key pair to use (default to tarmak generated key pair)",
 	)
 
 	if version == "dev" {
