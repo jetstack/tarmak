@@ -413,6 +413,19 @@ configuration like that:
       enabled: true
       externalScrapeTargetsOnly: true
 
+
+API Server
+~~~~~~~~~~~
+
+It is possible to let Tarmak create an public endpoint for your APIserver.
+This can be used together with `Secure public endpoints <user-guide.rst#secure-public-endpoints>`_.
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+        public: true
+
 Secure public endpoints
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -465,7 +478,10 @@ API Server
 ++++++++++
 
 For API server you can overwrite the environment level by adding ``allowCIDRs``
-to the kubernetes block
+to the kubernetes block.
+
+.. warning::
+  For this to work, you need to set your `API Server public <user-guide.rst#api-server>`_ first.
 
 .. code-block:: yaml
 
