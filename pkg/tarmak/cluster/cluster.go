@@ -178,7 +178,9 @@ func (c *Cluster) VerifyInstancePools() (result error) {
 	return nil
 }
 
-func (c *Cluster) Validate() (result error) {
+func (c *Cluster) Validate() error {
+	var result *multierror.Error
+
 	// validate instance pools
 	if err := c.validateInstancePools(); err != nil {
 		result = multierror.Append(result, err)
@@ -203,7 +205,30 @@ func (c *Cluster) Validate() (result error) {
 		}
 	}
 
-	return result
+	// validate enforcement of instance pool count
+	if err := c.validateInstancePoolMultiple(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
+}
+
+func (c *Cluster) validateInstancePoolMultiple() error {
+	var result *multierror.Error
+
+	list := make(map[string][]*clusterv1alpha1.InstancePool)
+	for _, i := range c.Config().InstancePools {
+		list[i.Name] = append(list[i.Name], &i)
+	}
+
+	for name, v := range list {
+		if name != "worker" && len(v) > 1 {
+			err := fmt.Errorf("'%s' only supports a single instance pool", name)
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result.ErrorOrNil()
 }
 
 // validate network configuration
