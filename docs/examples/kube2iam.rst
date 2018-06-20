@@ -214,7 +214,13 @@ When you create a role, you need to make sure you deploy it in the correct
 ``path`` and also add an assume role policy to it. That assume role policy
 needs to grant access to the role ARN that is attached to the instances.
 In our example Terraform project above we solved that by adding a variable for
-the ``instance_arn`` and the ``cluster_name``
+the ``instance_iam_role_arn`` and the ``cluster_name``.
+
+.. warning::
+   Make sure you use the IAM role ARN attached to your worker Kubernetes 
+   instances as input for ``instance_iam_role_arn``. You can retrieve the
+   IAM role ARN through the AWS console.
+   Don't confuse this with the earlier created IAM policy. 
 
 With the output of the test role, you can add that as an annotation to your deployment.
 
