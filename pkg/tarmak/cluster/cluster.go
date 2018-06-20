@@ -314,11 +314,7 @@ func (c *Cluster) validateInstancePools() error {
 		return err
 	}
 
-	if err := c.Environment().Provider().ValidateInstanceTypes(c.InstancePools()); err != nil {
-		return err
-	}
-
-	return nil
+	return result.ErrorOrNil()
 }
 
 // Verify cluster
@@ -326,6 +322,10 @@ func (c *Cluster) Verify() error {
 	var result *multierror.Error
 
 	if err := c.VerifyInstancePools(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if err := c.Environment().Provider().VerifyInstanceTypes(c.InstancePools()); err != nil {
 		result = multierror.Append(result, err)
 	}
 
