@@ -105,6 +105,14 @@ func init() {
 		"override the current cluster set in the config",
 	)
 
+	RootCmd.PersistentFlags().BoolVarP(
+		&globalFlags.Force,
+		"force",
+		"f",
+		false,
+		"skip all validation and verification checks",
+	)
+
 	if version == "dev" {
 		RootCmd.PersistentFlags().BoolVar(
 			&globalFlags.WingDevMode,
