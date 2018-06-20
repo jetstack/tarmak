@@ -121,13 +121,25 @@ func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
 	return nil
 }
 
-func (c *Config) CurrentCluster() string {
+func (c *Config) CurrentCluster() (string, error) {
 	// override current cluster if flags are set accordingly
+	currentCluster := ""
 	if c.flags.CurrentCluster != "" {
-		return c.flags.CurrentCluster
+		currentCluster = c.flags.CurrentCluster
+	} else {
+		if c.conf == nil {
+			return "", fmt.Errorf("config is nil")
+		}
+
+		currentCluster = c.conf.CurrentCluster
 	}
 
-	return c.conf.CurrentCluster
+	split := strings.Split(currentCluster, "-")
+	if len(split) != 2 {
+		return "", fmt.Errorf("current cluster '%s' is not in the correct format: <environment>-<clusterName>", currentCluster)
+	}
+
+	return currentCluster, nil
 }
 
 func (c *Config) SetCurrentCluster(clusterName string) error {
@@ -135,17 +147,29 @@ func (c *Config) SetCurrentCluster(clusterName string) error {
 	return c.writeYAML(c.conf)
 }
 
-func (c *Config) CurrentClusterName() string {
-	split := strings.Split(c.CurrentCluster(), "-")
-	if len(split) < 2 {
-		return ""
+func (c *Config) CurrentClusterName() (string, error) {
+
+	currentCluster, err := c.CurrentCluster()
+	if err != nil {
+		return "", fmt.Errorf("error retrieving current cluster: %s", err)
 	}
-	return split[1]
+
+	split := strings.Split(currentCluster, "-")
+	if len(split) < 2 {
+		return "", nil
+	}
+	return split[1], nil
 }
 
-func (c *Config) CurrentEnvironmentName() string {
-	split := strings.Split(c.CurrentCluster(), "-")
-	return split[0]
+func (c *Config) CurrentEnvironmentName() (string, error) {
+
+	currentCluster, err := c.CurrentCluster()
+	if err != nil {
+		return "", fmt.Errorf("error retrieving current cluster: %s", err)
+	}
+
+	split := strings.Split(currentCluster, "-")
+	return split[0], nil
 }
 
 func (c *Config) Cluster(environment string, name string) (cluster *clusterv1alpha1.Cluster, err error) {
