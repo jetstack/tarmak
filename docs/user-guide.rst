@@ -414,6 +414,83 @@ configuration like that:
       externalScrapeTargetsOnly: true
 
 
+API Server
+~~~~~~~~~~~
+
+It is possible to let Tarmak create an public endpoint for your APIserver.
+This can be used together with `Secure public endpoints <user-guide.rst#secure-public-endpoints>`_.
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+        public: true
+
+Secure public endpoints
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Public endpoints (Jenkins, bastion host and if enabled apiserver) can be secured
+by limiting the access to a list of CIDR blocks. This can be configured on a
+environment level for all public endpoint and if wanted can be overwritten on a
+specific public endpoint.
+
+Environment level
++++++++++++++++++
+
+This can be done by adding an ``adminCIDRs`` list to an environments block,
+if nothing has been set, the default is 0.0.0.0/0:
+
+.. code-block:: yaml
+
+    environments:
+    - contact: hello@example.com
+      location: eu-west-1
+      metadata:
+        name: example
+      privateZone: example.local
+      project: example-project
+      provider: aws
+      adminCIDRs:
+      - x.x.x.x/32
+      - y.y.y.y/24
+
+Jenkins and bastion host
+++++++++++++++++++++++++
+
+The environment level can be overwritten for Jenkins and bastion host
+by adding ``allowCIDRs`` in the instance pool block:
+
+.. code-block:: yaml
+
+  instancePools:
+  - image: centos-puppet-agent
+    allowCIDRs:
+    - x.x.x.x/32
+    maxCount: 1
+    metadata:
+      name: jenkins
+    minCount: 1
+    size: large
+    type: jenkins
+
+
+API Server
+++++++++++
+
+For API server you can overwrite the environment level by adding ``allowCIDRs``
+to the kubernetes block.
+
+.. warning::
+  For this to work, you need to set your `API Server public <user-guide.rst#api-server>`_ first.
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+        public: true
+        allowCIDRs:
+        - y.y.y.y/24
+
 Additional IAM policies
 ~~~~~~~~~~~~~~~~~~~~~~~
 
