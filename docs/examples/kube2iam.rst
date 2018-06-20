@@ -237,9 +237,9 @@ In the following example we spin up a pod to list all buckets:
         annotations:
             iam.amazonaws.com/role: role-arn
     spec:
-        name: aws-cli
         containers:
-        - image: fstab/aws-cli
+        - name: aws-cli
+          image: fstab/aws-cli
           command:
             - "/home/aws/aws/env/bin/aws"
             - "s3"
