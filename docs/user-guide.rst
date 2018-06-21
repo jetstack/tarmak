@@ -413,6 +413,19 @@ configuration like that:
       enabled: true
       externalScrapeTargetsOnly: true
 
+
+API Server
+~~~~~~~~~~~
+
+It is possible to let Tarmak create an public endpoint for your APIserver.
+This can be used together with `Secure public endpoints <user-guide.html#secure-api-server>`__.
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+      public: true
+
 Secure public endpoints
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -460,12 +473,16 @@ by adding ``allowCIDRs`` in the instance pool block:
     size: large
     type: jenkins
 
+.. _secure-api-server:
 
 API Server
 ++++++++++
 
 For API server you can overwrite the environment level by adding ``allowCIDRs``
-to the kubernetes block
+to the kubernetes block.
+
+.. warning::
+  For this to work, you need to set your `API Server public <user-guide.html#api-server>`__ first.
 
 .. code-block:: yaml
 
