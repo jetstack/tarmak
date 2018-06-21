@@ -77,3 +77,9 @@ localhost
 iptables
 ons
 ReplicaSet
+overprovisioning
+autoscaling
+preempted
+millicores
+yaml
+autoscale

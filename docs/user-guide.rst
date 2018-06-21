@@ -159,8 +159,8 @@ Cluster Autoscaler
 
 Tarmak supports deploying `Cluster Autoscaler
 <https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler>`_ when
-spinning up a Kubernetes cluster. The following `tarmak.yaml` snippet shows how
-you would enable Cluster Autoscaler. 
+spinning up a Kubernetes cluster to autoscale worker instance pools. The following
+`tarmak.yaml` snippet shows how you would enable Cluster Autoscaler.
 
 .. code-block:: yaml
 
