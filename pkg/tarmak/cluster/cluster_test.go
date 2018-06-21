@@ -219,6 +219,124 @@ func TestValidateClusterAutoscaler(t *testing.T) {
 	}
 }
 
+func TestCluster_ValidateClusterInstancePoolTypesHub(t *testing.T) {
+	clusterConfig := config.NewHub("multi")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Location = "my-region"
+	c := newFakeCluster(t, nil)
+	defer c.Finish()
+
+	var err error
+	c.Cluster, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	if err != nil {
+		t.Fatal("unexpected error: ", err)
+	}
+
+	if err := c.Cluster.validateMultiClusterInstancePoolTypes(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	volume := clusterv1alpha1.Volume{}
+	volume.Name = "root"
+
+	for _, i := range []string{
+		clusterv1alpha1.InstancePoolTypeVault,
+		clusterv1alpha1.InstancePoolTypeBastion,
+	} {
+		config := clusterConfig
+		config.InstancePools = append(config.InstancePools, clusterv1alpha1.InstancePool{
+			Type:     i,
+			MaxCount: 1,
+			Volumes:  []clusterv1alpha1.Volume{volume},
+		})
+
+		c.Cluster, err = NewFromConfig(c.fakeEnvironment, config)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+			continue
+		}
+	}
+
+	for _, i := range []string{
+		clusterv1alpha1.InstancePoolTypeMaster,
+		clusterv1alpha1.InstancePoolTypeWorker,
+		clusterv1alpha1.InstancePoolTypeEtcd,
+		clusterv1alpha1.InstancePoolTypeJenkins,
+		clusterv1alpha1.InstancePoolTypeMasterEtcd,
+	} {
+		config := clusterConfig
+		config.InstancePools = append(config.InstancePools, clusterv1alpha1.InstancePool{
+			Type:     i,
+			MaxCount: 1,
+			Volumes:  []clusterv1alpha1.Volume{volume},
+		})
+
+		c.Cluster, err = NewFromConfig(c.fakeEnvironment, config)
+		if err == nil {
+			t.Errorf("expected error, got=none. type (%s)", i)
+		}
+	}
+}
+
+func TestCluster_ValidateClusterInstancePoolTypesMulti(t *testing.T) {
+	clusterConfig := config.NewClusterMulti("multi", "foo")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Location = "my-region"
+	c := newFakeCluster(t, nil)
+	defer c.Finish()
+
+	var err error
+	c.Cluster, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	if err != nil {
+		t.Fatal("unexpected error: ", err)
+	}
+
+	if err := c.Cluster.validateMultiClusterInstancePoolTypes(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	volume := clusterv1alpha1.Volume{}
+	volume.Name = "root"
+
+	for _, i := range []string{
+		clusterv1alpha1.InstancePoolTypeMaster,
+		clusterv1alpha1.InstancePoolTypeWorker,
+		clusterv1alpha1.InstancePoolTypeEtcd,
+		clusterv1alpha1.InstancePoolTypeJenkins,
+		clusterv1alpha1.InstancePoolTypeMasterEtcd,
+	} {
+		config := clusterConfig
+		config.InstancePools = append(config.InstancePools, clusterv1alpha1.InstancePool{
+			Type:     i,
+			MaxCount: 1,
+			Volumes:  []clusterv1alpha1.Volume{volume},
+		})
+
+		c.Cluster, err = NewFromConfig(c.fakeEnvironment, config)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+			continue
+		}
+	}
+
+	for _, i := range []string{
+		clusterv1alpha1.InstancePoolTypeVault,
+		clusterv1alpha1.InstancePoolTypeBastion,
+	} {
+		config := clusterConfig
+		config.InstancePools = append(config.InstancePools, clusterv1alpha1.InstancePool{
+			Type:     i,
+			MaxCount: 1,
+			Volumes:  []clusterv1alpha1.Volume{volume},
+		})
+
+		c.Cluster, err = NewFromConfig(c.fakeEnvironment, config)
+		if err == nil {
+			t.Errorf("expected error, got=none. type (%s)", i)
+		}
+	}
+}
+
 /*
 func testDefaultClusterConfig() *config.Cluster {
 	return &config.Cluster{

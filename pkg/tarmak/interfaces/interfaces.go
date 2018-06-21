@@ -251,6 +251,7 @@ type InstancePool interface {
 	Validate() error
 	MinCount() int
 	MaxCount() int
+	InstanceType() string
 }
 
 type Volume interface {

@@ -216,7 +216,54 @@ func (c *Cluster) Validate() (result error) {
 		}
 	}
 
+	// validate instance instance pools according to hub and kubernetes multi cluster
+	if err := c.validateMultiClusterInstancePoolTypes(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
 	return result
+}
+
+func (c *Cluster) validateMultiClusterInstancePoolTypes() error {
+	errMap := make(map[string]bool)
+
+	if c.Type() == clusterv1alpha1.ClusterTypeHub {
+		hubTypes := map[string]bool{
+			clusterv1alpha1.InstancePoolTypeVault:   true,
+			clusterv1alpha1.InstancePoolTypeBastion: true,
+		}
+
+		for _, i := range c.Config().InstancePools {
+			if _, ok := hubTypes[i.Type]; !ok {
+				errMap[i.Type] = true
+			}
+		}
+
+	} else if c.Type() == clusterv1alpha1.ClusterTypeClusterMulti {
+		multiClusterTypes := map[string]bool{
+			clusterv1alpha1.InstancePoolTypeMaster:     true,
+			clusterv1alpha1.InstancePoolTypeWorker:     true,
+			clusterv1alpha1.InstancePoolTypeEtcd:       true,
+			clusterv1alpha1.InstancePoolTypeJenkins:    true,
+			clusterv1alpha1.InstancePoolTypeMasterEtcd: true,
+			clusterv1alpha1.InstancePoolTypeHybrid:     true,
+			clusterv1alpha1.InstancePoolTypeAll:        true,
+		}
+
+		for _, i := range c.Config().InstancePools {
+			if _, ok := multiClusterTypes[i.Type]; !ok {
+				errMap[i.Type] = true
+			}
+		}
+	}
+
+	var result *multierror.Error
+	for t := range errMap {
+		err := fmt.Errorf("instance pool type '%s' not valid in cluster type '%s'", t, c.Type())
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
 }
 
 // validate network configuration
