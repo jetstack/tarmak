@@ -181,6 +181,13 @@ func TestCluster_InstancePoolValidation(t *testing.T) {
 	}
 
 	c.conf.InstancePools = append(c.conf.InstancePools, clusterv1alpha1.InstancePool{
+		Type: clusterv1alpha1.InstancePoolTypeWorker,
+	})
+	if err := c.validateInstancePoolMultiple(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	c.conf.InstancePools = append(c.conf.InstancePools, clusterv1alpha1.InstancePool{
 		Type: clusterv1alpha1.InstancePoolTypeBastion,
 	})
 	if err := c.validateInstancePoolMultiple(); err == nil {
