@@ -90,7 +90,12 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
   vpc_zone_identifier       = ["${var.private_subnet_ids}"]
   launch_configuration      = "${aws_launch_configuration.{{.TFName}}.name}"
   load_balancers            = [
+{{ if .Role.AWS.ELBAPI -}}
     "${aws_elb.{{.Role.TFName}}.name}",
+{{ end -}}
+{{ if .Role.AWS.ELBIngress -}}
+    "${aws_elb.{{.Role.TFName}}.name}",
+{{ end -}}
 {{ if .Role.AWS.ELBAPIPublic -}}
     "${aws_elb.{{.Role.TFName}}_public.name}",
 {{ end -}}
