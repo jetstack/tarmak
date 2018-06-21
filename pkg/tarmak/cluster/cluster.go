@@ -216,7 +216,7 @@ func (c *Cluster) Validate() (result error) {
 		}
 	}
 
-	// validate instance instance pools according to hub and kubernetes multi cluster
+	// validate instance pools according to hub and kubernetes multi cluster environments
 	if err := c.validateMultiClusterInstancePoolTypes(); err != nil {
 		result = multierror.Append(result, err)
 	}
