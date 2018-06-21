@@ -558,17 +558,14 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 			}
 
 			if found {
-				err := fmt.Errorf("type '%s' is not supported for master instance", instanceType)
-				result = multierror.Append(result, err)
+				a.tarmak.Log().Warnf("Type '%s' is not advised for master instance", instanceType)
 			}
 			break
 
 		case "etcd", "vault":
 			if a.awsInstanceBurstable(instanceType) {
-				err := fmt.Errorf("instance '%s' does not support burstable type (%s)", instance.Name(), instanceType)
-				result = multierror.Append(result, err)
+				a.tarmak.Log().Warnf("Burstable type '%s' is not advised for instance '%s'", instanceType, instance.Name())
 			}
-
 			break
 
 		}
