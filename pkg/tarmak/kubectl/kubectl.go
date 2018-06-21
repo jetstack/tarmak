@@ -321,7 +321,11 @@ func (k *Kubectl) Kubectl(args []string) error {
 
 func (k *Kubectl) KubeConfig() (string, error) {
 	if k.tarmak.Cluster().Type() == clusterv1alpha1.ClusterTypeHub {
-		return "", fmt.Errorf("the current cluster '%s' is a hub and therefore does not contain a Kubernetes cluster", k.tarmak.Config().CurrentCluster())
+		currentCluster, err := k.tarmak.Config().CurrentCluster()
+		if err != nil {
+			return "", fmt.Errorf("error retrieving current cluster: %s", err)
+		}
+		return "", fmt.Errorf("the current cluster '%s' is a hub and therefore does not contain a Kubernetes cluster", currentCluster)
 	}
 	if k := k.tarmak.Cluster().Config().Kubernetes; k == nil {
 		return "", fmt.Errorf("APIServer is not public and we are not able to connect to the APIserver without SSH tunnel, please use tarmak cluster kubectl")
