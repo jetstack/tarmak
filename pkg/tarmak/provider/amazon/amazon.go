@@ -546,9 +546,9 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 			result = multierror.Append(result, err)
 		}
 
-		switch instance.Name() {
+		switch instance.InstanceType() {
 
-		case "master":
+		case clusterv1alpha1.InstancePoolTypeMaster:
 			found := false
 			for _, s := range a.nonMasterType() {
 				if s == instanceType {
@@ -562,7 +562,7 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 			}
 			break
 
-		case "etcd", "vault":
+		case clusterv1alpha1.InstancePoolTypeEtcd, clusterv1alpha1.InstancePoolTypeVault:
 			if a.awsInstanceBurstable(instanceType) {
 				a.tarmak.Log().Warnf("Burstable type '%s' is not advised for instance '%s'", instanceType, instance.Name())
 			}
