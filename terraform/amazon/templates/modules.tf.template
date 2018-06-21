@@ -83,7 +83,6 @@ module "jenkins" {
   private_zone = "${var.private_zone}"
   private_zone_id = "${module.network.private_zone_id[0]}"
   jenkins_ami = "${var.jenkins_ami}"
-  jenkins_instance_type = "${var.jenkins_instance_type}"
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   key_name = "${var.key_name}"
