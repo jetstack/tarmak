@@ -177,9 +177,15 @@ in your cluster configuration to scale between `minCount` and `maxCount`. We
 plan to add support for an arbitrary number of worker instance pools.
 
 Overprovisioning
-~~~~~~~~~~~~~~~~
+++++++++++++++++
 
-As well as cluster autoscaling, Tarmak also supports overprovisioning to give a fixed or proportional amount of headroom in the cluster. The technique used to implement overprovisioning is the same as described in the `cluster autoscaler documentation <https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#user-content-how-can-i-configure-overprovisioning-with-cluster-autoscaler>`_. The following `tarmak.yaml` snippet shows how to configure fixed overprovisioning. Note that cluster autoscaling must also be enabled.
+Tarmak supports overprovisioning to give a
+fixed or proportional amount of headroom in the cluster. The technique used to
+implement overprovisioning is the same as described in the `cluster autoscaler
+documentation
+<https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#user-content-how-can-i-configure-overprovisioning-with-cluster-autoscaler>`_.
+The following `tarmak.yaml` snippet shows how to configure fixed
+overprovisioning. Note that cluster autoscaling must also be enabled.
 
 .. code-block:: yaml
 
@@ -193,7 +199,11 @@ As well as cluster autoscaling, Tarmak also supports overprovisioning to give a 
           replicaCount: 10
     ...
 
-This will deploy 10 pause Pods with a negative `PriorityClass <https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/>`_ so that they will be preempted by any other pending Pods. Each Pod will request the specified number of millicores and megabytes. The following `tarmak.yaml` snippet shows how to configure proportional overprovisioning.
+This will deploy 10 pause Pods with a negative `PriorityClass
+<https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/>`_
+so that they will be preempted by any other pending Pods. Each Pod will request
+the specified number of millicores and megabytes. The following `tarmak.yaml`
+snippet shows how to configure proportional overprovisioning.
 
 .. code-block:: yaml
 
@@ -208,9 +218,14 @@ This will deploy 10 pause Pods with a negative `PriorityClass <https://kubernete
           coresPerReplica: 4
     ...
 
-The `nodesPerReplica` and `coresPerReplica` configuration parameters are described in the `cluster-proportional-autoscaler documentation <https://github.com/kubernetes-incubator/cluster-proportional-autoscaler#user-content-linear-mode>`_.
+The `nodesPerReplica` and `coresPerReplica` configuration parameters are
+described in the `cluster-proportional-autoscaler documentation
+<https://github.com/kubernetes-incubator/cluster-proportional-autoscaler#user-content-linear-mode>`_.
 
-The image and version used by the cluster-proportional-autoscaler can also be specified using the `image` and `version` fields of the `overprovisioning` block. These values default to `k8s.gcr.io/cluster-proportional-autoscaler-amd64` and `1.1.2` respectively.
+The image and version used by the cluster-proportional-autoscaler can also be
+specified using the `image` and `version` fields of the `overprovisioning`
+block. These values default to
+`k8s.gcr.io/cluster-proportional-autoscaler-amd64` and `1.1.2` respectively.
 
 Logging
 ~~~~~~~
