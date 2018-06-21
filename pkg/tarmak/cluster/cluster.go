@@ -218,12 +218,12 @@ func (c *Cluster) validateInstancePoolMultiple() error {
 
 	list := make(map[string][]*clusterv1alpha1.InstancePool)
 	for _, i := range c.Config().InstancePools {
-		list[i.Name] = append(list[i.Name], &i)
+		list[i.Type] = append(list[i.Type], &i)
 	}
 
-	for name, v := range list {
-		if name != "worker" && len(v) > 1 {
-			err := fmt.Errorf("'%s' only supports a single instance pool", name)
+	for instanceType, v := range list {
+		if instanceType != clusterv1alpha1.InstancePoolTypeWorker && len(v) > 1 {
+			err := fmt.Errorf("instance pool type '%s' only supports a single instance pool", instanceType)
 			result = multierror.Append(result, err)
 		}
 	}
