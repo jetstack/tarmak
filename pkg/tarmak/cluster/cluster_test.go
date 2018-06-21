@@ -337,6 +337,38 @@ func TestCluster_ValidateClusterInstancePoolTypesMulti(t *testing.T) {
 	}
 }
 
+func TestCluster_InstancePoolValidation(t *testing.T) {
+	clusterConfig := config.NewHub("multi")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Location = "my-region"
+	c := newFakeCluster(t, nil)
+	defer c.Finish()
+
+	var err error
+	c.Cluster, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
+	if err != nil {
+		t.Fatal("unexpected error: ", err)
+	}
+
+	if err := c.validateInstancePoolMultiple(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	c.conf.InstancePools = append(c.conf.InstancePools, clusterv1alpha1.InstancePool{
+		Type: clusterv1alpha1.InstancePoolTypeBastion,
+	})
+	if err := c.validateInstancePoolMultiple(); err == nil {
+		t.Errorf("expected error got=none")
+	}
+
+	c.conf.InstancePools = append(c.conf.InstancePools, clusterv1alpha1.InstancePool{
+		Type: clusterv1alpha1.InstancePoolTypeVault,
+	})
+	if err := c.validateInstancePoolMultiple(); err == nil {
+		t.Errorf("expected error got=none")
+	}
+}
+
 /*
 func testDefaultClusterConfig() *config.Cluster {
 	return &config.Cluster{
