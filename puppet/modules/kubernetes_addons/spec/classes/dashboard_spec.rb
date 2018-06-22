@@ -24,12 +24,12 @@ describe 'kubernetes_addons::dashboard' do
     end
 
     it 'have image set' do
-      expect(manifests[1]).to match(%{^[-\s].*image: [^:]+:[^:]+$})
+      expect(manifests[0]).to match(%{^[-\s].*image: [^:]+:[^:]+$})
     end
 
     it 'have resources set' do
-      expect(manifests[1]).to match(%{^[-\s].*cpu: [0-9]+})
-      expect(manifests[1]).to match(%{^[-\s].*memory: [0-9]+})
+      expect(manifests[0]).to match(%{^[-\s].*cpu: [0-9]+})
+      expect(manifests[0]).to match(%{^[-\s].*memory: [0-9]+})
     end
 
     context 'minikube tests' do
