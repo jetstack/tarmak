@@ -366,6 +366,28 @@ certificate is valid for ``jenkins.<environment>.<zone>``.
       type: ssd
   ...
 
+Dashboard
+~~~~~~~~~
+
+Tarmak supports deploying `Kubernetes Dashboard
+<https://github.com/kubernetes/dashboard>`_ when spinning up a Kubernetes
+cluster. The following `tarmak.yaml` snippet shows how you would enable
+Kubernetes Dashboard.
+
+.. code-block:: yaml
+
+    kubernetes:
+      dashboard:
+        enabled: true
+    ...
+
+The above configuration would deploy Kubernetes Dashboard with an image of
+`gcr.io/google_containers/kubernetes-dashboard-amd64` using the recommended
+version based on the version of your Kubernetes cluster. The configuration block
+accepts two optional fields of `image` and `version` allowing you to change
+these defaults. Note that the final image tag used when deploying Tiller will be
+the configured version prepended with the letter `v`.
+
 Tiller
 ~~~~~~
 

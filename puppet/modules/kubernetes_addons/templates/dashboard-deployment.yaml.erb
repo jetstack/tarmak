@@ -1,5 +1,9 @@
-# This file is managed by puppet module-k8s
+# This file should be kept in sync with https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+<% if @version_before_1_9 -%>
 apiVersion: extensions/v1beta1
+<% else -%>
+apiVersion: apps/v1
+<% end -%>
 kind: Deployment
 metadata:
   name: kubernetes-dashboard
@@ -11,6 +15,7 @@ spec:
 <% if @replicas -%>
   replicas: <%= @replicas %>
 <% end -%>
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       k8s-app: kubernetes-dashboard
@@ -20,25 +25,63 @@ spec:
         k8s-app: kubernetes-dashboard
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
+<% if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+<% end -%>
     spec:
+<% unless @version_before_1_6 -%>
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+<% end -%>
+<% if @rbac_enabled -%>
+      serviceAccountName: kubernetes-dashboard
+<% end -%>
       containers:
       - name: kubernetes-dashboard
-        image: <%= @image %>:<%= @version %>
-        imagePullPolicy: Always
+        image: <%= @_image %>:v<%= @_version %>
+        args:
+        - --auto-generate-certificates
+        ports:
+        - containerPort: 8443
+          protocol: TCP
         resources:
-          # keep request = limit to keep this container in guaranteed class
           limits:
             cpu: <%= @limit_cpu %>
             memory: <%= @limit_mem %>
           requests:
             cpu: <%= @request_cpu %>
             memory: <%= @request_mem %>
-        ports:
-        - containerPort: 9090
+        volumeMounts:
+        - name: kubernetes-dashboard-certs
+          mountPath: /certs
+        # Create on-disk volume to store exec logs
+        - mountPath: /tmp
+          name: tmp-volume
         livenessProbe:
           httpGet:
+            scheme: HTTPS
             path: /
-            port: 9090
+            port: 8443
           initialDelaySeconds: 30
           timeoutSeconds: 30
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: kubernetes-dashboard-certs
+        emptyDir: {}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+    kubernetes.io/cluster-service: "true"
+  name: kubernetes-dashboard
+  namespace: kube-system
+spec:
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
