@@ -168,13 +168,19 @@ func TestValidateClusterAutoscaler(t *testing.T) {
 	config.ApplyDefaults(clusterConfig)
 	clusterConfig.Kubernetes.ClusterAutoscaler.Enabled = true
 	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning = &clusterv1alpha1.ClusterKubernetesClusterAutoscalerOverprovisioning{}
-	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled = true
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled = false
 
 	cluster := &Cluster{
 		conf: clusterConfig,
 	}
 
+	// overprovisioning disabled without required settings
+	if err := cluster.validateClusterAutoscaler(); err != nil {
+		t.Errorf("validation should pass when cluster autoscaler is enabled and overprovisioning is disabled without required settings: %s", err)
+	}
+
 	// reservations not set
+	clusterConfig.Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled = true
 	if cluster.validateClusterAutoscaler() == nil {
 		t.Errorf("validation should fail when no reservations are set")
 	}

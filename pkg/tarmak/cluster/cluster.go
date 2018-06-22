@@ -258,6 +258,9 @@ func (c *Cluster) validateLoggingSinks() (result error) {
 func (c *Cluster) validateClusterAutoscaler() (result error) {
 
 	if c.Config().Kubernetes != nil && c.Config().Kubernetes.ClusterAutoscaler != nil && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning != nil {
+		if !c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled {
+			return nil
+		}
 		if c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled && !c.Config().Kubernetes.ClusterAutoscaler.Enabled {
 			return fmt.Errorf("cannot enable overprovisioning if cluster autoscaling is disabled")
 		}
