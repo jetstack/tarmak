@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
+	flag "github.com/spf13/pflag"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/packer"

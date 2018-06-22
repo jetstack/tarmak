@@ -139,9 +139,10 @@ type Flags struct {
 
 // This contains the cluster specifc operation flags
 type ClusterFlags struct {
-	Apply   ClusterApplyFlags   `json:"apply,omitempty"`   // flags for applying clusters
-	Destroy ClusterDestroyFlags `json:"destroy,omitempty"` // flags for destroying clusters
-	Images  ClusterImagesFlags  `json:"images,omitempty"`  // flags for handling images
+	Apply      ClusterApplyFlags      `json:"apply,omitempty"`      // flags for applying clusters
+	Destroy    ClusterDestroyFlags    `json:"destroy,omitempty"`    // flags for destroying clusters
+	Images     ClusterImagesFlags     `json:"images,omitempty"`     // flags for handling images
+	Kubeconfig ClusterKubeconfigflags `json:"kubeconfig,omitempty"` // flags for kubeconfig of clusters
 }
 
 // Contains the cluster apply flags
@@ -166,4 +167,9 @@ type ClusterImagesFlags struct {
 // Contains the cluster images build flags
 type ClusterImagesBuildFlags struct {
 	RebuildExisting bool `json:"rebuildExisting,omitempty"` // build all images regardless whether they already exist
+}
+
+// Contains the cluster kubeconfig flags
+type ClusterKubeconfigflags struct {
+	PublicApiEndpoint bool `json:"publicApiEndpoint,omitempty"` // use public API endpoint
 }

@@ -59,6 +59,16 @@ func clusterFlagDryRun(fs *flag.FlagSet, store *bool) {
 	)
 }
 
+func clusterKubeconfigFlags(fs *flag.FlagSet) {
+	store := &globalFlags.Cluster.Kubeconfig
+	fs.BoolVar(
+		&store.PublicApiEndpoint,
+		"public-api-endpoint",
+		false,
+		"Use public API endpoint for your kubeconfig",
+	)
+}
+
 func init() {
 	RootCmd.AddCommand(clusterCmd)
 }

@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	flag "github.com/spf13/pflag"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -145,7 +146,7 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	return nil
 }
 
-func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
+func (k *Kubectl) ensureWorkingKubeconfig(usePublicEndpointIfAvailable ...bool) (interfaces.Tunnel, error) {
 	c := api.NewConfig()
 	configPath := k.ConfigPath()
 
@@ -209,6 +210,14 @@ func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
 	if k := k.tarmak.Cluster().Config().Kubernetes; k != nil {
 		if apiServer := k.APIServer; apiServer != nil && apiServer.Public {
 			publicApiserver = true
+		}
+	}
+
+	if usePublicEndpointIfAvailable != nil {
+		if !usePublicEndpointIfAvailable[0] {
+			publicApiserver = false
+		} else if !publicApiserver {
+			return nil, fmt.Errorf("there is no public endpoint configured")
 		}
 	}
 
@@ -319,7 +328,7 @@ func (k *Kubectl) Kubectl(args []string) error {
 	return nil
 }
 
-func (k *Kubectl) KubeConfig() (string, error) {
+func (k *Kubectl) KubeConfig(flags *flag.FlagSet) (string, error) {
 	if k.tarmak.Cluster().Type() == clusterv1alpha1.ClusterTypeHub {
 		currentCluster, err := k.tarmak.Config().CurrentCluster()
 		if err != nil {
@@ -333,7 +342,18 @@ func (k *Kubectl) KubeConfig() (string, error) {
 		return "", fmt.Errorf("APIServer is not public and we are not able to connect to the APIserver without SSH tunnel, please use tarmak cluster kubectl")
 	}
 
-	tunnel, err := k.ensureWorkingKubeconfig()
+	var tunnel interfaces.Tunnel
+	var err error
+	if flags.Changed("public-api-endpoint") {
+		publicAPIEndpoint, err := flags.GetBool("public-api-endpoint")
+		if err != nil {
+			return "", fmt.Errorf("Something went wrong: %s", err)
+		}
+		tunnel, err = k.ensureWorkingKubeconfig(publicAPIEndpoint)
+	} else {
+		tunnel, err = k.ensureWorkingKubeconfig()
+	}
+
 	if err != nil {
 		if tunnel != nil {
 			tunnel.Stop()
