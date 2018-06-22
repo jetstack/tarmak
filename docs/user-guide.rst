@@ -93,6 +93,10 @@ To create the cluster, run ``tarmak clusters apply``.
 
       * failed verifying delegation of public zone 5 times, make sure the zone k8s.jetstack.io is delegated to nameservers [ns-100.awsdns-12.com ns-1283.awsdns-32.org ns-1638.awsdns-12.co.uk ns-842.awsdns-41.net]
 
+   When creating a multi-cluster environment, the hub cluster must first be
+   applied . To change the current cluster use the flag ``--current-cluster``.
+   See ``tarmak cluster help`` for more information.
+
 You should now change the nameservers of your domain to the four listed in the
 error. If you only wish to delegate a subdomain containing your zone to AWS
 without delegating the parent domain see `Creating a Subdomain That Uses Amazon
