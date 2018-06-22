@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 
+	"github.com/hashicorp/terraform/terraform"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack/vault-unsealer/pkg/kv"
 	"github.com/sirupsen/logrus"
@@ -128,6 +129,7 @@ type Provider interface {
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
 	VerifyInstanceTypes(intstancePools []InstancePool) error
+	RemoteStateData(path string) (*terraform.State, error)
 }
 
 type Tarmak interface {
