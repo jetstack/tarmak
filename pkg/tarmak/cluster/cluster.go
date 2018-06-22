@@ -152,8 +152,43 @@ func (c *Cluster) validateInstancePools() (result error) {
 }
 
 // Verify cluster
-func (c *Cluster) Verify() (result error) {
-	return c.VerifyInstancePools()
+func (c *Cluster) Verify() error {
+	var result *multierror.Error
+
+	if err := c.VerifyInstancePools(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if c.Type() == clusterv1alpha1.ClusterTypeClusterMulti {
+		if err := c.verifyHubState(); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result.ErrorOrNil()
+}
+
+func (c *Cluster) verifyHubState() error {
+	errMsg := "\n\nHas the hub cluster been applied?\n"
+	path := filepath.Join(c.Environment().Name(), clusterv1alpha1.ClusterTypeHub, "main.tfstate")
+
+	state, err := c.Environment().Provider().RemoteStateData(path)
+	if err != nil {
+		return fmt.Errorf("%v%s", err, errMsg)
+	}
+
+	var result *multierror.Error
+	for _, module := range []string{"bastion", "network", "state", "vault"} {
+		if state.ModuleByPath([]string{"root", module}).Empty() {
+			result = multierror.Append(result, fmt.Errorf("remote state module '%s' is empty", module))
+		}
+	}
+
+	if result.ErrorOrNil() != nil {
+		return fmt.Errorf("%v%s", result.ErrorOrNil(), errMsg)
+	}
+
+	return nil
 }
 
 // Verify instance pools
