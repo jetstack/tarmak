@@ -369,27 +369,34 @@ certificate is valid for ``jenkins.<environment>.<zone>``.
 Tiller
 ~~~~~~
 
-Another configuration option allows to deploy Tiller the server-side of `Helm
-<https://github.com/kubernetes/helm>`_. Tiller is listening for request on the
-loopback device only. This makes sure that no other Pod in the cluster can
-speak to it, while Helm clients are still able to access it using a port
-forwarding through the API server.
-
-As Helm and Tiller minor version need to match, the tarmak configuration also
-allows to override the deployed version:
+Tarmak supports deploying Tiller, the server-side component of `Helm
+<https://github.com/kubernetes/helm>`_, when spinning up a Kubernetes cluster.
+Tiller is configured to listen on localhost only which prevents arbitrary Pods
+in the cluster connecting to its unauthenticated endpoint. Helm clients can
+still talk to Tiller by port forwarding through the Kubernetes API Server. The
+following `tarmak.yaml` snippet shows how you would enable Tiller.
 
 .. code-block:: yaml
 
-  kubernetes:
-    tiller:
-      enabled: true
-      version: 2.9.1
+    kubernetes:
+      tiller:
+        enabled: true
+    ...
+
+The above configuration would deploy the latest version of Tiller with an image
+of `gcr.io/kubernetes-helm/tiller`. The configuration block accepts two optional
+fields of `image` and `version` allowing you to change these defaults. Note that
+the final image tag used when deploying Tiller will be the
+configured version prepended with the letter `v`. The version is particularly
+important when deploying Tiller since its minor version
+must match the minor version of any Helm clients.
 
 .. warning::
-   Tiller is deployed with full ``cluster-admin`` ClusterRole bound to its
-   service account and has therefore quiet far reaching privileges. Also
-   consider Helm's `security best practices
-   <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_.
+   Tiller is deployed with the ``cluster-admin`` ClusterRole bound to its
+   service account and therefore has far reaching privileges. Helm's `security
+   best practices
+   <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_
+   should also be considered.
 
 Prometheus
 ~~~~~~~~~~
