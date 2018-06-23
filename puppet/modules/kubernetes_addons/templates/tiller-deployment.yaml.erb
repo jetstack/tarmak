@@ -1,4 +1,8 @@
+<% if @version_before_1_9 -%>
 apiVersion: extensions/v1beta1
+<% else -%>
+apiVersion: apps/v1
+<% end -%>
 kind: Deployment
 metadata:
   labels:
@@ -8,6 +12,10 @@ metadata:
   namespace: <%= @namespace %>
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: helm
+      name: tiller
   template:
     metadata:
       labels:
@@ -18,7 +26,7 @@ spec:
       serviceAccountName: tiller
 <%- end -%>
       containers:
-      - image: <%= @image %>:v<%= @version %>
+      - image: <%= @_image %>:v<%= @_version %>
         args:
         - /tiller
         - --listen=localhost:44134
@@ -47,7 +55,13 @@ metadata:
   name: tiller
   namespace: <%= @namespace %>
 ---
+<% if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<% elsif @version_before_1_8 -%>
 apiVersion: rbac.authorization.k8s.io/v1beta1
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
 kind: ClusterRoleBinding
 metadata:
   name: tiller
