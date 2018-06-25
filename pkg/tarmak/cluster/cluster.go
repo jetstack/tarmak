@@ -138,7 +138,6 @@ func (c *Cluster) validateClusterInstancePoolTypes() error {
 			clusterv1alpha1.InstancePoolTypeMaster:     true,
 			clusterv1alpha1.InstancePoolTypeWorker:     true,
 			clusterv1alpha1.InstancePoolTypeEtcd:       true,
-			clusterv1alpha1.InstancePoolTypeJenkins:    true,
 			clusterv1alpha1.InstancePoolTypeMasterEtcd: true,
 			clusterv1alpha1.InstancePoolTypeHybrid:     true,
 			clusterv1alpha1.InstancePoolTypeAll:        true,
