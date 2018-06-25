@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -336,8 +337,54 @@ func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 		return nil, fmt.Errorf("got unexpected config type: %v", gvk)
 	}
 
+	_, err = c.readClusters()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read cluster configs: %v", err)
+	}
+
 	c.conf = config
 	return config, nil
+}
+
+func (c *Config) readClusters() ([]*clusterv1alpha1.Cluster, error) {
+	dir, err := ioutil.ReadDir(c.tarmak.ConfigPath())
+	if err != nil {
+		return nil, nil
+	}
+
+	var clusterFiles []os.FileInfo
+	for _, f := range dir {
+		if !f.IsDir() && strings.HasPrefix(f.Name(), "cluster") && strings.HasSuffix(f.Name(), ".yaml") {
+			clusterFiles = append(clusterFiles, f)
+		}
+	}
+
+	var result *multierror.Error
+	var clusterConfigs []*clusterv1alpha1.Cluster
+	for _, f := range clusterFiles {
+		b, err := ioutil.ReadFile(filepath.Join(c.tarmak.ConfigPath(), f.Name()))
+		if err != nil {
+			result = multierror.Append(result, err)
+			continue
+		}
+
+		configObj, gvk, err := c.codecs.UniversalDeserializer().Decode(b, nil, nil)
+		if err != nil {
+			err = fmt.Errorf("failed to decode cluster config: %v", err)
+			result = multierror.Append(result, err)
+			continue
+		}
+
+		clusterConfig, ok := configObj.(*clusterv1alpha1.Cluster)
+		if !ok {
+			result = multierror.Append(result, fmt.Errorf("got unexpected config type: %v", gvk))
+			continue
+		}
+
+		clusterConfigs = append(clusterConfigs, clusterConfig)
+	}
+
+	return clusterConfigs, result.ErrorOrNil()
 }
 
 func (c *Config) Contact() string {
