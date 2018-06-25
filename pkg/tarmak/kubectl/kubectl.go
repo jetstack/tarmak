@@ -177,9 +177,11 @@ func (k *Kubectl) ensureWorkingKubeconfig(usePublicEndpointIfAvailable ...bool) 
 	if !ok {
 		cluster = api.NewCluster()
 		cluster.CertificateAuthorityData = []byte{}
-		cluster.Server = ""
 		c.Clusters[key] = cluster
 	}
+
+	// unset Server because this is configurable through parameters
+	cluster.Server = ""
 
 	authInfo, ok := c.AuthInfos[key]
 	if !ok {
