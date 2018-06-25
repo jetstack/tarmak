@@ -120,41 +120,175 @@ func (c *Cluster) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1al
 	return instancePoolsMap
 }
 
-// validate hub instancePool types
-func validateHubTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, clusterType string) (result error) {
-	if len(poolMap[clusterv1alpha1.InstancePoolTypeBastion]) != 1 {
-		result = multierror.Append(result, fmt.Errorf("a hub needs to have exactly one '%s' server pool", clusterv1alpha1.InstancePoolTypeBastion))
+func (c *Cluster) validateClusterInstancePoolTypes() error {
+	errMap := make(map[string]bool)
+	poolMap := make(map[string]bool)
+
+	switch c.Type() {
+	case clusterv1alpha1.ClusterTypeHub:
+		poolMap = map[string]bool{
+			clusterv1alpha1.InstancePoolTypeVault:   true,
+			clusterv1alpha1.InstancePoolTypeBastion: true,
+		}
+
+		break
+
+	case clusterv1alpha1.ClusterTypeClusterMulti:
+		poolMap = map[string]bool{
+			clusterv1alpha1.InstancePoolTypeMaster:     true,
+			clusterv1alpha1.InstancePoolTypeWorker:     true,
+			clusterv1alpha1.InstancePoolTypeEtcd:       true,
+			clusterv1alpha1.InstancePoolTypeJenkins:    true,
+			clusterv1alpha1.InstancePoolTypeMasterEtcd: true,
+			clusterv1alpha1.InstancePoolTypeHybrid:     true,
+			clusterv1alpha1.InstancePoolTypeAll:        true,
+		}
+
+		break
+
+	case clusterv1alpha1.ClusterTypeClusterSingle:
+		poolMap = map[string]bool{
+			clusterv1alpha1.InstancePoolTypeMaster:     true,
+			clusterv1alpha1.InstancePoolTypeWorker:     true,
+			clusterv1alpha1.InstancePoolTypeEtcd:       true,
+			clusterv1alpha1.InstancePoolTypeBastion:    true,
+			clusterv1alpha1.InstancePoolTypeJenkins:    true,
+			clusterv1alpha1.InstancePoolTypeVault:      true,
+			clusterv1alpha1.InstancePoolTypeAll:        true,
+			clusterv1alpha1.InstancePoolTypeMasterEtcd: true,
+			clusterv1alpha1.InstancePoolTypeHybrid:     true,
+		}
+
+		break
+
+	default:
+		return fmt.Errorf("cluster type '%s' not supported", c.Type())
 	}
 
-	if len(poolMap[clusterv1alpha1.InstancePoolTypeVault]) != 1 {
-		result = multierror.Append(result, fmt.Errorf("a hub needs to have exactly one '%s' server pool", clusterv1alpha1.InstancePoolTypeVault))
+	for _, i := range c.Config().InstancePools {
+		if _, ok := poolMap[i.Type]; !ok {
+			errMap[i.Type] = true
+		}
 	}
 
-	return result
+	var result *multierror.Error
+	for t := range errMap {
+		err := fmt.Errorf("instance pool type '%s' not valid in cluster type '%s'", t, c.Type())
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
 }
 
-// validate cluster instancePool types
-func validateClusterTypes(poolMap map[string][]*clusterv1alpha1.InstancePool, clusterType string) (result error) {
-	if len(poolMap[clusterv1alpha1.InstancePoolTypeEtcd]) != 1 {
-		result = multierror.Append(result, fmt.Errorf("a %s needs to have exactly one '%s' server pool", clusterType, clusterv1alpha1.InstancePoolTypeEtcd))
+func (c *Cluster) validateSingleInstancePoolMap(poolMap map[string][]*clusterv1alpha1.InstancePool, singleList []string) error {
+	var result *multierror.Error
+
+	for _, i := range singleList {
+		if v, ok := poolMap[i]; !ok || len(v) != 1 {
+			err := fmt.Errorf("cluster type '%s' requires exactly one '%s' instance pool", c.Type(), i)
+			result = multierror.Append(result, err)
+		}
 	}
 
-	if len(poolMap[clusterv1alpha1.InstancePoolTypeMaster]) < 1 {
-		result = multierror.Append(result, fmt.Errorf("a %s needs to have more than one '%s' server pool", clusterType, clusterv1alpha1.InstancePoolTypeMaster))
+	return result.ErrorOrNil()
+}
+
+func (c *Cluster) validateMultiInstancePoolMap(poolMap map[string][]*clusterv1alpha1.InstancePool, instanceType string) error {
+	if len(poolMap[instanceType]) < 1 {
+		return fmt.Errorf("cluster type '%s' requires one or more instance pool of type '%s'", c.Type(), instanceType)
 	}
 
-	return result
+	return nil
+}
+
+func (c *Cluster) validateClusterInstancePoolCount() error {
+	var result *multierror.Error
+
+	poolMap := make(map[string][]*clusterv1alpha1.InstancePool)
+	for _, i := range c.Config().InstancePools {
+		poolMap[i.Type] = append(poolMap[i.Type], &i)
+	}
+
+	if c.Type() != clusterv1alpha1.ClusterTypeHub {
+		err := c.validateMultiInstancePoolMap(poolMap, clusterv1alpha1.InstancePoolTypeWorker)
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	switch c.Type() {
+	case clusterv1alpha1.ClusterTypeClusterSingle:
+		if err := c.validateSingleInstancePoolMap(poolMap, []string{
+			clusterv1alpha1.InstancePoolTypeBastion,
+			clusterv1alpha1.InstancePoolTypeVault,
+			clusterv1alpha1.InstancePoolTypeEtcd,
+		}); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := c.validateMultiInstancePoolMap(poolMap, clusterv1alpha1.InstancePoolTypeMaster); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		break
+
+	case clusterv1alpha1.ClusterTypeHub:
+
+		if err := c.validateSingleInstancePoolMap(poolMap, []string{
+			clusterv1alpha1.InstancePoolTypeBastion,
+			clusterv1alpha1.InstancePoolTypeVault,
+		}); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		break
+
+	case clusterv1alpha1.ClusterTypeClusterMulti:
+		if err := c.validateSingleInstancePoolMap(poolMap, []string{
+			clusterv1alpha1.InstancePoolTypeEtcd,
+		}); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := c.validateMultiInstancePoolMap(poolMap, clusterv1alpha1.InstancePoolTypeMaster); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		break
+
+	default:
+		return fmt.Errorf("cluster type '%s' is not a supported type", c.Type())
+	}
+
+	return result.ErrorOrNil()
 }
 
 // validate server pools
-func (c *Cluster) validateInstancePools() (result error) {
+func (c *Cluster) validateInstancePools() error {
+	var result *multierror.Error
+
 	for _, instancePool := range c.InstancePools() {
 		err := instancePool.Validate()
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
-	return result
+
+	if result.ErrorOrNil() != nil {
+		return result.ErrorOrNil()
+	}
+
+	// validate instance pool types according to cluster type
+	if err := c.validateClusterInstancePoolTypes(); err != nil {
+		return err
+	}
+
+	// validate instance pool count according to cluster type
+	if err := c.validateClusterInstancePoolCount(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Verify cluster
@@ -216,76 +350,6 @@ func (c *Cluster) Validate() error {
 				result = multierror.Append(result, err)
 			}
 		}
-	}
-
-	// validate instance pools according to hub and kubernetes multi cluster environments
-	if err := c.validateMultiClusterInstancePoolTypes(); err != nil {
-		result = multierror.Append(result, err)
-	}
-
-	// validate enforcement of instance pool count
-	if err := c.validateInstancePoolMultiple(); err != nil {
-		result = multierror.Append(result, err)
-	}
-
-	return result.ErrorOrNil()
-}
-
-func (c *Cluster) validateInstancePoolMultiple() error {
-	var result *multierror.Error
-
-	list := make(map[string][]*clusterv1alpha1.InstancePool)
-	for _, i := range c.Config().InstancePools {
-		list[i.Type] = append(list[i.Type], &i)
-	}
-
-	for instanceType, v := range list {
-		if instanceType != clusterv1alpha1.InstancePoolTypeWorker && len(v) > 1 {
-			err := fmt.Errorf("instance pool type '%s' only supports a single instance pool", instanceType)
-			result = multierror.Append(result, err)
-		}
-	}
-
-	return result.ErrorOrNil()
-}
-
-func (c *Cluster) validateMultiClusterInstancePoolTypes() error {
-	errMap := make(map[string]bool)
-
-	if c.Type() == clusterv1alpha1.ClusterTypeHub {
-		hubTypes := map[string]bool{
-			clusterv1alpha1.InstancePoolTypeVault:   true,
-			clusterv1alpha1.InstancePoolTypeBastion: true,
-		}
-
-		for _, i := range c.Config().InstancePools {
-			if _, ok := hubTypes[i.Type]; !ok {
-				errMap[i.Type] = true
-			}
-		}
-
-	} else if c.Type() == clusterv1alpha1.ClusterTypeClusterMulti {
-		multiClusterTypes := map[string]bool{
-			clusterv1alpha1.InstancePoolTypeMaster:     true,
-			clusterv1alpha1.InstancePoolTypeWorker:     true,
-			clusterv1alpha1.InstancePoolTypeEtcd:       true,
-			clusterv1alpha1.InstancePoolTypeJenkins:    true,
-			clusterv1alpha1.InstancePoolTypeMasterEtcd: true,
-			clusterv1alpha1.InstancePoolTypeHybrid:     true,
-			clusterv1alpha1.InstancePoolTypeAll:        true,
-		}
-
-		for _, i := range c.Config().InstancePools {
-			if _, ok := multiClusterTypes[i.Type]; !ok {
-				errMap[i.Type] = true
-			}
-		}
-	}
-
-	var result *multierror.Error
-	for t := range errMap {
-		err := fmt.Errorf("instance pool type '%s' not valid in cluster type '%s'", t, c.Type())
-		result = multierror.Append(result, err)
 	}
 
 	return result.ErrorOrNil()
