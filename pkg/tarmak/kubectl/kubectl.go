@@ -235,6 +235,7 @@ func (k *Kubectl) ensureWorkingKubeconfig(usePublicEndpointIfAvailable ...bool) 
 				return tunnel, err
 			}
 			cluster.Server = fmt.Sprintf("https://%s:%d", tunnel.BindAddress(), tunnel.Port())
+			k.log.Warnf("Using SSH tunnel to connect to kubernetes, this tunnel will automatically close after 10 minutes")
 		} else if publicApiserver {
 			cluster.Server = fmt.Sprintf("https://api.%s-%s.%s", k.tarmak.Environment().Name(), k.tarmak.Cluster().Name(), k.tarmak.Provider().PublicZone())
 		}
