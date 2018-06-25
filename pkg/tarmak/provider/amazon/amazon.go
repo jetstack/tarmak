@@ -546,7 +546,7 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 			result = multierror.Append(result, err)
 		}
 
-		switch instance.InstanceType() {
+		switch instance.Role().Name() {
 
 		case clusterv1alpha1.InstancePoolTypeMaster:
 			found := false
