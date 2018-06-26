@@ -322,27 +322,13 @@ func (c *Config) configPath() string {
 
 func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 	var config *tarmakv1alpha1.Config
-	var configBytes bytes.Buffer
-	var result *multierror.Error
 
-	for _, suffix := range c.flags.ConfigSuffixes {
-		b, err := c.readConfigFragment(suffix)
-		if err != nil {
-			result = multierror.Append(result, fmt.Errorf("failed to read main tarmak configs: %v", err))
-			continue
-		}
-
-		if _, err := configBytes.Write(b); err != nil {
-			result = multierror.Append(result, err)
-			continue
-		}
+	configBytes, err := c.readConfigFragments(c.flags.ConfigSuffixes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read tarmak configs: %v", err)
 	}
 
-	if result.ErrorOrNil() != nil {
-		return nil, result.ErrorOrNil()
-	}
-
-	configObj, gvk, err := c.codecs.UniversalDecoder(tarmakv1alpha1.SchemeGroupVersion).Decode(configBytes.Bytes(), nil, nil)
+	configObj, gvk, err := c.codecs.UniversalDecoder(tarmakv1alpha1.SchemeGroupVersion).Decode(configBytes, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode config bytes from file: %v", err)
 	}
@@ -356,16 +342,23 @@ func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 	return config, nil
 }
 
-func (c *Config) readConfigFragment(fragment string) ([]byte, error) {
+func (c *Config) readConfigFragments(suffixes []string) ([]byte, error) {
 	dir, err := ioutil.ReadDir(c.tarmak.ConfigPath())
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	var fragFiles []os.FileInfo
 	for _, f := range dir {
-		if !f.IsDir() && strings.HasPrefix(f.Name(), fragment) && strings.HasSuffix(f.Name(), ".yaml") {
-			fragFiles = append(fragFiles, f)
+		if !f.IsDir() && strings.HasSuffix(f.Name(), ".yaml") {
+
+			for _, suffix := range suffixes {
+				if strings.HasPrefix(f.Name(), suffix) {
+					fragFiles = append(fragFiles, f)
+					break
+				}
+			}
+
 		}
 	}
 
