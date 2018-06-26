@@ -2,6 +2,7 @@
 package config
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
-	//"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
@@ -322,52 +322,41 @@ func (c *Config) configPath() string {
 
 func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 	var config *tarmakv1alpha1.Config
+	var configBytes bytes.Buffer
+	var result *multierror.Error
 
-	mainConfigs, err := c.readConfigFragment("tarmak")
+	for _, suffix := range c.flags.ConfigSuffixes {
+		b, err := c.readConfigFragment(suffix)
+		if err != nil {
+			result = multierror.Append(result, fmt.Errorf("failed to read main tarmak configs: %v", err))
+			continue
+		}
+
+		if _, err := configBytes.Write(b); err != nil {
+			result = multierror.Append(result, err)
+			continue
+		}
+	}
+
+	if result.ErrorOrNil() != nil {
+		return nil, result.ErrorOrNil()
+	}
+
+	configObj, gvk, err := c.codecs.UniversalDecoder(tarmakv1alpha1.SchemeGroupVersion).Decode(configBytes.Bytes(), nil, nil)
 	if err != nil {
-		return nil, fmt.Errorf("faield to read main tarmak configs: %v", err)
+		return nil, fmt.Errorf("failed to decode config bytes from file: %v", err)
 	}
 
-	if len(mainConfigs) == 0 {
-		return nil, errors.New("failed to read configuration, at least a single configuration file must exist with prefix 'tarmak'")
-	}
-
-	config = mainConfigs[0].DeepCopy()
-	for _, m := range mainConfigs[1:] {
-		config.Clusters = append(config.Clusters, m.Clusters...)
-		config.Environments = append(config.Environments, m.Environments...)
-		config.Providers = append(config.Providers, m.Providers...)
-	}
-
-	clustersConfigs, err := c.readConfigFragment("cluster")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read cluster configs: %v", err)
-	}
-	for _, clusterConfig := range clustersConfigs {
-		config.Clusters = append(config.Clusters, clusterConfig.Clusters...)
-	}
-
-	environmentsConfigs, err := c.readConfigFragment("environment")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read environments configs: %v", err)
-	}
-	for _, environmentConfig := range environmentsConfigs {
-		config.Environments = append(config.Environments, environmentConfig.Environments...)
-	}
-
-	providersConfigs, err := c.readConfigFragment("providers")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read providers configs: %v", err)
-	}
-	for _, providerConfig := range providersConfigs {
-		config.Providers = append(config.Providers, providerConfig.Providers...)
+	config, ok := configObj.(*tarmakv1alpha1.Config)
+	if !ok {
+		return nil, fmt.Errorf("got unexpected config type: %v", gvk)
 	}
 
 	c.conf = config
 	return config, nil
 }
 
-func (c *Config) readConfigFragment(fragment string) ([]*tarmakv1alpha1.Config, error) {
+func (c *Config) readConfigFragment(fragment string) ([]byte, error) {
 	dir, err := ioutil.ReadDir(c.tarmak.ConfigPath())
 	if err != nil {
 		return nil, nil
@@ -380,8 +369,8 @@ func (c *Config) readConfigFragment(fragment string) ([]*tarmakv1alpha1.Config, 
 		}
 	}
 
+	var buff bytes.Buffer
 	var result *multierror.Error
-	var fragConfigs []*tarmakv1alpha1.Config
 	for _, f := range fragFiles {
 		b, err := ioutil.ReadFile(filepath.Join(c.tarmak.ConfigPath(), f.Name()))
 		if err != nil {
@@ -389,24 +378,12 @@ func (c *Config) readConfigFragment(fragment string) ([]*tarmakv1alpha1.Config, 
 			continue
 		}
 
-		configObj, gvk, err := c.codecs.UniversalDecoder(tarmakv1alpha1.SchemeGroupVersion).Decode(b, nil, nil)
-		if err != nil {
-			err = fmt.Errorf("faild to decode config file '%s': %v", f.Name(), err)
+		if _, err := buff.Write(b); err != nil {
 			result = multierror.Append(result, err)
-			continue
 		}
-
-		config, ok := configObj.(*tarmakv1alpha1.Config)
-		if !ok {
-			err := fmt.Errorf("got unexpected config type: %v", gvk)
-			result = multierror.Append(result, err)
-			continue
-		}
-
-		fragConfigs = append(fragConfigs, config)
 	}
 
-	return fragConfigs, result.ErrorOrNil()
+	return buff.Bytes(), result.ErrorOrNil()
 }
 
 func (c *Config) Contact() string {
