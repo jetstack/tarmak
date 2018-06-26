@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
+	//"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
@@ -320,71 +321,92 @@ func (c *Config) configPath() string {
 }
 
 func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
-	path := c.configPath()
+	var config *tarmakv1alpha1.Config
 
-	configBytes, err := ioutil.ReadFile(path)
+	mainConfigs, err := c.readConfigFragment("tarmak")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("faield to read main tarmak configs: %v", err)
 	}
 
-	configObj, gvk, err := c.codecs.UniversalDecoder(tarmakv1alpha1.SchemeGroupVersion).Decode(configBytes, nil, nil)
-	if err != nil {
-		return nil, err
+	if len(mainConfigs) == 0 {
+		return nil, errors.New("failed to read configuration, at least a single configuration file must exist with prefix 'tarmak'")
 	}
 
-	config, ok := configObj.(*tarmakv1alpha1.Config)
-	if !ok {
-		return nil, fmt.Errorf("got unexpected config type: %v", gvk)
+	config = mainConfigs[0].DeepCopy()
+	for _, m := range mainConfigs[1:] {
+		config.Clusters = append(config.Clusters, m.Clusters...)
+		config.Environments = append(config.Environments, m.Environments...)
+		config.Providers = append(config.Providers, m.Providers...)
 	}
 
-	_, err = c.readClusters()
+	clustersConfigs, err := c.readConfigFragment("cluster")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read cluster configs: %v", err)
+	}
+	for _, clusterConfig := range clustersConfigs {
+		config.Clusters = append(config.Clusters, clusterConfig.Clusters...)
+	}
+
+	environmentsConfigs, err := c.readConfigFragment("environment")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read environments configs: %v", err)
+	}
+	for _, environmentConfig := range environmentsConfigs {
+		config.Environments = append(config.Environments, environmentConfig.Environments...)
+	}
+
+	providersConfigs, err := c.readConfigFragment("providers")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read providers configs: %v", err)
+	}
+	for _, providerConfig := range providersConfigs {
+		config.Providers = append(config.Providers, providerConfig.Providers...)
 	}
 
 	c.conf = config
 	return config, nil
 }
 
-func (c *Config) readClusters() ([]*clusterv1alpha1.Cluster, error) {
+func (c *Config) readConfigFragment(fragment string) ([]*tarmakv1alpha1.Config, error) {
 	dir, err := ioutil.ReadDir(c.tarmak.ConfigPath())
 	if err != nil {
 		return nil, nil
 	}
 
-	var clusterFiles []os.FileInfo
+	var fragFiles []os.FileInfo
 	for _, f := range dir {
-		if !f.IsDir() && strings.HasPrefix(f.Name(), "cluster") && strings.HasSuffix(f.Name(), ".yaml") {
-			clusterFiles = append(clusterFiles, f)
+		if !f.IsDir() && strings.HasPrefix(f.Name(), fragment) && strings.HasSuffix(f.Name(), ".yaml") {
+			fragFiles = append(fragFiles, f)
 		}
 	}
 
 	var result *multierror.Error
-	var clusterConfigs []*clusterv1alpha1.Cluster
-	for _, f := range clusterFiles {
+	var fragConfigs []*tarmakv1alpha1.Config
+	for _, f := range fragFiles {
 		b, err := ioutil.ReadFile(filepath.Join(c.tarmak.ConfigPath(), f.Name()))
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
 		}
 
-		configObj, gvk, err := c.codecs.UniversalDeserializer().Decode(b, nil, nil)
+		configObj, gvk, err := c.codecs.UniversalDecoder(tarmakv1alpha1.SchemeGroupVersion).Decode(b, nil, nil)
 		if err != nil {
-			err = fmt.Errorf("failed to decode cluster config: %v", err)
+			err = fmt.Errorf("faild to decode config file '%s': %v", f.Name(), err)
 			result = multierror.Append(result, err)
 			continue
 		}
 
-		clusterConfig, ok := configObj.(*clusterv1alpha1.Cluster)
+		config, ok := configObj.(*tarmakv1alpha1.Config)
 		if !ok {
-			result = multierror.Append(result, fmt.Errorf("got unexpected config type: %v", gvk))
+			err := fmt.Errorf("got unexpected config type: %v", gvk)
+			result = multierror.Append(result, err)
 			continue
 		}
 
-		clusterConfigs = append(clusterConfigs, clusterConfig)
+		fragConfigs = append(fragConfigs, config)
 	}
 
-	return clusterConfigs, result.ErrorOrNil()
+	return fragConfigs, result.ErrorOrNil()
 }
 
 func (c *Config) Contact() string {
