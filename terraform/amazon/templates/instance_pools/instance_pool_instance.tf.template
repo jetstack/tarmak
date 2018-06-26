@@ -236,4 +236,16 @@ resource "aws_route53_record" "{{.TFName}}" {
   count   = "${var.{{.TFName}}_min_count}"
 }
 
+{{ if eq .Role.Name "etcd" -}}
+resource "aws_route53_record" "{{.TFName}}-srv-record" {
+  zone_id = "${var.private_zone_id}"
+  name    = "{{.Role.Name}}-svc.${data.template_file.stack_name.rendered}"
+  type    = "SRV"
+  ttl     = "300"
+  records = [
+    "${formatlist("1 10 9115 %s", aws_route53_record.{{.TFName}}.*.name)}"
+  ]
+}
+{{ end -}}
+
 {{ end -}}
