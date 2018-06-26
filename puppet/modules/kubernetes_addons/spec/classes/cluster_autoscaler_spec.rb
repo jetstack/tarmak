@@ -100,7 +100,7 @@ describe 'kubernetes_addons::cluster_autoscaler' do
       '1.7.0'
     end
     it 'uses correct image version' do
-      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v0.6.0})
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v0.6.4})
     end
   end
 
@@ -109,7 +109,7 @@ describe 'kubernetes_addons::cluster_autoscaler' do
       '1.8.0'
     end
     it 'uses correct image version' do
-      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.0.0})
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.0.4})
     end
   end
 
@@ -118,7 +118,7 @@ describe 'kubernetes_addons::cluster_autoscaler' do
       '1.9.0'
     end
     it 'uses correct image version' do
-      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.1.0})
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.1.2})
     end
   end
 
@@ -127,7 +127,16 @@ describe 'kubernetes_addons::cluster_autoscaler' do
       '1.10.0'
     end
     it 'uses correct image version' do
-      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.2.0})
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.2.2})
+    end
+  end
+
+  context 'with kubernetes 1.11' do
+    let(:kubernetes_version) do
+      '1.11.0'
+    end
+    it 'uses correct image version' do
+      expect(manifests[0]).to match(%r{gcr.io/google_containers/cluster-autoscaler:v1.3.0})
     end
   end
 end

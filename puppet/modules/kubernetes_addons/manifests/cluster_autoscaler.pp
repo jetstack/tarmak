@@ -28,14 +28,16 @@ class kubernetes_addons::cluster_autoscaler(
   }
 
   if $version == '' {
-    if versioncmp($::kubernetes::version, '1.10.0') >= 0 {
-      $_version = '1.2.0'
+    if versioncmp($::kubernetes::version, '1.11.0') >= 0 {
+      $_version = '1.3.0'
+    } elsif versioncmp($::kubernetes::version, '1.10.0') >= 0 {
+      $_version = '1.2.2'
     } elsif versioncmp($::kubernetes::version, '1.9.0') >= 0 {
-      $_version = '1.1.0'
+      $_version = '1.1.2'
     } elsif versioncmp($::kubernetes::version, '1.8.0') >= 0 {
-      $_version = '1.0.0'
+      $_version = '1.0.4'
     } elsif versioncmp($::kubernetes::version, '1.7.0') >= 0 {
-      $_version = '0.6.0'
+      $_version = '0.6.4'
     } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
       $_version = '0.5.4'
     } elsif versioncmp($::kubernetes::version, '1.5.0') >= 0 {
