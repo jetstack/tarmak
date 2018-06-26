@@ -1,0 +1,88 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: overprovisioning
+---
+apiVersion: scheduling.k8s.io/v1alpha1
+kind: PriorityClass
+metadata:
+  name: overprovisioning
+value: -1
+globalDefault: false
+description: "Priority class used by overprovisioning."
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: overprovisioning
+  namespace: overprovisioning
+spec:
+<% if @cores_per_replica == 0 and @nodes_per_replica == 0 -%>
+  replicas: <%= @_replica_count %>
+<% end -%>
+  selector:
+    matchLabels:
+      run: overprovisioning
+  template:
+    metadata:
+      labels:
+        run: overprovisioning
+    spec:
+      priorityClassName: overprovisioning
+      containers:
+      - name: reserve-resources
+        image: k8s.gcr.io/pause
+        resources:
+          requests:
+            cpu: "<%= @reserved_millicores_per_replica %>m"
+            memory: "<%= @reserved_megabytes_per_replica %>Mi"
+<% if @cores_per_replica > 0 or @nodes_per_replica > 0 -%>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: overprovisioning-autoscaler
+  namespace: overprovisioning
+  labels:
+    app: overprovisioning-autoscaler
+spec:
+  selector:
+    matchLabels:
+      app: overprovisioning-autoscaler
+  template:
+    metadata:
+      labels:
+        app: overprovisioning-autoscaler
+    spec:
+      containers:
+        - image: "<%= @_proportional_image %>:<%= @_proportional_version %>"
+          name: proportional-autoscaler
+          command:
+            - /cluster-proportional-autoscaler
+            - --namespace=overprovisioning
+            - --configmap=overprovisioning-autoscaler
+            - --target=deployment/overprovisioning
+            - --logtostderr=true
+            - --v=2
+<% if @rbac_enabled -%>
+      serviceAccountName: cluster-proportional-autoscaler
+<% end -%>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: overprovisioning-autoscaler
+  namespace: overprovisioning
+data:
+  linear: |-
+    {
+<% if @cores_per_replica > 0 -%>
+      "coresPerReplica": <%= @cores_per_replica %>,
+<% end -%>
+<% if @nodes_per_replica > 0 -%>
+      "nodesPerReplica": <%= @nodes_per_replica %>,
+<% end -%>
+      "min": 1
+    }
+<% end -%>

@@ -194,6 +194,11 @@ func (c *Cluster) Validate() (result error) {
 		result = multierror.Append(result, err)
 	}
 
+	// validate overprovisioning
+	if err := c.validateClusterAutoscaler(); err != nil {
+		result = multierror.Append(result, fmt.Errorf("invalid overprovisioning configuration: %s", err))
+	}
+
 	//validate apiserver
 	if k := c.Config().Kubernetes; k != nil {
 		if apiServer := k.APIServer; apiServer != nil {
@@ -243,6 +248,37 @@ func (c *Cluster) validateLoggingSinks() (result error) {
 					return fmt.Errorf("cannot enable AWS elasticsearch proxy and specify a custom CA for logging sink %d", index)
 				}
 			}
+		}
+	}
+
+	return nil
+}
+
+// validate overprovisioning
+func (c *Cluster) validateClusterAutoscaler() (result error) {
+
+	if c.Config().Kubernetes != nil && c.Config().Kubernetes.ClusterAutoscaler != nil && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning != nil {
+		if !c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled {
+			return nil
+		}
+		if c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled && !c.Config().Kubernetes.ClusterAutoscaler.Enabled {
+			return fmt.Errorf("cannot enable overprovisioning if cluster autoscaling is disabled")
+		}
+		if c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMegabytesPerReplica < 0 ||
+			c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica < 0 ||
+			c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.CoresPerReplica < 0 ||
+			c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.NodesPerReplica < 0 ||
+			c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReplicaCount < 0 {
+			return fmt.Errorf("cannot set negative overprovisioning parameters")
+		}
+		if c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMegabytesPerReplica == 0 && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica == 0 {
+			return fmt.Errorf("one of reservedMillicoresPerReplica and reservedMegabytesPerReplica must be set")
+		}
+		if (c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.CoresPerReplica > 0 || c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.NodesPerReplica > 0) && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.ReplicaCount > 0 {
+			return fmt.Errorf("cannot configure both static and per replica overprovisioning rules")
+		}
+		if (c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Image != "" || c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Version != "") && (c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.CoresPerReplica == 0 && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.NodesPerReplica == 0) {
+			return fmt.Errorf("setting overprovisioning image or version is only valid when proportional overprovisioning is enabled")
 		}
 	}
 

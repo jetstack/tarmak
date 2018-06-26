@@ -6,6 +6,7 @@ class kubernetes::apiserver(
   String $audit_log_path = '/etc/kubernetes/audit/kubernetes-audit.log',
   String $audit_policy_file = '/etc/kubernetes/audit/audit-policy.yaml',
   $admission_control = undef,
+  $feature_gates = [],
   $count = 1,
   $storage_backend = undef,
   Optional[String] $encryption_config_file = undef,
@@ -78,9 +79,18 @@ class kubernetes::apiserver(
       'ResourceQuota',
       $::kubernetes::_pod_security_policy ? { true => 'PodSecurityPolicy', default => undef },
       $post_1_8 ? { true => 'NodeRestriction', default => undef },
+      $::kubernetes::_enable_pod_priority ? { true => 'Priority', default => undef },
     ])
   } else {
     $_admission_control = $admission_control
+  }
+
+  if $feature_gates == [] {
+    $_feature_gates = delete_undef_values([
+      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
+    ])
+  } else {
+    $_feature_gates = $feature_gates
   }
 
   # check OIDC configuration parameters
@@ -125,19 +135,15 @@ class kubernetes::apiserver(
 
   $authorization_mode = $kubernetes::_authorization_mode
 
-  # enable alpha RBAC in kubernetes versions before 1.5
+  # enable alpha RBAC in kubernetes versions before 1.5 and Priority if overprovisioning
   if $runtime_config == [] {
-    if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') < 0 {
-      $_runtime_config = [
-        'rbac.authorization.k8s.io/v1alpha1=true'
-      ]
-    } else {
-      $_runtime_config = []
-    }
+    $_runtime_config = delete_undef_values([
+      (member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.6.0') < 0) ? { true => 'rbac.authorization.k8s.io/v1alpha1=true', default => undef },
+      $::kubernetes::_enable_pod_priority ? { true => 'scheduling.k8s.io/v1alpha1=true', default => undef },
+    ])
   } else {
     $_runtime_config = $runtime_config
   }
-
 
   # if ABAC is enabled
   if member($authorization_mode, 'ABAC'){

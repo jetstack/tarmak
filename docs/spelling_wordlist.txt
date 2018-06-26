@@ -75,3 +75,7 @@ admin
 plugin
 checklist
 localhost
+overprovisioning
+autoscaling
+preempted
+millicores
