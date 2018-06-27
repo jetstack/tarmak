@@ -237,7 +237,7 @@ resource "aws_route53_record" "{{.TFName}}" {
 }
 
 {{ if eq .Role.Name "etcd" -}}
-resource "aws_route53_record" "{{.TFName}}-exporter-srv-record" {
+resource "aws_route53_record" "{{.TFName}}-exporter-srv" {
   zone_id = "${var.private_zone_id}"
   name    = "{{.Role.Name}}-exporters.${data.template_file.stack_name.rendered}"
   type    = "SRV"
