@@ -323,7 +323,7 @@ func (c *Config) configPath() string {
 func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 	var config *tarmakv1alpha1.Config
 
-	configBytes, err := c.readConfigFragments(c.flags.ConfigSuffixes)
+	configBytes, err := c.readConfigFragments(c.flags.ConfigPrefixes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read tarmak configs: %v", err)
 	}
@@ -342,7 +342,7 @@ func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 	return config, nil
 }
 
-func (c *Config) readConfigFragments(suffixes []string) ([]byte, error) {
+func (c *Config) readConfigFragments(prefixes []string) ([]byte, error) {
 	dir, err := ioutil.ReadDir(c.tarmak.ConfigPath())
 	if err != nil {
 		return nil, err
@@ -352,8 +352,8 @@ func (c *Config) readConfigFragments(suffixes []string) ([]byte, error) {
 	for _, f := range dir {
 		if !f.IsDir() && strings.HasSuffix(f.Name(), ".yaml") {
 
-			for _, suffix := range suffixes {
-				if strings.HasPrefix(f.Name(), suffix) {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(f.Name(), prefix) {
 					fragFiles = append(fragFiles, f)
 					break
 				}

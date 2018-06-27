@@ -128,7 +128,7 @@ type Flags struct {
 
 	WingDevMode bool // use a bundled wing version rather than a tagged release from GitHub
 
-	ConfigSuffixes []string // the suffixes used for imported configuration fragments
+	ConfigPrefixes []string // the prefixes used for imported configuration fragments
 }
 
 // This contains the cluster specifc operation flags

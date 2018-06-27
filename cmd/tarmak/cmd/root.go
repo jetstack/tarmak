@@ -106,15 +106,15 @@ func init() {
 	)
 
 	RootCmd.PersistentFlags().StringSliceVar(
-		&globalFlags.ConfigSuffixes,
-		"config-suffixes",
+		&globalFlags.ConfigPrefixes,
+		"config-prefixes",
 		[]string{
 			"tarmak",
 			"cluster",
 			"environment",
 			"provider",
 		},
-		"set suffixes of files containing tarmak configuration",
+		"set prefixes of files containing tarmak configuration to be used",
 	)
 
 	if version == "dev" {
