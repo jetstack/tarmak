@@ -190,7 +190,7 @@ describe 'kubernetes::kubelet' do
 
       context 'on redhat family os' do
         let(:facts) { {'osfamily' => 'RedHat' } }
-        it { should contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+        it { should contain_file(service_file).with_content(%r{--cgroup-driver=cgroupfs}) }
       end
 
       context 'on anything but redhat family os' do

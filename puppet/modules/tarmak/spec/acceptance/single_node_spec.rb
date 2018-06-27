@@ -52,6 +52,9 @@ class{'tarmak::single_node':
         # make sure curl unzip vim is installed
         if fact_on(host, 'osfamily') == 'RedHat'
           on(host, 'yum install -y unzip docker')
+          on(host, 'cp -a /usr/lib/systemd/system/docker.service /etc/systemd/system/docker.service')
+          on(host, 'sed -i -e \'s/systemd/cgroupfs/g\' /etc/systemd/system/docker.service')
+          on(host, 'systemctl daemon-reload')
         elsif fact_on(host, 'osfamily') == 'Debian'
           on(host, 'apt-get install -y unzip apt-transport-https ca-certificates curl python-software-properties')
           on(host, 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D')
