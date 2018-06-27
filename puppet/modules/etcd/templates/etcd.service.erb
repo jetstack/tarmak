@@ -2,6 +2,7 @@
 Description=etcd server <%= @cluster_name %>
 Wants=network-online.target
 After=network.target network-online.target
+<%= scope.function_template(['etcd/_systemd_unit.erb']) %>
 
 [Service]
 User=<%= @user %>

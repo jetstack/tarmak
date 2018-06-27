@@ -9,9 +9,18 @@ define etcd::instance (
   String $tls_key_path = nil,
   String $tls_ca_path = nil,
   String $advertise_client_network = nil,
+  Array[String] $systemd_wants = [],
+  Array[String] $systemd_requires = [],
+  Array[String] $systemd_after = [],
+  Array[String] $systemd_before = [],
   Array $initial_cluster = []
 ){
   include ::etcd
+
+  $_systemd_wants = $systemd_wants
+  $_systemd_after = $systemd_after
+  $_systemd_requires = $systemd_after
+  $_systemd_before = $systemd_before
 
   $user = $::etcd::user
   $group = $::etcd::group

@@ -358,6 +358,7 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 		// etcd
 		if instancePool.Role().Name() == clusterv1alpha1.KubernetesEtcdRoleName {
 			variables = append(variables, fmt.Sprintf(`tarmak::etcd_instances: %d`, instancePool.MinCount()))
+			variables = append(variables, `tarmak::etcd_mount_unit: "var-lib-etcd.mount"`)
 		}
 
 		//  classes
