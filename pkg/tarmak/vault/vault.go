@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack/vault-unsealer/pkg/vault"
 	"github.com/sirupsen/logrus"
 
@@ -218,11 +219,12 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 
 	// get state of all instances
 	err = nil
+	var health *vault.HealthResponse
 	for retries := Retries; retries > 0; retries-- {
 
 		time.Sleep(time.Second * 1)
 
-		health, err := cl.Sys().Health()
+		health, err = cl.Sys().Health()
 		if err == nil {
 			if !health.Sealed {
 				return nil
@@ -249,7 +251,7 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 					err = fmt.Errorf("error initialising vault: %s", err)
 					continue
 				}
-				v.log.Info("vault succesfully initialised")
+				v.log.Info("vault successfully initialised")
 				return nil
 			} else if health.Sealed {
 				v.log.Debug("a quorum of vault instances is sealed, retrying")
@@ -257,7 +259,11 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 				v.log.Debug("a quorum of vault instances is in unknown state, retrying")
 			}
 		}
+
+		if retries == 1 {
+			err = fmt.Errorf("failed to connect to vault after %d tries", Retries)
+		}
 	}
 
-	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed: %s", err)
+	return fmt.Errorf("time out verifying that vault cluster is initialised and unsealed: %s", err)
 }
