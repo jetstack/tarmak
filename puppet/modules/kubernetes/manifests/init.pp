@@ -26,6 +26,7 @@ class kubernetes (
   $leader_elect = true,
   $allow_privileged = true,
   $pod_security_policy = undef,
+  Optional[Boolean] $enable_pod_priority = undef,
   $service_account_key_file = undef,
   $service_account_key_generate = false,
   Optional[String] $pod_network = undef,
@@ -71,6 +72,16 @@ class kubernetes (
       $_pod_security_policy = $pod_security_policy
     } else {
       $_pod_security_policy = false
+    }
+  }
+
+  if $enable_pod_priority == undef {
+    $_enable_pod_priority = false
+  } else {
+    if $enable_pod_priority and versioncmp($version, '1.8.0') >= 0 {
+      $_enable_pod_priority = true
+    } else {
+      $_enable_pod_priority = false
     }
   }
 

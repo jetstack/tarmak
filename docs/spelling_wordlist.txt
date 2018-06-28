@@ -78,3 +78,7 @@ plugin
 checklist
 localhost
 ReplicaSet
+overprovisioning
+autoscaling
+preempted
+millicores

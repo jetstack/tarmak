@@ -1,12 +1,25 @@
 class site_module::docker{
 
+  $service_name = 'docker'
+  $path = defined('$::path') ? {
+      default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+      true    => $::path
+  }
+
   package{'docker':
     ensure  => present,
   }
   -> class{'site_module::docker_config':}
-  -> service{'docker.service':
+  ~> exec { "${service_name}-daemon-reload":
+    command     => 'systemctl daemon-reload',
+    path        => $path,
+    refreshonly => true,
+  }
+  -> service{"${service_name}.service":
     ensure => running,
     enable => true,
+    hasstatus  => true,
+    hasrestart => true,
   }
 
   if defined(Class['kubernetes::kubelet']){

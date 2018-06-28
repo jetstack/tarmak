@@ -122,7 +122,7 @@ resource "aws_route53_record" "{{.Role.TFName}}_elb" {
 }
 
 resource "aws_elb" "{{.Role.TFName}}" {
-  name         = "${format("%.20s-ingress", data.template_file.stack_name.rendered)}"
+  name         = "${format("%.20s{{.Role.Name}}", data.template_file.stack_name.rendered)}"
   subnets      = ["${var.public_subnet_ids}"]
   idle_timeout = 600
 

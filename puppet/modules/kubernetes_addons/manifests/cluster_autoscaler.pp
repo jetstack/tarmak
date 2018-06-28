@@ -8,6 +8,14 @@ class kubernetes_addons::cluster_autoscaler(
   String $instance_pool_name='worker',
   Integer $min_instances=3,
   Integer $max_instances=6,
+  Optional[Boolean] $enable_overprovisioning=undef,
+  Optional[String] $proportional_image=undef,
+  Optional[String] $proportional_version=undef,
+  Integer $reserved_millicores_per_replica = 0,
+  Integer $reserved_megabytes_per_replica = 0,
+  Integer $cores_per_replica = 0,
+  Integer $nodes_per_replica = 0,
+  Integer $replica_count = 0,
   $ca_mounts=$::kubernetes_addons::params::ca_mounts,
   $cloud_provider=$::kubernetes_addons::params::cloud_provider,
   $aws_region=$::kubernetes_addons::params::aws_region,
@@ -28,14 +36,16 @@ class kubernetes_addons::cluster_autoscaler(
   }
 
   if $version == '' {
-    if versioncmp($::kubernetes::version, '1.10.0') >= 0 {
-      $_version = '1.2.0'
+    if versioncmp($::kubernetes::version, '1.11.0') >= 0 {
+      $_version = '1.3.0'
+    } elsif versioncmp($::kubernetes::version, '1.10.0') >= 0 {
+      $_version = '1.2.2'
     } elsif versioncmp($::kubernetes::version, '1.9.0') >= 0 {
-      $_version = '1.1.0'
+      $_version = '1.1.2'
     } elsif versioncmp($::kubernetes::version, '1.8.0') >= 0 {
-      $_version = '1.0.0'
+      $_version = '1.0.4'
     } elsif versioncmp($::kubernetes::version, '1.7.0') >= 0 {
-      $_version = '0.6.0'
+      $_version = '0.6.4'
     } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
       $_version = '0.5.4'
     } elsif versioncmp($::kubernetes::version, '1.5.0') >= 0 {
@@ -57,6 +67,40 @@ class kubernetes_addons::cluster_autoscaler(
     $version_before_1_6 = true
   }
 
+  if $cores_per_replica == 0 and $nodes_per_replica == 0 {
+    if $replica_count == 0 {
+      $_replica_count = 1
+    } else {
+      $_replica_count = $replica_count
+    }
+  }
+
+  if $enable_overprovisioning == undef {
+    $_enable_overprovisioning = false
+  } else {
+    $_enable_overprovisioning = $enable_overprovisioning
+  }
+
+  if $proportional_version == undef {
+    $_proportional_version = '1.1.2'
+  } else {
+    $_proportional_version = $proportional_version
+  }
+
+  if $proportional_image == undef {
+    $_proportional_image = 'k8s.gcr.io/cluster-proportional-autoscaler-amd64'
+  } else {
+    $_proportional_image = $proportional_image
+  }
+
+  if $_enable_overprovisioning and versioncmp($::kubernetes::version, '1.9.0') >= 0 {
+    kubernetes::apply{'cluster-autoscaler-overprovisioning':
+      manifests => [
+        template('kubernetes_addons/cluster-autoscaler-overprovisioning.yaml.erb'),
+        template('kubernetes_addons/cluster-autoscaler-overprovisioning-rbac.yaml.erb'),
+      ],
+    }
+  }
 
   kubernetes::apply{'cluster-autoscaler':
     manifests => [

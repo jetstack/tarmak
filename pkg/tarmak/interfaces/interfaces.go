@@ -176,11 +176,11 @@ type Config interface {
 	AppendEnvironment(*tarmakv1alpha1.Environment) error
 	UniqueEnvironmentName(name string) error
 	// currently selected <env name>-<cluster name>
-	CurrentCluster() string
+	CurrentCluster() (string, error)
 	// currently selected cluster name
-	CurrentClusterName() string
+	CurrentClusterName() (string, error)
 	// currently selected env name
-	CurrentEnvironmentName() string
+	CurrentEnvironmentName() (string, error)
 	Contact() string
 	Project() string
 	WingDevMode() bool

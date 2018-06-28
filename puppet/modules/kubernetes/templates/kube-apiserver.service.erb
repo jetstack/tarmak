@@ -82,6 +82,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <%- if scope['kubernetes::_service_account_key_file'] -%>
   --service-account-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>
+<% if @_feature_gates != [] -%>
+  --feature-gates=<%= @_feature_gates.join(',') %> \
+<% end -%>
 <%- if @post_1_7 and @encryption_config_file -%>
   --experimental-encryption-provider-config=<%= @encryption_config_file %> \
 <% end -%>

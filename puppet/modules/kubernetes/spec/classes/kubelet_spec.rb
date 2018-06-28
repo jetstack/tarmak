@@ -20,7 +20,43 @@ describe 'kubernetes::kubelet' do
       should_not contain_file(service_file).with_content(/--network-plugin/)
       should contain_file(service_file).with_content(/--container-runtime=docker/)
       should contain_file(service_file).with_content(%r{--kubeconfig=/etc/kubernetes/kubeconfig-kubelet})
-      should contain_file(service_file).with_content(%r{--eviction-hard=memory.available<191Mi})
+      should contain_file(service_file).with_content(%r{--eviction-hard=memory.available<5%})
+      should contain_file(service_file).with_content(%r{--eviction-minimum-reclaim=memory.available=100Mi,nodefs.available=1Gi})
+      should contain_file(service_file).with_content(%r{--eviction-soft=memory.available<10%,nodefs.available<15%,nodefs.inodesFree<10%})
+      should contain_file(service_file).with_content(%r{--eviction-soft-grace-period=memory.available=0m,nodefs.available=0m,nodefs.inodesFree=0m})
+      should contain_file(service_file).with_content(%r{--eviction-max-pod-grace-period=-1})
+      should contain_file(service_file).with_content(%r{--eviction-pressure-transition-period=2m})
+    end
+  end
+
+  context 'without soft evictions' do
+    let(:params) { {
+      "eviction_soft_enabled" => false
+    }}
+    it do
+      should_not contain_file(service_file).with_content(%r{--eviction-soft})
+      should_not contain_file(service_file).with_content(%r{--eviction-soft-grace-period})
+      should_not contain_file(service_file).with_content(%r{--eviction-max-pod-grace-period})
+      should_not contain_file(service_file).with_content(%r{--eviction-pressure-transition-period})
+      should contain_file(service_file).with_content(%r{--eviction-hard=memory.available<5%})
+      should contain_file(service_file).with_content(%r{--eviction-minimum-reclaim=memory.available=100Mi,nodefs.available=1Gi})
+    end
+  end
+
+  context 'soft evictions with modifications' do
+    let(:params) { {
+      "eviction_soft_memory_available_threshold" => '15%',
+      "eviction_minimum_reclaim_nodefs_available" => '2Gi',
+      "eviction_soft_nodefs_inodes_free_grace_period" => '1m',
+      "eviction_max_pod_grace_period" => '300',
+      "eviction_pressure_transition_period" => '5m'
+    }}
+    it do
+      should contain_file(service_file).with_content(%r{--eviction-soft=memory.available<15%,nodefs.available<15%,nodefs.inodesFree<10%})
+      should contain_file(service_file).with_content(%r{--eviction-minimum-reclaim=memory.available=100Mi,nodefs.available=2Gi})
+      should contain_file(service_file).with_content(%r{--eviction-soft-grace-period=memory.available=0m,nodefs.available=0m,nodefs.inodesFree=1m})
+      should contain_file(service_file).with_content(%r{--eviction-max-pod-grace-period=300})
+      should contain_file(service_file).with_content(%r{--eviction-pressure-transition-period=5m})
     end
   end
 
@@ -190,7 +226,7 @@ describe 'kubernetes::kubelet' do
 
       context 'on redhat family os' do
         let(:facts) { {'osfamily' => 'RedHat' } }
-        it { should contain_file(service_file).with_content(%r{--cgroup-driver=systemd}) }
+        it { should contain_file(service_file).with_content(%r{--cgroup-driver=cgroupfs}) }
       end
 
       context 'on anything but redhat family os' do

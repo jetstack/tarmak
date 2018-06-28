@@ -82,9 +82,6 @@ variable "bastion_root_size" {
 }
 {{ if .JenkinsInstall -}}
 variable "jenkins_ami" {}
-variable "jenkins_instance_type" {
-  default = "t2.large"
-}
 variable "jenkins_root_size" {
   default = "16"
 }
@@ -141,5 +138,3 @@ variable "tools_cluster_name" {
 data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }
-
-
