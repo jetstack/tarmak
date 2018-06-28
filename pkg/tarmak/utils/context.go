@@ -31,7 +31,7 @@ func GetContext() (context.Context, func()) {
 	return ctx, cancel
 }
 
-func WaitOrCancel(f func(context.Context) error, ignoredExitStatuses ...int) {
+func WaitOrCancel(f func(context.Context) error, stopCh chan struct{}, ignoredExitStatuses ...int) {
 	ctx, cancel := GetContext()
 	defer cancel()
 	wg := &sync.WaitGroup{}
@@ -39,6 +39,9 @@ func WaitOrCancel(f func(context.Context) error, ignoredExitStatuses ...int) {
 	defer wg.Wait()
 	finished := make(chan struct{})
 	defer close(finished)
+
+	closedStopCh := false
+
 	go func() {
 		select {
 		case <-ctx.Done():
@@ -53,6 +56,10 @@ func WaitOrCancel(f func(context.Context) error, ignoredExitStatuses ...int) {
 				log.Warn("Tarmak is shutting down.")
 				log.Warn("* Tarmak will exit after the current task finishes.")
 				log.Warn("* Send another SIGTERM or SIGINT (ctrl-c) to exit immediately.")
+				if !closedStopCh {
+					close(stopCh)
+					closedStopCh = true
+				}
 			}
 		}
 	}()
@@ -91,10 +98,10 @@ func BasicSignalHandler(l *log.Entry) chan struct{} {
 
 	go func(l *log.Entry) {
 		<-ch
-		l.Infof("received interupt. shutting down...")
+		l.Infof("Received signal interupt. shutting down...")
 		close(stopCh)
 		<-ch
-		l.Infof("force closed")
+		l.Infof("Force closed.")
 		os.Exit(1)
 	}(l)
 
