@@ -351,7 +351,7 @@ func (k *Kubectl) KubeConfig(flags *flag.FlagSet) (string, error) {
 
 	var tunnel interfaces.Tunnel
 	var err error
-	kubeconfigPath, _ := flags.GetString("kubeconfig-path")
+	kubeconfigPath, _ := flags.GetString("path")
 	if flags.Changed("public-api-endpoint") {
 		publicAPIEndpoint, err := flags.GetBool("public-api-endpoint")
 		if err != nil {
