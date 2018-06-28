@@ -70,7 +70,7 @@ func clusterKubeconfigFlags(fs *flag.FlagSet) {
 	fs.StringVarP(
 		&store.KubeconfigPath,
 		"path",
-		"k",
+		"p",
 		"",
 		"Path to save your kubeconfig file to",
 	)
