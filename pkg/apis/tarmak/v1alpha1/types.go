@@ -171,5 +171,6 @@ type ClusterImagesBuildFlags struct {
 
 // Contains the cluster kubeconfig flags
 type ClusterKubeconfigflags struct {
-	PublicApiEndpoint bool `json:"publicApiEndpoint,omitempty"` // use public API endpoint
+	PublicApiEndpoint bool   `json:"publicApiEndpoint,omitempty"` // use public API endpoint
+	KubeconfigPath    string `json:"kubeconfigPath,omitempty"`    // path to save the kubeconfig file
 }

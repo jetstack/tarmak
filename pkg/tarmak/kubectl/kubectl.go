@@ -41,7 +41,11 @@ func New(tarmak interfaces.Tarmak) *Kubectl {
 	return k
 }
 
-func (k *Kubectl) ConfigPath() string {
+func (k *Kubectl) ConfigPath(path string) string {
+	if path != "" {
+		k.log.Debugf("Using custom kubeconfig path %s", path)
+		return filepath.Join(path, "kubeconfig")
+	}
 	return filepath.Join(k.tarmak.Cluster().ConfigPath(), "kubeconfig")
 }
 
@@ -146,9 +150,9 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	return nil
 }
 
-func (k *Kubectl) ensureWorkingKubeconfig(usePublicEndpointIfAvailable ...bool) (interfaces.Tunnel, error) {
+func (k *Kubectl) ensureWorkingKubeconfig(kubeconfigPath string, usePublicEndpointIfAvailable ...bool) (interfaces.Tunnel, error) {
 	c := api.NewConfig()
-	configPath := k.ConfigPath()
+	configPath := k.ConfigPath(kubeconfigPath)
 
 	// cluster name in tarmak is cluster name in kubeconfig
 	key := k.tarmak.Cluster().ClusterName()
@@ -304,7 +308,7 @@ func (k *Kubectl) Kubectl(args []string) error {
 		return fmt.Errorf("the current cluster '%s' is a hub and therefore does not contain a Kubernetes cluster", currentCluster)
 	}
 
-	tunnel, err := k.ensureWorkingKubeconfig()
+	tunnel, err := k.ensureWorkingKubeconfig("")
 	if err != nil {
 		if tunnel != nil {
 			tunnel.Stop()
@@ -315,7 +319,7 @@ func (k *Kubectl) Kubectl(args []string) error {
 	cmd := exec.Command("kubectl", args...)
 	cmd.Env = append(
 		os.Environ(),
-		fmt.Sprintf("KUBECONFIG=%s", k.ConfigPath()),
+		fmt.Sprintf("KUBECONFIG=%s", k.ConfigPath("")),
 	)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -347,14 +351,15 @@ func (k *Kubectl) KubeConfig(flags *flag.FlagSet) (string, error) {
 
 	var tunnel interfaces.Tunnel
 	var err error
+	kubeconfigPath, _ := flags.GetString("kubeconfig-path")
 	if flags.Changed("public-api-endpoint") {
 		publicAPIEndpoint, err := flags.GetBool("public-api-endpoint")
 		if err != nil {
 			return "", fmt.Errorf("Something went wrong: %s", err)
 		}
-		tunnel, err = k.ensureWorkingKubeconfig(publicAPIEndpoint)
+		tunnel, err = k.ensureWorkingKubeconfig(kubeconfigPath, publicAPIEndpoint)
 	} else {
-		tunnel, err = k.ensureWorkingKubeconfig()
+		tunnel, err = k.ensureWorkingKubeconfig(kubeconfigPath)
 	}
 
 	if err != nil {
@@ -364,6 +369,6 @@ func (k *Kubectl) KubeConfig(flags *flag.FlagSet) (string, error) {
 		return "", err
 	}
 
-	configPath := fmt.Sprintf("KUBECONFIG=%s", k.ConfigPath())
+	configPath := fmt.Sprintf("KUBECONFIG=%s", k.ConfigPath(kubeconfigPath))
 	return configPath, nil
 }

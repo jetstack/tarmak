@@ -67,6 +67,13 @@ func clusterKubeconfigFlags(fs *flag.FlagSet) {
 		false,
 		"Use public API endpoint for your kubeconfig",
 	)
+	fs.StringVarP(
+		&store.KubeconfigPath,
+		"path",
+		"k",
+		"",
+		"Path to save your kubeconfig file to",
+	)
 }
 
 func init() {
