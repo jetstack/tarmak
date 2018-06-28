@@ -45,6 +45,8 @@ type Tarmak struct {
 	// function pointers for easier testing
 	environmentByName func(string) (interfaces.Environment, error)
 	providerByName    func(string) (interfaces.Provider, error)
+
+	StopCh chan struct{}
 }
 
 var _ interfaces.Tarmak = &Tarmak{}
@@ -52,8 +54,9 @@ var _ interfaces.Tarmak = &Tarmak{}
 // allocate a new tarmak struct
 func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
-		log:   logrus.New(),
-		flags: flags,
+		log:    logrus.New(),
+		flags:  flags,
+		StopCh: make(chan struct{}),
 	}
 
 	t.initializeModules()
@@ -127,7 +130,7 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 func (t *Tarmak) initializeModules() {
 	t.environmentByName = t.environmentByNameReal
 	t.providerByName = t.providerByNameReal
-	t.terraform = terraform.New(t)
+	t.terraform = terraform.New(t, t.StopCh)
 	t.packer = packer.New(t)
 	t.ssh = ssh.New(t)
 	t.puppet = puppet.New(t)

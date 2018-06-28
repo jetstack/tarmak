@@ -33,14 +33,16 @@ type Terraform struct {
 	*tarmakDocker.App
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
+	stopCh chan struct{}
 }
 
-func New(tarmak interfaces.Tarmak) *Terraform {
+func New(tarmak interfaces.Tarmak, stopCh chan struct{}) *Terraform {
 	log := tarmak.Log().WithField("module", "terraform")
 
 	return &Terraform{
 		log:    log,
 		tarmak: tarmak,
+		stopCh: stopCh,
 	}
 }
 
@@ -148,7 +150,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	}
 
 	// listen to rpc
-	stopCh := make(chan struct{})
+	stopRpcCh := make(chan struct{})
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -156,7 +158,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		if err := rpc.ListenUnixSocket(
 			rpc.New(t.tarmak.Cluster()),
 			t.socketPath(cluster),
-			stopCh,
+			stopRpcCh,
 		); err != nil {
 			t.log.Fatalf("error listening to unix socket: %s", err)
 		}
@@ -204,7 +206,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		}
 	}
 
-	close(stopCh)
+	close(stopRpcCh)
 	wg.Wait()
 
 	return nil
@@ -281,9 +283,23 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	cmd.Dir = t.codePath(cluster)
 	cmd.Env = envVars
 
+	complete := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-t.stopCh:
+				cmd.Process.Kill()
+				return
+			case <-complete:
+				return
+			}
+		}
+	}()
+
 	if err := cmd.Run(); err != nil {
 		return err
 	}
+	close(complete)
 
 	return nil
 }

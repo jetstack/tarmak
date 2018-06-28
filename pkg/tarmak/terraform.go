@@ -2,36 +2,50 @@
 package tarmak
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
+type CmdTerraform struct {
+	StopCh chan struct{}
+	tarmak *Tarmak
+	args   []string
+}
+
 func (t *Tarmak) Terraform() interfaces.Terraform {
 	return t.terraform
 }
 
-func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
-	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
+	return &CmdTerraform{
+		StopCh: t.StopCh,
+		tarmak: t,
+		args:   args,
+	}
+
+}
+
+func (c *CmdTerraform) Plan() error {
+	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
 
-	if err := t.verifyImageExists(); err != nil {
+	if err := c.tarmak.verifyImageExists(); err != nil {
 		return err
 	}
 
-	if err := t.Validate(); err != nil {
+	if err := c.tarmak.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	if err := t.Cluster().Verify(); err != nil {
+	if err := c.tarmak.Cluster().Verify(); err != nil {
 		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
 	}
 
-	t.cluster.Log().Info("running plan")
-	err := t.terraform.Plan(t.Cluster())
+	c.tarmak.cluster.Log().Info("running plan")
+	err := c.tarmak.terraform.Plan(c.tarmak.Cluster())
 	if err != nil {
 		return err
 	}
@@ -39,50 +53,50 @@ func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
 	return nil
 }
 
-func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
-	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+func (c *CmdTerraform) Apply() error {
+	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
 
-	if err := t.verifyImageExists(); err != nil {
+	if err := c.tarmak.verifyImageExists(); err != nil {
 		return err
 	}
 
-	if err := t.Validate(); err != nil {
+	if err := c.tarmak.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	if err := t.Cluster().Verify(); err != nil {
+	if err := c.tarmak.Cluster().Verify(); err != nil {
 		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
 	}
 
-	t.cluster.Log().Info("running apply")
+	c.tarmak.cluster.Log().Info("running apply")
 	// run terraform apply always, do not run it when in configuration only mode
-	if !t.flags.Cluster.Apply.ConfigurationOnly {
-		err := t.terraform.Apply(t.Cluster())
+	if !c.tarmak.flags.Cluster.Apply.ConfigurationOnly {
+		err := c.tarmak.terraform.Apply(c.tarmak.Cluster())
 		if err != nil {
 			return err
 		}
 	}
 
 	// upload tar gz only if terraform hasn't uploaded it yet
-	if t.flags.Cluster.Apply.ConfigurationOnly {
-		err := t.Cluster().UploadConfiguration()
+	if c.tarmak.flags.Cluster.Apply.ConfigurationOnly {
+		err := c.tarmak.Cluster().UploadConfiguration()
 		if err != nil {
 			return err
 		}
 	}
 
 	// reapply config expect if we are in infrastructure only
-	if !t.flags.Cluster.Apply.InfrastructureOnly {
-		err := t.Cluster().ReapplyConfiguration()
+	if !c.tarmak.flags.Cluster.Apply.InfrastructureOnly {
+		err := c.tarmak.Cluster().ReapplyConfiguration()
 		if err != nil {
 			return err
 		}
 	}
 
 	// wait for convergance in every mode
-	err := t.Cluster().WaitForConvergance()
+	err := c.tarmak.Cluster().WaitForConvergance()
 	if err != nil {
 		return err
 	}
@@ -90,34 +104,34 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 	return nil
 }
 
-func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
-	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+func (c *CmdTerraform) Destroy() error {
+	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
 
-	if err := t.Validate(); err != nil {
+	if err := c.tarmak.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	if err := t.Cluster().Verify(); err != nil {
+	if err := c.tarmak.Cluster().Verify(); err != nil {
 		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
 	}
 
-	t.cluster.Log().Info("running destroy")
+	c.tarmak.cluster.Log().Info("running destroy")
 
-	err := t.terraform.Destroy(t.Cluster())
+	err := c.tarmak.terraform.Destroy(c.tarmak.Cluster())
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *Tarmak) CmdTerraformShell(args []string) error {
-	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+func (c *CmdTerraform) Shell(args []string) error {
+	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
 
-	err := t.terraform.Shell(t.Cluster())
+	err := c.tarmak.terraform.Shell(c.tarmak.Cluster())
 	if err != nil {
 		return err
 	}
