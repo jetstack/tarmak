@@ -3,7 +3,6 @@ package amazon
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -216,25 +215,4 @@ func (a *Amazon) validateRemoteStateDynamoDB() error {
 	}
 
 	return nil
-}
-
-func (a *Amazon) RetrieveRemoteStateStateDynamoDBTable() (*dynamodb.GetItemOutput, error) {
-	svc, err := a.DynamoDB()
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := svc.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(a.RemoteStateName()),
-		Key: map[string]*dynamodb.AttributeValue{
-			DynamoDBKey: &dynamodb.AttributeValue{
-				S: aws.String(filepath.Join(a.RemoteStateName(), a.tarmak.Environment().Name(), a.tarmak.Cluster().Name(), "main.tfstate")),
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }

@@ -5,14 +5,17 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
 // ensure plugin clients get closed after subcommand run
-func terraformPassthrough(args []string, stopCh chan struct{}, f func([]string, chan struct{}) int) int {
+func terraformPassthrough(args []string, f func([]string, chan struct{}) int) int {
 	defer plugin.CleanupClients()
+	stopCh := utils.BasicSignalHandler(logrus.NewEntry(logrus.New()))
 	return f(args, stopCh)
 }
 
@@ -34,7 +37,7 @@ var terraformCmd = &cobra.Command{
 var terraformPlanCmd = &cobra.Command{
 	Use: "plan",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraformPassthrough(args, make(chan struct{}), terraform.Plan))
+		os.Exit(terraformPassthrough(args, terraform.Plan))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -43,7 +46,7 @@ var terraformPlanCmd = &cobra.Command{
 var terraformApplyCmd = &cobra.Command{
 	Use: "apply",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraformPassthrough(args, make(chan struct{}), terraform.Apply))
+		os.Exit(terraformPassthrough(args, terraform.Apply))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -52,7 +55,7 @@ var terraformApplyCmd = &cobra.Command{
 var terraformDestroyCmd = &cobra.Command{
 	Use: "destroy",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraformPassthrough(args, make(chan struct{}), terraform.Destroy))
+		os.Exit(terraformPassthrough(args, terraform.Destroy))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -61,7 +64,7 @@ var terraformDestroyCmd = &cobra.Command{
 var terraformOutputCmd = &cobra.Command{
 	Use: "output",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraformPassthrough(args, make(chan struct{}), terraform.Output))
+		os.Exit(terraformPassthrough(args, terraform.Output))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -70,7 +73,7 @@ var terraformOutputCmd = &cobra.Command{
 var terraformInitCmd = &cobra.Command{
 	Use: "init",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraformPassthrough(args, make(chan struct{}), terraform.Init))
+		os.Exit(terraformPassthrough(args, terraform.Init))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,
@@ -79,7 +82,7 @@ var terraformInitCmd = &cobra.Command{
 var terraformForceUnlockCmd = &cobra.Command{
 	Use: "force-unlock",
 	Run: func(cmd *cobra.Command, args []string) {
-		os.Exit(terraformPassthrough(args, make(chan struct{}), terraform.Unlock))
+		os.Exit(terraformPassthrough(args, terraform.Unlock))
 	},
 	Hidden:             true,
 	DisableFlagParsing: true,

@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack/vault-unsealer/pkg/kv"
 	"github.com/sirupsen/logrus"
@@ -129,7 +128,6 @@ type Provider interface {
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
 	VerifyInstanceTypes(intstancePools []InstancePool) error
-	RetrieveRemoteStateStateDynamoDBTable() (*dynamodb.GetItemOutput, error)
 }
 
 type Tarmak interface {
