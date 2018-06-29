@@ -36,6 +36,7 @@ type image struct {
 	environment string
 	imageName   string
 	id          *string
+	ctx         context.Context
 }
 
 func (i *image) tags() map[string]string {
@@ -156,8 +157,19 @@ func (i *image) Build() (amiID string, err error) {
 			}
 		}()
 	}
+	close(complete)
 
 	wg.Wait()
 
 	return strings.Join(amiIDs, ", "), result.ErrorOrNil()
+}
+
+func (i *image) waitOrKill(c *tarmakDocker.AppContainer, complete chan struct{}) {
+	select {
+	case <-i.ctx.Done():
+		c.Kill()
+		return
+	case <-complete:
+		return
+	}
 }

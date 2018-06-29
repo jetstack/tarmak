@@ -63,6 +63,7 @@ type EC2 interface {
 type DynamoDB interface {
 	DescribeTable(input *dynamodb.DescribeTableInput) (*dynamodb.DescribeTableOutput, error)
 	CreateTable(input *dynamodb.CreateTableInput) (*dynamodb.CreateTableOutput, error)
+	GetItem(input *dynamodb.GetItemInput) (*dynamodb.GetItemOutput, error)
 }
 
 type Route53 interface {

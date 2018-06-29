@@ -22,6 +22,7 @@ type CmdTerraform struct {
 	log    *logrus.Entry
 	tarmak *Tarmak
 	args   []string
+	ctx    context.Context
 }
 
 func (t *Tarmak) Terraform() interfaces.Terraform {
@@ -30,10 +31,10 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 
 func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
 	return &CmdTerraform{
-		StopCh: t.StopCh,
 		tarmak: t,
 		log:    t.Log(),
 		args:   args,
+		ctx:    t.Context(),
 	}
 
 }
@@ -44,9 +45,21 @@ func (c *CmdTerraform) Plan() error {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
+
 	c.log.Info("verify steps")
 	if err := c.tarmak.Verify(); err != nil {
 		return err
+	}
+
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
 	}
 
 	c.log.Info("write SSH config")
@@ -55,6 +68,8 @@ func (c *CmdTerraform) Plan() error {
 	}
 
 	c.log.Info("running plan")
+
+	c.tarmak.cluster.Log().Info("running plan")
 	err := c.tarmak.terraform.Plan(c.tarmak.Cluster())
 	if err != nil {
 		return err
@@ -68,10 +83,21 @@ func (c *CmdTerraform) Apply() error {
 	if err := c.tarmak.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
 
 	c.log.Info("verify steps")
 	if err := c.tarmak.Verify(); err != nil {
 		return err
+	}
+
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
 	}
 
 	c.log.Info("write SSH config")
@@ -104,6 +130,12 @@ func (c *CmdTerraform) Apply() error {
 		}
 	}
 
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
+
 	// wait for convergance in every mode
 	err := c.tarmak.Cluster().WaitForConvergance()
 	if err != nil {
@@ -119,9 +151,21 @@ func (c *CmdTerraform) Destroy() error {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
+
 	c.log.Info("verify steps")
 	if err := c.tarmak.Verify(); err != nil {
 		return err
+	}
+
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
 	}
 
 	c.log.Info("write SSH config")
@@ -131,6 +175,7 @@ func (c *CmdTerraform) Destroy() error {
 
 	c.log.Info("running destroy")
 
+	c.tarmak.cluster.Log().Info("running destroy")
 	err := c.tarmak.terraform.Destroy(c.tarmak.Cluster())
 	if err != nil {
 		return err
@@ -141,10 +186,6 @@ func (c *CmdTerraform) Destroy() error {
 
 func (c *CmdTerraform) Shell(args []string) error {
 	if err := c.verifyTerraformBinaryVersion(); err != nil {
-		return err
-	}
-
-	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
 

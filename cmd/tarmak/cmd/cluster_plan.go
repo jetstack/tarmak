@@ -17,13 +17,11 @@ var clusterPlanCmd = &cobra.Command{
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
 
-		planCmd := t.NewCmdTerraform(args)
-
 		utils.WaitOrCancel(
 			func(ctx context.Context) error {
-				return planCmd.Plan()
+				return t.NewCmdTerraform(args).Plan()
 			},
-			planCmd.StopCh,
+			t.Context(),
 			2,
 		)
 	},

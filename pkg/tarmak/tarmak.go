@@ -2,6 +2,7 @@
 package tarmak
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
@@ -30,6 +32,7 @@ type Tarmak struct {
 	log             *logrus.Logger
 	flags           *tarmakv1alpha1.Flags
 	configDirectory string
+	ctx             context.Context
 
 	config    interfaces.Config
 	terraform *terraform.Terraform
@@ -45,8 +48,6 @@ type Tarmak struct {
 	// function pointers for easier testing
 	environmentByName func(string) (interfaces.Environment, error)
 	providerByName    func(string) (interfaces.Provider, error)
-
-	StopCh chan struct{}
 }
 
 var _ interfaces.Tarmak = &Tarmak{}
@@ -54,9 +55,9 @@ var _ interfaces.Tarmak = &Tarmak{}
 // allocate a new tarmak struct
 func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
-		log:    logrus.New(),
-		flags:  flags,
-		StopCh: make(chan struct{}),
+		log:   logrus.New(),
+		flags: flags,
+		ctx:   utils.GetContext(),
 	}
 
 	t.initializeModules()
@@ -130,7 +131,7 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 func (t *Tarmak) initializeModules() {
 	t.environmentByName = t.environmentByNameReal
 	t.providerByName = t.providerByNameReal
-	t.terraform = terraform.New(t, t.StopCh)
+	t.terraform = terraform.New(t)
 	t.packer = packer.New(t)
 	t.ssh = ssh.New(t)
 	t.puppet = puppet.New(t)
@@ -344,4 +345,8 @@ func (t *Tarmak) CmdKubectl(args []string) error {
 		return err
 	}
 	return t.kubectl.Kubectl(args)
+}
+
+func (t *Tarmak) Context() context.Context {
+	return t.ctx
 }

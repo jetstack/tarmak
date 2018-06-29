@@ -15,7 +15,7 @@ var clusterDebugTerraformShellCmd = &cobra.Command{
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
 		defer plugin.CleanupClients()
-		//t.Must(t.CmdTerraformShell(args))
+		t.Must(t.NewCmdTerraform(args).Shell())
 	},
 }
 
