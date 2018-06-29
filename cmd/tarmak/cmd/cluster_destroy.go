@@ -33,7 +33,7 @@ var clusterDestroyCmd = &cobra.Command{
 			func(ctx context.Context) error {
 				return destroyCmd.Destroy()
 			},
-			destroyCmd.StopCh,
+			t.Context(),
 		)
 	},
 }

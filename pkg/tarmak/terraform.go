@@ -2,6 +2,7 @@
 package tarmak
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -9,9 +10,9 @@ import (
 )
 
 type CmdTerraform struct {
-	StopCh chan struct{}
 	tarmak *Tarmak
 	args   []string
+	ctx    context.Context
 }
 
 func (t *Tarmak) Terraform() interfaces.Terraform {
@@ -20,19 +21,21 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 
 func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
 	return &CmdTerraform{
-		StopCh: t.StopCh,
 		tarmak: t,
 		args:   args,
+		ctx:    t.Context(),
 	}
 
 }
 
 func (c *CmdTerraform) Plan() error {
-	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
-		return err
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
 	}
 
-	if err := c.tarmak.verifyImageExists(); err != nil {
+	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
 
@@ -40,8 +43,18 @@ func (c *CmdTerraform) Plan() error {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
+	if err := c.tarmak.verifyImageExists(); err != nil {
+		return err
+	}
+
 	if err := c.tarmak.Cluster().Verify(); err != nil {
 		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
+	}
+
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
 	}
 
 	c.tarmak.cluster.Log().Info("running plan")
@@ -54,6 +67,12 @@ func (c *CmdTerraform) Plan() error {
 }
 
 func (c *CmdTerraform) Apply() error {
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
+
 	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
@@ -68,6 +87,12 @@ func (c *CmdTerraform) Apply() error {
 
 	if err := c.tarmak.Cluster().Verify(); err != nil {
 		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
+	}
+
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
 	}
 
 	c.tarmak.cluster.Log().Info("running apply")
@@ -95,6 +120,12 @@ func (c *CmdTerraform) Apply() error {
 		}
 	}
 
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
+
 	// wait for convergance in every mode
 	err := c.tarmak.Cluster().WaitForConvergance()
 	if err != nil {
@@ -105,6 +136,12 @@ func (c *CmdTerraform) Apply() error {
 }
 
 func (c *CmdTerraform) Destroy() error {
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
+
 	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
@@ -117,8 +154,13 @@ func (c *CmdTerraform) Destroy() error {
 		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
 	}
 
-	c.tarmak.cluster.Log().Info("running destroy")
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
 
+	c.tarmak.cluster.Log().Info("running destroy")
 	err := c.tarmak.terraform.Destroy(c.tarmak.Cluster())
 	if err != nil {
 		return err
@@ -126,7 +168,7 @@ func (c *CmdTerraform) Destroy() error {
 	return nil
 }
 
-func (c *CmdTerraform) Shell(args []string) error {
+func (c *CmdTerraform) Shell() error {
 	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}

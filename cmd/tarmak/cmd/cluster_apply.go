@@ -44,7 +44,7 @@ var clusterApplyCmd = &cobra.Command{
 			func(ctx context.Context) error {
 				return applyCmd.Apply()
 			},
-			applyCmd.StopCh,
+			t.Context(),
 		)
 	},
 }
