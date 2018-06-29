@@ -281,20 +281,21 @@ func (t *Tarmak) Version() string {
 }
 
 func (t *Tarmak) Validate() error {
-	var err error
-	var result error
+	var result *multierror.Error
 
-	err = t.Cluster().Validate()
-	if err != nil {
+	if err := t.Cluster().Validate(); err != nil {
 		result = multierror.Append(result, err)
 	}
 
-	err = t.Cluster().Environment().Validate()
-	if err != nil {
+	if err := t.Cluster().Environment().Validate(); err != nil {
 		result = multierror.Append(result, err)
 	}
 
-	return result
+	if err := t.SSH().Validate(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
 }
 
 func (t *Tarmak) Cleanup() {

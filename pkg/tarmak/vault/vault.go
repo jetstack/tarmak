@@ -261,3 +261,22 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 
 	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed: %s", err)
 }
+
+func (v *Vault) Validate() error {
+
+	path := v.rootTokenPath()
+	f, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+
+		return fmt.Errorf("failed to get vault root token '%s' file stat: %v", path, err)
+	}
+
+	if f.Mode() != os.FileMode(0600) {
+		return fmt.Errorf("vault root token file '%s' does not match permissions (0600): %v", path, f.Mode())
+	}
+
+	return nil
+}

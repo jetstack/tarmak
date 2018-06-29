@@ -287,6 +287,10 @@ func (e *Environment) Validate() (result error) {
 		result = multierror.Append(result, err)
 	}
 
+	if err := e.Vault().Validate(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
 	return result
 }
 
