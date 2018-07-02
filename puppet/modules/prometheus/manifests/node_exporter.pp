@@ -68,8 +68,7 @@ class prometheus::node_exporter (
       }
     }
 
-    $external_scrape_targets_only = $::prometheus::external_scrape_targets_only
-    if ! $external_scrape_targets_only {
+  if $::prometheus::mode != 'ExternalScrapeTargetsOnly' {
       kubernetes::apply{'node-exporter':
         manifests => [
           template('prometheus/prometheus-ns.yaml.erb'),

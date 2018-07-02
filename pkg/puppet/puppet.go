@@ -143,14 +143,13 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		}
 	}
 
-	// enabling prometheus if requested, default is to enable prometheus
+	// enable prometheus if set, default: enabled
 	if conf.Prometheus == nil || conf.Prometheus.Enabled {
-		// check if mode external scrape targets only is enabled
-		if conf.Prometheus != nil && conf.Prometheus.ExternalScrapeTargetsOnly {
-			hieraData.variables = append(hieraData.variables, "prometheus::external_scrape_targets_only: true")
-		} else {
-			hieraData.variables = append(hieraData.variables, "prometheus::external_scrape_targets_only: false")
+		mode := clusterv1alpha1.PrometheusModeFull
+		if conf.Prometheus != nil {
+			mode = conf.Prometheus.Mode
 		}
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf("prometheus::mode: %s", mode))
 		hieraData.classes = append(hieraData.classes, `prometheus`)
 	}
 

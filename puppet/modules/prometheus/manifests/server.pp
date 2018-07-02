@@ -73,8 +73,7 @@ class prometheus::server (
       target  => 'prometheus-config',
   }
 
-  $external_scrape_targets_only = $::prometheus::external_scrape_targets_only
-  if ! $external_scrape_targets_only {
+  if $::prometheus::mode != 'ExternalScrapeTargetsOnly' {
     # Scrape config for API servers.
     #
     # Kubernetes exposes API servers as endpoints to the default/kubernetes
