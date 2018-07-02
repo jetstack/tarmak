@@ -11,13 +11,23 @@ class prometheus(
 {
 
   if $role == 'master' {
-    include ::prometheus::server
-    include ::prometheus::blackbox_exporter_etcd
-    include ::prometheus::node_exporter
-
-    if $mode != 'ExternalScrapeTargetsOnly' {
+    if $mode == 'Full' {
+      include ::prometheus::server
+      include ::prometheus::blackbox_exporter_etcd
+      include ::prometheus::node_exporter
       include ::prometheus::kube_state_metrics
       include ::prometheus::blackbox_exporter
+    }
+
+    if $mode == 'ExternalScrapeTargetsOnly' {
+      include ::prometheus::server
+      include ::prometheus::blackbox_exporter_etcd
+      include ::prometheus::node_exporter
+    }
+
+    if $mode == 'ExternalExportersOnly' {
+      include ::prometheus::blackbox_exporter_etcd
+      include ::prometheus::node_exporter
     }
   }
 
