@@ -146,7 +146,7 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	// enable prometheus if set, default: enabled
 	if conf.Prometheus == nil || conf.Prometheus.Enabled {
 		mode := clusterv1alpha1.PrometheusModeFull
-		if conf.Prometheus != nil {
+		if conf.Prometheus != nil && conf.Prometheus.Mode != "" {
 			mode = conf.Prometheus.Mode
 		}
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf("prometheus::mode: %s", mode))

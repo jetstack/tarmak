@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
@@ -206,6 +207,13 @@ func (c *Cluster) Validate() (result error) {
 				result = multierror.Append(result, err)
 			}
 		}
+
+		//validate prometheus mode
+		if c.Config().Kubernetes.Prometheus != nil {
+			if err := c.validatePrometheusMode(); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
 	}
 
 	return result
@@ -291,6 +299,33 @@ func (c *Cluster) validateAPIServer() (result error) {
 		_, _, err := net.ParseCIDR(cidr)
 		if err != nil {
 			result = multierror.Append(result, fmt.Errorf("%s is not a valid CIDR format", cidr))
+		}
+	}
+
+	return result
+}
+
+func (c *Cluster) validatePrometheusMode() error {
+	var result error
+
+	allowedModes := []string{
+		clusterv1alpha1.PrometheusModeFull,
+		clusterv1alpha1.PrometheusModeExternalScrapeTargetsOnly,
+		clusterv1alpha1.PrometheusModeExternalExportersOnly,
+	}
+
+	modeString := c.Config().Kubernetes.Prometheus.Mode
+	if c.Config().Kubernetes.Prometheus != nil && modeString != "" {
+		valid := false
+		for _, allowedMode := range allowedModes {
+			if modeString == allowedMode {
+				valid = true
+				break
+			}
+		}
+
+		if !valid {
+			result = multierror.Append(result, fmt.Errorf("%s is not a valid Prometheus mode, allowed modes: %s", modeString, strings.Join(allowedModes, ", ")))
 		}
 	}
 
