@@ -10,13 +10,13 @@ describe 'prometheus::scrape_config', :type => :define do
       'etcd_k8s'
     end
 
-    let(:etcd_cluster) { ['192.168.1.2', '192.168.1.3'] }
+    let(:etcd_cluster_exporters) { ['etcd-exporters.example.tarmak.local'] }
     let :params do
       {
         :config => {
           'metrics_path' => '/probe',
           'params' => { 'module' => ['k8s_proxy']},
-          'static_configs' => [ 'targets' => etcd_cluster ],
+          'dns_sd_config' => [ 'names' => etcd_cluster_exporters ],
           'relabel_configs' => [{
             'source_labels' => [],
             'regex' => '(.*)',
@@ -30,8 +30,8 @@ describe 'prometheus::scrape_config', :type => :define do
 
     it do
       should contain_concat__fragment("kubectl-apply-prometheus-scrape-config-etcd_k8s")
-        .with_content(/- targets:/)
-        .with_content(/  - 192.168.1.2/)
+        .with_content(/- names:/)
+        .with_content(/  - etcd-exporters.example.tarmak.local/)
     end
   end
 

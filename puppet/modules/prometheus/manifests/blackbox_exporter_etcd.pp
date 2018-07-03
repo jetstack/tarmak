@@ -19,16 +19,13 @@ class prometheus::blackbox_exporter_etcd (
   if $::prometheus::role == 'master' {
     include ::prometheus::server
 
-    $blackbox_exporters = $::prometheus::etcd_cluster.map |$node| { "${node}:${port}" }
-
     prometheus::scrape_config { 'etcd-k8s-main':
       order  =>  140,
       config => {
         'metrics_path'    => '/probe',
         'params'          => { 'module' => ['etcd_k8s_main_proxy'] },
-        'static_configs'  => [{
-          'targets' => $blackbox_exporters,
-          'labels'  => {'role' => 'etcd'},
+        'dns_sd_configs'  => [{
+          'names' => $tarmak::etcd_cluster_exporters,
         }],
         'relabel_configs' => [{
           'source_labels' => [],
@@ -44,9 +41,8 @@ class prometheus::blackbox_exporter_etcd (
       config => {
         'metrics_path'    => '/probe',
         'params'          => { 'module' => ['etcd_k8s_events_proxy'] },
-        'static_configs'  => [{
-          'targets' => $blackbox_exporters,
-          'labels'  => {'role' => 'etcd'},
+        'dns_sd_configs'  => [{
+          'names' => $tarmak::etcd_cluster_exporters,
         }],
         'relabel_configs' => [{
           'source_labels' => [],
@@ -62,9 +58,8 @@ class prometheus::blackbox_exporter_etcd (
       config => {
         'metrics_path'    => '/probe',
         'params'          => { 'module' => ['etcd_overlay_proxy'] },
-        'static_configs'  => [{
-          'targets' => $blackbox_exporters,
-          'labels'  => {'role' => 'etcd'},
+        'dns_sd_configs'  => [{
+          'names' => $tarmak::etcd_cluster_exporters,
         }],
         'relabel_configs' => [{
           'source_labels' => [],

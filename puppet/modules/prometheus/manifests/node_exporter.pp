@@ -57,13 +57,11 @@ class prometheus::node_exporter (
 
 
     # scrape node exporter running on etcd nodes
-    $etcd_node_exporters = $::prometheus::etcd_cluster.map |$node| { "${node}:${port}" }
     prometheus::scrape_config { 'etcd-nodes-exporter':
       order  =>  135,
       config => {
-        'static_configs'  => [{
-          'targets' => $etcd_node_exporters,
-          'labels'  => {'role' => 'etcd'},
+        'dns_sd_configs'  => [{
+          'names' => $tarmak::etcd_cluster_exporters,
         }],
       }
     }
