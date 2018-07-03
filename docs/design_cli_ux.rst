@@ -143,15 +143,18 @@ Usage::
 
 Get the path to your ``kubeconfig`` file of your cluster configuration.
 
-.. warning::
-  This command will only succeed when your APIserver is `publicly <user-guide.html#api-server>`__ available.
-
 Usage::
 
   $ tarmak clusters kubectl
 
   Or if you want to export it to your environment
   $ export "$(tarmak cluster kubeconfig)"
+
+Flags::
+  -p --path [default=~/.tarmak]
+      Path to save your kubeconfig file to
+  --public-api-endpoint [default=When public endpoints is available use that]
+      Use public API endpoint for your kubeconfig
 
 ``ssh <instance_name>``
 ***********************
