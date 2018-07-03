@@ -10,13 +10,11 @@ class prometheus::blackbox_exporter(
   $namespace = $::prometheus::namespace
 
   # Setup deployment for blackbox exporter in cluster
-  if $::prometheus::role == 'master' {
-    kubernetes::apply{'blackbox-exporter':
-      manifests => [
-        template('prometheus/prometheus-ns.yaml.erb'),
-        template('prometheus/blackbox-exporter-deployment.yaml.erb'),
-        template('prometheus/blackbox-exporter-svc.yaml.erb'),
-      ],
-    }
+  kubernetes::apply{'blackbox-exporter':
+    manifests => [
+      template('prometheus/prometheus-ns.yaml.erb'),
+      template('prometheus/blackbox-exporter-deployment.yaml.erb'),
+      template('prometheus/blackbox-exporter-svc.yaml.erb'),
+    ],
   }
 }
