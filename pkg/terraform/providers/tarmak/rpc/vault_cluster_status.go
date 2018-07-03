@@ -3,7 +3,6 @@ package rpc
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
 
@@ -36,6 +35,7 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 
 	vault := r.cluster.Environment().Vault()
 
+	// initialise and unseal vault
 	err := vault.VerifyInitFromFQDNs(args.VaultInternalFQDNs, args.VaultCA, args.VaultKMSKeyID, args.VaultUnsealKeyName)
 	if err != nil {
 		err = fmt.Errorf("failed to initialise vault cluster: %s", err)
@@ -78,6 +78,7 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result *VaultClusterStatusReply) error {
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
+	// if destroying, return with unknown state
 	if r.tarmak.Cluster().GetState() == cluster.StateDestroy {
 		result.Status = "unknown"
 		return nil
@@ -93,6 +94,7 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 	}
 	defer vaultTunnel.Stop()
 
+	// init vault client
 	vaultClient := vaultTunnel.VaultClient()
 
 	vaultRootToken, err := vault.RootToken()
@@ -104,26 +106,20 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 
 	vaultClient.SetToken(vaultRootToken)
 
-	up := false
-	err = nil
-	for i := 1; i <= Retries; i++ {
-		up, err = vaultClient.Sys().InitStatus()
-		if err != nil {
-			time.Sleep(time.Second)
-			continue
-		}
-		break
-	}
+	// retrieve vault init status
+	up, err := vaultClient.Sys().InitStatus()
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve init status: %s", err)
 		r.tarmak.Log().Error(err)
 		return err
 	}
 	if !up {
-		err = fmt.Errorf("failed to initialised vault cluster")
+		err = fmt.Errorf("vault cluster is not initialised")
 		r.tarmak.Log().Error(err)
 		return err
 	}
+
+	// TODO: verify that all Ensure operations have succeeded, not just initialisation
 
 	result.Status = "ready"
 	return nil

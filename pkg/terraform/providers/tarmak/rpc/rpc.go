@@ -15,7 +15,6 @@ import (
 const (
 	ConnectorSocket = "/tmp/tarmak-connector.sock"
 	RPCName         = "Tarmak"
-	Retries         = 60
 )
 
 type tarmakRPC struct {
@@ -38,7 +37,8 @@ type Tarmak interface {
 	BastionInstanceStatus(*BastionInstanceStatusArgs, *BastionInstanceStatusReply) error
 	VaultClusterStatus(*VaultClusterStatusArgs, *VaultClusterStatusReply) error
 	VaultClusterInitStatus(*VaultClusterStatusArgs, *VaultClusterStatusReply) error
-	VaultInstanceRole(*VaultInstanceRoleArgs, *VaultInstanceRoleReply) error
+	VaultInstanceRoleCreate(*VaultInstanceRoleArgs, *VaultInstanceRoleReply) error
+	VaultInstanceRoleRead(*VaultInstanceRoleArgs, *VaultInstanceRoleReply) error
 	Ping(*PingArgs, *PingReply) error
 	log() *logrus.Entry
 }

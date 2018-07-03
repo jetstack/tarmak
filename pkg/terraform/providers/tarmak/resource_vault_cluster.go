@@ -109,7 +109,6 @@ func resourceTarmakVaultClusterRead(d *schema.ResourceData, meta interface{}) (e
 
 	log.Print("[DEBUG] calling rpc vault cluster init status")
 	var reply tarmakRPC.VaultClusterStatusReply
-	// TODO: verify that all Ensure operations have succeeded, not just initialisation
 	err = client.Call(tarmakRPC.VaultClusterInitStatusCall, args, &reply)
 	if err != nil {
 		d.SetId("")
