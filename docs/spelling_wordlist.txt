@@ -97,3 +97,5 @@ unsealer
 username
 wrt
 yaml
+gid
+kubeconfig

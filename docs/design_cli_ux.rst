@@ -145,7 +145,7 @@ Get the path to your ``kubeconfig`` file of your cluster configuration.
 
 Usage::
 
-  $ tarmak clusters kubectl
+  $ tarmak clusters kubeconfig
 
   Or if you want to export it to your environment
   $ export "$(tarmak cluster kubeconfig)"
