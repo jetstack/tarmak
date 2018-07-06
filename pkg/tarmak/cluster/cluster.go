@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
-	"strings"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/instance_pool"
@@ -308,24 +308,16 @@ func (c *Cluster) validateAPIServer() (result error) {
 func (c *Cluster) validatePrometheusMode() error {
 	var result error
 
-	allowedModes := []string{
+	allowedModes := sets.NewString(
 		clusterv1alpha1.PrometheusModeFull,
 		clusterv1alpha1.PrometheusModeExternalScrapeTargetsOnly,
 		clusterv1alpha1.PrometheusModeExternalExportersOnly,
-	}
+	)
 
 	modeString := c.Config().Kubernetes.Prometheus.Mode
 	if c.Config().Kubernetes.Prometheus != nil && modeString != "" {
-		valid := false
-		for _, allowedMode := range allowedModes {
-			if modeString == allowedMode {
-				valid = true
-				break
-			}
-		}
-
-		if !valid {
-			result = multierror.Append(result, fmt.Errorf("%s is not a valid Prometheus mode, allowed modes: %s", modeString, strings.Join(allowedModes, ", ")))
+		if !allowedModes.Has(modeString) {
+			return fmt.Errorf("%s is not a valid Prometheus mode, allowed modes: %s", modeString, allowedModes.List())
 		}
 	}
 
