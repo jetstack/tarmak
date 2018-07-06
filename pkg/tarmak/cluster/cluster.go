@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/instance_pool"
@@ -206,6 +207,13 @@ func (c *Cluster) Validate() (result error) {
 				result = multierror.Append(result, err)
 			}
 		}
+
+		//validate prometheus mode
+		if c.Config().Kubernetes.Prometheus != nil {
+			if err := c.validatePrometheusMode(); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
 	}
 
 	return result
@@ -291,6 +299,25 @@ func (c *Cluster) validateAPIServer() (result error) {
 		_, _, err := net.ParseCIDR(cidr)
 		if err != nil {
 			result = multierror.Append(result, fmt.Errorf("%s is not a valid CIDR format", cidr))
+		}
+	}
+
+	return result
+}
+
+func (c *Cluster) validatePrometheusMode() error {
+	var result error
+
+	allowedModes := sets.NewString(
+		clusterv1alpha1.PrometheusModeFull,
+		clusterv1alpha1.PrometheusModeExternalScrapeTargetsOnly,
+		clusterv1alpha1.PrometheusModeExternalExportersOnly,
+	)
+
+	modeString := c.Config().Kubernetes.Prometheus.Mode
+	if c.Config().Kubernetes.Prometheus != nil && modeString != "" {
+		if !allowedModes.Has(modeString) {
+			return fmt.Errorf("%s is not a valid Prometheus mode, allowed modes: %s", modeString, allowedModes.List())
 		}
 	}
 

@@ -243,7 +243,7 @@ resource "aws_route53_record" "{{.TFName}}-exporter-srv" {
   type    = "SRV"
   ttl     = "300"
   records = [
-    "${formatlist("1 10 9115 %s", aws_route53_record.{{.TFName}}.*.name)}"
+    "${formatlist("1 10 9115 %s.%s", aws_route53_record.{{.TFName}}.*.name, var.private_zone)}"
   ]
 }
 {{ end -}}

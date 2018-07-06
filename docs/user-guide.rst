@@ -156,7 +156,7 @@ Cluster Autoscaler
 Tarmak supports deploying `Cluster Autoscaler
 <https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler>`_ when
 spinning up a Kubernetes cluster. The following `tarmak.yaml` snippet shows how
-you would enable Cluster Autoscaler. 
+you would enable Cluster Autoscaler.
 
 .. code-block:: yaml
 
@@ -323,9 +323,9 @@ Elasticsearch endpoint and the policy that allow shipping to it:
 ::
 
   Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
-  
+
   Outputs:
-  
+
   elasticsearch_endpoint = search-tarmak-logs-xyz.eu-west-1.es.amazonaws.com
   elasticsearch_shipping_policy_arn = arn:aws:iam::1234:policy/tarmak-logs-shipping
 
@@ -441,9 +441,10 @@ allows to override the deployed version:
 Prometheus
 ~~~~~~~~~~
 
-By default Tarmak will deploy a `Prometheus <https://prometheus.io/>`_ and some
-exporters into the ``monitoring`` namespace. Using this config Prometheus could
-be disabled all together:
+By default Tarmak will deploy a `Prometheus <https://prometheus.io/>`_
+installation and some exporters into the ``monitoring`` namespace.
+
+This can be completely disabled with the following cluster configuration:
 
 .. code-block:: yaml
 
@@ -451,19 +452,31 @@ be disabled all together:
     prometheus:
       enabled: false
 
-Another possibility would be to use The Tarmak provisioned Prometheus only for
+Another possibility would be to use the Tarmak provisioned Prometheus only for
 scraping exporters on instances that are not part of the Kubernetes cluster.
-Using federation those metrics could then be integrated into an already
-existing Prometheus deployment. Get that behaviour you needs to set the
-configuration like that:
+Using federation, those metrics could then be integrated into an existing
+Prometheus deployment.
+
+To have Prometheus only monitor nodes external to the cluster, use the
+following configuration instead:
 
 .. code-block:: yaml
 
   kubernetes:
     prometheus:
       enabled: true
-      externalScrapeTargetsOnly: true
+      mode: ExternalScrapeTargetsOnly
 
+Finally, you may wish to have Tarmak only install the exporters on the external
+nodes. If this is your desired configuration, then set the following mode in
+the yaml:
+
+.. code-block:: yaml
+
+  kubernetes:
+    prometheus:
+      enabled: true
+      mode: ExternalExportersOnly
 
 API Server
 ~~~~~~~~~~~

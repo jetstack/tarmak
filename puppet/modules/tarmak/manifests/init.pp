@@ -101,6 +101,8 @@ class tarmak (
     $_etcd_cluster = $etcd_cluster
   }
 
+  $etcd_cluster_exporters = ["etcd-exporters.${cluster_name}.${dns_root}"]
+
   $kubernetes_pod_network_host = split($kubernetes_pod_network, '/')[0]
   $kubernetes_pod_network_mask = Integer(split($kubernetes_pod_network, '/')[1], 10)
 

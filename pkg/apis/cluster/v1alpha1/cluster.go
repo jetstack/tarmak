@@ -38,6 +38,12 @@ const (
 	StateDestroy = "destroy"
 )
 
+const (
+	PrometheusModeFull                      = "Full"
+	PrometheusModeExternalExportersOnly     = "ExternalExportersOnly"
+	PrometheusModeExternalScrapeTargetsOnly = "ExternalScrapeTargetsOnly"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +resource:path=clusters
 
@@ -165,8 +171,8 @@ type ClusterPodSecurityPolicy struct {
 type ClusterKubernetesPrometheus struct {
 	// Enable a cluster internal prometheus deployment, default: true
 	Enabled bool `json:"enabled,omitempty"`
-	// Only deploy/scrape Kubernetes external exporters, default: false
-	ExternalScrapeTargetsOnly bool `json:"externalScrapeTargetsOnly,omitempty"`
+	// Mode defines which components are installed
+	Mode string `json:"mode,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

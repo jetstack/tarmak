@@ -7,7 +7,7 @@ describe 'prometheus' do
     '  $etcd_k8s_main_client_port = 1234',
     '  $etcd_k8s_events_client_port = 1235',
     '  $etcd_overlay_client_port = 1236',
-    "  $_etcd_cluster = ['1.2.3.4', '1.2.3.5']",
+    "  $etcd_cluster_exporters = ['etcd-exporters.example.tarmak.local']",
     '}',
     'include tarmak',
     'class kubernetes::apiserver{}',
