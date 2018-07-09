@@ -250,6 +250,7 @@ type InstancePool interface {
 	Zones() []string
 	MinCount() int
 	MaxCount() int
+	InstanceType() string
 }
 
 type Volume interface {
