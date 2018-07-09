@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/hashicorp/terraform/command"
 	"github.com/kardianos/osext"
@@ -281,7 +282,28 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	cmd.Dir = t.codePath(cluster)
 	cmd.Env = envVars
 
+	complete := make(chan struct{})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	defer wg.Wait()
+	go func() {
+		for {
+			select {
+			case <-t.tarmak.Context().Done():
+				if cmd.Process != nil {
+					cmd.Process.Signal(syscall.SIGINT)
+				}
+				wg.Done()
+				return
+			case <-complete:
+				wg.Done()
+				return
+			}
+		}
+	}()
+
 	err = cmd.Run()
+	close(complete)
 	if err != nil {
 		return err
 	}
