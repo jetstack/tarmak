@@ -51,7 +51,7 @@ func (s *SSH) Validate() error {
 			continue
 		}
 
-		if f.Mode() != os.FileMode(0600) {
+		if (f.Mode() & 0077) != 0 {
 			err := fmt.Errorf("'%s' does not match permissions (0600): %v", path, f.Mode())
 			result = multierror.Append(result, err)
 			continue

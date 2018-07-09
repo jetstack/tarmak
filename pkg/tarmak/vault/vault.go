@@ -274,7 +274,7 @@ func (v *Vault) Validate() error {
 		return fmt.Errorf("failed to get vault root token '%s' file stat: %v", path, err)
 	}
 
-	if f.Mode() != os.FileMode(0600) {
+	if (f.Mode() & 0077) != 0 {
 		return fmt.Errorf("vault root token file '%s' does not match permissions (0600): %v", path, f.Mode())
 	}
 
