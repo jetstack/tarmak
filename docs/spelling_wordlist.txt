@@ -65,6 +65,8 @@ Jenkins
 prepended
 username
 loopback
+iptables
+ons
 CIDR
 addons
 autoscaler
@@ -75,6 +77,7 @@ admin
 plugin
 checklist
 localhost
+ReplicaSet
 overprovisioning
 autoscaling
 preempted
