@@ -175,23 +175,44 @@ func (c *Cluster) Verify() error {
 }
 
 func (c *Cluster) verifyHubState() error {
-	errMsg := "\n\nHas the hub cluster been applied?\n"
-	path := filepath.Join(c.Environment().Name(), clusterv1alpha1.ClusterTypeHub, "main.tfstate")
-
-	state, err := c.Environment().Provider().RemoteStateData(path)
+	errMsg := "ensure hub cluster has been fully applied"
+	output, err := c.Environment().Tarmak().Terraform().Output(c.Environment().Hub())
 	if err != nil {
-		return fmt.Errorf("%v%s", err, errMsg)
+		return fmt.Errorf("failed to retrieve hub cluster output, %s: %v", errMsg, err)
 	}
 
+	requiredHubResources := []string{
+		"bastion_bastion_instance_id",
+		"bastion_bastion_security_group_id",
+		"instance_fqdns",
+		"network_availability_zones",
+		"network_private_subnet_ids",
+		"network_private_zone",
+		"network_private_zone_id",
+		"network_public_subnet_ids",
+		"network_vpc_id",
+		"state_public_zone",
+		"state_public_zone_id",
+		"state_secrets_bucket",
+		"vault_ca",
+		"vault_instance_fqdns",
+		"vault_vault_ca",
+		"vault_vault_kms_key_id",
+		"vault_vault_security_group_id",
+		"vault_vault_unseal_key_name",
+		"vault_vault_url",
+	}
 	var result *multierror.Error
-	for _, module := range []string{"bastion", "network", "state", "vault"} {
-		if state.ModuleByPath([]string{"root", module}).Empty() {
-			result = multierror.Append(result, fmt.Errorf("remote state module '%s' is empty", module))
+	for _, r := range requiredHubResources {
+		o, ok := output[r]
+		if !ok || o == nil {
+			err := fmt.Errorf("'%s' not found", r)
+			result = multierror.Append(result, err)
 		}
 	}
 
 	if result.ErrorOrNil() != nil {
-		return fmt.Errorf("%v%s", result.ErrorOrNil(), errMsg)
+		return fmt.Errorf("required hub cluster resource(s) not found, %s: %v", errMsg, result.ErrorOrNil())
 	}
 
 	return nil

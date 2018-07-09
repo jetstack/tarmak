@@ -9,8 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func (a *Amazon) RemoteStateName() string {
@@ -217,26 +215,4 @@ func (a *Amazon) validateRemoteStateDynamoDB() error {
 	}
 
 	return nil
-}
-
-func (a *Amazon) RemoteStateData(path string) (*terraform.State, error) {
-	downloader := s3manager.NewDownloader(a.session)
-	buff := new(aws.WriteAtBuffer)
-	bucketName := a.RemoteStateName()
-
-	_, err := downloader.Download(buff,
-		&s3.GetObjectInput{
-			Bucket: &bucketName,
-			Key:    &path,
-		})
-	if err != nil {
-		return nil, fmt.Errorf("failed to read terraform state file '%s': %v", path, err)
-	}
-
-	state, err := terraform.ReadStateV3(buff.Bytes())
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode remote terraform state '%s': %v", path, err)
-	}
-
-	return state, nil
 }
