@@ -317,12 +317,11 @@ func (a *Amazon) readVaultToken() (string, error) {
 }
 
 func (a *Amazon) Validate() error {
-	var result error
-	var err error
+	var result *multierror.Error
 
 	// These checks only make sense with an environment given
 	if a.tarmak.Environment() != nil {
-		err = a.validateRemoteStateBucket()
+		err := a.validateRemoteStateBucket()
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
@@ -337,26 +336,23 @@ func (a *Amazon) Validate() error {
 			result = multierror.Append(result, err)
 		}
 
-		err = a.validateAWSKeyPair()
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-
 	}
 
-	err = a.validatePublicZone()
+	err := a.validatePublicZone()
 	if err != nil {
 		result = multierror.Append(result, err)
 	}
 
-	if result != nil {
-		return result
-	}
-	return nil
-
+	return result.ErrorOrNil()
 }
 
-func (a *Amazon) Verify() (result error) {
+func (a *Amazon) Verify() error {
+	var result *multierror.Error
+
+	if err := a.verifyAWSKeyPair(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
 	return result
 }
 

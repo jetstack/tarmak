@@ -185,6 +185,7 @@ type Config interface {
 	Project() string
 	WingDevMode() bool
 	SetCurrentCluster(string) error
+	KeyName() string
 }
 
 type Packer interface {

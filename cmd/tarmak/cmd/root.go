@@ -105,6 +105,13 @@ func init() {
 		"override the current cluster set in the config",
 	)
 
+	RootCmd.PersistentFlags().StringVar(
+		&globalFlags.KeyPairName,
+		"key-pair",
+		"",
+		"name of an existing key pair to use (default to tarmak generated key pair)",
+	)
+
 	if version == "dev" {
 		RootCmd.PersistentFlags().BoolVar(
 			&globalFlags.WingDevMode,
