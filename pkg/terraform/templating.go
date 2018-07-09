@@ -186,6 +186,8 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 		"Module":                module,
 		"WingHash":              t.wingHash,
 		"WingDevMode":           t.wingDevMode,
+		"VaultInstancePool":     t.cluster.InstancePool("vault"),
+		"BastionInstancePool":   t.cluster.InstancePool("bastion"),
 	}
 }
 
@@ -246,7 +248,7 @@ func (t *terraformTemplate) generateTemplate(name string, target string, fileTyp
 		// TODO: change behaviour of data function to not have to use module kubernetes below
 		t.data("kubernetes"),
 	); err != nil {
-		return fmt.Errorf("failed to execute template '%s'", name)
+		return fmt.Errorf("failed to execute template '%s' (%s) ", name, err)
 	}
 
 	return nil
