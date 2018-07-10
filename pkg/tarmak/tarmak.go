@@ -2,7 +2,6 @@
 package tarmak
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -32,7 +31,7 @@ type Tarmak struct {
 	log             *logrus.Logger
 	flags           *tarmakv1alpha1.Flags
 	configDirectory string
-	ctx             context.Context
+	ctx             interfaces.Context
 
 	config    interfaces.Config
 	terraform *terraform.Terraform
@@ -57,7 +56,7 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
 		log:   logrus.New(),
 		flags: flags,
-		ctx:   utils.GetContext(),
+		ctx:   utils.NewContext(),
 	}
 
 	t.initializeModules()
@@ -347,6 +346,6 @@ func (t *Tarmak) CmdKubectl(args []string) error {
 	return t.kubectl.Kubectl(args)
 }
 
-func (t *Tarmak) Context() context.Context {
+func (t *Tarmak) Context() interfaces.Context {
 	return t.ctx
 }

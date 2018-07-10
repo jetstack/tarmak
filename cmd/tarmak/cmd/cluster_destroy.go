@@ -2,13 +2,11 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 // clusterDestroyCmd handles `tarmak clusters destroy`
@@ -29,12 +27,7 @@ var clusterDestroyCmd = &cobra.Command{
 
 		destroyCmd := t.NewCmdTerraform(args)
 
-		utils.WaitOrCancel(
-			func(ctx context.Context) error {
-				return destroyCmd.Destroy()
-			},
-			t.Context(),
-		)
+		t.Context().WaitOrCancel(destroyCmd.Destroy)
 	},
 }
 

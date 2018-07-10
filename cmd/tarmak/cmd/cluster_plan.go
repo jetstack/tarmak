@@ -2,12 +2,9 @@
 package cmd
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 var clusterPlanCmd = &cobra.Command{
@@ -17,11 +14,8 @@ var clusterPlanCmd = &cobra.Command{
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
 
-		utils.WaitOrCancel(
-			func(ctx context.Context) error {
-				return t.NewCmdTerraform(args).Plan()
-			},
-			t.Context(),
+		t.Context().WaitOrCancel(
+			t.NewCmdTerraform(args).Plan,
 			2,
 		)
 	},

@@ -22,7 +22,7 @@ type CmdTerraform struct {
 	log    *logrus.Entry
 	tarmak *Tarmak
 	args   []string
-	ctx    context.Context
+	ctx    interfaces.Context
 }
 
 func (t *Tarmak) Terraform() interfaces.Terraform {

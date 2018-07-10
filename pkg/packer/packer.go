@@ -37,6 +37,7 @@ func (p *Packer) images() (images []*image) {
 			imageName:   imageName,
 			packer:      p,
 			tarmak:      p.tarmak,
+			ctx:         p.tarmak.Context(),
 		}
 		image.log = p.log
 		for key, val := range image.tags() {
