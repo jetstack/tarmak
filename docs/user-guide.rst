@@ -381,9 +381,10 @@ following `tarmak.yaml` snippet shows how you would enable Tiller.
     kubernetes:
       tiller:
         enabled: true
+        image: 2.9.1
     ...
 
-The above configuration would deploy the latest version of Tiller with an image
+The above configuration would deploy version 2.9.1 of Tiller with an image
 of `gcr.io/kubernetes-helm/tiller`. The configuration block accepts two optional
 fields of `image` and `version` allowing you to change these defaults. Note that
 the final image tag used when deploying Tiller will be the
