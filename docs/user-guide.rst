@@ -388,6 +388,14 @@ accepts two optional fields of `image` and `version` allowing you to change
 these defaults. Note that the final image tag used when deploying Tiller will be
 the configured version prepended with the letter `v`.
 
+.. warning::
+   Before Dashboard version 1.7, when RBAC is enabled (from Kubernetes version
+   1.6) cluster-wide ``cluster-admin`` privileges are granted to Dashboard. From
+   Dashboard version 1.7, only minimal privileges are granted that allow
+   Dashboard to work. See Dashboard's `access control documentation
+   <https://github.com/kubernetes/dashboard/wiki/Access-control>`_ for more
+   details.
+
 Tiller
 ~~~~~~
 
