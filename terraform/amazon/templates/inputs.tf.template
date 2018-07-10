@@ -75,7 +75,7 @@ variable "route_table_private_ids" {
 }
 variable "bastion_ami" {}
 variable "bastion_instance_type" {
-  default = "t2.nano"
+  default = "{{ .BastionInstancePool.InstanceType }}"
 }
 variable "bastion_root_size" {
   default = "16"
@@ -116,10 +116,10 @@ variable "vault_data_size" {
 variable "vault_min_instance_count" {}
 
 variable "vault_instance_type" {
-  default = "t2.nano"
+  default = "{{ .VaultInstancePool.InstanceType }}"
 }
 variable "vault_ami" {}
-# state 
+# state
 variable "bucket_prefix" {}
 {{end}}
 
