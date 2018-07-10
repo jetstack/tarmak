@@ -1,5 +1,5 @@
 class kubernetes_addons::dashboard(
-  Optional[String] $image=undef,
+  String $image='gcr.io/google_containers/kubernetes-dashboard-amd64',
   Optional[String] $version=undef,
   String $limit_cpu='100m',
   String $limit_mem='128Mi',
@@ -8,12 +8,6 @@ class kubernetes_addons::dashboard(
   $replicas=undef,
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
-
-  if $image == undef {
-    $_image = 'gcr.io/google_containers/kubernetes-dashboard-amd64'
-  } else {
-    $_image = $image
-  }
 
   if $version == undef {
     if versioncmp($::kubernetes::version, '1.8.0') >= 0 {
