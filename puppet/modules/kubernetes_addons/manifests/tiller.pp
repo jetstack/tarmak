@@ -1,21 +1,9 @@
 class kubernetes_addons::tiller(
-  Optional[String] $image=undef,
-  Optional[String] $version=undef,
+  String $image='gcr.io/kubernetes-helm/tiller',
+  String $version='2.9.1',
   String $namespace='kube-system',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
-
-  if $image == undef {
-    $_image = 'gcr.io/kubernetes-helm/tiller'
-  } else {
-    $_image = $image
-  }
-
-  if $version == undef {
-    $_version = '2.9.1'
-  } else {
-    $_version = $version
-  }
 
   if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
     $version_before_1_6 = false
