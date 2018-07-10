@@ -148,22 +148,21 @@ func (k *Kubernetes) k8sComponentRole(roleName string) *pkiRole {
 
 // this makes sure all etcd PKI roles are setup correctly
 func (k *Kubernetes) ensurePKIRolesEtcd(p *PKIVaultBackend) error {
-	var err error
-	var result error
+	var result *multierror.Error
 
-	if err = p.WriteRole(k.etcdClientRole()); err != nil {
+	if err := p.WriteRole(k.etcdClientRole()); err != nil {
 		result = multierror.Append(result, err)
 	}
 
-	if err = p.WriteRole(k.etcdServerRole()); err != nil {
+	if err := p.WriteRole(k.etcdServerRole()); err != nil {
 		result = multierror.Append(result, err)
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (k *Kubernetes) deletePKIRolesEtcd(p *PKIVaultBackend) error {
-	var result error
+	var result *multierror.Error
 
 	if err := p.DeleteRole(k.etcdClientRole()); err != nil {
 		result = multierror.Append(result, err)
@@ -173,7 +172,7 @@ func (k *Kubernetes) deletePKIRolesEtcd(p *PKIVaultBackend) error {
 		result = multierror.Append(result, err)
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (k *Kubernetes) ensureDryRunPKIRolesEtcd(p *PKIVaultBackend) (bool, error) {
@@ -182,8 +181,10 @@ func (k *Kubernetes) ensureDryRunPKIRolesEtcd(p *PKIVaultBackend) (bool, error) 
 	secret, err := p.ReadRole(k.etcdClientRole())
 	if err != nil {
 		result = multierror.Append(result, err)
-	} else if secret == nil || secret.Data == nil || len(secret.Data) == 0 {
-		return true, nil
+	}
+
+	if secret == nil || secret.Data == nil || len(secret.Data) == 0 {
+		return true, result.ErrorOrNil()
 	}
 
 	if !secretDataMatch(secret.Data, k.etcdClientRole().Data) {
@@ -193,8 +194,10 @@ func (k *Kubernetes) ensureDryRunPKIRolesEtcd(p *PKIVaultBackend) (bool, error) 
 	secret, err = p.ReadRole(k.etcdServerRole())
 	if err != nil {
 		result = multierror.Append(result, err)
-	} else if len(secret.Data) == 0 {
-		return true, nil
+	}
+
+	if secret == nil || len(secret.Data) == 0 {
+		return true, result.ErrorOrNil()
 	}
 
 	if !secretDataMatch(secret.Data, k.etcdServerRole().Data) {
@@ -217,7 +220,7 @@ func (k *Kubernetes) pkiRoleK8s() []*pkiRole {
 
 // this makes sure all kubernetes PKI roles are setup correctly
 func (k *Kubernetes) ensurePKIRolesK8S(p *PKIVaultBackend) error {
-	var result error
+	var result *multierror.Error
 
 	for _, role := range k.pkiRoleK8s() {
 		if err := p.WriteRole(role); err != nil {
@@ -225,11 +228,11 @@ func (k *Kubernetes) ensurePKIRolesK8S(p *PKIVaultBackend) error {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (k *Kubernetes) deletePKIRolesK8S(p *PKIVaultBackend) error {
-	var result error
+	var result *multierror.Error
 
 	for _, role := range k.pkiRoleK8s() {
 		if err := p.DeleteRole(role); err != nil {
@@ -237,7 +240,7 @@ func (k *Kubernetes) deletePKIRolesK8S(p *PKIVaultBackend) error {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (k *Kubernetes) ensureDryRunPKIRolesK8S(p *PKIVaultBackend) (bool, error) {
@@ -247,8 +250,10 @@ func (k *Kubernetes) ensureDryRunPKIRolesK8S(p *PKIVaultBackend) (bool, error) {
 		secret, err := p.ReadRole(role)
 		if err != nil {
 			result = multierror.Append(result, err)
-		} else if len(secret.Data) == 0 {
-			return true, nil
+		}
+
+		if secret == nil || len(secret.Data) == 0 {
+			return true, result.ErrorOrNil()
 		}
 
 		if !secretDataMatch(secret.Data, role.Data) {
@@ -261,7 +266,7 @@ func (k *Kubernetes) ensureDryRunPKIRolesK8S(p *PKIVaultBackend) (bool, error) {
 
 // this makes sure all kubernetes API Proxy PKI roles are setup correctly
 func (k *Kubernetes) ensurePKIRolesK8SAPIProxy(p *PKIVaultBackend) error {
-	var result error
+	var result *multierror.Error
 
 	roles := []*pkiRole{
 		k.k8sAPIServerProxyRole(),
@@ -273,11 +278,11 @@ func (k *Kubernetes) ensurePKIRolesK8SAPIProxy(p *PKIVaultBackend) error {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (k *Kubernetes) deletePKIRolesK8SAPIProxy(p *PKIVaultBackend) error {
-	var result error
+	var result *multierror.Error
 
 	roles := []*pkiRole{
 		k.k8sAPIServerProxyRole(),
@@ -289,24 +294,20 @@ func (k *Kubernetes) deletePKIRolesK8SAPIProxy(p *PKIVaultBackend) error {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (k *Kubernetes) ensureDryRunPKIRolesK8SAPIProxy(p *PKIVaultBackend) (bool, error) {
 	secret, err := p.ReadRole(k.k8sAPIServerProxyRole())
-	if err != nil {
-		return false, err
-	}
-
-	if len(secret.Data) == 0 {
-		return true, nil
+	if secret == nil || len(secret.Data) == 0 {
+		return true, err
 	}
 
 	if !secretDataMatch(secret.Data, k.k8sAPIServerProxyRole().Data) {
-		return true, nil
+		return true, err
 	}
 
-	return false, nil
+	return false, err
 }
 
 func constructTimeString(t time.Duration) string {
