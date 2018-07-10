@@ -42,6 +42,8 @@ variable "secrets_bucket" {
   default = ""
 }
 
+variable "tarmak_version" {}
+
 {{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeHub)}}
 
 
