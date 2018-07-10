@@ -25,6 +25,18 @@ class kubernetes_addons::dashboard(
     $_version = $version
   }
 
+  if versioncmp($_version, '1.7.0') >= 0 {
+    $dashboard_version_before_1_7 = false
+  } else {
+    $dashboard_version_before_1_7 = true
+  }
+
+  if versioncmp($_version, '1.8.0') >= 0 {
+    $dashboard_version_before_1_8 = false
+  } else {
+    $dashboard_version_before_1_8 = true
+  }
+
   if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
     $version_before_1_6 = false
   } else {
