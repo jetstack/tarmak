@@ -417,6 +417,36 @@ certificate is valid for ``jenkins.<environment>.<zone>``.
       type: ssd
   ...
 
+Dashboard
+~~~~~~~~~
+
+Tarmak supports deploying `Kubernetes Dashboard
+<https://github.com/kubernetes/dashboard>`_ when spinning up a Kubernetes
+cluster. The following `tarmak.yaml` snippet shows how you would enable
+Kubernetes Dashboard.
+
+.. code-block:: yaml
+
+    kubernetes:
+      dashboard:
+        enabled: true
+    ...
+
+The above configuration would deploy Kubernetes Dashboard with an image of
+`gcr.io/google_containers/kubernetes-dashboard-amd64` using the recommended
+version based on the version of your Kubernetes cluster. The configuration block
+accepts two optional fields of `image` and `version` allowing you to change
+these defaults. Note that the final image tag used when deploying Tiller will be
+the configured version prepended with the letter `v`.
+
+.. warning::
+   Before Dashboard version 1.7, when RBAC is enabled (from Kubernetes version
+   1.6) cluster-wide ``cluster-admin`` privileges are granted to Dashboard. From
+   Dashboard version 1.7, only minimal privileges are granted that allow
+   Dashboard to work. See Dashboard's `access control documentation
+   <https://github.com/kubernetes/dashboard/wiki/Access-control>`_ for more
+   details.
+
 Tiller
 ~~~~~~
 

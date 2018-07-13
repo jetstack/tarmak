@@ -1,0 +1,110 @@
+# This file should be kept in sync with https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+<% if @rbac_enabled -%>
+<% if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<% elsif @version_before_1_8 -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
+<% if @dashboard_version_before_1_7 -%>
+kind: ClusterRoleBinding
+<% else -%>
+kind: RoleBinding
+<% end -%>
+metadata:
+<% if @dashboard_version_before_1_7 -%>
+  name: kubernetes-dashboard
+<% else -%>
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+<% end -%>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+<% if @dashboard_version_before_1_7 -%>
+  kind: ClusterRole
+  name: cluster-admin
+<% else -%>
+  kind: Role
+  name: kubernetes-dashboard-minimal
+<% end -%>
+subjects:
+- kind: ServiceAccount
+  name: kubernetes-dashboard
+  namespace: kube-system
+---
+<% unless @dashboard_version_before_1_7 -%>
+<% if @version_before_1_6 -%>
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+<% elsif @version_before_1_8 -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
+kind: Role
+metadata:
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+rules:
+<% if @dashboard_version_before_1_8 -%>
+  # Allow Dashboard to create and watch 'kubernetes-dashboard-key-holder' secret.
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["kubernetes-dashboard-key-holder"]
+  verbs: ["watch"]
+  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs"]
+  verbs: ["get", "update", "delete"]
+  # Allow Dashboard to get metrics from heapster.
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["heapster"]
+  verbs: ["proxy"]
+- apiGroups: [""]
+  resources: ["services/proxy"]
+  resourceNames: ["heapster", "http:heapster:", "https:heapster:"]
+  verbs: ["get"]
+<% else -%>
+  # Allow Dashboard to create 'kubernetes-dashboard-key-holder' secret.
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create"]
+  # Allow Dashboard to create 'kubernetes-dashboard-settings' config map.
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create"]
+  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs"]
+  verbs: ["get", "update", "delete"]
+  # Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["kubernetes-dashboard-settings"]
+  verbs: ["get", "update"]
+  # Allow Dashboard to get metrics from heapster.
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["heapster"]
+  verbs: ["proxy"]
+- apiGroups: [""]
+  resources: ["services/proxy"]
+  resourceNames: ["heapster", "http:heapster:", "https:heapster:"]
+  verbs: ["get"]
+<% end -%>
+---
+<% end -%>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kube-system
+<% end -%>
