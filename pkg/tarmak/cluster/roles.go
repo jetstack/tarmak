@@ -49,7 +49,6 @@ func defineKubernetesRoles(roleMap map[string]*role.Role) {
 	workerRole := &role.Role{
 		Stateful: false,
 		AWS: &role.RoleAWS{
-			ELBIngress:                     true,
 			IAMEC2Read:                     true,
 			IAMEC2ModifyInstanceAttributes: false,
 		},
