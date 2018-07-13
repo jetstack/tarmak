@@ -14,6 +14,14 @@ describe 'kubernetes_addons::cluster_autoscaler' do
     '1.6.6'
   end
 
+  let(:params) do
+    {
+      'instance_pool_names': ['worker1', 'worker2'],
+      'min_instances': [3, 1],
+      'max_instances': [6, 10],
+    }
+  end
+
   let(:pre_condition) do
     "
       class kubernetes{
@@ -49,7 +57,8 @@ describe 'kubernetes_addons::cluster_autoscaler' do
     end
 
     it 'has asg configured' do
-      expect(manifests[0]).to match(%{3:6:cluster1-kubernetes-worker})
+      expect(manifests[0]).to match(%{--nodes=3:6:cluster1-kubernetes-worker1})
+      expect(manifests[0]).to match(%{--nodes=1:10:cluster1-kubernetes-worker2})
     end
 
     it 'has cloud_provider configured' do

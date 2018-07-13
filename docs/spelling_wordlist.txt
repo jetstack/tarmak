@@ -83,3 +83,4 @@ autoscaling
 preempted
 millicores
 yaml
+autoscale
