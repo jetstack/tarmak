@@ -5,6 +5,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	ApplyOperation  = "apply"
+	DryRunOperation = "dry-run"
+)
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -21,11 +26,12 @@ type Instance struct {
 
 // InstanceSpec defines the desired state of Instance
 type InstanceSpec struct {
-	PuppetManifestRef string `json:"puppetManifestRef"`
+	PuppetTargetRef string `json:"puppetTargetRef"`
 }
 
 // InstanceStatus defines the observed state of Instance
 type InstanceStatus struct {
+	PuppetTargetRef string `json:"puppetTargetRef"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -44,17 +50,22 @@ type PuppetTarget struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Source           ManifestSource `json:"source"`
-	Hash             string         `json:"hash,omitempty"`             // hash of manifests, prefixed with type (eg: sha256:xyz)
-	RequestTimestamp metav1.Time    `json:"requestTimestamp,omitempty"` // timestamp when a converge was requested
+	Source ManifestSource `json:"source"`
+	Hash   string         `json:"hash,omitempty"` // hash of manifests, prefixed with type (eg: sha256:xyz)
 }
 
 type ManifestSource struct {
-	S3 *S3ManifestSource `json:"s3"`
+	S3   *S3ManifestSource   `json:"s3"`
+	File *FileManifestSource `json:"file"`
 }
 
 type S3ManifestSource struct {
 	BucketName string `json:"bucketName"`
+	Path       string `json:"path"`
+}
+
+type FileManifestSource struct {
+	Path string `json:"path"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -78,15 +89,16 @@ type WingJob struct {
 }
 
 type WingJobSpec struct {
-	InstanceID       string         `json:"instanceID,omitempty"`
-	Source           ManifestSource `json:"source"`
-	Operation        string         `json:"operation"`
-	RequestTimestamp metav1.Time    `json:"requestTimestamp,omitempty"`
+	InstanceName     string      `json:"instanceName,omitempty"`
+	PuppetTargetRef  string      `json:"puppetTargetRef"`
+	Operation        string      `json:"operation"`
+	RequestTimestamp metav1.Time `json:"requestTimestamp,omitempty"`
 }
 
 type WingJobStatus struct {
-	Messages string `json:"messages,omitempty"`
-	ExitCode int    `json:"exitCode,omitempty"`
+	Messages            string      `json:"messages,omitempty"`
+	ExitCode            int         `json:"exitCode,omitempty"`
+	LastUpdateTimestamp metav1.Time `json:"lastUpdateTimestamp,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

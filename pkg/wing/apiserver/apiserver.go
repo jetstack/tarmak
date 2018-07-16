@@ -18,6 +18,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	wingregistry "github.com/jetstack/tarmak/pkg/wing/registry"
 	instancestorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/instance"
+	wingjobstorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/wingjob"
 )
 
 var (
@@ -92,6 +93,7 @@ func (c completedConfig) New() (*WingServer, error) {
 	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
 	v1alpha1storage := map[string]rest.Storage{}
 	v1alpha1storage["instances"] = wingregistry.RESTInPeace(instancestorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
+	v1alpha1storage["wingjobs"] = wingregistry.RESTInPeace(wingjobstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
 	apiGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1storage
 
 	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {

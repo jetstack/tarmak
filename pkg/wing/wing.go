@@ -64,9 +64,7 @@ func (w *Wing) Run(args []string) error {
 	if w.flags.InstanceName == "" {
 		errors = append(errors, fmt.Errorf("--instance-name flag cannot be empty"))
 	}
-	if w.flags.ManifestURL == "" {
-		errors = append(errors, fmt.Errorf("--manifest-url flag cannot be empty"))
-	}
+
 	if err := utilerrors.NewAggregate(errors); err != nil {
 		return err
 	}
@@ -89,8 +87,8 @@ func (w *Wing) Run(args []string) error {
 	signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 	w.signalHandler(signalCh)
 
-	// run converge loop after first start
-	go w.converge()
+	// run converge on instance after first start
+	go w.convergeInstance()
 
 	// start watching for API server events that trigger applies
 	w.watchForNotifications()
@@ -112,8 +110,13 @@ func (w *Wing) Must(err error) *Wing {
 
 func (w *Wing) watchForNotifications() {
 
-	// create the instance watcher
-	instanceListWatcher := cache.NewListWatchFromClient(w.clientset.WingV1alpha1().RESTClient(), "instances", w.flags.ClusterName, fields.ParseSelectorOrDie(fmt.Sprintf("metadata.name=%s", w.flags.InstanceName)))
+	// create the job watcher
+	jobListWatcher := cache.NewListWatchFromClient(
+		w.clientset.WingV1alpha1().RESTClient(),
+		"wingjobs",
+		w.flags.ClusterName,
+		fields.ParseSelectorOrDie(fmt.Sprintf("spec.instanceName=%s", w.flags.InstanceName)),
+	)
 
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -122,7 +125,7 @@ func (w *Wing) watchForNotifications() {
 	// whenever the cache is updated, the pod key is added to the workqueue.
 	// Note that when we finally process the item from the workqueue, we might see a newer version
 	// of the Pod than the version which was responsible for triggering the update.
-	indexer, informer := cache.NewIndexerInformer(instanceListWatcher, &v1alpha1.Instance{}, 0, cache.ResourceEventHandlerFuncs{
+	indexer, informer := cache.NewIndexerInformer(jobListWatcher, &v1alpha1.WingJob{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
@@ -169,7 +172,7 @@ func (w *Wing) signalHandler(ch chan os.Signal) {
 
 				// create new converge stop channel and run converge
 				w.convergeStopCh = make(chan struct{})
-				w.converge()
+				w.convergeInstance()
 
 			case syscall.SIGINT:
 				w.log.Infof("wing received SIGINT")

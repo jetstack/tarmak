@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -29,32 +28,31 @@ import (
 )
 
 // This make sure puppet is converged when neccessary
-func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
-	// start converging mainfest
-	status := &v1alpha1.InstanceStatus{
-		Converge: &v1alpha1.InstanceStatusManifest{
-			State: v1alpha1.InstanceManifestStateConverging,
-		},
+func (w *Wing) runPuppet(job *v1alpha1.WingJob) error {
+	targetAPI := w.clientset.WingV1alpha1().PuppetTargets(w.flags.ClusterName)
+	target, err := targetAPI.Get(
+		job.Spec.PuppetTargetRef,
+		metav1.GetOptions{},
+	)
+
+	noop := true
+	if job.Spec.Operation == v1alpha1.ApplyOperation {
+		noop = false
 	}
 
-	err := w.reportStatus(status)
+	originalReader, err := w.getManifests(target)
 	if err != nil {
-		w.log.Warn("reporting status failed: ", err)
-	}
-
-	originalReader, err := w.getManifests(w.flags.ManifestURL)
-	if err != nil {
-		return status, err
+		return err
 	}
 
 	// buffer file locally
 	buf, err := ioutil.ReadAll(originalReader)
 	if err != nil {
-		return status, err
+		return err
 	}
 	err = originalReader.Close()
 	if err != nil {
-		return status, err
+		return err
 	}
 	// create reader from buffer
 	reader := bytes.NewReader(buf)
@@ -62,9 +60,9 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 	// build hash over puppet.tar.gz
 	hash := sha256.New()
 	if _, err := io.Copy(hash, reader); err != nil {
-		return status, err
+		return err
 	}
-	hashString := fmt.Sprintf("sha256:%x", hash.Sum(nil))
+	//hashString := fmt.Sprintf("sha256:%x", hash.Sum(nil))
 
 	// roll back reader
 	reader.Seek(0, 0)
@@ -72,26 +70,23 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 	// read tar in
 	tarReader, err := gzip.NewReader(reader)
 	if err != nil {
-		return status, err
+		return err
 	}
 
 	dir, err := ioutil.TempDir("", "wing-puppet-tar-gz")
 	if err != nil {
-		return status, err
+		return err
 	}
 	defer os.RemoveAll(dir) // clean up
 
 	err = archive.Unpack(tarReader, dir, &archive.TarOptions{})
 	if err != nil {
-		return status, err
+		return err
 	}
 	tarReader.Close()
 
-	var puppetMessages []string
-	var puppetRetCodes []int
-
 	puppetApplyCmd := func() error {
-		output, retCode, err := w.puppetApply(dir)
+		output, retCode, err := w.puppetApply(dir, noop)
 
 		if err == nil && retCode != 0 {
 			err = fmt.Errorf("puppet apply has not converged yet (return code %d)", retCode)
@@ -101,21 +96,11 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 			output = fmt.Sprintf("puppet apply error: %s\n%s", err, output)
 		}
 
-		puppetMessages = append(puppetMessages, output)
-		puppetRetCodes = append(puppetRetCodes, retCode)
-
 		// start converging mainfest
-		status = &v1alpha1.InstanceStatus{
-			Converge: &v1alpha1.InstanceStatusManifest{
-				State:     v1alpha1.InstanceManifestStateConverging,
-				Messages:  puppetMessages,
-				ExitCodes: puppetRetCodes,
-				Hash:      hashString,
-			},
-		}
-		statusErr := w.reportStatus(status)
-		if statusErr != nil {
-			w.log.Warn("reporting status failed: ", statusErr)
+		job.Status = &v1alpha1.WingJobStatus{
+			Messages: output,
+			ExitCode: retCode,
+			//Hash:      hashString,
 		}
 
 		return err
@@ -151,56 +136,120 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 		w.log.Error("error applying puppet:", err)
 	}
 
-	return status, nil
+	return nil
 }
 
-func (w *Wing) converge() {
+func (w *Wing) convergeInstance() error {
+	instanceAPI := w.clientset.WingV1alpha1().Instances(w.flags.ClusterName)
+	instance, err := instanceAPI.Get(
+		w.flags.InstanceName,
+		metav1.GetOptions{},
+	)
+	if err != nil {
+		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
+			instance = &v1alpha1.Instance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: w.flags.InstanceName,
+				},
+				Status: &v1alpha1.InstanceStatus{},
+			}
+			_, err := instanceAPI.Create(instance)
+			if err != nil {
+				return fmt.Errorf("error creating instance: %s", err)
+			}
+			return nil
+		}
+		return fmt.Errorf("error get existing instance: %s", err)
+	}
+
+	puppetTarget := instance.Spec.PuppetTargetRef
+	if puppetTarget == "" {
+		w.log.Warn("no puppet target for instance: ", instance.Name)
+		return nil
+	}
+
+	// FIXME: this shouldn't be done on the wing agent
+	jobName := fmt.Sprintf("%s-%s", w.flags.InstanceName, puppetTarget)
+	jobsAPI := w.clientset.WingV1alpha1().WingJobs(w.flags.ClusterName)
+	job, err := jobsAPI.Get(
+		jobName,
+		metav1.GetOptions{},
+	)
+	if err != nil {
+		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
+			job = &v1alpha1.WingJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: jobName,
+				},
+				Spec: &v1alpha1.WingJobSpec{
+					InstanceName:     instance.Name,
+					PuppetTargetRef:  puppetTarget,
+					Operation:        "apply",
+					RequestTimestamp: metav1.Now(),
+				},
+				Status: &v1alpha1.WingJobStatus{},
+			}
+			_, err := jobsAPI.Create(job)
+			if err != nil {
+				return fmt.Errorf("error creating WingJob: %s", err)
+			}
+			return nil
+		}
+		return fmt.Errorf("error get existing WingJob: %s", err)
+	}
+
+	return nil
+}
+
+func (w *Wing) converge(job *v1alpha1.WingJob) {
 	w.convergeWG.Add(1)
 	defer w.convergeWG.Done()
 
+	jobCopy := job.DeepCopy()
+
 	// run puppet
-	status, err := w.runPuppet()
-	if err != nil {
-		status.Converge.State = v1alpha1.InstanceManifestStateError
-		status.Converge.Messages = append(status.Converge.Messages, err.Error())
-		w.log.Error(err)
-	} else {
-		status.Converge.State = v1alpha1.InstanceManifestStateConverged
-	}
+	err := w.runPuppet(jobCopy)
 
 	// feedback puppet status to apiserver
-	err = w.reportStatus(status)
+	err = w.reportStatus(job)
 	if err != nil {
 		w.log.Warn("reporting status failed: ", err)
 	}
 }
 
-func (w *Wing) puppetCommand(dir string) Command {
+func (w *Wing) puppetCommand(dir string, noop bool) Command {
 	if w.puppetCommandOverride != nil {
 		return w.puppetCommandOverride
 	}
 
+	args := []string{"apply"}
+
+	if noop {
+		args = append(args, "--noop")
+	}
+
+	args = append(args, []string{
+		"--detailed-exitcodes",
+		"--color",
+		"no",
+		"--environment",
+		"production",
+		"--hiera_config",
+		filepath.Join(dir, "hiera.yaml"),
+		"--modulepath",
+		filepath.Join(dir, "modules"),
+		filepath.Join(dir, "manifests/site.pp"),
+	}...,
+	)
+
 	return &execCommand{
-		Cmd: exec.Command(
-			"puppet",
-			"apply",
-			"--detailed-exitcodes",
-			"--color",
-			"no",
-			"--environment",
-			"production",
-			"--hiera_config",
-			filepath.Join(dir, "hiera.yaml"),
-			"--modulepath",
-			filepath.Join(dir, "modules"),
-			filepath.Join(dir, "manifests/site.pp"),
-		),
+		Cmd: exec.Command("puppet", args...),
 	}
 }
 
 // apply puppet code in a specific directory
-func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
-	puppetCmd := w.puppetCommand(dir)
+func (w *Wing) puppetApply(dir string, noop bool) (output string, retCode int, err error) {
+	puppetCmd := w.puppetCommand(dir, noop)
 
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -293,44 +342,26 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 	return output, 0, nil
 }
 
-// report status to the API server
-func (w *Wing) reportStatus(status *v1alpha1.InstanceStatus) error {
-	instanceAPI := w.clientset.WingV1alpha1().Instances(w.flags.ClusterName)
-	instance, err := instanceAPI.Get(
-		w.flags.InstanceName,
-		metav1.GetOptions{},
-	)
-	if err != nil {
-		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
-			instance = &v1alpha1.Instance{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: w.flags.InstanceName,
-				},
-				Status: status.DeepCopy(),
-			}
-			_, err := instanceAPI.Create(instance)
-			if err != nil {
-				return fmt.Errorf("error creating instance: %s", err)
-			}
-			return nil
-		}
-		return fmt.Errorf("error get existing instance: %s", err)
-	}
+func (w *Wing) reportStatus(job *v1alpha1.WingJob) error {
+	jobAPI := w.clientset.WingV1alpha1().WingJobs(w.flags.ClusterName)
 
-	instance.Status = status.DeepCopy()
-	_, err = instanceAPI.Update(instance)
+	_, err := jobAPI.UpdateStatus(job)
+
 	if err != nil {
-		return fmt.Errorf("error updating existing instance: %s", err)
-		// TODO: handle race for update
+		return fmt.Errorf("error updating job status: %s", err)
 	}
 
 	return nil
-
 }
 
-func (w *Wing) getManifests(manifestURL string) (io.ReadCloser, error) {
-	if strings.HasPrefix(manifestURL, "s3://") {
-		return s3.New(w.log).GetManifest(manifestURL)
+func (w *Wing) getManifests(target *v1alpha1.PuppetTarget) (io.ReadCloser, error) {
+	if target.Source.S3 != nil {
+		return s3.New(w.log).GetManifest(fmt.Sprintf("s3://%s/%s", target.Source.S3.BucketName, target.Source.S3.Path))
 	}
-	return file.New(w.log).GetManifest(manifestURL)
+
+	if target.Source.File != nil {
+		return file.New(w.log).GetManifest(target.Source.File.Path)
+	}
+
+	return nil, fmt.Errorf("unknown source type")
 }
