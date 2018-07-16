@@ -10,11 +10,12 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 
+	"net"
+
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
-	"net"
 )
 
 var _ interfaces.InstancePool = &InstancePool{}
@@ -191,8 +192,8 @@ func (n *InstancePool) Validate() (result error) {
 	return n.ValidateAllowCIDRs()
 }
 
-func (e *InstancePool) ValidateAllowCIDRs() (result error) {
-	for _, cidr := range e.Config().AllowCIDRs {
+func (n *InstancePool) ValidateAllowCIDRs() (result error) {
+	for _, cidr := range n.Config().AllowCIDRs {
 		_, _, err := net.ParseCIDR(cidr)
 		if err != nil {
 			result = multierror.Append(result, fmt.Errorf("%s is not a valid CIDR format", cidr))
@@ -200,4 +201,28 @@ func (e *InstancePool) ValidateAllowCIDRs() (result error) {
 	}
 
 	return result
+}
+
+func (n *InstancePool) Labels() string {
+	var labels []string
+
+	for _, label := range n.conf.Labels {
+		if label.Key != "" && label.Value != "" {
+			labels = append(labels, fmt.Sprintf("  %s: \"%s\"", label.Key, label.Value))
+		}
+	}
+
+	return strings.Join(labels, "\n")
+}
+
+func (n *InstancePool) Taints() string {
+	var taints []string
+
+	for _, taint := range n.conf.Taints {
+		if taint.Key != "" && taint.Value != "" && taint.Effect != "" {
+			taints = append(taints, fmt.Sprintf("  %s: \"%s:%s\"", taint.Key, taint.Value, taint.Effect))
+		}
+	}
+
+	return strings.Join(taints, "\n")
 }
