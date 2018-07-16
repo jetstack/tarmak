@@ -185,3 +185,27 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
 
 	return fmt.Sprintf("[%s]", strings.Join(policies, ","))
 }
+
+func (n *InstancePool) Labels() string {
+	var labels []string
+
+	for _, label := range n.conf.Labels {
+		if label.Key != "" && label.Value != "" {
+			labels = append(labels, fmt.Sprintf("  %s: \"%s\"", label.Key, label.Value))
+		}
+	}
+
+	return strings.Join(labels, "\n")
+}
+
+func (n *InstancePool) Taints() string {
+	var taints []string
+
+	for _, taint := range n.conf.Taints {
+		if taint.Key != "" && taint.Value != "" && taint.Effect != "" {
+			taints = append(taints, fmt.Sprintf("  %s: \"%s:%s\"", taint.Key, taint.Value, taint.Effect))
+		}
+	}
+
+	return strings.Join(taints, "\n")
+}
