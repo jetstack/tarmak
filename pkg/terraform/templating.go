@@ -146,6 +146,9 @@ func (t *terraformTemplate) Generate() error {
 	if err := t.generateTemplate("wing_s3", "modules/kubernetes/wing_s3", "tf"); err != nil {
 		result = multierror.Append(result, err)
 	}
+	if err := t.generateTemplate("vault_instances", "modules/vault/vault_instances", "tf"); err != nil {
+		result = multierror.Append(result, err)
+	}
 
 	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml"); err != nil {
 		result = multierror.Append(result, err)
