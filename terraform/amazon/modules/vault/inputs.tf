@@ -83,3 +83,5 @@ data "template_file" "stack_name" {
 data "template_file" "vault_unseal_key_name" {
   template = "vault-${var.environment}-"
 }
+
+

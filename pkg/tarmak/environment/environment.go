@@ -157,7 +157,6 @@ func (e *Environment) Variables() map[string]interface{} {
 	output["state_cluster_name"] = e.HubCluster.Name()
 	output["tools_cluster_name"] = e.HubCluster.Name()
 	output["vault_cluster_name"] = e.HubCluster.Name()
-	output["tarmak_version"] = e.tarmak.Version()
 	return output
 }
 

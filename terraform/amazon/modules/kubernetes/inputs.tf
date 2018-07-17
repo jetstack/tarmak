@@ -73,5 +73,3 @@ variable "public_zone_id" {}
 variable "vault_security_group_id" {}
 
 variable "bastion_security_group_id" {}
-
-variable "tarmak_version" {}
