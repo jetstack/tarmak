@@ -70,7 +70,6 @@ func resourceTarmakVaultClusterCreate(d *schema.ResourceData, meta interface{}) 
 		VaultCA:            vaultCA,
 		VaultKMSKeyID:      vaultKMSKeyID,
 		VaultUnsealKeyName: vaultUnsealKeyName,
-		Create:             true,
 	}
 
 	log.Print("[DEBUG] calling rpc vault cluster status")
@@ -106,11 +105,11 @@ func resourceTarmakVaultClusterRead(d *schema.ResourceData, meta interface{}) (e
 	args := &tarmakRPC.VaultClusterStatusArgs{
 		VaultInternalFQDNs: vaultInternalFQDNs,
 		VaultCA:            vaultCA,
-		Create:             false,
 	}
 
 	log.Print("[DEBUG] calling rpc vault cluster init status")
 	var reply tarmakRPC.VaultClusterStatusReply
+	// TODO: verify that all Ensure operations have succeeded, not just initialisation
 	err = client.Call(tarmakRPC.VaultClusterInitStatusCall, args, &reply)
 	if err != nil {
 		d.SetId("")
@@ -122,29 +121,6 @@ func resourceTarmakVaultClusterRead(d *schema.ResourceData, meta interface{}) (e
 }
 
 func resourceTarmakVaultClusterDelete(d *schema.ResourceData, meta interface{}) (err error) {
-	client := meta.(*rpc.Client)
-
-	vaultInternalFQDNs := []string{}
-	for _, internalFQDN := range d.Get("internal_fqdns").([]interface{}) {
-		vaultInternalFQDNs = append(vaultInternalFQDNs, internalFQDN.(string))
-	}
-	vaultCA := d.Get("vault_ca").(string)
-
-	args := &tarmakRPC.VaultClusterStatusArgs{
-		VaultInternalFQDNs: vaultInternalFQDNs,
-		VaultCA:            vaultCA,
-		Create:             false,
-	}
-
-	log.Print("[DEBUG] calling rpc vault cluster delete")
-	var reply tarmakRPC.VaultClusterStatusReply
-	err = client.Call(tarmakRPC.VaultClusterDeleteCall, args, &reply)
-	if err != nil {
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("status", reply.Status)
 	d.SetId("")
 	return nil
 }

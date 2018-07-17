@@ -2,7 +2,6 @@
 package rpc
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
@@ -20,7 +19,6 @@ type VaultInstanceRoleArgs struct {
 	VaultInternalFQDNs []string
 	VaultCA            string
 	Create             bool
-	Force              bool
 }
 
 type VaultInstanceRoleReply struct {
@@ -60,29 +58,10 @@ func (r *tarmakRPC) VaultInstanceRole(args *VaultInstanceRoleArgs, result *Vault
 	k := kubernetes.New(vaultClient, r.tarmak.Log())
 	k.SetClusterID(r.tarmak.Cluster().ClusterName())
 
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	changesNeeded, err := k.EnsureDryRun()
-	if err != nil {
+	if err := k.Ensure(); err != nil {
 		err = fmt.Errorf("vault cluster is not ready: %s", err)
 		r.tarmak.Log().Error(err)
 		return err
-	}
-
-	if changesNeeded || args.Force {
-		if args.Create {
-			if err := k.Ensure(); err != nil {
-				err = fmt.Errorf("vault cluster is not ready: %s", err)
-				r.tarmak.Log().Error(err)
-				return err
-			}
-
-		} else {
-			err = errors.New("changes needed to vault")
-			r.tarmak.Log().Error(err)
-			return err
-		}
 	}
 
 	initTokens := k.InitTokens()

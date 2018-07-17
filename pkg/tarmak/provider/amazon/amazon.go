@@ -105,11 +105,10 @@ func (a *Amazon) Reset() {
 // This parameters should include non sensitive information to identify a provider
 func (a *Amazon) Parameters() map[string]string {
 	p := map[string]string{
-		"name":           a.Name(),
-		"cloud":          a.Cloud(),
-		"public_zone":    a.conf.Amazon.PublicZone,
-		"bucket_prefix":  a.conf.Amazon.BucketPrefix,
-		"tarmak_version": a.tarmak.Version(),
+		"name":          a.Name(),
+		"cloud":         a.Cloud(),
+		"public_zone":   a.conf.Amazon.PublicZone,
+		"bucket_prefix": a.conf.Amazon.BucketPrefix,
 	}
 	if a.conf.Amazon.VaultPath != "" {
 		p["vault_path"] = a.conf.Amazon.VaultPath
@@ -279,7 +278,6 @@ func (a *Amazon) Variables() map[string]interface{} {
 	output["public_zone"] = a.conf.Amazon.PublicZone
 	output["public_zone_id"] = a.conf.Amazon.PublicHostedZoneID
 	output["bucket_prefix"] = a.conf.Amazon.BucketPrefix
-	output["tarmak_version"] = a.tarmak.Version()
 
 	return output
 }

@@ -45,11 +45,6 @@ func resourceTarmakVaultInstanceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tarmak_version": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -65,20 +60,12 @@ func resourceTarmakVaultInstanceRoleCreate(d *schema.ResourceData, meta interfac
 	}
 	vaultCA := d.Get("vault_ca").(string)
 
-	old, new := d.GetChange("tarmak_version")
-
-	force := false
-	if old.(string) != new.(string) {
-		force = true
-	}
-
 	args := &tarmakRPC.VaultInstanceRoleArgs{
 		VaultClusterName:   clusterName,
 		RoleName:           roleName,
 		VaultInternalFQDNs: vaultInternalFQDNs,
 		VaultCA:            vaultCA,
 		Create:             true,
-		Force:              force,
 	}
 
 	log.Printf("[DEBUG] calling rpc vault instance role for role %s", roleName)
@@ -114,7 +101,7 @@ func resourceTarmakVaultInstanceRoleRead(d *schema.ResourceData, meta interface{
 		RoleName:           roleName,
 		VaultInternalFQDNs: vaultInternalFQDNs,
 		VaultCA:            vaultCA,
-		Create:             false,
+		Create:             true,
 	}
 
 	log.Printf("[DEBUG] calling rpc vault instance role for role %s", roleName)
