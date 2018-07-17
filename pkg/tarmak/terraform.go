@@ -20,7 +20,7 @@ func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
 	}
 
 	t.cluster.Log().Info("Verify steps")
-	if err := t.Validate(); err != nil {
+	if err := t.Verify(); err != nil {
 		return err
 	}
 
@@ -45,7 +45,7 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 	}
 
 	t.cluster.Log().Info("Verify steps")
-	if err := t.Validate(); err != nil {
+	if err := t.Verify(); err != nil {
 		return err
 	}
 
@@ -95,7 +95,7 @@ func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
 	}
 
 	t.cluster.Log().Info("Verify steps")
-	if err := t.Validate(); err != nil {
+	if err := t.Verify(); err != nil {
 		return err
 	}
 
