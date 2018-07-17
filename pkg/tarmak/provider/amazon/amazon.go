@@ -357,6 +357,8 @@ func (a *Amazon) Verify() error {
 	return result.ErrorOrNil()
 }
 
+// Check if AWS credentials are setup correctly.
+// AWS GO SDK doesn't have an default check if access is successfull. We check if we can query the region without errors
 func (a *Amazon) VerifyAWSCredentials() error {
 	svc, err := a.EC2()
 	if err != nil {
