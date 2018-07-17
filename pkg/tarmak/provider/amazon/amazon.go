@@ -358,8 +358,30 @@ func (a *Amazon) Validate() error {
 
 }
 
-func (a *Amazon) Verify() (result error) {
-	return result
+func (a *Amazon) Verify() error {
+	var result *multierror.Error
+
+	if err := a.VerifyAWSCredentials(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
+}
+
+func (a *Amazon) VerifyAWSCredentials() error {
+	svc, err := a.EC2()
+	if err != nil {
+		return err
+	}
+	input := &ec2.DescribeRegionsInput{}
+
+	_, err = svc.DescribeRegions(input)
+	if err != nil {
+		fmt.Printf("In Here")
+		return err
+	}
+
+	return nil
 }
 
 func (a *Amazon) getAvailablityZoneByRegion() (zones []string, err error) {

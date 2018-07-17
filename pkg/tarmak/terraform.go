@@ -14,20 +14,19 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 }
 
 func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
-	if err := t.writeSSHConfigForClusterHosts(); err != nil {
-		return err
-	}
-
-	if err := t.verifyImageExists(); err != nil {
-		return err
-	}
-
+	t.cluster.Log().Info("Validate steps")
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	if err := t.Cluster().Verify(); err != nil {
-		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
+	t.cluster.Log().Info("Verify steps")
+	if err := t.Validate(); err != nil {
+		return err
+	}
+
+	t.cluster.Log().Info("Write SSH config")
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return err
 	}
 
 	t.cluster.Log().Info("running plan")
@@ -40,20 +39,19 @@ func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
-	if err := t.writeSSHConfigForClusterHosts(); err != nil {
-		return err
-	}
-
-	if err := t.verifyImageExists(); err != nil {
-		return err
-	}
-
+	t.cluster.Log().Info("Validate steps")
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	if err := t.Cluster().Verify(); err != nil {
-		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
+	t.cluster.Log().Info("Verify steps")
+	if err := t.Validate(); err != nil {
+		return err
+	}
+
+	t.cluster.Log().Info("Write SSH config")
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return err
 	}
 
 	t.cluster.Log().Info("running apply")
@@ -91,16 +89,19 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
-	if err := t.writeSSHConfigForClusterHosts(); err != nil {
-		return err
-	}
-
+	t.cluster.Log().Info("Validate steps")
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	if err := t.Cluster().Verify(); err != nil {
-		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
+	t.cluster.Log().Info("Verify steps")
+	if err := t.Validate(); err != nil {
+		return err
+	}
+
+	t.cluster.Log().Info("Write SSH config")
+	if err := t.writeSSHConfigForClusterHosts(); err != nil {
+		return err
 	}
 
 	t.cluster.Log().Info("running destroy")
