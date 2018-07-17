@@ -319,49 +319,38 @@ func (a *Amazon) readVaultToken() (string, error) {
 }
 
 func (a *Amazon) Validate() error {
-	var result error
-	var err error
-
-	// These checks only make sense with an environment given
-	if a.tarmak.Environment() != nil {
-		err = a.validateRemoteStateBucket()
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-
-		err = a.validateRemoteStateDynamoDB()
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-
-		err = a.validateAvailabilityZones()
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-
-		err = a.validateAWSKeyPair()
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-
-	}
-
-	err = a.validatePublicZone()
-	if err != nil {
-		result = multierror.Append(result, err)
-	}
-
-	if result != nil {
-		return result
-	}
 	return nil
-
 }
 
 func (a *Amazon) Verify() error {
+	fmt.Printf("In here")
 	var result *multierror.Error
 
+	// If this fails we don't want to verify any of the other steps as they will have the same error
 	if err := a.VerifyAWSCredentials(); err != nil {
+		return err
+	}
+
+	// These checks only make sense with an environment given
+	if a.tarmak.Environment() != nil {
+		if err := a.validateRemoteStateBucket(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := a.validateRemoteStateDynamoDB(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := a.validateAvailabilityZones(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := a.validateAWSKeyPair(); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	if err := a.validatePublicZone(); err != nil {
 		result = multierror.Append(result, err)
 	}
 

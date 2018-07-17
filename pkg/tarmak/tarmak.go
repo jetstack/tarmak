@@ -298,12 +298,12 @@ func (t *Tarmak) Validate() error {
 }
 
 func (t *Tarmak) Verify() error {
-	if err := t.Cluster().Verify(); err != nil {
-		return fmt.Errorf("failed to validate tarmak cluster: %s", err)
+	if err := t.Cluster().Environment().Verify(); err != nil {
+		return fmt.Errorf("failed to verify tarmak provider: %s", err)
 	}
 
-	if err := t.Cluster().Environment().Provider().Verify(); err != nil {
-		return fmt.Errorf("failed to verify tarmak provider: %s", err)
+	if err := t.Cluster().Verify(); err != nil {
+		return fmt.Errorf("failed to verify tarmak cluster: %s", err)
 	}
 
 	if err := t.verifyImageExists(); err != nil {
