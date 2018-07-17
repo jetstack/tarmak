@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 )
 
@@ -54,7 +56,7 @@ func (c *Cluster) ReapplyConfiguration() error {
 		if instance.Spec == nil {
 			instance.Spec = &wingv1alpha1.InstanceSpec{}
 		}
-		instance.Spec.Converge = &wingv1alpha1.InstanceSpecManifest{}
+		instance.Status.Converged = false
 
 		if _, err := client.Update(instance); err != nil {
 			c.log.Warnf("error updating instance %s in wing API: %s", instance.Name, err)
@@ -78,33 +80,33 @@ func (c *Cluster) WaitForConvergance() error {
 			return fmt.Errorf("failed to list instances: %s", err)
 		}
 
-		instanceByState := make(map[wingv1alpha1.InstanceManifestState][]*wingv1alpha1.Instance)
+		errors := []error{}
 
 		for pos, _ := range instances {
 			instance := instances[pos]
 
 			// index by instance convergance state
-			if instance.Status == nil || instance.Status.Converge == nil || instance.Status.Converge.State == "" {
+			if instance.Status == nil || instance.Status.Converged == false {
 				continue
 			}
 
-			state := instance.Status.Converge.State
-			if _, ok := instanceByState[state]; !ok {
-				instanceByState[state] = []*wingv1alpha1.Instance{}
+			jobs, err := c.listJobsForInstance(instance)
+			if err != nil {
+				return err
 			}
 
-			instanceByState[state] = append(
-				instanceByState[state],
-				instance,
-			)
+			err = c.checkAllJobsCompleted(jobs)
+			if err != nil {
+				errors = append(errors, err)
+			}
+
 		}
 
-		err = c.checkAllInstancesConverged(instanceByState)
-		if err == nil {
+		if len(errors) == 0 {
 			c.log.Info("all instances converged")
 			return nil
 		} else {
-			c.log.Debug(err)
+			c.log.Debug(utilerrors.NewAggregate(errors))
 		}
 
 		retries--

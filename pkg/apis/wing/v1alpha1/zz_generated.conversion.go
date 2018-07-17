@@ -142,6 +142,7 @@ func Convert_wing_InstanceSpec_To_v1alpha1_InstanceSpec(in *wing.InstanceSpec, o
 
 func autoConvert_v1alpha1_InstanceStatus_To_wing_InstanceStatus(in *InstanceStatus, out *wing.InstanceStatus, s conversion.Scope) error {
 	out.PuppetTargetRef = in.PuppetTargetRef
+	out.Converged = in.Converged
 	return nil
 }
 
@@ -152,6 +153,7 @@ func Convert_v1alpha1_InstanceStatus_To_wing_InstanceStatus(in *InstanceStatus, 
 
 func autoConvert_wing_InstanceStatus_To_v1alpha1_InstanceStatus(in *wing.InstanceStatus, out *InstanceStatus, s conversion.Scope) error {
 	out.PuppetTargetRef = in.PuppetTargetRef
+	out.Converged = in.Converged
 	return nil
 }
 
@@ -329,6 +331,7 @@ func Convert_wing_WingJobSpec_To_v1alpha1_WingJobSpec(in *wing.WingJobSpec, out 
 func autoConvert_v1alpha1_WingJobStatus_To_wing_WingJobStatus(in *WingJobStatus, out *wing.WingJobStatus, s conversion.Scope) error {
 	out.Messages = in.Messages
 	out.ExitCode = in.ExitCode
+	out.Completed = in.Completed
 	out.LastUpdateTimestamp = in.LastUpdateTimestamp
 	return nil
 }
@@ -341,6 +344,7 @@ func Convert_v1alpha1_WingJobStatus_To_wing_WingJobStatus(in *WingJobStatus, out
 func autoConvert_wing_WingJobStatus_To_v1alpha1_WingJobStatus(in *wing.WingJobStatus, out *WingJobStatus, s conversion.Scope) error {
 	out.Messages = in.Messages
 	out.ExitCode = in.ExitCode
+	out.Completed = in.Completed
 	out.LastUpdateTimestamp = in.LastUpdateTimestamp
 	return nil
 }

@@ -15,7 +15,7 @@ import (
 	wingclientv1alpha1 "github.com/jetstack/tarmak/pkg/wing/client/typed/wing/v1alpha1"
 )
 
-func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, error) {
+func (c *Cluster) ensureWingClientset() error {
 	var err error
 
 	if c.wingClientset == nil {
@@ -37,12 +37,29 @@ func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, er
 		b := backoff.WithContext(expBackoff, context.Background())
 
 		if err := backoff.Retry(wingClientsetTry, b); err != nil {
-			return nil, err
+			return err
 		}
+	}
 
+	return nil
+}
+
+func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, error) {
+	err := c.ensureWingClientset()
+	if err != nil {
+		return nil, err
 	}
 
 	return c.wingClientset.WingV1alpha1().Instances(c.ClusterName()), nil
+}
+
+func (c *Cluster) wingJobClient() (wingclientv1alpha1.WingJobInterface, error) {
+	err := c.ensureWingClientset()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.wingClientset.WingV1alpha1().WingJobs(c.ClusterName()), nil
 }
 
 func (c *Cluster) listInstances() (instances []*wingv1alpha1.Instance, err error) {
@@ -107,10 +124,57 @@ func (c *Cluster) checkAllInstancesConverged(byState map[wingv1alpha1.InstanceMa
 	return nil
 }
 
+func (c *Cluster) checkAllJobsCompleted(jobs []wingv1alpha1.WingJob) error {
+	jobsNotCompleted := []wingv1alpha1.WingJob{}
+	for _, job := range jobs {
+		if !job.Status.Completed {
+			jobsNotCompleted = append(jobsNotCompleted, job)
+		}
+	}
+
+	c.Log().Debugf("%d jobs not completed: %s", len(jobs), outputWingJobs(jobs))
+
+	if len(jobsNotCompleted) > 0 {
+		return fmt.Errorf("not all jobs have completed yet %s", outputWingJobs(jobsNotCompleted))
+	}
+
+	return nil
+}
+
 func outputInstances(instances []*wingv1alpha1.Instance) string {
 	var output []string
 	for _, instance := range instances {
 		output = append(output, instance.Name)
 	}
 	return strings.Join(output, ", ")
+}
+
+func outputWingJobs(jobs []wingv1alpha1.WingJob) string {
+	var output []string
+	for _, job := range jobs {
+		output = append(output, job.Name)
+	}
+	return strings.Join(output, ", ")
+}
+
+func (c *Cluster) listJobsForInstance(instance *wingv1alpha1.Instance) ([]wingv1alpha1.WingJob, error) {
+	err := c.ensureWingClientset()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := c.wingJobClient()
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := client.List(metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("spec.instanceName=%s", instance.Name),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return list.Items, err
 }

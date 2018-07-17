@@ -32,6 +32,7 @@ type InstanceSpec struct {
 // InstanceStatus defines the observed state of Instance
 type InstanceStatus struct {
 	PuppetTargetRef string `json:"puppetTargetRef"`
+	Converged       bool   `json:"converged"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -98,6 +99,7 @@ type WingJobSpec struct {
 type WingJobStatus struct {
 	Messages            string      `json:"messages,omitempty"`
 	ExitCode            int         `json:"exitCode,omitempty"`
+	Completed           bool        `json:"completed"`
 	LastUpdateTimestamp metav1.Time `json:"lastUpdateTimestamp,omitempty"`
 }
 

@@ -98,8 +98,9 @@ func (w *Wing) runPuppet(job *v1alpha1.WingJob) error {
 
 		// start converging mainfest
 		job.Status = &v1alpha1.WingJobStatus{
-			Messages: output,
-			ExitCode: retCode,
+			Messages:  output,
+			ExitCode:  retCode,
+			Completed: true,
 			//Hash:      hashString,
 		}
 
@@ -151,7 +152,9 @@ func (w *Wing) convergeInstance() error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: w.flags.InstanceName,
 				},
-				Status: &v1alpha1.InstanceStatus{},
+				Status: &v1alpha1.InstanceStatus{
+					Converged: false,
+				},
 			}
 			_, err := instanceAPI.Create(instance)
 			if err != nil {
@@ -160,6 +163,11 @@ func (w *Wing) convergeInstance() error {
 			return nil
 		}
 		return fmt.Errorf("error get existing instance: %s", err)
+	}
+
+	if instance.Status.Converged {
+		w.log.Infof("Instance already converged: ", instance.Name)
+		return nil
 	}
 
 	puppetTarget := instance.Spec.PuppetTargetRef
@@ -196,6 +204,13 @@ func (w *Wing) convergeInstance() error {
 			return nil
 		}
 		return fmt.Errorf("error get existing WingJob: %s", err)
+	}
+
+	instanceCopy := instance.DeepCopy()
+	instanceCopy.Status.Converged = true
+	_, err = instanceAPI.Update(instanceCopy)
+	if err != nil {
+		return err
 	}
 
 	return nil
