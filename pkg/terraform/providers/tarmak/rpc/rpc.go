@@ -6,7 +6,6 @@ import (
 	"net/rpc"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -22,7 +21,6 @@ const (
 type tarmakRPC struct {
 	cluster interfaces.Cluster
 	tarmak  interfaces.Tarmak
-	mu      sync.Mutex
 }
 
 func (r *tarmakRPC) log() *logrus.Entry {
@@ -33,7 +31,6 @@ func New(cluster interfaces.Cluster) Tarmak {
 	return &tarmakRPC{
 		tarmak:  cluster.Environment().Tarmak(),
 		cluster: cluster,
-		mu:      sync.Mutex{},
 	}
 }
 
