@@ -3,6 +3,8 @@ package cluster
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -26,11 +28,16 @@ func (c *Cluster) UploadConfiguration() error {
 		return err
 	}
 
+	hash := sha256.New()
+	hash.Write(buffer.Bytes())
+	name := hex.EncodeToString(hash.Sum(nil))
+
 	// build reader from config
 	reader := bytes.NewReader(buffer.Bytes())
 
 	return c.Environment().Provider().UploadConfiguration(
 		c,
+		name,
 		reader,
 	)
 }

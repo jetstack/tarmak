@@ -13,7 +13,7 @@ import (
 )
 
 // This uploads the main configuration to the S3 bucket
-func (a *Amazon) UploadConfiguration(cluster interfaces.Cluster, configReader io.ReadSeeker) error {
+func (a *Amazon) UploadConfiguration(cluster interfaces.Cluster, path string, configReader io.ReadSeeker) error {
 	svc, err := a.S3()
 	if err != nil {
 		return err
