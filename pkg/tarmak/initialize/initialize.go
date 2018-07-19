@@ -17,6 +17,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
+	"github.com/hashicorp/go-multierror"
 )
 
 var _ interfaces.Initialize = &Initialize{}
@@ -88,7 +89,13 @@ creationLoop:
 		}
 
 		for {
-			err := providerObj.Validate()
+			var err *multierror.Error
+			if result := providerObj.Validate(); result != nil {
+				err = multierror.Append(err, result)
+			}
+			if result := providerObj.Verify(); result != nil {
+				err = multierror.Append(err, result)
+			}
 			if err != nil {
 				i.input.Warnf("validation failed: %s", err)
 
@@ -114,8 +121,7 @@ creationLoop:
 				}
 
 			}
-
-			err = i.tarmak.Config().AppendProvider(providerConf)
+			err = multierror.Append(err, i.tarmak.Config().AppendProvider(providerConf))
 			if err != nil {
 				return nil, err
 			}
