@@ -323,7 +323,6 @@ func (a *Amazon) Validate() error {
 }
 
 func (a *Amazon) Verify() error {
-	fmt.Printf("In here")
 	var result *multierror.Error
 
 	// If this fails we don't want to verify any of the other steps as they will have the same error
@@ -368,8 +367,7 @@ func (a *Amazon) VerifyAWSCredentials() error {
 
 	_, err = svc.DescribeRegions(input)
 	if err != nil {
-		fmt.Printf("In Here")
-		return err
+		return fmt.Errorf("There was a problem with veryfing your AWS credentials: %s", err)
 	}
 
 	return nil
