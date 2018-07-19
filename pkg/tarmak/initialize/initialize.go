@@ -10,6 +10,7 @@ import (
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/sirupsen/logrus"
 
+	"github.com/hashicorp/go-multierror"
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
@@ -17,7 +18,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
-	"github.com/hashicorp/go-multierror"
 )
 
 var _ interfaces.Initialize = &Initialize{}
