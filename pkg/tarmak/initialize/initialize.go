@@ -121,9 +121,9 @@ creationLoop:
 				}
 
 			}
-			err = multierror.Append(err, i.tarmak.Config().AppendProvider(providerConf))
-			if err != nil {
-				return nil, err
+			appendError := i.tarmak.Config().AppendProvider(providerConf)
+			if appendError != nil {
+				return nil, appendError
 			}
 			break
 		}
