@@ -117,13 +117,15 @@ describe 'kubernetes::kubelet' do
   end
 
   context 'with role master' do
-    let(:params) { {'role' => 'master' } }
+    let(:params) { { 'role' => 'master' } }
+
     context 'versions before 1.6' do
       let(:pre_condition) {[
         """
         class{'kubernetes': version => '1.5.8'}
         """
       ]}
+
       it do
         have_service_file = contain_file('/etc/systemd/system/kubelet.service')
         should have_service_file.with_content(/--register-schedulable=false/)
@@ -137,20 +139,57 @@ describe 'kubernetes::kubelet' do
         class{'kubernetes': version => '1.6.0'}
         """
       ]}
+
       it do
         have_service_file = contain_file('/etc/systemd/system/kubelet.service')
         should have_service_file.with_content(/--register-with-taints=node-role\.kubernetes\.io\/master=:NoSchedule/)
         should have_service_file.with_content(/--node-labels=role=master/)
       end
+
+      context 'with additional node taints' do
+        let(:params) { { 'role' => 'master', 'node_taints' => { 'foo' => 'bar:NoSchedule' } } }
+
+        it "retains the default taints" do
+          have_service_file = contain_file('/etc/systemd/system/kubelet.service')
+          should have_service_file.with_content(/--register-with-taints=node-role\.kubernetes\.io\/master=:NoSchedule,foo=bar:NoSchedule/)
+        end
+      end
+
+      context 'with overriding node taints' do
+        let(:params) { { 'role' => 'master', 'node_taints' => { 'node-role.kubernetes.io/master' => ':NoExecute' } } }
+
+        it "replaces the default" do
+          have_service_file = contain_file('/etc/systemd/system/kubelet.service')
+          should have_service_file.with_content(/--register-with-taints=node-role.kubernetes.io\/master=:NoExecute/)
+        end
+      end
+
+      context 'with blank overriding node taints' do
+        let(:params) { { 'role' => 'master', 'node_taints' => { 'node-role.kubernetes.io/master' => 'REMOVE:REMOVE' } } }
+
+        it "removes the taint" do
+          have_service_file = contain_file('/etc/systemd/system/kubelet.service')
+          should_not have_service_file.with_content(/--register-with-taints/)
+        end
+      end
     end
   end
 
   context 'with role worker' do
-    let(:params) { {'role' => 'worker' } }
+    let(:params) { { 'role' => 'worker' } }
 
     it do
       have_service_file = contain_file('/etc/systemd/system/kubelet.service')
-      should have_service_file.with_content(/--node-labels=role=worker/)
+      should have_service_file.with_content(/--node-labels=role=worker,node-role.kubernetes.io\/worker="/)
+    end
+
+    context 'with additional node labels' do
+      let(:params) { { 'role' => 'worker', 'node_labels' => { 'foo' => 'bar' } } }
+
+      it do
+        have_service_file = contain_file('/etc/systemd/system/kubelet.service')
+        should have_service_file.with_content(/--node-labels=role=worker,node-role.kubernetes.io\/worker=,foo=bar/)
+      end
     end
   end
 

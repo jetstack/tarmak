@@ -100,35 +100,41 @@ class kubernetes::kubelet(
     $_register_schedulable = $register_schedulable
   }
 
-  if $node_taints == undef {
-    if !$_register_schedulable {
-      $_node_taints = {
-        'node-role.kubernetes.io/master' => ':NoSchedule',
-      }
-    }
-    else {
-      $_node_taints = {}
+  if !$_register_schedulable {
+    $_default_node_taints = {
+      'node-role.kubernetes.io/master' => ':NoSchedule',
     }
   } else {
-    $_node_taints = $node_taints
+    $_default_node_taints = {}
   }
+
+  if $node_taints == undef {
+    $_merged_node_taints = $_default_node_taints
+  } else {
+    $_merged_node_taints = $_default_node_taints+$node_taints
+  }
+
+  # format values as key=value strings, reject values set to REMOVE
+  $_node_taints_string =
+    delete_undef_values($_merged_node_taints.map |$k,$v| { $v ? { 'REMOVE:REMOVE' => undef, default => "${k}=${v}" } }).join(',')
 
   $_feature_gates = []
 
-  $_node_taints_list = $_node_taints.map |$k,$v| { "${k}=${v}"}
-  $_node_taints_string = $_node_taints_list.join(',')
-
-  if $node_labels == undef {
-    $_node_labels = {
-      'role'                            => $role,
-      "node-role.kubernetes.io/${role}" => '',
-    }
-  } else {
-    $_node_labels = $node_labels
+  $_default_node_labels = {
+    'role'                            => $role,
+    "node-role.kubernetes.io/${role}" => '',
   }
 
-  $_node_labels_list = $_node_labels.map |$k,$v| { "${k}=${v}"}
-  $_node_labels_string = $_node_labels_list.join(',')
+  if $node_labels == undef {
+    $_merged_node_labels = $_default_node_labels
+  } else {
+    # defaults + params, defaults overwritten using the same key
+    $_merged_node_labels = $_default_node_labels+$node_labels
+  }
+
+  # format values as key=value strings, reject values set to REMOVE
+  $_node_labels_string =
+    delete_undef_values($_merged_node_labels.map |$k,$v| { $v ? { 'REMOVE' => undef, default => "${k}=${v}" } }).join(',')
 
   $cluster_domain = $::kubernetes::cluster_domain
   $cluster_dns = $::kubernetes::_cluster_dns
