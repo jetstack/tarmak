@@ -278,6 +278,7 @@ type Initialize interface {
 type Context interface {
 	Done() <-chan struct{}
 	Err() error
-	Signal() <-chan os.Signal
+	//StopCh() chan struct{}
+	Signal() os.Signal
 	WaitOrCancel(f func() error, ignoredExitStatuses ...int)
 }

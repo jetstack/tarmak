@@ -18,19 +18,28 @@ import (
 type Context struct {
 	context.Context
 	cancel func()
-	sigCh  chan os.Signal
+	sig    os.Signal
 }
+
+var notifies = []os.Signal{syscall.SIGINT, syscall.SIGTERM}
 
 var _ interfaces.Context = &Context{}
 
 func NewContext() interfaces.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigCh, notifies...)
+
+	c := &Context{
+		ctx,
+		cancel,
+		syscall.SIGCONT,
+	}
 
 	go func() {
 		select {
 		case sig := <-sigCh:
+			c.sig = sig
 			log.Infof("caught signal '%v'", sig)
 			cancel()
 		case <-ctx.Done():
@@ -41,19 +50,30 @@ func NewContext() interfaces.Context {
 		cancel()
 	}()
 
-	return &Context{
-		ctx,
-		cancel,
-		sigCh,
-	}
+	return c
 }
 
-func (c *Context) Signal() <-chan os.Signal {
-	return c.sigCh
+func (c *Context) Signal() os.Signal {
+	return c.sig
 }
 
 func (c *Context) Err() error {
 	return c.Err()
+}
+
+func MakeShutdownCh() <-chan struct{} {
+	resultCh := make(chan struct{})
+
+	signalCh := make(chan os.Signal, 4)
+	signal.Notify(signalCh, notifies...)
+	go func() {
+		for {
+			<-signalCh
+			resultCh <- struct{}{}
+		}
+	}()
+
+	return resultCh
 }
 
 func (c *Context) WaitOrCancel(f func() error, ignoredExitStatuses ...int) {

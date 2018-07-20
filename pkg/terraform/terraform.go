@@ -242,6 +242,14 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 		args...,
 	)
 
+	// This ensures that processes are run in different process groups so a
+	// signal to the parent process is not propagated to the children. This is
+	// needed to control signaling and ensure graceful shutdown of
+	// subprocesses.
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
+
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -280,33 +288,27 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	cmd.Dir = t.codePath(cluster)
 	cmd.Env = envVars
 
-	complete := make(chan struct{})
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	defer wg.Wait()
-	go func() {
-		for {
-			select {
-			case <-t.tarmak.Context().Done():
-				if cmd.Process != nil {
-					cmd.Process.Signal(syscall.SIGINT)
-				}
-				wg.Done()
-				return
-			case <-complete:
-				wg.Done()
-				return
-			}
-		}
-	}()
-
-	err = cmd.Run()
-	close(complete)
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		return err
 	}
 
-	return nil
+	complete := make(chan struct{})
+	go func() {
+		err = cmd.Wait()
+		close(complete)
+	}()
+
+	select {
+	case <-t.tarmak.Context().Done():
+		if cmd.Process != nil {
+			cmd.Process.Signal(t.tarmak.Context().Signal())
+		}
+		<-complete
+
+	case <-complete:
+	}
+
+	return err
 }
 
 func (t *Terraform) Plan(cluster interfaces.Cluster) error {
