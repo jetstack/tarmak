@@ -18,6 +18,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/assets"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/initialize"
+	"github.com/jetstack/tarmak/pkg/tarmak/install"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
@@ -38,6 +39,7 @@ type Tarmak struct {
 	ssh       interfaces.SSH
 	init      *initialize.Initialize
 	kubectl   *kubectl.Kubectl
+	install   *install.Install
 
 	environment interfaces.Environment
 	cluster     interfaces.Cluster
@@ -120,6 +122,10 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 		t.log.Fatal("unable to initialize tarmak: ", err)
 	}
 
+	if err := t.install.Ensure(); err != nil {
+		t.log.Fatalf("failed to ensure tarmak install: %v", err)
+	}
+
 	return t
 }
 
@@ -132,6 +138,7 @@ func (t *Tarmak) initializeModules() {
 	t.ssh = ssh.New(t)
 	t.puppet = puppet.New(t)
 	t.kubectl = kubectl.New(t)
+	t.install = install.New(t)
 }
 
 // Initialize default cluster, its environment and provider
