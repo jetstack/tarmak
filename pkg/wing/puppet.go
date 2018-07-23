@@ -88,6 +88,8 @@ func (w *Wing) runPuppet(job *v1alpha1.WingJob) error {
 	puppetApplyCmd := func() error {
 		output, retCode, err := w.puppetApply(dir, noop)
 
+		w.log.Infof("puppet output: %s", output)
+
 		if err == nil && retCode != 0 {
 			err = fmt.Errorf("puppet apply has not converged yet (return code %d)", retCode)
 		}
@@ -98,9 +100,10 @@ func (w *Wing) runPuppet(job *v1alpha1.WingJob) error {
 
 		// start converging mainfest
 		job.Status = &v1alpha1.WingJobStatus{
-			Messages:  output,
-			ExitCode:  retCode,
-			Completed: true,
+			Messages:            output,
+			ExitCode:            retCode,
+			LastUpdateTimestamp: metav1.Now(),
+			Completed:           true,
 			//Hash:      hashString,
 		}
 
@@ -170,6 +173,11 @@ func (w *Wing) convergeInstance() error {
 		return nil
 	}
 
+	if instance.Spec == nil {
+		w.log.Warnf("instance %s has empty spec field", instance.Name)
+		return nil
+	}
+
 	puppetTarget := instance.Spec.PuppetTargetRef
 	if puppetTarget == "" {
 		w.log.Warn("no puppet target for instance: ", instance.Name)
@@ -224,9 +232,12 @@ func (w *Wing) converge(job *v1alpha1.WingJob) {
 
 	// run puppet
 	err := w.runPuppet(jobCopy)
+	if err != nil {
+		w.log.Warn("running puppet failed: ", err)
+	}
 
 	// feedback puppet status to apiserver
-	err = w.reportStatus(job)
+	err = w.reportStatus(jobCopy)
 	if err != nil {
 		w.log.Warn("reporting status failed: ", err)
 	}
@@ -264,6 +275,8 @@ func (w *Wing) puppetCommand(dir string, noop bool) Command {
 
 // apply puppet code in a specific directory
 func (w *Wing) puppetApply(dir string, noop bool) (output string, retCode int, err error) {
+	w.log.Infof("Running puppet in %s", dir)
+
 	puppetCmd := w.puppetCommand(dir, noop)
 
 	var mu sync.Mutex
@@ -360,7 +373,7 @@ func (w *Wing) puppetApply(dir string, noop bool) (output string, retCode int, e
 func (w *Wing) reportStatus(job *v1alpha1.WingJob) error {
 	jobAPI := w.clientset.WingV1alpha1().WingJobs(w.flags.ClusterName)
 
-	_, err := jobAPI.UpdateStatus(job)
+	_, err := jobAPI.Update(job)
 
 	if err != nil {
 		return fmt.Errorf("error updating job status: %s", err)
@@ -371,7 +384,13 @@ func (w *Wing) reportStatus(job *v1alpha1.WingJob) error {
 
 func (w *Wing) getManifests(target *v1alpha1.PuppetTarget) (io.ReadCloser, error) {
 	if target.Source.S3 != nil {
-		return s3.New(w.log).GetManifest(fmt.Sprintf("s3://%s/%s", target.Source.S3.BucketName, target.Source.S3.Path))
+
+		manifestStr := fmt.Sprintf("s3://%s/%s", target.Source.S3.BucketName, target.Source.S3.Path)
+		w.log.Infof("Getting manifests from S3: %s", manifestStr)
+		return s3.New(w.log).GetManifest(
+			manifestStr,
+			target.Source.S3.Region,
+		)
 	}
 
 	if target.Source.File != nil {

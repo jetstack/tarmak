@@ -22,7 +22,7 @@ func New(log *logrus.Entry) *S3 {
 	}
 }
 
-func (s *S3) GetManifest(manifestString string) (io.ReadCloser, error) {
+func (s *S3) GetManifest(manifestString string, region string) (io.ReadCloser, error) {
 	manifestURL, err := url.Parse(manifestString)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,11 @@ func (s *S3) GetManifest(manifestString string) (io.ReadCloser, error) {
 	key := manifestURL.Path
 
 	cfg := aws.NewConfig()
-	awsSession := session.New(cfg)
+	awsSession := session.New(cfg,
+		&aws.Config{
+			Region: aws.String(region),
+		},
+	)
 	s3Service := s3.New(awsSession)
 
 	result, err := s3Service.GetObject(&s3.GetObjectInput{

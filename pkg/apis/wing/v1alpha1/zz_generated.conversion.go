@@ -237,6 +237,7 @@ func Convert_wing_PuppetTargetList_To_v1alpha1_PuppetTargetList(in *wing.PuppetT
 func autoConvert_v1alpha1_S3ManifestSource_To_wing_S3ManifestSource(in *S3ManifestSource, out *wing.S3ManifestSource, s conversion.Scope) error {
 	out.BucketName = in.BucketName
 	out.Path = in.Path
+	out.Region = in.Region
 	return nil
 }
 
@@ -248,6 +249,7 @@ func Convert_v1alpha1_S3ManifestSource_To_wing_S3ManifestSource(in *S3ManifestSo
 func autoConvert_wing_S3ManifestSource_To_v1alpha1_S3ManifestSource(in *wing.S3ManifestSource, out *S3ManifestSource, s conversion.Scope) error {
 	out.BucketName = in.BucketName
 	out.Path = in.Path
+	out.Region = in.Region
 	return nil
 }
 

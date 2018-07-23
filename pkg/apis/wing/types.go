@@ -58,6 +58,7 @@ type ManifestSource struct {
 type S3ManifestSource struct {
 	BucketName string
 	Path       string
+	Region     string
 }
 
 type FileManifestSource struct {

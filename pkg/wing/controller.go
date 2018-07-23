@@ -80,10 +80,10 @@ func (c *Controller) syncWingJob(key string) error {
 					c.log.Debug("no converge neccessary, last update was after request")
 					return nil
 				}
-			} else {
+			} /* else {
 				c.log.Debug("no converge neccessary, no status section found or update timestamp zero")
 				return nil
-			}
+			}*/
 		} else {
 			c.log.Debug("no converge neccessary, no spec section found or request timestamp zero")
 			return nil
