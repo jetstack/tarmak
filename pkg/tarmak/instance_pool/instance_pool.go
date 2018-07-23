@@ -195,10 +195,10 @@ func (n *InstancePool) Labels() (string, error) {
 	validValue := regexp.MustCompile(`^\w+$`)
 
 	for _, label := range n.conf.Labels {
-		if validKey.MatchString(label.Key) {
+		if !validKey.MatchString(label.Key) {
 			result = multierror.Append(result, fmt.Errorf("key was invalid for label: %+v", label))
 		}
-		if validValue.MatchString(label.Value) {
+		if !validValue.MatchString(label.Value) {
 			result = multierror.Append(result, fmt.Errorf("value was invalid for label: %+v", label))
 		}
 		labels = append(labels, fmt.Sprintf("  %s: \"%s\"", label.Key, label.Value))
