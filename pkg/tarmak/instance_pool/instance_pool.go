@@ -4,6 +4,7 @@ package instance_pool
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -186,26 +187,47 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
 	return fmt.Sprintf("[%s]", strings.Join(policies, ","))
 }
 
-func (n *InstancePool) Labels() string {
+func (n *InstancePool) Labels() (string, error) {
 	var labels []string
+	var result error
+
+	validKey := regexp.MustCompile(`^\w+$`)
+	validValue := regexp.MustCompile(`^\w+$`)
 
 	for _, label := range n.conf.Labels {
-		if label.Key != "" && label.Value != "" {
-			labels = append(labels, fmt.Sprintf("  %s: \"%s\"", label.Key, label.Value))
+		if validKey.MatchString(label.Key) {
+			result = multierror.Append(result, fmt.Errorf("key was invalid for label: %+v", label))
 		}
+		if validValue.MatchString(label.Value) {
+			result = multierror.Append(result, fmt.Errorf("value was invalid for label: %+v", label))
+		}
+		labels = append(labels, fmt.Sprintf("  %s: \"%s\"", label.Key, label.Value))
 	}
 
-	return strings.Join(labels, "\n")
+	return strings.Join(labels, "\n"), result
 }
 
-func (n *InstancePool) Taints() string {
+func (n *InstancePool) Taints() (string, error) {
 	var taints []string
+	var result error
+
+	validKey := regexp.MustCompile(`^\w+$`)
+	validValue := regexp.MustCompile(`^\w+$`)
+	validEffect := regexp.MustCompile(`^PreferNoSchedule|NoSchedule|NoExecute$`)
 
 	for _, taint := range n.conf.Taints {
-		if taint.Key != "" && taint.Value != "" && taint.Effect != "" {
-			taints = append(taints, fmt.Sprintf("  %s: \"%s:%s\"", taint.Key, taint.Value, taint.Effect))
+		if !validKey.MatchString(taint.Key) {
+			result = multierror.Append(result, fmt.Errorf("key was invalid for taint: %+v", taint))
 		}
+		if !validValue.MatchString(taint.Value) {
+			result = multierror.Append(result, fmt.Errorf("value was invalid for taint: %+v", taint))
+		}
+		if !validEffect.MatchString(taint.Effect) {
+			result = multierror.Append(result, fmt.Errorf("effect was invalid for taint: %+v", taint))
+		}
+
+		taints = append(taints, fmt.Sprintf("  %s: \"%s:%s\"", taint.Key, taint.Value, taint.Effect))
 	}
 
-	return strings.Join(taints, "\n")
+	return strings.Join(taints, "\n"), result
 }
