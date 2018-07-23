@@ -367,7 +367,7 @@ func (a *Amazon) VerifyAWSCredentials() error {
 
 	_, err = svc.DescribeRegions(input)
 	if err != nil {
-		return fmt.Errorf("There was a problem with veryfing your AWS credentials: %s", err)
+		return fmt.Errorf("there was a problem with veryfing your AWS credentials: %s", err)
 	}
 
 	return nil

@@ -14,17 +14,17 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 }
 
 func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
-	t.cluster.Log().Info("Validate steps")
+	t.cluster.Log().Info("validate steps")
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	t.cluster.Log().Info("Verify steps")
+	t.cluster.Log().Info("verify steps")
 	if err := t.Verify(); err != nil {
 		return err
 	}
 
-	t.cluster.Log().Info("Write SSH config")
+	t.cluster.Log().Info("write SSH config")
 	if err := t.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
@@ -39,17 +39,17 @@ func (t *Tarmak) CmdTerraformPlan(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
-	t.cluster.Log().Info("Validate steps")
+	t.cluster.Log().Info("validate steps")
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	t.cluster.Log().Info("Verify steps")
+	t.cluster.Log().Info("verify steps")
 	if err := t.Verify(); err != nil {
 		return err
 	}
 
-	t.cluster.Log().Info("Write SSH config")
+	t.cluster.Log().Info("write SSH config")
 	if err := t.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
@@ -89,17 +89,17 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
-	t.cluster.Log().Info("Validate steps")
+	t.cluster.Log().Info("validate steps")
 	if err := t.Validate(); err != nil {
 		return fmt.Errorf("failed to validate tarmak: %s", err)
 	}
 
-	t.cluster.Log().Info("Verify steps")
+	t.cluster.Log().Info("verify steps")
 	if err := t.Verify(); err != nil {
 		return err
 	}
 
-	t.cluster.Log().Info("Write SSH config")
+	t.cluster.Log().Info("write SSH config")
 	if err := t.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
