@@ -644,3 +644,33 @@ It is possible to add extra policies to only a specific instance pool.
     - metadata:
       zone: eu-west-1c
     type: worker
+
+Node Taints & Labels
+~~~~~~~~~~~~~~~~~~~~
+
+You might have added additional instance pools for a specific workload. In
+these cases it might be useful to label and or taint the nodes in this instance
+pool.
+
+You add labels and taints in the tarmak yaml like this:
+
+.. code-block:: yaml
+
+  - image: centos-puppet-agent
+    maxCount: 3
+    metadata:
+      name: worker
+    minCount: 3
+    size: medium
+    type: worker
+    labels:
+    - key: "ssd"
+      value: "true"
+    taints:
+    - key: "gpu"
+      value: "gtx1170"
+      effect: "NoSchedule"
+
+**Note**, these are only applied when the node is first registered. Changes to
+these values will not remove taints and labels from nodes that are already
+registered.

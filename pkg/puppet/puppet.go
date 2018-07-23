@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/pkg/archive"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
@@ -359,6 +360,29 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 			}
 			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::max_instances: %s`, string(s)))
 			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::instance_pool_names: ['%s']`, strings.Join(workerInstancePoolNames[:], `','`)))
+		}
+
+		var taintLabelError error
+
+		if len(instancePool.Config().Labels) > 0 {
+			labels, err := instancePool.Labels()
+			if err != nil {
+				taintLabelError = multierror.Append(taintLabelError, fmt.Errorf("error reading instance pool labels: %s", err))
+			} else {
+				variables = append(variables, fmt.Sprintf("kubernetes::kubelet::node_labels:\n%s", labels))
+			}
+		}
+		if len(instancePool.Config().Taints) > 0 {
+			taints, err := instancePool.Taints()
+			if err != nil {
+				taintLabelError = multierror.Append(taintLabelError, fmt.Errorf("error reading instance pool taints: %s", err))
+			} else {
+				variables = append(variables, fmt.Sprintf("kubernetes::kubelet::node_taints:\n%s", taints))
+			}
+		}
+
+		if taintLabelError != nil {
+			return taintLabelError
 		}
 
 		// etcd
