@@ -30,6 +30,7 @@ describe 'vault_client' do
             is_expected.not_to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_INIT_ROLE=')}/)
         end
         it do
+            should contain_exec('vault-token-renewal-trigger').with_command('systemctl start vault-token-renewal.service')
         end
     end
 
@@ -52,6 +53,7 @@ describe 'vault_client' do
             is_expected.to contain_file('/etc/vault/config').with_content(/#{Regexp.escape('VAULT_INIT_ROLE=test-master')}/)
         end
         it do
+            should contain_exec('vault-token-renewal-trigger').with_command('systemctl start vault-token-renewal.service')
         end
     end
 
@@ -68,6 +70,18 @@ describe 'vault_client' do
             is_expected.to contain_file('/opt/bin/vault-helper').with(
                 'mode' => '0755',
             )
+        end
+    end
+
+    context "with run_exec => false" do
+        let(:params) do {
+            :run_exec => false,
+            :token => 'ab',
+        }
+        end
+
+        it do
+            should contain_exec('vault-token-renewal-trigger').with_command('/bin/true')
         end
     end
 end

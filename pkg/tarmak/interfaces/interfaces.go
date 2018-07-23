@@ -239,6 +239,7 @@ type Host interface {
 
 type Puppet interface {
 	TarGz(io.Writer) error
+	Initialize(packerbuild bool) error
 }
 
 type Kubectl interface {

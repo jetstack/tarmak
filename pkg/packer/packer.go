@@ -47,6 +47,11 @@ func (p *Packer) Build(imageNames []string) error {
 	var wg sync.WaitGroup
 	var result *multierror.Error
 
+	// Save puppet config
+	err := p.tarmak.Puppet().Initialize(true)
+	if err != nil {
+		return err
+	}
 	wg.Add(len(imageNames))
 	for _, name := range imageNames {
 		image := &image{

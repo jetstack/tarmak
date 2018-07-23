@@ -29,6 +29,7 @@ class vault_client (
   $download_dir = $::vault_client::params::download_dir,
   $server_url = $::vault_client::params::server_url,
   $systemd_dir = $::vault_client::params::systemd_dir,
+  $run_exec = $::vault_client::params::run_exec,
   $init_token = undef,
   $init_role = undef,
   $token = undef,

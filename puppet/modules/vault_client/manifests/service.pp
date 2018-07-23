@@ -9,6 +9,12 @@ class vault_client::service {
     true    => $::path
   }
 
+  if $::vault_client::run_exec {
+    $trigger_command = "systemctl start ${service_name}.service"
+  } else {
+    $trigger_command = '/bin/true'
+  }
+
   exec { "${module_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
@@ -21,7 +27,7 @@ class vault_client::service {
     notify  => Exec["${module_name}-systemctl-daemon-reload"],
   }
   ~> exec { "${service_name}-trigger":
-    command     => "systemctl start ${service_name}.service",
+    command     => $trigger_command,
     path        => $path,
     refreshonly => true,
     require     => Exec["${module_name}-systemctl-daemon-reload"],

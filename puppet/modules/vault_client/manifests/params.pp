@@ -13,4 +13,5 @@ class vault_client::params {
   $download_url = 'https://github.com/jetstack/vault-helper/releases/download/#VERSION#/vault-helper_#VERSION#_linux_amd64'
   $server_url = 'http://127.0.0.1:8200'
   $systemd_dir = '/etc/systemd/system'
+  $run_exec = true
 }

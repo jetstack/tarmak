@@ -1,5 +1,6 @@
 # class kubernetes::proxy
 class kubernetes::proxy(
+  String $service_ensure = 'running',
   Optional[String] $ca_file = undef,
   Optional[String] $cert_file = undef,
   Optional[String] $key_file = undef,
@@ -72,7 +73,7 @@ class kubernetes::proxy(
     refreshonly => true,
   }
   -> service{ "${service_name}.service":
-    ensure  => running,
+    ensure  => $service_ensure,
     enable  => true,
     require => Package[$conntrack_package_name],
   }

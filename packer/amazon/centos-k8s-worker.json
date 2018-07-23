@@ -1,0 +1,87 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "region": "{{env `AWS_DEFAULT_REGION`}}",
+    "tarmak_environment": "{{env `TARMAK_ENVIRONMENT`}}",
+    "tarmak_base_image_name": "{{env `TARMAK_BASE_IMAGE_NAME`}}",
+    "puppet_path": "{{env `PUPPET_PATH`}}",
+    "ebs_volume_encrypted": "{{env `EBS_VOLUME_ENCRYPTED`}}"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "{{user `region`}}",
+      "source_ami_filter": {
+        "filters": {
+          "owner-alias": "aws-marketplace",
+          "product-code": "aw0evgkw8e5c1q413zgy5pjce",
+          "virtualization-type": "hvm"
+        },
+        "most_recent": true
+      },
+      "instance_type": "c4.xlarge",
+      "ssh_username": "centos",
+      "ssh_pty": "true",
+      "encrypt_boot": "{{user `ebs_volume_encrypted`}}",
+      "ami_name": "Tarmak CentOS 7 x86_64 with puppet-agent optimized for k8s workers {{isotime \"2006-01-02_030405\"}}",
+      "tags": {
+        "Name": "tarmak_{{user `tarmak_environment`}}_{{user `tarmak_base_image_name`}}",
+        "tarmak_environment": "{{user `tarmak_environment`}}",
+        "tarmak_base_image_name": "{{user `tarmak_base_image_name`}}"
+      },
+      "associate_public_ip_address": true
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "sudo -E -S sh '{{ .Path }}'",
+      "inline": [
+        "echo $PWD",
+        "rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm",
+        "yum update -y",
+        "yum install -y epel-release",
+        "yum install -y git puppet-agent vim tmux socat python-pip at jq unzip awscli",
+        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=0 console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/sysconfig/grub",
+        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=0 console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/default/grub",
+        "grub2-mkconfig -o /boot/grub2/grub.cfg",
+        "rm -f /etc/sysconfig/network-scripts/ifcfg-ens*",
+        "systemctl disable kdump.service",
+        "rm -f /etc/ssh/ssh_host_*",
+        "mkdir -p /tmp/packer-puppet-masterless",
+        "chown centos:centos /tmp/packer-puppet-masterless"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{user `puppet_path`}}/hieradata",
+      "destination": "/tmp/packer-puppet-masterless"
+    },
+    {
+      "type": "puppet-masterless",
+      "manifest_file": "{{user `puppet_path`}}/manifests/site.pp",
+      "hiera_config_path": "{{user `puppet_path`}}/hiera.yaml",
+      "module_paths": [
+        "{{user `puppet_path`}}/modules"
+      ],
+      "extra_arguments": [
+        "--color",
+        "no",
+        "--environment",
+        "production"
+      ],
+      "puppet_bin_dir": "/opt/puppetlabs/bin",
+      "facter": { "TARMAK_ROLE" : "worker", "TARMAK_HOSTNAME": "worker" }
+    },
+    {
+      "type": "shell",
+      "execute_command": "sudo -E -S sh '{{ .Path }}'",
+      "inline": [
+        "rm -f /etc/vault/init-token"
+      ]
+    }
+  ]
+} 

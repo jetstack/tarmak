@@ -10,6 +10,14 @@ describe 'vault_client::cert_service', :type => :define do
     "#{title}-cert.service"
   end
 
+  let(:service_trigger) do
+    "#{title}-cert-trigger"
+  end
+
+  let(:service_trigger_command) do
+    "systemctl start #{service_name}"
+  end
+
   let(:timer_name) do
     "#{title}-cert.timer"
   end
@@ -43,6 +51,20 @@ class{'vault_client':
       should contain_service(timer_name)
       should contain_file(service_file).with_content(/EnvironmentFile=\/etc\/vault\/config/)
       should contain_file(timer_file)
+      should contain_exec(service_trigger).with_command(service_trigger_command)
+    end
+  end
+
+  context 'with run_exec => false' do
+    let(:params) do
+      super().merge({ 'run_exec' => false })
+    end
+
+    it do
+      should contain_service(timer_name)
+      should contain_file(service_file).with_content(/EnvironmentFile=\/etc\/vault\/config/)
+      should contain_file(timer_file)
+      should contain_exec(service_trigger).with_command('/bin/true')
     end
   end
 end

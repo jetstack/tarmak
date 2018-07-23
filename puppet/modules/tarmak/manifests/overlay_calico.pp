@@ -5,8 +5,11 @@ class tarmak::overlay_calico {
   ensure_resource('file', $::tarmak::etcd_home, {'ensure'    => 'directory' })
   ensure_resource('file', $::tarmak::etcd_ssl_dir, {'ensure' => 'directory' })
 
+  $run_exec = $::tarmak::service_ensure ? { stopped => false, default => true,}
+
   $etcd_overlay_base_path = "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_overlay_ca_name}"
   vault_client::cert_service { 'etcd-overlay':
+    run_exec    => $run_exec,
     base_path   => $etcd_overlay_base_path,
     common_name =>  'etcd-client',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::etcd_overlay_ca_name}/sign/client",

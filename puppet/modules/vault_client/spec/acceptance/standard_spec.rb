@@ -144,4 +144,29 @@ EOS
       expect(result.exit_code).to eq(0)
     end
   end
+
+  context 'vault with run_exec false' do
+    # Using puppet_apply as a helper
+    it 'should work with no errors based on the example' do
+      pp = <<-EOS
+class {'vault_client':
+  version => '#{version}',
+  init_token => 'init-token-all',
+  init_role => 'test-all',
+  run_exec => false
+}
+EOS
+      # cleanup existing config
+      shell('rm -rf /etc/vault/init-token /etc/vault/token')
+
+      # Run it twice and test for idempotency
+      apply_manifest(pp, :catch_failures => true)
+      expect(apply_manifest(pp, :catch_failures => true).exit_code).to be_zero
+    end
+    
+      it 'runs the correct version of vault-helper' do
+        show_result = shell('/opt/bin/vault-helper version')
+        expect(show_result.stdout).to match(/#{version}/)
+      end
+  end
 end

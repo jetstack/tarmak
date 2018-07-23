@@ -2,8 +2,11 @@ class tarmak::worker {
   include ::tarmak
   require ::vault_client
 
+  $run_exec = $::tarmak::service_ensure ? { stopped => false, default => true,}
+
   $proxy_base_path = "${::tarmak::kubernetes_ssl_dir}/kube-proxy"
   vault_client::cert_service { 'kube-proxy':
+    run_exec    => $run_exec,
     base_path   => $proxy_base_path,
     common_name => 'system:kube-proxy',
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kube-proxy",
@@ -19,6 +22,7 @@ class tarmak::worker {
 
   $kubelet_base_path = "${::tarmak::kubernetes_ssl_dir}/kubelet"
   vault_client::cert_service { 'kubelet':
+    run_exec    => $run_exec,
     base_path   => $kubelet_base_path,
     common_name => "system:node:${::fqdn}",
     role        => "${::tarmak::cluster_name}/pki/${::tarmak::kubernetes_ca_name}/sign/kubelet",
@@ -34,6 +38,7 @@ class tarmak::worker {
   }
 
   class { 'kubernetes::kubelet':
+      service_ensure   => $::tarmak::service_ensure,
       ca_file          => "${kubelet_base_path}-ca.pem",
       key_file         => "${kubelet_base_path}-key.pem",
       cert_file        => "${kubelet_base_path}.pem",
@@ -43,6 +48,7 @@ class tarmak::worker {
   }
 
   class { 'kubernetes::proxy':
+      service_ensure   => $::tarmak::service_ensure,
       ca_file          => "${proxy_base_path}-ca.pem",
       key_file         => "${proxy_base_path}-key.pem",
       cert_file        => "${proxy_base_path}.pem",
