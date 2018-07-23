@@ -33,6 +33,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&InstanceList{},
 		&WingJob{},
 		&WingJobList{},
+		&PuppetTarget{},
+		&PuppetTargetList{},
 	)
 	return nil
 }

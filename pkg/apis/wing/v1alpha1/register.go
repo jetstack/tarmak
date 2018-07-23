@@ -37,6 +37,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&InstanceList{},
 		&WingJob{},
 		&WingJobList{},
+		&PuppetTarget{},
+		&PuppetTargetList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 
