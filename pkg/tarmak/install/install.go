@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/hashicorp/go-multierror"
@@ -17,19 +18,19 @@ import (
 )
 
 const (
-	terraformUrl        = "https://releases.hashicorp.com/terraform/%s/terraform_%s_%s_amd64.zip"
-	terraformHashDarwin = "6514a8fe5a344c5b8819c7f32745cd571f58092ffc9bbe9ea3639799b97ced5f"
-	terraformHashLinux  = "6b8ce67647a59b2a3f70199c304abca0ddec0e49fd060944c26f666298e23418"
-	terraformPath       = "/opt/tarmak/terraform"
-	terraformVersion    = "0.11.7"
+	terraformVersion       = "0.11.7"
+	terraformUrl           = "https://releases.hashicorp.com/terraform/%s/terraform_%s_%s_amd64.zip"
+	terraformHashLinuxZip  = "6b8ce67647a59b2a3f70199c304abca0ddec0e49fd060944c26f666298e23418"
+	terraformHashDarwinZip = "6514a8fe5a344c5b8819c7f32745cd571f58092ffc9bbe9ea3639799b97ced5f"
+	terraformHashLinux     = "00cc2e727e662fb81c789b2b8371d82d6be203ddc76c49232ed9c17b4980949a"
+	terraformHashDarwin    = "e8460143408184b383baba6226d4076887aa774e522b19c84f2d65070c1a1430"
 
-	packerUrl        = "https://releases.hashicorp.com/packer/%s/packer_%s_%s_amd64.zip"
-	packerHashLinux  = "bc58aa3f3db380b76776e35f69662b49f3cf15cf80420fc81a15ce971430824c"
-	packerHashDarwin = "3d546eff8179fc0de94ad736718fdaebdfc506536203eade732d9d218fbb347c"
-	packerPath       = "/opt/tarmak/packer"
-	packerVersion    = "1.2.5"
-
-	tarmakDir = "/opt/tarmak"
+	packerVersion       = "1.2.5"
+	packerUrl           = "https://releases.hashicorp.com/packer/%s/packer_%s_%s_amd64.zip"
+	packerHashLinuxZip  = "bc58aa3f3db380b76776e35f69662b49f3cf15cf80420fc81a15ce971430824c"
+	packerHashDarwinZip = "3d546eff8179fc0de94ad736718fdaebdfc506536203eade732d9d218fbb347c"
+	packerHashLinux     = "fd9d6c7acdeacfd1a08487a1f3308269f7d01f64950158133f6f0f438d3d1902"
+	packerHashDarwin    = "fa89d4e1ab14cd934d560d5efb5a886ed9003ad075b3bc514dd703a5db1ef1fb"
 )
 
 type Install struct {
@@ -38,8 +39,9 @@ type Install struct {
 }
 
 type dependency struct {
-	path, zippath, url, hash string
-	log                      *logrus.Entry
+	path, zippath, url string
+	hash, ziphash      string
+	log                *logrus.Entry
 }
 
 func New(t interfaces.Tarmak) *Install {
@@ -50,22 +52,6 @@ func New(t interfaces.Tarmak) *Install {
 }
 
 func (i *Install) Ensure() error {
-	f, err := os.Stat(tarmakDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			if err := os.Mkdir(tarmakDir, os.FileMode(0777)); err != nil {
-				return err
-			}
-
-		} else {
-			return err
-		}
-	} else {
-		if !f.IsDir() {
-			return fmt.Errorf("file '%s' is not a directory", tarmakDir)
-		}
-	}
-
 	var result *multierror.Error
 	for _, d := range i.dependencies() {
 		f, err := os.Stat(d.path)
@@ -75,11 +61,17 @@ func (i *Install) Ensure() error {
 					result = multierror.Append(result, err)
 				}
 
+				f, err = os.Stat(d.path)
+				if err != nil {
+					result = multierror.Append(result, err)
+					continue
+				}
+
 			} else {
 				result = multierror.Append(result, err)
-			}
 
-			continue
+				continue
+			}
 		}
 
 		if f.IsDir() {
@@ -88,19 +80,19 @@ func (i *Install) Ensure() error {
 			continue
 		}
 
-		if (f.Mode() & os.FileMode(0766)) != 0 {
-			err = fmt.Errorf("file '%s' does not match expected permissions(0766): %s", d.path, os.FileMode(0766))
+		if (f.Mode() & os.FileMode(0022)) != 0 {
+			err = fmt.Errorf("file '%s' does not match expected permissions(0755): %s", d.path, os.FileMode(0755))
 			result = multierror.Append(result, err)
 			continue
 		}
 	}
 
-	if result != nil {
+	if result.ErrorOrNil() != nil {
 		return result.ErrorOrNil()
 	}
 
 	for _, d := range i.dependencies() {
-		if err := d.checkSum(); err != nil {
+		if err := d.checkSum(d.path, d.hash); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
@@ -127,21 +119,19 @@ func (d *dependency) downloadBinary() error {
 		return err
 	}
 
+	if err := d.checkSum(d.zippath, d.ziphash); err != nil {
+		return err
+	}
+
 	if err := d.unzip(); err != nil {
 		return err
 	}
 
-	//if err := os.Remove(d.zippath); err != nil {
-	//	return err
-	//}
-
 	return nil
 }
 
-func (d *dependency) checkSum() error {
-	d.log.Infof("Checking binary checksum '%s'", d.path)
-
-	f, err := os.Open(d.zippath)
+func (d *dependency) checkSum(path, hashStr string) error {
+	f, err := os.Open(path)
 	defer f.Close()
 	if err != nil {
 		return err
@@ -155,11 +145,9 @@ func (d *dependency) checkSum() error {
 
 	s := hex.EncodeToString(hash.Sum(nil))
 
-	if s != d.hash {
-		return fmt.Errorf("binary at '%s' does not match expected hash", d.path)
+	if s != hashStr {
+		return fmt.Errorf("file at '%s' does not match expected hash", path)
 	}
-
-	d.log.Infof("'%s' Passed.", d.path)
 
 	return nil
 }
@@ -172,29 +160,35 @@ func (i *Install) dependencies() []*dependency {
 		linux = true
 	}
 
+	path := filepath.Join(i.tarmak.ConfigPath(), "terraform")
 	terraform := &dependency{
-		path:    terraformPath,
-		zippath: fmt.Sprintf("%s.zip", terraformPath),
+		path:    path,
+		zippath: fmt.Sprintf("%s.zip", path),
 		url:     fmt.Sprintf(terraformUrl, terraformVersion, terraformVersion, runtime.GOOS),
 		log:     i.log,
 	}
 	if linux {
 		terraform.hash = terraformHashLinux
+		terraform.ziphash = terraformHashLinuxZip
 	} else {
 		terraform.hash = terraformHashDarwin
+		terraform.ziphash = terraformHashDarwinZip
 	}
 	dependencies = append(dependencies, terraform)
 
+	path = filepath.Join(i.tarmak.ConfigPath(), "packer")
 	packer := &dependency{
-		path:    packerPath,
-		zippath: fmt.Sprintf("%s.zip", packerPath),
+		path:    path,
+		zippath: fmt.Sprintf("%s.zip", path),
 		url:     fmt.Sprintf(packerUrl, packerVersion, packerVersion, runtime.GOOS),
 		log:     i.log,
 	}
 	if linux {
 		packer.hash = packerHashLinux
+		packer.ziphash = packerHashLinuxZip
 	} else {
 		packer.hash = packerHashDarwin
+		packer.ziphash = packerHashDarwinZip
 	}
 	dependencies = append(dependencies, packer)
 
