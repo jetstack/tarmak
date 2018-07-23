@@ -127,24 +127,21 @@ func (t *terraformTemplate) Generate() error {
 			result = multierror.Append(result, err)
 		}
 	}
-	if err := t.generateTemplate("modules", "modules", "tf"); err != nil {
-		result = multierror.Append(result, err)
-	}
-	if err := t.generateTemplate("inputs", "inputs", "tf"); err != nil {
-		result = multierror.Append(result, err)
-	}
-	if err := t.generateTemplate("outputs", "outputs", "tf"); err != nil {
-		result = multierror.Append(result, err)
-	}
-	if err := t.generateTemplate("providers", "providers", "tf"); err != nil {
-		result = multierror.Append(result, err)
-	}
-	if err := t.generateTemplate("jenkins_elb", "modules/jenkins/jenkins_elb", "tf"); err != nil {
-		result = multierror.Append(result, err)
-	}
-	// TODO time for a loop over an array of pairs?
-	if err := t.generateTemplate("wing_s3", "modules/kubernetes/wing_s3", "tf"); err != nil {
-		result = multierror.Append(result, err)
+
+	for _, tmpl := range []struct {
+		name, target string
+	}{
+		{"modules", "modules"},
+		{"inputs", "inputs"},
+		{"outputs", "outputs"},
+		{"providers", "providers"},
+		{"jenkins_elb", "modules/jenkins/jenkins_elb"},
+		{"wing_s3", "modules/kubernetes/wing_s3"},
+		{"vault_instances", "modules/vault/vault_instances"},
+	} {
+		if err := t.generateTemplate(tmpl.name, tmpl.target, "tf"); err != nil {
+			result = multierror.Append(result, err)
+		}
 	}
 
 	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml"); err != nil {

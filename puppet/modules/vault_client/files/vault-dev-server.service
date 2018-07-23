@@ -4,7 +4,7 @@ Description=vault dev server for acceptance tests
 [Service]
 Type=notify
 Environment=VAULT_VERSION=0.9.5
-Environment=VAULT_HELPER_VERSION=0.9.12
+Environment=VAULT_HELPER_VERSION=0.9.13
 Environment=VAULT_CMD=/opt/bin/vault-helper
 Environment=VAULT_ADDR=http://127.0.0.1:8200
 ExecStart=/bin/bash /etc/puppetlabs/code/modules/vault_client/files/vault-dev-server.sh
