@@ -37,10 +37,14 @@ var clusterApplyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
+
+		applyCmd := t.NewCmdTerraform(args)
+
 		utils.WaitOrCancel(
 			func(ctx context.Context) error {
-				return t.CmdTerraformApply(args, ctx)
+				return applyCmd.Apply()
 			},
+			t.Context(),
 		)
 	},
 }

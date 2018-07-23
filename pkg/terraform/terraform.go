@@ -4,6 +4,8 @@ package terraform
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -13,6 +15,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/hashicorp/terraform/command"
 	"github.com/kardianos/osext"
@@ -148,7 +151,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 	}
 
 	// listen to rpc
-	stopCh := make(chan struct{})
+	stopRpcCh := make(chan struct{})
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -156,7 +159,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		if err := rpc.ListenUnixSocket(
 			rpc.New(t.tarmak.Cluster()),
 			t.socketPath(cluster),
-			stopCh,
+			stopRpcCh,
 		); err != nil {
 			t.log.Fatalf("error listening to unix socket: %s", err)
 		}
@@ -204,7 +207,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		}
 	}
 
-	close(stopCh)
+	close(stopRpcCh)
 	wg.Wait()
 
 	return nil
@@ -281,11 +284,67 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	cmd.Dir = t.codePath(cluster)
 	cmd.Env = envVars
 
-	if err := cmd.Run(); err != nil {
+	complete := make(chan struct{})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	defer wg.Wait()
+	go func() {
+		for {
+			select {
+			case <-t.tarmak.Context().Done():
+				if cmd.Process != nil {
+					cmd.Process.Signal(syscall.SIGINT)
+					t.log.Infof("Attempting to remove terraform remote state lock")
+					if err := t.DeleteRemoteStateLock(cluster); err != nil {
+						t.log.Errorf("Failed to remove terraform remote state lock: %v", err)
+					}
+					t.log.Infof("Remote state lock was removed")
+				}
+				wg.Done()
+				return
+			case <-complete:
+				wg.Done()
+				return
+			}
+		}
+	}()
+
+	err = cmd.Run()
+	close(complete)
+	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (t *Terraform) DeleteRemoteStateLock(cluster interfaces.Cluster) error {
+
+	type LockID struct {
+		ID string `json:"ID"`
+	}
+	errMsg := errors.New("remote state lock ID not found")
+
+	result, err := t.tarmak.Provider().RetrieveRemoteStateStateDynamoDBTable()
+	if err != nil {
+		return fmt.Errorf("%s: %s", errMsg, err)
+	}
+
+	item := LockID{}
+	r, ok := result.Item["Info"]
+	if !ok {
+		return errMsg
+	}
+	json.Unmarshal([]byte(*r.S), &item)
+	if item.ID == "" {
+		return errMsg
+	}
+
+	return t.terraformWrapper(
+		cluster,
+		"force-unlock",
+		[]string{"--force", item.ID},
+	)
 }
 
 func (t *Terraform) Plan(cluster interfaces.Cluster) error {

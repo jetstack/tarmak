@@ -16,16 +16,17 @@ var clusterPlanCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
+
 		utils.WaitOrCancel(
 			func(ctx context.Context) error {
-				return t.CmdTerraformPlan(args, ctx)
+				return t.NewCmdTerraform(args).Plan()
 			},
+			t.Context(),
 			2,
 		)
 	},
 }
 
 func init() {
-	//clusterPlanFlags(clusterPlanCmd.PersistentFlags())
 	clusterCmd.AddCommand(clusterPlanCmd)
 }

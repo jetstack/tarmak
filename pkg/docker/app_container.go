@@ -18,11 +18,11 @@ type AppContainer struct {
 
 	dockerContainer *docker.Container
 
-	WorkingDir string   // working dir inside the container
-	Env        []string // environment variables
-	Cmd        []string // command to run in the container
-	Keep       bool     // don't cleanup containers
-
+	WorkingDir string        // working dir inside the container
+	Env        []string      // environment variables
+	Cmd        []string      // command to run in the container
+	Keep       bool          // don't cleanup containers
+	stopCh     chan struct{} // signal to kill container
 }
 
 func (ac *AppContainer) SetLog(log *logrus.Entry) {
@@ -197,4 +197,15 @@ func (ac *AppContainer) Capture(cmd string, args []string) (stdOut string, stdEr
 
 func (ac *AppContainer) Start() error {
 	return ac.app.dockerClient.StartContainer(ac.dockerContainer.ID, &docker.HostConfig{})
+}
+
+func (ac *AppContainer) Kill() error {
+	if ac.dockerContainer != nil {
+		return ac.app.dockerClient.KillContainer(docker.KillContainerOptions{
+			ID:     ac.dockerContainer.ID,
+			Signal: docker.SIGKILL,
+		})
+	}
+
+	return nil
 }

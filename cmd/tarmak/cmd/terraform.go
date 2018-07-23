@@ -5,15 +5,18 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
 // ensure plugin clients get closed after subcommand run
-func terraformPassthrough(args []string, f func([]string) int) int {
+func terraformPassthrough(args []string, f func([]string, chan struct{}) int) int {
 	defer plugin.CleanupClients()
-	return f(args)
+	stopCh := utils.BasicSignalHandler(logrus.NewEntry(logrus.New()))
+	return f(args, stopCh)
 }
 
 var internalPluginCmd = &cobra.Command{

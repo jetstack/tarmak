@@ -22,13 +22,18 @@ var clusterDestroyCmd = &cobra.Command{
 		}
 		return nil
 	},
+
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
+
+		destroyCmd := t.NewCmdTerraform(args)
+
 		utils.WaitOrCancel(
 			func(ctx context.Context) error {
-				return t.CmdTerraformDestroy(args, ctx)
+				return destroyCmd.Destroy()
 			},
+			t.Context(),
 		)
 	},
 }

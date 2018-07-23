@@ -2,6 +2,7 @@
 package tarmak
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
@@ -30,6 +32,7 @@ type Tarmak struct {
 	log             *logrus.Logger
 	flags           *tarmakv1alpha1.Flags
 	configDirectory string
+	ctx             context.Context
 
 	config    interfaces.Config
 	terraform *terraform.Terraform
@@ -54,6 +57,7 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
 		log:   logrus.New(),
 		flags: flags,
+		ctx:   utils.GetContext(),
 	}
 
 	t.initializeModules()
@@ -325,4 +329,8 @@ func (t *Tarmak) CmdKubectl(args []string) error {
 		return err
 	}
 	return t.kubectl.Kubectl(args)
+}
+
+func (t *Tarmak) Context() context.Context {
+	return t.ctx
 }

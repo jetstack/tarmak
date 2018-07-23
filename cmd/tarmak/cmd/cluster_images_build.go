@@ -20,6 +20,7 @@ var clusterImagesBuildCmd = &cobra.Command{
 			func(ctx context.Context) error {
 				return t.Packer().Build(ctx)
 			},
+			t.Context(),
 		)
 	},
 }

@@ -13,7 +13,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetContext() (context.Context, func()) {
+type Context struct {
+	context.Context
+	cancel func()
+}
+
+func GetContext() *Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
@@ -21,6 +26,7 @@ func GetContext() (context.Context, func()) {
 		select {
 		case sig := <-ch:
 			log.Infof("caught signal '%v'", sig)
+			cancel()
 		case <-ctx.Done():
 			log.Info("context done")
 		}
@@ -28,17 +34,26 @@ func GetContext() (context.Context, func()) {
 		log.Info("cancelling")
 		cancel()
 	}()
-	return ctx, cancel
+
+	return &Context{
+		ctx,
+		cancel,
+	}
 }
 
-func WaitOrCancel(f func(context.Context) error, ignoredExitStatuses ...int) {
-	ctx, cancel := GetContext()
-	defer cancel()
+func WaitOrCancel(f func(context.Context) error, c context.Context, ignoredExitStatuses ...int) {
+	ctx, ok := c.(*Context)
+	if !ok {
+		log.Error("Failed to assert context")
+		return
+	}
+	defer ctx.cancel()
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	defer wg.Wait()
 	finished := make(chan struct{})
 	defer close(finished)
+
 	go func() {
 		select {
 		case <-ctx.Done():
@@ -49,14 +64,14 @@ func WaitOrCancel(f func(context.Context) error, ignoredExitStatuses ...int) {
 			case <-finished:
 				wg.Done()
 				return
-			case <-time.After(time.Second):
+			case <-time.After(time.Second * 2):
 				log.Warn("Tarmak is shutting down.")
-				log.Warn("* Tarmak will exit after the current task finishes.")
+				log.Warn("* Tarmak will attempt to kill the current task.")
 				log.Warn("* Send another SIGTERM or SIGINT (ctrl-c) to exit immediately.")
 			}
 		}
 	}()
-	err := f(ctx)
+	err := f(c)
 	switch err {
 	case context.Canceled:
 		log.Warn("Tarmak was canceled. Re-run to complete any remaining tasks.")
@@ -76,11 +91,11 @@ func WaitOrCancel(f func(context.Context) error, ignoredExitStatuses ...int) {
 				}
 			}
 			if !errorOk {
-				log.WithError(err).Errorf("Tarmak exited with an error: %s", err)
+				log.Errorf("Tarmak exited with an error: %s", err)
 			}
 			log.Exit(exitStatus)
 		}
-		log.WithError(err).Fatalf("Tarmak exited with an error: %s", err)
+		log.Fatalf("Tarmak exited with an error: %s", err)
 	}
 }
 
@@ -91,10 +106,10 @@ func BasicSignalHandler(l *log.Entry) chan struct{} {
 
 	go func(l *log.Entry) {
 		<-ch
-		l.Infof("received interupt. shutting down...")
+		l.Infof("Received signal interupt. shutting down...")
 		close(stopCh)
 		<-ch
-		l.Infof("force closed")
+		l.Infof("Force closed.")
 		os.Exit(1)
 	}(l)
 
