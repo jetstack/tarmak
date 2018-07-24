@@ -51,10 +51,6 @@ func (c *MachineController) processNextItem() bool {
 }
 
 func (c *MachineController) syncMachine(key string) error {
-
-	// ensure only one converge at a time
-	c.wing.convergeWG.Wait()
-
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
 		c.log.Errorf("Fetching object with key %s from store failed with %v", key, err)

@@ -88,9 +88,6 @@ func (w *Wing) Run(args []string) error {
 	signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 	w.signalHandler(signalCh)
 
-	// run converge on instance after first start
-	go w.convergeMachine()
-
 	// start watching for API server events that trigger applies
 	w.watchForNotifications()
 
