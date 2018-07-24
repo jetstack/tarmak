@@ -269,6 +269,10 @@ func (w *Wing) puppetCommand(dir string, noop bool) Command {
 	)
 
 	return &execCommand{
+		Cmd: exec.Command("git", "status"),
+	}
+
+	return &execCommand{
 		Cmd: exec.Command("puppet", args...),
 	}
 }
