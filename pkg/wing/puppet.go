@@ -143,44 +143,39 @@ func (w *Wing) runPuppet(job *v1alpha1.WingJob) error {
 	return nil
 }
 
-func (w *Wing) convergeInstance() error {
-	instanceAPI := w.clientset.WingV1alpha1().Instances(w.flags.ClusterName)
-	instance, err := instanceAPI.Get(
+func (w *Wing) convergeMachine() error {
+	machineAPI := w.clientset.WingV1alpha1().Machines(w.flags.ClusterName)
+	machine, err := machineAPI.Get(
 		w.flags.InstanceName,
 		metav1.GetOptions{},
 	)
 	if err != nil {
 		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
-			instance = &v1alpha1.Instance{
+			machine = &v1alpha1.Machine{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: w.flags.InstanceName,
 				},
-				Status: &v1alpha1.InstanceStatus{
+				Status: v1alpha1.MachineStatus{
 					Converged: false,
 				},
 			}
-			_, err := instanceAPI.Create(instance)
+			_, err := machineAPI.Create(machine)
 			if err != nil {
-				return fmt.Errorf("error creating instance: %s", err)
+				return fmt.Errorf("error creating machine: %s", err)
 			}
 			return nil
 		}
-		return fmt.Errorf("error get existing instance: %s", err)
+		return fmt.Errorf("error get existing machine: %s", err)
 	}
 
-	if instance.Status.Converged {
-		w.log.Infof("Instance already converged: ", instance.Name)
+	if machine.Status.Converged {
+		w.log.Infof("Machine already converged: ", machine.Name)
 		return nil
 	}
 
-	if instance.Spec == nil {
-		w.log.Warnf("instance %s has empty spec field", instance.Name)
-		return nil
-	}
-
-	puppetTarget := instance.Spec.PuppetTargetRef
+	puppetTarget := machine.Spec.PuppetTargetRef
 	if puppetTarget == "" {
-		w.log.Warn("no puppet target for instance: ", instance.Name)
+		w.log.Warn("no puppet target for machine: ", machine.Name)
 		return nil
 	}
 
@@ -198,7 +193,7 @@ func (w *Wing) convergeInstance() error {
 					Name: jobName,
 				},
 				Spec: &v1alpha1.WingJobSpec{
-					InstanceName:     instance.Name,
+					InstanceName:     machine.Name,
 					PuppetTargetRef:  puppetTarget,
 					Operation:        "apply",
 					RequestTimestamp: metav1.Now(),
@@ -214,9 +209,9 @@ func (w *Wing) convergeInstance() error {
 		return fmt.Errorf("error get existing WingJob: %s", err)
 	}
 
-	instanceCopy := instance.DeepCopy()
-	instanceCopy.Status.Converged = true
-	_, err = instanceAPI.Update(instanceCopy)
+	machineCopy := machine.DeepCopy()
+	machineCopy.Status.Converged = true
+	_, err = machineAPI.Update(machineCopy)
 	if err != nil {
 		return err
 	}

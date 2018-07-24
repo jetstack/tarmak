@@ -32,8 +32,8 @@ type Wing struct {
 	convergeWG     sync.WaitGroup // wait group for converge runs
 
 	// controller loop
-	controller         *Controller
-	instanceController *InstanceController
+	controller        *Controller
+	machineController *MachineController
 
 	// allows overriding puppet command for testing
 	puppetCommandOverride Command
@@ -89,7 +89,7 @@ func (w *Wing) Run(args []string) error {
 	w.signalHandler(signalCh)
 
 	// run converge on instance after first start
-	go w.convergeInstance()
+	go w.convergeMachine()
 
 	// start watching for API server events that trigger applies
 	w.watchForNotifications()
@@ -155,31 +155,31 @@ func (w *Wing) watchForNotifications() {
 	// Now let's start the controller
 	go w.controller.Run(1, w.stopCh)
 
-	instanceListWatcher := cache.NewListWatchFromClient(
+	machineListWatcher := cache.NewListWatchFromClient(
 		w.clientset.WingV1alpha1().RESTClient(),
-		"instances", w.flags.ClusterName,
+		"machines", w.flags.ClusterName,
 		fields.ParseSelectorOrDie(fmt.Sprintf("metadata.name=%s",
 			w.flags.InstanceName)),
 	)
 
 	// create the workqueue
-	instanceQueue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+	machineQueue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
 	// Bind the workqueue to a cache with the help of an informer. This way we make sure that
 	// whenever the cache is updated, the pod key is added to the workqueue.
 	// Note that when we finally process the item from the workqueue, we might see a newer version
 	// of the Pod than the version which was responsible for triggering the update.
-	instanceIndexer, instanceInformer := cache.NewIndexerInformer(instanceListWatcher, &v1alpha1.Instance{}, 0, cache.ResourceEventHandlerFuncs{
+	machineIndexer, machineInformer := cache.NewIndexerInformer(machineListWatcher, &v1alpha1.Machine{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
-				instanceQueue.AddAfter(key, 2*time.Second)
+				machineQueue.AddAfter(key, 2*time.Second)
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
-				instanceQueue.AddAfter(key, 2*time.Second)
+				machineQueue.AddAfter(key, 2*time.Second)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -187,15 +187,15 @@ func (w *Wing) watchForNotifications() {
 			// key function.
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
-				instanceQueue.AddAfter(key, 2*time.Second)
+				machineQueue.AddAfter(key, 2*time.Second)
 			}
 		},
 	}, cache.Indexers{})
 
-	w.instanceController = NewInstanceController(instanceQueue, instanceIndexer, instanceInformer, w)
+	w.machineController = NewMachineController(machineQueue, machineIndexer, machineInformer, w)
 
 	// Now let's start the controller
-	go w.instanceController.Run(1, w.stopCh)
+	go w.machineController.Run(1, w.stopCh)
 
 }
 
@@ -216,7 +216,7 @@ func (w *Wing) signalHandler(ch chan os.Signal) {
 
 				// create new converge stop channel and run converge
 				w.convergeStopCh = make(chan struct{})
-				w.convergeInstance()
+				w.convergeMachine()
 
 			case syscall.SIGINT:
 				w.log.Infof("wing received SIGINT")

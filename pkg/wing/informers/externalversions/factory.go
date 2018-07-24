@@ -6,7 +6,6 @@ package externalversions
 
 import (
 	client "github.com/jetstack/tarmak/pkg/wing/client"
-	apis "github.com/jetstack/tarmak/pkg/wing/informers/externalversions/apis"
 	internalinterfaces "github.com/jetstack/tarmak/pkg/wing/informers/externalversions/internalinterfaces"
 	wing "github.com/jetstack/tarmak/pkg/wing/informers/externalversions/wing"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -109,12 +108,7 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Wing() apis.Interface
 	Wing() wing.Interface
-}
-
-func (f *sharedInformerFactory) Wing() apis.Interface {
-	return apis.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Wing() wing.Interface {

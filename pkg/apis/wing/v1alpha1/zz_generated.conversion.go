@@ -243,6 +243,7 @@ func autoConvert_v1alpha1_MachineSpec_To_wing_MachineSpec(in *MachineSpec, out *
 		return err
 	}
 	out.ConfigSource = (*v1.NodeConfigSource)(unsafe.Pointer(in.ConfigSource))
+	out.PuppetTargetRef = in.PuppetTargetRef
 	return nil
 }
 
@@ -262,6 +263,7 @@ func autoConvert_wing_MachineSpec_To_v1alpha1_MachineSpec(in *wing.MachineSpec, 
 		return err
 	}
 	out.ConfigSource = (*v1.NodeConfigSource)(unsafe.Pointer(in.ConfigSource))
+	out.PuppetTargetRef = in.PuppetTargetRef
 	return nil
 }
 
@@ -278,6 +280,7 @@ func autoConvert_v1alpha1_MachineStatus_To_wing_MachineStatus(in *MachineStatus,
 	out.ErrorMessage = (*string)(unsafe.Pointer(in.ErrorMessage))
 	out.ProviderStatus = (*runtime.RawExtension)(unsafe.Pointer(in.ProviderStatus))
 	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
+	out.Converged = in.Converged
 	return nil
 }
 
@@ -294,6 +297,7 @@ func autoConvert_wing_MachineStatus_To_v1alpha1_MachineStatus(in *wing.MachineSt
 	out.ErrorMessage = (*string)(unsafe.Pointer(in.ErrorMessage))
 	out.ProviderStatus = (*runtime.RawExtension)(unsafe.Pointer(in.ProviderStatus))
 	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
+	out.Converged = in.Converged
 	return nil
 }
 

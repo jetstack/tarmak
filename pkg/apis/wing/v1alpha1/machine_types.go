@@ -77,6 +77,8 @@ type MachineSpec struct {
 	// as-is.
 	// +optional
 	ConfigSource *corev1.NodeConfigSource `json:"configSource,omitempty"`
+
+	PuppetTargetRef string `json:"puppetTargetRef"`
 }
 
 // MachineStatus defines the observed state of Machine
