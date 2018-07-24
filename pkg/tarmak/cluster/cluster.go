@@ -308,10 +308,15 @@ func (c *Cluster) Verify() error {
 }
 
 func (c *Cluster) verifyHubState() error {
-	errMsg := "ensure hub cluster has been fully applied"
+	// The hub should be manually applied first to ensure the vault token and private key can be saved
+	errMsg := "hub cluster must be applied once first"
+	err := c.Environment().Tarmak().Terraform().Prepare(c.Environment().Hub())
+	if err != nil {
+		return fmt.Errorf("failed to prepare hub cluster for output, %s: %v", errMsg, err)
+	}
 	output, err := c.Environment().Tarmak().Terraform().Output(c.Environment().Hub())
 	if err != nil {
-		return fmt.Errorf("failed to retrieve hub cluster output, %s: %v", errMsg, err)
+		return fmt.Errorf("failed to get hub cluster output values, %s: %v", errMsg, err)
 	}
 
 	requiredHubResources := []string{
