@@ -181,6 +181,35 @@ go_generate_types: depend $(TYPES_FILES)
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
 		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
 		--output-file-base zz_generated.conversion
+	# Generate the internal clientset (pkg/client/clientset_generated/internalclientset)
+	${BINDIR}/client-gen "$@" \
+			  --go-header-file "${HACK_DIR}/boilerplate/boilerplate.go.txt" \
+			  --input-base "github.com/jetstack/tarmak/pkg/apis/" \
+			  --input "wing" \
+			  --clientset-path "github.com/jetstack/tarmak/pkg/wing/clients" \
+			  --clientset-name internalclientset \
+	# Generate the versioned clientset (pkg/client/clientset_generated/clientset)
+	${BINDIR}/client-gen "$@" \
+			  --go-header-file "${HACK_DIR}/boilerplate/boilerplate.go.txt" \
+			  --input-base "github.com/jetstack/tarmak/pkg/apis/" \
+			  --input "wing/v1alpha1" \
+			  --clientset-path "github.com/jetstack/tarmak/pkg/wing" \
+			  --clientset-name "client" \
+	# generate lister
+	${BINDIR}/lister-gen "$@" \
+			  --go-header-file "${HACK_DIR}/boilerplate/boilerplate.go.txt" \
+			  --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing" \
+			  --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1" \
+			  --output-package "github.com/jetstack/tarmak/pkg/wing/listers" \
+	# generate informer
+	${BINDIR}/informer-gen "$@" \
+			  --go-header-file "${HACK_DIR}/boilerplate/boilerplate.go.txt" \
+			  --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing" \
+			  --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1" \
+			  --internal-clientset-package "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset" \
+			  --versioned-clientset-package "github.com/jetstack/tarmak/pkg/wing/client" \
+			  --listers-package "github.com/jetstack/tarmak/pkg/wing/listers" \
+	--output-package "github.com/jetstack/tarmak/pkg/wing/informers"	
 	# generate all pkg/client contents
 	$(HACK_DIR)/update-client-gen.sh
 
