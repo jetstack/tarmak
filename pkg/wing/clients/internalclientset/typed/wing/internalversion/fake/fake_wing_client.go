@@ -15,6 +15,10 @@ func (c *FakeWing) Instances(namespace string) internalversion.InstanceInterface
 	return &FakeInstances{c, namespace}
 }
 
+func (c *FakeWing) Machines(namespace string) internalversion.MachineInterface {
+	return &FakeMachines{c, namespace}
+}
+
 func (c *FakeWing) PuppetTargets(namespace string) internalversion.PuppetTargetInterface {
 	return &FakePuppetTargets{c, namespace}
 }

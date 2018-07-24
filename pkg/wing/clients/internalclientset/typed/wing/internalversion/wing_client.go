@@ -9,6 +9,7 @@ import (
 type WingInterface interface {
 	RESTClient() rest.Interface
 	InstancesGetter
+	MachinesGetter
 	PuppetTargetsGetter
 	WingJobsGetter
 }
@@ -20,6 +21,10 @@ type WingClient struct {
 
 func (c *WingClient) Instances(namespace string) InstanceInterface {
 	return newInstances(c, namespace)
+}
+
+func (c *WingClient) Machines(namespace string) MachineInterface {
+	return newMachines(c, namespace)
 }
 
 func (c *WingClient) PuppetTargets(namespace string) PuppetTargetInterface {

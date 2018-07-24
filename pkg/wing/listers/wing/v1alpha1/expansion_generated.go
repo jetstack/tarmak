@@ -12,6 +12,14 @@ type InstanceListerExpansion interface{}
 // InstanceNamespaceLister.
 type InstanceNamespaceListerExpansion interface{}
 
+// MachineListerExpansion allows custom methods to be added to
+// MachineLister.
+type MachineListerExpansion interface{}
+
+// MachineNamespaceListerExpansion allows custom methods to be added to
+// MachineNamespaceLister.
+type MachineNamespaceListerExpansion interface{}
+
 // PuppetTargetListerExpansion allows custom methods to be added to
 // PuppetTargetLister.
 type PuppetTargetListerExpansion interface{}

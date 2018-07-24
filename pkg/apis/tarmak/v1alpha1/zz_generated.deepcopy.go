@@ -167,6 +167,11 @@ func (in *Environment) DeepCopyInto(out *Environment) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.AdminCIDRs != nil {
+		in, out := &in.AdminCIDRs, &out.AdminCIDRs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

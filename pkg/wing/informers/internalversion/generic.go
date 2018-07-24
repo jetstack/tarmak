@@ -40,6 +40,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=wing.tarmak.io, Version=internalVersion
 	case wing.SchemeGroupVersion.WithResource("instances"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().InternalVersion().Instances().Informer()}, nil
+	case wing.SchemeGroupVersion.WithResource("machines"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().InternalVersion().Machines().Informer()}, nil
 	case wing.SchemeGroupVersion.WithResource("puppettargets"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().InternalVersion().PuppetTargets().Informer()}, nil
 	case wing.SchemeGroupVersion.WithResource("wingjobs"):
