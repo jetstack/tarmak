@@ -24,6 +24,7 @@
 class vault_client (
   $version = $::vault_client::params::version,
   $bin_dir = $::vault_client::params::bin_dir,
+  $local_bin_dir = $::vault_client::params::local_bin_dir,
   $download_dir = $::vault_client::params::download_dir,
   $dest_dir = $::vault_client::params::dest_dir,
   $server_url = $::vault_client::params::server_url,
@@ -74,6 +75,12 @@ class vault_client (
   $token_service_name = 'vault-token-renewal'
 
   $_dest_dir = "${dest_dir}/${::vault_client::params::app_name}-${version}"
+
+  user { 'vault-user':
+    user   => 'vault',
+    system => true,
+    home   => '/var/lib/vault',
+  }
 
   class { '::vault_client::install': }
   -> class { '::vault_client::config': }

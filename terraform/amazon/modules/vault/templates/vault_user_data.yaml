@@ -7,9 +7,9 @@ preserve_hostname: true
 users:
 - default
 
-- name: vault
-  system: true
-  home_dir: /var/lib/vault
+  #- name: vault
+  #  system: true
+  #  home_dir: /var/lib/vault
 
 - name: consul
   system: true
@@ -119,62 +119,62 @@ write_files:
     [Install]
     WantedBy=multi-user.target
 
-- path: /etc/systemd/system/vault-assets.service
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Fetch vault assets
-    After=network-online.target
-    Requires=network-online.target
+    #- path: /etc/systemd/system/vault-assets.service
+    #  permissions: '0644'
+    #  content: |
+    #    [Unit]
+    #    Description=Fetch vault assets
+    #    After=network-online.target
+    #    Requires=network-online.target
+    #
+    #    [Service]
+    #    Type=oneshot
+    #    RemainAfterExit=yes
+    #    ExecStart=/bin/bash -c "aws configure set s3.signature_version s3v4 && aws s3 cp ${vault_tls_cert_path} /etc/vault/tls/tls.pem && aws s3 cp ${vault_tls_key_path} /etc/vault/tls/tls-key.pem && chmod 0600 /etc/vault/tls/tls-key.pem && aws s3 cp ${vault_tls_ca_path} /etc/vault/tls/ca.pem"
+    #
+    #    [Install]
+    #    WantedBy=multi-user.target
 
-    [Service]
-    Type=oneshot
-    RemainAfterExit=yes
-    ExecStart=/bin/bash -c "aws configure set s3.signature_version s3v4 && aws s3 cp ${vault_tls_cert_path} /etc/vault/tls/tls.pem && aws s3 cp ${vault_tls_key_path} /etc/vault/tls/tls-key.pem && chmod 0600 /etc/vault/tls/tls-key.pem && aws s3 cp ${vault_tls_ca_path} /etc/vault/tls/ca.pem"
+    #- path: /etc/systemd/system/vault-unsealer.service
+    #  permissions: '0644'
+    #  content: |
+    #    [Unit]
+    #    Description=Vault unsealer service
+    #    Requires=vault-assets.service
+    #    After=vault-assets.service
+    #
+    #    [Service]
+    #    Restart=always
+    #    RestartSec=5
+    #    Environment=AWS_REGION=${region}
+    #    Environment=VAULT_CACERT=/etc/vault/tls/ca.pem
+    #    Environment=VAULT_ADDR=https://localhost:8200
+    #    Environment=VAULT_UNSEALER_MODE=aws-kms-ssm
+    #    Environment=VAULT_UNSEALER_AWS_KMS_KEY_ID=${vault_unsealer_kms_key_id}
+    #    Environment=VAULT_UNSEALER_AWS_SSM_KEY_PREFIX=${vault_unsealer_ssm_key_prefix}
+    #    Environment=VAULT_UNSEALER_STORE_ROOT_TOKEN=false
+    #    ExecStart=/usr/local/bin/vault-unsealer unseal
+    #
+    #    [Install]
+    #    WantedBy=multi-user.target
 
-    [Install]
-    WantedBy=multi-user.target
-
-- path: /etc/systemd/system/vault-unsealer.service
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Vault unsealer service
-    Requires=vault-assets.service
-    After=vault-assets.service
-
-    [Service]
-    Restart=always
-    RestartSec=5
-    Environment=AWS_REGION=${region}
-    Environment=VAULT_CACERT=/etc/vault/tls/ca.pem
-    Environment=VAULT_ADDR=https://localhost:8200
-    Environment=VAULT_UNSEALER_MODE=aws-kms-ssm
-    Environment=VAULT_UNSEALER_AWS_KMS_KEY_ID=${vault_unsealer_kms_key_id}
-    Environment=VAULT_UNSEALER_AWS_SSM_KEY_PREFIX=${vault_unsealer_ssm_key_prefix}
-    Environment=VAULT_UNSEALER_STORE_ROOT_TOKEN=false
-    ExecStart=/usr/local/bin/vault-unsealer unseal
-
-    [Install]
-    WantedBy=multi-user.target
-
-- path: /etc/systemd/system/vault.service
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Vault server
-    Requires=consul.service vault-assets.service
-    After=consul.service vault-assets.service
-
-    [Service]
-    Environment=AWS_REGION=${region}
-    ExecStart=/usr/local/bin/vault server \
-      -config=/etc/vault/vault.hcl
-    Restart=on-failure
-    RestartSec=10
-
-    [Install]
-    WantedBy=multi-user.target
+    #- path: /etc/systemd/system/vault.service
+    #  permissions: '0644'
+    #  content: |
+    #    [Unit]
+    #    Description=Vault server
+    #    Requires=consul.service vault-assets.service
+    #    After=consul.service vault-assets.service
+    #
+    #    [Service]
+    #    Environment=AWS_REGION=${region}
+    #    ExecStart=/usr/local/bin/vault server \
+    #      -config=/etc/vault/vault.hcl
+    #    Restart=on-failure
+    #    RestartSec=10
+    #
+    #    [Install]
+    #    WantedBy=multi-user.target
 
 
 - path: "/etc/consul/consul.json"
@@ -302,21 +302,21 @@ write_files:
     download_app "vault" "$${VAULT_VERSION}"
     download_app "consul" "$${CONSUL_VERSION}"
 
-- path: /usr/local/bin/download-vault-unsealer.sh
-  permissions: "0755"
-  content: |
-    #!/bin/bash
-
-    set -euo pipefail
-
-    VAULT_UNSEALER_VERSION=0.1.4
-    VAULT_UNSEALER_HASH=7a01a119429b93edecb712aa897f2b22ba0575b7db5f810d4a9a40d993dad1aa
-    DEST_DIR=$${DEST_DIR:-/usr/local/bin}
-
-    curl -sL https://github.com/jetstack/vault-unsealer/releases/download/$${VAULT_UNSEALER_VERSION}/vault-unsealer_$${VAULT_UNSEALER_VERSION}_linux_amd64 > $${DEST_DIR}/vault-unsealer
-
-    echo "$${VAULT_UNSEALER_HASH}  $${DEST_DIR}/vault-unsealer" | sha256sum -c
-    chmod +x "$${DEST_DIR}/vault-unsealer"
+    #- path: /usr/local/bin/download-vault-unsealer.sh
+    #  permissions: "0755"
+    #  content: |
+    #    #!/bin/bash
+    #
+    #    set -euo pipefail
+    #
+    #    VAULT_UNSEALER_VERSION=0.1.4
+    #    VAULT_UNSEALER_HASH=7a01a119429b93edecb712aa897f2b22ba0575b7db5f810d4a9a40d993dad1aa
+    #    DEST_DIR=$${DEST_DIR:-/usr/local/bin}
+    #
+    #    curl -sL https://github.com/jetstack/vault-unsealer/releases/download/$${VAULT_UNSEALER_VERSION}/vault-unsealer_$${VAULT_UNSEALER_VERSION}_linux_amd64 > $${DEST_DIR}/vault-unsealer
+    #
+    #    echo "$${VAULT_UNSEALER_HASH}  $${DEST_DIR}/vault-unsealer" | sha256sum -c
+    #    chmod +x "$${DEST_DIR}/vault-unsealer"
 
 - path: /usr/local/bin/download-consul-backinator.sh
   permissions: "0755"
@@ -361,12 +361,12 @@ write_files:
 
     rm -rf "$${backup_local_path}" "$${backup_local_path}.sig" "$${backup_local_acls_path}" "$${backup_local_acls_path}.sig"
 
-- path: /etc/profile.d/vault.sh
-  permissions: "0644"
-  content: |
-    export PATH=$PATH:/usr/local/bin
-    export VAULT_ADDR=https://localhost:8200
-    export VAULT_CACERT=/etc/vault/tls/ca.pem
+    #- path: /etc/profile.d/vault.sh
+    #  permissions: "0644"
+    #  content: |
+    #    export PATH=$PATH:/usr/local/bin
+    #    export VAULT_ADDR=https://localhost:8200
+    #    export VAULT_CACERT=/etc/vault/tls/ca.pem
 
 runcmd:
 - chown consul:consul /etc/consul/consul.json
