@@ -17,6 +17,24 @@ func (k *Kubernetes) WritePolicy(p *Policy) error {
 	return nil
 }
 
+func (k *Kubernetes) DeletePolicy(p *Policy) error {
+	err := k.vaultClient.Sys().DeletePolicy(p.Name)
+	if err != nil {
+		return fmt.Errorf("error deleting policy '%s': %v", p.Name, err)
+	}
+
+	return nil
+}
+
+func (k *Kubernetes) ReadPolicy(p *Policy) (string, error) {
+	policy, err := k.vaultClient.Sys().GetPolicy(p.Name)
+	if err != nil {
+		return "", fmt.Errorf("error reading policy '%s': %v", p.Name, err)
+	}
+
+	return policy, nil
+}
+
 func (k *Kubernetes) ensurePolicies() error {
 	var result error
 
@@ -37,6 +55,38 @@ func (k *Kubernetes) ensurePolicies() error {
 	return result
 }
 
+func (k *Kubernetes) deletePolicies() error {
+	var result *multierror.Error
+
+	for _, p := range []*Policy{
+		k.etcdPolicy(),
+		k.masterPolicy(),
+		k.workerPolicy(),
+	} {
+		if err := k.DeletePolicy(p); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result.ErrorOrNil()
+}
+
+func (k *Kubernetes) ensureDryRunPolicies() (bool, error) {
+	var result *multierror.Error
+
+	for _, p := range []*Policy{k.etcdPolicy(), k.masterPolicy(), k.workerPolicy()} {
+		policy, err := k.ReadPolicy(p)
+		if err != nil {
+			result = multierror.Append(result, err)
+		} else if policy != p.Policy() {
+			return true, result.ErrorOrNil()
+		}
+
+	}
+
+	return false, result.ErrorOrNil()
+}
+
 func (k *Kubernetes) etcdPolicy() *Policy {
 	role := "etcd"
 	return &Policy{
@@ -44,11 +94,11 @@ func (k *Kubernetes) etcdPolicy() *Policy {
 		Role: role,
 		Policies: []*policyPath{
 			&policyPath{
-				path:         filepath.Join(k.etcdKubernetesPKI.Path(), "sign/server"),
+				path:         filepath.Join(k.etcdKubernetesBackend.Path(), "sign/server"),
 				capabilities: []string{"create", "read", "update"},
 			},
 			&policyPath{
-				path:         filepath.Join(k.etcdOverlayPKI.Path(), "sign/server"),
+				path:         filepath.Join(k.etcdOverlayBackend.Path(), "sign/server"),
 				capabilities: []string{"create", "read", "update"},
 			},
 		},
@@ -62,11 +112,15 @@ func (k *Kubernetes) masterPolicy() *Policy {
 		Role: role,
 		Policies: []*policyPath{
 			&policyPath{
-				path:         filepath.Join(k.etcdKubernetesPKI.Path(), "sign/client"),
+				path:         filepath.Join(k.etcdKubernetesBackend.Path(), "sign/client"),
 				capabilities: []string{"create", "read", "update"},
 			},
 			&policyPath{
-				path:         filepath.Join(k.secretsGeneric.Path(), "service-accounts"),
+				path:         k.secretsBackend.ServiceAccountsPath(),
+				capabilities: []string{"read"},
+			},
+			&policyPath{
+				path:         k.secretsBackend.EncryptionConfigPath(),
 				capabilities: []string{"read"},
 			},
 		},
@@ -77,7 +131,7 @@ func (k *Kubernetes) masterPolicy() *Policy {
 		p.Policies = append(
 			p.Policies,
 			&policyPath{
-				path:         filepath.Join(k.kubernetesPKI.Path(), "sign", k8sRole),
+				path:         filepath.Join(k.kubernetesBackend.Path(), "sign", k8sRole),
 				capabilities: []string{"create", "read", "update"},
 			},
 		)
@@ -87,7 +141,7 @@ func (k *Kubernetes) masterPolicy() *Policy {
 	p.Policies = append(
 		p.Policies,
 		&policyPath{
-			path:         filepath.Join(k.kubernetesAPIProxy.Path(), "sign", "kube-apiserver"),
+			path:         filepath.Join(k.kubernetesAPIProxyBackend.Path(), "sign", "kube-apiserver"),
 			capabilities: []string{"create", "read", "update"},
 		},
 	)
@@ -101,15 +155,15 @@ func (k *Kubernetes) masterPolicy() *Policy {
 func (k *Kubernetes) workerPolicyPaths() []*policyPath {
 	return []*policyPath{
 		&policyPath{
-			path:         filepath.Join(k.kubernetesPKI.Path(), "sign/kubelet"),
+			path:         filepath.Join(k.kubernetesBackend.Path(), "sign/kubelet"),
 			capabilities: []string{"create", "read", "update"},
 		},
 		&policyPath{
-			path:         filepath.Join(k.kubernetesPKI.Path(), "sign/kube-proxy"),
+			path:         filepath.Join(k.kubernetesBackend.Path(), "sign/kube-proxy"),
 			capabilities: []string{"create", "read", "update"},
 		},
 		&policyPath{
-			path:         filepath.Join(k.etcdOverlayPKI.Path(), "sign/client"),
+			path:         filepath.Join(k.etcdOverlayBackend.Path(), "sign/client"),
 			capabilities: []string{"create", "read", "update"},
 		},
 	}

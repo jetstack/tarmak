@@ -4,9 +4,9 @@ package kubernetes
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/hashicorp/go-multierror"
+	vault "github.com/hashicorp/vault/api"
 )
 
 type InitToken struct {
@@ -41,6 +41,52 @@ func (i *InitToken) Ensure() error {
 	return result
 }
 
+func (i *InitToken) Delete() error {
+	var result *multierror.Error
+
+	if err := i.deleteInitTokenPolicy(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if err := i.deleteTokenRole(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
+}
+
+func (i *InitToken) EnsureDryRun() (bool, error) {
+	var result *multierror.Error
+
+	secret, err := i.readTokenRole()
+	if err != nil {
+		result = multierror.Append(result, err)
+	} else if len(secret.Data) == 0 {
+		return true, result.ErrorOrNil()
+	}
+
+	if !secretDataMatch(secret.Data, i.writeData()) {
+		return true, result.ErrorOrNil()
+	}
+
+	policy, err := i.readInitTokenPolicy()
+	if err != nil {
+		result = multierror.Append(result, err)
+	} else if policy != i.policy().Policy() {
+		return true, result.ErrorOrNil()
+	}
+
+	// get init token from secrets backend
+	token, err := i.secretsBackend().InitToken(i.Name(), i.Role, []string{fmt.Sprintf("%s-creator", i.namePath())}, i.ExpectedToken)
+	if err != nil {
+		result = multierror.Append(result, err)
+	} else if token == "" {
+		return true, result.ErrorOrNil()
+	}
+
+	return false, result.ErrorOrNil()
+}
+
 // Get init token name
 func (i *InitToken) Name() string {
 	return fmt.Sprintf("%s-%s", i.kubernetes.clusterID, i.Role)
@@ -63,17 +109,7 @@ func (i *InitToken) Path() string {
 
 // Write token role to vault
 func (i *InitToken) writeTokenRole() error {
-	policies := i.Policies
-	policies = append(policies, "default")
-
-	writeData := map[string]interface{}{
-		"period":           fmt.Sprintf("%ds", int(i.kubernetes.MaxValidityComponents.Seconds())),
-		"orphan":           true,
-		"allowed_policies": strings.Join(policies, ","),
-		"path_suffix":      i.namePath(),
-	}
-
-	_, err := i.kubernetes.vaultClient.Logical().Write(i.Path(), writeData)
+	_, err := i.kubernetes.vaultClient.Logical().Write(i.Path(), i.writeData())
 	if err != nil {
 		return fmt.Errorf("error writing token role %s: %v", i.Path(), err)
 	}
@@ -81,9 +117,26 @@ func (i *InitToken) writeTokenRole() error {
 	return nil
 }
 
-// Construct policy and send to kubernetes to be written to vault
-func (i *InitToken) writeInitTokenPolicy() error {
-	p := &Policy{
+func (i *InitToken) deleteTokenRole() error {
+	_, err := i.kubernetes.vaultClient.Logical().Delete(i.Path())
+	if err != nil {
+		return fmt.Errorf("error deleting token role %s: %v", i.Path(), err)
+	}
+
+	return nil
+}
+
+func (i *InitToken) readTokenRole() (*vault.Secret, error) {
+	secret, err := i.kubernetes.vaultClient.Logical().Read(i.Path())
+	if err != nil {
+		return nil, fmt.Errorf("error read token role %s: %v", i.Path(), err)
+	}
+
+	return secret, nil
+}
+
+func (i *InitToken) policy() *Policy {
+	return &Policy{
 		Name: fmt.Sprintf("%s-creator", i.namePath()),
 		Policies: []*policyPath{
 			&policyPath{
@@ -92,18 +145,29 @@ func (i *InitToken) writeInitTokenPolicy() error {
 			},
 		},
 	}
-	return i.kubernetes.WritePolicy(p)
 }
 
-// Return init token if token exists
-// Retrieve from generic if !exists
+// Construct policy and send to kubernetes to be written to vault
+func (i *InitToken) writeInitTokenPolicy() error {
+	return i.kubernetes.WritePolicy(i.policy())
+}
+
+func (i *InitToken) deleteInitTokenPolicy() error {
+	return i.kubernetes.DeletePolicy(i.policy())
+}
+
+func (i *InitToken) readInitTokenPolicy() (string, error) {
+	return i.kubernetes.ReadPolicy(i.policy())
+}
+
+// InitToken fetches the token from the secrets backend if it is not already set
 func (i *InitToken) InitToken() (string, error) {
 	if i.token != nil {
 		return *i.token, nil
 	}
 
-	// get init token from generic
-	token, err := i.secretsGeneric().InitToken(i.Name(), i.Role, []string{fmt.Sprintf("%s-creator", i.namePath())}, i.ExpectedToken)
+	// get init token from the secrets backend
+	token, err := i.secretsBackend().InitToken(i.Name(), i.Role, []string{fmt.Sprintf("%s-creator", i.namePath())}, i.ExpectedToken)
 	if err != nil {
 		return "", err
 	}
@@ -112,6 +176,18 @@ func (i *InitToken) InitToken() (string, error) {
 	return token, nil
 }
 
-func (i *InitToken) secretsGeneric() *Generic {
-	return i.kubernetes.secretsGeneric
+func (i *InitToken) secretsBackend() *GenericVaultBackend {
+	return i.kubernetes.secretsBackend
+}
+
+func (i *InitToken) writeData() map[string]interface{} {
+	policies := i.Policies
+	//policies = append(policies, "default")
+
+	return map[string]interface{}{
+		"period":           fmt.Sprintf("%d", int(i.kubernetes.MaxValidityComponents.Seconds())),
+		"orphan":           true,
+		"allowed_policies": policies,
+		"path_suffix":      i.namePath(),
+	}
 }
