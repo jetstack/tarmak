@@ -127,7 +127,6 @@ type Provider interface {
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
 	VerifyInstanceTypes(intstancePools []InstancePool) error
-	Credentials() (map[string]string, error)
 }
 
 type Tarmak interface {

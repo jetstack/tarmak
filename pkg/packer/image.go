@@ -90,14 +90,22 @@ func (i *image) Build() (amiID string, err error) {
 		Variables:  i.tags(),
 	}
 
-	creds, err := i.tarmak.Provider().Credentials()
+	envVars, err := i.tarmak.Provider().Environment()
 	if err != nil {
 		return "", fmt.Errorf("faild to get provider credentials: %v", err)
 	}
 
 	var result *multierror.Error
-	for k, v := range creds {
-		if err := os.Setenv(k, v); err != nil {
+	for _, e := range envVars {
+		kv := strings.Split(e, "=")
+		if len(kv) < 2 {
+			err := fmt.Errorf("malformed environment variable: %s", kv)
+			result = multierror.Append(result, err)
+			continue
+		}
+
+		v := strings.Join(kv[1:], "")
+		if err := os.Setenv(kv[0], v); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
