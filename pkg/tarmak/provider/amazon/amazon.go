@@ -603,3 +603,22 @@ func (a *Amazon) VolumeType(typeIn string) (typeOut string, err error) {
 	// TODO: Validate custom instance type here
 	return typeIn, nil
 }
+
+func (a *Amazon) Credentials() (map[string]string, error) {
+	sess, err := a.Session()
+	if err != nil {
+		return nil, fmt.Errorf("faild to get amazon session: %v", err)
+	}
+
+	creds, err := sess.Config.Credentials.Get()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get amazon credentials: %v", err)
+	}
+
+	return map[string]string{
+		"AWS_ACCESS_KEY_ID":     creds.AccessKeyID,
+		"AWS_SECRET_ACCESS_KEY": creds.SecretAccessKey,
+		"AWS_SESSION_TOKEN":     creds.SessionToken,
+		"AWS_DEFAULT_REGION":    a.Region(),
+	}, nil
+}

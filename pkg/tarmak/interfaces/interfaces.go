@@ -2,7 +2,6 @@
 package interfaces
 
 import (
-	"context"
 	"io"
 	"net"
 
@@ -128,6 +127,7 @@ type Provider interface {
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
 	VerifyInstanceTypes(intstancePools []InstancePool) error
+	Credentials() (map[string]string, error)
 }
 
 type Tarmak interface {
@@ -190,7 +190,7 @@ type Config interface {
 type Packer interface {
 	IDs() (map[string]string, error)
 	List() ([]tarmakv1alpha1.Image, error)
-	Build(ctx context.Context) error
+	Build() error
 }
 
 type Terraform interface {

@@ -2,18 +2,15 @@
 package packer
 
 import (
-	"context"
 	"time"
 
 	"github.com/sirupsen/logrus"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
-	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
 type Packer struct {
-	*tarmakDocker.App
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
 }
@@ -23,15 +20,7 @@ var _ interfaces.Packer = &Packer{}
 func New(tarmak interfaces.Tarmak) *Packer {
 	log := tarmak.Log().WithField("module", "packer")
 
-	app := tarmakDocker.NewApp(
-		tarmak,
-		log,
-		"jetstack/tarmak-packer",
-		"packer",
-	)
-
 	p := &Packer{
-		App:    app,
 		tarmak: tarmak,
 		log:    log,
 	}
@@ -68,9 +57,9 @@ func (p *Packer) List() ([]tarmakv1alpha1.Image, error) {
 }
 
 // Build all images
-func (p *Packer) Build(ctx context.Context) error {
+func (p *Packer) Build() error {
 	for _, image := range p.images() {
-		amiID, err := image.Build(ctx)
+		amiID, err := image.Build()
 		if err != nil {
 			return err
 		}

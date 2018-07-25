@@ -18,7 +18,6 @@ import (
 	"github.com/kardianos/osext"
 	"github.com/sirupsen/logrus"
 
-	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
@@ -30,7 +29,6 @@ const debugShell = "debug-shell"
 var wingHash = ""
 
 type Terraform struct {
-	*tarmakDocker.App
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
 }
