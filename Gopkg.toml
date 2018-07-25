@@ -138,6 +138,26 @@ required = [
   name = "github.com/chzyer/readline"
   revision = "c914be64f07d9998f52bf0d598ec26d457168c0f"
 
+[[override]]
+  name = "github.com/hashicorp/packer"
+  version = "1.2.5"
+
+[[override]]
+  name = "github.com/hashicorp/go-retryablehttp"
+  revision = "6e85be8fee1dcaa02c0eaaac2df5a8fbecf94145"
+
+[[override]]
+  name = "github.com/golang/mock"
+  revision = "v1.1.1"
+
+[[override]]
+  name = "k8s.io/gengo"
+  revision = "b58fc7edb82e0c6ffc9b8aef61813c7261b785d4"
+
+[[constraint]]
+  name = "github.com/docker/docker"
+  revision = "bc7424b4434443b036604277bfcdee3fa34a268a"
+
 [prune]
   non-go = true
   go-tests = true

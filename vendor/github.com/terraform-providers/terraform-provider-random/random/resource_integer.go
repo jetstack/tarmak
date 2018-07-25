@@ -40,7 +40,7 @@ func resourceInteger() *schema.Resource {
 			"seed": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				ForceNew: true,
 			},
 
 			"result": {

@@ -2,7 +2,6 @@
 package interfaces
 
 import (
-	"context"
 	"io"
 	"net"
 
@@ -190,7 +189,7 @@ type Config interface {
 type Packer interface {
 	IDs() (map[string]string, error)
 	List() ([]tarmakv1alpha1.Image, error)
-	Build(ctx context.Context) error
+	Build() error
 }
 
 type Terraform interface {

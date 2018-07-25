@@ -18,7 +18,7 @@ var clusterImagesBuildCmd = &cobra.Command{
 		defer t.Cleanup()
 		utils.WaitOrCancel(
 			func(ctx context.Context) error {
-				return t.Packer().Build(ctx)
+				return t.Packer().Build()
 			},
 		)
 	},
