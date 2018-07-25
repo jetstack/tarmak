@@ -113,4 +113,7 @@ following annotations to your clusters network configuration (located in
 			  tarmak.io/existing-public-subnet-ids: subnet-xxxxxxxx,subnet-xxxxxxxx,subnet-xxxxxxxx
 			  tarmak.io/existing-private-subnet-ids: subnet-xxxxxxxx,subnet-xxxxxxxx,subnet-xxxxxxxx
 
+**Note** you need to add these annotations to all clusters for that VPC, this
+includes hub clusters.
+
 Now you can run ``tarmak cluster apply`` and continue as normal.
