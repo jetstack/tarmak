@@ -1,13 +1,12 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"regexp"
 	"strconv"
 	"time"
-
-	"bytes"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -57,10 +56,11 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateElbNamePrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateElbNamePrefix,
 			},
 
 			"internal": {
@@ -103,10 +103,12 @@ func resourceAwsLb() *schema.Resource {
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -122,25 +124,27 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"access_logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfLBType("network"),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:             schema.TypeString,
+							Required:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeBool,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 					},
 				},
@@ -153,21 +157,24 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"idle_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  60,
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          60,
+				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
 			"enable_cross_zone_load_balancing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType("application"),
 			},
 
 			"enable_http2": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          true,
+				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
 			"ip_address_type": {
@@ -193,6 +200,12 @@ func resourceAwsLb() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+	}
+}
+
+func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return d.Get("load_balancer_type").(string) == t
 	}
 }
 
@@ -346,14 +359,11 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 					&elbv2.LoadBalancerAttribute{
 						Key:   aws.String("access_logs.s3.bucket"),
 						Value: aws.String(log["bucket"].(string)),
-					})
-
-				if prefix, ok := log["prefix"]; ok {
-					attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+					},
+					&elbv2.LoadBalancerAttribute{
 						Key:   aws.String("access_logs.s3.prefix"),
-						Value: aws.String(prefix.(string)),
+						Value: aws.String(log["prefix"].(string)),
 					})
-				}
 			} else if len(logs) == 0 {
 				attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 					Key:   aws.String("access_logs.s3.enabled"),
@@ -699,11 +709,11 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	for _, attr := range attributesResp.Attributes {
 		switch *attr.Key {
 		case "access_logs.s3.enabled":
-			accessLogMap["enabled"] = *attr.Value
+			accessLogMap["enabled"] = aws.StringValue(attr.Value) == "true"
 		case "access_logs.s3.bucket":
-			accessLogMap["bucket"] = *attr.Value
+			accessLogMap["bucket"] = aws.StringValue(attr.Value)
 		case "access_logs.s3.prefix":
-			accessLogMap["prefix"] = *attr.Value
+			accessLogMap["prefix"] = aws.StringValue(attr.Value)
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(*attr.Value)
 			if err != nil {
@@ -726,9 +736,10 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		}
 	}
 
-	log.Printf("[DEBUG] Setting ALB Access Logs: %#v", accessLogMap)
 	if accessLogMap["bucket"] != "" || accessLogMap["prefix"] != "" {
-		d.Set("access_logs", []interface{}{accessLogMap})
+		if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
+			return fmt.Errorf("error setting access_logs: %s", err)
+		}
 	} else {
 		d.Set("access_logs", []interface{}{})
 	}

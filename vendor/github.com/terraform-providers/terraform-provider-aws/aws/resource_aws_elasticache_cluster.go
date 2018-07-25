@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform/helper/customdiff"
@@ -180,6 +180,9 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		ForceNew: true,
 	}
 
+	resourceSchema["availability_zones"].ConflictsWith = []string{"preferred_availability_zones"}
+	resourceSchema["availability_zones"].Deprecated = "Use `preferred_availability_zones` instead"
+
 	resourceSchema["configuration_endpoint"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
@@ -213,6 +216,12 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				},
 			},
 		},
+	}
+
+	resourceSchema["preferred_availability_zones"] = &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
 	}
 
 	resourceSchema["replication_group_id"] = &schema.Schema{
@@ -285,27 +294,6 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 					return nil
 				}
 				return diff.ForceNew("engine_version")
-			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
-				// Plan time validation for node_type
-				// InvalidParameterCombination: Instance type cache.t2.micro can only be created in a VPC.
-				nodeType, nodeTypeOk := diff.GetOk("node_type")
-				if !nodeTypeOk {
-					return nil
-				}
-				vpcOnlyNodeTypes := []string{
-					"cache.t2.micro",
-					"cache.t2.small",
-					"cache.t2.medium",
-				}
-				if _, ok := diff.GetOk("subnet_group_name"); !ok {
-					for _, vpcOnlyNodeType := range vpcOnlyNodeTypes {
-						if nodeType == vpcOnlyNodeType {
-							return fmt.Errorf("node_type %q can only be created in a VPC", nodeType)
-						}
-					}
-				}
-				return nil
 			},
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for num_cache_nodes
@@ -421,37 +409,26 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 		req.PreferredAvailabilityZone = aws.String(v.(string))
 	}
 
-	preferred_azs := d.Get("availability_zones").(*schema.Set).List()
-	if len(preferred_azs) > 0 {
-		azs := expandStringList(preferred_azs)
-		req.PreferredAvailabilityZones = azs
+	if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
+		req.PreferredAvailabilityZones = expandStringList(v.([]interface{}))
+	} else {
+		preferred_azs := d.Get("availability_zones").(*schema.Set).List()
+		if len(preferred_azs) > 0 {
+			azs := expandStringList(preferred_azs)
+			req.PreferredAvailabilityZones = azs
+		}
 	}
 
-	resp, err := conn.CreateCacheCluster(req)
+	id, err := createElasticacheCacheCluster(conn, req)
 	if err != nil {
-		return fmt.Errorf("Error creating Elasticache: %s", err)
+		return fmt.Errorf("error creating Elasticache Cache Cluster: %s", err)
 	}
 
-	// Assign the cluster id as the resource ID
-	// Elasticache always retains the id in lower case, so we have to
-	// mimic that or else we won't be able to refresh a resource whose
-	// name contained uppercase characters.
-	d.SetId(strings.ToLower(*resp.CacheCluster.CacheClusterId))
+	d.SetId(id)
 
-	pending := []string{"creating", "modifying", "restoring", "snapshotting"}
-	stateConf := &resource.StateChangeConf{
-		Pending:    pending,
-		Target:     []string{"available"},
-		Refresh:    cacheClusterStateRefreshFunc(conn, d.Id(), "available", pending),
-		Timeout:    40 * time.Minute,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	log.Printf("[DEBUG] Waiting for state to become available: %v", d.Id())
-	_, sterr := stateConf.WaitForState()
-	if sterr != nil {
-		return fmt.Errorf("Error waiting for elasticache (%s) to be created: %s", d.Id(), sterr)
+	err = waitForCreateElasticacheCacheCluster(conn, d.Id(), 40*time.Minute)
+	if err != nil {
+		return fmt.Errorf("error waiting for Elasticache Cache Cluster (%s) to be created: %s", d.Id(), err)
 	}
 
 	return resourceAwsElasticacheClusterRead(d, meta)
@@ -466,7 +443,7 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 
 	res, err := conn.DescribeCacheClusters(req)
 	if err != nil {
-		if eccErr, ok := err.(awserr.Error); ok && eccErr.Code() == "CacheClusterNotFound" {
+		if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 			log.Printf("[WARN] ElastiCache Cluster (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -520,24 +497,26 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 		}
 		// list tags for resource
 		// set tags
-		arn, err := buildECARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
+		arn := arn.ARN{
+			Partition: meta.(*AWSClient).partition,
+			Service:   "elasticache",
+			Region:    meta.(*AWSClient).region,
+			AccountID: meta.(*AWSClient).accountid,
+			Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+		}.String()
+		resp, err := conn.ListTagsForResource(&elasticache.ListTagsForResourceInput{
+			ResourceName: aws.String(arn),
+		})
+
 		if err != nil {
-			log.Printf("[DEBUG] Error building ARN for ElastiCache Cluster, not setting Tags for cluster %s", *c.CacheClusterId)
-		} else {
-			resp, err := conn.ListTagsForResource(&elasticache.ListTagsForResourceInput{
-				ResourceName: aws.String(arn),
-			})
-
-			if err != nil {
-				log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
-			}
-
-			var et []*elasticache.Tag
-			if len(resp.TagList) > 0 {
-				et = resp.TagList
-			}
-			d.Set("tags", tagsToMapEC(et))
+			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
 		}
+
+		var et []*elasticache.Tag
+		if len(resp.TagList) > 0 {
+			et = resp.TagList
+		}
+		d.Set("tags", tagsToMapEC(et))
 	}
 
 	return nil
@@ -545,13 +524,16 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 
 func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
-	arn, err := buildECARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
-	if err != nil {
-		log.Printf("[DEBUG] Error building ARN for ElastiCache Cluster, not updating Tags for cluster %s", d.Id())
-	} else {
-		if err := setTagsEC(conn, d, arn); err != nil {
-			return err
-		}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "elasticache",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	if err := setTagsEC(conn, d, arn); err != nil {
+		return err
 	}
 
 	req := &elasticache.ModifyCacheClusterInput{
@@ -620,6 +602,22 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 			log.Printf("[INFO] Cluster %s is marked for Decreasing cache nodes from %d to %d", d.Id(), o, n)
 			nodesToRemove := getCacheNodesToRemove(d, o, o-n)
 			req.CacheNodeIdsToRemove = nodesToRemove
+		} else {
+			log.Printf("[INFO] Cluster %s is marked for increasing cache nodes from %d to %d", d.Id(), o, n)
+			// SDK documentation for NewAvailabilityZones states:
+			// The list of Availability Zones where the new Memcached cache nodes are created.
+			//
+			// This parameter is only valid when NumCacheNodes in the request is greater
+			// than the sum of the number of active cache nodes and the number of cache
+			// nodes pending creation (which may be zero). The number of Availability Zones
+			// supplied in this list must match the cache nodes being added in this request.
+			if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
+				// Here we check the list length to prevent a potential panic :)
+				if len(v.([]interface{})) != n {
+					return fmt.Errorf("length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
+				}
+				req.NewAvailabilityZones = expandStringList(v.([]interface{})[o:])
+			}
 		}
 
 		req.NumCacheNodes = aws.Int64(int64(d.Get("num_cache_nodes").(int)))
@@ -698,41 +696,17 @@ func (b byCacheNodeId) Less(i, j int) bool {
 func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	req := &elasticache.DeleteCacheClusterInput{
-		CacheClusterId: aws.String(d.Id()),
-	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCacheCluster(req)
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			// The cluster may be just snapshotting, so we retry until it's ready for deletion
-			if ok && awsErr.Code() == "InvalidCacheClusterState" {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	err := deleteElasticacheCacheCluster(conn, d.Id())
 	if err != nil {
-		return err
+		if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
+			return nil
+		}
+		return fmt.Errorf("error deleting Elasticache Cache Cluster (%s): %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network", "restore-failed", "snapshotting"},
-		Target:     []string{},
-		Refresh:    cacheClusterStateRefreshFunc(conn, d.Id(), "", []string{}),
-		Timeout:    40 * time.Minute,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+	err = waitForDeleteElasticacheCacheCluster(conn, d.Id(), 40*time.Minute)
+	if err != nil {
+		return fmt.Errorf("error waiting for Elasticache Cache Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
-
-	_, sterr := stateConf.WaitForState()
-	if sterr != nil {
-		return fmt.Errorf("Error waiting for elasticache (%s) to delete: %s", d.Id(), sterr)
-	}
-
-	d.SetId("")
 
 	return nil
 }
@@ -744,9 +718,7 @@ func cacheClusterStateRefreshFunc(conn *elasticache.ElastiCache, clusterID, give
 			ShowCacheNodeInfo: aws.Bool(true),
 		})
 		if err != nil {
-			apierr := err.(awserr.Error)
-			log.Printf("[DEBUG] message: %v, code: %v", apierr.Message(), apierr.Code())
-			if apierr.Message() == fmt.Sprintf("CacheCluster not found: %v", clusterID) {
+			if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 				log.Printf("[DEBUG] Detect deletion")
 				return nil, "", nil
 			}
@@ -810,14 +782,71 @@ func cacheClusterStateRefreshFunc(conn *elasticache.ElastiCache, clusterID, give
 	}
 }
 
-func buildECARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct ElastiCache ARN because of missing AWS partition")
+func createElasticacheCacheCluster(conn *elasticache.ElastiCache, input *elasticache.CreateCacheClusterInput) (string, error) {
+	log.Printf("[DEBUG] Creating Elasticache Cache Cluster: %s", input)
+	output, err := conn.CreateCacheCluster(input)
+	if err != nil {
+		return "", err
 	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct ElastiCache ARN because of missing AWS Account ID")
+	if output == nil || output.CacheCluster == nil {
+		return "", errors.New("missing cluster ID after creation")
 	}
-	arn := fmt.Sprintf("arn:%s:elasticache:%s:%s:cluster:%s", partition, region, accountid, identifier)
-	return arn, nil
+	// Elasticache always retains the id in lower case, so we have to
+	// mimic that or else we won't be able to refresh a resource whose
+	// name contained uppercase characters.
+	return strings.ToLower(aws.StringValue(output.CacheCluster.CacheClusterId)), nil
+}
 
+func waitForCreateElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) error {
+	pending := []string{"creating", "modifying", "restoring", "snapshotting"}
+	stateConf := &resource.StateChangeConf{
+		Pending:    pending,
+		Target:     []string{"available"},
+		Refresh:    cacheClusterStateRefreshFunc(conn, cacheClusterID, "available", pending),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	log.Printf("[DEBUG] Waiting for Elasticache Cache Cluster (%s) to be created", cacheClusterID)
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string) error {
+	input := &elasticache.DeleteCacheClusterInput{
+		CacheClusterId: aws.String(cacheClusterID),
+	}
+	log.Printf("[DEBUG] Deleting Elasticache Cache Cluster: %s", input)
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteCacheCluster(input)
+		if err != nil {
+			// This will not be fixed by retrying
+			if isAWSErr(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "serving as primary") {
+				return resource.NonRetryableError(err)
+			}
+			// The cluster may be just snapshotting, so we retry until it's ready for deletion
+			if isAWSErr(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	return err
+}
+
+func waitForDeleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network", "restore-failed", "snapshotting"},
+		Target:     []string{},
+		Refresh:    cacheClusterStateRefreshFunc(conn, cacheClusterID, "", []string{}),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+	log.Printf("[DEBUG] Waiting for Elasticache Cache Cluster deletion: %v", cacheClusterID)
+
+	_, err := stateConf.WaitForState()
+	return err
 }
