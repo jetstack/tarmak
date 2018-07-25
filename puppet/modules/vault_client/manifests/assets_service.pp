@@ -21,4 +21,8 @@ define vault_client::assets_service (
     refreshonly => true,
     path        => $::vault_client::path,
   }
+  -> service { "${service_name}.service":
+    ensure => 'stopped',
+    enable => false,
+  }
 }

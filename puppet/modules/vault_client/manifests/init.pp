@@ -76,8 +76,8 @@ class vault_client (
 
   $_dest_dir = "${dest_dir}/${::vault_client::params::app_name}-${version}"
 
-  user { 'vault-user':
-    user   => 'vault',
+  user { 'vault':
+    ensure => 'present',
     system => true,
     home   => '/var/lib/vault',
   }
