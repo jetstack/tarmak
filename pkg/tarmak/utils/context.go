@@ -113,7 +113,7 @@ func (c *Context) WaitOrCancel(f func() error, ignoredExitStatuses ...int) {
 		log.Info("Tarmak performed all tasks successfully.")
 		log.Exit(0)
 	case context.Canceled:
-		log.Errorf("Tarmak was canceled (%v). Re-run to complete any remaining tasks.", c.sig)
+		log.Errorf("Tarmak was canceled (%s). Re-run to complete any remaining tasks.", c.sig)
 		log.Exit(1)
 	default:
 		exitError, ok := err.(*exec.ExitError)
@@ -147,11 +147,11 @@ func BasicSignalHandler(l *log.Entry) chan struct{} {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 
 	go func(l *log.Entry) {
-		<-ch
-		l.Infof("Received signal interupt. shutting down...")
+		sig := <-ch
+		l.Infof("Received signal %s. Shutting down...", sig)
 		close(stopCh)
-		<-ch
-		l.Infof("Force closed.")
+		sig = <-ch
+		l.Infof("Received signal %s. Force closing.", sig)
 		os.Exit(1)
 	}(l)
 
