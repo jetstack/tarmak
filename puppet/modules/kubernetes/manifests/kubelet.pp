@@ -113,6 +113,8 @@ class kubernetes::kubelet(
     $_node_taints = $node_taints
   }
 
+  $_feature_gates = []
+
   $_node_taints_list = $_node_taints.map |$k,$v| { "${k}=${v}"}
   $_node_taints_string = $_node_taints_list.join(',')
 
