@@ -3,6 +3,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -40,14 +41,14 @@ func NewContext() interfaces.Context {
 		select {
 		case sig := <-sigCh:
 			c.sig = sig
-			log.Infof("caught signal '%v'", sig)
+			log.Infof("Caught signal %s.", sig)
+			log.Info("Attempting to shutdown gracefully.")
 			cancel()
 		case <-ctx.Done():
-			log.Info("context done")
 		}
+
 		signal.Stop(sigCh)
-		log.Info("cancelling")
-		cancel()
+		return
 	}()
 
 	return c
@@ -58,7 +59,10 @@ func (c *Context) Signal() os.Signal {
 }
 
 func (c *Context) Err() error {
-	return c.Err()
+	if c.Context.Err() == context.Canceled {
+		return fmt.Errorf("signal %s", c.Signal())
+	}
+	return c.Context.Err()
 }
 
 func MakeShutdownCh() <-chan struct{} {
@@ -95,7 +99,7 @@ func (c *Context) WaitOrCancel(f func() error, ignoredExitStatuses ...int) {
 			case <-finished:
 				wg.Done()
 				return
-			case <-time.After(time.Second * 2):
+			case <-time.After(time.Second * 3):
 				log.Warn("Tarmak is shutting down.")
 				log.Warn("* Tarmak will attempt to kill the current task.")
 				log.Warn("* Send another SIGTERM or SIGINT (ctrl-c) to exit immediately.")
@@ -105,10 +109,12 @@ func (c *Context) WaitOrCancel(f func() error, ignoredExitStatuses ...int) {
 
 	err := f()
 	switch err {
-	case context.Canceled:
-		log.Warn("Tarmak was canceled. Re-run to complete any remaining tasks.")
 	case nil:
 		log.Info("Tarmak performed all tasks successfully.")
+		log.Exit(0)
+	case context.Canceled:
+		log.Errorf("Tarmak was canceled (%v). Re-run to complete any remaining tasks.", c.sig)
+		log.Exit(1)
 	default:
 		exitError, ok := err.(*exec.ExitError)
 		if ok {
@@ -124,10 +130,14 @@ func (c *Context) WaitOrCancel(f func() error, ignoredExitStatuses ...int) {
 			}
 			if !errorOk {
 				log.Errorf("Tarmak exited with an error: %s", err)
+				log.Exit(exitStatus)
 			}
+			log.Info("Tarmak performed all tasks successfully.")
 			log.Exit(exitStatus)
 		}
-		log.Fatalf("Tarmak exited with an error: %s", err)
+
+		log.Errorf("Tarmak exited with an error: %s", err)
+		log.Exit(1)
 	}
 }
 

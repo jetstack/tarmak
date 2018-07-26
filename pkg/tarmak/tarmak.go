@@ -237,6 +237,12 @@ func (t *Tarmak) Clusters() (clusters []interfaces.Cluster) {
 
 // this builds a temporary directory with the needed assets that are built into the go binary
 func (t *Tarmak) RootPath() (string, error) {
+	select {
+	case <-t.Context().Done():
+		return "", t.Context().Err()
+	default:
+	}
+
 	if t.rootPath != nil {
 		return *t.rootPath, nil
 	}
@@ -247,6 +253,12 @@ func (t *Tarmak) RootPath() (string, error) {
 	}
 
 	t.log.Debugf("created temporary directory: %s", dir)
+
+	select {
+	case <-t.Context().Done():
+		return "", t.Context().Err()
+	default:
+	}
 
 	err = assets.RestoreAssets(dir, "")
 	if err != nil {

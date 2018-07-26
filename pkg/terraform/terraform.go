@@ -32,6 +32,7 @@ var wingHash = ""
 type Terraform struct {
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
+	ctx    interfaces.Context
 }
 
 func New(tarmak interfaces.Tarmak) *Terraform {
@@ -40,6 +41,7 @@ func New(tarmak interfaces.Tarmak) *Terraform {
 	return &Terraform{
 		log:    log,
 		tarmak: tarmak,
+		ctx:    tarmak.Context(),
 	}
 }
 
@@ -110,15 +112,32 @@ func (t *Terraform) socketPath(c interfaces.Cluster) string {
 }
 
 func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
+	}
 
 	// generate tf code
 	if err := t.GenerateCode(cluster); err != nil {
 		return fmt.Errorf("failed to generate code: %s", err)
 	}
 
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
+	}
+
 	// symlink tarmak plugins into folder
 	if err := t.preparePlugins(cluster); err != nil {
 		return fmt.Errorf("failed to prepare plugins: %s", err)
+	}
+
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
 	}
 
 	// run init
@@ -137,11 +156,16 @@ func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 		return fmt.Errorf("failed to run terraform init: %s", err)
 	}
 
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
+	}
+
 	return nil
 }
 
 func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string, args []string) error {
-
 	if err := t.Prepare(cluster); err != nil {
 		return fmt.Errorf("failed to prepare terraform: %s", err)
 	}
