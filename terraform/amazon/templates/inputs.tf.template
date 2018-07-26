@@ -127,9 +127,6 @@ variable "bucket_prefix" {}
 variable "{{.TFName}}_ami" {}
 {{ end }}
 {{ end }}
-variable "api_admin_cidrs" {
-    type = "list"
-}
 variable "tools_cluster_name" {
   default = "hub"
 }

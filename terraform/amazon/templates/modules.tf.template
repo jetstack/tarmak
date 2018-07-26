@@ -155,7 +155,6 @@ module "kubernetes" {
   {{.TFName}}_ami = "${var.{{.TFName}}_ami}"
 {{ end }}
 {{ end }}
-  api_admin_cidrs = "${var.api_admin_cidrs}"
   secrets_bucket = "${module.state.secrets_bucket[0]}"
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
@@ -209,7 +208,6 @@ module "kubernetes" {
   {{.TFName}}_ami = "${var.{{.TFName}}_ami}"
 {{ end }}
 {{ end }}
-  api_admin_cidrs = "${var.api_admin_cidrs}"
   bastion_security_group_id = "${data.terraform_remote_state.hub_state.bastion_bastion_security_group_id}"
   secrets_bucket = "${data.terraform_remote_state.hub_state.state_secrets_bucket}"
   public_zone = "${data.terraform_remote_state.hub_state.state_public_zone}"
