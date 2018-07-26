@@ -14,6 +14,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type testTarmak struct {
@@ -95,6 +96,7 @@ func newTestTarmak(t *testing.T) *testTarmak {
 		tarmak: &Tarmak{
 			log:   logger,
 			flags: &tarmakv1alpha1.Flags{},
+			ctx:   utils.NewContext(),
 		},
 		logger: logger,
 	}
