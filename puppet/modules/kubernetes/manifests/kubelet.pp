@@ -44,11 +44,11 @@ class kubernetes::kubelet(
   },
   String $cgroup_root = '/',
   Optional[String] $cgroup_kube_name = '/podruntime.slice',
-  Optional[String] $cgroup_kube_reserved_memory = '256Mi',
-  Optional[String] $cgroup_kube_reserved_cpu = '10m',
+  Optional[String] $cgroup_kube_reserved_memory = undef,
+  Optional[String] $cgroup_kube_reserved_cpu = '100m',
   Optional[String] $cgroup_system_name = '/system.slice',
   Optional[String] $cgroup_system_reserved_memory = '128Mi',
-  Optional[String] $cgroup_system_reserved_cpu = '10m',
+  Optional[String] $cgroup_system_reserved_cpu = '100m',
   Array[String] $systemd_wants = [],
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
@@ -78,6 +78,19 @@ class kubernetes::kubelet(
   } else {
     $_eviction_soft_nodefs_inodes_free_threshold = $eviction_soft_nodefs_inodes_free_threshold
     $_eviction_soft_nodefs_inodes_free_grace_period = $eviction_soft_nodefs_inodes_free_grace_period
+  }
+
+  if $cgroup_kube_reserved_memory == undef {
+    $cgroup_kube_reserved_memory_default_mi_bytes = 1024
+    $node_memory_total_mi_bytes = dig44($facts, ['memory', 'system', 'total_bytes'], 1) / ( 1024 * 1024 )
+    if $node_memory_total_mi_bytes / 4 < $cgroup_kube_reserved_memory_default_mi_bytes {
+      $cgroup_kube_reserved_memory_mi_bytes = $node_memory_total_mi_bytes / 4
+    } else {
+      $cgroup_kube_reserved_memory_mi_bytes = $cgroup_kube_reserved_memory_default_mi_bytes
+    }
+    $_cgroup_kube_reserved_memory = "${cgroup_kube_reserved_memory_mi_bytes}Mi"
+  } else {
+    $_cgroup_kube_reserved_memory = $cgroup_kube_reserved_memory
   }
 
   $_systemd_wants = $systemd_wants
