@@ -101,101 +101,100 @@ class prometheus::server (
       }
     }
 
-      # Scrape config for master's schedulers and controller manager (kubelet).
-      #
-      # Rather than connecting directly to the node, the scrape is proxied though the
-      # Kubernetes apiserver.  This means it will work if Prometheus is running out of
-      # cluster, or can't connect to nodes for some other reason (e.g. because of
-      # firewalling).
-      prometheus::scrape_config { 'kubernetes-schedulers':
-        order  =>  110,
-        config => {
-          'kubernetes_sd_configs' => [{
-            'role' => 'node',
-          }],
-          'tls_config'            => {
-            'ca_file' => $kubernetes_ca_file,
-          },
-          'bearer_token_file'     => $kubernetes_token_file,
-          'scheme'                => 'https',
-          'relabel_configs'       => [{
-              'source_labels' => ['__meta_kubernetes_node_label_role'],
-              'action'        => 'keep',
-              'regex'         => 'master',
-          },{
-            'action' => 'labelmap',
-            'regex'  => '__meta_kubernetes_node_label_(.+)',
-          },{
-            'target_label' => '__address__',
-            'replacement'  => 'kubernetes.default.svc:443',
-          }, {
-            'source_labels' => ['__meta_kubernetes_node_name'],
-            'regex'         => '(.+)',
-            'target_label'  => '__metrics_path__',
-            'replacement'   => '/api/v1/nodes/${1}:10251/proxy/metrics',
-          }],
-        }
-      }
-      prometheus::scrape_config { 'kubernetes-controller-managers':
-        order  =>  110,
-        config => {
-          'kubernetes_sd_configs' => [{
-            'role' => 'node',
-          }],
-          'tls_config'            => {
-            'ca_file' => $kubernetes_ca_file,
-          },
-          'bearer_token_file'     => $kubernetes_token_file,
-          'scheme'                => 'https',
-          'relabel_configs'       => [{
+    # Scrape config for master's schedulers and controller manager (kubelet).
+    #
+    # Rather than connecting directly to the node, the scrape is proxied though the
+    # Kubernetes apiserver.  This means it will work if Prometheus is running out of
+    # cluster, or can't connect to nodes for some other reason (e.g. because of
+    # firewalling).
+    prometheus::scrape_config { 'kubernetes-schedulers':
+      order  =>  110,
+      config => {
+        'kubernetes_sd_configs' => [{
+          'role' => 'node',
+        }],
+        'tls_config'            => {
+          'ca_file' => $kubernetes_ca_file,
+        },
+        'bearer_token_file'     => $kubernetes_token_file,
+        'scheme'                => 'https',
+        'relabel_configs'       => [{
             'source_labels' => ['__meta_kubernetes_node_label_role'],
             'action'        => 'keep',
             'regex'         => 'master',
-          },{
-            'action' => 'labelmap',
-            'regex'  => '__meta_kubernetes_node_label_(.+)',
-          },{
-            'target_label' => '__address__',
-            'replacement'  => 'kubernetes.default.svc:443',
-          }, {
-            'source_labels' => ['__meta_kubernetes_node_name'],
-            'regex'         => '(.+)',
-            'target_label'  => '__metrics_path__',
-            'replacement'   => '/api/v1/nodes/${1}:10252/proxy/metrics',
-          }],
-        }
+        },{
+          'action' => 'labelmap',
+          'regex'  => '__meta_kubernetes_node_label_(.+)',
+        },{
+          'target_label' => '__address__',
+          'replacement'  => 'kubernetes.default.svc:443',
+        }, {
+          'source_labels' => ['__meta_kubernetes_node_name'],
+          'regex'         => '(.+)',
+          'target_label'  => '__metrics_path__',
+          'replacement'   => '/api/v1/nodes/${1}:10251/proxy/metrics',
+        }],
       }
+    }
+    prometheus::scrape_config { 'kubernetes-controller-managers':
+      order  =>  110,
+      config => {
+        'kubernetes_sd_configs' => [{
+          'role' => 'node',
+        }],
+        'tls_config'            => {
+          'ca_file' => $kubernetes_ca_file,
+        },
+        'bearer_token_file'     => $kubernetes_token_file,
+        'scheme'                => 'https',
+        'relabel_configs'       => [{
+          'source_labels' => ['__meta_kubernetes_node_label_role'],
+          'action'        => 'keep',
+          'regex'         => 'master',
+        },{
+          'action' => 'labelmap',
+          'regex'  => '__meta_kubernetes_node_label_(.+)',
+        },{
+          'target_label' => '__address__',
+          'replacement'  => 'kubernetes.default.svc:443',
+        }, {
+          'source_labels' => ['__meta_kubernetes_node_name'],
+          'regex'         => '(.+)',
+          'target_label'  => '__metrics_path__',
+          'replacement'   => '/api/v1/nodes/${1}:10252/proxy/metrics',
+        }],
+      }
+    }
 
-      # Scrape config for nodes (kubelet).
-      #
-      # Rather than connecting directly to the node, the scrape is proxied though the
-      # Kubernetes apiserver.  This means it will work if Prometheus is running out of
-      # cluster, or can't connect to nodes for some other reason (e.g. because of
-      # firewalling).
-      prometheus::scrape_config { 'kubernetes-nodes':
-        order  =>  110,
-        config => {
-          'kubernetes_sd_configs' => [{
-            'role' => 'node',
-          }],
-          'tls_config'            => {
-            'ca_file' => $kubernetes_ca_file,
-          },
-          'bearer_token_file'     => $kubernetes_token_file,
-          'scheme'                => 'https',
-          'relabel_configs'       => [{
-            'action' => 'labelmap',
-            'regex'  => '__meta_kubernetes_node_label_(.+)',
-          },{
-            'target_label' => '__address__',
-            'replacement'  => 'kubernetes.default.svc:443',
-          }, {
-            'source_labels' => ['__meta_kubernetes_node_name'],
-            'regex'         => '(.+)',
-            'target_label'  => '__metrics_path__',
-            'replacement'   => '/api/v1/nodes/${1}/proxy/metrics',
-          }],
-        }
+    # Scrape config for nodes (kubelet).
+    #
+    # Rather than connecting directly to the node, the scrape is proxied though the
+    # Kubernetes apiserver.  This means it will work if Prometheus is running out of
+    # cluster, or can't connect to nodes for some other reason (e.g. because of
+    # firewalling).
+    prometheus::scrape_config { 'kubernetes-nodes':
+      order  =>  110,
+      config => {
+        'kubernetes_sd_configs' => [{
+          'role' => 'node',
+        }],
+        'tls_config'            => {
+          'ca_file' => $kubernetes_ca_file,
+        },
+        'bearer_token_file'     => $kubernetes_token_file,
+        'scheme'                => 'https',
+        'relabel_configs'       => [{
+          'action' => 'labelmap',
+          'regex'  => '__meta_kubernetes_node_label_(.+)',
+        },{
+          'target_label' => '__address__',
+          'replacement'  => 'kubernetes.default.svc:443',
+        }, {
+          'source_labels' => ['__meta_kubernetes_node_name'],
+          'regex'         => '(.+)',
+          'target_label'  => '__metrics_path__',
+          'replacement'   => '/api/v1/nodes/${1}/proxy/metrics',
+        }],
       }
     }
 
