@@ -59,7 +59,7 @@ release::tarmak::golang:
   - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
   - cd /go/src/github.com/jetstack/tarmak
   - make all
-  - bin/goreleaser
+  - export PATH="/go/src/github.com/jetstack/tarmak/bin:${PATH}" && goreleaser
   - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
 
 stages:
