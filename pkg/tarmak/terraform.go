@@ -68,8 +68,6 @@ func (c *CmdTerraform) Plan() error {
 	}
 
 	c.log.Info("running plan")
-
-	c.tarmak.cluster.Log().Info("running plan")
 	err := c.tarmak.terraform.Plan(c.tarmak.Cluster())
 	if err != nil {
 		return err
