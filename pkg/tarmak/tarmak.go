@@ -31,7 +31,7 @@ type Tarmak struct {
 	log             *logrus.Logger
 	flags           *tarmakv1alpha1.Flags
 	configDirectory string
-	ctx             interfaces.Context
+	ctx             interfaces.CancellationContext
 
 	config    interfaces.Config
 	terraform *terraform.Terraform
@@ -56,7 +56,7 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
 		log:   logrus.New(),
 		flags: flags,
-		ctx:   utils.NewContext(),
+		ctx:   utils.NewCancellationContext(),
 	}
 
 	t.initializeModules()
@@ -358,6 +358,6 @@ func (t *Tarmak) CmdKubectl(args []string) error {
 	return t.kubectl.Kubectl(args)
 }
 
-func (t *Tarmak) Context() interfaces.Context {
+func (t *Tarmak) Context() interfaces.CancellationContext {
 	return t.ctx
 }

@@ -153,7 +153,7 @@ type Tarmak interface {
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
 	KeepContainers() bool
-	Context() Context
+	Context() CancellationContext
 
 	// get a provider by name
 	ProviderByName(string) (Provider, error)
@@ -275,7 +275,7 @@ type Initialize interface {
 	CurrentEnvironment() Environment
 }
 
-type Context interface {
+type CancellationContext interface {
 	Done() <-chan struct{}
 	Err() error
 	Signal() os.Signal

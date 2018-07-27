@@ -96,7 +96,7 @@ func newTestTarmak(t *testing.T) *testTarmak {
 		tarmak: &Tarmak{
 			log:   logger,
 			flags: &tarmakv1alpha1.Flags{},
-			ctx:   utils.NewContext(),
+			ctx:   utils.NewCancellationContext(),
 		},
 		logger: logger,
 	}

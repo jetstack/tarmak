@@ -32,7 +32,7 @@ var wingHash = ""
 type Terraform struct {
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
-	ctx    interfaces.Context
+	ctx    interfaces.CancellationContext
 }
 
 func New(tarmak interfaces.Tarmak) *Terraform {

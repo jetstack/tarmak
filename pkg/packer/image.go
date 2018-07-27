@@ -32,7 +32,7 @@ type image struct {
 	packer *Packer
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
-	ctx    interfaces.Context
+	ctx    interfaces.CancellationContext
 
 	environment string
 	imageName   string

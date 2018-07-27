@@ -16,7 +16,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
-type Context struct {
+type CancellationContext struct {
 	context.Context
 	cancel func()
 	sig    os.Signal
@@ -24,14 +24,14 @@ type Context struct {
 
 var notifies = []os.Signal{syscall.SIGINT, syscall.SIGTERM}
 
-var _ interfaces.Context = &Context{}
+var _ interfaces.CancellationContext = &CancellationContext{}
 
-func NewContext() interfaces.Context {
+func NewCancellationContext() interfaces.CancellationContext {
 	ctx, cancel := context.WithCancel(context.Background())
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, notifies...)
 
-	c := &Context{
+	c := &CancellationContext{
 		ctx,
 		cancel,
 		syscall.SIGCONT,
@@ -54,11 +54,11 @@ func NewContext() interfaces.Context {
 	return c
 }
 
-func (c *Context) Signal() os.Signal {
+func (c *CancellationContext) Signal() os.Signal {
 	return c.sig
 }
 
-func (c *Context) Err() error {
+func (c *CancellationContext) Err() error {
 	if c.Context.Err() == context.Canceled {
 		return fmt.Errorf("signal %s", c.Signal())
 	}
@@ -80,7 +80,7 @@ func MakeShutdownCh() <-chan struct{} {
 	return resultCh
 }
 
-func (c *Context) WaitOrCancel(f func() error, ignoredExitStatuses ...int) {
+func (c *CancellationContext) WaitOrCancel(f func() error, ignoredExitStatuses ...int) {
 	defer c.cancel()
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
