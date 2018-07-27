@@ -105,6 +105,8 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 				return t
 			}
 			t.log.Fatal("unable to find an existing config, run 'tarmak init'")
+		} else {
+			t.log.Fatalf("failed to read config: %s", err)
 		}
 
 	}
@@ -137,12 +139,19 @@ func (t *Tarmak) initializeConfig() error {
 	var err error
 
 	// get current environment
-	t.environment, err = t.EnvironmentByName(t.config.CurrentEnvironmentName())
+	currentEnvironmentName, err := t.config.CurrentEnvironmentName()
+	if err != nil {
+		return fmt.Errorf("error retrieving current environment name: %s", err)
+	}
+	t.environment, err = t.EnvironmentByName(currentEnvironmentName)
 	if err != nil {
 		return err
 	}
 
-	clusterName := t.config.CurrentClusterName()
+	clusterName, err := t.config.CurrentClusterName()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve current cluster name: %s", err)
+	}
 	// init cluster
 	t.cluster, err = t.environment.Cluster(clusterName)
 	if err != nil {
@@ -154,7 +163,11 @@ func (t *Tarmak) initializeConfig() error {
 
 func (t *Tarmak) writeSSHConfigForClusterHosts() error {
 	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
-		return fmt.Errorf("failed to write ssh config for current cluster '%s': %v", t.config.CurrentClusterName(), err)
+		clusterName, errCluster := t.config.CurrentClusterName()
+		if errCluster != nil {
+			return fmt.Errorf("failed to retrieve current cluster name: %s", errCluster)
+		}
+		return fmt.Errorf("failed to write ssh config for current cluster '%s': %v", clusterName, err)
 	}
 	return nil
 }

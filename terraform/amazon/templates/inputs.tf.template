@@ -75,19 +75,13 @@ variable "route_table_private_ids" {
 }
 variable "bastion_ami" {}
 variable "bastion_instance_type" {
-  default = "t2.nano"
+  default = "{{ .BastionInstancePool.InstanceType }}"
 }
 variable "bastion_root_size" {
   default = "16"
 }
 {{ if .JenkinsInstall -}}
 variable "jenkins_ami" {}
-variable "jenkins_stack_name_prefix" {
-  default = "jenkins-"
-}
-variable "jenkins_instance_type" {
-  default = "t2.large"
-}
 variable "jenkins_root_size" {
   default = "16"
 }
@@ -117,20 +111,22 @@ variable "vault_root_size" {
 variable "vault_data_size" {
   default = "10"
 }
-variable "vault_instance_count" {}
+variable "vault_min_instance_count" {}
 
 variable "vault_instance_type" {
-  default = "t2.nano"
+  default = "{{ .VaultInstancePool.InstanceType }}"
 }
 variable "vault_ami" {}
-# state 
+# state
 variable "bucket_prefix" {}
 {{end}}
 
 {{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeClusterMulti)}}
-variable "kubernetes_master_ami" {}
-variable "kubernetes_worker_ami" {}
-variable "kubernetes_etcd_ami" {}
+{{range .InstancePools}}
+{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
+variable "{{.TFName}}_ami" {}
+{{ end }}
+{{ end }}
 variable "tools_cluster_name" {
   default = "hub"
 }
@@ -139,5 +135,3 @@ variable "tools_cluster_name" {
 data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }
-
-

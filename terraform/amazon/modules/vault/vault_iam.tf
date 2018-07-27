@@ -1,26 +1,26 @@
 resource "aws_iam_role" "vault" {
   name               = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
-  count              = "${var.vault_instance_count}"
+  count              = "${var.vault_min_instance_count}"
   path               = "/vault-${var.environment}/"
   assume_role_policy = "${file("${path.module}/templates/role.json")}"
 }
 
 resource "aws_iam_instance_profile" "vault" {
   name  = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
-  count = "${var.vault_instance_count}"
+  count = "${var.vault_min_instance_count}"
   role  = "${element(aws_iam_role.vault.*.name, count.index)}"
 }
 
 resource "aws_iam_role_policy" "vault" {
   name   = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
-  count  = "${var.vault_instance_count}"
+  count  = "${var.vault_min_instance_count}"
   role   = "${element(aws_iam_role.vault.*.name, count.index)}"
   policy = "${element(data.template_file.vault_policy.*.rendered, count.index)}"
 }
 
 data "template_file" "vault_policy" {
   template = "${file("${path.module}/templates/vault_role_policy.json")}"
-  count    = "${var.vault_instance_count}"
+  count    = "${var.vault_min_instance_count}"
 
   vars {
     region      = "${var.region}"

@@ -93,6 +93,10 @@ To create the cluster, run ``tarmak clusters apply``.
 
       * failed verifying delegation of public zone 5 times, make sure the zone k8s.jetstack.io is delegated to nameservers [ns-100.awsdns-12.com ns-1283.awsdns-32.org ns-1638.awsdns-12.co.uk ns-842.awsdns-41.net]
 
+   When creating a multi-cluster environment, the hub cluster must first be
+   applied . To change the current cluster use the flag ``--current-cluster``.
+   See ``tarmak cluster help`` for more information.
+
 You should now change the nameservers of your domain to the four listed in the
 error. If you only wish to delegate a subdomain containing your zone to AWS
 without delegating the parent domain see `Creating a Subdomain That Uses Amazon
@@ -149,6 +153,32 @@ configuration file under the kubernetes field of that environment:
 The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
 The Pod Security Policy manifests can be found within the tarmak directory at
 ``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``
+
+Cluster Autoscaler
+~~~~~~~~~~~~~~~~~~
+
+Tarmak supports deploying `Cluster Autoscaler
+<https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler>`_ when
+spinning up a Kubernetes cluster to autoscale worker instance pools. The following
+`tarmak.yaml` snippet shows how you would enable Cluster Autoscaler.
+
+.. code-block:: yaml
+
+    kubernetes:
+      clusterAutoscaler:
+        enabled: true
+    ...
+
+The above configuration would deploy Cluster Autoscaler with an image of
+`gcr.io/google_containers/cluster-autoscaler` using the recommend version based
+on the version of your Kubernetes cluster. The configuration block accepts two
+optional fields of `image` and `version` allowing you to change these defaults.
+Note that the final image tag used when deploying Cluster Autoscaler will be the
+configured version prepended with the letter `v`.
+
+The current implementation will configure the first instance pool of type worker
+in your cluster configuration to scale between `minCount` and `maxCount`. We
+plan to add support for an arbitrary number of worker instance pools.
 
 Logging
 ~~~~~~~
@@ -336,32 +366,68 @@ certificate is valid for ``jenkins.<environment>.<zone>``.
       type: ssd
   ...
 
+Dashboard
+~~~~~~~~~
+
+Tarmak supports deploying `Kubernetes Dashboard
+<https://github.com/kubernetes/dashboard>`_ when spinning up a Kubernetes
+cluster. The following `tarmak.yaml` snippet shows how you would enable
+Kubernetes Dashboard.
+
+.. code-block:: yaml
+
+    kubernetes:
+      dashboard:
+        enabled: true
+    ...
+
+The above configuration would deploy Kubernetes Dashboard with an image of
+`gcr.io/google_containers/kubernetes-dashboard-amd64` using the recommended
+version based on the version of your Kubernetes cluster. The configuration block
+accepts two optional fields of `image` and `version` allowing you to change
+these defaults. Note that the final image tag used when deploying Tiller will be
+the configured version prepended with the letter `v`.
+
+.. warning::
+   Before Dashboard version 1.7, when RBAC is enabled (from Kubernetes version
+   1.6) cluster-wide ``cluster-admin`` privileges are granted to Dashboard. From
+   Dashboard version 1.7, only minimal privileges are granted that allow
+   Dashboard to work. See Dashboard's `access control documentation
+   <https://github.com/kubernetes/dashboard/wiki/Access-control>`_ for more
+   details.
 
 Tiller
 ~~~~~~
 
-Another configuration option allows to deploy Tiller the server-side of `Helm
-<https://github.com/kubernetes/helm>`_. Tiller is listening for request on the
-loopback device only. This makes sure that no other Pod in the cluster can
-speak to it, while Helm clients are still able to access it using a port
-forwarding through the API server.
-
-As Helm and Tiller minor version need to match, the tarmak configuration also
-allows to override the deployed version:
+Tarmak supports deploying Tiller, the server-side component of `Helm
+<https://github.com/kubernetes/helm>`_, when spinning up a Kubernetes cluster.
+Tiller is configured to listen on localhost only which prevents arbitrary Pods
+in the cluster connecting to its unauthenticated endpoint. Helm clients can
+still talk to Tiller by port forwarding through the Kubernetes API Server. The
+following `tarmak.yaml` snippet shows how you would enable Tiller.
 
 .. code-block:: yaml
 
-  kubernetes:
-    tiller:
-      enabled: true
-      version: 2.9.1
+    kubernetes:
+      tiller:
+        enabled: true
+        image: 2.9.1
+    ...
+
+The above configuration would deploy version 2.9.1 of Tiller with an image
+of `gcr.io/kubernetes-helm/tiller`. The configuration block accepts two optional
+fields of `image` and `version` allowing you to change these defaults. Note that
+the final image tag used when deploying Tiller will be the
+configured version prepended with the letter `v`. The version is particularly
+important when deploying Tiller since its minor version
+must match the minor version of any Helm clients.
 
 .. warning::
-   Tiller is deployed with full ``cluster-admin`` ClusterRole bound to its
-   service account and has therefore quiet far reaching privileges. Also
-   consider Helm's `security best practices
-   <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_.
-
+   Tiller is deployed with the ``cluster-admin`` ClusterRole bound to its
+   service account and therefore has far reaching privileges. Helm's `security
+   best practices
+   <https://github.com/kubernetes/helm/blob/master/docs/securing_installation.md>`_
+   should also be considered.
 
 Prometheus
 ~~~~~~~~~~
@@ -388,3 +454,64 @@ configuration like that:
     prometheus:
       enabled: true
       externalScrapeTargetsOnly: true
+
+
+API Server
+~~~~~~~~~~~
+
+It is possible to let Tarmak create an public endpoint for your APIserver.
+This can be used together with `Secure public endpoints <user-guide.html#secure-api-server>`__.
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+      public: true
+
+
+Additional IAM policies
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Additional IAM policies can be added by adding those ARNs to the ``tarmak.yaml``
+config. You can add additional IAM policies to the ``cluster`` and
+``instance pool`` blocks. When you define additional IAM policies on both
+levels, they will be merged when applied to a specific instance pool.
+
+Cluster
++++++++
+
+You can add additional IAM policies that will be added to all the instance pools of
+the whole cluster.
+
+.. code-block:: yaml
+
+    apiVersion: api.tarmak.io/v1alpha1
+    clusters:
+    - amazon:
+        additionalIAMPolicies:
+        - "arn:aws:iam::xxxxxxx:policy/policy_name"
+
+Instance pool
++++++++++++++
+
+It is possible to add extra policies to only a specific instance pool.
+
+.. code-block:: yaml
+
+  - image: centos-puppet-agent
+    amazon:
+      additionalIAMPolicies:
+      - "arn:aws:iam::xxxxxxx:policy/policy_name"
+    maxCount: 3
+    metadata:
+      name: worker
+    minCount: 3
+    size: medium
+    subnets:
+    - metadata:
+      zone: eu-west-1a
+    - metadata:
+      zone: eu-west-1b
+    - metadata:
+      zone: eu-west-1c
+    type: worker

@@ -5,6 +5,24 @@ class kubernetes_addons::tiller(
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
+  if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+    $version_before_1_6 = false
+  } else {
+    $version_before_1_6 = true
+  }
+
+  if versioncmp($::kubernetes::version, '1.8.0') >= 0 {
+    $version_before_1_8 = false
+  } else {
+    $version_before_1_8 = true
+  }
+
+  if versioncmp($::kubernetes::version, '1.9.0') >= 0 {
+    $version_before_1_9 = false
+  } else {
+    $version_before_1_9 = true
+  }
+
   $authorization_mode = $::kubernetes::_authorization_mode
   if member($authorization_mode, 'RBAC'){
     $rbac_enabled = true

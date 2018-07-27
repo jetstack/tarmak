@@ -869,8 +869,8 @@
     "tfdiags",
     "version"
   ]
-  revision = "dbce85d85ff0beebc660b3d1805b4ef15361af00"
-  version = "v0.11.6"
+  revision = "41e50bd32a8825a84535e353c3674af8ce799161"
+  version = "v0.11.7"
 
 [[projects]]
   name = "github.com/hashicorp/vault"
@@ -930,8 +930,8 @@
 [[projects]]
   name = "github.com/jetstack/vault-helper"
   packages = ["pkg/kubernetes"]
-  revision = "d7fcb83d1a91d54e1e71899d0948743cb5076361"
-  version = "0.9.10"
+  revision = "9fb3ba240f007f40cafb27cb3083d9148c4ddafd"
+  version = "0.9.13"
 
 [[projects]]
   name = "github.com/jetstack/vault-unsealer"
@@ -1703,7 +1703,6 @@
   revision = "927313aa2f67b6f51d3ea954027cb009efb31941"
 
 [[projects]]
-  branch = "release-1.9"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -1766,6 +1765,7 @@
     "third_party/forked/golang/reflect"
   ]
   revision = "19e3f5aa3adca672c153d324e6b7d82ff8935f03"
+  version = "kubernetes-1.9.3"
 
 [[projects]]
   name = "k8s.io/apiserver"
@@ -2035,6 +2035,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "315cb1240c8d1820c8ed1ca6aaea27ef6740f5d9eb8fd68534328dd3bc733f3e"
+  inputs-digest = "46a4ef14ac64fad641ab741db8a7409da8194fdb1055f43493c2023136a10d2f"
   solver-name = "gps-cdcl"
   solver-version = 1

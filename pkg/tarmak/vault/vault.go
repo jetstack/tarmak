@@ -24,6 +24,7 @@ const (
 	VaultStateUnsealed
 	VaultStateUnintialised
 	VaultStateErr
+	vaultTunnelCreationTimeoutSeconds = 100
 )
 
 const (
@@ -107,22 +108,27 @@ func (v *Vault) TunnelFromFQDNs(vaultInternalFQDNs []string, vaultCA string) (in
 				return
 			}
 
-			if health.Standby == false && health.Sealed == false {
+			if health.Standby == false && health.Sealed == false && health.Initialized == true {
 				activeNode <- pos
-
 			}
 
 		}(pos)
 	}
 
-	activePos := <-activeNode
+	var activePos int
+	select {
+	case activePos = <-activeNode:
+		v.log.Debug("active channel position recieved")
+	case <-time.After(vaultTunnelCreationTimeoutSeconds * time.Second):
+		return nil, fmt.Errorf("failed to retrieve active channel position")
+	}
 
 	go func(activePos int) {
 
 		// wait for all tunnel attempts
 		wg.Wait()
 
-		// stop tunnels
+		// stop non-active tunnels
 		for pos, _ := range tunnels {
 			if pos == activePos {
 				continue

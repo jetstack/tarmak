@@ -356,6 +356,10 @@ func (a *Amazon) Validate() error {
 
 }
 
+func (a *Amazon) Verify() (result error) {
+	return result
+}
+
 func (a *Amazon) getAvailablityZoneByRegion() (zones []string, err error) {
 	svc, err := a.EC2()
 	if err != nil {

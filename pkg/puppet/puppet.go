@@ -306,10 +306,44 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 		return fmt.Errorf("error writing global hiera config: %s", err)
 	}
 
+	// build instance pool arrays
+	workerMinCounts := make([]int, 0)
+	workerMaxCounts := make([]int, 0)
+	workerInstancePoolNames := make([]string, 0)
+	if cluster.Config().Kubernetes.ClusterAutoscaler != nil && cluster.Config().Kubernetes.ClusterAutoscaler.Enabled {
+		for _, instancePool := range cluster.InstancePools() {
+			if instancePool.Role().Name() == clusterv1alpha1.KubernetesWorkerRoleName {
+				workerMinCounts = append(workerMinCounts, instancePool.MinCount())
+				workerMaxCounts = append(workerMaxCounts, instancePool.MaxCount())
+				workerInstancePoolNames = append(workerInstancePoolNames, instancePool.Name())
+			}
+		}
+	}
+
 	// loop through instance pools
 	for _, instancePool := range cluster.InstancePools() {
 
 		classes, variables := contentInstancePoolConfig(cluster.Config(), instancePool.Config(), instancePool.Role().Name())
+
+		if instancePool.Role().Name() == clusterv1alpha1.KubernetesMasterRoleName && cluster.Config().Kubernetes.ClusterAutoscaler != nil && cluster.Config().Kubernetes.ClusterAutoscaler.Enabled {
+			s, err := json.Marshal(workerMinCounts)
+			if err != nil {
+				panic(err)
+			}
+			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::min_instances: %s`, string(s)))
+			s, err = json.Marshal(workerMaxCounts)
+			if err != nil {
+				panic(err)
+			}
+			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::max_instances: %s`, string(s)))
+			variables = append(variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::instance_pool_names: ['%s']`, strings.Join(workerInstancePoolNames[:], `','`)))
+		}
+
+		// etcd
+		if instancePool.Role().Name() == clusterv1alpha1.KubernetesEtcdRoleName {
+			variables = append(variables, fmt.Sprintf(`tarmak::etcd_instances: %d`, instancePool.MinCount()))
+			variables = append(variables, `tarmak::etcd_mount_unit: "var-lib-etcd.mount"`)
+		}
 
 		//  classes
 		err = p.writeLines(

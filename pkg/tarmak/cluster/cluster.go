@@ -54,18 +54,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		log:         environment.Log().WithField("cluster", conf.Name),
 	}
 
-	// validate instance pools
-	if err := cluster.validateInstancePools(); err != nil {
-		return nil, err
-	}
-
-	// validate network setup
-	if err := cluster.validateNetwork(); err != nil {
-		return nil, err
-	}
-
-	//validate logging
-	if err := cluster.validateLoggingSinks(); err != nil {
+	if err := cluster.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -163,8 +152,69 @@ func (c *Cluster) validateInstancePools() (result error) {
 }
 
 // Verify cluster
-func (c *Cluster) Verify() (result error) {
-	return c.VerifyInstancePools()
+func (c *Cluster) Verify() error {
+	var result *multierror.Error
+
+	if err := c.VerifyInstancePools(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if c.Type() == clusterv1alpha1.ClusterTypeClusterMulti {
+		if err := c.verifyHubState(); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result.ErrorOrNil()
+}
+
+func (c *Cluster) verifyHubState() error {
+	// The hub should be manually applied first to ensure the vault token and private key can be saved
+	errMsg := "hub cluster must be applied once first"
+	err := c.Environment().Tarmak().Terraform().Prepare(c.Environment().Hub())
+	if err != nil {
+		return fmt.Errorf("failed to prepare hub cluster for output, %s: %v", errMsg, err)
+	}
+	output, err := c.Environment().Tarmak().Terraform().Output(c.Environment().Hub())
+	if err != nil {
+		return fmt.Errorf("failed to get hub cluster output values, %s: %v", errMsg, err)
+	}
+
+	requiredHubResources := []string{
+		"bastion_bastion_instance_id",
+		"bastion_bastion_security_group_id",
+		"instance_fqdns",
+		"network_availability_zones",
+		"network_private_subnet_ids",
+		"network_private_zone",
+		"network_private_zone_id",
+		"network_public_subnet_ids",
+		"network_vpc_id",
+		"state_public_zone",
+		"state_public_zone_id",
+		"state_secrets_bucket",
+		"vault_ca",
+		"vault_instance_fqdns",
+		"vault_vault_ca",
+		"vault_vault_kms_key_id",
+		"vault_vault_security_group_id",
+		"vault_vault_unseal_key_name",
+		"vault_vault_url",
+	}
+	var result *multierror.Error
+	for _, r := range requiredHubResources {
+		o, ok := output[r]
+		if !ok || o == nil {
+			err := fmt.Errorf("'%s' not found", r)
+			result = multierror.Append(result, err)
+		}
+	}
+
+	if result.ErrorOrNil() != nil {
+		return fmt.Errorf("required hub cluster resource(s) not found, %s: %v", errMsg, result.ErrorOrNil())
+	}
+
+	return nil
 }
 
 // Verify instance pools
@@ -182,6 +232,25 @@ func (c *Cluster) VerifyInstancePools() (result error) {
 		}
 	}
 	return nil
+}
+
+func (c *Cluster) Validate() (result error) {
+	// validate instance pools
+	if err := c.validateInstancePools(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	// validate network setup
+	if err := c.validateNetwork(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	//validate logging
+	if err := c.validateLoggingSinks(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result
 }
 
 // validate network configuration
@@ -305,10 +374,6 @@ func (c *Cluster) APITunnel() interfaces.Tunnel {
 	)
 }
 
-func (c *Cluster) Validate() error {
-	return nil
-}
-
 func (c *Cluster) Environment() interfaces.Environment {
 	return c.environment
 }
@@ -388,7 +453,8 @@ func (c *Cluster) Variables() map[string]interface{} {
 		if ok {
 			output[fmt.Sprintf("%s_ami", instancePool.TFName())] = ids
 		}
-		output[fmt.Sprintf("%s_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
+		output[fmt.Sprintf("%s_min_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
+		output[fmt.Sprintf("%s_max_instance_count", instancePool.TFName())] = instancePool.Config().MaxCount
 	}
 
 	// set network cidr

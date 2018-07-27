@@ -5,8 +5,12 @@ variable "{{.TFName}}_instance_type" {
 
 variable "{{.TFName}}_ami" {}
 
-variable "{{.TFName}}_count" {
-  default = {{.Count}}
+variable "{{.TFName}}_min_count" {
+  default = {{.MinCount}}
+}
+
+variable "{{.TFName}}_max_count" {
+  default = {{.MaxCount}}
 }
 
 variable "{{.TFName}}_root_volume_size" {

@@ -83,7 +83,6 @@ module "jenkins" {
   private_zone = "${var.private_zone}"
   private_zone_id = "${module.network.private_zone_id[0]}"
   jenkins_ami = "${var.jenkins_ami}"
-  jenkins_instance_type = "${var.jenkins_instance_type}"
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   key_name = "${var.key_name}"
@@ -92,7 +91,7 @@ module "jenkins" {
   certificate_arn = "${var.jenkins_certificate_arn}"
   admin_ips = ["${var.admin_ips}"]
   public_zone_id = "${module.state.public_zone_id}"
-  stack_name_prefix = "${var.jenkins_stack_name_prefix}"
+  stack_name_prefix = "${var.stack_name_prefix}"
   availability_zones = ["${var.availability_zones}"]
   name = "${var.name}"
 }
@@ -116,7 +115,7 @@ module "vault" {
   vault_version = "${var.vault_version}"
   vault_root_size = "${var.vault_root_size}"
   vault_data_size = "${var.vault_data_size}"
-  vault_instance_count = "${var.vault_instance_count}"
+  vault_min_instance_count = "${var.vault_min_instance_count}"
   vault_instance_type = "${var.vault_instance_type}"
   state_cluster_name = "${var.state_cluster_name}"
   private_zone = "${module.network.private_zone[0]}"
@@ -151,9 +150,11 @@ module "kubernetes" {
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
   tools_cluster_name = "${var.tools_cluster_name}"
-  kubernetes_master_ami = "${var.kubernetes_master_ami}"
-  kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
-  kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
+{{range .InstancePools}}
+{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
+  {{.TFName}}_ami = "${var.{{.TFName}}_ami}"
+{{ end }}
+{{ end }}
   secrets_bucket = "${module.state.secrets_bucket[0]}"
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
@@ -202,9 +203,11 @@ module "kubernetes" {
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
   tools_cluster_name = "${var.tools_cluster_name}"  
-  kubernetes_master_ami = "${var.kubernetes_master_ami}"
-  kubernetes_worker_ami = "${var.kubernetes_worker_ami}"
-  kubernetes_etcd_ami = "${var.kubernetes_etcd_ami}"
+{{range .InstancePools}}
+{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
+  {{.TFName}}_ami = "${var.{{.TFName}}_ami}"
+{{ end }}
+{{ end }}
   bastion_security_group_id = "${data.terraform_remote_state.hub_state.bastion_bastion_security_group_id}"
   secrets_bucket = "${data.terraform_remote_state.hub_state.state_secrets_bucket}"
   public_zone = "${data.terraform_remote_state.hub_state.state_public_zone}"
