@@ -317,47 +317,58 @@ func (a *Amazon) readVaultToken() (string, error) {
 }
 
 func (a *Amazon) Validate() error {
-	var result error
-	var err error
+	return nil
+}
+
+func (a *Amazon) Verify() error {
+	var result *multierror.Error
+
+	// If this fails we don't want to verify any of the other steps as they will have the same error
+	if err := a.VerifyAWSCredentials(); err != nil {
+		return err
+	}
 
 	// These checks only make sense with an environment given
 	if a.tarmak.Environment() != nil {
-		err = a.validateRemoteStateBucket()
-		if err != nil {
+		if err := a.validateRemoteStateBucket(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		err = a.validateRemoteStateDynamoDB()
-		if err != nil {
+		if err := a.validateRemoteStateDynamoDB(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		err = a.validateAvailabilityZones()
-		if err != nil {
+		if err := a.validateAvailabilityZones(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		err = a.validateAWSKeyPair()
-		if err != nil {
+		if err := a.validateAWSKeyPair(); err != nil {
 			result = multierror.Append(result, err)
 		}
-
 	}
 
-	err = a.validatePublicZone()
-	if err != nil {
+	if err := a.validatePublicZone(); err != nil {
 		result = multierror.Append(result, err)
 	}
 
-	if result != nil {
-		return result
-	}
-	return nil
-
+	return result.ErrorOrNil()
 }
 
-func (a *Amazon) Verify() (result error) {
-	return result
+// Check if AWS credentials are setup correctly.
+// AWS GO SDK doesn't have an default check if access is successfull. We check if we can query the region without errors
+func (a *Amazon) VerifyAWSCredentials() error {
+	svc, err := a.EC2()
+	if err != nil {
+		return err
+	}
+	input := &ec2.DescribeRegionsInput{}
+
+	_, err = svc.DescribeRegions(input)
+	if err != nil {
+		return fmt.Errorf("there was a problem with veryfing your AWS credentials: %s", err)
+	}
+
+	return nil
 }
 
 func (a *Amazon) getAvailablityZoneByRegion() (zones []string, err error) {

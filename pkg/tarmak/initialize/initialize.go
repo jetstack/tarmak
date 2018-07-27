@@ -10,6 +10,7 @@ import (
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/sirupsen/logrus"
 
+	"github.com/hashicorp/go-multierror"
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
@@ -88,7 +89,13 @@ creationLoop:
 		}
 
 		for {
-			err := providerObj.Validate()
+			var err *multierror.Error
+			if result := providerObj.Validate(); result != nil {
+				err = multierror.Append(err, result)
+			}
+			if result := providerObj.Verify(); result != nil {
+				err = multierror.Append(err, result)
+			}
 			if err != nil {
 				i.input.Warnf("validation failed: %s", err)
 
@@ -114,10 +121,9 @@ creationLoop:
 				}
 
 			}
-
-			err = i.tarmak.Config().AppendProvider(providerConf)
-			if err != nil {
-				return nil, err
+			appendError := i.tarmak.Config().AppendProvider(providerConf)
+			if appendError != nil {
+				return nil, appendError
 			}
 			break
 		}

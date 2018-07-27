@@ -301,7 +301,13 @@ func (e *Environment) ValidateAdminCIDRs() (result error) {
 	return result
 }
 
-func (e *Environment) Verify() (result error) {
+func (e *Environment) Verify() error {
+	var result *multierror.Error
+
+	if err := e.Provider().Verify(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
 	return result
 }
 
