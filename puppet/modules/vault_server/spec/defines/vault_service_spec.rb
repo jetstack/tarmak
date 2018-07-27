@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'vault_client::vault_service', :type => :define do
+describe 'vault_server::vault_service', :type => :define do
 
   let(:title) do
     'vault'
@@ -16,7 +16,7 @@ describe 'vault_client::vault_service', :type => :define do
 
   let(:pre_condition) {[
     "
-class{'vault_client':
+class{'vault_server':
   token => 'token1'
 }
     "

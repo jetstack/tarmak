@@ -1,4 +1,4 @@
-define vault_client::vault_service (
+define vault_server::vault_service (
   String $region,
   String $user = 'root',
   String $group = 'root',
@@ -6,9 +6,9 @@ define vault_client::vault_service (
 {
   $service_name = 'vault'
 
-  file { "${::vault_client::systemd_dir}/${service_name}.service":
+  file { "${::vault_server::systemd_dir}/${service_name}.service":
     ensure  => file,
-    content => template('vault_client/vault.service.erb'),
+    content => template('vault_server/vault.service.erb'),
     notify  => Service["${service_name}.service"],
     owner   => $user,
     group   => $group,
@@ -17,7 +17,7 @@ define vault_client::vault_service (
   ~> exec { "${service_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
-    path        => $::vault_client::path,
+    path        => $::vault_server::path,
   }
   -> service { "${service_name}.service":
     ensure => 'running',

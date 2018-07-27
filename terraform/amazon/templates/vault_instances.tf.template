@@ -28,6 +28,9 @@ data "template_file" "vault" {
 
     # run backup once per instance spread throughout the day
     backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.vault_min_instance_count))}:00:00"
+
+    wing_binary_path          = "${var.secrets_bucket}/${var.wing_binary_path}"
+    wing_version              = "${var.wing_version}"
   }
 }
 

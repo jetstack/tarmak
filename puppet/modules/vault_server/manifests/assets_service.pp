@@ -1,4 +1,4 @@
-define vault_client::assets_service (
+define vault_server::assets_service (
   String $vault_tls_cert_path,
   String $vault_tls_key_path,
   String $vault_tls_ca_path,
@@ -8,9 +8,9 @@ define vault_client::assets_service (
 {
   $service_name = 'vault-assets'
 
-  file { "${::vault_client::systemd_dir}/${service_name}.service":
+  file { "${::vault_server::systemd_dir}/${service_name}.service":
     ensure  => file,
-    content => template('vault_client/vault-assets.service.erb'),
+    content => template('vault_server/vault-assets.service.erb'),
     notify  => Service["${service_name}.service"],
     owner   => $user,
     group   => $group,
@@ -19,7 +19,7 @@ define vault_client::assets_service (
   ~> exec { "${service_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
-    path        => $::vault_client::path,
+    path        => $::vault_server::path,
   }
   -> service { "${service_name}.service":
     ensure => 'stopped',

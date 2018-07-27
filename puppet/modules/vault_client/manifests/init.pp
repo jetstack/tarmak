@@ -76,12 +76,6 @@ class vault_client (
 
   $_dest_dir = "${dest_dir}/${::vault_client::params::app_name}-${version}"
 
-  user { 'vault':
-    ensure => 'present',
-    system => true,
-    home   => '/var/lib/vault',
-  }
-
   class { '::vault_client::install': }
   -> class { '::vault_client::config': }
   -> class { '::vault_client::service': }

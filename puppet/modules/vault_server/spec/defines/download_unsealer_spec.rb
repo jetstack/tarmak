@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'vault_client::download_unsealer', :type => :define do
+describe 'vault_server::download_unsealer', :type => :define do
 
   let(:title) do
     'download-vault-unsealer'
@@ -16,7 +16,7 @@ describe 'vault_client::download_unsealer', :type => :define do
 
   let(:pre_condition) {[
     "
-class{'vault_client':
+class{'vault_server':
   token => 'token1'
 }
     "
