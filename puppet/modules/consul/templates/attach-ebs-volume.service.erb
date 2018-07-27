@@ -1,0 +1,20 @@
+[Unit]
+Description=Attach EBS volume if needed
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c ' \
+  test -e /dev/xvdd && exit 0; \
+  aws ec2 attach-volume --region <%= @region %> --volume-id <%= @volume_id %> --instance-id $(curl -sL http://169.254.169.254/latest/meta-data/instance-id) --device /dev/xvdd \
+'
+ExecStart=/bin/bash -c ' \
+  until test -e /dev/xvdd; do \
+    echo "Waiting for device /dev/xvdd ..."; \
+    sleep 1; \
+  done \
+'
+ExecStop=/bin/bash -c ' \
+  test -e /dev/xvdd || exit 0 \
+  aws ec2 detach-volume --region <%= @region %> --volume-id <%= @volume_id %> --instance-id $(curl -sl http://169.254.169.254/latest/meta-data/instance-id) \
+'
