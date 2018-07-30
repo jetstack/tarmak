@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -67,6 +68,16 @@ func (c *Controller) syncToStdout(key string) error {
 	if !exists {
 		// Below we will warm up our cache with a Instance, so that we will see a delete for one instance
 		fmt.Printf("Instance %s does not exist anymore\n", key)
+		instanceAPI := c.wing.clientset.WingV1alpha1().Instances(c.wing.flags.ClusterName)
+		instance := &v1alpha1.Instance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: c.wing.flags.InstanceName,
+			},
+		}
+		_, err := instanceAPI.Create(instance)
+		if err != nil {
+			return fmt.Errorf("error creating instance: %s", err)
+		}
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual instance, to detect that a Instance was recreated with the same name
