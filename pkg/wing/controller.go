@@ -73,6 +73,11 @@ func (c *Controller) syncToStdout(key string) error {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: c.wing.flags.InstanceName,
 			},
+			Status: &v1alpha1.InstanceStatus{
+				Converge: &v1alpha1.InstanceStatusManifest{
+					State: v1alpha1.InstanceManifestStateConverging,
+				},
+			},
 		}
 		_, err := instanceAPI.Create(instance)
 		if err != nil {
