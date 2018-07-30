@@ -2,9 +2,9 @@
 class kubernetes::apiserver(
   $allow_privileged = true,
   Optional[Boolean] $audit_enabled = undef,
-  String $audit_log_directory = '/etc/kubernetes/audit',
-  String $audit_log_path = '/etc/kubernetes/audit/kubernetes-audit.log',
-  String $audit_policy_file = '/etc/kubernetes/audit/audit-policy.yaml',
+  String $audit_log_directory = '/var/log/kubernetes',
+  Integer $audit_log_maxbackup = 1,
+  Integer $audit_log_maxsize = 100,
   $admission_control = undef,
   $count = 1,
   $storage_backend = undef,
@@ -185,13 +185,17 @@ class kubernetes::apiserver(
 
   if $_audit_enabled {
 
+    $audit_log_path = "${audit_log_directory}/audit.log"
     file {$audit_log_directory:
       ensure => directory,
       mode   => '0750',
       owner  => $::kubernetes::params::user,
       group  => $::kubernetes::params::group,
+      notify => Service["${service_name}.service"],
     }
-    -> file{$audit_policy_file:
+
+    $audit_policy_file = "${::kubernetes::config_dir}/audit-policy.yaml"
+    file{$audit_policy_file:
       ensure  => file,
       mode    => '0640',
       owner   => 'root',
