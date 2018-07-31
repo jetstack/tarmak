@@ -308,7 +308,7 @@ func (e *Environment) Verify() error {
 		result = multierror.Append(result, err)
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (e *Environment) WingTunnel() interfaces.Tunnel {
