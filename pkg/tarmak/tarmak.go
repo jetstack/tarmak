@@ -238,8 +238,8 @@ func (t *Tarmak) Clusters() (clusters []interfaces.Cluster) {
 // this builds a temporary directory with the needed assets that are built into the go binary
 func (t *Tarmak) RootPath() (string, error) {
 	select {
-	case <-t.Context().Done():
-		return "", t.Context().Err()
+	case <-t.CancellationContext().Done():
+		return "", t.CancellationContext().Err()
 	default:
 	}
 
@@ -255,8 +255,8 @@ func (t *Tarmak) RootPath() (string, error) {
 	t.log.Debugf("created temporary directory: %s", dir)
 
 	select {
-	case <-t.Context().Done():
-		return "", t.Context().Err()
+	case <-t.CancellationContext().Done():
+		return "", t.CancellationContext().Err()
 	default:
 	}
 
@@ -358,6 +358,6 @@ func (t *Tarmak) CmdKubectl(args []string) error {
 	return t.kubectl.Kubectl(args)
 }
 
-func (t *Tarmak) Context() interfaces.CancellationContext {
+func (t *Tarmak) CancellationContext() interfaces.CancellationContext {
 	return t.ctx
 }

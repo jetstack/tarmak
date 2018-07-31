@@ -153,7 +153,7 @@ type Tarmak interface {
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
 	KeepContainers() bool
-	Context() CancellationContext
+	CancellationContext() CancellationContext
 
 	// get a provider by name
 	ProviderByName(string) (Provider, error)

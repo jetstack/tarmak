@@ -34,7 +34,7 @@ func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
 		tarmak: t,
 		log:    t.Log(),
 		args:   args,
-		ctx:    t.Context(),
+		ctx:    t.CancellationContext(),
 	}
 
 }

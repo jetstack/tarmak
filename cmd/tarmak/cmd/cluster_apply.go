@@ -38,7 +38,7 @@ var clusterApplyCmd = &cobra.Command{
 
 		applyCmd := t.NewCmdTerraform(args)
 
-		t.Context().WaitOrCancel(applyCmd.Apply)
+		t.CancellationContext().WaitOrCancel(applyCmd.Apply)
 	},
 }
 

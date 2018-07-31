@@ -14,7 +14,7 @@ var clusterPlanCmd = &cobra.Command{
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
 
-		t.Context().WaitOrCancel(
+		t.CancellationContext().WaitOrCancel(
 			t.NewCmdTerraform(args).Plan,
 			2,
 		)

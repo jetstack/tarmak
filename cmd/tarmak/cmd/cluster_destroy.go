@@ -27,7 +27,7 @@ var clusterDestroyCmd = &cobra.Command{
 
 		destroyCmd := t.NewCmdTerraform(args)
 
-		t.Context().WaitOrCancel(destroyCmd.Destroy)
+		t.CancellationContext().WaitOrCancel(destroyCmd.Destroy)
 	},
 }
 

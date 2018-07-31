@@ -41,7 +41,7 @@ func New(tarmak interfaces.Tarmak) *Terraform {
 	return &Terraform{
 		log:    log,
 		tarmak: tarmak,
-		ctx:    tarmak.Context(),
+		ctx:    tarmak.CancellationContext(),
 	}
 }
 
@@ -323,9 +323,9 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	}()
 
 	select {
-	case <-t.tarmak.Context().Done():
+	case <-t.tarmak.CancellationContext().Done():
 		if cmd.Process != nil {
-			cmd.Process.Signal(t.tarmak.Context().Signal())
+			cmd.Process.Signal(t.tarmak.CancellationContext().Signal())
 		}
 		<-complete
 
