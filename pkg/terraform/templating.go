@@ -118,7 +118,7 @@ type terraformTemplate struct {
 
 func (t *terraformTemplate) Generate() error {
 
-	var result error
+	var result *multierror.Error
 	if err := t.generateRemoteStateConfig(); err != nil {
 		result = multierror.Append(result, err)
 	}
@@ -151,7 +151,7 @@ func (t *terraformTemplate) Generate() error {
 		result = multierror.Append(result, err)
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (t *terraformTemplate) data(module string) map[string]interface{} {

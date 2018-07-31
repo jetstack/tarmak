@@ -77,8 +77,7 @@ func NewFromConfig(cluster interfaces.Cluster, conf *clusterv1alpha1.InstancePoo
 		return nil, fmt.Errorf("minCount does not equal maxCount but role is stateful. minCount=%d maxCount=%d", instancePool.Config().MinCount, instancePool.Config().MaxCount)
 	}
 
-	var result error
-
+	var result *multierror.Error
 	count := 0
 	for pos, _ := range conf.Volumes {
 		volume, err := NewVolumeFromConfig(count, provider, &conf.Volumes[pos])
@@ -98,7 +97,7 @@ func NewFromConfig(cluster interfaces.Cluster, conf *clusterv1alpha1.InstancePoo
 		return nil, errors.New("no root volume given")
 	}
 
-	return instancePool, result
+	return instancePool, result.ErrorOrNil()
 }
 
 func (n *InstancePool) Role() *role.Role {
@@ -191,11 +190,13 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
 	return fmt.Sprintf("[%s]", strings.Join(policies, ","))
 }
 
-func (n *InstancePool) Validate() (result error) {
+func (n *InstancePool) Validate() error {
 	return n.ValidateAllowCIDRs()
 }
 
-func (n *InstancePool) ValidateAllowCIDRs() (result error) {
+func (n *InstancePool) ValidateAllowCIDRs() error {
+	var result *multierror.Error
+
 	for _, cidr := range n.Config().AllowCIDRs {
 		_, _, err := net.ParseCIDR(cidr)
 		if err != nil {
@@ -203,7 +204,7 @@ func (n *InstancePool) ValidateAllowCIDRs() (result error) {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (n *InstancePool) Labels() (string, error) {
@@ -227,7 +228,7 @@ func (n *InstancePool) Labels() (string, error) {
 
 func (n *InstancePool) Taints() (string, error) {
 	var taints []string
-	var result error
+	var result *multierror.Error
 
 	err := n.validTaints()
 	if err != nil {
@@ -238,11 +239,11 @@ func (n *InstancePool) Taints() (string, error) {
 		taints = append(taints, fmt.Sprintf("  %s: \"%s:%s\"", taint.Key, taint.Value, taint.Effect))
 	}
 
-	return strings.Join(taints, "\n"), result
+	return strings.Join(taints, "\n"), result.ErrorOrNil()
 }
 
 func (n *InstancePool) validTaints() error {
-	var result error
+	var result *multierror.Error
 
 	validKey := regexp.MustCompile(`^[a-zA-Z0-9][\w_\-\.]*\/?[\w_\-\.]*[a-zA-Z0-9]$`)
 	validValue := regexp.MustCompile(`^[a-zA-Z0-9][\w_\-\.]*[a-zA-Z0-9]$`)
@@ -260,5 +261,5 @@ func (n *InstancePool) validTaints() error {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }

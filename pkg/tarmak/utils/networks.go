@@ -21,7 +21,7 @@ func UnusedPort() int {
 }
 
 func NetworkOverlap(netCIDRs []*net.IPNet) error {
-	var result error
+	var result *multierror.Error
 	for i, _ := range netCIDRs {
 		for j := i + 1; j < len(netCIDRs); j++ {
 			// check for overlap per network
@@ -34,5 +34,5 @@ func NetworkOverlap(netCIDRs []*net.IPNet) error {
 			}
 		}
 	}
-	return result
+	return result.ErrorOrNil()
 }

@@ -399,7 +399,7 @@ func (a *Amazon) getAvailablityZoneByRegion() (zones []string, err error) {
 }
 
 func (a *Amazon) validateAvailabilityZones() error {
-	var result error
+	var result *multierror.Error
 
 	zones, err := a.getAvailablityZoneByRegion()
 	if err != nil {
@@ -432,7 +432,7 @@ func (a *Amazon) validateAvailabilityZones() error {
 		}
 	}
 	if result != nil {
-		return result
+		return result.ErrorOrNil()
 	}
 
 	if len(availabilityZones) == 0 {
@@ -522,7 +522,7 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 }
 
 func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) error {
-	var result error
+	var result *multierror.Error
 
 	svc, err := a.EC2()
 	if err != nil {
@@ -540,11 +540,11 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2) error {
-	var result error
+	var result *multierror.Error
 	var available bool
 
 	//Request offering, filter by given instance type
@@ -579,7 +579,7 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 // This methods converts and possibly validates a generic instance type to a
