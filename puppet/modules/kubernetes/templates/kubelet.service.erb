@@ -14,7 +14,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
 <% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
 <% if @_node_taints_string and @_node_taints_string.length > 0 -%>
-  --register-with-taints=<%= @_node_taints_string %> \
+  "--register-with-taints=<%= @_node_taints_string %>" \
 <% end -%>
 <% else -%>
   --register-schedulable=<%= @_register_schedulable %> \
@@ -36,7 +36,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% end -%>
 <% end -%>
 <% if @_node_labels_string and @_node_labels_string.length > 0 -%>
-  --node-labels=<%= @_node_labels_string %> \
+  "--node-labels=<%= @_node_labels_string %>" \
 <% end -%>
   --cluster-dns=<%= @cluster_dns %> \
   --cluster-domain=<%= @cluster_domain %> \

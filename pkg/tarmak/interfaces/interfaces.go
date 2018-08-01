@@ -251,6 +251,8 @@ type InstancePool interface {
 	MinCount() int
 	MaxCount() int
 	InstanceType() string
+	Labels() (string, error)
+	Taints() (string, error)
 }
 
 type Volume interface {
