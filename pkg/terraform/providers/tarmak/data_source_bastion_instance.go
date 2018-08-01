@@ -19,10 +19,6 @@ func dataSourceBastionInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"instance_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"username": {
 				Type:     schema.TypeString,
 				Required: true,

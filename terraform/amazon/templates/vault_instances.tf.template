@@ -49,12 +49,6 @@ resource "aws_cloudwatch_metric_alarm" "vault-autorecover" {
   }
 }
 
-data "tarmak_bastion_instance" "bastion" {
-  hostname    = "bastion"
-  username    = "centos"
-  instance_id = "${var.bastion_instance_id}"
-}
-
 resource "aws_instance" "vault" {
   ami                  = "${var.vault_ami}"
   instance_type        = "${var.vault_instance_type}"
@@ -86,8 +80,6 @@ resource "aws_instance" "vault" {
   lifecycle {
     ignore_changes = ["volume_tags"]
   }
-
-  depends_on = ["data.tarmak_bastion_instance.bastion"]
 }
 
 resource "aws_ebs_volume" "vault" {

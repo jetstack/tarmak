@@ -2,7 +2,6 @@
 package tarmak
 
 import (
-	"fmt"
 	"log"
 	"net/rpc"
 
@@ -16,6 +15,7 @@ func resourceTarmakVaultInstanceRole() *schema.Resource {
 		Create: resourceTarmakVaultInstanceRoleCreate,
 		Read:   resourceTarmakVaultInstanceRoleRead,
 		Delete: resourceTarmakVaultInstanceRoleDelete,
+		Update: resourceTarmakVaultInstanceRoleCreate,
 
 		Schema: map[string]*schema.Schema{
 			"role_name": {
@@ -41,6 +41,10 @@ func resourceTarmakVaultInstanceRole() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"vault_status": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"init_token": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -52,6 +56,13 @@ func resourceTarmakVaultInstanceRole() *schema.Resource {
 func resourceTarmakVaultInstanceRoleCreate(d *schema.ResourceData, meta interface{}) (err error) {
 	client := meta.(*rpc.Client)
 
+	vaultStatus := d.Get("vault_status").(string)
+	if vaultStatus != tarmakRPC.VaultStatusReady {
+		log.Print("vault is not ready")
+		d.SetId("")
+		return nil
+	}
+
 	roleName := d.Get("role_name").(string)
 	clusterName := d.Get("vault_cluster_name").(string)
 	vaultInternalFQDNs := []string{}
@@ -72,12 +83,15 @@ func resourceTarmakVaultInstanceRoleCreate(d *schema.ResourceData, meta interfac
 	var reply tarmakRPC.VaultInstanceRoleReply
 	err = client.Call(tarmakRPC.VaultInstanceRole, args, &reply)
 	if err != nil {
+		log.Printf("call to %s failed: %s", tarmakRPC.VaultInstanceRole, err)
 		d.SetId("")
-		return fmt.Errorf("call to %s failed: %s", tarmakRPC.VaultInstanceRole, err)
+		return nil
 	}
 
 	if err = d.Set("init_token", reply.InitToken); err != nil {
-		return fmt.Errorf("failed to set init token: %s", err)
+		log.Printf("failed to set init token: %s", err)
+		d.SetId("")
+		return
 	}
 
 	d.SetId(reply.InitToken)
@@ -88,6 +102,13 @@ func resourceTarmakVaultInstanceRoleCreate(d *schema.ResourceData, meta interfac
 func resourceTarmakVaultInstanceRoleRead(d *schema.ResourceData, meta interface{}) (err error) {
 	client := meta.(*rpc.Client)
 
+	vaultStatus := d.Get("vault_status").(string)
+	if vaultStatus != tarmakRPC.VaultStatusReady {
+		log.Printf("vault is not ready")
+		d.SetId("")
+		return nil
+	}
+
 	roleName := d.Get("role_name").(string)
 	clusterName := d.Get("vault_cluster_name").(string)
 	vaultInternalFQDNs := []string{}
@@ -108,6 +129,7 @@ func resourceTarmakVaultInstanceRoleRead(d *schema.ResourceData, meta interface{
 	var reply tarmakRPC.VaultInstanceRoleReply
 	err = client.Call(tarmakRPC.VaultInstanceRole, args, &reply)
 	if err != nil {
+		log.Printf("call to %s failed: %s", tarmakRPC.VaultInstanceRole, err)
 		d.SetId("")
 		return nil
 	}
