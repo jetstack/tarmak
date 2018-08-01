@@ -39,10 +39,16 @@ class consul(
     Optional[String] $ca_file = undef,
     Optional[String] $cert_file = undef,
     Optional[String] $key_file = undef,
+    $consul_encrypt = true,
+    $private_ip,
+    $consul_master_token,
+    $region,
+    $instance_count,
+    $environment,
 ) inherits ::consul::params {
 
     include ::archive
-
+    include ::airworthy
 
     $app_name = 'consul'
     $_dest_dir = "${dest_dir}/${app_name}-${version}"
@@ -52,9 +58,6 @@ class consul(
 
     $exporter_dest_dir = "${dest_dir}/${app_name}_exporter-${exporter_version}"
     $exporter_bin_path = "${exporter_dest_dir}/${app_name}_exporter"
-
-    # install airworthy if necessary
-    ensure_resource('class', '::airworthy', {})
 
     Class['::airworthy']
     -> class { '::consul::install': }

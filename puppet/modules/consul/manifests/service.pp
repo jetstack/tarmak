@@ -3,9 +3,11 @@ class consul::service(
   $systemd_requires = [],
   $systemd_after = [],
   $systemd_before = [],
+  $private_ip = $consul::private_ip,
 )
 {
   $service_name = 'consul'
+  $mount_name = 'var-lib-consul'
 
   $_systemd_wants = $systemd_wants
   $_systemd_requires = $systemd_requires

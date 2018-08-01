@@ -23,28 +23,55 @@ write_files:
     vault_server::vault_unsealer_kms_key_id: "${vault_unsealer_kms_key_id}"
     vault_server::vault_unsealer_ssm_key_prefix: "${vault_unsealer_ssm_key_prefix}"
 
+- path: /tmp/consul.yaml
+  permissions: '0644'
+  content: |
+    ---
+    consul::private_ip: "${private_ip}"
+    consul::consul_master_token: "${consul_master_token}"
+    consul::region: "${region}"
+    consul::instance_count: "${instance_count}"
+    consul::environment: "${environment}"
 
-- path: /etc/systemd/system/puppet-init.service
+- path: /etc/systemd/system/puppet-vault-init.service
   permissions: '0644'
   content: |
     [Unit]
-    Description=Bootstrap vault and consul using puppet
+    Description=Bootstrap vault using puppet
     Wants=network-online.target
     After=network.target network-online.target
 
     [Service]
     Environment=AWS_REGION=${region}
-    Environment=VAULT_UNSEALER_AWS_KMS_KEY_ID=${vault_unsealer_kms_key_id}
-    Environment=VAULT_UNSEALER_AWS_SSM_KEY_PREFIX=${vault_unsealer_ssm_key_prefix}
     Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
     PermissionsStartOnly=true
     Restart=on-failure
     RestartSec=3
-    ExecStartPre=/bin/sh -c 'set -e; mkdir -p /tmp/puppet-manifests; aws configure set s3.signature_version s3v4 && aws s3 cp "s3://${puppet_tar_gz_bucket_path}" /tmp/puppet-manifests/.; tar -xf /tmp/puppet.tar.gz -C /tmp/puppet-manifests/.; mkdir -p /tmp/puppet-manifests/modules/vault_server/hieradata; cp /tmp/vault_server.yaml /tmp/puppet-manifests/modules/vault_server/hieradata/vault_server.yaml'
-    ExecStart=/bin/sh -c ' puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/vault_server/hiera.yaml /tmp/puppet-manifests/modules/vault_server -e "include vault_server""
+    ExecStartPre=/bin/sh -c 'set -e; mkdir -p /tmp/puppet-manifests; tar -xf /tmp/puppet.tar.gz -C /tmp/puppet-manifests/.; mkdir -p /tmp/puppet-manifests/modules/vault_server/hieradata; cp /tmp/vault_server.yaml /tmp/puppet-manifests/modules/vault_server/hieradata/vault_server.yaml'
+    ExecStart=/bin/sh -c ' puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/vault_server/hiera.yaml /tmp/puppet-manifests/modules/vault_server -e "include vault_server"'
+    [Install]
+    WantedBy=multi-user.target
+
+- path: /etc/systemd/system/puppet-consul-init.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Bootstrap consul using puppet
+    Wants=network-online.target
+    After=network.target network-online.target
+
+    [Service]
+    Environment=AWS_REGION=${region}
+    Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
+    PermissionsStartOnly=true
+    Restart=on-failure
+    RestartSec=3
+    ExecStartPre=/bin/sh -c 'mkdir -p /tmp/puppet-manifests/modules/consul/hieradata; cp /tmp/consul.yaml /tmp/puppet-manifests/modules/consul/hieradata/consul.yaml'
+    ExecStart=/bin/sh -c ' puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/consul/hiera.yaml /tmp/puppet-manifests/modules/consul -e "include consul"'
     [Install]
     WantedBy=multi-user.target
 
 
 runcmd:
-- systemctl start puppet-init.service
+- systemctl start puppet-vault-init.service
+- systemctl start puppet-consul-init.service

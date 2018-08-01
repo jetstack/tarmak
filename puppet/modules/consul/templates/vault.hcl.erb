@@ -1,8 +1,8 @@
 backend "consul" {
   address = "127.0.0.1:8500"
   scheme = "http"
-  token  = "<%= consul_master_token %>"
-  path = "vault-<%= environment %>/"
+  token  = "<%= @consul_master_token %>"
+  path = "vault-<%= @environment %>/"
   disable_registration = "true"
 }
 
@@ -16,4 +16,4 @@ default_lease_ttl = "168h"
 max_lease_ttl = "720h"
 disable_mlock = false
 
-cluster_name = "vault-<%= environment %>"
+cluster_name = "vault-<%= @environment %>"

@@ -1,4 +1,11 @@
-class consul::config
+class consul::config (
+    $consul_encrypt = $::consul::consul_encrypt,
+    $private_ip = $::consul::private_ip,
+    $consul_master_token = $::consul::consul_master_token,
+    $region = $::consul::region,
+    $instance_count = $::consul::instance_count,
+    $environment = $::consul::environment,
+)
 {
   if $::consul::ca_file != undef and $::consul::cert_file != undef and $::consul::key_file != undef {
       $enable_tls = true

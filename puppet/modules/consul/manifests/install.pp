@@ -115,4 +115,14 @@ class consul::install(
             ensure => absent,
         }
     }
+
+
+    consul::consul{'consul':
+        fqdn                => $::consul::fqdn,
+        private_ip          => $::consul::private_ip,
+        consul_master_token => $::consul::consul_master_token,
+        region              => $::consul::region,
+        instance_count      => $::consul::instance_count,
+        environment         => $::consul::environment,
+    }
 }
