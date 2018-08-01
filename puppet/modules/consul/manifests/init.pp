@@ -39,7 +39,7 @@ class consul(
     Optional[String] $ca_file = undef,
     Optional[String] $cert_file = undef,
     Optional[String] $key_file = undef,
-    $consul_encrypt = true,
+    $consul_encrypt,
     $private_ip,
     $consul_master_token,
     $region,

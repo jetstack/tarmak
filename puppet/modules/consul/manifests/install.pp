@@ -124,5 +124,6 @@ class consul::install(
         region              => $::consul::region,
         instance_count      => $::consul::instance_count,
         environment         => $::consul::environment,
+        consul_encrypt      => $::consul::consul_encrypt,
     }
 }

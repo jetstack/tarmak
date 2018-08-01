@@ -5,6 +5,7 @@ define consul::consul(
     String $region,
     String $instance_count,
     String $environment,
+    String $consul_encrypt
 )
 {
     require consul
