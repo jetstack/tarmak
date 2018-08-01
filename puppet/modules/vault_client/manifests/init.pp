@@ -25,6 +25,7 @@ class vault_client (
   $version = $::vault_client::params::version,
   $bin_dir = $::vault_client::params::bin_dir,
   $download_dir = $::vault_client::params::download_dir,
+  $download_url = $::vault_client::params::download_url,
   $dest_dir = $::vault_client::params::dest_dir,
   $server_url = $::vault_client::params::server_url,
   $systemd_dir = $::vault_client::params::systemd_dir,
@@ -51,8 +52,8 @@ class vault_client (
   }
 
   ## build download URL
-  $download_url = regsubst(
-    $::vault_client::params::download_url,
+  $real_download_url = regsubst(
+    $download_url,
     '#VERSION#',
     $version,
     'G'
