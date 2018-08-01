@@ -23,6 +23,6 @@ output "secrets_bucket" {
 }
 
 output "secrets_kms_arn" {
-  value = "${aws_kms_key.secrets.*.arn}"
+  value = "${concat(aws_kms_key.secrets.*.arn, list(""))}"
 }
 
