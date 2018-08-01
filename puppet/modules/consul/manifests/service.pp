@@ -28,7 +28,7 @@ class consul::service(
     },
   }
 
-  file { "/etc/systemd/system/${service_name}.service":
+  file { "${::consul::systemd_dir}/${service_name}.service":
     ensure  => file,
     content => template('consul/consul.service.erb'),
     notify  => Exec["${service_name}-systemctl-daemon-reload"]
@@ -56,7 +56,7 @@ class consul::service(
   # install consul exporter if enabled
   if $::consul::exporter_enabled {
     $exporter_bin_path = $::consul::exporter_bin_path
-    file { "/etc/systemd/system/${service_name}-exporter.service":
+    file { "${::consul::systemd_dir}/${service_name}-exporter.service":
       ensure  => file,
       content => template('consul/consul-exporter.service.erb'),
       notify  => Exec["${service_name}-systemctl-daemon-reload"]

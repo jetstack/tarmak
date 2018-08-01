@@ -11,7 +11,7 @@ class vault_server::params {
   $dest_dir = '/opt'
   $config_dir = '/etc/vault'
   $download_dir = '/tmp'
-  #$download_url = "https://releases.hashicorp.com/vault/#VERSION#/vault_#VERSION_linux_amd64.zip"
-  #$server_url = 'http://127.0.0.1:8200'
-  #$systemd_dir = '/etc/systemd/system'
+  $download_url = 'https://releases.hashicorp.com/vault/#VERSION#/vault_#VERSION_linux_amd64.zip'
+  $server_url = 'http://127.0.0.1:8200'
+  $systemd_dir = '/etc/systemd/system'
 }

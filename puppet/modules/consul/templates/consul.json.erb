@@ -1,17 +1,17 @@
 {
     "acl_default_policy" : "deny",
     "acl_down_policy" : "deny",
-    "acl_master_token" : "<%= consul_master_token %>",
-    "acl_datacenter" : "<%= region %>",
-    "datacenter" : "<%= region %>",
+    "acl_master_token" : "<%= @consul_master_token %>",
+    "acl_datacenter" : "<%= @region %>",
+    "datacenter" : "<%= @region %>",
     "log_level" : "INFO",
     "disable_remote_exec" : true,
     "client_addr" : "0.0.0.0",
     "bind_addr" : "0.0.0.0",
-    "encrypt" : "<%= consul_encrypt %>",
+    "encrypt" : "<%= @consul_encrypt %>",
     "server" : true,
-    "bootstrap_expect" : <%= instance_count %>,
+    "bootstrap_expect" : <%= @instance_count %>,
     "retry_join": [
-        "provider=aws tag_key=VaultCluster tag_value=<%= environment %>"
+        "provider=aws tag_key=VaultCluster tag_value=<%= @environment %>"
     ]
 }

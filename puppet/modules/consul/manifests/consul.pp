@@ -5,8 +5,7 @@ define consul::consul(
     String $consul_master_token,
     String $region,
     String $sonul_encrypt,
-    String $instance_count,
-    Integer instance_count,
+    Integer $instance_count,
     String $environment,
 )
 {
@@ -24,22 +23,22 @@ define consul::consul(
         mode    => '0644'
     }
 
-    file { "etc/consul/${json_name}.json":
+    file { "${::consul::consul_config_dir}/${json_name}.json":
         ensure  => file,
         content => template('consul/consul.json.erb'),
         mode    => '0600'
     }
 
-    file { "etc/vault/${hcl_name}.hcl":
+    file { "${::consul::vault_config_dir}/${hcl_name}.hcl":
         ensure  => file,
         content => template('consul/vault.hcl.erb'),
         mode    => '0600'
     }
 
-    file { "/usr/local/bin/download-vault-consul.sh":
+    file { "${::consul::bin_dir}/download-vault-consul.sh":
         ensure  => file,
         content => template('consul/download-vault-consul.sh.erb'),
-        mode    => '-755'
+        mode    => '0755'
     }
 
     file { "${::vault_client::systemd_dir}/${service_name}.service":
