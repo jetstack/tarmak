@@ -25,9 +25,9 @@ define consul::consul_backup_service (
         enable => true,
     }
 
-    file { "${vault_client::systemd_dir}/${service_name}.timer":
+    file { "${consul::systemd_dir}/${service_name}.timer":
         ensure  => file,
-        content => template('vault_client/cert.timer.erb'),
+        content => template('consul/cert.timer.erb'),
         notify  => Exec["${service_name}-systemctl-daemon-reload"],
     }
     ~> service { "${service_name}.timer":
