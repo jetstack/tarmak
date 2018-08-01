@@ -24,7 +24,6 @@
 class vault_client (
   $version = $::vault_client::params::version,
   $bin_dir = $::vault_client::params::bin_dir,
-  $local_bin_dir = $::vault_client::params::local_bin_dir,
   $download_dir = $::vault_client::params::download_dir,
   $dest_dir = $::vault_client::params::dest_dir,
   $server_url = $::vault_client::params::server_url,

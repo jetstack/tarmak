@@ -1,14 +1,17 @@
 include ::tarmak
-define consul::ensure_ebs_volume(
+define consul::attach_ebs_volume_service (
+    String $region,
+    String $volume,
+    String $volume_id,
 )
 {
     require consul
 
-    $service_name = "ensure-ebs-volume-formatted"
+    $service_name = 'attach-ebs-volume'
 
     file { "${::consul::systemd_dir}/${service_name}.service":
         ensure  => file,
-        content => template('consul/ensure-ebs-volume-formatted.service.erb'),
+        content => template('consul/attach-ebs-volume.service.erb'),
         notify  => Exec["${service_name}-systemctl-daemon-reload"],
         mode    => '0644'
     }

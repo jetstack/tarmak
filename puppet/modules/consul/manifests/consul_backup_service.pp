@@ -1,5 +1,5 @@
 include ::tarmak
-define consul::consul_backup(
+define consul::consul_backup_service (
     String $region,
     String $backup_bucket_prefix,
     String $consul_master_token,
@@ -7,7 +7,7 @@ define consul::consul_backup(
 {
     require consul
 
-    $service_name = "consul-backup"
+    $service_name = 'consul-backup'
 
     file { "${::consul::systemd_dir}/${service_name}.service":
         ensure  => file,
