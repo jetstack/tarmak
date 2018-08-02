@@ -119,14 +119,14 @@ Usage::
 
 
 
-``set-context``
+``set-current``
 ***************
 
 Change active cluster.
 
 Usage::
 
-  $ tarmak clusters set-context [EnvironmentName-ClusterName]
+  $ tarmak clusters set-cureent [EnvironmentName-ClusterName]
 
 
 ``kubectl``
