@@ -18,16 +18,6 @@ class vault_server (
     $vault_unsealer_ssm_key_prefix,
 ) inherits ::vault_server::params {
 
-    # verify inputs
-
-    ## only one of init_token or token needs to exist
-    #if $init_token == undef and $token == undef {
-    #  fail('You must provide at least one of $init_token or $token.')
-    #}
-    #if $init_token != undef and $token != undef {
-    #  fail('You must provide either $init_token or $token.')
-    #}
-
     # paths
     $path = defined('$::path') ? {
         default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
@@ -42,16 +32,9 @@ class vault_server (
         'G'
     )
 
-    # token path
-    $config_path = "${::vault_server::config_dir}/config"
-
-    # token path
-    $token_path = "${::vault_server::config_dir}/token"
-
-    # init_token path
-    $init_token_path = "${::vault_server::config_dir}/init-token"
-
     $_dest_dir = "${dest_dir}/${::vault_server::params::app_name}-${version}"
+    $bin_path = "${_dest_dir}/${::vault_server::params::app_name}"
+    $link_path = "/usr/local/bin/${::vault_server::params::app_name}"
 
     user { 'vault':
         ensure => 'present',
@@ -81,6 +64,6 @@ class vault_server (
         region => $region,
     }
 
-    class { '::vault_server::config': }
+    class { '::vault_server::install': }
     -> Class['::vault_server']
 }

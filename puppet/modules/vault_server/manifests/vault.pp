@@ -5,7 +5,7 @@ define vault_server::vault (
 {
   $script_name = 'vault'
 
-  file { "${::vault_server::local_bin_dir}/${script_name}.sh":
+  file { "/etc/profile.d/${script_name}.sh":
     ensure  => file,
     content => file('vault_server/vault.sh'),
     owner   => $user,

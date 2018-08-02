@@ -27,10 +27,4 @@ define consul::consul(
         content => template('consul/vault.hcl.erb'),
         mode    => '0600'
     }
-
-    file { "${::consul::bin_dir}/download-vault-consul.sh":
-        ensure  => file,
-        content => template('consul/download-vault-consul.sh.erb'),
-        mode    => '0755'
-    }
 }

@@ -2,12 +2,19 @@ include ::tarmak
 define consul::consul_backup_service (
     String $region,
     String $backup_bucket_prefix,
+    String $backup_schedule,
     String $consul_master_token,
 )
 {
     require consul
 
     $service_name = 'consul-backup'
+
+    file { "/usr/local/bin/${service_name}.sh":
+        ensure  => file,
+        content => file('consul/consul-backup.sh'),
+        mode    => '0755'
+    }
 
     file { "${::consul::systemd_dir}/${service_name}.service":
         ensure  => file,
@@ -20,14 +27,10 @@ define consul::consul_backup_service (
         refreshonly => true,
         path        => $::consul::path,
     }
-    -> service { "${service_name}.service":
-        ensure => 'running',
-        enable => true,
-    }
 
     file { "${consul::systemd_dir}/${service_name}.timer":
         ensure  => file,
-        content => template('consul/cert.timer.erb'),
+        content => template('consul/consul-backup.timer.erb'),
         notify  => Exec["${service_name}-systemctl-daemon-reload"],
     }
     ~> service { "${service_name}.timer":

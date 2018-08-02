@@ -8,11 +8,20 @@ class consul::install(
 {
     include ::archive
 
-
     $nologin = $::osfamily ? {
         'RedHat' => '/sbin/nologin',
         'Debian' => '/usr/sbin/nologin',
         default  => '/usr/sbin/nologin',
+    }
+
+    exec { 'install epel-release':
+      command => "yum -y install epel-release",
+      path    => '/usr/local/bin/:/bin/',
+    }
+
+    exec { 'install tools':
+      command => "yum -y install epel-release",
+      path    => '/usr/local/bin/:/bin/',
     }
 
     group { $::consul::group:
@@ -125,5 +134,12 @@ class consul::install(
         instance_count      => $::consul::instance_count,
         environment         => $::consul::environment,
         consul_encrypt      => $::consul::consul_encrypt,
+    }
+
+    consul::consul_backup_service{'consul_backup_service':
+        region               => $::consul::region,
+        backup_bucket_prefix => $::consul::backup_bucket_prefix,
+        backup_schedule      => $::consul::backup_schedule,
+        consul_master_token  => $::consul::consul_master_token,
     }
 }
