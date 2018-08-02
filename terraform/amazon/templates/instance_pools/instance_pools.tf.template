@@ -20,6 +20,7 @@
 {{ template "instance_pool_variables.tf.template" . -}}
 # Instance for {{.TFName}}
 {{ template "instance_pool_instance.tf.template" dict "InstancePool" . "AmazonEBSEncrypted" $AmazonEBSEncrypted }}
+{{ template "instance_pool_instance.tf.template" dict "InstancePool" . "WingDevMode" $WingDevMode }}
 # IAM role for {{.TFName}}
 {{ template "instance_pool_iam.tf.template" . }}
 {{- end }}
