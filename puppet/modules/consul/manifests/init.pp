@@ -45,10 +45,17 @@ class consul(
     $region,
     $instance_count,
     $environment,
+    $backup_bucket_prefix,
+    $backup_schedule,
 ) inherits ::consul::params {
 
     include ::archive
     include ::airworthy
+
+    file { '/etc/vault':
+        ensure => 'directory',
+        mode   => '0777',
+    }
 
     $app_name = 'consul'
     $_dest_dir = "${dest_dir}/${app_name}-${version}"
@@ -58,6 +65,7 @@ class consul(
 
     $exporter_dest_dir = "${dest_dir}/${app_name}_exporter-${exporter_version}"
     $exporter_bin_path = "${exporter_dest_dir}/${app_name}_exporter"
+
 
     Class['::airworthy']
     -> class { '::consul::install': }
