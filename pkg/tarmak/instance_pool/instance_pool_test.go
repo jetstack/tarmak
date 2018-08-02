@@ -53,6 +53,86 @@ func newFakeInstancePool(t *testing.T) *fakeInstancePool {
 	return i
 }
 
+func TestInstancePool_Labels(t *testing.T) {
+	validLabels := []clusterv1alpha1.Label{
+		clusterv1alpha1.Label{Key: "key", Value: "value"},
+		clusterv1alpha1.Label{Key: "key.with/slash-in_it", Value: "value"},
+		clusterv1alpha1.Label{Key: "empty", Value: ""},
+	}
+
+	for _, label := range validLabels {
+		i := InstancePool{
+			conf: &clusterv1alpha1.InstancePool{
+				Labels: []*clusterv1alpha1.Label{&label},
+			},
+		}
+
+		_, err := i.Labels()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	invalidLabels := []clusterv1alpha1.Label{
+		clusterv1alpha1.Label{Key: "invalid-character", Value: "="},
+		clusterv1alpha1.Label{Key: "two/slashes/in-it", Value: "value"},
+		clusterv1alpha1.Label{Key: "bad key", Value: "value"},
+	}
+
+	for _, label := range invalidLabels {
+		i := InstancePool{
+			conf: &clusterv1alpha1.InstancePool{
+				Labels: []*clusterv1alpha1.Label{&label},
+			},
+		}
+
+		_, err := i.Labels()
+		if err == nil {
+			t.Errorf("expected %s to cause a validation error", label)
+		}
+	}
+}
+
+func TestInstancePool_Taints(t *testing.T) {
+	validTaints := []clusterv1alpha1.Taint{
+		clusterv1alpha1.Taint{Key: "key", Value: "value", Effect: "NoSchedule"},
+		clusterv1alpha1.Taint{Key: "key.with/slash-in_it", Value: "value", Effect: "NoExecute"},
+		clusterv1alpha1.Taint{Key: "empty", Value: "", Effect: "PreferNoSchedule"},
+	}
+
+	for _, taint := range validTaints {
+		i := InstancePool{
+			conf: &clusterv1alpha1.InstancePool{
+				Taints: []*clusterv1alpha1.Taint{&taint},
+			},
+		}
+
+		_, err := i.Taints()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	invalidTaints := []clusterv1alpha1.Taint{
+		clusterv1alpha1.Taint{Key: "key", Value: "value", Effect: "Not a Valid Effect"},
+		clusterv1alpha1.Taint{Key: "missingeffect", Value: "value", Effect: ""},
+		clusterv1alpha1.Taint{Key: "invalid taint key", Value: "value", Effect: "PreferNoSchedule"},
+	}
+
+	for _, taint := range invalidTaints {
+		i := InstancePool{
+			conf: &clusterv1alpha1.InstancePool{
+				Taints: []*clusterv1alpha1.Taint{&taint},
+			},
+		}
+
+		_, err := i.Taints()
+		if err == nil {
+			t.Errorf("expected %s to cause a validation error", taint)
+		}
+	}
+}
+
 func TestInstancePool_MinMaxCount(t *testing.T) {
 	i := newFakeInstancePool(t)
 	defer i.ctrl.Finish()
