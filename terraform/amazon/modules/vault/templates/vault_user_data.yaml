@@ -33,6 +33,8 @@ write_files:
     consul::instance_count: "${instance_count}"
     consul::environment: "${environment}"
     consul::consul_encrypt: "${consul_encrypt}"
+    consul::backup_bucket_prefix: "${backup_bucket_prefix}"
+    consul::backup_schedule: "${backup_schedule}"
 
 - path: /etc/systemd/system/puppet-vault-init.service
   permissions: '0644'
@@ -48,7 +50,7 @@ write_files:
     PermissionsStartOnly=true
     Restart=on-failure
     RestartSec=3
-    ExecStartPre=/bin/sh -c 'set -e; mkdir -p /tmp/puppet-manifests; tar -xf /tmp/puppet.tar.gz -C /tmp/puppet-manifests/.; mkdir -p /tmp/puppet-manifests/modules/vault_server/hieradata; cp /tmp/vault_server.yaml /tmp/puppet-manifests/modules/vault_server/hieradata/vault_server.yaml'
+    ExecStartPre=/bin/sh -c 'set -e; aws s3 cp ${puppet_tar_gz_bucket_path} /tmp/puppet.tar.gz; mkdir -p /tmp/puppet-manifests; tar -xf /tmp/puppet.tar.gz -C /tmp/puppet-manifests/.; mkdir -p /tmp/puppet-manifests/modules/vault_server/hieradata; cp /tmp/vault_server.yaml /tmp/puppet-manifests/modules/vault_server/hieradata/vault_server.yaml'
     ExecStart=/bin/sh -c ' puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/vault_server/hiera.yaml /tmp/puppet-manifests/modules/vault_server -e "include vault_server"'
     [Install]
     WantedBy=multi-user.target
