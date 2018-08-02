@@ -117,6 +117,18 @@ Usage::
 
   $ tarmak clusters init
 
+
+
+``set-context``
+***************
+
+Change active cluster.
+
+Usage::
+
+  $ tarmak clusters set-context [EnvironmentName-ClusterName]
+
+
 ``kubectl``
 ***********
 
