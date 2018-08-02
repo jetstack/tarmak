@@ -122,11 +122,11 @@ Usage::
 ``set-current``
 ***************
 
-Change active cluster.
+Change selected cluster.
 
 Usage::
 
-  $ tarmak clusters set-cureent [EnvironmentName-ClusterName]
+  $ tarmak clusters set-current [EnvironmentName-ClusterName]
 
 
 ``kubectl``
