@@ -34,7 +34,8 @@
       "Resource": [
           "arn:aws:s3:::${secrets_bucket}/${vault_tls_key_path}",
           "arn:aws:s3:::${secrets_bucket}/${vault_tls_cert_path}",
-          "arn:aws:s3:::${secrets_bucket}/${vault_tls_ca_path}"
+          "arn:aws:s3:::${secrets_bucket}/${vault_tls_ca_path}",
+          "arn:aws:s3:::${puppet_tar_gz_bucket_path}"
       ]
     },
     {
