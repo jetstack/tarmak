@@ -12,6 +12,12 @@ import (
 type Interface interface {
 	// Instances returns a InstanceInformer.
 	Instances() InstanceInformer
+	// Machines returns a MachineInformer.
+	Machines() MachineInformer
+	// PuppetTargets returns a PuppetTargetInformer.
+	PuppetTargets() PuppetTargetInformer
+	// WingJobs returns a WingJobInformer.
+	WingJobs() WingJobInformer
 }
 
 type version struct {
@@ -28,4 +34,19 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Instances returns a InstanceInformer.
 func (v *version) Instances() InstanceInformer {
 	return &instanceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Machines returns a MachineInformer.
+func (v *version) Machines() MachineInformer {
+	return &machineInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// PuppetTargets returns a PuppetTargetInformer.
+func (v *version) PuppetTargets() PuppetTargetInformer {
+	return &puppetTargetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// WingJobs returns a WingJobInformer.
+func (v *version) WingJobs() WingJobInformer {
+	return &wingJobInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

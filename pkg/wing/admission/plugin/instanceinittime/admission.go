@@ -28,30 +28,19 @@ type instanceInitTime struct {
 // In addition checks that the Name is not on the banned list.
 // The list is stored in Fischers API objects.
 func (d *instanceInitTime) Admit(a admission.Attributes) error {
-	// we are only interested in instances
-	if a.GetKind().GroupKind() != wing.Kind("Instance") {
+	// we are only interested in WingJobs
+	if a.GetKind().GroupKind() != wing.Kind("WingJob") {
 		return nil
 	}
 
-	instance, ok := a.GetObject().(*wing.Instance)
+	job, ok := a.GetObject().(*wing.WingJob)
 	if !ok {
 		return errors.New("unexpected object time")
 	}
 
-	if instance.Status != nil {
-		if instance.Status.Converge != nil && instance.Status.Converge.LastUpdateTimestamp.IsZero() {
-			instance.Status.Converge.LastUpdateTimestamp.Time = time.Now()
-		}
-		if instance.Status.DryRun != nil && instance.Status.DryRun.LastUpdateTimestamp.IsZero() {
-			instance.Status.DryRun.LastUpdateTimestamp.Time = time.Now()
-		}
-	}
-	if instance.Spec != nil {
-		if instance.Spec.Converge != nil && instance.Spec.Converge.RequestTimestamp.IsZero() {
-			instance.Spec.Converge.RequestTimestamp.Time = time.Now()
-		}
-		if instance.Spec.DryRun != nil && instance.Spec.DryRun.RequestTimestamp.IsZero() {
-			instance.Spec.DryRun.RequestTimestamp.Time = time.Now()
+	if job.Spec != nil {
+		if job.Spec.RequestTimestamp.IsZero() {
+			job.Spec.RequestTimestamp.Time = time.Now()
 		}
 	}
 

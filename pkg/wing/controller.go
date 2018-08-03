@@ -44,16 +44,13 @@ func (c *Controller) processNextItem() bool {
 	defer c.queue.Done(key)
 
 	// Invoke the method containing the business logic
-	err := c.syncToStdout(key.(string))
+	err := c.syncWingJob(key.(string))
 	// Handle the error if something went wrong during the execution of the business logic
 	c.handleErr(err, key)
 	return true
 }
 
-// syncToStdout is the business logic of the controller. In this controller it simply prints
-// information about the instance to stdout. In case an error happened, it has to simply return the error.
-// The retry logic should not be part of the business logic.
-func (c *Controller) syncToStdout(key string) error {
+func (c *Controller) syncWingJob(key string) error {
 
 	// ensure only one converge at a time
 	c.wing.convergeWG.Wait()
@@ -66,30 +63,34 @@ func (c *Controller) syncToStdout(key string) error {
 
 	if !exists {
 		// Below we will warm up our cache with a Instance, so that we will see a delete for one instance
-		fmt.Printf("Instance %s does not exist anymore\n", key)
+		fmt.Printf("WingJob %s does not exist anymore\n", key)
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual instance, to detect that a Instance was recreated with the same name
-		instance := obj.(*v1alpha1.Instance)
+		job, ok := obj.(*v1alpha1.WingJob)
+		if !ok {
+			c.log.Error("couldn't cast to WingJob")
+			return nil
+		}
 
 		// trigger converge if status time is older or not existing
-		if instance.Spec != nil && instance.Spec.Converge != nil && !instance.Spec.Converge.RequestTimestamp.Time.IsZero() {
-			if instance.Status != nil && instance.Status.Converge != nil && !instance.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
-				if instance.Status.Converge.LastUpdateTimestamp.Time.After(instance.Spec.Converge.RequestTimestamp.Time) {
+		if job.Spec != nil && !job.Spec.RequestTimestamp.Time.IsZero() {
+			if job.Status != nil && !job.Status.LastUpdateTimestamp.Time.IsZero() {
+				if job.Status.LastUpdateTimestamp.Time.After(job.Spec.RequestTimestamp.Time) {
 					c.log.Debug("no converge neccessary, last update was after request")
 					return nil
 				}
-			} else {
+			} /* else {
 				c.log.Debug("no converge neccessary, no status section found or update timestamp zero")
 				return nil
-			}
+			}*/
 		} else {
 			c.log.Debug("no converge neccessary, no spec section found or request timestamp zero")
 			return nil
 		}
 
 		c.log.Infof("running converge")
-		c.wing.converge()
+		c.wing.converge(job)
 	}
 	return nil
 }
@@ -125,7 +126,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 
 	// Let the workers stop when we are done
 	defer c.queue.ShutDown()
-	c.log.Info("Starting Instance controller")
+	c.log.Info("Starting WingJob controller")
 
 	go c.informer.Run(stopCh)
 
@@ -140,7 +141,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 	}
 
 	<-stopCh
-	c.log.Info("Stopping Instance controller")
+	c.log.Info("Stopping WingJob controller")
 }
 
 func (c *Controller) runWorker() {

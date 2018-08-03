@@ -125,7 +125,7 @@ type Provider interface {
 	String() string
 	AskEnvironmentLocation(Initialize) (string, error)
 	AskInstancePoolZones(Initialize) (zones []string, err error)
-	UploadConfiguration(Cluster, io.ReadSeeker) error
+	UploadConfiguration(Cluster, string, io.ReadSeeker) error
 	VerifyInstanceTypes(intstancePools []InstancePool) error
 }
 

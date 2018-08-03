@@ -6,35 +6,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE}")/.."; pwd)
-BINDIR=${REPO_ROOT}/bin
+SCRIPT_ROOT=$(dirname ${BASH_SOURCE})/..
+CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
 
-# Generate the internal clientset (pkg/client/clientset_generated/internalclientset)
-${BINDIR}/client-gen "$@" \
-          --go-header-file "${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt" \
-          --input-base "github.com/jetstack/tarmak/pkg/apis/" \
-          --input "wing" \
-          --clientset-path "github.com/jetstack/tarmak/pkg/wing/clients" \
-          --clientset-name internalclientset \
-# Generate the versioned clientset (pkg/client/clientset_generated/clientset)
-${BINDIR}/client-gen "$@" \
-          --go-header-file "${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt" \
-          --input-base "github.com/jetstack/tarmak/pkg/apis/" \
-          --input "wing/v1alpha1" \
-          --clientset-path "github.com/jetstack/tarmak/pkg/wing" \
-          --clientset-name "client" \
-# generate lister
-${BINDIR}/lister-gen "$@" \
-          --go-header-file "${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt" \
-          --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing" \
-          --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1" \
-          --output-package "github.com/jetstack/tarmak/pkg/wing/listers" \
-# generate informer
-${BINDIR}/informer-gen "$@" \
-          --go-header-file "${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt" \
-          --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing" \
-          --input-dirs="github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1" \
-          --internal-clientset-package "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset" \
-          --versioned-clientset-package "github.com/jetstack/tarmak/pkg/wing/client" \
-          --listers-package "github.com/jetstack/tarmak/pkg/wing/listers" \
-          --output-package "github.com/jetstack/tarmak/pkg/wing/informers"
+${CODEGEN_PKG}/generate-internal-groups.sh all \
+  github.com/jetstack/tarmak/pkg/client github.com/jetstack/tarmak/pkg/apis github.com/jetstack/tarmak/pkg/apis \
+  wing:v1alpha1 \
+  --output-base "${GOPATH}/src/" \
+  --go-header-file ${SCRIPT_ROOT}/hack/boilerplate/boilerplate.go.txt

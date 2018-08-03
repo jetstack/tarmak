@@ -11,3 +11,27 @@ type InstanceListerExpansion interface{}
 // InstanceNamespaceListerExpansion allows custom methods to be added to
 // InstanceNamespaceLister.
 type InstanceNamespaceListerExpansion interface{}
+
+// MachineListerExpansion allows custom methods to be added to
+// MachineLister.
+type MachineListerExpansion interface{}
+
+// MachineNamespaceListerExpansion allows custom methods to be added to
+// MachineNamespaceLister.
+type MachineNamespaceListerExpansion interface{}
+
+// PuppetTargetListerExpansion allows custom methods to be added to
+// PuppetTargetLister.
+type PuppetTargetListerExpansion interface{}
+
+// PuppetTargetNamespaceListerExpansion allows custom methods to be added to
+// PuppetTargetNamespaceLister.
+type PuppetTargetNamespaceListerExpansion interface{}
+
+// WingJobListerExpansion allows custom methods to be added to
+// WingJobLister.
+type WingJobListerExpansion interface{}
+
+// WingJobNamespaceListerExpansion allows custom methods to be added to
+// WingJobNamespaceLister.
+type WingJobNamespaceListerExpansion interface{}
