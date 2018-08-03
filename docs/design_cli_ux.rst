@@ -117,6 +117,18 @@ Usage::
 
   $ tarmak clusters init
 
+
+
+``set-current``
+***************
+
+Change selected cluster.
+
+Usage::
+
+  $ tarmak clusters set-current [EnvironmentName-ClusterName]
+
+
 ``kubectl``
 ***********
 
