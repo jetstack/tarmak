@@ -34,7 +34,7 @@ type LoggingSinkElasticSearch struct {
 	Host           string         `json:"host,omitempty"`
 	Port           int            `json:"port,omitempty"`
 	LogstashPrefix string         `json:"logstashPrefix,omitempty"`
-	TLS            bool           `json:"tls,omitempty"`
+	TLS            *bool          `json:"tls,omitempty"`
 	TLSVerify      bool           `json:"tlsVerify,omitempty"`
 	TLSCA          string         `json:"tlsCA,omitempty"`
 	HTTPBasicAuth  *HTTPBasicAuth `json:"httpBasicAuth,omitempty"`
