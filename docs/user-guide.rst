@@ -243,27 +243,27 @@ shown below:
   apiVersion: api.tarmak.io/v1alpha1
   kind: Config
   clusters:
-  - loggingSinks:
-  - types:
-    - application
-    - platform
-    elasticsearch:
-      host: example.amazonaws.com
-      port: 443
-      logstashPrefix: test
-      tls: true
-      tlsVerify: false
-      httpBasicAuth:
-        username: administrator
-        password: mypassword
-  - types:
-    - all
-    elasticsearch:
-      host: example2.amazonaws.com
-      port: 443
-      tls: true
-      amazonESProxy:
-        port: 9200
+    loggingSinks:
+    - types:
+      - application
+      - platform
+      elasticsearch:
+        host: example.amazonaws.com
+        port: 443
+        logstashPrefix: test
+        tls: true
+        tlsVerify: false
+        httpBasicAuth:
+          username: administrator
+          password: mypassword
+    - types:
+      - all
+      elasticsearch:
+        host: example2.amazonaws.com
+        port: 443
+        tls: true
+        amazonESProxy:
+          port: 9200
   ...
 
 
