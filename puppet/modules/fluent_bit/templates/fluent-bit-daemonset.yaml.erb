@@ -22,6 +22,7 @@ spec:
         prometheus.io/path: /api/v1/metrics/prometheus
     spec:
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: fluent-bit
         image: "<%= @fluent_bit_image %>:<%= @fluent_bit_version %>"
