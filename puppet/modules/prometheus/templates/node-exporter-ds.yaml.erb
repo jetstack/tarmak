@@ -19,6 +19,8 @@ spec:
       - key: "node-role.kubernetes.io/master"
         operator: "Exists"
         effect: "NoSchedule"
+      - key: "dedicated"
+        operator: "Exists"
       containers:
         - name: node-exporter
           resources:

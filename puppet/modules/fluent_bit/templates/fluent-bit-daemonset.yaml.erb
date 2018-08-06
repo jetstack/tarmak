@@ -72,6 +72,8 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: NoSchedule
+      - key: "dedicated"
+        operator: "Exists"
 <%- if @rbac_enabled -%>
 ---
 apiVersion: v1

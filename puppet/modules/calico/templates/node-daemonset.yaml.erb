@@ -23,7 +23,7 @@ spec:
 <%- if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: |
           [
-            {"key": "dedicated", "value": "master", "effect": "NoSchedule" },
+            {"key": "dedicated", "operator": "Exists" },
             {"key": "CriticalAddonsOnly", "operator":"Exists"},
             {"key": "node-role.kubernetes.io/master", "effect": "NoSchedule"}
           ]
@@ -44,8 +44,7 @@ spec:
       - key: "CriticalAddonsOnly"
         operator: "Exists"
       - key: "dedicated"
-        value: "master"
-        effect: "NoSchedule"
+        operator: "Exists"
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
 <%- end -%>
