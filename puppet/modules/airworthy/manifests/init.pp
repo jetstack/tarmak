@@ -28,7 +28,4 @@ class airworthy (
   } else {
       $_checksum = $checksum
   }
-
-  class { '::airworthy::install': }
-  -> Class['::airworthy']
 }

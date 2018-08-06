@@ -66,6 +66,7 @@ class consul(
 
 
     Class['::airworthy']
+    -> class { '::airworthy::install': }
     -> class { '::consul::install': }
     -> class { '::consul::config': }
     ~> class { '::consul::service': }
