@@ -6,7 +6,6 @@ class vault_server::install(
 {
     include ::archive
 
-
     $_download_url = regsubst(
         $download_url,
         '#VERSION#',

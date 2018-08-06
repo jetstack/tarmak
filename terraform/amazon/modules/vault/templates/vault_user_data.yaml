@@ -38,6 +38,24 @@ write_files:
     consul::backup_schedule: "${backup_schedule}"
     consul::volume_id: "${volume_id}"
 
+- path: /etc/systemd/system/puppet-download-manifests.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Download puppet manifests
+    Wants=network-online.target
+    After=network.target network-online.target
+
+    [Service]
+    Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
+    PermissionsStartOnly=true
+    Restart=on-failure
+    RestartSec=3
+    ExecStart=/bin/sh -c 'set -e; aws s3 cp s3://${puppet_tar_gz_bucket_path} /tmp/puppet.tar.gz; mkdir -p /tmp/puppet-manifests; tar -xf /tmp/puppet.tar.gz -C /tmp/puppet-manifests/.; mkdir -p /tmp/puppet-manifests/modules/vault_server/hieradata; cp /tmp/vault_server.yaml /tmp/puppet-manifests/modules/vault_server/hieradata/vault_server.yaml; mkdir -p /tmp/puppet-manifests/modules/consul/hieradata; cp /tmp/consul.yaml /tmp/puppet-manifests/modules/consul/hieradata/consul.yaml'
+    [Install]
+    WantedBy=multi-user.target
+
+
 - path: /etc/systemd/system/puppet-vault-init.service
   permissions: '0644'
   content: |
@@ -47,13 +65,12 @@ write_files:
     After=network.target network-online.target
 
     [Service]
-    Environment=AWS_REGION=${region}
     Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
     PermissionsStartOnly=true
     Restart=on-failure
-    RestartSec=3
-    ExecStartPre=/bin/sh -c 'set -e; aws s3 cp s3://${puppet_tar_gz_bucket_path} /tmp/puppet.tar.gz; mkdir -p /tmp/puppet-manifests; tar -xf /tmp/puppet.tar.gz -C /tmp/puppet-manifests/.; mkdir -p /tmp/puppet-manifests/modules/vault_server/hieradata; cp /tmp/vault_server.yaml /tmp/puppet-manifests/modules/vault_server/hieradata/vault_server.yaml'
-    ExecStart=/bin/sh -c ' puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/vault_server/hiera.yaml /tmp/puppet-manifests/modules/vault_server -e "include vault_server"'
+    RestartSec=6
+    SuccessExitStatus=0 2
+    ExecStart=/opt/puppetlabs/bin/puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/vault_server/hiera.yaml /tmp/puppet-manifests/modules/vault_server -e "include vault_server"
     [Install]
     WantedBy=multi-user.target
 
@@ -66,17 +83,17 @@ write_files:
     After=network.target network-online.target
 
     [Service]
-    Environment=AWS_REGION=${region}
     Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
     PermissionsStartOnly=true
     Restart=on-failure
-    RestartSec=3
-    ExecStartPre=/bin/sh -c 'mkdir -p /tmp/puppet-manifests/modules/consul/hieradata; cp /tmp/consul.yaml /tmp/puppet-manifests/modules/consul/hieradata/consul.yaml'
-    ExecStart=/bin/sh -c ' puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/consul/hiera.yaml /tmp/puppet-manifests/modules/consul -e "include consul"'
+    RestartSec=6
+    SuccessExitStatus=0 2
+    ExecStart=/opt/puppetlabs/bin/puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/consul/hiera.yaml /tmp/puppet-manifests/modules/consul -e "include consul"
     [Install]
     WantedBy=multi-user.target
 
 
 runcmd:
+- systemctl start puppet-download-manifests.service
 - systemctl start puppet-vault-init.service
 - systemctl start puppet-consul-init.service

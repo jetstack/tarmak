@@ -1,4 +1,11 @@
 class vault_server (
+    $region,
+    $vault_tls_cert_path,
+    $vault_tls_ca_path,
+    $vault_tls_key_path,
+    $vault_unsealer_kms_key_id,
+    $vault_unsealer_ssm_key_prefix,
+    String $init_role = '',
     String $version = $::vault_server::params::version,
     String $bin_dir = $::vault_server::params::bin_dir,
     String $local_bin_dir = $::vault_server::params::local_bin_dir,
@@ -6,16 +13,6 @@ class vault_server (
     String $dest_dir = $::vault_server::params::dest_dir,
     String $server_url = $::vault_server::params::server_url,
     String $systemd_dir = $::vault_server::params::systemd_dir,
-    String $init_token = "",
-    String $init_role = "",
-    String $token = "",
-    String $ca_cert_path = "",
-    $region,
-    $vault_tls_cert_path,
-    $vault_tls_ca_path,
-    $vault_tls_key_path,
-    $vault_unsealer_kms_key_id,
-    $vault_unsealer_ssm_key_prefix,
 ) inherits ::vault_server::params {
 
     # paths
@@ -58,10 +55,10 @@ class vault_server (
         vault_tls_key_path  => $vault_tls_key_path,
     }
 
-    vault_server::download_unsealer{'download_unsealer':
+    vault_server::vault{'vault_script':
     }
 
-    vault_server::vault{'vault_script':
+    vault_server::download_unsealer{'download_unsealer':
     }
 
     vault_server::unsealer_service{'unsealer_service':
