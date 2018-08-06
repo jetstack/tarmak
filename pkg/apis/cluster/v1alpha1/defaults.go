@@ -80,8 +80,11 @@ func SetDefaults_Cluster(obj *Cluster) {
 			if loggingSink.ElasticSearch.Host == "" {
 				loggingSink.ElasticSearch.Host = "127.0.0.1"
 			}
+			if loggingSink.ElasticSearch.TLS == nil {
+				loggingSink.ElasticSearch.TLS = boolPointer(true)
+			}
 			if loggingSink.ElasticSearch.Port == 0 {
-				if loggingSink.ElasticSearch.TLS {
+				if *loggingSink.ElasticSearch.TLS {
 					loggingSink.ElasticSearch.Port = 443
 				} else {
 					loggingSink.ElasticSearch.Port = 80
@@ -102,6 +105,10 @@ func SetDefaults_Cluster(obj *Cluster) {
 		}
 	}
 
+}
+
+func boolPointer(x bool) *bool {
+	return &x
 }
 
 func allocateAmazonESProxyPort(loggingSinks []*LoggingSink) int {
