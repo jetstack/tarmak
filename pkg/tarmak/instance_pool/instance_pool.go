@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
+	validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"net"
 
@@ -205,46 +207,58 @@ func (n *InstancePool) ValidateAllowCIDRs() (result error) {
 }
 
 func (n *InstancePool) Labels() (string, error) {
-	var labels []string
-	var result error
-
-	validKey := regexp.MustCompile(`^\w+$`)
-	validValue := regexp.MustCompile(`^\w+$`)
-
+	labelMap := make(map[string]string)
 	for _, label := range n.conf.Labels {
-		if !validKey.MatchString(label.Key) {
-			result = multierror.Append(result, fmt.Errorf("key was invalid for label: %+v", label))
-		}
-		if !validValue.MatchString(label.Value) {
-			result = multierror.Append(result, fmt.Errorf("value was invalid for label: %+v", label))
-		}
+		labelMap[label.Key] = label.Value
+	}
+
+	err := validation.ValidateLabels(labelMap, &field.Path{})
+	if len(err) != 0 {
+		return "", fmt.Errorf("%v", err)
+	}
+
+	var labels []string
+	for _, label := range n.conf.Labels {
 		labels = append(labels, fmt.Sprintf("  %s: \"%s\"", label.Key, label.Value))
 	}
 
-	return strings.Join(labels, "\n"), result
+	return strings.Join(labels, "\n"), nil
 }
 
 func (n *InstancePool) Taints() (string, error) {
 	var taints []string
 	var result error
 
-	validKey := regexp.MustCompile(`^\w+$`)
-	validValue := regexp.MustCompile(`^\w+$`)
+	err := n.validTaints()
+	if err != nil {
+		return "", err
+	}
+
+	for _, taint := range n.conf.Taints {
+		taints = append(taints, fmt.Sprintf("  %s: \"%s:%s\"", taint.Key, taint.Value, taint.Effect))
+	}
+
+	return strings.Join(taints, "\n"), result
+}
+
+func (n *InstancePool) validTaints() error {
+	var result error
+
+	validKey := regexp.MustCompile(`^[a-zA-Z0-9][\w_\-\.]*\/?[\w_\-\.]*[a-zA-Z0-9]$`)
+	validValue := regexp.MustCompile(`^[a-zA-Z0-9][\w_\-\.]*[a-zA-Z0-9]$`)
 	validEffect := regexp.MustCompile(`^PreferNoSchedule|NoSchedule|NoExecute$`)
 
 	for _, taint := range n.conf.Taints {
 		if !validKey.MatchString(taint.Key) {
 			result = multierror.Append(result, fmt.Errorf("key was invalid for taint: %+v", taint))
 		}
-		if !validValue.MatchString(taint.Value) {
+		if len(taint.Value) > 0 && !validValue.MatchString(taint.Value) {
 			result = multierror.Append(result, fmt.Errorf("value was invalid for taint: %+v", taint))
 		}
 		if !validEffect.MatchString(taint.Effect) {
 			result = multierror.Append(result, fmt.Errorf("effect was invalid for taint: %+v", taint))
 		}
-
-		taints = append(taints, fmt.Sprintf("  %s: \"%s:%s\"", taint.Key, taint.Value, taint.Effect))
 	}
 
-	return strings.Join(taints, "\n"), result
+	return result
 }
