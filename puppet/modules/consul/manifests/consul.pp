@@ -21,6 +21,10 @@ define consul::consul(
         notify  => Exec["${service_name}-systemctl-daemon-reload"],
         mode    => '0644'
     }
+    ~> exec { "${mount_name}-mount":
+        command => "systemctl enable ${mount_name}.mount",
+        path    => $::consul::path,
+    }
 
     file { "${::consul::vault_config_dir}/${hcl_name}.hcl":
         ensure  => file,

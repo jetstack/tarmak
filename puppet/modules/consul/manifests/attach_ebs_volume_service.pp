@@ -1,7 +1,6 @@
 include ::tarmak
 define consul::attach_ebs_volume_service (
     String $region,
-    String $volume,
     String $volume_id,
 )
 {

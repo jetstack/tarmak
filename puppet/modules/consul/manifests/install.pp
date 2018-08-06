@@ -15,12 +15,12 @@ class consul::install(
     }
 
     exec { 'install epel-release':
-      command => "yum -y install epel-release",
+      command => 'yum -y install epel-release',
       path    => '/usr/local/bin/:/bin/',
     }
 
     exec { 'install tools':
-      command => "yum -y install epel-release",
+      command => 'yum -y install epel-release',
       path    => '/usr/local/bin/:/bin/',
     }
 
@@ -141,5 +141,11 @@ class consul::install(
         backup_bucket_prefix => $::consul::backup_bucket_prefix,
         backup_schedule      => $::consul::backup_schedule,
         consul_master_token  => $::consul::consul_master_token,
+    }
+    consul::attach_ebs_volume_service{'attach_ebs_volume_service':
+        region    => $::consul::region,
+        volume_id => $::consul::volume_id,
+    }
+    consul::ensure_ebs_volume_service{'ensure_ebs_volume_service':
     }
 }

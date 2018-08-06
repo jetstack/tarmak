@@ -36,6 +36,16 @@ class vault_server (
     $bin_path = "${_dest_dir}/${::vault_server::params::app_name}"
     $link_path = "/usr/local/bin/${::vault_server::params::app_name}"
 
+    file { '/etc/vault':
+        ensure => 'directory',
+        mode   => '0777',
+    }
+
+    file { '/var/lib/vault':
+        ensure => 'directory',
+        mode   => '0777',
+    }
+
     user { 'vault':
         ensure => 'present',
         system => true,

@@ -40,6 +40,7 @@ class consul(
     Optional[String] $cert_file = undef,
     Optional[String] $key_file = undef,
     $consul_encrypt,
+    $fqdn,
     $private_ip,
     $consul_master_token,
     $region,
@@ -47,15 +48,11 @@ class consul(
     $environment,
     $backup_bucket_prefix,
     $backup_schedule,
+    $volume_id,
 ) inherits ::consul::params {
 
     include ::archive
     include ::airworthy
-
-    file { '/etc/vault':
-        ensure => 'directory',
-        mode   => '0777',
-    }
 
     $app_name = 'consul'
     $_dest_dir = "${dest_dir}/${app_name}-${version}"

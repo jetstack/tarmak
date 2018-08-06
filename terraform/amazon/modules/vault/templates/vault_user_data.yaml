@@ -27,6 +27,7 @@ write_files:
   permissions: '0644'
   content: |
     ---
+    consul::fqdn: "${fqdn}"
     consul::private_ip: "${private_ip}"
     consul::consul_master_token: "${consul_master_token}"
     consul::region: "${region}"
@@ -35,6 +36,7 @@ write_files:
     consul::consul_encrypt: "${consul_encrypt}"
     consul::backup_bucket_prefix: "${backup_bucket_prefix}"
     consul::backup_schedule: "${backup_schedule}"
+    consul::volume_id: "${volume_id}"
 
 - path: /etc/systemd/system/puppet-vault-init.service
   permissions: '0644'
