@@ -17,7 +17,7 @@ define vault_server::unsealer_service (
     mode    => '0644',
   }
   ~> exec { "${service_name}-systemctl-daemon-reload":
-    command     => 'systemctl daemon-reload',
+    command     => '/bin/systemctl daemon-reload',
     refreshonly => true,
     path        => $::vault_server::path,
   }

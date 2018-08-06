@@ -14,6 +14,16 @@
 # @param backup_version Version of backup
 # @param advertise_network Specify network used for consul
 class consul(
+    $consul_encrypt,
+    $fqdn,
+    $private_ip,
+    $consul_master_token,
+    $region,
+    $instance_count,
+    $environment,
+    $backup_bucket_prefix,
+    $backup_schedule,
+    $volume_id,
     String $data_dir = '/var/lib/consul',
     String $config_dir = '/etc/consul',
     String $dest_dir = '/opt',
@@ -34,21 +44,12 @@ class consul(
     String $bind_addr = '0.0.0.0',
     String $log_level = 'INFO',
     String $datacenter = 'dc1',
+    String $path = '/etc/systemd/system',
     Optional[String] $advertise_network = undef,
     Optional[Array[String]] $retry_join = undef,
     Optional[String] $ca_file = undef,
     Optional[String] $cert_file = undef,
     Optional[String] $key_file = undef,
-    $consul_encrypt,
-    $fqdn,
-    $private_ip,
-    $consul_master_token,
-    $region,
-    $instance_count,
-    $environment,
-    $backup_bucket_prefix,
-    $backup_schedule,
-    $volume_id,
 ) inherits ::consul::params {
 
     include ::archive

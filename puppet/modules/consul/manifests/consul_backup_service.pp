@@ -23,7 +23,7 @@ define consul::consul_backup_service (
         mode    => '0644'
     }
     ~> exec { "${service_name}-systemctl-daemon-reload":
-        command     => 'systemctl daemon-reload',
+        command     => '/bin/systemctl daemon-reload',
         refreshonly => true,
         path        => $::consul::path,
     }

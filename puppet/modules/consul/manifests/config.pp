@@ -7,6 +7,7 @@ class consul::config (
     $environment = $::consul::environment,
 )
 {
+
   if $::consul::ca_file != undef and $::consul::cert_file != undef and $::consul::key_file != undef {
       $enable_tls = true
   } else {

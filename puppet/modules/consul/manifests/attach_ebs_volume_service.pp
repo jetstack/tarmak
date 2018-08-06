@@ -15,9 +15,12 @@ define consul::attach_ebs_volume_service (
         mode    => '0644'
     }
     ~> exec { "${service_name}-systemctl-daemon-reload":
-        command     => 'systemctl daemon-reload',
+        command     => '/bin/systemctl daemon-reload',
         refreshonly => true,
-        path        => $::consul::path,
+        path        => defined('$::path') ? {
+          default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
+          true    => $::path
+        },
     }
     -> service { "${service_name}.service":
         ensure => 'running',

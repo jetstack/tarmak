@@ -22,7 +22,7 @@ define consul::consul(
         mode    => '0644'
     }
     ~> exec { "${mount_name}-mount":
-        command => "systemctl enable ${mount_name}.mount",
+        command => "/bin/systemctl enable ${mount_name}.mount",
         path    => $::consul::path,
     }
 

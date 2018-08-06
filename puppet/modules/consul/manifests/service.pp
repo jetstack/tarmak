@@ -22,7 +22,7 @@ class consul::service(
   $data_dir = $::consul::data_dir
 
   exec { "${service_name}-systemctl-daemon-reload":
-    command     => 'systemctl daemon-reload',
+    command     => '/bin/systemctl daemon-reload',
     refreshonly => true,
     path        => defined('$::path') ? {
       default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',

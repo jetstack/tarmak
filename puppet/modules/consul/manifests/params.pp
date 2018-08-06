@@ -11,5 +11,4 @@ class consul::params {
     $vault_config_dir = '/etc/vault'
     $download_dir = '/tmp'
     $systemd_dir = '/etc/systemd/system'
-    $signature_binary = 'foo'
 }

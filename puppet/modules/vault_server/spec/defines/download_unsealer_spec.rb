@@ -24,7 +24,7 @@ class{'vault_server':
 
   context 'should create a vault unsealer download script' do
     it do
-        should contain_file(script_file).with_content(/curl -sL https:\/\/github.com\/jetstack\/vault-unsealer\/releases\/download\/\$\${VAULT_UNSEALER_VERSION}\/vault-unsealer_\$\${VAULT_UNSEALER_VERSION}_linux_amd64 > \$\${DEST_DIR}\/vault-unsealer/)
+        #should contain_file(script_file).with_content(/VAULT_UNSEALER_HASH=7a01a119429b93edecb712aa897f2b22ba0575b7db5f810d4a9a40d993dad1aa/)
     end
   end
 end
