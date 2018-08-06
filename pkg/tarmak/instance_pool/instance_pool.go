@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
+	validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"net"
 
@@ -205,36 +207,22 @@ func (n *InstancePool) ValidateAllowCIDRs() (result error) {
 }
 
 func (n *InstancePool) Labels() (string, error) {
-	var labels []string
-
-	err := n.validLabels()
-	if err != nil {
-		return "", err
+	labelMap := make(map[string]string)
+	for _, label := range n.conf.Labels {
+		labelMap[label.Key] = label.Value
 	}
 
+	err := validation.ValidateLabels(labelMap, &field.Path{})
+	if len(err) != 0 {
+		return "", fmt.Errorf("%v", err)
+	}
+
+	var labels []string
 	for _, label := range n.conf.Labels {
 		labels = append(labels, fmt.Sprintf("  %s: \"%s\"", label.Key, label.Value))
 	}
 
 	return strings.Join(labels, "\n"), nil
-}
-
-func (n *InstancePool) validLabels() error {
-	var result error
-
-	validKey := regexp.MustCompile(`^[a-zA-Z0-9][\w_\-\.]*\/?[\w_\-\.]*[a-zA-Z0-9]$`)
-	validValue := regexp.MustCompile(`^[a-zA-Z0-9][\w_\-\.]*[a-zA-Z0-9]$`)
-
-	for _, label := range n.conf.Labels {
-		if !validKey.MatchString(label.Key) {
-			result = multierror.Append(result, fmt.Errorf("key was invalid for label: %+v", label))
-		}
-		if len(label.Value) > 0 && !validValue.MatchString(label.Value) {
-			result = multierror.Append(result, fmt.Errorf("value was invalid for label: %+v", label))
-		}
-	}
-
-	return result
 }
 
 func (n *InstancePool) Taints() (string, error) {
