@@ -20,8 +20,8 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if @_audit_enabled -%>
   --audit-policy-file=<%= scope['kubernetes::apiserver::audit_policy_file'] %> \
   --audit-log-path=<%= scope['kubernetes::apiserver::audit_log_path'] %> \
-  --audit-log-maxbackup=0 \
-  --audit-log-maxsize=100 \
+  --audit-log-maxbackup=<%= scope['kubernetes::apiserver::audit_log_maxbackup'] %> \
+  --audit-log-maxsize=<%= scope['kubernetes::apiserver::audit_log_maxsize'] %> \
 <% end -%>
 <% if @secure_port -%>
   --secure-port=<%= @secure_port %> \
