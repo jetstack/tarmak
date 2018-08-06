@@ -6,11 +6,13 @@ After=var-lib-consul.mount
 User=consul
 Group=consul
 PermissionsStartOnly=true
+ExecStartPre=/bin/rm -rf /var/lib/consul/data
 ExecStartPre=/bin/mkdir -p /var/lib/consul/data
 ExecStartPre=/bin/chown -c root:consul /var/lib/consul
 ExecStartPre=/bin/chmod 0750 /var/lib/consul
 ExecStartPre=/bin/chown -cR consul:consul /var/lib/consul/data
 ExecStartPre=/bin/chmod 0750 /var/lib/consul/data
+EnvironmentFile=/etc/consul/master-token
 ExecStart=/opt/bin/consul agent -node=<%= @fqdn %> -data-dir=/var/lib/consul/data -server -config-dir=/etc/consul -advertise=<%= @private_ip %>
 
 [Install]

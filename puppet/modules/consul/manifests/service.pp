@@ -44,16 +44,16 @@ class consul::service(
   }
 
   # write master token to vault
-  if defined('$::consul_master_token') {
+  #if defined('$::consul::consul_master_token') {
     $token_file_path = "${::consul::config_dir}/master-token"
     file {$token_file_path:
       ensure  => file,
-      content => "CONSUL_HTTP_TOKEN=${::consul_master_token}",
+      content => "CONSUL_HTTP_TOKEN=${::consul::consul_master_token}",
       owner   => $::consul::user,
       group   => $::consul::group,
       mode    => '0600',
     }
-  }
+    #}
 
   # install consul exporter if enabled
   if $::consul::exporter_enabled {
@@ -72,7 +72,7 @@ class consul::service(
       ],
     }
 
-    if defined('$::consul_master_token') {
+    if defined('$::consul::consul_master_token') {
       File[$token_file_path] ~> Service["${service_name}-exporter.service"]
     }
   }
