@@ -56,7 +56,7 @@ type InstancePool struct {
 	Volumes           []Volume                `json:"volumes,omitempty"`
 	Kubernetes        *InstancePoolKubernetes `json:"kubernetes,omitempty"`
 	AllowCIDRs        []string                `json:"allowCIDRs,omitempty"`
-	Labels            []*Label                `json:"labels,omityempty"`
+	Labels            []*Label                `json:"labels,omitempty"`
 	Taints            []*Taint                `json:"taints,omitempty"`
 
 	// Amazon specific settings for that instance pool
