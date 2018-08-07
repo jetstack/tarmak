@@ -158,6 +158,11 @@ class{'tarmak::single_node':
         end
       end
 
+      it 'should have a service account ready', :retry => 20, :retry_wait => 1 do
+        result = shell('kubectl get serviceaccount --namespace developer default')
+        expect(result.exit_code).to eq(0)
+      end
+
       it 'allows developer to run unprivileged pods in namespace developer' do
         result = shell('kubectl --as=developer run busybox --image=busybox --restart=Never -n developer --rm --attach  -- uname -a')
         expect(result.exit_code).to eq(0)
