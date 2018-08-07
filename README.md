@@ -20,8 +20,8 @@ including Terraform, Puppet and systemd.
 Get a ready built version of tarmak from [the releases
 page](https://github.com/jetstack/tarmak/releases):
 
-    $ wget https://github.com/jetstack/tarmak/releases/download/0.4.0-rc4/tarmak_0.4.0-rc4_linux_amd64
-    $ mv tarmak_0.4.0-rc4_linux_amd64 tarmak
+    $ wget https://github.com/jetstack/tarmak/releases/download/0.4.0/tarmak_0.4.0_linux_amd64
+    $ mv tarmak_0.4.0_linux_amd64 tarmak
     $ chmod +x tarmak
 
 If you want compile from source, follow the [build
