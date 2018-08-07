@@ -1,10 +1,10 @@
 class vault_server::service (
-    $region = $::vault_server::region,
-    $vault_tls_cert_path = $::vault_server::vault_tls_cert_path,
-    $vault_tls_ca_path = $::vault_server::vault_tls_ca_path,
-    $vault_tls_key_path = $::vault_server::vault_tls_key_path,
-    $vault_unsealer_kms_key_id = $::vault_server::vault_unsealer_kms_key_id,
-    $vault_unsealer_ssm_key_prefix = $::vault_server::vault_unsealer_ssm_key_prefix,
+    $region = $vault_server::region,
+    $vault_tls_cert_path = $vault_server::vault_tls_cert_path,
+    $vault_tls_ca_path = $vault_server::vault_tls_ca_path,
+    $vault_tls_key_path = $vault_server::vault_tls_key_path,
+    $vault_unsealer_kms_key_id = $vault_server::vault_unsealer_kms_key_id,
+    $vault_unsealer_ssm_key_prefix = $vault_server::vault_unsealer_ssm_key_prefix,
     $user = 'root',
     $group = 'root',
     $assets_service_name = 'vault-assets',
@@ -22,9 +22,9 @@ class vault_server::service (
         mode    => '0644',
     }
     ~> exec { "${assets_service_name}-systemctl-daemon-reload":
-        command     => '/bin/systemctl daemon-reload',
+        command     => 'systemctl daemon-reload',
         refreshonly => true,
-        path        => $::vault_server::path,
+        path        => $vault_server::path,
     }
     -> service { "${assets_service_name}.service":
         ensure => 'stopped',
@@ -41,9 +41,9 @@ class vault_server::service (
         mode    => '0644',
     }
     ~> exec { "${unsealer_service_name}-systemctl-daemon-reload":
-        command     => '/bin/systemctl daemon-reload',
+        command     => 'systemctl daemon-reload',
         refreshonly => true,
-        path        => $::vault_server::path,
+        path        => $vault_server::path,
     }
     -> service { "${unsealer_service_name}.service":
         ensure => 'running',
@@ -59,9 +59,9 @@ class vault_server::service (
         mode    => '0644',
     }
     ~> exec { "${vault_service_name}-systemctl-daemon-reload":
-        command     => '/bin/systemctl daemon-reload',
+        command     => 'systemctl daemon-reload',
         refreshonly => true,
-        path        => $::vault_server::path,
+        path        => $vault_server::path,
     }
     -> service { "${vault_service_name}.service":
         ensure => 'running',
