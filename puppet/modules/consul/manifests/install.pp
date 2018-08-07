@@ -1,67 +1,32 @@
-class consul::install(
-    String $download_url = 'https://releases.hashicorp.com/consul/#VERSION#/consul_#VERSION#_linux_amd64.zip',
-    String $sha256sums_url = 'https://releases.hashicorp.com/consul/#VERSION#/consul_#VERSION#_SHA256SUMS',
-    String $signature_url = 'https://releases.hashicorp.com/consul/#VERSION#/consul_#VERSION#_SHA256SUMS.sig',
-    String $exporter_download_url = 'https://github.com/prometheus/consul_exporter/releases/download/v#VERSION#/consul_exporter-#VERSION#.linux-amd64.tar.gz',
-    String $exporter_signature_url = 'https://releases.tarmak.io/signatures/consul_exporter/#VERSION#/consul_exporter-#VERSION#.linux-amd64.tar.gz.asc',
-)
+class consul::install
 {
     include ::archive
 
-    $nologin = $::osfamily ? {
-        'RedHat' => '/sbin/nologin',
-        'Debian' => '/usr/sbin/nologin',
-        default  => '/usr/sbin/nologin',
-    }
-
-    exec { 'install epel-release':
-        command => 'yum -y install epel-release',
-        path    => '/usr/local/bin/:/bin/',
-    }
-
-    exec { 'install tools':
-        command => 'yum -y install epel-release',
-        path    => '/usr/local/bin/:/bin/',
-    }
-
-    group { $::consul::group:
-        ensure => present,
-        gid    => $::consul::gid,
-    }
-    -> user { $::consul::user:
-        ensure => present,
-        uid    => $::consul::uid,
-        shell  => $nologin,
-        home   => $::consul::data_dir,
-    }
-
-    $version = $name
-
     $_download_url = regsubst(
-        $download_url,
+        $consul::download_url,
         '#VERSION#',
-        $::consul::version,
+        $consul::version,
         'G'
     )
 
     $_sha256sums_url = regsubst(
-        $sha256sums_url,
+        $consul::sha256sums_url,
         '#VERSION#',
-        $::consul::version,
+        $consul::version,
         'G'
     )
 
     $_signature_url = regsubst(
-        $signature_url,
+        $consul::signature_url,
         '#VERSION#',
-        $::consul::version,
+        $consul::version,
         'G'
     )
 
     # install unzip if necessary
     ensure_resource('package', 'unzip', {})
 
-    $zip_path = "${::consul::_dest_dir}/consul.zip"
+    $zip_path = "${consul::_dest_dir}/consul.zip"
 
     Package['unzip']
     -> Archive[$zip_path]
@@ -77,35 +42,35 @@ class consul::install(
         signature_binary => $_signature_url,
         sha256sums       => $_sha256sums_url,
         provider         => 'airworthy',
-        extract_path     => $::consul::_dest_dir,
+        extract_path     => $consul::_dest_dir,
     }
-    -> file {$::consul::bin_path:
+    -> file {$consul::bin_path:
         mode   => '0755',
     }
-    -> file {$::consul::link_path:
+    -> file {$consul::link_path:
         ensure => link,
-        target => $::consul::bin_path,
+        target => $consul::bin_path,
     }
 
     # install consul exporter if enabled
-    if $::consul::exporter_enabled {
-        $exporter_tar_path = "${::consul::exporter_dest_dir}/consul-exporter.tar.gz"
+    if $consul::exporter_enabled {
+        $exporter_tar_path = "${consul::exporter_dest_dir}/consul-exporter.tar.gz"
 
         $_exporter_download_url = regsubst(
-            $exporter_download_url,
+            $consul::exporter_download_url,
             '#VERSION#',
-            $::consul::exporter_version,
+            $consul::exporter_version,
             'G'
         )
 
         $_exporter_signature_url = regsubst(
-            $exporter_signature_url,
+            $consul::exporter_signature_url,
             '#VERSION#',
-            $::consul::exporter_version,
+            $consul::exporter_version,
             'G'
         )
 
-        file {$::consul::exporter_dest_dir:
+        file {$consul::exporter_dest_dir:
             ensure => directory,
             mode   => '0755',
         }
@@ -115,18 +80,19 @@ class consul::install(
             source            => $_exporter_download_url,
             signature_armored => $_exporter_signature_url,
             provider          => 'airworthy',
-            extract_path      => $::consul::exporter_dest_dir,
+            extract_path      => $consul::exporter_dest_dir,
             extract_command   => 'tar xfz %s --strip-components=1'
         }
-        } else {
-            file {$::consul::exporter_dest_dir:
-                ensure => absent,
-            }
+    }
+    else {
+        file {$consul::exporter_dest_dir:
+            ensure => absent,
         }
+    }
 
-        file { '/usr/local/bin/consul-backup.sh':
-            ensure  => file,
-            content => file('consul/consul-backup.sh'),
-            mode    => '0755'
-        }
+    file { '/usr/local/bin/consul-backup.sh':
+        ensure  => file,
+        content => file('consul/consul-backup.sh'),
+        mode    => '0755'
+    }
 }
