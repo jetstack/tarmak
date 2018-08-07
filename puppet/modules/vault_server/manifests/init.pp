@@ -52,6 +52,5 @@ class vault_server (
     Class['::airworthy']
     -> class { '::airworthy::install': }
     -> class { '::vault_server::install': }
-    -> class { '::vault_server::config': }
     ~> class { '::vault_server::service': }
 }
