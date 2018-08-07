@@ -49,28 +49,9 @@ class vault_server (
         home   => '/var/lib/vault',
     }
 
-    vault_server::assets_service{'assets_service':
-        vault_tls_cert_path => $vault_tls_cert_path,
-        vault_tls_ca_path   => $vault_tls_ca_path,
-        vault_tls_key_path  => $vault_tls_key_path,
-    }
-
-    vault_server::vault{'vault_script':
-    }
-
-    vault_server::download_unsealer{'download_unsealer':
-    }
-
-    vault_server::unsealer_service{'unsealer_service':
-        region                        => $region,
-        vault_unsealer_kms_key_id     => $vault_unsealer_kms_key_id,
-        vault_unsealer_ssm_key_prefix => $vault_unsealer_ssm_key_prefix,
-    }
-
-    vault_server::vault_service{'vault_service':
-        region => $region,
-    }
-
-    class { '::vault_server::install': }
-    -> Class['::vault_server']
+    Class['::airworthy']
+    -> class { '::airworthy::install': }
+    -> class { '::vault_server::install': }
+    -> class { '::vault_server::config': }
+    ~> class { '::vault_server::service': }
 }

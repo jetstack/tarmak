@@ -2,6 +2,8 @@ class vault_server::install(
     String $download_url = 'https://releases.hashicorp.com/vault/#VERSION#/vault_#VERSION#_linux_amd64.zip',
     String $sha256sums_url = 'https://releases.hashicorp.com/vault/#VERSION#/vault_#VERSION#_SHA256SUMS',
     String $signature_url = 'https://releases.hashicorp.com/vault/#VERSION#/vault_#VERSION#_SHA256SUMS.sig',
+    String $user = 'root',
+    String $group = 'root',
 )
 {
     include ::archive
@@ -57,4 +59,29 @@ class vault_server::install(
         target => $::vault_server::bin_path,
     }
 
+
+    $unsealer_script_name = 'download-vault-unsealer'
+
+    file { "${::vault_server::local_bin_dir}/${unsealer_script_name}.sh":
+        ensure  => file,
+        content => file('vault_server/download-vault-unsealer.sh'),
+        owner   => $user,
+        group   => $group,
+        mode    => '0755',
+    }
+    ~> exec { "${unsealer_script_name}-script-run":
+        command => "${::vault_server::local_bin_dir}/${unsealer_script_name}.sh",
+        path    => $::vault_server::path,
+    }
+
+
+    $vault_script_name = 'vault'
+
+    file { "/etc/profile.d/${vault_script_name}.sh":
+        ensure  => file,
+        content => file('vault_server/vault.sh'),
+        owner   => $user,
+        group   => $group,
+        mode    => '0644',
+    }
 }
