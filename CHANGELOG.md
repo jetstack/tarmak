@@ -17,10 +17,48 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Application | Supported versions | Default  |
 |-------------|-------------------:|---------:|
 | Packer      |                    | `1.0.2`  |
-| Terraform   |                    | `0.11.3` |
+| Terraform   |                    | `0.11.7` |
 | Consul      |                    | `1.0.6`  |
 | Vault       |                    | `0.9.5`  |
-| Kubernetes  | `>= 1.7 && < 1.11` | `1.9.7`  |
+| Kubernetes  | `>= 1.7 && < 1.11` | `1.9.10` |
+| Calico      |                    | `3.1.1`  |
+| Vault Helper|                    | `0.9.13` |
+| Etcd        |                    | `3.2.17` |
+
+## [0.4.0]: 0.4.0 - 2018-08-07
+
+### Added
+- Add Tarmak Terraform provider for ordering infrastructure creation (#12, @simonswine)
+- Add support for automatically adding taints and labels to instance pools (#369, @charlieegan3)
+- Support log forwarding (#197, @dippynark)
+- Add Jenkins module to Terraform stack (#240, @MattiasGees)
+- Support autoscaling arbitrary worker instance pools (#325, @dippynark)
+
+### Changed
+- Merged Terraform stacks (state, bastion, vault, network, kubernetes) into a single stack. This allows a plan to be run against all infrastructure at the same time and also benefit from Terraform's parallelisation  capabilities (#148, @dippynark)
+- Vendor Terraform instead of shelling out to binary inside the Tarmak Docker container. This gives us more control over how terraform is run and the version used. Care must be take when running terraform commands within the Tarmak debug shell as using a version of Tarmak higher than the version vendored by Tarmak will prevent Tarmak from running further Terraform commands
+- Change cgroup driver from systemd to cgroupfs as cgroupfs has better support in the kubelet for enforcing node allocatable (#300, @dippynark)
+
+# Fixed
+- Add security group to allow cluster autoscaler scaping (#338, @dippynark)
+- Remove unneeded infrastructure (#329 #336 #321 @dippynark @MattiasGees)
+- Pass through etcd instance pool min count to puppet (#322, @dippynark)
+- Fix etcd mount race condition (#313, @dippynark)
+- Add RBAC support to Dashboard (#343, @dippynark)
+- Use correct versions for cluster autoscaler (#346, @dippynark)
+- Return informative error when failing to parse tarmak configuration (#326, @dippynark)
+- Use ClusterFirstWithHostNet for fluent-bit ds (#319, @charlieegan3)
+- Prepare Terraform when running kubectl (#185, @dippynark)
+
+### Versions
+
+| Application | Supported versions | Default  |
+|-------------|-------------------:|---------:|
+| Packer      |                    | `1.0.2`  |
+| Terraform   |                    | `0.11.7` |
+| Consul      |                    | `1.0.6`  |
+| Vault       |                    | `0.9.5`  |
+| Kubernetes  | `>= 1.7 && < 1.11` | `1.9.10` |
 | Calico      |                    | `3.1.1`  |
 | Vault Helper|                    | `0.9.13` |
 | Etcd        |                    | `3.2.17` |
