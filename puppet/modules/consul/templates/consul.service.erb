@@ -13,7 +13,7 @@ ExecStartPre=/bin/chmod 0750 /var/lib/consul
 ExecStartPre=/bin/chown -cR consul:consul /var/lib/consul/data
 ExecStartPre=/bin/chmod 0750 /var/lib/consul/data
 EnvironmentFile=/etc/consul/master-token
-ExecStart=/opt/bin/consul agent -node=<%= @private_ip %> -data-dir=/var/lib/consul/data -server -config-dir=/etc/consul -advertise=<%= @private_ip %>
+ExecStart=/usr/local/bin/consul agent -node=<%= @private_ip %> -data-dir=/var/lib/consul/data -server -config-dir=/etc/consul -advertise=<%= @private_ip %>
 
 [Install]
 WantedBy=multi-user.target
