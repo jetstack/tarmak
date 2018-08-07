@@ -165,12 +165,12 @@ class tarmak::master(
       cert_file => "${admin_base_path}.pem",
   }
 
-  Service['kube-scheduler-cert.service'] -> Service['kube-scheduler.service']
-  Service['kube-controller-manager-cert.service'] -> Service['kube-controller-manager.service']
-  Service['kube-apiserver-cert.service'] -> Service['kube-apiserver.service']
-  Service['kube-admin-cert.service'] -> Service['kube-apiserver.service']
-  Service['kube-service-account-key-secret.service'] -> Service['kube-controller-manager.service']
-  Service['kube-service-account-key-secret.service'] -> Service['kube-apiserver.service']
+  Vault_Client::Cert_Service['kube-scheduler'] -> Service['kube-scheduler.service']
+  Vault_Client::Cert_Service['kube-controller-manager'] -> Service['kube-controller-manager.service']
+  Vault_Client::Cert_Service['kube-apiserver'] -> Service['kube-apiserver.service']
+  Vault_Client::Cert_Service['kube-admin'] -> Service['kube-apiserver.service']
+  Vault_Client::Secret_Service['kube-service-account-key'] -> Service['kube-controller-manager.service']
+  Vault_Client::Secret_Service['kube-service-account-key'] -> Service['kube-apiserver.service']
   Service['kube-admin-cert.service'] -> Kubernetes::Apply <||>
 
   class { 'kubernetes::master':
