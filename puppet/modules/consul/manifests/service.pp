@@ -1,14 +1,14 @@
 class consul::service(
-    $consul_encrypt = $::consul::consul_encrypt,
-    $fqdn = $::consul::fqdn,
-    $private_ip = $::consul::private_ip,
-    $consul_master_token = $::consul::consul_master_token,
-    $region = $::consul::region,
-    $instance_count = $::consul::instance_count,
-    $environment = $::consul::environment,
-    $backup_bucket_prefix = $::consul::backup_bucket_prefix,
-    $backup_schedule = $::consul::backup_schedule,
-    $volume_id = $::consul::volume_id,
+    $consul_encrypt = $consul::consul_encrypt,
+    $fqdn = $consul::fqdn,
+    $private_ip = $consul::private_ip,
+    $consul_master_token = $consul::consul_master_token,
+    $region = $consul::region,
+    $instance_count = $consul::instance_count,
+    $environment = $consul::environment,
+    $backup_bucket_prefix = $consul::backup_bucket_prefix,
+    $backup_schedule = $consul::backup_schedule,
+    $volume_id = $consul::volume_id,
     $systemd_wants = [],
     $systemd_requires = [],
     $systemd_after = [],
@@ -21,17 +21,19 @@ class consul::service(
     $attach_service_name = 'attach-ebs-volume'
     $ebs_service_name = 'ensure-ebs-volume-formatted'
 
+    $token_file_path = "${consul::config_dir}/master-token"
+
     $_systemd_wants = $systemd_wants
     $_systemd_requires = $systemd_requires
     $_systemd_after = ['network.target'] + $systemd_after
     $_systemd_before = $systemd_before
 
-    $bin_path = $::consul::bin_path
-    $config_path = $::consul::config_path
+    $bin_path = $consul::bin_path
+    $config_path = $consul::config_path
 
-    $user = $::consul::user
-    $group = $::consul::group
-    $data_dir = $::consul::data_dir
+    $user = $consul::user
+    $group = $consul::group
+    $data_dir = $consul::data_dir
 
     exec { "${service_name}-systemctl-daemon-reload":
         command     => '/bin/systemctl daemon-reload',
@@ -42,21 +44,9 @@ class consul::service(
         },
     }
 
-    # write master token to vault
-    #if defined('$::consul::consul_master_token') {
-    $token_file_path = "${::consul::config_dir}/master-token"
-    file {$token_file_path:
-        ensure  => file,
-        content => "CONSUL_HTTP_TOKEN=${::consul::consul_master_token}",
-        owner   => $::consul::user,
-        group   => $::consul::group,
-        mode    => '0600',
-    }
-    #}
-
     # install consul exporter if enabled
-    if $::consul::exporter_enabled {
-        $exporter_bin_path = $::consul::exporter_bin_path
+    if $consul::exporter_enabled {
+        $exporter_bin_path = $consul::exporter_bin_path
         file { "${::consul::systemd_dir}/${service_name}-exporter.service":
             ensure  => file,
             content => template('consul/consul-exporter.service.erb'),
@@ -71,7 +61,7 @@ class consul::service(
                 ],
         }
 
-        if defined('$::consul::consul_master_token') {
+        if defined('$consul::consul_master_token') {
             File[$token_file_path] ~> Service["${service_name}-exporter.service"]
         }
     }
@@ -97,7 +87,7 @@ class consul::service(
     }
     ~> exec { "${mount_name}-mount":
         command => "/bin/systemctl enable ${mount_name}.mount",
-        path    => $::consul::path,
+        path    => $consul::path,
     }
 
     file { "${::consul::systemd_dir}/${backup_service_name}.service":
@@ -109,7 +99,7 @@ class consul::service(
     ~> exec { "${backup_service_name}-systemctl-daemon-reload":
         command     => '/bin/systemctl daemon-reload',
         refreshonly => true,
-        path        => $::consul::path,
+        path        => $consul::path,
     }
 
     file { "${consul::systemd_dir}/${backup_service_name}.timer":
@@ -151,7 +141,7 @@ class consul::service(
     ~> exec { "${ebs_service_name}-systemctl-daemon-reload":
         command     => '/bin/systemctl daemon-reload',
         refreshonly => true,
-        path        => $::consul::path,
+        path        => $consul::path,
     }
     -> service { "${ebs_service_name}.service":
         ensure => 'running',
