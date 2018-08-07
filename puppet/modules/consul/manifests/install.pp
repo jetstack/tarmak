@@ -15,13 +15,13 @@ class consul::install(
     }
 
     exec { 'install epel-release':
-      command => 'yum -y install epel-release',
-      path    => '/usr/local/bin/:/bin/',
+        command => 'yum -y install epel-release',
+        path    => '/usr/local/bin/:/bin/',
     }
 
     exec { 'install tools':
-      command => 'yum -y install epel-release',
-      path    => '/usr/local/bin/:/bin/',
+        command => 'yum -y install epel-release',
+        path    => '/usr/local/bin/:/bin/',
     }
 
     group { $::consul::group:
@@ -118,34 +118,15 @@ class consul::install(
             extract_path      => $::consul::exporter_dest_dir,
             extract_command   => 'tar xfz %s --strip-components=1'
         }
-    }
-    else {
-        file {$::consul::exporter_dest_dir:
-            ensure => absent,
+        } else {
+            file {$::consul::exporter_dest_dir:
+                ensure => absent,
+            }
         }
-    }
 
-
-    consul::consul{'consul':
-        fqdn                => $::consul::fqdn,
-        private_ip          => $::consul::private_ip,
-        consul_master_token => $::consul::consul_master_token,
-        region              => $::consul::region,
-        instance_count      => $::consul::instance_count,
-        environment         => $::consul::environment,
-        consul_encrypt      => $::consul::consul_encrypt,
-    }
-
-    consul::consul_backup_service{'consul_backup_service':
-        region               => $::consul::region,
-        backup_bucket_prefix => $::consul::backup_bucket_prefix,
-        backup_schedule      => $::consul::backup_schedule,
-        consul_master_token  => $::consul::consul_master_token,
-    }
-    consul::attach_ebs_volume_service{'attach_ebs_volume_service':
-        region    => $::consul::region,
-        volume_id => $::consul::volume_id,
-    }
-    consul::ensure_ebs_volume_service{'ensure_ebs_volume_service':
-    }
+        file { '/usr/local/bin/consul-backup.sh':
+            ensure  => file,
+            content => file('consul/consul-backup.sh'),
+            mode    => '0755'
+        }
 }

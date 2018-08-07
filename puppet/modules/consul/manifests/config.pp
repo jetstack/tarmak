@@ -93,4 +93,10 @@ class consul::config (
     mode    => '0600',
     content => template('consul/consul.json.erb'),
   }
+
+  file { "${::consul::vault_config_dir}/vault.hcl":
+      ensure  => file,
+      content => template('consul/vault.hcl.erb'),
+      mode    => '0600'
+  }
 }
