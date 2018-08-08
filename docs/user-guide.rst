@@ -689,9 +689,9 @@ included in Cloud-Init configuration within terraform templates. These URLs can
 therefore be changed within template files: ``terraform/modules/{tool related
 module}/templates/...`` and ``terraform/templates/...``
 
-For these changes to take effect the puppet binary data must be regenerated and
-included into the Tarmak binary. This is done by rebuilding through the
-Makefile:
+For these changes to take effect the puppet and terraform binary data must be
+regenerated and included into the Tarmak binary. This is done by rebuilding
+through the Makefile:
 
 ::
 
