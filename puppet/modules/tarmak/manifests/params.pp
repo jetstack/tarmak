@@ -14,7 +14,7 @@ class tarmak::params{
   }
 
   ## Kubernetes
-  $kubernetes_version = '1.9.7'
+  $kubernetes_version = '1.10.6'
 
   ## etcd
   $etcd_advertise_client_network = '172.16.0.0/12'
