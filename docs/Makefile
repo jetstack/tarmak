@@ -32,7 +32,7 @@ docker_html:
 	# start documentaion build
 	$(eval CONTAINER_ID := $(shell docker create $(IMAGE_ID)))
 	(git ls-files && git ls-files --others --exclude-standard) | tar cf -  -T - | docker cp - $(CONTAINER_ID):/site
-	docker start -a $(CONTAINER_ID)
+	- docker start -a $(CONTAINER_ID)
 	docker cp $(CONTAINER_ID):/site/_build - | tar xf -
 	docker rm $(CONTAINER_ID)
 

@@ -674,3 +674,26 @@ You add labels and taints in the tarmak yaml like this:
 **Note**, these are only applied when the node is first registered. Changes to
 these values will not remove taints and labels from nodes that are already
 registered.
+
+Custom Tooling URLs
+~~~~~~~~~~~~~~~~~~~
+
+You may wish to change the default source URL for various tools and binaries
+such as vault-helper or hyperkube, downloaded and installed within the Tarmak
+cluster. To do this, change the ``$download_url`` parameter within the relevant
+puppet module's parameters file: ``puppet/modules/{tool
+module}/manifests/params.pp``
+
+Some tooling URLs such as Wing are not defined in puppet and may instead be
+included in Cloud-Init configuration within terraform templates. These URLs can
+therefore be changed within template files: ``terraform/modules/{tool related
+module}/templates/...`` and ``terraform/templates/...``
+
+For these changes to take effect the puppet binary data must be regenerated and
+included into the Tarmak binary. This is done by rebuilding through the
+Makefile:
+
+::
+
+  $ make build
+
