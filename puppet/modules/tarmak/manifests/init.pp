@@ -20,6 +20,10 @@
 # @param kubernetes_api_proxy_ca_name Name of the PKI resource in Vault for the API server proxy
 # @param kubernetes_api_aggregation Enable API aggregation for Kubernetes, defaults to true for versions 1.7+
 class tarmak (
+  Array[String] $api_feature_gates,
+  Array[String] $calico_feature_gates,
+  Array[String] $kubelet_feature_gates,
+  Array[String] $scheduler_feature_gates,
   String $dest_dir = '/opt',
   String $bin_dir = '/opt/bin',
   String $cluster_name = $tarmak::params::cluster_name,

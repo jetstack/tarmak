@@ -61,6 +61,7 @@ type Cluster struct {
 	KubernetesAPI     *KubernetesAPI      `json:"kubernetesAPI,omitempty"`
 	GroupIdentifier   string              `json:"groupIdentifier,omitempty"`
 	VaultHelper       *ClusterVaultHelper `json:"vaultHelper,omitempty"`
+	FeatureGates      *FeatureGates       `json:"featureGates,omitempty"`
 
 	Environment string             `json:"environment,omitempty"`
 	Kubernetes  *ClusterKubernetes `json:"kubernetes,omitempty"`

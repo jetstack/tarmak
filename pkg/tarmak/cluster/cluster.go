@@ -829,6 +829,17 @@ func (c *Cluster) Variables() map[string]interface{} {
 
 	output["name"] = c.Name()
 
+	output["api_feature_gates"] = []string{}
+	output["calico_feature_gates"] = []string{}
+	output["kubelet_feature_gates"] = []string{}
+	output["scheduler_feature_gates"] = []string{}
+	if f := c.Config().FeatureGates; f != nil {
+		output["api_feature_gates"] = f.APIServer
+		output["calico_feature_gates"] = f.Calico
+		output["kubelet_feature_gates"] = f.Kubelet
+		output["scheduler_feature_gates"] = f.KubeScheduler
+	}
+
 	return output
 
 	// TODO: refactor me

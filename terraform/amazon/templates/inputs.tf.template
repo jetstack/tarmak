@@ -214,3 +214,19 @@ variable "elb_access_logs_internal_bucket_interval" {
 data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }
+
+variable "api_feature_gates" {
+  type = "list"
+}
+
+variable "calico_feature_gates"{
+  type = "list"
+}
+
+variable "kubelet_feature_gates"{
+  type = "list"
+}
+
+variable "scheduler_feature_gates" {
+  type = "list"
+}
