@@ -19,13 +19,6 @@ var clusterApplyCmd = &cobra.Command{
 			return errors.New("dry run is not yet supported")
 		}
 
-		if len(store.InfrastructureStacks) > 0 {
-			if store.ConfigurationOnly {
-				return errors.New("the flags --infrastructure-stacks and --configuration-only are mutually exclusive")
-			}
-			store.InfrastructureOnly = true
-		}
-
 		if store.InfrastructureOnly && store.ConfigurationOnly {
 			return errors.New("the flags --infrastructure-only and --configuration-only are mutually exclusive")
 		}
