@@ -128,8 +128,8 @@ module "vault" {
   availability_zones = ["${var.availability_zones}"]
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
   vpc_id = "${module.network.vpc_id}" 
-  bastion_instance_id = "${module.bastion.bastion_instance_id}"
   vault_cluster_name = "${var.vault_cluster_name}"
+  bastion_status = "${module.bastion.bastion_status}"
 }
 {{end}}
 
@@ -160,8 +160,6 @@ module "kubernetes" {
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
   internal_fqdns = ["${module.vault.instance_fqdns}"]
-  vault_kms_key_id = "${module.vault.vault_kms_key_id}"
-  vault_unseal_key_name = "${module.vault.vault_unseal_key_name}"
   # template variables
   availability_zones = ["${module.network.availability_zones}"]
   vpc_id = "${module.network.vpc_id}"
@@ -173,6 +171,7 @@ module "kubernetes" {
   public_zone_id = "${module.state.public_zone_id}"
   vault_security_group_id = "${module.vault.vault_security_group_id}"
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
+  vault_status = "${module.vault.vault_status}"
 }
 {{end}}
 
@@ -226,5 +225,6 @@ module "kubernetes" {
   vault_ca = "${data.terraform_remote_state.hub_state.vault_vault_ca}"
   vault_url = "${data.terraform_remote_state.hub_state.vault_vault_url}"
   vault_security_group_id = "${data.terraform_remote_state.hub_state.vault_vault_security_group_id}"
+  vault_status = "${module.vault.vault_status}"
 }
 {{end}}

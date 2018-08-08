@@ -24,8 +24,14 @@ resource "aws_security_group" "bastion" {
   }
 }
 
+data "tarmak_bastion_instance" "bastion" {
+  hostname    = "bastion"
+  username    = "centos"
+
+  depends_on = ["aws_instance.bastion"]
+}
+
 resource "aws_instance" "bastion" {
-  count                  = 1
   ami                    = "${var.bastion_ami}"
   instance_type          = "${var.bastion_instance_type}"
   subnet_id              = "${var.public_subnet_ids[0]}"

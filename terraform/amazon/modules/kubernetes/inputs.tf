@@ -47,10 +47,6 @@ variable "internal_fqdns" {
   type = "list"
 }
 
-variable "vault_kms_key_id" {}
-
-variable "vault_unseal_key_name" {}
-
 # template variables
 variable "availability_zones" {
   type = "list"
@@ -77,3 +73,5 @@ variable "public_zone_id" {}
 variable "vault_security_group_id" {}
 
 variable "bastion_security_group_id" {}
+
+variable "vault_status" {}

@@ -18,6 +18,7 @@ func resourceTarmakVaultCluster() *schema.Resource {
 		Create: resourceTarmakVaultClusterCreate,
 		Read:   resourceTarmakVaultClusterRead,
 		Delete: resourceTarmakVaultClusterDelete,
+		Update: resourceTarmakVaultClusterCreate,
 
 		Schema: map[string]*schema.Schema{
 			"internal_fqdns": {
@@ -43,6 +44,10 @@ func resourceTarmakVaultCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"bastion_status": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -52,12 +57,10 @@ func resourceTarmakVaultCluster() *schema.Resource {
 }
 
 func resourceTarmakVaultClusterCreate(d *schema.ResourceData, meta interface{}) (err error) {
+
 	client := meta.(*rpc.Client)
 
 	vaultInternalFQDNs := []string{}
-
-	//return fmt.Errorf("DEBUG: %#v", d.Get("internal_fqdns").([]interface{})[0])
-
 	for _, internalFQDN := range d.Get("internal_fqdns").([]interface{}) {
 		vaultInternalFQDNs = append(vaultInternalFQDNs, internalFQDN.(string))
 	}
@@ -94,6 +97,7 @@ func resourceTarmakVaultClusterCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceTarmakVaultClusterRead(d *schema.ResourceData, meta interface{}) (err error) {
+
 	client := meta.(*rpc.Client)
 
 	vaultInternalFQDNs := []string{}

@@ -8,6 +8,13 @@ import (
 	cluster "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 )
 
+const (
+	bastionVerifyTimeoutSeconds = 180
+	BastionStatusUnknown        = "unknown"
+	BastionStatusReady          = "ready"
+	BastionStatusDown           = "down"
+)
+
 var (
 	BastionInstanceStatusCall = fmt.Sprintf("%s.BastionInstanceStatus", RPCName)
 )
@@ -25,23 +32,53 @@ func (r *tarmakRPC) BastionInstanceStatus(args *BastionInstanceStatusArgs, resul
 	r.tarmak.Log().Debug("received rpc bastion status")
 
 	if r.cluster.GetState() == cluster.StateDestroy {
-		result.Status = "unknown"
+		result.Status = BastionStatusUnknown
 		return nil
 	}
 
-	var err error
-	for i := 1; i <= Retries; i++ {
-		if err = r.cluster.Environment().VerifyBastionAvailable(); err != nil {
-			r.tarmak.Log().Error(err)
-			time.Sleep(time.Second)
-		} else {
-			break
+	// check if bastion instance exists
+	instances, err := r.cluster.Environment().Provider().ListHosts(r.cluster.Environment().Hub())
+	if err != nil {
+		r.tarmak.Log().Debug("failed to list instances in hub: %s", err)
+		result.Status = BastionStatusUnknown
+		return nil
+	}
+	bastionExists := false
+	for _, instance := range instances {
+		for _, role := range instance.Roles() {
+			if role == cluster.InstancePoolTypeBastion {
+				bastionExists = true
+			}
 		}
 	}
-	if err != nil {
-		return fmt.Errorf("bastion instance is not ready: %s", err)
+	if !bastionExists {
+		r.tarmak.Log().Debug("bastion instance does not exist")
+		result.Status = BastionStatusDown
+		return nil
 	}
 
-	result.Status = "ready"
+	// verify bastion responsiveness
+	verifyChannel := make(chan bool)
+	go func() {
+		for {
+			if err := r.cluster.Environment().VerifyBastionAvailable(); err != nil {
+				r.tarmak.Log().Error(err)
+				time.Sleep(time.Second)
+				continue
+			}
+			verifyChannel <- true
+			return
+		}
+	}()
+
+	select {
+	case <-verifyChannel:
+	case <-time.After(bastionVerifyTimeoutSeconds * time.Second):
+		r.tarmak.Log().Debug("failed to verify bastion instance")
+		result.Status = BastionStatusDown
+		return nil
+	}
+
+	result.Status = BastionStatusReady
 	return nil
 }

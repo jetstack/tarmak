@@ -10,6 +10,11 @@ import (
 	cluster "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 )
 
+const (
+	VaultStatusUnknown = "unknown"
+	VaultStatusReady   = "ready"
+)
+
 var (
 	VaultClusterStatusCall     = fmt.Sprintf("%s.VaultClusterStatus", RPCName)
 	VaultClusterInitStatusCall = fmt.Sprintf("%s.VaultClusterInitStatus", RPCName)
@@ -30,7 +35,7 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
 	if r.tarmak.Cluster().GetState() == cluster.StateDestroy {
-		result.Status = "unknown"
+		result.Status = VaultStatusUnknown
 		return nil
 	}
 
@@ -40,14 +45,16 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 	if err != nil {
 		err = fmt.Errorf("failed to initialise vault cluster: %s", err)
 		r.tarmak.Log().Error(err)
-		return err
+		result.Status = VaultStatusUnknown
+		return nil
 	}
 
 	vaultTunnel, err := vault.TunnelFromFQDNs(args.VaultInternalFQDNs, args.VaultCA)
 	if err != nil {
 		err = fmt.Errorf("failed to create vault tunnel: %s", err)
 		r.tarmak.Log().Error(err)
-		return err
+		result.Status = VaultStatusUnknown
+		return nil
 	}
 	defer vaultTunnel.Stop()
 
@@ -57,7 +64,8 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve vault root token: %s", err)
 		r.tarmak.Log().Error(err)
-		return err
+		result.Status = VaultStatusUnknown
+		return nil
 	}
 
 	vaultClient.SetToken(vaultRootToken)
@@ -68,10 +76,11 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 	if err := k.Ensure(); err != nil {
 		err = fmt.Errorf("vault cluster is not ready: %s", err)
 		r.tarmak.Log().Error(err)
-		return err
+		result.Status = VaultStatusUnknown
+		return nil
 	}
 
-	result.Status = "ready"
+	result.Status = VaultStatusReady
 	return nil
 }
 
@@ -79,7 +88,7 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 	r.tarmak.Log().Debug("received rpc vault cluster status")
 
 	if r.tarmak.Cluster().GetState() == cluster.StateDestroy {
-		result.Status = "unknown"
+		result.Status = VaultStatusUnknown
 		return nil
 	}
 
@@ -89,7 +98,8 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 	if err != nil {
 		err = fmt.Errorf("failed to create vault tunnel: %s", err)
 		r.tarmak.Log().Error(err)
-		return err
+		result.Status = VaultStatusUnknown
+		return nil
 	}
 	defer vaultTunnel.Stop()
 
@@ -99,7 +109,8 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve vault root token: %s", err)
 		r.tarmak.Log().Error(err)
-		return err
+		result.Status = VaultStatusUnknown
+		return nil
 	}
 
 	vaultClient.SetToken(vaultRootToken)
@@ -117,14 +128,16 @@ func (r *tarmakRPC) VaultClusterInitStatus(args *VaultClusterStatusArgs, result 
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve init status: %s", err)
 		r.tarmak.Log().Error(err)
-		return err
+		result.Status = VaultStatusUnknown
+		return nil
 	}
 	if !up {
 		err = fmt.Errorf("failed to initialised vault cluster")
 		r.tarmak.Log().Error(err)
-		return err
+		result.Status = VaultStatusUnknown
+		return nil
 	}
 
-	result.Status = "ready"
+	result.Status = VaultStatusReady
 	return nil
 }

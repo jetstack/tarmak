@@ -72,8 +72,6 @@ variable "bastion_security_group_id" {}
 # data.terraform_remote_state.network.vpc_id
 variable "vpc_id" {}
 
-variable "bastion_instance_id" {}
-
 variable "vault_cluster_name" {}
 
 data "template_file" "stack_name" {
@@ -84,4 +82,4 @@ data "template_file" "vault_unseal_key_name" {
   template = "vault-${var.environment}-"
 }
 
-
+variable "bastion_status" {}
