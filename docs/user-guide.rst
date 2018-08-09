@@ -828,7 +828,7 @@ make sure you don't define any volumes with the name ``docker``.
     metadata:
       name: worker
     minCount: 3
-    size: c5d.xlarge	
+    size: c5d.xlarge
     subnets:
       zone: eu-west-1a
     - metadata:
@@ -858,6 +858,29 @@ URL to the ``url`` attribute, under the ``vaultHelper`` header in the cluster:
     vaultHelper:
       url: https://example.com/custom_vault-helper_location
 
+Feature Gates
+~~~~~~~~~~~~~
+
+Feature gates can be enabled or disabled on Kubernetes components through the
+Tarmak configuration file. The feature gates can be set on the API server,
+Kubelet, Scheduler, Controller Manager and Kube-Proxy that will take effect cluster
+wide. To change feature gates, each component takes a list of stings that
+will be applied to their corresponding command line flags or configuration
+file under the Kubernetes code block like following:
+
+.. code-block:: yaml
+
+    kubernetes:
+      featureGates:
+          api-server:
+              - "AllAlpha=true"
+              - "APIResponseCompression=false"
+          kubelet:
+              - "CustomPodDNS=true"
+          kube-proxy:
+              - "CSIPersistentVolume=false"
+          controller-manager:
+          scheduler:
 
 Cluster Services
 ----------------
