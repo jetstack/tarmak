@@ -33,6 +33,11 @@ Class: kubernetes
 * Type: `Any`
 * Default: `$::kubernetes::params::download_dir`
 
+##### `download_url`
+
+* Type: `Any`
+* Default: `$::kubernetes::params::download_url`
+
 ##### `dest_dir`
 
 * Type: `Any`
