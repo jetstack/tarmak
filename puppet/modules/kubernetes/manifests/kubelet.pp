@@ -121,12 +121,12 @@ class kubernetes::kubelet(
     $_register_schedulable = $register_schedulable
   }
 
-  if $feature_gates == [] {
+  if $::kubernetes::kubelet_feature_gates == [] {
     $_feature_gates = delete_undef_values([
       $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
     ])
   } else {
-    $_feature_gates = $feature_gates
+    $_feature_gates = $::kubernetes::kubelet_feature_gates
   }
 
   $_config_feature_gates = $_feature_gates.map |$gate| {

@@ -12,6 +12,12 @@ tarmak::etcd_advertise_client_network: 10.0.0.0/8
 tarmak::cloud_provider: aws
 tarmak::kubernetes_api_url: "https://api.%{::tarmak_cluster}.%{::tarmak_dns_root}:6443"
 
+
+calico::$calico_feature_gates: "%{::$calico_feature_gates}"
+kubernetes::$api_feature_gates: "%{::api_feature_gates}"
+kubernetes::$kubelet_feature_gates: "%{::tarmak::$kubelet_feature_gates}"
+kubernetes::$scheduler_feature_gates: "%{::tarmak::$scheduler_feature_gates}"
+
 # point heapster to influxdb
 kubernetes_addons::heapster::sink: influxdb:http://monitoring-influxdb.kube-system:8086
 
