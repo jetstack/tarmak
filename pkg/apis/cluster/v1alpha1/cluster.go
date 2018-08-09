@@ -51,17 +51,17 @@ const (
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	CloudId           string              `json:"cloudId,omitempty"`
-	InstancePools     []InstancePool      `json:"instancePools,omitempty"`
-	Cloud             string              `json:"cloud,omitempty"`
-	Location          string              `json:"location,omitempty"`
-	Network           *Network            `json:"network,omitempty"`
-	LoggingSinks      []*LoggingSink      `json:"loggingSinks,omitempty"`
-	Values            *Values             `json:"values,omitempty"`
-	KubernetesAPI     *KubernetesAPI      `json:"kubernetesAPI,omitempty"`
-	GroupIdentifier   string              `json:"groupIdentifier,omitempty"`
-	VaultHelper       *ClusterVaultHelper `json:"vaultHelper,omitempty"`
-	FeatureGates      *FeatureGates       `json:"featureGates,omitempty"`
+
+	CloudId         string              `json:"cloudId,omitempty"`
+	InstancePools   []InstancePool      `json:"instancePools,omitempty"`
+	Cloud           string              `json:"cloud,omitempty"`
+	Location        string              `json:"location,omitempty"`
+	Network         *Network            `json:"network,omitempty"`
+	LoggingSinks    []*LoggingSink      `json:"loggingSinks,omitempty"`
+	Values          *Values             `json:"values,omitempty"`
+	KubernetesAPI   *KubernetesAPI      `json:"kubernetesAPI,omitempty"`
+	GroupIdentifier string              `json:"groupIdentifier,omitempty"`
+	VaultHelper     *ClusterVaultHelper `json:"vaultHelper,omitempty"`
 
 	Environment string             `json:"environment,omitempty"`
 	Kubernetes  *ClusterKubernetes `json:"kubernetes,omitempty"`
@@ -92,6 +92,7 @@ type ClusterKubernetes struct {
 	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
 	PodSecurityPolicy *ClusterPodSecurityPolicy           `json:"podSecurityPolicy,omitempty"`
 	Prometheus        *ClusterKubernetesPrometheus        `json:"prometheus,omitempty"`
+	FeatureGates      *FeatureGates                       `json:"featureGates,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscaler struct {

@@ -87,15 +87,6 @@ func (in *Cluster) DeepCopyInto(out *Cluster) {
 			**out = **in
 		}
 	}
-	if in.FeatureGates != nil {
-		in, out := &in.FeatureGates, &out.FeatureGates
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(FeatureGates)
-			(*in).DeepCopyInto(*out)
-		}
-	}
 	if in.Kubernetes != nil {
 		in, out := &in.Kubernetes, &out.Kubernetes
 		if *in == nil {
@@ -221,6 +212,15 @@ func (in *ClusterKubernetes) DeepCopyInto(out *ClusterKubernetes) {
 		} else {
 			*out = new(ClusterKubernetesPrometheus)
 			**out = **in
+		}
+	}
+	if in.FeatureGates != nil {
+		in, out := &in.FeatureGates, &out.FeatureGates
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(FeatureGates)
+			(*in).DeepCopyInto(*out)
 		}
 	}
 	return

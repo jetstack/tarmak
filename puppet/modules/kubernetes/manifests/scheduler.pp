@@ -55,5 +55,4 @@ class kubernetes::scheduler(
     ensure => running,
     enable => true,
   }
-
 }

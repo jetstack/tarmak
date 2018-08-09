@@ -28,11 +28,6 @@ data "template_file" "{{.TFName}}_user_data" {
     vault_ca    = "${base64encode(var.vault_ca)}"
     vault_url   = "${var.vault_url}"
 
-    api_feature_gates = "${var.api_feature_gates}"
-    calico_feature_gates = "${var.calico_feature_gates}"
-    kubelet_feature_gates = "${var.kubelet_feature_gates}"
-    scheduler_feature_gates = "${var.scheduler_feature_gates}"
-
     tarmak_dns_root      = "${var.private_zone}"
     tarmak_role          = "{{.Role.Name}}"
     tarmak_instance_pool = "{{.Name}}"

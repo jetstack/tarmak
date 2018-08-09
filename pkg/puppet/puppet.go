@@ -165,6 +165,19 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		hieraData.classes = append(hieraData.classes, `prometheus`)
 	}
 
+	if f := conf.FeatureGates; f != nil {
+		for _, d := range []struct {
+			name  string
+			gates []string
+		}{
+			{"api", f.APIServer},
+			{"kubelet", f.Kubelet},
+			{"scheduler", f.KubeScheduler},
+		} {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::%s_feature_gates: ["%s"]`, d.name, strings.Join(d.gates, `", "`)))
+		}
+	}
+
 	return
 }
 
