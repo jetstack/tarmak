@@ -13,11 +13,6 @@ tarmak::cloud_provider: aws
 tarmak::kubernetes_api_url: "https://api.%{::tarmak_cluster}.%{::tarmak_dns_root}:6443"
 
 
-calico::$feature_flags: "%{::$puppet_calico_gates}"
-kubernetes::$api_feature_gates: "%{::puppet_api_gates}"
-kubernetes::$kubelet_feature_gates: "%{::puppet_kubelet_gates}"
-kubernetes::$scheduler_feature_gates: "%{::puppet_scheduler_gates}"
-
 # point heapster to influxdb
 kubernetes_addons::heapster::sink: influxdb:http://monitoring-influxdb.kube-system:8086
 

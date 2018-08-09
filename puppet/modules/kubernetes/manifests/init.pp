@@ -47,6 +47,8 @@ class kubernetes (
   Array[String] $api_feature_gates = [],
   Array[String] $kubelet_feature_gates = [],
   Array[String] $scheduler_feature_gates = [],
+  Array[String] $controller_feature_gates = [],
+  Array[String] $proxy_feature_gates = [],
 ) inherits ::kubernetes::params
 {
 

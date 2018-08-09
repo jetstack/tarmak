@@ -7,6 +7,7 @@ class kubernetes::controller_manager(
   $systemd_requires = [],
   $systemd_after = [],
   $systemd_before = [],
+  $feature_gates = [],
   Boolean $allocate_node_cidrs = false,
 )  {
   require ::kubernetes
@@ -26,6 +27,14 @@ class kubernetes::controller_manager(
     $version_before_1_6 = false
   } else {
     $version_before_1_6 = true
+  }
+
+  if $::kubernetes::controller_feature_gates == [] {
+    $_feature_gates = delete_undef_values([
+      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
+    ])
+  } else {
+    $_feature_gates = $::kubernetes::controller_feature_gates
   }
 
   kubernetes::symlink{'controller-manager':}

@@ -7,6 +7,7 @@ class kubernetes::proxy(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
+  Array[String] feature_gates = [],
   String $config_file = "${::kubernetes::params::config_dir}/kube-proxy-config.yaml",
 ) inherits kubernetes::params{
   require ::kubernetes
@@ -25,6 +26,14 @@ class kubernetes::proxy(
   ensure_resource('package', [$conntrack_package_name,'ipvsadm'],{
     ensure => 'present',
   })
+
+  if $::kubernetes::proxy_feature_gates == [] {
+    $_feature_gates = delete_undef_values([
+      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
+    ])
+  } else {
+    $_feature_gates = $::kubernetes::proxy_feature_gates
+  }
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-proxy"
   file{$kubeconfig_path:

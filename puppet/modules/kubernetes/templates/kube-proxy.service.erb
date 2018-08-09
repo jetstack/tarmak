@@ -17,6 +17,8 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/proxy \
 <% if @kubeconfig_path -%>
   --kubeconfig=<%= @kubeconfig_path %> \
 <% end -%>
+<% if @_feature_gates != [] -%>
+  --feature-gates=<%= @_feature_gates.join(',') %> \
 <% end -%>
   --logtostderr=true
 

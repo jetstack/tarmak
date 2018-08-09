@@ -173,6 +173,8 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 			{"api", f.APIServer},
 			{"kubelet", f.Kubelet},
 			{"scheduler", f.KubeScheduler},
+			{"proxy", f.KubeProxy},
+			{"controller", f.ControllerManager},
 		} {
 			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::%s_feature_gates: ["%s"]`, d.name, strings.Join(d.gates, `", "`)))
 		}

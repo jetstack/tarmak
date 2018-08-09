@@ -16,8 +16,10 @@
 package v1alpha1
 
 type FeatureGates struct {
-	KubeScheduler []string `json:"kubeScheduler,omitempty"`
-	APIServer     []string `json:"apiServer,omitempty"`
-	Kubelet       []string `json:"kubelet,omitempty"`
-	Calico        []string `json:"calico,omitempty"`
+	KubeScheduler     []string `json:"kubeScheduler,omitempty"`
+	APIServer         []string `json:"api-server,omitempty"`
+	Kubelet           []string `json:"kubelet,omitempty"`
+	KubeProxy         []string `json:"kube-proxy,omitempty"`
+	ControllerManager []string `json:"controller-manager,omitempty"`
+	Calico            []string `json:"calico,omitempty"`
 }
