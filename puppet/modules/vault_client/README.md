@@ -38,6 +38,10 @@ Puppet module to install and manage a vault client install
 [*init_role*]
   TODO
 
+[*download_url*]
+  Download url for the `vault-helper` binary. It supports the placeholder `#VERSION#`
+  that gets replaced by `$version` variable.
+
 #### Parameters
 
 ##### `version`
@@ -54,6 +58,11 @@ Puppet module to install and manage a vault client install
 
 * Type: `Any`
 * Default: `$::vault_client::params::download_dir`
+
+##### `download_url`
+
+* Type: `Any`
+* Default: `$::vault_client::params::download_url`
 
 ##### `dest_dir`
 
