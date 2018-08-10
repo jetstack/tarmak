@@ -232,5 +232,75 @@ describe 'kubernetes::apiserver' do
       let(:authorization_mode) { '[\'AlwaysAllow\']' }
       it { should contain_file(service_file).with_content(/#{Regexp.escape('--authorization-mode=AlwaysAllow')}/)}
     end
+
+    context 'deprecated insecure-port flag after 1.11' do
+      context 'insecure-port' do
+        context 'should exist before 1.11' do
+          let(:pre_condition) {[
+          """
+          class{'kubernetes': version => '1.10.7'}
+          """
+          ]}
+
+          it {should contain_file(service_file).with_content(/#{Regexp.escape('--insecure-port=')}/)}
+        end
+
+        context 'should not exist after 1.11' do
+          let(:pre_condition) {[
+            """
+            class{'kubernetes': version => '1.11.0'}
+              """
+          ]}
+
+          it {should_not contain_file(service_file).with_content(/#{Regexp.escape('--insecure-port=')}/)}
+        end
+      end
+
+      context 'etc-quorum-read' do
+        context 'should exist before 1.11' do
+          let(:pre_condition) {[
+              """
+            class{'kubernetes': version => '1.10.7'}
+              """
+          ]}
+
+          it {should contain_file(service_file).with_content(/#{Regexp.escape('--etcd-quorum-read=true')}/)}
+        end
+
+        context 'should not exist after 1.11' do
+          let(:pre_condition) {[
+              """
+          class{'kubernetes': version => '1.11.0'}
+              """
+          ]}
+
+          it {should_not contain_file(service_file).with_content(/#{Regexp.escape('--etcd-quorum-read=true')}/)}
+        end
+      end
+
+      context 'admission-control' do
+        context 'should exist before 1.11' do
+          let(:pre_condition) {[
+          """
+          class{'kubernetes': version => '1.10.7'}
+          """
+          ]}
+
+          it {should contain_file(service_file).with_content(/#{Regexp.escape('--admission-control=')}/)}
+        end
+
+        context 'should not exist after 1.11' do
+          let(:pre_condition) {[
+            """
+            class{'kubernetes': version => '1.11.0'}
+              """
+          ]}
+
+          it {should_not contain_file(service_file).with_content(/#{Regexp.escape('--admission-control=')}/)}
+          it {should contain_file(service_file).with_content(/#{Regexp.escape('--enable-admission-plugins=')}/)}
+          it {should contain_file(service_file).with_content(/#{Regexp.escape('--disable-admission-plugins=')}/)}
+        end
+      end
+    end
   end
 end

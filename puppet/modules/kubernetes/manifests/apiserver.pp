@@ -6,6 +6,7 @@ class kubernetes::apiserver(
   Integer $audit_log_maxbackup = 1,
   Integer $audit_log_maxsize = 100,
   $admission_control = undef,
+  $disable_admission_control = [],
   $feature_gates = [],
   $count = 1,
   $storage_backend = undef,
@@ -51,6 +52,8 @@ class kubernetes::apiserver(
   $_systemd_after = ['network.target'] + $systemd_after
   $_systemd_before = $systemd_before
 
+  $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
+  $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
   $post_1_9 = versioncmp($::kubernetes::version, '1.9.0') >= 0
   $post_1_8 = versioncmp($::kubernetes::version, '1.8.0') >= 0
   $post_1_7 = versioncmp($::kubernetes::version, '1.7.0') >= 0
@@ -85,6 +88,8 @@ class kubernetes::apiserver(
     $_admission_control = $admission_control
   }
 
+  $_disable_admission_control = $disable_admission_control
+
   if $feature_gates == [] {
     $_feature_gates = delete_undef_values([
       $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
@@ -101,7 +106,10 @@ class kubernetes::apiserver(
   }
 
   # Do not insecure bind the API server on kubernetes 1.6+
-  $insecure_port = $::kubernetes::_apiserver_insecure_port
+  if !$post_1_11 {
+    $insecure_port = $::kubernetes::_apiserver_insecure_port
+    $etcd_quorum_read = true
+  }
   $secure_port = $::kubernetes::apiserver_secure_port
 
   # Default to etcd3 for versions bigger than 1.5

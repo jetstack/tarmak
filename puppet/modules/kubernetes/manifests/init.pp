@@ -52,6 +52,7 @@ class kubernetes (
   }
 
   # do not insecure bind the apiserver after 1.5
+
   if $apiserver_insecure_port == -1 and versioncmp($version, '1.6.0') < 0 {
     $_apiserver_insecure_port = 8080
   } elsif $apiserver_insecure_port == -1 {
