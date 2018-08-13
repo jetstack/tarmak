@@ -7,6 +7,7 @@ class kubernetes::proxy(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
+  String $proxy_config_file = "${::kubernetes::config_dir}/kube-proxy-config.yaml",
 ){
   require ::kubernetes
 
@@ -16,6 +17,8 @@ class kubernetes::proxy(
   $_systemd_after = $systemd_after
   $_systemd_requires = $systemd_after
   $_systemd_before = $systemd_before
+
+  $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
 
   # ensure ipvsadm and contrack installed (for kube-proxy)
   $conntrack_package_name = 'conntrack'
@@ -31,6 +34,16 @@ class kubernetes::proxy(
     group   => $kubernetes::group,
     content => template('kubernetes/kubeconfig.erb'),
     notify  => Service["${service_name}.service"],
+  }
+
+  if $post_1_11 {
+    file{$proxy_config_file:
+      ensure  => file,
+      mode    => '0640',
+      owner   => 'root',
+      group   => $kubernetes::group,
+      content => template('kubernetes/kube-proxy-config.yaml.erb'),
+    }
   }
 
   kubernetes::symlink{'proxy':}
