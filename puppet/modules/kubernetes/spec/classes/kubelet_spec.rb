@@ -10,6 +10,10 @@ describe 'kubernetes::kubelet' do
       '/etc/kubernetes/kubeconfig-kubelet'
   end
 
+  let :kubelet_config do
+      '/var/lib/kubelet/kubelet-config.yaml'
+  end
+
   context 'defaults' do
     it do
       should contain_file(service_file).with_content(/--register-node=true/)
@@ -357,5 +361,32 @@ describe 'kubernetes::kubelet' do
         should_not contain_file(service_file).with_content(%r{--enforce-node-allocatable= })
       end
     end
+  end
+
+  context 'kubelet config' do
+    context 'on kubernetes 1.10' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.10.0'}
+        """
+      ]}
+      it 'is not used' do
+        should_not contain_file(service_file).with_content(%r{--config=/var/lib/kubelet/kubelet-config\.yaml})
+        should_not contain_file(kubelet_config)
+      end
+    end
+
+    context 'on kubernetes 1.11' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.11.0'}
+        """
+      ]}
+      it 'is used' do
+          should contain_file(service_file).with_content(%r{--config=/var/lib/kubelet/kubelet-config\.yaml})
+          should contain_file(kubelet_config)
+      end
+    end
+
   end
 end

@@ -53,8 +53,11 @@ class kubernetes::kubelet(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
+  String $kubelet_config_file = "${kubelet_dir}/kubelet-config.yaml",
 ){
   require ::kubernetes
+
+  $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
 
   if ! $eviction_soft_memory_available_threshold or ! $eviction_soft_memory_available_grace_period {
     $_eviction_soft_memory_available_threshold = undef
@@ -264,6 +267,16 @@ class kubernetes::kubelet(
     notify  => Service["${service_name}.service"],
   }
 
+  if $post_1_11 {
+    file{$kubelet_config_file:
+      ensure  => file,
+      mode    => '0640',
+      owner   => 'root',
+      group   => $kubernetes::group,
+      content => template('kubernetes/kubelet-config.yaml.erb'),
+    }
+  }
+
   kubernetes::symlink{'kubelet':}
   -> file{"${::kubernetes::systemd_dir}/${service_name}.service":
     ensure  => file,
@@ -287,5 +300,4 @@ class kubernetes::kubelet(
   ensure_resource('package', 'socat',{
     ensure => 'present',
   })
-
 }

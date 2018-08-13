@@ -7,8 +7,8 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 Slice=podruntime.slice
 WorkingDirectory=<%= @kubelet_dir %>
 <% if @cloud_provider == 'aws' -%>
-# prevent metadata service access on AWS
-ExecStartPre=/bin/sh -e -c "iptables -C PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181 2> /dev/null || iptables -A PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181"
+    # prevent metadata service access on AWS
+    ExecStartPre=/bin/sh -e -c "iptables -C PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181 2> /dev/null || iptables -A PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181"
 <% end -%>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
@@ -38,13 +38,8 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @_node_labels_string and @_node_labels_string.length > 0 -%>
   "--node-labels=<%= @_node_labels_string %>" \
 <% end -%>
-  --cluster-dns=<%= @cluster_dns %> \
-  --cluster-domain=<%= @cluster_domain %> \
 <% if @hostname_override -%>
   --hostname-override=<%= @hostname_override %> \
-<% end -%>
-<% if @pod_cidr -%>
-  --pod-cidr=<%= @pod_cidr %> \
 <% end -%>
 <% if @network_plugin -%>
   --network-plugin=<%= @network_plugin %> \
@@ -58,6 +53,19 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @container_runtime -%>
   --container-runtime=<%= @container_runtime %> \
 <% end -%>
+  --logtostderr=true \
+<% if not @kernelversion.nil? and scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 and scope.function_versioncmp([scope['kubernetes::version'], '1.7.0']) < 0 and scope.function_versioncmp([@kernelversion, '4.9']) >= 0 -%>
+  --cgroups-per-qos=false \
+  --enforce-node-allocatable= \
+<% end -%>
+<% if @post_1_11 -%>
+  --config=<%= @kubelet_config_file  %> \
+<% else -%>
+  --cluster-dns=<%= @cluster_dns %> \
+  --cluster-domain=<%= @cluster_domain %> \
+<% if @pod_cidr -%>
+  --pod-cidr=<%= @pod_cidr %> \
+<% end -%>
 <% if @client_ca_file and scope.function_versioncmp([scope['kubernetes::version'], '1.5.0']) >= 0 -%>
   --client-ca-file=<%= @client_ca_file %> \
   --anonymous-auth=false \
@@ -65,10 +73,6 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --authorization-mode=Webhook \
 <% end -%>
 <% # Kubernetes older than 1.7 has issues with kernel 4.9+ -%>
-<% if not @kernelversion.nil? and scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 and scope.function_versioncmp([scope['kubernetes::version'], '1.7.0']) < 0 and scope.function_versioncmp([@kernelversion, '4.9']) >= 0 -%>
-  --cgroups-per-qos=false \
-  --enforce-node-allocatable= \
-<% end -%>
 <% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
   --cgroup-driver=<%= @cgroup_driver %> \
   --cgroup-root=<%= @cgroup_root %> \
@@ -122,7 +126,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
     @eviction_soft << "nodefs.available<#{@_eviction_soft_nodefs_available_threshold}" unless @_eviction_soft_nodefs_available_threshold.nil? or @_eviction_soft_nodefs_available_threshold == 'nil'
     @eviction_soft << "nodefs.inodesFree<#{@_eviction_soft_nodefs_inodes_free_threshold}" unless @_eviction_soft_nodefs_inodes_free_threshold.nil? or @_eviction_soft_nodefs_inodes_free_threshold == 'nil'
 -%>
-<%    if @eviction_soft.length > 0 -%>
+<%if @eviction_soft.length > 0 -%>
 <%
     # build eviction soft grace period command line
     @eviction_soft_grace_period = []
@@ -136,24 +140,25 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --eviction-soft-grace-period=<%= @eviction_soft_grace_period.join(',') %> \
   --eviction-max-pod-grace-period=<%= @eviction_max_pod_grace_period %> \
   --eviction-pressure-transition-period=<%= @eviction_pressure_transition_period %> \
-<%        end -%>
-<%    end -%>
+<% end -%>
+<% end -%>
 <% end -%>
 <%
-  # build minumum reclaim command line
-  @eviction_minimum_reclaim = []
+    # build minumum reclaim command line
+    @eviction_minimum_reclaim = []
 
-  @eviction_minimum_reclaim << "memory.available=#{@eviction_minimum_reclaim_memory_available}" unless @eviction_minimum_reclaim_memory_available.nil? or @eviction_minimum_reclaim_memory_available == 'nil'
-  @eviction_minimum_reclaim << "nodefs.available=#{@eviction_minimum_reclaim_nodefs_available}" unless @eviction_minimum_reclaim_nodefs_available.nil? or @eviction_minimum_reclaim_nodefs_available == 'nil'
-  @eviction_minimum_reclaim << "nodefs.inodesFree=#{@eviction_minimum_reclaim_nodefs_inodes_free}" unless @eviction_minimum_reclaim_nodefs_inodes_free.nil? or @eviction_minimum_reclaim_nodefs_inodes_free == 'nil'
+    @eviction_minimum_reclaim << "memory.available=#{@eviction_minimum_reclaim_memory_available}" unless @eviction_minimum_reclaim_memory_available.nil? or @eviction_minimum_reclaim_memory_available == 'nil'
+    @eviction_minimum_reclaim << "nodefs.available=#{@eviction_minimum_reclaim_nodefs_available}" unless @eviction_minimum_reclaim_nodefs_available.nil? or @eviction_minimum_reclaim_nodefs_available == 'nil'
+    @eviction_minimum_reclaim << "nodefs.inodesFree=#{@eviction_minimum_reclaim_nodefs_inodes_free}" unless @eviction_minimum_reclaim_nodefs_inodes_free.nil? or @eviction_minimum_reclaim_nodefs_inodes_free == 'nil'
 -%>
 <% if @eviction_minimum_reclaim.length > 0 -%>
   "--eviction-minimum-reclaim=<%= @eviction_minimum_reclaim.join(',') %>" \
 <% end -%>
+
 <% if @_feature_gates != [] -%>
-  --feature-gates=<%= @_feature_gates.join(',') %> \
+  --feature-gates=<%= @_feature_gates.join(',') %>
 <% end -%>
-  --logtostderr=true
+<% end -%>
 
 Restart=on-failure
 KillMode=process
