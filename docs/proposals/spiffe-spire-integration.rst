@@ -77,6 +77,23 @@ Steps as I currently see them (Subject to Change):
 - Create spire-helper type tool.
 - Set up PKI with Kubernetes components using Spire agents.
 
+Useful Plugins
+--------------
+- AWS Node Attestor: https://github.com/spiffe/aws-iid-attestor.
+  This plugin provides functionality for AWS instances to authenticates
+  themselves using AWS meta data. This is required for Spire agents to
+  authenticate against the spire server cluster.
+
+- K8s Workload Attestor: https://github.com/spiffe/spire/blob/master/doc/plugin_agent_workloadattestor_k8s.md.
+  Plugin that uses Kubernetes primitives to authenticate workloads against
+  SPIFFE agents.
+
+- Unix Workload Attestor: https://github.com/spiffe/spire/blob/master/doc/plugin_agent_workloadattestor_unix.md.
+  Plugin that uses Unix primitives to authenticate workloads against SPIFFE
+  agents.
+
+- SQL Data Store: https://github.com/spiffe/spire/blob/master/doc/plugin_server_datastore_sql.md.
+  Plugin used as a data backend for Spire using an SQL database solution.
 
 Notable items
 -------------
