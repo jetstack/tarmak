@@ -51,7 +51,7 @@ Objective
 ---------
 
 Use Spire within the Tarmak cluster to bolster the authentication of workload
-identities, resulting in a more secure cluster. This would ultimately mean a
+identities, resulting in a more secure cluster. This could ultimately mean a
 complete replacement of Vault and it's periphery tools, in favour of Spire and
 it's stack.
 
@@ -104,6 +104,8 @@ Notable items
 - Spire is still in very much heavy development so breaking changes are highly
   probable.
 - It may just end up not working and be incompatible with Tarmak clusters.
+
+- HA with Postgress as backend
 
 Out of scope
 ------------

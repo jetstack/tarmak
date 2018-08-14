@@ -75,6 +75,10 @@ output "vault_vault_ca" {
 output "vault_vault_url" {
   value = "${module.vault.vault_url}"
 }
+output "vault_vault_ip" {
+  value = "${module.vault.vault_ip}"
+}
+
 output "vault_vault_security_group_id" {
   value = "${module.vault.vault_security_group_id}"
 }

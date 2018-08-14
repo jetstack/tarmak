@@ -6,6 +6,10 @@ output "vault_url" {
   value = "https://${element(concat(aws_route53_record.endpoint.*.fqdn, list("")), 0)}:8200"
 }
 
+output "vault_ip" {
+ value = "${aws_route53_record.endpoint.records[0]}"
+}
+
 output "vault_kms_key_id" {
   value = "${element(split("/", var.secrets_kms_arn), 1)}"
 }

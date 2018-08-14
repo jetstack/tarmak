@@ -339,6 +339,7 @@ func (c *Cluster) verifyHubState() error {
 		"vault_vault_security_group_id",
 		"vault_vault_unseal_key_name",
 		"vault_vault_url",
+		"vault_vault_ip",
 	}
 	var result *multierror.Error
 	for _, r := range requiredHubResources {

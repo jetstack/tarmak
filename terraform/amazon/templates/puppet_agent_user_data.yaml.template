@@ -98,6 +98,93 @@ write_files:
 
     #includedir /etc/sudoers.d
 
+- path: /etc/spire/ca.pem
+  permissions: "0700"
+  content: |
+    -----BEGIN CERTIFICATE-----
+    MIIBzDCCAVOgAwIBAgIJAJM4DhRH0vmuMAoGCCqGSM49BAMEMB4xCzAJBgNVBAYT
+    AlVTMQ8wDQYDVQQKDAZTUElGRkUwHhcNMTgwNTEzMTkzMzQ3WhcNMjMwNTEyMTkz
+    MzQ3WjAeMQswCQYDVQQGEwJVUzEPMA0GA1UECgwGU1BJRkZFMHYwEAYHKoZIzj0C
+    AQYFK4EEACIDYgAEWjB+nSGSxIYiznb84xu5WGDZj80nL7W1c3zf48Why0ma7Y7m
+    CBKzfQkrgDguI4j0Z+0/tDH/r8gtOtLLrIpuMwWHoe4vbVBFte1vj6Xt6WeE8lXw
+    cCvLs/mcmvPqVK9jo10wWzAdBgNVHQ4EFgQUh6XzV6LwNazA+GTEVOdu07o5yOgw
+    DwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwGQYDVR0RBBIwEIYOc3Bp
+    ZmZlOi8vbG9jYWwwCgYIKoZIzj0EAwQDZwAwZAIwE4Me13qMC9i6Fkx0h26y09QZ
+    IbuRqA9puLg9AeeAAyo5tBzRl1YL0KNEp02VKSYJAjBdeJvqjJ9wW55OGj1JQwDF
+    D7kWeEB6oMlwPbI/5hEY3azJi16I0uN1JSYTSWGSqWc=
+    -----END CERTIFICATE-----
+
+- path: /usr/local/bin/download-spire.sh
+  permissions: "0755"
+  content: |
+    #!/bin/bash
+
+    set -euo pipefail
+
+    SPIRE_VERSION=0.6.1
+    DEST_DIR=$${DEST_DIR:-/tmp}
+
+    curl -sL https://github.com/spiffe/spire/releases/download/$${SPIRE_VERSION}/spire-$${SPIRE_VERSION}-linux-x86_64-glibc.tar.gz > $${DEST_DIR}/spire.tar.gz
+    cd /tmp
+    tar zvxf spire.tar.gz
+    cp -r spire-$${SPIRE_VERSION}/. /opt/spire
+    mkdir -p /etc/spire/.data
+
+- path: /etc/spire/agent.conf
+  permissions: "0755"
+  content: |
+    agent {
+        data_dir = "/etc/spire/.data"
+        log_level = "DEBUG"
+        plugin_dir = "/etc/spire/plugin"
+        server_address = "${vault_ip}"
+        server_port = "8081"
+        socket_path ="/tmp/agent.sock"
+        trust_bundle_path = "/etc/spire/ca.pem"
+        trust_domain = "jvl"
+        umask = ""
+    }
+
+    plugins {
+        NodeAttestor "aws_iid" {
+            enabled = true
+            plugin_data {
+                trust_domain = "jvl"
+            }
+        }
+        KeyManager "memory" {
+            enabled = true
+            plugin_data {
+            }
+        }
+        WorkloadAttestor "k8s" {
+            enabled = true
+            plugin_data {
+                kubelet_read_only_port = "10255"
+            }
+        }
+        WorkloadAttestor "unix" {
+            enabled = true
+            plugin_data {
+            }
+        }
+    }
+
+- path: /etc/systemd/system/spire-agent.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Spire agent
+
+    [Service]
+    ExecStart=/opt/spire/spire-agent run -config /etc/spire/agent.conf
+    Restart=on-failure
+    RestartSec=10
+
+    [Install]
+    WantedBy=multi-user.target
+
 runcmd:
-- systemctl enable wing
-- systemctl start wing
+- /usr/local/bin/download-spire.sh
+- systemctl enable wing spire-agent.service
+- systemctl start wing spire-agent.service
