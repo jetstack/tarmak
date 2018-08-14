@@ -75,25 +75,3 @@ write_files:
     WantedBy=multi-user.target
 
 - path: /etc/systemd/system/puppet-consul-init.service
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Bootstrap consul using puppet
-    Wants=network-online.target
-    After=network.target network-online.target
-
-    [Service]
-    Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
-    PermissionsStartOnly=true
-    Restart=on-failure
-    RestartSec=6
-    SuccessExitStatus=0 2
-    ExecStart=/opt/puppetlabs/bin/puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/consul/hiera.yaml /tmp/puppet-manifests/modules/consul -e "include consul"
-    [Install]
-    WantedBy=multi-user.target
-
-
-runcmd:
-- systemctl start puppet-download-manifests.service
-- systemctl start puppet-vault-init.service
-- systemctl start puppet-consul-init.service
