@@ -304,6 +304,21 @@ func Rules() (rules []*Rule) {
 			Destinations: []Host{Host{Name: "all"}},
 		},
 		&Rule{
+			Comment:   "allow all instances to connect to spire",
+			Services:  []Service{newSpireService()},
+			Direction: "ingress",
+			Sources: []Host{
+				Host{Role: "etcd"},
+				Host{Role: "worker"},
+				Host{Role: "master"},
+				Host{Role: "master_elb"},
+				Host{Role: "bastion"},
+			},
+			Destinations: []Host{
+				Host{Role: "vault"},
+			},
+		},
+		&Rule{
 			Comment: "allow vault instances to connect to each other's consul",
 			Services: []Service{
 				newConsulTCPService(),

@@ -4,12 +4,13 @@ data "template_file" "vault" {
   count    = "${var.vault_min_instance_count}"
 
   vars {
-    fqdn           = "vault-${count.index + 1}.${var.private_zone}"
-    environment    = "${var.environment}"
-    region         = "${var.region}"
-    instance_count = "${var.vault_min_instance_count}"
-    volume_id      = "${element(aws_ebs_volume.vault.*.id, count.index)}"
-    private_ip     = "${cidrhost(element(var.private_subnets, count.index % length(var.availability_zones)),(10 + (count.index/length(var.availability_zones))))}"
+    fqdn            = "vault-${count.index + 1}.${var.private_zone}"
+    environment     = "${var.environment}"
+    region          = "${var.region}"
+    instance_count  = "${var.vault_min_instance_count}"
+    volume_id       = "${element(aws_ebs_volume.vault.*.id, count.index)}"
+    private_ip      = "${cidrhost(element(var.private_subnets, count.index % length(var.availability_zones)),(10 + (count.index/length(var.availability_zones))))}"
+    private_subnets = "${element(var.private_subnets, count.index % length(var.availability_zones))}"
 
     consul_version      = "${var.consul_version}"
     consul_master_token = "${random_id.consul_master_token.hex}"

@@ -75,3 +75,220 @@ write_files:
     WantedBy=multi-user.target
 
 - path: /etc/systemd/system/puppet-consul-init.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Bootstrap consul using puppet
+    Wants=network-online.target
+    After=network.target network-online.target
+    [Service]
+    Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
+    PermissionsStartOnly=true
+    Restart=on-failure
+    RestartSec=6
+    SuccessExitStatus=0 2
+    ExecStart=/opt/puppetlabs/bin/puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/consul/hiera.yaml /tmp/puppet-manifests/modules/consul -e "include consul"
+    [Install]
+    WantedBy=multi-user.target
+
+- path: /usr/local/bin/download-spire.sh
+  permissions: "0755"
+  content: |
+    #!/bin/bash
+    set -euo pipefail
+
+    SPIRE_VERSION=0.6.1
+    DEST_DIR=$${DEST_DIR:-/tmp}
+    curl -sL https://github.com/spiffe/spire/releases/download/$${SPIRE_VERSION}/spire-$${SPIRE_VERSION}-linux-x86_64-glibc.tar.gz > $${DEST_DIR}/spire.tar.gz
+    cd /tmp
+    tar zvxf spire.tar.gz
+    cp -r spire-$${SPIRE_VERSION}/. /opt/spire
+    mkdir -p /etc/spire/.data
+    chmod 777 /etc/spire
+
+    mkdir -p /etc/patroni
+    cd /etc/patroni
+    git clone https://github.com/zalando/patroni
+
+    curl -sL https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm > /tmp/pgdg-centos96-9.6-6.noarch.rpm
+    rpm -ivh /tmp/pgdg-centos96-9.6-6.noarch.rpm
+    yum -y install postgresql96.x86_64 postgresql96-server.x86_64 postgresql96-devel.x86_64 postgresql96-contrib.x86_64
+    ln -s /usr/pgsql-9.6/bin/* /usr/local/bin/
+    ln -s /usr/pgsql-9.6/share/* /usr/local/share/
+
+- path: /etc/patroni/postgres.yml
+  permissions: "0755"
+  content: |
+    name: spire-${fqdn}
+    scope: spire-${environment}
+    consul:
+      host: 127.0.0.1:8500
+      url: http://127.0.0.1:8500
+      port: 8500
+      scheme: http
+      token: ${consul_master_token}
+    restapi:
+      listen: ${private_ip}:8008
+      connect_address: ${private_ip}:8008
+    bootstrap:
+      dcs:
+        ttl: 30
+        loop_wait: 10
+        retry_timeout: 10
+        maximum_lag_on_failover: 1048576
+        postgresql:
+          use_pg_rewind: true
+          use_slots: true
+      initdb:
+      - encoding: UTF8
+      - data-checksums
+      pg_hba:
+      - host replication replicator 127.0.0.1/32 md5
+      - host replication replicator ${private_subnets} md5
+      - host all all 0.0.0.0/0 md5
+    users:
+        vault:
+            password:
+            options:
+                - createrole
+                - createdb
+    postgresql:
+      listen: ${private_ip}:5432
+      connect_address: ${private_ip}:5432
+      data_dir: /etc/spire/.data
+      pg_pass: /tmp/pgpass0
+      use_slots: true
+      maximum_lag_on_failover: 1048576
+      authentication:
+        replication:
+          username: replicator
+          password: rep-pass
+        superuser:
+          username: postgres
+          password: password
+      parameters:
+        unix_socket_directories: '.'
+    tags:
+      nofailover: false
+      noloadbalance: false
+      clonefrom: false
+      nosync: false
+
+- path: /etc/systemd/system/postgresql.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Start Postgresql distributed service
+    [Service]
+    User=vault
+    Group=vault
+    ExecStart=/etc/patroni/patroni/patroni.py /etc/patroni/postgres.yml
+    Restart=on-failure
+    RestartSec=10
+    [Install]
+    WantedBy=multi-user.target
+
+- path: /etc/spire/ca.pem
+  permissions: "0700"
+  content: |
+    -----BEGIN CERTIFICATE-----
+    MIIBzDCCAVOgAwIBAgIJAJM4DhRH0vmuMAoGCCqGSM49BAMEMB4xCzAJBgNVBAYT
+    AlVTMQ8wDQYDVQQKDAZTUElGRkUwHhcNMTgwNTEzMTkzMzQ3WhcNMjMwNTEyMTkz
+    MzQ3WjAeMQswCQYDVQQGEwJVUzEPMA0GA1UECgwGU1BJRkZFMHYwEAYHKoZIzj0C
+    AQYFK4EEACIDYgAEWjB+nSGSxIYiznb84xu5WGDZj80nL7W1c3zf48Why0ma7Y7m
+    CBKzfQkrgDguI4j0Z+0/tDH/r8gtOtLLrIpuMwWHoe4vbVBFte1vj6Xt6WeE8lXw
+    cCvLs/mcmvPqVK9jo10wWzAdBgNVHQ4EFgQUh6XzV6LwNazA+GTEVOdu07o5yOgw
+    DwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwGQYDVR0RBBIwEIYOc3Bp
+    ZmZlOi8vbG9jYWwwCgYIKoZIzj0EAwQDZwAwZAIwE4Me13qMC9i6Fkx0h26y09QZ
+    IbuRqA9puLg9AeeAAyo5tBzRl1YL0KNEp02VKSYJAjBdeJvqjJ9wW55OGj1JQwDF
+    D7kWeEB6oMlwPbI/5hEY3azJi16I0uN1JSYTSWGSqWc=
+    -----END CERTIFICATE-----
+
+- path: /etc/spire/key.pem
+  permissions: "0700"
+  content: |
+    -----BEGIN EC PRIVATE KEY-----
+    MIGkAgEBBDAg2LbulXzQX1NF+2Di0RKzMWfEGioBhh/fFpx7yOEqka//TpaeU3O5
+    QJRZXdWHKuagBwYFK4EEACKhZANiAARaMH6dIZLEhiLOdvzjG7lYYNmPzScvtbVz
+    fN/jxaHLSZrtjuYIErN9CSuAOC4jiPRn7T+0Mf+vyC060susim4zBYeh7i9tUEW1
+    7W+Ppe3pZ4TyVfBwK8uz+Zya8+pUr2M=
+    -----END EC PRIVATE KEY-----
+
+- path: /etc/spire/server.conf
+  permissions: "0755"
+  content: |
+    server {
+        bind_address = "0.0.0.0"
+        bind_port = "8081"
+        bind_http_port = "8080"
+        trust_domain = "${environment}"
+        data_dir = "/etc/spire/.data"
+        plugin_dir = "/etc/spire/plugin"
+        log_level = "DEBUG"
+        umask = ""
+        upstream_bundle = true
+        svid_ttl = "5m"
+        ca_ttl = "24h"
+        ca_subject = {
+            Country = ["GB"],
+            Organization = ["Tarmak"],
+            CommonName = "",
+        }
+    }
+    plugins {
+        DataStore "sql" {
+            enabled = true
+            plugin_data {
+                database_type = "postgres"
+                connection_string = "dbname=postgres user=postgres password=password host=${private_ip} port=5432 sslmode=disable"
+            }
+        }
+        NodeAttestor "aws_iid" {
+            enabled = true
+            plugin_data {
+                trust_domain = "${environment}"
+            }
+        }
+        NodeResolver "noop" {
+            enabled = true
+            plugin_data {}
+        }
+        ServerCA "memory" {
+            enabled = true
+            plugin_data {
+    	        trust_domain = "${environment}"
+    	    }
+        }
+        UpstreamCA "disk" {
+            enabled = true
+            plugin_data {
+                trust_domain = "${environment}"
+                ttl = "15m"
+                cert_file_path = "/etc/spire/ca.pem"
+                key_file_path = "/etc/spire/key.pem"
+            }
+        }
+    }
+
+- path: /etc/systemd/system/spire-server.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Spire server
+    [Service]
+    ExecStart=/opt/spire/spire-server run -config /etc/spire/server.conf
+    Restart=on-failure
+    RestartSec=10
+    [Install]
+    WantedBy=multi-user.target
+
+
+runcmd:
+- yum -y install epel-release
+- yum -y install unzip jq curl gpg
+- yum -y install gcc python-devel
+- pip install --upgrade pip setuptools
+- pip install --upgrade pip patroni[consul]
+- /usr/local/bin/download-spire.sh
+- systemctl start puppet-download-manifests.service puppet-vault-init.service puppet-consul-init.service spire-server.service postgresql.service
+- systemctl enable puppet-download-manifests.service puppet-vault-init.service puppet-consul-init.service spire-server.service postgresql.service

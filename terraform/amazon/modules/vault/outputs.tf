@@ -7,7 +7,7 @@ output "vault_url" {
 }
 
 output "vault_ip" {
- value = "${aws_route53_record.endpoint.records[0]}"
+ value = "${aws_route53_record.endpoint.records[1]}"
 }
 
 output "vault_kms_key_id" {

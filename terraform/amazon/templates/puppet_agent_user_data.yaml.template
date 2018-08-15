@@ -141,7 +141,7 @@ write_files:
         server_port = "8081"
         socket_path ="/tmp/agent.sock"
         trust_bundle_path = "/etc/spire/ca.pem"
-        trust_domain = "jvl"
+        trust_domain = "${tarmak_environment}"
         umask = ""
     }
 
@@ -149,7 +149,7 @@ write_files:
         NodeAttestor "aws_iid" {
             enabled = true
             plugin_data {
-                trust_domain = "jvl"
+                trust_domain = "${tarmak_environment}"
             }
         }
         KeyManager "memory" {
