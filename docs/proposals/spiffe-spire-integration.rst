@@ -123,3 +123,10 @@ cluster master elected through Consul.
 Spire uses Elliptic Curve keys which is odd and can be annoying.
 
 .. _Patroni: https://github.com/zalando/patroni
+
+Road Map
+--------
+
+High availability support is targeted to be included at the end of October 2018.
+Perhaps when this has been included a re-review of the inclusion of Spire should
+be considered.
