@@ -116,6 +116,68 @@ write_files:
     ln -s /usr/pgsql-9.6/bin/* /usr/local/bin/
     ln -s /usr/pgsql-9.6/share/* /usr/local/share/
 
+- path: /usr/local/bin/spire-create-entries.sh
+  permissions: "0755"
+  content: |
+    #!/bin/bash
+    set -euo pipefail
+
+    spire-server entry create \
+        -parentID spiffe://${environment}/tarmak \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/apiserver \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/controller-manager \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/scheduler \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/kubectl \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/proxy \
+        -selector unix:uid:{10} \
+        -selector unix:gid:{10}
+
+    spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/kubelet \
+        -selector unix:uid:{10} \
+        -selector unix:gid:{10}
+
+- path: /etc/systemd/system/spire-create-entries.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Create Entries for Kubernetes components
+    [Service]
+    User=root
+    Group=root
+    ExecStart=/usr/local/bin/spire-create-entries.sh
+    Restart=on-failure
+    RestartSec=10
+    [Install]
+    WantedBy=multi-user.target
+
 - path: /etc/patroni/postgres.yml
   permissions: "0755"
   content: |
