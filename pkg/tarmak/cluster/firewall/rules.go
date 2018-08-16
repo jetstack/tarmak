@@ -301,7 +301,14 @@ func Rules() (rules []*Rule) {
 			Sources: []Host{
 				Host{Role: "vault"},
 			},
-			Destinations: []Host{Host{Name: "all"}},
+			Destinations: []Host{
+				Host{Role: "etcd"},
+				Host{Role: "worker"},
+				Host{Role: "master"},
+				Host{Role: "master_elb"},
+				Host{Role: "bastion"},
+				Host{Role: "all"},
+			},
 		},
 		&Rule{
 			Comment:   "allow all instances to connect to spire",

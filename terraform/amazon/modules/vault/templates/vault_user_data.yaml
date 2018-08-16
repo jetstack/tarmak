@@ -138,7 +138,7 @@ write_files:
         maximum_lag_on_failover: 1048576
         postgresql:
           use_pg_rewind: true
-          use_slots: true
+          use_slots: false
       initdb:
       - encoding: UTF8
       - data-checksums
@@ -157,7 +157,7 @@ write_files:
       connect_address: ${private_ip}:5432
       data_dir: /etc/spire/.data
       pg_pass: /tmp/pgpass0
-      use_slots: true
+      use_slots: false
       maximum_lag_on_failover: 1048576
       authentication:
         replication:
