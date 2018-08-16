@@ -92,7 +92,7 @@ func (i *image) Build() (amiID string, err error) {
 
 	envVars, err := i.tarmak.Provider().Environment()
 	if err != nil {
-		return "", fmt.Errorf("faild to get provider credentials: %v", err)
+		return "", fmt.Errorf("failed to get provider credentials: %v", err)
 	}
 
 	var result *multierror.Error

@@ -360,14 +360,14 @@ func (c *Cluster) verifyHubState() error {
 func (c *Cluster) VerifyInstancePools() (result error) {
 	imageIDs, err := c.ImageIDs()
 	if err != nil {
-		return fmt.Errorf("error getting image IDs: %s]", err)
+		return fmt.Errorf("error getting image IDs: %s", err)
 	}
 
 	for _, instancePool := range c.InstancePools() {
 		image := instancePool.Image()
 		_, ok := imageIDs[image]
 		if !ok {
-			return fmt.Errorf("error getting the image ID of %s", instancePool.TFName())
+			return fmt.Errorf("could not find image ID of: %s", instancePool.TFName())
 		}
 	}
 	return nil

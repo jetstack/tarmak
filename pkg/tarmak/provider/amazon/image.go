@@ -11,6 +11,27 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
 
+var (
+	defaultAMIByRegion = map[string]string{
+		"us-east-1":      "foo",
+		"us-east-2":      "foo",
+		"us-west-1":      "foo",
+		"us-west-2":      "foo",
+		"ca-central-1":   "foo",
+		"eu-central-1":   "foo",
+		"eu-west-1":      "foo",
+		"eu-west-2":      "foo",
+		"eu-west-3":      "foo",
+		"ap-northeast-1": "foo",
+		"ap-northeast-2": "foo",
+		"ap-northeast-3": "foo",
+		"ap-southeast-1": "foo",
+		"ap-southeast-2": "foo",
+		"ap-south-1":     "foo",
+		"sa-east-1":      "foo",
+	}
+)
+
 func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Image, err error) {
 
 	sess, err := a.Session()
@@ -33,6 +54,27 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 	})
 	if err != nil {
 		return images, err
+	}
+
+	// Use our default AMIs if the user hasn't got any
+	if len(amis.Images) == 0 {
+		defaultAMI, ok := defaultAMIByRegion[a.Region()]
+		if !ok {
+			return images, nil
+		}
+
+		amis, err = svc.DescribeImages(&ec2.DescribeImagesInput{
+			Filters: []*ec2.Filter{
+				&ec2.Filter{
+					Name:   aws.String("image-id"),
+					Values: []*string{aws.String(defaultAMI)},
+				},
+			},
+		})
+
+		if err != nil {
+			return images, err
+		}
 	}
 
 	formatRFC3339amazon := "2006-01-02T15:04:05.999Z07:00"
