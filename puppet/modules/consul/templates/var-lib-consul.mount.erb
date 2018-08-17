@@ -1,0 +1,9 @@
+[Unit]
+Description=Mount consul data
+After=ensure-ebs-volume-formatted.service
+Requires=ensure-ebs-volume-formatted.service
+
+[Mount]
+What=/dev/xvdd
+Where=/var/lib/consul
+Type=ext4

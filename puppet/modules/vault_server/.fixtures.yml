@@ -1,0 +1,7 @@
+fixtures:
+  symlinks:
+    vault_server: "#{source_dir}"
+    archive: "#{source_dir}/../archive"
+    concat: "#{source_dir}/../concat"
+    stdlib: "#{source_dir}/../stdlib"
+    airworthy: "#{source_dir}/../airworthy"

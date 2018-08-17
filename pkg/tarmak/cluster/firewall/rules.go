@@ -40,10 +40,11 @@ var (
 	k8sEventsPort                = uint16(2369)
 	k8sPort                      = uint16(2379)
 	apiPort                      = uint16(6443)
+	clusterAutoscalerMetricsPort = uint16(8085)
 	consulRCPPort                = uint16(8300)
 	consulSerfPort               = uint16(8301)
 	vaultPort                    = uint16(8200)
-	clusterAutoscalerMetricsPort = uint16(8085)
+	spirePort                    = uint16(8081)
 	calicoMetricsPort            = uint16(9091)
 	nodePort                     = uint16(9100)
 	blackboxPort                 = uint16(9115)
@@ -141,6 +142,16 @@ func newVaultService() Service {
 		Protocol: "tcp",
 		Ports: []Port{
 			Port{Single: &vaultPort},
+		},
+	}
+}
+
+func newSpireService() Service {
+	return Service{
+		Name:     "spire",
+		Protocol: "tcp",
+		Ports: []Port{
+			Port{Single: &spirePort},
 		},
 	}
 }
@@ -282,6 +293,21 @@ func Rules() (rules []*Rule) {
 				Host{Role: "vault"},
 			},
 			Destinations: []Host{Host{Name: "all"}},
+		},
+		&Rule{
+			Comment:   "allow all instances to connect to spire",
+			Services:  []Service{newSpireService()},
+			Direction: "ingress",
+			Sources: []Host{
+				Host{Role: "vault"},
+			},
+			Destinations: []Host{
+				Host{Role: "vault"},
+				Host{Role: "etcd"},
+				Host{Role: "worker"},
+				Host{Role: "master"},
+				Host{Role: "all"},
+			},
 		},
 		&Rule{
 			Comment: "allow vault instances to connect to each other's consul",

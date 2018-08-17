@@ -26,6 +26,7 @@ data "template_file" "{{.TFName}}_user_data" {
     vault_token = "${tarmak_vault_instance_role.{{.Role.Name}}.init_token}"
     vault_ca    = "${base64encode(var.vault_ca)}"
     vault_url   = "${var.vault_url}"
+    vault_ip    = "${var.vault_ip}"
 
     tarmak_dns_root      = "${var.private_zone}"
     tarmak_role          = "{{.Role.Name}}"

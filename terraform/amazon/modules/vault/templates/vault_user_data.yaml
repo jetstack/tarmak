@@ -11,371 +11,346 @@ users:
   system: true
   home_dir: /var/lib/vault
 
-- name: consul
-  system: true
-  home_dir: /var/lib/consul
-
 write_files:
-- path: /etc/systemd/system/attach-ebs-volume.service
+- path: /tmp/vault_server.yaml
+  permissions: '0644'
+  content: |
+    ---
+    vault_server::region: "${region}"
+    vault_server::vault_tls_cert_path: "${vault_tls_cert_path}"
+    vault_server::vault_tls_ca_path: "${vault_tls_ca_path}"
+    vault_server::vault_tls_key_path: "${vault_tls_key_path}"
+    vault_server::vault_unsealer_kms_key_id: "${vault_unsealer_kms_key_id}"
+    vault_server::vault_unsealer_ssm_key_prefix: "${vault_unsealer_ssm_key_prefix}"
+
+- path: /tmp/consul.yaml
+  permissions: '0644'
+  content: |
+    ---
+    consul::fqdn: "${fqdn}"
+    consul::private_ip: "${private_ip}"
+    consul::consul_master_token: "${consul_master_token}"
+    consul::region: "${region}"
+    consul::instance_count: "${instance_count}"
+    consul::environment: "${environment}"
+    consul::consul_encrypt: "${consul_encrypt}"
+    consul::backup_bucket_prefix: "${backup_bucket_prefix}"
+    consul::backup_schedule: "${backup_schedule}"
+    consul::volume_id: "${volume_id}"
+
+- path: /etc/systemd/system/puppet-download-manifests.service
   permissions: '0644'
   content: |
     [Unit]
-    Description=Attach EBS volume if needed
+    Description=Download puppet manifests
+    Wants=network-online.target
+    After=network.target network-online.target
 
     [Service]
-    Type=oneshot
-    RemainAfterExit=yes
-    ExecStart=/bin/bash -c ' \
-      test -e /dev/xvdd && exit 0; \
-      aws ec2 attach-volume --region ${region} --volume-id ${volume_id} --instance-id $(curl -sL http://169.254.169.254/latest/meta-data/instance-id) --device /dev/xvdd \
-    '
-    ExecStart=/bin/bash -c ' \
-      until test -e /dev/xvdd; do \
-        echo "Waiting for device /dev/xvdd ..."; \
-        sleep 1; \
-      done \
-    '
-    ExecStop=/bin/bash -c ' \
-      test -e /dev/xvdd || exit 0 \
-      aws ec2 detach-volume --region ${region} --volume-id ${volume_id} --instance-id $(curl -sl http://169.254.169.254/latest/meta-data/instance-id) \
-    '
-
-- path: /etc/systemd/system/ensure-ebs-volume-formatted.service
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Format EBS volume if needed
-    After=attach-ebs-volume.service
-    Requires=attach-ebs-volume.service
-
-    [Service]
-    Type=oneshot
-    RemainAfterExit=yes
-    ExecStart=/bin/bash -c 'blkid /dev/xvdd || (wipefs -fa /dev/xvdd && mkfs.ext4 /dev/xvdd)'
-
-- path: /etc/systemd/system/consul-backup.service
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Backup consul KV store
-    Requires=consul.service
-    After=consul.service
-
-    [Service]
-    Type=oneshot
-    Environment=AWS_DEFAULT_REGION=${region}
-    Environment=BUCKET_NAME=${backup_bucket_prefix}
-    Environment=CONSUL_HTTP_TOKEN=${consul_master_token}
-    ExecStart=/usr/local/bin/consul-backup.sh
-
-- path: /etc/systemd/system/consul-backup.timer
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Backup consul according to schedule
-    [Timer]
-    OnCalendar=${backup_schedule}
-    [Install]
-    WantedBy=timers.target
-
-- path: /etc/systemd/system/var-lib-consul.mount
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Mount consul data
-    After=ensure-ebs-volume-formatted.service
-    Requires=ensure-ebs-volume-formatted.service
-
-    [Mount]
-    What=/dev/xvdd
-    Where=/var/lib/consul
-    Type=ext4
-
-- path: /etc/systemd/system/consul.service
-  permissions: '0644'
-  content: |
-    [Unit]
-    Description=Consul server
-    Requires=var-lib-consul.mount
-    After=var-lib-consul.mount
-
-    [Service]
-    User=consul
-    Group=consul
+    Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
     PermissionsStartOnly=true
-    ExecStartPre=/bin/mkdir -p /var/lib/consul/data
-    ExecStartPre=/bin/chown -c root:consul /var/lib/consul
-    ExecStartPre=/bin/chmod 0750 /var/lib/consul
-    ExecStartPre=/bin/chown -cR consul:consul /var/lib/consul/data
-    ExecStartPre=/bin/chmod 0750 /var/lib/consul/data
-    ExecStart=/usr/local/bin/consul \
-       agent \
-       -node=${fqdn} \
-       -data-dir=/var/lib/consul/data \
-       -server \
-       -config-dir=/etc/consul \
-       -advertise=${private_ip}
-
+    Restart=on-failure
+    RestartSec=3
+    ExecStart=/bin/sh -c 'set -e; aws s3 cp s3://${puppet_tar_gz_bucket_path} /tmp/puppet.tar.gz; mkdir -p /tmp/puppet-manifests; tar -xf /tmp/puppet.tar.gz -C /tmp/puppet-manifests/.; mkdir -p /tmp/puppet-manifests/modules/vault_server/hieradata; cp /tmp/vault_server.yaml /tmp/puppet-manifests/modules/vault_server/hieradata/vault_server.yaml; mkdir -p /tmp/puppet-manifests/modules/consul/hieradata; cp /tmp/consul.yaml /tmp/puppet-manifests/modules/consul/hieradata/consul.yaml'
     [Install]
     WantedBy=multi-user.target
 
-- path: /etc/systemd/system/vault-assets.service
+
+- path: /etc/systemd/system/puppet-vault-init.service
   permissions: '0644'
   content: |
     [Unit]
-    Description=Fetch vault assets
-    After=network-online.target
-    Requires=network-online.target
+    Description=Bootstrap vault using puppet
+    Wants=network-online.target
+    After=network.target network-online.target
 
     [Service]
-    Type=oneshot
-    RemainAfterExit=yes
-    ExecStart=/bin/bash -c "aws configure set s3.signature_version s3v4 && aws s3 cp ${vault_tls_cert_path} /etc/vault/tls/tls.pem && aws s3 cp ${vault_tls_key_path} /etc/vault/tls/tls-key.pem && chmod 0600 /etc/vault/tls/tls-key.pem && aws s3 cp ${vault_tls_ca_path} /etc/vault/tls/ca.pem"
-
+    Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
+    PermissionsStartOnly=true
+    Restart=on-failure
+    RestartSec=6
+    SuccessExitStatus=0 2
+    ExecStart=/opt/puppetlabs/bin/puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/vault_server/hiera.yaml /tmp/puppet-manifests/modules/vault_server -e "include vault_server"
     [Install]
     WantedBy=multi-user.target
 
-- path: /etc/systemd/system/vault-unsealer.service
+- path: /etc/systemd/system/puppet-consul-init.service
   permissions: '0644'
   content: |
     [Unit]
-    Description=Vault unsealer service
-    Requires=vault-assets.service
-    After=vault-assets.service
-
+    Description=Bootstrap consul using puppet
+    Wants=network-online.target
+    After=network.target network-online.target
     [Service]
-    Restart=always
-    RestartSec=5
-    Environment=AWS_REGION=${region}
-    Environment=VAULT_CACERT=/etc/vault/tls/ca.pem
-    Environment=VAULT_ADDR=https://localhost:8200
-    Environment=VAULT_UNSEALER_MODE=aws-kms-ssm
-    Environment=VAULT_UNSEALER_AWS_KMS_KEY_ID=${vault_unsealer_kms_key_id}
-    Environment=VAULT_UNSEALER_AWS_SSM_KEY_PREFIX=${vault_unsealer_ssm_key_prefix}
-    Environment=VAULT_UNSEALER_STORE_ROOT_TOKEN=false
-    ExecStart=/usr/local/bin/vault-unsealer unseal
-
+    Environment=PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/opt/bin:/root/bin
+    PermissionsStartOnly=true
+    Restart=on-failure
+    RestartSec=6
+    SuccessExitStatus=0 2
+    ExecStart=/opt/puppetlabs/bin/puppet apply --detailed-exitcodes --color no --environment production --modulepath /tmp/puppet-manifests/modules --hiera_config /tmp/puppet-manifests/modules/consul/hiera.yaml /tmp/puppet-manifests/modules/consul -e "include consul"
     [Install]
     WantedBy=multi-user.target
 
-- path: /etc/systemd/system/vault.service
+- path: /usr/local/bin/download-spire.sh
+  permissions: "0755"
+  content: |
+    #!/bin/bash
+    set -euo pipefail
+
+    SPIRE_VERSION=0.6.1
+    DEST_DIR=$${DEST_DIR:-/tmp}
+    curl -sL https://github.com/spiffe/spire/releases/download/$${SPIRE_VERSION}/spire-$${SPIRE_VERSION}-linux-x86_64-glibc.tar.gz > $${DEST_DIR}/spire.tar.gz
+    cd /tmp
+    tar zvxf spire.tar.gz
+    cp -r spire-$${SPIRE_VERSION}/. /opt/spire
+    mkdir -p /etc/spire/.data
+    chmod 777 /etc/spire
+
+    mkdir -p /etc/patroni
+    cd /etc/patroni
+    git clone https://github.com/zalando/patroni
+
+    curl -sL https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm > /tmp/pgdg-centos96-9.6-6.noarch.rpm
+    rpm -ivh /tmp/pgdg-centos96-9.6-6.noarch.rpm
+    yum -y install postgresql96.x86_64 postgresql96-server.x86_64 postgresql96-devel.x86_64 postgresql96-contrib.x86_64
+    ln -s /usr/pgsql-9.6/bin/* /usr/local/bin/
+    ln -s /usr/pgsql-9.6/share/* /usr/local/share/
+
+- path: /usr/local/bin/spire-create-entries.sh
+  permissions: "0755"
+  content: |
+    #!/bin/bash
+    set -euo pipefail
+
+    /opt/spire/spire-server entry create \
+        -parentID spiffe://${environment}/tarmak \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    /opt/spire/spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/apiserver \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    /opt/spire/spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/controller-manager \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    /opt/spire/spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/scheduler \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    /opt/spire/spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/kubectl \
+        -selector unix:uid:{3000} \
+        -selector unix:gid:{3000}
+
+    /opt/spire/spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/proxy \
+        -selector unix:uid:{10} \
+        -selector unix:gid:{10}
+
+    /opt/spire/spire-server entry create \
+        -parentID spiffe://${environment}/tarmak/kubernetes \
+        -spiffeID spiffe://${environment}/tarmak/kubernetes/kubelet \
+        -selector unix:uid:{10} \
+        -selector unix:gid:{10}
+
+- path: /etc/systemd/system/spire-create-entries.service
   permissions: '0644'
   content: |
     [Unit]
-    Description=Vault server
-    Requires=consul.service vault-assets.service
-    After=consul.service vault-assets.service
-
+    Description=Create Entries for Kubernetes components
     [Service]
-    Environment=AWS_REGION=${region}
-    ExecStart=/usr/local/bin/vault server \
-      -config=/etc/vault/vault.hcl
+    User=root
+    Group=root
+    ExecStart=/usr/local/bin/spire-create-entries.sh
     Restart=on-failure
     RestartSec=10
+    [Install]
+    WantedBy=multi-user.target
 
+- path: /etc/patroni/postgres.yml
+  permissions: "0755"
+  content: |
+    name: spire-${fqdn}
+    scope: spire-${environment}
+    consul:
+      host: 127.0.0.1:8500
+      url: http://127.0.0.1:8500
+      port: 8500
+      scheme: http
+      token: ${consul_master_token}
+    restapi:
+      listen: ${private_ip}:8008
+      connect_address: ${private_ip}:8008
+    bootstrap:
+      dcs:
+        ttl: 30
+        loop_wait: 10
+        retry_timeout: 10
+        maximum_lag_on_failover: 1048576
+        postgresql:
+          use_pg_rewind: true
+          use_slots: false
+      initdb:
+      - encoding: UTF8
+      - data-checksums
+      pg_hba:
+      - host replication replicator 127.0.0.1/32 md5
+      - host replication replicator ${private_subnets} md5
+      - host all all 0.0.0.0/0 md5
+    users:
+        vault:
+            password:
+            options:
+                - createrole
+                - createdb
+    postgresql:
+      listen: ${private_ip}:5432
+      connect_address: ${private_ip}:5432
+      data_dir: /etc/spire/.data
+      pg_pass: /tmp/pgpass0
+      use_slots: false
+      maximum_lag_on_failover: 1048576
+      authentication:
+        replication:
+          username: replicator
+          password: rep-pass
+        superuser:
+          username: postgres
+          password: password
+      parameters:
+        unix_socket_directories: '.'
+    tags:
+      nofailover: false
+      noloadbalance: false
+      clonefrom: false
+      nosync: false
+
+- path: /etc/systemd/system/postgresql.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Start Postgresql distributed service
+    [Service]
+    User=vault
+    Group=vault
+    ExecStart=/etc/patroni/patroni/patroni.py /etc/patroni/postgres.yml
+    Restart=on-failure
+    RestartSec=10
+    [Install]
+    WantedBy=multi-user.target
+
+- path: /etc/spire/ca.pem
+  permissions: "0700"
+  content: |
+    -----BEGIN CERTIFICATE-----
+    MIIBzDCCAVOgAwIBAgIJAJM4DhRH0vmuMAoGCCqGSM49BAMEMB4xCzAJBgNVBAYT
+    AlVTMQ8wDQYDVQQKDAZTUElGRkUwHhcNMTgwNTEzMTkzMzQ3WhcNMjMwNTEyMTkz
+    MzQ3WjAeMQswCQYDVQQGEwJVUzEPMA0GA1UECgwGU1BJRkZFMHYwEAYHKoZIzj0C
+    AQYFK4EEACIDYgAEWjB+nSGSxIYiznb84xu5WGDZj80nL7W1c3zf48Why0ma7Y7m
+    CBKzfQkrgDguI4j0Z+0/tDH/r8gtOtLLrIpuMwWHoe4vbVBFte1vj6Xt6WeE8lXw
+    cCvLs/mcmvPqVK9jo10wWzAdBgNVHQ4EFgQUh6XzV6LwNazA+GTEVOdu07o5yOgw
+    DwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwGQYDVR0RBBIwEIYOc3Bp
+    ZmZlOi8vbG9jYWwwCgYIKoZIzj0EAwQDZwAwZAIwE4Me13qMC9i6Fkx0h26y09QZ
+    IbuRqA9puLg9AeeAAyo5tBzRl1YL0KNEp02VKSYJAjBdeJvqjJ9wW55OGj1JQwDF
+    D7kWeEB6oMlwPbI/5hEY3azJi16I0uN1JSYTSWGSqWc=
+    -----END CERTIFICATE-----
+
+- path: /etc/spire/key.pem
+  permissions: "0700"
+  content: |
+    -----BEGIN EC PRIVATE KEY-----
+    MIGkAgEBBDAg2LbulXzQX1NF+2Di0RKzMWfEGioBhh/fFpx7yOEqka//TpaeU3O5
+    QJRZXdWHKuagBwYFK4EEACKhZANiAARaMH6dIZLEhiLOdvzjG7lYYNmPzScvtbVz
+    fN/jxaHLSZrtjuYIErN9CSuAOC4jiPRn7T+0Mf+vyC060susim4zBYeh7i9tUEW1
+    7W+Ppe3pZ4TyVfBwK8uz+Zya8+pUr2M=
+    -----END EC PRIVATE KEY-----
+
+- path: /etc/spire/server.conf
+  permissions: "0755"
+  content: |
+    server {
+        bind_address = "0.0.0.0"
+        bind_port = "8081"
+        bind_http_port = "8080"
+        trust_domain = "${environment}"
+        data_dir = "/etc/spire/.data"
+        plugin_dir = "/etc/spire/plugin"
+        log_level = "DEBUG"
+        umask = ""
+        upstream_bundle = true
+        svid_ttl = "5m"
+        ca_ttl = "24h"
+        ca_subject = {
+            Country = ["GB"],
+            Organization = ["Tarmak"],
+            CommonName = "",
+        }
+    }
+    plugins {
+        DataStore "sql" {
+            enabled = true
+            plugin_data {
+                database_type = "postgres"
+                connection_string = "dbname=postgres user=postgres password=password host=${private_ip} port=5432 sslmode=disable"
+            }
+        }
+        NodeAttestor "aws_iid" {
+            enabled = true
+            plugin_data {
+                trust_domain = "${environment}"
+            }
+        }
+        NodeResolver "noop" {
+            enabled = true
+            plugin_data {}
+        }
+        ServerCA "memory" {
+            enabled = true
+            plugin_data {
+    	        trust_domain = "${environment}"
+    	    }
+        }
+        UpstreamCA "disk" {
+            enabled = true
+            plugin_data {
+                trust_domain = "${environment}"
+                ttl = "15m"
+                cert_file_path = "/etc/spire/ca.pem"
+                key_file_path = "/etc/spire/key.pem"
+            }
+        }
+    }
+
+- path: /etc/systemd/system/spire-server.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Spire server
+    [Service]
+    ExecStart=/opt/spire/spire-server run -config /etc/spire/server.conf
+    Restart=on-failure
+    RestartSec=10
     [Install]
     WantedBy=multi-user.target
 
 
-- path: "/etc/consul/consul.json"
-  permissions: "0600"
-  content: |
-    {
-      "acl_default_policy" : "deny",
-      "acl_down_policy" : "deny",
-      "acl_master_token" : "${consul_master_token}",
-      "acl_datacenter" : "${region}",
-      "datacenter" : "${region}",
-      "log_level" : "INFO",
-      "disable_remote_exec" : true,
-      "client_addr" : "0.0.0.0",
-      "bind_addr" : "0.0.0.0",
-      "encrypt" : "${consul_encrypt}",
-      "server" : true,
-      "bootstrap_expect" : ${instance_count},
-      "retry_join": [
-        "provider=aws tag_key=VaultCluster tag_value=${environment}"
-      ]
-    }
-
-- path: "/etc/vault/vault.hcl"
-  permissions: "0600"
-  content: |
-    backend "consul" {
-      address = "127.0.0.1:8500"
-      scheme = "http"
-      token  = "${consul_master_token}"
-      path = "vault-${environment}/"
-      disable_registration = "true"
-    }
-
-    listener "tcp" {
-      address = "0.0.0.0:8200"
-      tls_cert_file = "/etc/vault/tls/tls.pem"
-      tls_key_file = "/etc/vault/tls/tls-key.pem"
-    }
-
-    default_lease_ttl = "168h"
-    max_lease_ttl = "720h"
-    disable_mlock = false
-
-    cluster_name = "vault-${environment}"
-
-- path: /usr/local/bin/download-vault-consul.sh
-  permissions: "0755"
-  content: |
-    #!/bin/bash
-
-    set -euo pipefail
-
-    VAULT_VERSION=$${VAULT_VERSION:-${vault_version}}
-    CONSUL_VERSION=$${CONSUL_VERSION:-${consul_version}}
-    DEST_DIR=$${DEST_DIR:-/usr/local/bin}
-
-    OLD_PWD=$(pwd)
-    TEMP_DIR=$(mktemp -d)
-
-    trap cleanup EXIT
-
-    function cleanup {
-        echo "cleanup temp dir"
-        cd "$${OLD_PWD}"
-        rm -rf "$${TEMP_DIR}"
-    }
-
-    function download_app {
-        APP=$1
-        VERSION=$2
-
-        gpg --import - <<EOF
-    -----BEGIN PGP PUBLIC KEY BLOCK-----
-    Version: GnuPG v1
-
-    mQENBFMORM0BCADBRyKO1MhCirazOSVwcfTr1xUxjPvfxD3hjUwHtjsOy/bT6p9f
-    W2mRPfwnq2JB5As+paL3UGDsSRDnK9KAxQb0NNF4+eVhr/EJ18s3wwXXDMjpIifq
-    fIm2WyH3G+aRLTLPIpscUNKDyxFOUbsmgXAmJ46Re1fn8uKxKRHbfa39aeuEYWFA
-    3drdL1WoUngvED7f+RnKBK2G6ZEpO+LDovQk19xGjiMTtPJrjMjZJ3QXqPvx5wca
-    KSZLr4lMTuoTI/ZXyZy5bD4tShiZz6KcyX27cD70q2iRcEZ0poLKHyEIDAi3TM5k
-    SwbbWBFd5RNPOR0qzrb/0p9ksKK48IIfH2FvABEBAAG0K0hhc2hpQ29ycCBTZWN1
-    cml0eSA8c2VjdXJpdHlAaGFzaGljb3JwLmNvbT6JATgEEwECACIFAlMORM0CGwMG
-    CwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEFGFLYc0j/xMyWIIAIPhcVqiQ59n
-    Jc07gjUX0SWBJAxEG1lKxfzS4Xp+57h2xxTpdotGQ1fZwsihaIqow337YHQI3q0i
-    SqV534Ms+j/tU7X8sq11xFJIeEVG8PASRCwmryUwghFKPlHETQ8jJ+Y8+1asRydi
-    psP3B/5Mjhqv/uOK+Vy3zAyIpyDOMtIpOVfjSpCplVRdtSTFWBu9Em7j5I2HMn1w
-    sJZnJgXKpybpibGiiTtmnFLOwibmprSu04rsnP4ncdC2XRD4wIjoyA+4PKgX3sCO
-    klEzKryWYBmLkJOMDdo52LttP3279s7XrkLEE7ia0fXa2c12EQ0f0DQ1tGUvyVEW
-    WmJVccm5bq25AQ0EUw5EzQEIANaPUY04/g7AmYkOMjaCZ6iTp9hB5Rsj/4ee/ln9
-    wArzRO9+3eejLWh53FoN1rO+su7tiXJA5YAzVy6tuolrqjM8DBztPxdLBbEi4V+j
-    2tK0dATdBQBHEh3OJApO2UBtcjaZBT31zrG9K55D+CrcgIVEHAKY8Cb4kLBkb5wM
-    skn+DrASKU0BNIV1qRsxfiUdQHZfSqtp004nrql1lbFMLFEuiY8FZrkkQ9qduixo
-    mTT6f34/oiY+Jam3zCK7RDN/OjuWheIPGj/Qbx9JuNiwgX6yRj7OE1tjUx6d8g9y
-    0H1fmLJbb3WZZbuuGFnK6qrE3bGeY8+AWaJAZ37wpWh1p0cAEQEAAYkBHwQYAQIA
-    CQUCUw5EzQIbDAAKCRBRhS2HNI/8TJntCAClU7TOO/X053eKF1jqNW4A1qpxctVc
-    z8eTcY8Om5O4f6a/rfxfNFKn9Qyja/OG1xWNobETy7MiMXYjaa8uUx5iFy6kMVaP
-    0BXJ59NLZjMARGw6lVTYDTIvzqqqwLxgliSDfSnqUhubGwvykANPO+93BBx89MRG
-    unNoYGXtPlhNFrAsB1VR8+EyKLv2HQtGCPSFBhrjuzH3gxGibNDDdFQLxxuJWepJ
-    EK1UbTS4ms0NgZ2Uknqn1WRU1Ki7rE4sTy68iZtWpKQXZEJa0IGnuI2sSINGcXCJ
-    oEIgXTMyCILo34Fa/C6VCm2WBgz9zZO8/rHIiQm1J5zqz0DrDwKBUM9C
-    =LYpS
-    -----END PGP PUBLIC KEY BLOCK-----
-    EOF
-
-        # download $${APP}
-        cd "$${TEMP_DIR}"
-        curl -OsL "https://releases.hashicorp.com/$${APP}/$${VERSION}/$${APP}_$${VERSION}_linux_amd64.zip"
-        curl -OsL "https://releases.hashicorp.com/$${APP}/$${VERSION}/$${APP}_$${VERSION}_SHA256SUMS"
-        curl -OsL "https://releases.hashicorp.com/$${APP}/$${VERSION}/$${APP}_$${VERSION}_SHA256SUMS.sig"
-
-        # gpg verify
-        gpg --verify "$${APP}_$${VERSION}_SHA256SUMS.sig" "$${APP}_$${VERSION}_SHA256SUMS"
-
-        # verify the SHASUM matches the binary
-        grep "$${APP}_$${VERSION}_linux_amd64.zip" "$${APP}_$${VERSION}_SHA256SUMS" | sha256sum -c
-
-        unzip "$${APP}_$${VERSION}_linux_amd64.zip"
-
-        mv "$${APP}" "$${DEST_DIR}/$${APP}"
-        chmod 0755 "$${DEST_DIR}/$${APP}"
-        chown 0:0 "$${DEST_DIR}/$${APP}"
-    }
-
-    download_app "vault" "$${VAULT_VERSION}"
-    download_app "consul" "$${CONSUL_VERSION}"
-
-- path: /usr/local/bin/download-vault-unsealer.sh
-  permissions: "0755"
-  content: |
-    #!/bin/bash
-
-    set -euo pipefail
-
-    VAULT_UNSEALER_VERSION=0.1.4
-    VAULT_UNSEALER_HASH=7a01a119429b93edecb712aa897f2b22ba0575b7db5f810d4a9a40d993dad1aa
-    DEST_DIR=$${DEST_DIR:-/usr/local/bin}
-
-    curl -sL https://github.com/jetstack/vault-unsealer/releases/download/$${VAULT_UNSEALER_VERSION}/vault-unsealer_$${VAULT_UNSEALER_VERSION}_linux_amd64 > $${DEST_DIR}/vault-unsealer
-
-    echo "$${VAULT_UNSEALER_HASH}  $${DEST_DIR}/vault-unsealer" | sha256sum -c
-    chmod +x "$${DEST_DIR}/vault-unsealer"
-
-- path: /usr/local/bin/download-consul-backinator.sh
-  permissions: "0755"
-  content: |
-    #!/bin/bash
-
-    set -euo pipefail
-
-    CONSUL_BACKINATOR_VERSION=1.3
-    CONSUL_BACKINATOR_HASH=8ea624487a86007825884685dbc978ba87f7a448f11d59b9eb29fd5b1b2a0e87
-
-    mkdir -p /tmp/consul-backinator
-
-    curl -sL https://github.com/myENA/consul-backinator/releases/download/v$${CONSUL_BACKINATOR_VERSION}/consul-backinator-$${CONSUL_BACKINATOR_VERSION}-amd64-linux.tar.gz > /tmp/consul-backinator/consul-backinator.tar.gz
-    echo "$${CONSUL_BACKINATOR_HASH}  /tmp/consul-backinator/consul-backinator.tar.gz" | sha256sum -c
-
-    tar xvzf /tmp/consul-backinator/consul-backinator.tar.gz -C /tmp/consul-backinator
-    mv /tmp/consul-backinator/consul-backinator-$${CONSUL_BACKINATOR_VERSION}-amd64-linux/consul-backinator-$${CONSUL_BACKINATOR_VERSION} /usr/local/bin/consul-backinator
-    chown root:root /usr/local/bin/consul-backinator
-    rm -rf /tmp/consul-backinator
-
-- path: /usr/local/bin/consul-backup.sh
-  permissions: "0755"
-  content: |
-    #!/bin/bash
-
-    set -euo pipefail
-
-    backup_local_path=/tmp/consul-backup
-    backup_local_acls_path=/tmp/consul-backup-acls
-
-    consul-backinator backup -file "$${backup_local_path}" -acls "$${backup_local_acls_path}"
-
-    backup_s3_prefix="s3://$${BUCKET_NAME}/consul-backup-$(date -u +"%Y-%m-%d_%H-%M-%S")"
-    backup_s3_path="$${backup_s3_prefix}/consul-backup"
-    backup_s3_acls_path="$${backup_s3_prefix}/consul-backup-acls"
-
-    aws s3 cp "$${backup_local_path}"          "$${backup_s3_path}"
-    aws s3 cp "$${backup_local_path}.sig"      "$${backup_s3_path}.sig"
-    aws s3 cp "$${backup_local_acls_path}"     "$${backup_s3_acls_path}"
-    aws s3 cp "$${backup_local_acls_path}.sig" "$${backup_s3_acls_path}.sig"
-
-    rm -rf "$${backup_local_path}" "$${backup_local_path}.sig" "$${backup_local_acls_path}" "$${backup_local_acls_path}.sig"
-
-- path: /etc/profile.d/vault.sh
-  permissions: "0644"
-  content: |
-    export PATH=$PATH:/usr/local/bin
-    export VAULT_ADDR=https://localhost:8200
-    export VAULT_CACERT=/etc/vault/tls/ca.pem
-
 runcmd:
-- chown consul:consul /etc/consul/consul.json
-- chown vault:vault /etc/vault/vault.hcl
-- hostnamectl set-hostname "${fqdn}"
 - yum -y install epel-release
 - yum -y install unzip jq curl gpg
-- /usr/local/bin/download-vault-consul.sh
-- /usr/local/bin/download-vault-unsealer.sh
-- /usr/local/bin/download-consul-backinator.sh
-- systemctl enable consul.service vault.service vault-unsealer.service consul-backup.timer
-- systemctl start consul.service vault.service vault-unsealer.service consul-backup.timer
+- yum -y install gcc python-devel
+- pip install --upgrade pip setuptools
+- pip install --upgrade pip patroni[consul]
+- /usr/local/bin/download-spire.sh
+- systemctl start puppet-download-manifests.service puppet-vault-init.service puppet-consul-init.service spire-server.service postgresql.service spire-create-entries.service
+- systemctl enable puppet-download-manifests.service puppet-vault-init.service puppet-consul-init.service spire-server.service postgresql.service spire-create-entries.service

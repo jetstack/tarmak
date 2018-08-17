@@ -68,6 +68,8 @@ variable "vault_ca" {}
 
 variable "vault_url" {}
 
+variable "vault_ip" {}
+
 variable "private_zone" {}
 
 variable "public_zone" {}

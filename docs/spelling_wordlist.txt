@@ -84,3 +84,9 @@ preempted
 millicores
 yaml
 autoscale
+unsealer
+runtime
+attestor
+postgresql
+uid
+gid

@@ -169,6 +169,7 @@ module "kubernetes" {
   private_zone = "${module.network.private_zone[0]}"
   vault_ca = "${module.vault.vault_ca}"
   vault_url = "${module.vault.vault_url}"
+  vault_ip = "${module.vault.vault_ip}"
   public_zone = "${module.state.public_zone}"
   public_zone_id = "${module.state.public_zone_id}"
   vault_security_group_id = "${module.vault.vault_security_group_id}"
@@ -225,6 +226,7 @@ module "kubernetes" {
   vault_unseal_key_name = "${data.terraform_remote_state.hub_state.vault_vault_unseal_key_name}"
   vault_ca = "${data.terraform_remote_state.hub_state.vault_vault_ca}"
   vault_url = "${data.terraform_remote_state.hub_state.vault_vault_url}"
+  vault_ip = "${data.terraform_remote_state.hub_state.vault_vault_ip}"
   vault_security_group_id = "${data.terraform_remote_state.hub_state.vault_vault_security_group_id}"
 }
 {{end}}
