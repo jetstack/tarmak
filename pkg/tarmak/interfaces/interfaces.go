@@ -247,6 +247,7 @@ type InstancePool interface {
 	Image() string
 	Role() *role.Role
 	Volumes() []Volume
+	RootVolume() Volume
 	Zones() []string
 	MinCount() int
 	MaxCount() int
