@@ -126,6 +126,8 @@ variable "bucket_prefix" {}
 {{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
 variable "{{.TFName}}_ami" {}
 {{ end }}
+variable "{{.TFName}}_root_volume_size" {}
+variable "{{.TFName}}_root_volume_type" {}
 {{ end }}
 variable "tools_cluster_name" {
   default = "hub"

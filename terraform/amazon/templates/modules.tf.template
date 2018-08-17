@@ -122,12 +122,12 @@ module "vault" {
   private_zone_id = "${module.network.private_zone_id[0]}"
   secrets_bucket = "${module.state.secrets_bucket[0]}"
   secrets_kms_arn = "${module.state.secrets_kms_arn[0]}"
-  backups_bucket = "${module.state.backups_bucket[0]}"  
+  backups_bucket = "${module.state.backups_bucket[0]}"
   private_subnet_ids = ["${module.network.private_subnet_ids}"]
   private_subnets = ["${module.network.private_subnets}"]
   availability_zones = ["${var.availability_zones}"]
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
-  vpc_id = "${module.network.vpc_id}" 
+  vpc_id = "${module.network.vpc_id}"
   bastion_instance_id = "${module.bastion.bastion_instance_id}"
   vault_cluster_name = "${var.vault_cluster_name}"
 }
@@ -150,9 +150,11 @@ module "kubernetes" {
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
   tools_cluster_name = "${var.tools_cluster_name}"
-{{range .InstancePools}}
+{{ range .InstancePools }}
 {{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
   {{.TFName}}_ami = "${var.{{.TFName}}_ami}"
+  {{.TFName}}_root_volume_size = "${var.{{.TFName}}_root_volume_size}"
+  {{.TFName}}_root_volume_type = "${var.{{.TFName}}_root_volume_type}"
 {{ end }}
 {{ end }}
   secrets_bucket = "${module.state.secrets_bucket[0]}"
@@ -202,10 +204,12 @@ module "kubernetes" {
   environment = "${var.environment}"
   state_cluster_name = "${var.state_cluster_name}"
   vault_cluster_name = "${var.vault_cluster_name}"
-  tools_cluster_name = "${var.tools_cluster_name}"  
-{{range .InstancePools}}
+  tools_cluster_name = "${var.tools_cluster_name}"
+{{ range .InstancePools }}
 {{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
   {{.TFName}}_ami = "${var.{{.TFName}}_ami}"
+  {{.TFName}}_root_volume_size = "${var.{{.TFName}}_root_volume_size}"
+  {{.TFName}}_root_volume_type = "${var.{{.TFName}}_root_volume_type}"
 {{ end }}
 {{ end }}
   bastion_security_group_id = "${data.terraform_remote_state.hub_state.bastion_bastion_security_group_id}"
