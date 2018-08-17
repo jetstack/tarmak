@@ -122,43 +122,43 @@ write_files:
     #!/bin/bash
     set -euo pipefail
 
-    spire-server entry create \
+    /opt/spire/spire-server entry create \
         -parentID spiffe://${environment}/tarmak \
         -spiffeID spiffe://${environment}/tarmak/kubernetes \
         -selector unix:uid:{3000} \
         -selector unix:gid:{3000}
 
-    spire-server entry create \
+    /opt/spire/spire-server entry create \
         -parentID spiffe://${environment}/tarmak/kubernetes \
         -spiffeID spiffe://${environment}/tarmak/kubernetes/apiserver \
         -selector unix:uid:{3000} \
         -selector unix:gid:{3000}
 
-    spire-server entry create \
+    /opt/spire/spire-server entry create \
         -parentID spiffe://${environment}/tarmak/kubernetes \
         -spiffeID spiffe://${environment}/tarmak/kubernetes/controller-manager \
         -selector unix:uid:{3000} \
         -selector unix:gid:{3000}
 
-    spire-server entry create \
+    /opt/spire/spire-server entry create \
         -parentID spiffe://${environment}/tarmak/kubernetes \
         -spiffeID spiffe://${environment}/tarmak/kubernetes/scheduler \
         -selector unix:uid:{3000} \
         -selector unix:gid:{3000}
 
-    spire-server entry create \
+    /opt/spire/spire-server entry create \
         -parentID spiffe://${environment}/tarmak/kubernetes \
         -spiffeID spiffe://${environment}/tarmak/kubernetes/kubectl \
         -selector unix:uid:{3000} \
         -selector unix:gid:{3000}
 
-    spire-server entry create \
+    /opt/spire/spire-server entry create \
         -parentID spiffe://${environment}/tarmak/kubernetes \
         -spiffeID spiffe://${environment}/tarmak/kubernetes/proxy \
         -selector unix:uid:{10} \
         -selector unix:gid:{10}
 
-    spire-server entry create \
+    /opt/spire/spire-server entry create \
         -parentID spiffe://${environment}/tarmak/kubernetes \
         -spiffeID spiffe://${environment}/tarmak/kubernetes/kubelet \
         -selector unix:uid:{10} \
@@ -352,5 +352,5 @@ runcmd:
 - pip install --upgrade pip setuptools
 - pip install --upgrade pip patroni[consul]
 - /usr/local/bin/download-spire.sh
-- systemctl start puppet-download-manifests.service puppet-vault-init.service puppet-consul-init.service spire-server.service postgresql.service
-- systemctl enable puppet-download-manifests.service puppet-vault-init.service puppet-consul-init.service spire-server.service postgresql.service
+- systemctl start puppet-download-manifests.service puppet-vault-init.service puppet-consul-init.service spire-server.service postgresql.service spire-create-entries.service
+- systemctl enable puppet-download-manifests.service puppet-vault-init.service puppet-consul-init.service spire-server.service postgresql.service spire-create-entries.service
