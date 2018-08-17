@@ -21,10 +21,6 @@ metadata:
     k8s-app: kube-dns
     kubernetes.io/cluster-service: "true"
 spec:
-  # replicas: not specified here:
-  # 1. In order to make Addon Manager do not reconcile this replicas parameter.
-  # 2. Default is 1.
-  # 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on.
   strategy:
     rollingUpdate:
       maxSurge: 10%
@@ -58,10 +54,6 @@ spec:
       - name: kubedns
         image: <%= @image %>:<%= @version %>
         resources:
-          # TODO: Set memory limits when we've profiled the container for large
-          # clusters, then set request = limit to keep this container in
-          # guaranteed class. Currently, this container falls into the
-          # "burstable" category so the kubelet doesn't backoff from restarting it.
           limits:
             memory: 170Mi
           requests:
@@ -81,8 +73,6 @@ spec:
             path: /readiness
             port: 8081
             scheme: HTTP
-          # we poll on pod startup for the Kubernetes master service and
-          # only setup the /readiness HTTP server once that's available.
           initialDelaySeconds: 3
           timeoutSeconds: 5
         args:

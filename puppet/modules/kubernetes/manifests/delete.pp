@@ -1,5 +1,5 @@
 # adds resources to a kubernetes master
-define kubernetes::apply(
+define kubernetes::delete(
   $manifests = [],
   $force = false,
   $format = 'yaml',
@@ -33,23 +33,23 @@ define kubernetes::apply(
 
   case $type {
     'manifests': {
-      file{$apply_file:
+      file{$delete_file:
         ensure  => file,
         mode    => '0640',
         owner   => 'root',
         group   => $kubernetes::group,
         content => $manifests_content,
-        notify  => Service["${service_name_apply}.service"],
+        notify  => Service["${service_name_delete}.service"],
       }
     }
     'concat': {
-      concat { $apply_file:
+      concat { $delete_file:
         ensure         => present,
         ensure_newline => true,
         mode           => '0640',
         owner          => 'root',
         group          => $kubernetes::group,
-        notify         => Service["${service_name_apply}.service"],
+        notify         => Service["${service_name_delete}.service"],
       }
     }
     default: {
@@ -59,12 +59,12 @@ define kubernetes::apply(
 
   case $type {
     'manifests': {
-      file{$delete_file:
+      file{$apply_file:
         ensure => absent,
       }
     }
     'concat': {
-      concat { $delete_file:
+      concat { $apply_file:
         ensure => absent,
       }
     }
@@ -73,22 +73,22 @@ define kubernetes::apply(
     }
   }
 
-  file{"${::kubernetes::systemd_dir}/${service_name_apply}.service":
+  file{"${::kubernetes::systemd_dir}/${service_name_delete}.service":
     ensure  => file,
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
-    content => template('kubernetes/kubectl-apply.service.erb'),
+    content => template('kubernetes/kubectl-delete.service.erb'),
     notify  => [
-      Service["${service_name_apply}.service"],
+      Service["${service_name_delete}.service"],
     ]
   }
-  ~> exec { "${service_name_apply}-daemon-reload":
+  ~> exec { "${service_name_delete}-daemon-reload":
     command     => 'systemctl daemon-reload',
     path        => $::kubernetes::path,
     refreshonly => true,
   }
-  -> service{ "${service_name_apply}.service":
+  -> service{ "${service_name_delete}.service":
     ensure  => 'running',
     enable  => true,
     require => [
@@ -96,7 +96,7 @@ define kubernetes::apply(
     ]
   }
 
-  file{"${::kubernetes::systemd_dir}/${service_name_delete}.service":
+  file{"${::kubernetes::systemd_dir}/${service_name_apply}.service":
     ensure => absent,
   }
 }

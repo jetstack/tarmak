@@ -8,6 +8,7 @@ class kubernetes (
   $systemd_dir = $::kubernetes::params::systemd_dir,
   $run_dir = $::kubernetes::params::run_dir,
   $apply_dir = $::kubernetes::params::apply_dir,
+  $delete_dir = $::kubernetes::params::delete_dir,
   $uid = $::kubernetes::params::uid,
   $gid = $::kubernetes::params::gid,
   $user = $::kubernetes::params::user,
@@ -169,6 +170,14 @@ class kubernetes (
   }
 
   file {$::kubernetes::params::apply_dir:
+    ensure  => directory,
+    owner   => $user,
+    group   => $group,
+    mode    => '0750',
+    require => User[$user],
+  }
+
+  file {$::kubernetes::params::delete_dir:
     ensure  => directory,
     owner   => $user,
     group   => $group,

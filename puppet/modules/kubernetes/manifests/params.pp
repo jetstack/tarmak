@@ -6,6 +6,7 @@ class kubernetes::params {
   $config_dir = '/etc/kubernetes'
   $run_dir = '/var/run/kubernetes'
   $apply_dir = '/etc/kubernetes/apply'
+  $delete_dir = '/etc/kubernetes/delete'
   $download_dir = '/tmp'
   $systemd_dir = '/etc/systemd/system'
   $download_url = 'https://storage.googleapis.com/kubernetes-release/release/v#VERSION#/bin/linux/amd64/hyperkube'
