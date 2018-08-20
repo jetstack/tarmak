@@ -17,7 +17,7 @@ ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -k -w '%{h
 ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:<%= scope['kubernetes::_apiserver_insecure_port'] %>/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
 <%- end -%>
 # Apply template
-ExecStart=<%= @kubectl_path %> delete -f <%= @delete_file %>
+ExecStart=<%= @kubectl_path %> delete -f <%= @delete_file %> --ignore-not-found=true
 
 [Install]
 WantedBy=multi-user.target

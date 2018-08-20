@@ -4,7 +4,7 @@ metadata:
   name: coredns
   namespace: kube-system
   labels:
-    k8s-app: kube-dns
+    k8s-app: core-dns
     kubernetes.io/name: "CoreDNS"
 spec:
   replicas: 2
@@ -15,11 +15,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      k8s-app: kube-dns
+      k8s-app: core-dns
   template:
     metadata:
       labels:
-        k8s-app: kube-dns
+        k8s-app: core-dns
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
 <%- if @version_before_1_6 -%>

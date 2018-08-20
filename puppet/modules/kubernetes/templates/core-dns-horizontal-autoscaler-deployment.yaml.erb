@@ -18,13 +18,13 @@ metadata:
   name: core-dns-autoscaler
   namespace: kube-system
   labels:
-    k8s-app: kube-dns-autoscaler
+    k8s-app: core-dns-autoscaler
     kubernetes.io/cluster-service: "true"
 spec:
   template:
     metadata:
       labels:
-        k8s-app: kube-dns-autoscaler
+        k8s-app: core-dns-autoscaler
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
 <%- if @version_before_1_6 -%>
