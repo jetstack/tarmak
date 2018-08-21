@@ -31,6 +31,12 @@ type hieraData struct {
 	variables []string
 }
 
+var (
+	nvmeInstances = map[string]bool{
+		"c5d": true, "f1": true, "i2": true, "i3": true, "m5d": true, "r3": true, "r5d": true, "z1d": true,
+	}
+)
+
 func New(tarmak interfaces.Tarmak) *Puppet {
 	log := tarmak.Log().WithField("module", "puppet")
 
@@ -391,6 +397,13 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 			variables = append(variables, `tarmak::etcd_mount_unit: "var-lib-etcd.mount"`)
 		}
 
+		size := strings.Split(strings.ToLower(instancePool.Config().Size), ".")
+		if b, ok := nvmeInstances[size[0]]; ok && b {
+			variables = append(variables, `site_module::ebs_device: "/dev/nvme1n1"`)
+		} else {
+			variables = append(variables, `site_module::ebs_device: "/dev/xvdd"`)
+		}
+
 		//  classes
 		err = p.writeLines(
 			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s_classes.yaml", instancePool.Name())), classes,
@@ -405,5 +418,4 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 	}
 
 	return nil
-
 }
