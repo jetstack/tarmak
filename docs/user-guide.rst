@@ -700,6 +700,39 @@ policy permissions. `Information on how to correctly set these permissions can
 be found here
 <https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy>`_.
 
+Spot Instances
+~~~~~~~~~~~~~~
+Tarmak gives the ability to attempt to request spot instances for use in
+instance pools. Spot instances are very cheap, spare AWS instances that can be
+revoked by AWS at any time, given a 2 minute notification. `More information
+here <https://aws.amazon.com/ec2/spot/>`_.
+
+Spot instances can be requested cluster-wide by giving the ``--spot-pricing``
+flag to ``cluster apply``. Tarmak will then attempt a best effort spot price for
+each instance pool in the cluster, calculated as the average spot price in the
+last 3 days for that instance type in each zone plus 25%.
+
+Manual spot prices can be applied to each instance pool within the
+``tarmak.yaml`` which will override the Tarmak best effort for that instance
+pool. This is done through the ``spotPrice`` attribute under the instance pool,
+given as a number in USD. This can be added like so:
+
+.. code-block:: yaml
+
+  - image: centos-puppet-agent
+    maxCount: 3
+    metadata:
+      creationTimestamp: "2018-07-27T09:33:15Z"
+      name: worker
+    minCount: 3
+    size: medium
+    spotPrice: 0.015
+
+
+Note that Tarmak will only attempt to create spot instances for instance pools
+with the ``spotPrice`` attribute or spot pricing flag during a cluster apply.
+
+
 Cluster Services
 ----------------
 
@@ -721,3 +754,4 @@ Do the following steps to access Grafana:
 .. code-block:: none
 
   http://127.0.0.1:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/
+

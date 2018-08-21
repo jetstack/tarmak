@@ -68,7 +68,7 @@ func (a *Amazon) SpotPrice(instancePool interfaces.InstancePool) (float64, error
 		total /= float64(len(prices))
 	}
 
-	total *= 1.10
+	total *= 1.25
 
 	return total, result.ErrorOrNil()
 }

@@ -173,7 +173,7 @@ func (n *InstancePool) SpotPrice() string {
 }
 
 func (n *InstancePool) CalculateSpotPrice() error {
-	if n.spotPrice != "" {
+	if n.spotPrice == "" {
 		p, err := n.cluster.Environment().Provider().SpotPrice(n)
 		if err != nil {
 			return err
