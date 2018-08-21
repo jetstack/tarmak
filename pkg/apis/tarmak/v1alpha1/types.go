@@ -143,6 +143,8 @@ type ClusterApplyFlags struct {
 	InfrastructureOnly   bool     // only run terraform
 
 	ConfigurationOnly bool // only run puppet
+
+	SpotPricing bool // Use spot pricing for all applied instances at best effort according to last 3 days pricing. Spot prices in config will override this option per instance pool.
 }
 
 // Contains the cluster destroy flags
