@@ -171,10 +171,11 @@ spinning up a Kubernetes cluster to autoscale worker instance pools. The followi
 
 The above configuration would deploy Cluster Autoscaler with an image of
 `gcr.io/google_containers/cluster-autoscaler` using the recommend version based
-on the version of your Kubernetes cluster. The configuration block accepts two
-optional fields of `image` and `version` allowing you to change these defaults.
-Note that the final image tag used when deploying Cluster Autoscaler will be the
-configured version prepended with the letter `v`.
+on the version of your Kubernetes cluster. The configuration block accepts
+three optional fields of `image`, `version` and `scaleDownUtilizationThreshold`
+allowing you to change these defaults.  Note that the final image tag used when
+deploying Cluster Autoscaler will be the configured version prepended with the
+letter `v`.
 
 The current implementation will configure the first instance pool of type worker
 in your cluster configuration to scale between `minCount` and `maxCount`. We
