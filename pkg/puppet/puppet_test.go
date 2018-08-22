@@ -59,13 +59,13 @@ func TestIsNVMeInstances(t *testing.T) {
 	}
 
 	for _, i := range nVMeInstances {
-		if !isNVMeInstance(i) {
+		if !isAWSNVMeInstance(i) {
 			t.Errorf("expected '%s' to be NVMe instance, got false", i)
 		}
 	}
 
 	for _, i := range noneNVMeInstances {
-		if isNVMeInstance(i) {
+		if isAWSNVMeInstance(i) {
 			t.Errorf("expected '%s' to not be NVMe instance, got true", i)
 		}
 	}

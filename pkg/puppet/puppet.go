@@ -405,7 +405,7 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 			variables = append(variables, `tarmak::etcd_mount_unit: "var-lib-etcd.mount"`)
 		}
 
-		if isNVMeInstance(instancePool.Config().Size) {
+		if isAWSNVMeInstance(instancePool.Config().Size) {
 			variables = append(variables, `site_module::docker_storage::ebs_device: "/dev/nvme1n1"`)
 		} else {
 			variables = append(variables, `site_module::docker_storage::ebs_device: "/dev/xvdd"`)
@@ -427,7 +427,7 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 	return nil
 }
 
-func isNVMeInstance(instanceType string) bool {
+func isAWSNVMeInstance(instanceType string) bool {
 	instanceType = strings.ToLower(instanceType)
 	if instanceType == "i3.metal" {
 		return true
