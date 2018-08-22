@@ -37,7 +37,7 @@ spec:
         - name: GF_AUTH_ANONYMOUS_ORG_ROLE
           value: Admin
         - name: GF_SERVER_ROOT_URL
-          value: /api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/
+          value: /api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/
         image: <%= @grafana_image %>:<%= @grafana_version %>
         imagePullPolicy: IfNotPresent
         name: grafana
