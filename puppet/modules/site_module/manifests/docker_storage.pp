@@ -3,10 +3,8 @@ class site_module::docker_storage(
   String $vg_name = 'vg_docker',
   String $vg_initial_size = '60%FREE',
 ){
-  include ::site_module
 
   $conf_file = '/etc/sysconfig/docker-storage-setup'
-
 
   file {$conf_file:
     ensure  => file,
