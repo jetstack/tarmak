@@ -674,3 +674,25 @@ You add labels and taints in the tarmak yaml like this:
 **Note**, these are only applied when the node is first registered. Changes to
 these values will not remove taints and labels from nodes that are already
 registered.
+
+Cluster Services
+----------------
+
+Grafana
+~~~~~~~
+
+Grafana is deployed as part of Tarmak. You can access Grafana through a
+`Kubernetes cluster service <https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-services/>`_.
+Do the following steps to access Grafana:
+
+1. Create a proxy
+
+.. code-block:: bash
+
+    tarmak kubectl proxy
+
+2. In the browser go to
+
+.. code-block:: none
+
+  http://127.0.0.1:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/
