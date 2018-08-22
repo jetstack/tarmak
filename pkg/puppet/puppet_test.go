@@ -39,3 +39,34 @@ func TestOIDCFields(t *testing.T) {
 	}
 
 }
+
+func TestisNVMeInstances(t *testing.T) {
+	nVMeInstances := []string{
+		"c5.large",
+		"C5.large",
+		"c5",
+		"i3.metal",
+		"I3.metal",
+		"M5.foo",
+	}
+
+	noneNVMeInstances := []string{
+		"foo",
+		"t2.bla",
+		"i3.foo",
+		"I3.foo",
+		"m5e.foo",
+	}
+
+	for _, i := range nVMeInstances {
+		if !isNVMeInstance(i) {
+			t.Errorf("expected '%s' to be NVMe instance, got false", i)
+		}
+	}
+
+	for _, i := range noneNVMeInstances {
+		if isNVMeInstance(i) {
+			t.Errorf("expected '%s' to not be NVMe instance, got true", i)
+		}
+	}
+}

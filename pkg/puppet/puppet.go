@@ -33,7 +33,15 @@ type hieraData struct {
 
 var (
 	nvmeInstances = map[string]bool{
-		"c5d": true, "f1": true, "i2": true, "i3": true, "m5d": true, "r3": true, "r5d": true, "z1d": true,
+		"c5":  true,
+		"c5d": true,
+		//i3.metal special case
+		"m5":  true,
+		"m5d": true,
+		"r5":  true,
+		"r5d": true,
+		"t3":  true,
+		"z1d": true,
 	}
 )
 
@@ -397,11 +405,10 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 			variables = append(variables, `tarmak::etcd_mount_unit: "var-lib-etcd.mount"`)
 		}
 
-		size := strings.Split(strings.ToLower(instancePool.Config().Size), ".")
-		if b, ok := nvmeInstances[size[0]]; ok && b {
-			variables = append(variables, `site_module::ebs_device: "/dev/nvme1n1"`)
+		if isNVMeInstance(instancePool.Config().Size) {
+			variables = append(variables, `site_module::docker_storage::ebs_device: "/dev/nvme1n1"`)
 		} else {
-			variables = append(variables, `site_module::ebs_device: "/dev/xvdd"`)
+			variables = append(variables, `site_module::docker_storage::ebs_device: "/dev/xvdd"`)
 		}
 
 		//  classes
@@ -418,4 +425,18 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 	}
 
 	return nil
+}
+
+func isNVMeInstance(instanceType string) bool {
+	instanceType = strings.ToLower(instanceType)
+	if instanceType == "i3.metal" {
+		return true
+	}
+
+	instanceType = strings.Split(instanceType, ".")[0]
+	if b, ok := nvmeInstances[instanceType]; ok && b {
+		return true
+	}
+
+	return false
 }
