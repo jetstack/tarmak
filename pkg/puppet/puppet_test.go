@@ -40,7 +40,7 @@ func TestOIDCFields(t *testing.T) {
 
 }
 
-func TestisNVMeInstances(t *testing.T) {
+func TestIsNVMeInstances(t *testing.T) {
 	nVMeInstances := []string{
 		"c5.large",
 		"C5.large",
