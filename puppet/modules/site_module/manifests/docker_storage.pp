@@ -1,4 +1,5 @@
 class site_module::docker_storage(
+  String $ebs_device = undef,
   String $vg_name = 'vg_docker',
   String $vg_initial_size = '60%FREE',
 ){
@@ -6,7 +7,6 @@ class site_module::docker_storage(
 
   $conf_file = '/etc/sysconfig/docker-storage-setup'
 
-  $ebs_device = $::site_module::ebs_device
 
   file {$conf_file:
     ensure  => file,
