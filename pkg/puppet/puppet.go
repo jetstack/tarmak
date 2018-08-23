@@ -31,6 +31,20 @@ type hieraData struct {
 	variables []string
 }
 
+var (
+	nvmeInstances = map[string]bool{
+		"c5":  true,
+		"c5d": true,
+		//i3.metal special case
+		"m5":  true,
+		"m5d": true,
+		"r5":  true,
+		"r5d": true,
+		"t3":  true,
+		"z1d": true,
+	}
+)
+
 func New(tarmak interfaces.Tarmak) *Puppet {
 	log := tarmak.Log().WithField("module", "puppet")
 
@@ -391,6 +405,12 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 			variables = append(variables, `tarmak::etcd_mount_unit: "var-lib-etcd.mount"`)
 		}
 
+		if isAWSNVMeInstance(instancePool.Config().Size) {
+			variables = append(variables, `site_module::docker_storage::ebs_device: "/dev/nvme1n1"`)
+		} else {
+			variables = append(variables, `site_module::docker_storage::ebs_device: "/dev/xvdd"`)
+		}
+
 		//  classes
 		err = p.writeLines(
 			filepath.Join(hieraPath, "instance_pools", fmt.Sprintf("%s_classes.yaml", instancePool.Name())), classes,
@@ -405,5 +425,18 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 	}
 
 	return nil
+}
 
+func isAWSNVMeInstance(instanceType string) bool {
+	instanceType = strings.ToLower(instanceType)
+	if instanceType == "i3.metal" {
+		return true
+	}
+
+	instanceType = strings.Split(instanceType, ".")[0]
+	if b, ok := nvmeInstances[instanceType]; ok && b {
+		return true
+	}
+
+	return false
 }
