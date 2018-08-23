@@ -13,7 +13,7 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
-	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
+	wingclient "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
 type Cluster interface {

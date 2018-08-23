@@ -14,7 +14,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/instance_pool"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
-	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
+	wingclient "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
 const (

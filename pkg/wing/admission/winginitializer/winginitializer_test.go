@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
-	"github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/fake"
-	informers "github.com/jetstack/tarmak/pkg/wing/informers/internalversion"
+	"github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion/fake"
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
 	"k8s.io/apiserver/pkg/admission"
 )
 
