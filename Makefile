@@ -46,7 +46,7 @@ help:
 
 test: go_test
 
-verify: generate go_verify verify_boilerplate verify_client_gen verify_vendor
+verify: generate go_verify verify_boilerplate verify_codegen verify_vendor
 
 all: verify test build
 
@@ -151,44 +151,14 @@ depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
 
-go_generate_types: depend $(TYPES_FILES)
-	# generate types
-	defaulter-gen \
-		--v 1 --logtostderr \
-		--go-header-file "$(HACK_DIR)/boilerplate/boilerplate.go.txt" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
-		--extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
-		--extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
-		--extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
-		--extra-peer-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
-		--output-file-base "zz_generated.defaults"
-	# generate deep copies
-	deepcopy-gen \
-		--v 1 --logtostderr \
-		--go-header-file "$(HACK_DIR)/boilerplate/boilerplate.go.txt" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/tarmak/v1alpha1" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/cluster/v1alpha1" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
-		--output-file-base zz_generated.deepcopy
-	# generate conversions
-	conversion-gen \
-		--v 1 --logtostderr \
-		--go-header-file "$(HACK_DIR)/boilerplate/boilerplate.go.txt" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing" \
-		--input-dirs "$(PACKAGE_NAME)/pkg/apis/wing/v1alpha1" \
-		--output-file-base zz_generated.conversion
-	# generate all pkg/client contents
-	$(HACK_DIR)/update-client-gen.sh
+go_codegen: depend $(TYPES_FILES)
+	$(HACK_DIR)/update-codegen.sh
 
 verify_boilerplate:
 	$(HACK_DIR)/verify-boilerplate.sh
 
-verify_client_gen:
-	$(HACK_DIR)/verify-client-gen.sh
+verify_codegen:
+	$(HACK_DIR)/verify-codegen.sh
 
 verify_vendor: $(BINDIR)/dep
 	dep ensure -no-vendor -dry-run -v
