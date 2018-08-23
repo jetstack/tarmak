@@ -72,7 +72,7 @@ clean:
 	rm -rf $(BINDIR)
 
 go_vet:
-	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/fake | grep -v pkg/wing/clients/internalclientset/fake)
+	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/clientset/internalversion/fake | grep -v pkg/wing/client/clientset/versioned/fake)
 
 go_build:
 	# Build a wing binary
