@@ -1,6 +1,6 @@
 class site_module::docker_storage(
   String $vg_name = 'vg_docker',
-  String $vg_initial_size = '60%FREE',
+  String $vg_initial_size = '100%FREE',
 ){
 
   include ::aws_ebs
