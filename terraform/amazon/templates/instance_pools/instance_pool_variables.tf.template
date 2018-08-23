@@ -1,4 +1,3 @@
-{{/* vim: set ft=tf: */}}
 variable "{{.TFName}}_instance_type" {
   default = "{{.InstanceType}}"
 }

@@ -684,6 +684,8 @@ func (c *Cluster) Variables() map[string]interface{} {
 		}
 		output[fmt.Sprintf("%s_min_instance_count", instancePool.TFName())] = instancePool.Config().MinCount
 		output[fmt.Sprintf("%s_max_instance_count", instancePool.TFName())] = instancePool.Config().MaxCount
+		output[fmt.Sprintf("%s_root_volume_size", instancePool.TFName())] = instancePool.RootVolume().Size()
+		output[fmt.Sprintf("%s_root_volume_type", instancePool.TFName())] = instancePool.RootVolume().Type()
 	}
 
 	// set network cidr
