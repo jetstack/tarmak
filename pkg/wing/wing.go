@@ -17,7 +17,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
-	"github.com/jetstack/tarmak/pkg/wing/client"
+	client "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
 type Wing struct {

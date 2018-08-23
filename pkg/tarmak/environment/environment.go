@@ -23,7 +23,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/tarmak/vault"
-	wingclient "github.com/jetstack/tarmak/pkg/wing/client"
+	wingclient "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
 type Environment struct {
