@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 
-	"github.com/jetstack/tarmak/pkg/wing/client"
+	client "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 	"github.com/jetstack/tarmak/pkg/wing/mocks"
 )
 
