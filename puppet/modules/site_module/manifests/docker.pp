@@ -16,8 +16,8 @@ class site_module::docker{
     refreshonly => true,
   }
   -> service{"${service_name}.service":
-    ensure => running,
-    enable => true,
+    ensure     => running,
+    enable     => true,
     hasstatus  => true,
     hasrestart => true,
   }
