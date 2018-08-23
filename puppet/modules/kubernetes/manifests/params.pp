@@ -1,6 +1,6 @@
 # == Class kubernetes::params
 class kubernetes::params {
-  $version = '1.9.7'
+  $version = '1.10.6'
   $bin_dir = '/opt/bin'
   $dest_dir = '/opt'
   $config_dir = '/etc/kubernetes'

@@ -4,7 +4,7 @@ describe 'kubernetes_addons::tiller' do
     "
       class kubernetes{
         $_authorization_mode = ['RBAC']
-        $version = '1.9.7'
+        $version = '1.10.6'
       }
       define kubernetes::apply(
         $manifests,
