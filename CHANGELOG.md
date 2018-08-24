@@ -25,6 +25,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault Helper|                    | `0.9.13` |
 | Etcd        |                    | `3.2.17` |
 
+
+## [0.4.1]: 0.4.1 - 2018-08-24
+
+### Fixed
+
+* Correctly mount docker storage on NVMe driver AWS instances. (#461, [@JoshVanL](https://github.com/JoshVanL))
+* Fix grafana in cluster service (#460, [@MattiasGees](https://github.com/MattiasGees))
+* Ensure code generation is verified correctly  (#462, [@simonswine](https://github.com/simonswine))
+* Set root volume attribute variables, previously only default was used. (#447, [@charlieegan3](https://github.com/charlieegan3))
+
+### Versions
+
+| Application | Supported versions | Default  |
+|-------------|-------------------:|---------:|
+| Packer      |                    | `1.0.2`  |
+| Terraform   |                    | `0.11.7` |
+| Consul      |                    | `1.0.6`  |
+| Vault       |                    | `0.9.5`  |
+| Kubernetes  | `>= 1.7 && < 1.11` | `1.9.10` |
+| Calico      |                    | `3.1.1`  |
+| Vault Helper|                    | `0.9.13` |
+| Etcd        |                    | `3.2.17` |
+
 ## [0.4.0]: 0.4.0 - 2018-08-07
 
 ### Added
@@ -175,6 +198,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
+[0.4.1]: https://github.com/jetstack/tarmak/compare/0.4.0...0.4.1
+[0.4.0]: https://github.com/jetstack/tarmak/compare/0.3.0...0.4.0
+[0.3.0]: https://github.com/jetstack/tarmak/compare/0.2.0...0.3.0
 [0.2.1]: https://github.com/jetstack/tarmak/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/jetstack/tarmak/compare/0.1.2...0.2.0
-[Unreleased]: https://github.com/jetstack/tarmak/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/jetstack/tarmak/compare/0.4.1...HEAD
