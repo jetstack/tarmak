@@ -5,5 +5,6 @@ RSpec.configure do |config|
     :path => '/bin:/sbin:/usr/bin:/usr/sbin:/opt/bin',
     :ipaddress => '10.10.10.10',
     :osfamily => 'RedHat',
+    :disks => {},
   }
 end

@@ -4,7 +4,7 @@ Requires=<%= @format_service_name %>
 After=<%= @format_service_name %>
 
 [Mount]
-What=<%= @device %>
+What=/dev/<%= @device %>
 Where=<%= @dest_path %>
 Type=<%= @filesystem %>
 

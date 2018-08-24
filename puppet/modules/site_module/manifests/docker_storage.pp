@@ -10,7 +10,7 @@ class site_module::docker_storage(
   $disks = aws_ebs::disks()
 
   case $disks.length {
-    0: {$ebs_device = undef}
+    0: {$ebs_device = ''}
     1: {$ebs_device = $disks[0]}
     default: {$ebs_device = $disks[1]}
   }

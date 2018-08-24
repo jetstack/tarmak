@@ -5,3 +5,4 @@ fixtures:
     concat: "#{source_dir}/../concat"
     stdlib: "#{source_dir}/../stdlib"
     airworthy: "#{source_dir}/../airworthy"
+    aws_ebs: "#{source_dir}/../aws_ebs"

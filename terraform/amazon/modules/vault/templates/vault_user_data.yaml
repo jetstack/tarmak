@@ -37,6 +37,7 @@ write_files:
     consul::backup_bucket_prefix: "${backup_bucket_prefix}"
     consul::backup_schedule: "${backup_schedule}"
     consul::volume_id: "${volume_id}"
+    consul::cloud_provider: "aws"
 
 - path: /etc/systemd/system/puppet-download-manifests.service
   permissions: '0644'

@@ -16,7 +16,6 @@ class consul::service(
 )
 {
     $service_name = 'consul'
-    $mount_name = 'var-lib-consul'
     $backup_service_name = 'consul-backup'
     $attach_service_name = 'attach-ebs-volume'
     $ebs_service_name = 'ensure-ebs-volume-formatted'
@@ -79,15 +78,24 @@ class consul::service(
             ],
     }
 
-    file { "${::consul::systemd_dir}/${mount_name}.mount":
-        ensure  => file,
-        content => template('consul/var-lib-consul.mount.erb'),
-        notify  => Exec["${service_name}-systemctl-daemon-reload"],
-        mode    => '0644'
+
+    $disks = aws_ebs::disks()
+    case $disks.length {
+      0: {$ebs_device = ''}
+      1: {$ebs_device = $disks[0]}
+      default: {$ebs_device = $disks[1]}
     }
-    ~> exec { "${mount_name}-mount":
-        command => "/bin/systemctl enable ${mount_name}.mount",
-        path    => $consul::path,
+
+    if $::consul::cloud_provider == 'aws' {
+      class{'::aws_ebs':
+        bin_dir     => $::consul::bin_dir,
+        systemd_dir => $::consul::systemd_dir,
+      }
+      aws_ebs::mount{'consul':
+        volume_id => $volume_id,
+        device    => $ebs_device,
+        dest_path => $data_dir,
+      }
     }
 
     file { "${::consul::systemd_dir}/${backup_service_name}.service":
@@ -111,40 +119,5 @@ class consul::service(
         ensure  => 'running',
         enable  => true,
         require => Exec["${service_name}-systemctl-daemon-reload"],
-    }
-
-    file { "${::consul::systemd_dir}/${attach_service_name}.service":
-        ensure  => file,
-        content => template('consul/attach-ebs-volume.service.erb'),
-        notify  => Exec["${attach_service_name}-systemctl-daemon-reload"],
-        mode    => '0644'
-    }
-    ~> exec { "${attach_service_name}-systemctl-daemon-reload":
-        command     => '/bin/systemctl daemon-reload',
-        refreshonly => true,
-        path        => defined('$::path') ? {
-            default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
-            true    => $::path
-        },
-    }
-    -> service { "${attach_service_name}.service":
-        ensure => 'running',
-        enable => true,
-    }
-
-    file { "${::consul::systemd_dir}/${ebs_service_name}.service":
-        ensure  => file,
-        content => template('consul/ensure-ebs-volume-formatted.service.erb'),
-        notify  => Exec["${ebs_service_name}-systemctl-daemon-reload"],
-        mode    => '0644'
-    }
-    ~> exec { "${ebs_service_name}-systemctl-daemon-reload":
-        command     => '/bin/systemctl daemon-reload',
-        refreshonly => true,
-        path        => $consul::path,
-    }
-    -> service { "${ebs_service_name}.service":
-        ensure => 'running',
-        enable => true,
     }
 }

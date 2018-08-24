@@ -1,26 +1,11 @@
 fixtures:
-  repositories:
-    stdlib:
-      repo: "https://github.com/puppetlabs/puppetlabs-stdlib.git"
-      ref: "4.17.1"
-    concat:
-      repo: "https://github.com/puppetlabs/puppetlabs-concat.git"
-      ref: "2.2.1"
-    archive:
-      repo: "https://github.com/voxpupuli/puppet-archive.git"
-      ref: "v1.1.2"
-    kubernetes:
-      repo: "https://github.com/jetstack/puppet-module-kubernetes.git"
-      ref: "master"
-    calico:
-      repo: "https://github.com/jetstack/puppet-module-calico.git"
-      ref: "master"
-    etcd:
-      repo: "https://github.com/jetstack/puppet-module-etcd.git"
-      ref: "master"
-    aws_ebs:
-      repo: "https://github.com/jetstack/puppet-module-aws_ebs.git"
-      ref: "master"
-    vault_client:
-      repo: "https://github.com/jetstack/puppet-module-vault_client.git"
-      ref: "master"
+  symlinks:
+    tarmak: "#{source_dir}"
+    kubernetes: "#{source_dir}/../kubernetes"
+    stdlib: "#{source_dir}/../stdlib"
+    concat: "#{source_dir}/../concat"
+    archive: "#{source_dir}/../archive"
+    calico: "#{source_dir}/../calico"
+    etcd: "#{source_dir}/../etcd"
+    aws_ebs: "#{source_dir}/../aws_ebs"
+    vault_client: "#{source_dir}/../vault_client"
