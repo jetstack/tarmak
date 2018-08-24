@@ -68,7 +68,7 @@ volume in AWS.
 
 ##### `device`
 
-* block device to attach to (should be `/dev/xvd[a-z]`)
+* block device to attach to
 * Type: `String`
 
 ##### `filesystem`

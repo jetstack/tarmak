@@ -1,4 +1,5 @@
 data "template_file" "vault" {
+
   template = "${file("${path.module}/templates/vault_user_data.yaml")}"
   count    = "${var.vault_min_instance_count}"
 
@@ -28,6 +29,8 @@ data "template_file" "vault" {
 
     # run backup once per instance spread throughout the day
     backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.vault_min_instance_count))}:00:00"
+
+    puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
   }
 }
 

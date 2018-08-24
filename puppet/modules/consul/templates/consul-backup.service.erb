@@ -1,0 +1,11 @@
+[Unit]
+Description=Backup consul KV store
+Requires=consul.service
+After=consul.service
+
+[Service]
+Type=oneshot
+Environment=AWS_DEFAULT_REGION=<%= @region %>
+Environment=BUCKET_NAME=<%= @backup_bucket_prefix %>
+Environment=CONSUL_HTTP_TOKEN=<%= @consul_master_token %>
+ExecStart=/usr/local/bin/consul-backup.sh

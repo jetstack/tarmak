@@ -9,7 +9,7 @@ describe 'aws_ebs::mount', :type => :define do
     {
       'volume_id' => 'vol-deadbeef',
       'dest_path' => '/mnt/folder/test1',
-      'device' => '/dev/xvdy'
+      'device' => 'xvdy'
     }
   end
 
@@ -54,7 +54,7 @@ describe 'aws_ebs::mount', :type => :define do
         aws_ebs::mount{'test2':
           volume_id => 'vol-beefdead',
           dest_path => '/mnt/fodeler/test2',
-          device => '/dev/xvdx',
+          device => 'xvdx',
         }
       """
     ]}

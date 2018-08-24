@@ -43,4 +43,5 @@ class vault_client::config {
     ensure  => file,
     content => template('vault_client/config.erb'),
   }
+
 }

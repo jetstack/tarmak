@@ -1,0 +1,12 @@
+---
+consul::fqdn: "${fqdn}"
+consul::private_ip: "${private_ip}"
+consul::consul_master_token: "${consul_master_token}"
+consul::region: "${region}"
+consul::instance_count: "${instance_count}"
+consul::environment: "${environment}"
+consul::consul_encrypt: "${consul_encrypt}"
+consul::backup_bucket_prefix: "${backup_bucket_prefix}"
+consul::backup_schedule: "${backup_schedule}"
+consul::volume_id: "${volume_id}"
+consul::cloud_provider: aws

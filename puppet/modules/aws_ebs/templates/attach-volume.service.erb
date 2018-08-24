@@ -6,7 +6,7 @@ After=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=<%= scope['aws_ebs::attach_bin_path'] %> <%= @device %> <%= @volume_id %>
+ExecStart=<%= scope['aws_ebs::attach_bin_path'] %> /dev/<%= @device %> <%= @volume_id %>
 
 [Install]
 WantedBy=multiuser.target

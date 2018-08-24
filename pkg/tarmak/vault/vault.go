@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack/vault-unsealer/pkg/vault"
 	"github.com/sirupsen/logrus"
 
@@ -217,12 +218,13 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 	cl := tunnels[0].VaultClient()
 
 	// get state of all instances
+	var health *vault.HealthResponse
 	err = nil
 	for retries := Retries; retries > 0; retries-- {
 
 		time.Sleep(time.Second * 1)
 
-		health, err := cl.Sys().Health()
+		health, err = cl.Sys().Health()
 		if err == nil {
 			if !health.Sealed {
 				return nil
