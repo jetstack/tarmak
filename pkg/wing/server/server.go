@@ -16,8 +16,8 @@ import (
 	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/instanceinittime"
 	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
-	clientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
-	informers "github.com/jetstack/tarmak/pkg/wing/informers/internalversion"
+	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion"
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
 )
 
 const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
