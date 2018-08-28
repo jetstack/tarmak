@@ -15,41 +15,46 @@ class consul::config (
         $enable_tls = false
     }
 
+    if $consul::advertise_network == undef {
+        if defined('$::ipaddress') {
+            $advertise_addr = $::ipaddress
+        } else {
+            $advertise_addr = '127.0.0.1'
+        }
+    } else {
+        $advertise_addr = get_ipaddress_in_network($consul::advertise_network)
+    }
+
+
     # build config hash
     $config = {
         acl_default_policy  => defined('$consul_master_token') ? {
-            true    => $consul::acl_default_policy,
+            true    => "\"${consul::acl_default_policy}\"",
             default =>  undef,
         },
         acl_down_policy     => defined('$consul_master_token') ? {
-            true    => $consul::acl_down_policy,
+            true    => "\"${consul::acl_down_policy}\"",
             default =>  undef,
         },
         acl_master_token    => defined('$consul_master_token') ? {
-            true    => $consul_master_token,
+            true    => "\"${consul_master_token}\"",
             default =>  undef,
         },
         acl_agent_token    => defined('$consul_master_token') ? {
-            true    => $consul_master_token,
+            true    => "\"${consul_master_token}\"",
             default =>  undef,
         },
         acl_datacenter      => defined('$consul_master_token') ? {
-            true    => $consul::datacenter,
+            true    => "\"${consul::datacenter}\"",
             default =>  undef,
         },
-        datacenter          => $consul::datacenter,
-        log_level           => $consul::log_level,
-        client_addr         => $consul::client_addr,
-        bind_addr           => $consul::bind_addr,
-        advertise_addr      => $consul::advertise_network ? {
-            default => get_ipaddress_in_network($consul::advertise_network),
-            undef   => defined('$::ipaddress') ? {
-                true    => $::ipaddress,
-                default => '127.0.0.1',
-            },
-        },
+        datacenter          => "\"${consul::datacenter}\"",
+        log_level           => "\"${consul::log_level}\"",
+        client_addr         => "\"${consul::client_addr}\"",
+        bind_addr           => "\"${consul::bind_addr}\"",
+        advertise_addr      => "\"${advertise_addr}\"",
         encrypt             => defined('$consul_encrypt') ? {
-            true    => $consul_encrypt,
+            true    => "\"${consul_encrypt}\"",
             default =>  undef,
         },
         bootstrap_expect    => defined('$consul::consul_bootstrap_expect') ? {
@@ -59,12 +64,12 @@ class consul::config (
         server              => $consul::server,
         disable_remote_exec => true,
         retry_join          => $consul::cloud_provider ? {
-            'aws'   => "[provider=aws tag_key=VaultCluster tag_value=${environment}]",
+            'aws'   => "[\"provider=aws tag_key=VaultCluster tag_value=${environment}\"]",
             default => $consul::retry_join,
         },
-        ca_file             => $consul::ca_file,
-        cert_file           => $consul::cert_file,
-        key_file            => $consul::key_file,
+        ca_file             => "\"${consul::ca_file}\"",
+        cert_file           => "\"${consul::cert_file}\"",
+        key_file            => "\"${consul::key_file}\"",
         verify_outgoing     => $enable_tls,
         verify_incoming     => $enable_tls,
     }
@@ -96,5 +101,4 @@ class consul::config (
             mode    => '0600',
         }
     }
-
 }
