@@ -1,5 +1,5 @@
 class consul::service(
-    $consul_encrypt = $consul::consul_encrypt,
+    $consul_encrypt = $::consul::consul_encrypt,
     $fqdn = $consul::fqdn,
     $private_ip = $consul::private_ip,
     $consul_master_token = $consul::consul_master_token,
@@ -15,8 +15,8 @@ class consul::service(
     $systemd_before = [],
 )
 {
+
     $service_name = 'consul'
-    $mount_name = 'var-lib-consul'
     $backup_service_name = 'consul-backup'
     $attach_service_name = 'attach-ebs-volume'
     $ebs_service_name = 'ensure-ebs-volume-formatted'
@@ -79,15 +79,16 @@ class consul::service(
             ],
     }
 
-    file { "${::consul::systemd_dir}/${mount_name}.mount":
-        ensure  => file,
-        content => template('consul/var-lib-consul.mount.erb'),
-        notify  => Exec["${service_name}-systemctl-daemon-reload"],
-        mode    => '0644'
-    }
-    ~> exec { "${mount_name}-mount":
-        command => "/bin/systemctl enable ${mount_name}.mount",
-        path    => $consul::path,
+    if $::consul::cloud_provider == 'aws' {
+      class{'::aws_ebs':
+        bin_dir     => $::consul::bin_dir,
+        systemd_dir => $::consul::systemd_dir,
+      }
+      aws_ebs::mount{'consul':
+        volume_id => $volume_id,
+        device    => '/dev/xvdd',
+        dest_path => $data_dir,
+      }
     }
 
     file { "${::consul::systemd_dir}/${backup_service_name}.service":

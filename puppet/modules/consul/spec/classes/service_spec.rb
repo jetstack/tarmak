@@ -2,10 +2,9 @@ require 'spec_helper'
 
 describe 'consul::service' do
     let(:pre_condition) do
-        [
-            'include consul',
-            'include consul::install'
-        ]
+      """
+        class{'consul': cloud_provider => 'aws' }
+      """
     end
 
     let :systemd_dir do
@@ -36,12 +35,7 @@ describe 'consul::service' do
         end
 
         it 'should create consul mount' do
-            should contain_file(systemd_dir+'/var-lib-consul.mount').with(
-                :mode => '0644',
-            )
-            should contain_exec('var-lib-consul-mount').with_command(
-                '/bin/systemctl enable var-lib-consul.mount'
-            )
+            should contain_file(systemd_dir+'/var-lib-consul.mount')
         end
 
         it 'should create consul backup unit' do
