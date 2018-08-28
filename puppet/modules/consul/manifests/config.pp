@@ -89,12 +89,6 @@ class consul::config (
         content => template('consul/consul.json.erb'),
     }
 
-    file { "${consul::vault_config_dir}/vault.hcl":
-        ensure  => file,
-        content => template('consul/vault.hcl.erb'),
-        mode    => '0600'
-    }
-
     # write master token to vault
     if defined('$consul::consul_master_token') {
         $token_file_path = "${consul::config_dir}/master-token"

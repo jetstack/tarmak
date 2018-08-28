@@ -45,9 +45,10 @@ class consul::install
         extract_path     => $consul::_dest_dir,
     }
     -> file {$consul::bin_path:
+        ensure => file,
         mode   => '0755',
     }
-    -> file {$consul::link_path:
+    -> file {"${consul::link_path}/${consul::app_name}":
         ensure => link,
         target => $consul::bin_path,
     }
@@ -90,9 +91,13 @@ class consul::install
         }
     }
 
-    file { '/usr/local/bin/consul-backup.sh':
+    file { "${consul::_dest_dir}/consul-backup.sh":
         ensure  => file,
         content => file('consul/consul-backup.sh'),
         mode    => '0755'
+    }
+    -> file {"${consul::link_path}/consul-backup.sh":
+        ensure => link,
+        target => "${consul::_dest_dir}/consul-backup.sh",
     }
 }

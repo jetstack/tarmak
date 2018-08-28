@@ -26,12 +26,9 @@ class consul(
     $backup_bucket_prefix,
     $backup_schedule,
     $volume_id,
-
     String $app_name = $consul::params::app_name,
     String $version = $consul::params::version,
-    String $bin_dir = $consul::params::bin_dir,
     String $config_dir = $consul::params::config_dir,
-    String $vault_config_dir = $consul::params::vault_config_dir,
     String $download_dir = $consul::params::download_dir,
     String $systemd_dir = $consul::params::systemd_dir,
     String $exporter_version = $consul::params::exporter_version,
@@ -42,7 +39,6 @@ class consul(
     String $sha256sums_url = $consul::params::sha256sums_url,
     String $exporter_download_url = $consul::params::exporter_download_url,
     String $exporter_signature_url = $consul::params::exporter_signature_url,
-
     Integer $uid = 871,
     Integer $gid = 871,
     String $user = 'consul',
@@ -70,7 +66,7 @@ class consul(
 
     $_dest_dir = "${dest_dir}/${app_name}-${version}"
     $bin_path = "${_dest_dir}/${app_name}"
-    $link_path = "${bin_dir}/${app_name}"
+    $link_path = "${dest_dir}/bin"
     $config_path = "${config_dir}/consul.json"
 
     $exporter_dest_dir = "${dest_dir}/${app_name}_exporter-${exporter_version}"
@@ -100,9 +96,7 @@ class consul(
         home   => $data_dir,
     }
 
-    Class['::airworthy']
-    -> class { '::airworthy::install': }
-    -> class { '::consul::config': }
+    class { '::consul::config': }
     -> class { '::consul::install': }
     ~> class { '::consul::service': }
 }

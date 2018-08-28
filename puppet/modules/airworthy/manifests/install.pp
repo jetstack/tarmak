@@ -34,10 +34,4 @@ class airworthy::install {
     target  => $airworthy_path,
     require => File[$::airworthy::bin_dir],
   }
-
-  file { '/bin/airworthy':
-    ensure  => link,
-    target  => $airworthy_path,
-    require => File[$::airworthy::bin_dir],
-  }
 }

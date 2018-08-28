@@ -4,7 +4,7 @@ set -euo pipefail
 
 VAULT_VERSION=$${VAULT_VERSION:-${vault_version}}
 CONSUL_VERSION=$${CONSUL_VERSION:-${consul_version}}
-DEST_DIR=$${DEST_DIR:-/usr/local/bin}
+DEST_DIR=$${DEST_DIR:-/opt/bin}
 
 OLD_PWD=$(pwd)
 TEMP_DIR=$(mktemp -d)

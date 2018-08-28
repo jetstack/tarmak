@@ -6,8 +6,6 @@
 class consul::params {
     $app_name = 'consul'
     $version = '1.2.1'
-    $bin_dir = '/usr/local/bin'
-    $vault_config_dir = '/etc/vault'
     $download_dir = '/tmp'
     $systemd_dir = '/etc/systemd/system'
     $data_dir = '/var/lib/consul'

@@ -21,15 +21,7 @@ describe 'consul::config' do
                 .with_content(/#{Regexp.escape('"acl_master_token" : "${consul_master_token}",')}/)
         end
 
-        it 'should install vault.hcl file' do
-            should contain_file('/etc/vault/vault.hcl').with(
-                :mode => '0600',
-            )
-            should contain_file('/etc/vault/vault.hcl')
-                .with_content(/#{Regexp.escape('path = "vault-${environment}/"')}/)
-        end
-
-        it 'should install consul master token' do
+       it 'should install consul master token' do
             should contain_file('/etc/consul/master-token').with(
                 :mode => '0600',
             )

@@ -7,7 +7,6 @@ class vault_server::params {
     $app_name = 'vault'
     $version = '0.9.5'
     $bin_dir = '/opt/bin'
-    $local_bin_dir = '/usr/local/bin'
     $dest_dir = '/opt'
     $config_dir = '/etc/vault'
     $lib_dir = '/var/lib/vault'

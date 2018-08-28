@@ -5,7 +5,7 @@ After=consul.service vault-assets.service
 
 [Service]
 Environment=AWS_REGION=<%= @region %>
-ExecStart=/usr/local/bin/vault server -config=/etc/vault/vault.hcl
+ExecStart=/opt/bin/vault server -config=/etc/vault/vault.hcl
 Restart=on-failure
 RestartSec=10
 

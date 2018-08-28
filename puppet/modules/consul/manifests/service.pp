@@ -81,7 +81,7 @@ class consul::service(
 
     if $::consul::cloud_provider == 'aws' {
       class{'::aws_ebs':
-        bin_dir     => $::consul::bin_dir,
+        bin_dir     => $::consul::_dest_dir,
         systemd_dir => $::consul::systemd_dir,
       }
       aws_ebs::mount{'consul':

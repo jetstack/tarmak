@@ -1,15 +1,14 @@
 class vault_server (
     $region,
+    $environment,
     $vault_tls_cert_path,
     $vault_tls_ca_path,
     $vault_tls_key_path,
     $vault_unsealer_kms_key_id,
     $vault_unsealer_ssm_key_prefix,
-
     String $app_name = $vault_server::params::app_name,
     String $version = $vault_server::params::version,
     String $bin_dir = $vault_server::params::bin_dir,
-    String $local_bin_dir = $vault_server::params::local_bin_dir,
     String $dest_dir = $vault_server::params::dest_dir,
     String $config_dir = $vault_server::params::config_dir,
     String $lib_dir = $vault_server::params::lib_dir,
@@ -53,7 +52,7 @@ class vault_server (
 
     $_dest_dir = "${dest_dir}/${app_name}-${version}"
     $bin_path = "${_dest_dir}/${app_name}"
-    $link_path = "${local_bin_dir}/${app_name}"
+    $link_path = "${dest_dir}/bin"
 
     file { $config_dir:
         ensure => 'directory',
