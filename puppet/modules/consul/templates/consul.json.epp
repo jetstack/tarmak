@@ -1,0 +1,7 @@
+<%- | $config | -%>
+<%- include stdlib -%>
+{
+<% $config.keys.sort.each |$key| { -%>
+    "<%= $key %>" : "<%= $config[$key] %>"
+<% } -%>
+}

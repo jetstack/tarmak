@@ -58,8 +58,8 @@ class consul::config (
         },
         server              => $consul::server,
         disable_remote_exec => true,
-        retry_join          => $consul::retry_join ? {
-            undef   => [],
+        retry_join          => $consul::cloud_provider ? {
+            'aws'   => "[provider=aws tag_key=VaultCluster tag_value=${environment}]",
             default => $consul::retry_join,
         },
         ca_file             => $consul::ca_file,
@@ -68,12 +68,6 @@ class consul::config (
         verify_outgoing     => $enable_tls,
         verify_incoming     => $enable_tls,
     }
-
-    ## TODO: Add AWS stuff for rejoining
-    #    "retry_join": [
-    #        "provider=aws tag_key=VaultCluster tag_value=${environment}"
-    #    ],
-
 
     file { $consul::config_dir:
         ensure => directory,
@@ -86,7 +80,9 @@ class consul::config (
         owner   => $consul::user,
         group   => $consul::group,
         mode    => '0600',
-        content => template('consul/consul.json.erb'),
+        content => epp('consul/consul.json.epp', {
+            config => $config,
+        })
     }
 
     # write master token to vault

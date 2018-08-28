@@ -2,9 +2,9 @@ require 'spec_helper'
 
 describe 'consul::config' do
     let(:pre_condition) do
-        [
-            'include consul'
-        ]
+      """
+        class{'consul': cloud_provider => 'aws' }
+      """
     end
 
     context 'with default values for all parameters' do
@@ -18,7 +18,9 @@ describe 'consul::config' do
                 :mode => '0600',
             )
             should contain_file('/etc/consul/consul.json')
-                .with_content(/#{Regexp.escape('"acl_master_token" : "${consul_master_token}",')}/)
+                .with_content(/"acl_master_token" : "\${consul_master_token}"/)
+            should contain_file('/etc/consul/consul.json')
+                .with_content(/[provider=aws tag_key=VaultCluster tag_value=${environment}]/)
         end
 
        it 'should install consul master token' do
