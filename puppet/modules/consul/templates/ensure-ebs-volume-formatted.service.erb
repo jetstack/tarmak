@@ -1,0 +1,9 @@
+[Unit]
+Description=Format EBS volume if needed
+After=attach-ebs-volume.service
+Requires=attach-ebs-volume.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c 'blkid /dev/xvdd || (wipefs -fa /dev/xvdd && mkfs.ext4 /dev/xvdd)'

@@ -28,5 +28,4 @@ class airworthy (
   } else {
       $_checksum = $checksum
   }
-
 }

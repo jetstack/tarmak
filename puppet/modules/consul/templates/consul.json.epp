@@ -1,0 +1,7 @@
+<%- | $config | -%>
+<%- include stdlib -%>
+{
+<% $config.keys.sort.each |$i,$key| { -%>
+    "<%= $key %>" : <%= $config[$key] %><% if $i < ($config.size - 1) { %> , <% } %>
+<% } -%>
+}
