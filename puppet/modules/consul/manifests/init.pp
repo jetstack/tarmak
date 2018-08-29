@@ -18,13 +18,13 @@
 class consul(
   String $consul_encrypt = '',
   String $fqdn = '',
-  String $private_ip = '',
+  String $private_ip = '127.0.0.1',
   String $consul_master_token = '',
   String $region = '',
   String $instance_count = '',
   String $environment = '',
   String $backup_bucket_prefix = '',
-  String $backup_schedule = '*-*-* 12:00:00',
+  String $backup_schedule = '*-*-* 00:00:00',
   String $volume_id = '',
   String $app_name = $consul::params::app_name,
   String $version = $consul::params::version,
@@ -54,7 +54,7 @@ class consul(
   String $log_level = 'INFO',
   String $datacenter = 'dc1',
   Optional[String] $advertise_network = undef,
-  Optional[Array[String]] $retry_join = undef,
+  Optional[Array[String]] $retry_join = [''],
   Optional[String] $ca_file = undef,
   Optional[String] $cert_file = undef,
   Optional[String] $key_file = undef,
@@ -64,6 +64,8 @@ class consul(
     default => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin',
     true    => $::path,
   }
+
+  Exec { path => $path }
 
   $_dest_dir = "${dest_dir}/${app_name}-${version}"
   $bin_path = "${_dest_dir}/${app_name}"
@@ -98,7 +100,7 @@ class consul(
   }
 
   class { '::airworthy': }
-  -> class { '::consul::config': }
   -> class { '::consul::install': }
-  ~> class { '::consul::service': }
+  -> class { '::consul::config': }
+  -> class { '::consul::service': }
 }
