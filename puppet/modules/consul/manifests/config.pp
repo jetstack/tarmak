@@ -16,12 +16,11 @@ class consul::config (
     if defined('$::ipaddress') {
       $advertise_addr = $::ipaddress
     } else {
-        $advertise_addr = '127.0.0.1'
+      $advertise_addr = '127.0.0.1'
     }
   } else {
-        $advertise_addr = get_ipaddress_in_network($consul::advertise_network)
+    $advertise_addr = get_ipaddress_in_network($consul::advertise_network)
   }
-
 
   # build config hash
   $config = {

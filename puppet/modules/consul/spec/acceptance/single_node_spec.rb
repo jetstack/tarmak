@@ -1,4 +1,26 @@
 require 'spec_helper_acceptance'
+require 'rubygems/package'
+
+def prepare_host_files(host)
+  file = Tempfile.new('params_tar')
+
+  Gem::Package::TarWriter.new(file) do |writer|
+    writer.add_file("etc/facter/facts.d/consul", 0700) do |f|
+      content = <<EOS
+#!/bin/bash
+echo CONSUL_MASTER_TOKEN=7f0c1dae-aac7-44ea-abe8-d9411c9068cb
+echo CONSUL_BOOTSTRAP_EXPECT=1
+echo CONSUL_ENCRYPT=GFoaCb3cOofGJn2qwqvz8A==
+EOS
+      f.write(content)
+    end
+  end
+
+  file.close
+
+  rsync_to(host, file.path, "/tmp/archive.tar", {})
+  on host, "tar xvf /tmp/archive.tar -C /"
+end
 
 if hosts.length == 1
   describe '::consul' do
@@ -7,6 +29,10 @@ if hosts.length == 1
         # Ensure /opt/bin is in the path
         on host, "echo -e '# ensure /opt/bin is in the path\nif ! echo $$PATH | grep -q /opt/bin ; then\n  export PATH=$PATH:/opt/bin\nfi\n' > /etc/profile.d/opt-bin.sh"
       end
+    end
+
+    hosts.each do |host|
+      prepare_host_files(host)
     end
 
     context 'test single node consul cluster' do
