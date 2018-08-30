@@ -1,0 +1,20 @@
+[Unit]
+Description=Fetch vault assets
+After=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+<% if @vault_tls_cert_path and @vault_tls_ca_path and @vault_tls_key_path -%>
+ExecStart=/bin/bash -c "aws configure set s3.signature_version s3v4 && \
+  aws s3 cp <%= @vault_tls_cert_path %> /etc/vault/tls/tls.pem && \
+  aws s3 cp <%= @vault_tls_key_path %> /etc/vault/tls/tls-key.pem && \
+  chmod 0600 /etc/vault/tls/tls-key.pem && \
+  aws s3 cp <%= @vault_tls_ca_path %> /etc/vault/tls/ca.pem"
+<% else -%>
+ExecStart=/bin/bash -c "true"
+<% end -%>
+
+[Install]
+WantedBy=multi-user.target
