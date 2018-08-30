@@ -34,10 +34,6 @@ describe 'consul::service' do
       )
     end
 
-    it 'should create consul mount' do
-      should contain_file(systemd_dir+'/var-lib-consul.mount')
-    end
-
     it 'should create consul backup unit' do
       should contain_file(systemd_dir+'/consul-backup.service').with(
         :ensure => 'file',

@@ -58,6 +58,10 @@ class consul(
   Optional[String] $ca_file = undef,
   Optional[String] $cert_file = undef,
   Optional[String] $key_file = undef,
+  Array[String] $systemd_wants = [],
+  Array[String] $systemd_requires = [],
+  Array[String] $systemd_after = [],
+  Array[String] $systemd_before = [],
 ) inherits ::consul::params {
 
   $path = defined('$::path') ? {
@@ -99,8 +103,11 @@ class consul(
     home   => $data_dir,
   }
 
-  class { '::airworthy': }
-  -> class { '::consul::install': }
-  -> class { '::consul::config': }
-  -> class { '::consul::service': }
+  # install airworthy if necessary
+  ensure_resource('class', '::airworthy', {})
+
+  Class['::airworthy']
+  ~> class { '::consul::install': }
+  ~> class { '::consul::config': }
+  ~> class { '::consul::service': }
 }

@@ -1,5 +1,7 @@
-class consul::install
-{
+class consul::install(
+
+){
+
   $_download_url = regsubst(
     $consul::download_url,
     '#VERSION#',

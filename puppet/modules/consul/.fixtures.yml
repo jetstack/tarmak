@@ -4,4 +4,3 @@ fixtures:
     archive: "#{source_dir}/../archive"
     stdlib: "#{source_dir}/../stdlib"
     airworthy: "#{source_dir}/../airworthy"
-    aws_ebs: "#{source_dir}/../aws_ebs"

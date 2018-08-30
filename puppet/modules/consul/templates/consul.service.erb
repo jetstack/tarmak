@@ -1,19 +1,30 @@
 [Unit]
 Description=Consul server
-After=var-lib-consul.mount
+<% if @_systemd_after.length > 0  -%>
+After=<%= @_systemd_after.join(' ') %>
+<% end  -%>
+<% if @_systemd_before.length > 0  -%>
+Before=<%= @_systemd_before.join(' ') %>
+<% end  -%>
+<% if @_systemd_wants.length > 0  -%>
+Wants=<%= @_systemd_wants.join(' ') %>
+<% end  -%>
+<% if @_systemd_requires.length > 0  -%>
+Requires=<%= @_systemd_requires.join(' ') %>
+<% end  -%>
 
 [Service]
-User=consul
-Group=consul
+User=<%= @user %>
+Group=<%= @group %>
 PermissionsStartOnly=true
-ExecStartPre=/bin/rm -rf /var/lib/consul/data
-ExecStartPre=/bin/mkdir -p /var/lib/consul/data
-ExecStartPre=/bin/chown -c root:consul /var/lib/consul
-ExecStartPre=/bin/chmod 0750 /var/lib/consul
-ExecStartPre=/bin/chown -cR consul:consul /var/lib/consul/data
-ExecStartPre=/bin/chmod 0750 /var/lib/consul/data
-EnvironmentFile=/etc/consul/master-token
-ExecStart=/opt/bin/consul agent -node=<%= @private_ip %> -data-dir=/var/lib/consul/data -server -config-dir=/etc/consul -advertise=<%= @private_ip %>
-
+ExecStartPre=/bin/mkdir -p <%= @data_dir %>/data
+ExecStartPre=/bin/chown -c root:<%= @group %> <%= @data_dir %>
+ExecStartPre=/bin/chmod 0750 <%= @data_dir%>
+ExecStartPre=/bin/chown -cR <%= @user %>:<%= @group %> <%= @data_dir %>/data
+ExecStartPre=/bin/chmod 0750 <%= @data_dir %>/data
+ExecStart=<%= @bin_path %> \
+   agent \
+   -config-file=<%= @config_path %> \
+   -data-dir=<%= @data_dir %>/data
 [Install]
 WantedBy=multi-user.target

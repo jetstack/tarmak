@@ -1,16 +1,21 @@
 class consul::service(
-  $consul_encrypt = $::consul::consul_encrypt,
-  $fqdn = $consul::fqdn,
-  $private_ip = $consul::private_ip,
-  $consul_master_token = $consul::consul_master_token,
-  $region = $consul::region,
-  $instance_count = $consul::instance_count,
-  $environment = $consul::environment,
-  $backup_bucket_prefix = $consul::backup_bucket_prefix,
-  $backup_schedule = $consul::backup_schedule,
-  $volume_id = $consul::volume_id,
+  String $consul_encrypt = $::consul::consul_encrypt,
+  String $fqdn = $consul::fqdn,
+  String $private_ip = $consul::private_ip,
+  String $consul_master_token = $consul::consul_master_token,
+  String $region = $consul::region,
+  String $instance_count = $consul::instance_count,
+  String $environment = $consul::environment,
+  String $backup_bucket_prefix = $consul::backup_bucket_prefix,
+  String $backup_schedule = $consul::backup_schedule,
+  String $volume_id = $consul::volume_id,
+  Array[String] $_systemd_wants = $consul::systemd_wants,
+  Array[String] $_systemd_requires = $consul::systemd_requires,
+  Array[String] $_systemd_before = $consul::systemd_before,
 )
 {
+
+  $_systemd_after = ['network.target'] + $consul::systemd_after
 
   $service_name = 'consul'
   $backup_service_name = 'consul-backup'
@@ -63,29 +68,9 @@ class consul::service(
   ~> service { "${service_name}.service":
     ensure  => running,
     enable  => true,
-    require => [
-      Exec["${service_name}-systemctl-daemon-reload"],
-      ],
+    require => Exec["${service_name}-systemctl-daemon-reload"],
   }
 
-  $disks = aws_ebs::disks()
-  case $disks.length {
-    0: {$ebs_device = ''}
-    1: {$ebs_device = $disks[0]}
-    default: {$ebs_device = $disks[1]}
-  }
-
-  if $::consul::cloud_provider == 'aws' {
-    class{'::aws_ebs':
-      bin_dir     => $::consul::_dest_dir,
-      systemd_dir => $::consul::systemd_dir,
-    }
-    aws_ebs::mount{'consul':
-      volume_id => $volume_id,
-      device    => $ebs_device,
-      dest_path => $data_dir,
-    }
-  }
 
   file { "${::consul::systemd_dir}/${backup_service_name}.service":
     ensure  => file,

@@ -22,7 +22,6 @@ describe 'consul::config' do
         :mode => '0600',
       )
       should contain_file('/etc/consul/consul.json')
-        .with_content(/"acl_master_token" : "master_token"/)
       should contain_file('/etc/consul/consul.json')
         .with_content(/[provider=aws tag_key=VaultCluster tag_value=env}]/)
     end
@@ -33,6 +32,25 @@ describe 'consul::config' do
       )
       should contain_file('/etc/consul/master-token')
         .with_content(/#{Regexp.escape('CONSUL_HTTP_TOKEN=master_token')}/)
+    end
+  end
+
+  context 'parse json with  defaults' do
+
+    let(:config_file) do
+      catalogue.resource('file', '/etc/consul/consul.json').send(:parameters)[:content]
+    end
+
+    it 'be valid json' do
+      JSON.parse config_file
+    end
+
+    it 'have token set' do
+      expect(config_file).to match(%{^  "acl_master_token": "master_token",$})
+    end
+
+    it 'have retry join set' do
+      expect(config_file).to match(%{^    "provider=aws tag_key=VaultCluster tag_value=env"$})
     end
   end
 end
