@@ -6,6 +6,8 @@ describe 'consul::config' do
       class{'consul':
         cloud_provider => 'aws',
         consul_master_token => 'master_token',
+        consul_bootstrap_expect => '3',
+        consul_encrypt => 'enc',
         environment => 'env',
       }
     """
@@ -48,6 +50,10 @@ describe 'consul::config' do
 
     it 'have retry join set' do
       expect(config_file).to match(%{^    "provider=aws tag_key=VaultCluster tag_value=env"$})
+    end
+
+    it 'have bootstrap expect set' do
+      expect(config_file).to match(%{^  "bootstrap_expect": 3,$})
     end
   end
 end

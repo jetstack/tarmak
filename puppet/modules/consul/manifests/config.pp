@@ -1,7 +1,5 @@
 class consul::config (
-  String $consul_encrypt = $consul::consul_encrypt,
   String $private_ip = $consul::private_ip,
-  String $consul_master_token = $consul::consul_master_token,
   String $region = $consul::region,
   String $instance_count = $consul::instance_count,
   String $environment = $consul::environment,
@@ -27,23 +25,23 @@ class consul::config (
 
   # build config hash
   $config = {
-    acl_default_policy  => defined('$consul_master_token') ? {
+    acl_default_policy  => defined('$consul::_consul_master_token') ? {
       true    => $consul::acl_default_policy,
       default =>  undef,
     },
-    acl_down_policy     => defined('$consul_master_token') ? {
+    acl_down_policy     => defined('$consul::_consul_master_token') ? {
       true    => $consul::acl_down_policy,
       default =>  undef,
     },
-    acl_master_token    => defined('$consul_master_token') ? {
-      true    => $consul_master_token,
+    acl_master_token    => defined('$consul::_consul_master_token') ? {
+      true    => $consul::_consul_master_token,
       default => undef,
     },
-    acl_agent_token    => defined('$consul_master_token') ? {
-      true    => $consul_master_token,
+    acl_agent_token    => defined('$consul::_consul_master_token') ? {
+      true    => $consul::_consul_master_token,
       default => undef,
     },
-    acl_datacenter      => defined('$consul_master_token') ? {
+    acl_datacenter      => defined('$consul::_consul_master_token') ? {
       true    => $consul::datacenter,
       default =>  undef,
     },
@@ -52,12 +50,12 @@ class consul::config (
     client_addr         => $consul::client_addr,
     bind_addr           => $consul::bind_addr,
     advertise_addr      => $advertise_addr,
-    encrypt             => defined('$consul_encrypt') ? {
-      true    => $consul_encrypt,
+    encrypt             => defined('$consul::_consul_encrypt') ? {
+      true    => $consul::_consul_encrypt,
       default =>  undef,
     },
-    bootstrap_expect    => defined('$consul::consul_bootstrap_expect') ? {
-      true    =>  $consul::consul_bootstrap_expect.scanf('%i')[0],
+    bootstrap_expect    => defined('$consul::_consul_bootstrap_expect') ? {
+      true    =>  $consul::_consul_bootstrap_expect.scanf('%i')[0],
       default =>  1,
     },
     server              => $consul::server,
@@ -88,11 +86,11 @@ class consul::config (
   }
 
   # write master token to vault
-  if defined('$consul::consul_master_token') {
+  if defined('$consul::_consul_master_token') {
     $token_file_path = "${consul::config_dir}/master-token"
     file {$token_file_path:
       ensure  => file,
-      content => "CONSUL_HTTP_TOKEN=${consul::consul_master_token}",
+      content => "CONSUL_HTTP_TOKEN=${consul::_consul_master_token}",
       owner   => $consul::user,
       group   => $consul::group,
       mode    => '0600',

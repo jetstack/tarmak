@@ -3,7 +3,13 @@ require 'spec_helper'
 describe 'consul::service' do
   let(:pre_condition) do
     """
-        class{'consul': cloud_provider => 'aws' }
+      class{'consul':
+        cloud_provider => 'aws',
+        consul_master_token => 'master_token',
+        consul_bootstrap_expect => '3',
+        consul_encrypt => 'enc',
+        environment => 'env',
+      }
     """
   end
 

@@ -16,10 +16,11 @@
 
 
 class consul(
-  String $consul_encrypt = '',
+  Optional[String] $consul_master_token = undef,
+  Optional[String] $consul_encrypt = undef,
+  Optional[String] $consul_bootstrap_expect = undef,
   String $fqdn = '',
   String $private_ip = '127.0.0.1',
-  String $consul_master_token = '',
   String $region = '',
   String $instance_count = '',
   String $environment = '',
@@ -78,6 +79,21 @@ class consul(
 
   $exporter_dest_dir = "${dest_dir}/${app_name}_exporter-${exporter_version}"
   $exporter_bin_path = "${exporter_dest_dir}/${app_name}_exporter"
+
+  $_consul_master_token = $consul_master_token ? {
+    undef   => $::consul_master_token,
+    default => $consul_master_token,
+  }
+
+  $_consul_bootstrap_expect = $consul_bootstrap_expect ? {
+    undef   => $::consul_bootstrap_expect,
+    default => $consul_bootstrap_expect,
+  }
+
+  $_consul_encrypt = $consul_encrypt ? {
+    undef   => $::consul_encrypt,
+    default => $consul_encrypt,
+  }
 
   $nologin = $::osfamily ? {
     'RedHat' => '/sbin/nologin',

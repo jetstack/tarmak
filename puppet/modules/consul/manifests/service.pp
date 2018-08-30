@@ -1,8 +1,6 @@
 class consul::service(
-  String $consul_encrypt = $::consul::consul_encrypt,
   String $fqdn = $consul::fqdn,
   String $private_ip = $consul::private_ip,
-  String $consul_master_token = $consul::consul_master_token,
   String $region = $consul::region,
   String $instance_count = $consul::instance_count,
   String $environment = $consul::environment,
@@ -24,6 +22,9 @@ class consul::service(
 
   $bin_path = $consul::bin_path
   $config_path = $consul::config_path
+
+  $consul_encrypt = $consul::_consul_encrypt
+  $consul_master_token = $consul::_consul_master_token
 
   $user = $consul::user
   $group = $consul::group
@@ -55,7 +56,7 @@ class consul::service(
         ],
     }
 
-    if defined('$consul::consul_master_token') {
+    if defined('$consul_master_token') {
       File[$token_file_path] ~> Service["${service_name}-exporter.service"]
     }
   }
