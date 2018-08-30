@@ -51,7 +51,8 @@ class vault_server (
   ensure_resource('class', '::airworthy', {})
 
   Class['::airworthy']
-  -> class { '::tarmak::vault': }
-  ~> class { '::vault_server::install': }
+  -> class { '::tarmak::vault':
+    volume_id => $volume_id,
+  } -> class { '::vault_server::install': }
   ~> class { '::vault_server::service': }
 }

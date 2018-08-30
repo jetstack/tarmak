@@ -2,9 +2,9 @@ class tarmak::vault (
   String $data_dir = '/var/lib/consul',
   String $dest_dir = '/opt/bin',
   String $systemd_dir = '/etc/systemd/system',
+  String $volume_id = '',
   Enum['aws', ''] $cloud_provider = '',
 ){
-  require ::vault_server
 
   if $cloud_provider == 'aws' {
     $disks = aws_ebs::disks()
@@ -19,7 +19,7 @@ class tarmak::vault (
       systemd_dir => $systemd_dir,
     }
     aws_ebs::mount{'vault':
-      volume_id => $vault_server::volume_id,
+      volume_id => $volume_id,
       device    => $ebs_device,
       dest_path => $data_dir,
     }
