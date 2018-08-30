@@ -21,9 +21,6 @@ describe 'consul::config' do
       should contain_file('/etc/consul/consul.json').with(
         :mode => '0600',
       )
-      should contain_file('/etc/consul/consul.json')
-      should contain_file('/etc/consul/consul.json')
-        .with_content(/[provider=aws tag_key=VaultCluster tag_value=env}]/)
     end
 
     it 'should install consul master token' do
