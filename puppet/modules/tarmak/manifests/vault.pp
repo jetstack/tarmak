@@ -6,7 +6,11 @@ class tarmak::vault (
   Enum['aws', ''] $cloud_provider = '',
 ){
 
-  if $cloud_provider == 'aws' {
+  if $cloud_provider == '' and defined('$::cloud_provider') {
+    $_cloud_provider = $::cloud_provider
+  }
+
+  if $_cloud_provider == 'aws' {
     $disks = aws_ebs::disks()
     case $disks.length {
       0: {$ebs_device = ''}

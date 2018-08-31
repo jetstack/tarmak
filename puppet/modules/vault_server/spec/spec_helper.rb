@@ -4,6 +4,7 @@ RSpec.configure do |config|
   config.default_facts = {
     :osfamily => 'RedHat',
     :path => '/bin:/sbin:/usr/bin:/usr/sbin',
+    :cloud_provider => 'aws',
     :disks => {},
     :consul_master_token => '',
     :consul_encrypt => '',

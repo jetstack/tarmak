@@ -30,5 +30,10 @@ describe 'vault_server' do
         :home => lib_dir,
       )
     end
+
+    it 'should mount vault ebs device' do
+      should contain_file('/etc/systemd/system/attach-ebs-volume-vault.service')
+      should contain_file('/etc/systemd/system/ensure-ebs-volume-vault-formatted.service')
+    end
   end
 end
