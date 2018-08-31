@@ -1,5 +1,6 @@
 require 'spec_helper_acceptance'
 require 'rubygems/package'
+require 'openssl'
 
 class CA
   def initialize(subject, validity=24*60*60*30)
@@ -63,25 +64,20 @@ end
 def prepare_host_files(host)
   file = Tempfile.new('params_tar')
   Gem::Package::TarWriter.new(file) do |writer|
-    writer.add_file("etc/facter/facts.d/vault_server", 0700) do |f|
-      # generate cert, key
-      cert, key = $ca.node_cert("/CN=#{host.hostname}",["DNS:#{host.hostname}"])
-      writer.add_file("etc/vault/tls/ca.pem", 0644) do |f|
-        f.write($ca.ca_cert_pem)
-      end
 
-      writer.add_file("etc/vault/tls/tls.pem", 0644) do |f|
-        f.write(cert)
-      end
-
-      writer.add_file("etc/tls/tls-key.pem", 0600) do |f|
-        f.write(key)
-      end
+    # generate cert, key
+    cert, key = $ca.node_cert("/CN=#{host.hostname}",["DNS:#{host.hostname}"])
+    writer.add_file("etc/vault/tls/ca.pem", 0644) do |f|
+      f.write($ca.ca_cert_pem)
     end
 
-    file.close
-    rsync_to(host, file.path, "/tmp/archive.tar", {})
-    on host, "tar xvf /tmp/archive.tar -C /"
+    writer.add_file("etc/vault/tls/tls.pem", 0644) do |f|
+      f.write(cert)
+    end
+
+    writer.add_file("etc/vault/tls/tls-key.pem", 0600) do |f|
+      f.write(key)
+    end
   end
 
   file.close
@@ -98,6 +94,7 @@ if hosts.length == 1
       end
     end
 
+    $ca = CA.new("/CN=Vault CI CA")
     hosts.each do |host|
       prepare_host_files(host)
     end
@@ -106,7 +103,10 @@ if hosts.length == 1
       # Using puppet_apply as a helper
       it 'should work with no errors based on the example' do
         pp = <<-EOS
-class{'vault_server':}
+class{'vault_server':
+  vault_unsealer_kms_key_id => '1234abcd-12ab-34cd-56ef-1234567890ab',
+  vault_unsealer_ssm_key_prefix => 'arn:aws:kms:us-west-2:111122223333:key',
+}
         EOS
         # Run it twice and test for idempotency
         apply_manifest(pp, :catch_failures => true)
