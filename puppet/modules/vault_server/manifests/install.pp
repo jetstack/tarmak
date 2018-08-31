@@ -4,7 +4,7 @@ class vault_server::install(
   String $_signature_url = $vault_server::params::signature_url,
   String $_unsealer_download_url = $vault_server::params::unsealer_download_url,
   String $unsealer_sha256 = $vault_server::params::unsealer_sha256,
-  String $consul_master_token = $vault_server::consul_master_token,
+  String $consul_master_token = $vault_server::_consul_master_token,
   String $environment = $vault_server::environment,
   String $user = 'root',
   String $group = 'root',

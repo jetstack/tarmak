@@ -6,10 +6,12 @@ verify: bundle_install
 bundle_install:
 	bundle install --path $(BUNDLE_DIR)
 
-acceptance: accetance-centos
-
-acceptance-centos: bundle_install
+acceptance: bundle_install
 	BEAKER_destroy=onpass bundle exec rake beaker:default
 
-acceptance-ubuntu: bundle_install
-	bundle exec rake beaker:ubuntu_1604_single_node
+# provide backwards compatiblity
+acceptance_three_node: acceptance-three-node
+
+acceptance-three-node: bundle_install
+	bundle exec rake beaker:3n-cluster
+

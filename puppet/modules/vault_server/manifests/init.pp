@@ -6,8 +6,8 @@ class vault_server (
   String $vault_tls_key_path = '',
   String $vault_unsealer_kms_key_id = '',
   String $vault_unsealer_ssm_key_prefix = '',
-  String $consul_master_token = '',
-  String $cloud_provider = '',
+  Optional[String] $consul_master_token = undef,
+  Enum['aws', ''] $cloud_provider = '',
   String $volume_id = '',
   String $app_name = $vault_server::params::app_name,
   String $version = $vault_server::params::version,
@@ -25,6 +25,10 @@ class vault_server (
     true    => $::path,
   }
 
+  $_consul_master_token = $consul_master_token ? {
+    undef   => $::consul_master_token,
+    default => $consul_master_token,
+  }
 
   $_dest_dir = "${dest_dir}/${app_name}-${version}"
   $bin_path = "${_dest_dir}/${app_name}"
@@ -48,11 +52,14 @@ class vault_server (
   }
 
   # install airworthy if necessary
-  ensure_resource('class', '::airworthy', {})
+  if !defined(Class[::airworthy]) {
+    ensure_resource('class', '::airworthy', {})
+  }
 
   Class['::airworthy']
-  -> class { '::tarmak::vault':
+  -> class {'::tarmak::vault':
     volume_id => $volume_id,
-  } -> class { '::vault_server::install': }
+  }
+  ~> class { '::vault_server::install': }
   ~> class { '::vault_server::service': }
 }

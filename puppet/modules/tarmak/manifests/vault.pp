@@ -1,8 +1,8 @@
 class tarmak::vault (
+  String $volume_id = '',
   String $data_dir = '/var/lib/consul',
   String $dest_dir = '/opt/bin',
   String $systemd_dir = '/etc/systemd/system',
-  String $volume_id = '',
   Enum['aws', ''] $cloud_provider = '',
 ){
 

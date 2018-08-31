@@ -5,5 +5,8 @@ RSpec.configure do |config|
     :osfamily => 'RedHat',
     :path => '/bin:/sbin:/usr/bin:/usr/sbin',
     :disks => {},
+    :consul_master_token => '',
+    :consul_encrypt => '',
+    :consul_bootstrap_expect => '1',
   }
 end

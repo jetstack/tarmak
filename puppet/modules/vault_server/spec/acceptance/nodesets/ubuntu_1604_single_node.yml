@@ -2,6 +2,7 @@
 HOSTS:
   centos-72-x64:
     roles:
+      - consul
       - vault_server
     platform: el-7-x86_64
     box: centos/7

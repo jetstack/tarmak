@@ -120,7 +120,9 @@ class consul(
   }
 
   # install airworthy if necessary
-  ensure_resource('class', '::airworthy', {})
+  if !defined(Class[::airworthy]) {
+    ensure_resource('class', '::airworthy', {})
+  }
 
   Class['::airworthy']
   ~> class { '::consul::install': }

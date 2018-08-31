@@ -65,24 +65,44 @@ def prepare_host_files(host)
   file = Tempfile.new('params_tar')
   Gem::Package::TarWriter.new(file) do |writer|
 
+    writer.add_file("etc/facter/facts.d/consul", 0700) do |f|
+      content = <<EOS
+#!/bin/bash
+echo CONSUL_MASTER_TOKEN=7f0c1dae-aac7-44ea-abe8-d9411c9068cb
+echo CONSUL_BOOTSTRAP_EXPECT=1
+echo CONSUL_ENCRYPT=GFoaCb3cOofGJn2qwqvz8A==
+EOS
+      f.write(content)
+    end
+
     # generate cert, key
-    cert, key = $ca.node_cert("/CN=#{host.hostname}",["DNS:#{host.hostname}"])
+    cert, key = $ca.node_cert("/CN=localhost",["DNS:localhost"])
     writer.add_file("etc/vault/tls/ca.pem", 0644) do |f|
       f.write($ca.ca_cert_pem)
     end
-
     writer.add_file("etc/vault/tls/tls.pem", 0644) do |f|
       f.write(cert)
     end
-
     writer.add_file("etc/vault/tls/tls-key.pem", 0600) do |f|
       f.write(key)
+    end
+
+    writer.add_file("etc/consul/consul-ca.pem", 0644) do |f| 
+	    f.write($ca.ca_cert_pem)
+    end
+    writer.add_file("etc/consul/consul.pem", 0644) do |f| 
+	    f.write(cert)
+    end
+    writer.add_file("etc/consul/consul-key.pem", 0600) do |f| 
+	    f.write(key)
     end
   end
 
   file.close
   rsync_to(host, file.path, "/tmp/archive.tar", {})
   on host, "tar xvf /tmp/archive.tar -C /"
+  on host, "chown 871 /etc/consul/consul-key.pem"
+  on host, "chown 871 /etc/vault/tls/tls-key.pem"
 end
 
 if hosts.length == 1
@@ -103,9 +123,17 @@ if hosts.length == 1
       # Using puppet_apply as a helper
       it 'should work with no errors based on the example' do
         pp = <<-EOS
+class{'consul':
+  ca_file => '/etc/consul/consul-ca.pem',
+  cert_file => '/etc/consul/consul.pem',
+  key_file => '/etc/consul/consul-key.pem',
+}
 class{'vault_server':
   vault_unsealer_kms_key_id => '1234abcd-12ab-34cd-56ef-1234567890ab',
   vault_unsealer_ssm_key_prefix => 'arn:aws:kms:us-west-2:111122223333:key',
+  environment => 'dev',
+  cloud_provider => 'aws',
+  volume_id => 'vol',
 }
         EOS
         # Run it twice and test for idempotency
