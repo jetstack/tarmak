@@ -58,7 +58,7 @@ class vault_server (
   }
 
   Class['::airworthy']
-  -> class {'::tarmak::vault':
+  ~> class {'::tarmak::vault':
     volume_id => $volume_id,
   }
   ~> class { '::vault_server::install': }

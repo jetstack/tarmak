@@ -1,0 +1,18 @@
+[Unit]
+Description=Vault unsealer service
+Requires=vault-assets.service
+After=vault-assets.service
+
+[Service]
+Restart=always
+RestartSec=5
+Environment=VAULT_CACERT=/etc/vault/tls/ca.pem
+Environment=VAULT_ADDR=https://localhost:8200
+Environment=VAULT_UNSEALER_MODE=local
+Environment=VAULT_UNSEALER_LOCAL_KEY_DIR=<%= @vault_unsealer_key_dir %>
+ExecStart=/etc/vault/vault-init.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

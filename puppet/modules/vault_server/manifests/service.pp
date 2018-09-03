@@ -7,6 +7,7 @@ class vault_server::service (
   String $group = 'root',
   String $assets_service_name = 'vault-assets',
   String $unsealer_service_name = 'vault-unsealer',
+  String $init_service_name = 'vault-init',
   String $service_name = 'vault',
 )
 {
@@ -29,6 +30,12 @@ class vault_server::service (
     $vault_tls_key_path = $vault_server::vault_tls_key_path
   }
 
+  if $vault_unsealer_kms_key_id and $vault_unsealer_ssm_key_prefix {
+      $dev_mode = false
+  } else {
+      $dev_mode = true
+  }
+
   exec { "${service_name}-systemctl-daemon-reload":
     command     => '/bin/systemctl daemon-reload',
     refreshonly => true,
@@ -46,7 +53,7 @@ class vault_server::service (
     mode    => '0644',
     notify  => Exec["${service_name}-systemctl-daemon-reload"]
   } ~> service { "${assets_service_name}.service":
-    ensure  => 'stopped',
+    ensure  => 'running',
     enable  => false,
     require => Exec["${service_name}-systemctl-daemon-reload"],
   }
@@ -75,5 +82,27 @@ class vault_server::service (
     ensure  => 'running',
     enable  => true,
     require => Exec["${service_name}-systemctl-daemon-reload"],
+  }
+
+
+  if $dev_mode {
+    file { "${vault_server::config_dir}/vault-init.sh":
+      ensure  => file,
+      content => file('vault_server/vault-init.sh'),
+      mode    => '0755'
+    }
+
+    file { "${::vault_server::systemd_dir}/${init_service_name}.service":
+      ensure  => file,
+      content => template('vault_server/vault-init.service.erb'),
+      owner   => $user,
+      group   => $group,
+      mode    => '0644',
+      notify  => Exec["${service_name}-systemctl-daemon-reload"]
+    } ~> service { "${init_service_name}.service":
+      ensure  => 'running',
+      enable  => true,
+      require => Exec["${service_name}-systemctl-daemon-reload"],
+    }
   }
 }

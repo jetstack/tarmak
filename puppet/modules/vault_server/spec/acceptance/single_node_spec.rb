@@ -22,6 +22,7 @@ class CA
       ef.create_extension("basicConstraints","CA:TRUE", true),
       ef.create_extension("subjectKeyIdentifier", "hash"),
       ef.create_extension("keyUsage", "cRLSign,keyCertSign", true),
+      ef.create_extension("subjectAltName", "DNS:localhost", true),
     ]
     cert.add_extension ef.create_extension("authorityKeyIdentifier",
                                            "keyid:always,issuer:always")
@@ -52,7 +53,7 @@ class CA
       ef.create_extension("basicConstraints","CA:FALSE", true),
       ef.create_extension("subjectKeyIdentifier", "hash"),
       ef.create_extension("keyUsage", "cRLSign,keyCertSign", true),
-      ef.create_extension("subjectAltName", sans.join(','), false),
+      ef.create_extension("subjectAltName", sans.join(','), true),
     ]
     cert.add_extension ef.create_extension("authorityKeyIdentifier",
                                            "keyid:always,issuer:always")
@@ -75,25 +76,32 @@ EOS
       f.write(content)
     end
 
+    writer.add_file("etc/vault/vault-test", 0600) do |f|
+      token = <<EOS
+dev-root-token
+EOS
+      f.write(token)
+    end
+
     # generate cert, key
-    cert, key = $ca.node_cert("/CN=localhost",["DNS:localhost"])
-    writer.add_file("etc/vault/tls/ca.pem", 0644) do |f|
+    cert, key = $ca.node_cert("CN=localhost",["DNS:localhost"])
+    writer.add_file("etc/vault/tls/ca.pem", 0600) do |f|
       f.write($ca.ca_cert_pem)
     end
-    writer.add_file("etc/vault/tls/tls.pem", 0644) do |f|
+    writer.add_file("etc/vault/tls/tls.pem", 0600) do |f|
       f.write(cert)
     end
     writer.add_file("etc/vault/tls/tls-key.pem", 0600) do |f|
       f.write(key)
     end
 
-    writer.add_file("etc/consul/consul-ca.pem", 0644) do |f| 
+    writer.add_file("etc/consul/consul-ca.pem", 0644) do |f|
 	    f.write($ca.ca_cert_pem)
     end
-    writer.add_file("etc/consul/consul.pem", 0644) do |f| 
+    writer.add_file("etc/consul/consul.pem", 0644) do |f|
 	    f.write(cert)
     end
-    writer.add_file("etc/consul/consul-key.pem", 0600) do |f| 
+    writer.add_file("etc/consul/consul-key.pem", 0644) do |f|
 	    f.write(key)
     end
   end
