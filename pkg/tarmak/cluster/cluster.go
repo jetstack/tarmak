@@ -734,6 +734,30 @@ func (c *Cluster) Variables() map[string]interface{} {
 		output["private_zone"] = privateZone
 	}
 
+	// Get enabled elb access logs
+	if k := c.Config().Kubernetes; k != nil && k.APIServer != nil && k.APIServer.Amazon != nil {
+		if p := k.APIServer.Amazon.PublicELBAccessLogs; p != nil {
+			output["elb_access_logs_public_enabled"] = fmt.Sprintf("%v", p.Enabled)
+			output["elb_access_logs_public_bucket"] = p.Bucket
+			output["elb_access_logs_public_bucket_prefix"] = p.BucketPrefix
+			output["elb_access_logs_public_bucket_interval"] = p.Interval
+		} else {
+			output["elb_access_logs_public_enabled"] = "false"
+		}
+
+		if i := k.APIServer.Amazon.InternalELBAccessLogs; i != nil {
+			output["elb_access_logs_internal_enabled"] = fmt.Sprintf("%v", i.Enabled)
+			output["elb_access_logs_internal_bucket"] = i.Bucket
+			output["elb_access_logs_internal_bucket_prefix"] = i.BucketPrefix
+			output["elb_access_logs_internal_bucket_interval"] = i.Interval
+		} else {
+			output["elb_access_logs_internal_enabled"] = "false"
+		}
+	} else {
+		output["elb_access_logs_public_enabled"] = "false"
+		output["elb_access_logs_internal_enabled"] = "false"
+	}
+
 	output["name"] = c.Name()
 
 	return output

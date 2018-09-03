@@ -126,6 +126,9 @@ type ClusterKubernetesAPIServer struct {
 
 	// OIDC
 	OIDC *ClusterKubernetesAPIServerOIDC `json:"oidc,omitempty"`
+
+	// AWS specifc options
+	Amazon *ClusterKubernetesAPIServerAmazon `json:"amazon,omitempty"`
 }
 
 type ClusterKubernetesAPIServerOIDC struct {
@@ -161,6 +164,18 @@ type ClusterKubernetesAPIServerOIDC struct {
 	// provided, username claims other than 'email' are prefixed by the issuer
 	// URL to avoid clashes. To skip any prefixing, provide the value '-'.
 	UsernamePrefix string `json:"usernamePrefix,omitempty" hiera:"kubernetes::apiserver::oidc_username_prefix"`
+}
+
+type ClusterKubernetesAPIServerAmazon struct {
+	PublicELBAccessLogs   *ClusterKubernetesAPIServerAmazonAccessLogs `json:"publicELBAccessLogs,omitempty"`
+	InternalELBAccessLogs *ClusterKubernetesAPIServerAmazonAccessLogs `json:"internalELBAccessLogs,omitempty"`
+}
+
+type ClusterKubernetesAPIServerAmazonAccessLogs struct {
+	Enabled      bool   `json:"enabled,omitempty"`
+	Bucket       string `json:"bucket,omitempty"`
+	BucketPrefix string `json:"bucketPrefix,omitempty"`
+	Interval     int    `json:"interval,omitempty"`
 }
 
 type ClusterPodSecurityPolicy struct {

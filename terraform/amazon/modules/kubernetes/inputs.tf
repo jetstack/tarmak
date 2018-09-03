@@ -77,3 +77,12 @@ variable "public_zone_id" {}
 variable "vault_security_group_id" {}
 
 variable "bastion_security_group_id" {}
+
+variable "elb_access_logs_public_enabled" {}
+variable "elb_access_logs_public_bucket" {}
+variable "elb_access_logs_public_bucket_prefix" {}
+variable "elb_access_logs_public_bucket_interval" {}
+variable "elb_access_logs_internal_enabled" {}
+variable "elb_access_logs_internal_bucket" {}
+variable "elb_access_logs_internal_bucket_prefix" {}
+variable "elb_access_logs_internal_bucket_interval" {}

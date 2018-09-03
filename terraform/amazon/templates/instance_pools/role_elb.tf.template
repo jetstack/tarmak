@@ -25,6 +25,13 @@ resource "aws_elb" "{{.Role.TFName}}" {
     interval            = 30
   }
 
+  access_logs {
+    enabled       = "${var.elb_access_logs_internal_enabled}"
+    bucket        = "${var.elb_access_logs_internal_bucket}"
+    bucket_prefix = "${var.elb_access_logs_internal_bucket_prefix}"
+    interval      = "${var.elb_access_logs_internal_bucket_interval}"
+  }
+
   tags {
     Name        = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
     Environment = "${var.environment}"
@@ -69,6 +76,13 @@ resource "aws_elb" "{{.Role.TFName}}_public" {
     timeout             = 3
     target              = "TCP:6443"
     interval            = 30
+  }
+
+  access_logs {
+    enabled       = "${var.elb_access_logs_public_enabled}"
+    bucket        = "${var.elb_access_logs_public_bucket}"
+    bucket_prefix = "${var.elb_access_logs_public_bucket_prefix}"
+    interval      = "${var.elb_access_logs_public_bucket_interval}"
   }
 
   tags {
@@ -182,6 +196,13 @@ resource "aws_elb" "{{.Role.TFName}}" {
   #  lb_protocol        = "https"
   #  ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
   #}
+
+  access_logs {
+    enabled       = "${var.elb_access_logs_internal_enabled}"
+    bucket        = "${var.elb_access_logs_internal_bucket}"
+    bucket_prefix = "${var.elb_access_logs_internal_bucket_prefix}"
+    interval      = "${var.elb_access_logs_internal_bucket_interval}"
+  }
 
   tags {
     Environment = "${var.environment}"
