@@ -8,6 +8,8 @@ class tarmak::vault (
 
   if $cloud_provider == '' and defined('$::cloud_provider') {
     $_cloud_provider = $::cloud_provider
+  } else {
+    $_cloud_provider = $cloud_provider
   }
 
   if $_cloud_provider == 'aws' {
