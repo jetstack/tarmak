@@ -129,8 +129,6 @@ class{'consul':
   key_file => '/etc/consul/consul-key.pem',
 }
 class{'vault_server':
-  vault_unsealer_kms_key_id => '1234abcd-12ab-34cd-56ef-1234567890ab',
-  vault_unsealer_ssm_key_prefix => 'arn:aws:kms:us-west-2:111122223333:key',
   environment => 'dev',
   cloud_provider => 'aws',
   volume_id => 'vol',

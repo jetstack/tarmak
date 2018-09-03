@@ -6,13 +6,18 @@ After=vault-assets.service
 [Service]
 Restart=always
 RestartSec=5
-Environment=AWS_REGION=<%= @region %>
 Environment=VAULT_CACERT=/etc/vault/tls/ca.pem
 Environment=VAULT_ADDR=https://localhost:8200
+Environment=VAULT_UNSEALER_STORE_ROOT_TOKEN=false
+<% if @vault_unsealer_kms_key_id and @vault_unsealer_ssm_key_prefix -%>
+Envirend=AWS_REGION=<%= @region %>
 Environment=VAULT_UNSEALER_MODE=aws-kms-ssm
 Environment=VAULT_UNSEALER_AWS_KMS_KEY_ID=<%= @vault_unsealer_kms_key_id %>
 Environment=VAULT_UNSEALER_AWS_SSM_KEY_PREFIX=<%= @vault_unsealer_ssm_key_prefix %>
-Environment=VAULT_UNSEALER_STORE_ROOT_TOKEN=false
+<% else -%>
+Environment=VAULT_UNSEALER_MODE=local
+Environment=VAULT_UNSEALER_LOCAL_KEY_DIR=<%= @vault_unsealer_key_dir %>
+<% end -%>
 ExecStart=/opt/bin/vault-unsealer unseal
 
 [Install]

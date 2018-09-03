@@ -1,7 +1,8 @@
 class vault_server::service (
+  Optional[String] $vault_unsealer_kms_key_id = $vault_server::vault_unsealer_kms_key_id,
+  Optional[String] $vault_unsealer_ssm_key_prefix = $vault_server::vault_unsealer_ssm_key_prefix,
+  Optional[String] $vault_unsealer_key_dir = $vault_server::vault_unsealer_key_dir,
   String $region = $vault_server::region,
-  String $vault_unsealer_kms_key_id = $vault_server::vault_unsealer_kms_key_id,
-  String $vault_unsealer_ssm_key_prefix = $vault_server::vault_unsealer_ssm_key_prefix,
   String $user = 'root',
   String $group = 'root',
   String $assets_service_name = 'vault-assets',
