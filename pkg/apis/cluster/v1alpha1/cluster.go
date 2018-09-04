@@ -69,11 +69,13 @@ type Cluster struct {
 	Amazon *ClusterAmazon `json:"amazon"`
 }
 
-// Amazon specific settings for that instance pool
+// ClusterAmazon offers Amazon-specific settings for that instance pool
 type ClusterAmazon struct {
 	// This fields contains ARNs for additional IAM policies to be added to this
 	// instance pool
 	AdditionalIAMPolicies []string `json:"additionalIAMPolicies,omitempty"`
+	// When set to true, AWS Elastic Block Storage volumes are encrypted
+	EBSEncrypted *bool `json:"ebsEncrypted,omitempty"`
 }
 
 type ClusterKubernetes struct {

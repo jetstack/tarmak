@@ -39,7 +39,7 @@ type image struct {
 	id          *string
 }
 
-func (i *image) tags() map[string]string {
+func (i *image) userVariables() map[string]string {
 	return map[string]string{
 		tarmakv1alpha1.ImageTagEnvironment:   i.environment,
 		tarmakv1alpha1.ImageTagBaseImageName: i.imageName,
@@ -95,7 +95,7 @@ func (i *image) Build() (amiID string, err error) {
 		Version:    version.Version,
 		Template:   tpl,
 		Components: components,
-		Variables:  i.tags(),
+		Variables:  i.userVariables(),
 	}
 
 	select {
@@ -106,7 +106,7 @@ func (i *image) Build() (amiID string, err error) {
 
 	envVars, err := i.tarmak.Provider().Environment()
 	if err != nil {
-		return "", fmt.Errorf("faild to get provider credentials: %v", err)
+		return "", fmt.Errorf("failed to get provider credentials: %v", err)
 	}
 
 	var result *multierror.Error

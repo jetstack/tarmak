@@ -64,6 +64,9 @@ type Cluster interface {
 
 	// return public api hostname
 	PublicAPIHostname() string
+
+	// get status of Aamazon EBS encryption
+	AmazonEBSEncrypted() bool
 }
 
 type Environment interface {
@@ -97,7 +100,7 @@ type Environment interface {
 	// return the cluster which is the hub
 	Hub() Cluster
 
-	// return the vaullt for the environment
+	// return the vault for the environment
 	Vault() Vault
 }
 

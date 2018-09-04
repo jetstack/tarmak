@@ -357,6 +357,22 @@ Both of those outputs can then be used in the tarmak configuration:
       additionalIAMPolicies:
       - ${elasticsearch_shipping_policy_arn}
 
+EBS Encryption
+~~~~~~~~~~~~~~
+
+AWS offers encrypted EBS (`Elastic Block Storage <https://aws.amazon.com/ebs/details/>`_); however,
+`Encryption of EBS volumes <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html>`_
+is not enabled by Tarmak by default. When enabled, building the image and applying a Tarmak cluster
+will take considerably longer.
+
+The following `tarmak.yaml` snippet shows how to enable encrypted EBS.
+
+.. code-block:: yaml
+
+    clusters:
+    - amazon:
+        ebsEncrypted: true
+    ...
 
 OIDC Authentication
 ~~~~~~~~~~~~~~~~~~~

@@ -71,6 +71,15 @@ func SetDefaults_Cluster(obj *Cluster) {
 		obj.Kubernetes.Dashboard = &ClusterKubernetesDashboard{}
 	}
 
+	// EBS encryption off if Amazon interface used
+	// but EBSEncrypted not specified
+	if obj.Amazon == nil {
+		obj.Amazon = &ClusterAmazon{}
+	}
+	if obj.Amazon.EBSEncrypted == nil {
+		obj.Amazon.EBSEncrypted = boolPointer(false)
+	}
+
 	// logging
 	if obj.LoggingSinks == nil {
 		obj.LoggingSinks = []*LoggingSink{}
