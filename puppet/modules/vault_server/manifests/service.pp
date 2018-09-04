@@ -83,26 +83,4 @@ class vault_server::service (
     enable  => true,
     require => Exec["${service_name}-systemctl-daemon-reload"],
   }
-
-
-  if $dev_mode {
-    file { "${vault_server::config_dir}/vault-init.sh":
-      ensure  => file,
-      content => file('vault_server/vault-init.sh'),
-      mode    => '0755'
-    }
-
-    file { "${::vault_server::systemd_dir}/${init_service_name}.service":
-      ensure  => file,
-      content => template('vault_server/vault-init.service.erb'),
-      owner   => $user,
-      group   => $group,
-      mode    => '0644',
-      notify  => Exec["${service_name}-systemctl-daemon-reload"]
-    } ~> service { "${init_service_name}.service":
-      ensure  => 'running',
-      enable  => true,
-      require => Exec["${service_name}-systemctl-daemon-reload"],
-    }
-  }
 }

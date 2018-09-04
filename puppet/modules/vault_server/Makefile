@@ -13,5 +13,4 @@ acceptance: bundle_install
 acceptance_three_node: acceptance-three-node
 
 acceptance-three-node: bundle_install
-	bundle exec rake beaker:3n-cluster
-
+	BEAKER_destroy=onpass bundle exec rake beaker:3n-cluster

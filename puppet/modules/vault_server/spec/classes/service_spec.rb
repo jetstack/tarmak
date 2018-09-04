@@ -23,7 +23,7 @@ describe 'vault_server::service' do
         :mode => '0644',
       )
       should contain_service('vault-assets.service').with(
-        :ensure => 'stopped',
+        :ensure => 'running',
         :enable => false,
       )
     end

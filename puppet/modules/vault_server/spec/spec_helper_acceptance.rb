@@ -15,12 +15,12 @@ RSpec.configure do |c|
   c.before :suite do
     # Sync modules to all hosts
     hosts.each do |host|
-      if fact('osfamily') == 'RedHat'
-        logger.notify "ensure rsync exists on #{host}"
-        on host, 'yum install -y rsync'
-      elsif fact_on(host, 'osfamily') == 'Debian'
+      if fact_on(host, 'osfamily') == 'Debian'
         on(host, 'apt-get update')
         on(host, 'apt-get -y install rsync')
+      else
+        logger.notify "ensure rsync exists on #{host}"
+        on host, 'yum install -y rsync'
       end
 
       # rsync modules fixtures or folders in if you are on tarmak
