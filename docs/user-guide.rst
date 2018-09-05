@@ -675,6 +675,36 @@ You add labels and taints in the tarmak yaml like this:
 these values will not remove taints and labels from nodes that are already
 registered.
 
+API Server ELB Access Logs
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tarmak features storing access logs of the internal and public, if enabled, API
+server ELB.  This is achieved through enabling configuration options in the
+tarmak.yaml. Here you must specify the S3 storage bucket, prefix and
+publishing interval in minutes under the API server header within the
+Kubernetes options, as follows:
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+      public: true
+      amazon:
+        internalELBAccessLogs:
+          bucket: cluster-accesslogs
+          bucketPrefix: internal
+          enabled: true
+          interval: 60
+        publicELBAccessLogs:
+          bucket: cluster-accesslogs
+          bucketPrefix: public
+          enabled: true
+          interval: 60
+
+Note that the S3 bucket needs to exist with the correct S3 policy permissions.
+`Information on how to correctly set these permissions can be found here
+<https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy>`_.
+
 Cluster Services
 ----------------
 
