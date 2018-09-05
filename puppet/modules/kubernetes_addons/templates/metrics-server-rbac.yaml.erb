@@ -1,0 +1,93 @@
+# This file should be kept in sync with https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy
+<% if @rbac_enabled -%>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+---
+<% if @version_before_1_8 -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+<% if @version_before_1_8 -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+<% unless @version_before_1_8 -%>
+<% if @version_before_1_8 -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - nodes/stats
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+<% if @version_before_1_8 -%>
+apiVersion: rbac.authorization.k8s.io/v1beta1
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+<% end -%>
+<% end -%>
