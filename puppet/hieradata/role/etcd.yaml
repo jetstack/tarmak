@@ -1,6 +1,6 @@
 ---
 classes:
 - tarmak::etcd
-- airworthy::install
+- airworthy
 
 tarmak::hostname: "%{::tarmak_hostname}"
