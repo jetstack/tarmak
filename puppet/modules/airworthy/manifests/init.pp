@@ -30,5 +30,4 @@ class airworthy (
   }
 
   class { '::airworthy::install': }
-  -> Class['::airworthy']
 }
