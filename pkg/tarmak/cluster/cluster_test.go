@@ -238,12 +238,12 @@ func TestCluster_ValidateClusterInstancePoolTypesHub(t *testing.T) {
 	passTypes := []string{
 		clusterv1alpha1.InstancePoolTypeBastion,
 		clusterv1alpha1.InstancePoolTypeVault,
+		clusterv1alpha1.InstancePoolTypeJenkins,
 	}
 	failTypes := []string{
 		clusterv1alpha1.InstancePoolTypeMaster,
 		clusterv1alpha1.InstancePoolTypeWorker,
 		clusterv1alpha1.InstancePoolTypeEtcd,
-		clusterv1alpha1.InstancePoolTypeJenkins,
 	}
 	tryInstancePoolTypes(c, passTypes, failTypes, t)
 
