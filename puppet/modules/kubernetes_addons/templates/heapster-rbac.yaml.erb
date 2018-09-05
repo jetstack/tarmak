@@ -7,11 +7,13 @@ metadata:
   labels:
     kubernetes.io/cluster-service: "true"
 ---
-<%- if @version_before_1_6 -%>
+<% if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
-<%- else -%>
+<% elsif @version_before_1_8 -%>
 apiVersion: rbac.authorization.k8s.io/v1beta1
-<%- end -%>
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
 kind: ClusterRoleBinding
 metadata:
   name: system:heapster
@@ -24,11 +26,13 @@ subjects:
   name: heapster
   namespace: kube-system
 ---
-<%- if @version_before_1_6 -%>
+<% if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
-<%- else -%>
+<% elsif @version_before_1_8 -%>
 apiVersion: rbac.authorization.k8s.io/v1beta1
-<%- end -%>
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
 kind: Role
 metadata:
   namespace: kube-system
@@ -45,11 +49,13 @@ rules:
   - watch
   - update
 ---
-<%- if @version_before_1_6 -%>
+<% if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
-<%- else -%>
+<% elsif @version_before_1_8 -%>
 apiVersion: rbac.authorization.k8s.io/v1beta1
-<%- end -%>
+<% else -%>
+apiVersion: rbac.authorization.k8s.io/v1
+<% end -%>
 kind: RoleBinding
 metadata:
   namespace: kube-system

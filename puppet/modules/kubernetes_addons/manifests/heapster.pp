@@ -28,6 +28,18 @@ class kubernetes_addons::heapster(
     $version_before_1_6 = true
   }
 
+  if versioncmp($::kubernetes::version, '1.8.0') >= 0 {
+    $version_before_1_8 = false
+  } else {
+    $version_before_1_8 = true
+  }
+
+  if versioncmp($::kubernetes::version, '1.9.0') >= 0 {
+    $version_before_1_9 = false
+  } else {
+    $version_before_1_9 = true
+  }
+
   kubernetes::apply{'heapster':
     manifests => [
       template('kubernetes_addons/heapster-svc.yaml.erb'),
