@@ -7,10 +7,10 @@ bundle_install:
 	bundle install --path $(BUNDLE_DIR)
 
 acceptance: bundle_install
-	BEAKER_destroy=onpass bundle exec rake beaker:default
+	bundle exec rake beaker:default
 
 # provide backwards compatiblity
 acceptance_three_node: acceptance-three-node
 
 acceptance-three-node: bundle_install
-	BEAKER_destroy=onpass bundle exec rake beaker:3n-cluster
+	bundle exec rake beaker:3n-cluster

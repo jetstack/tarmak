@@ -1,0 +1,17 @@
+[Unit]
+Description=Vault server
+Requires=consul.service vault-assets.service
+After=consul.service vault-assets.service
+
+[Service]
+Environment=VAULT_CACERT=/etc/vault/tls/ca.pem
+Environment=VAULT_ADDR=https://localhost:8200
+Environment=VAULT_UNSEALER_MODE=local
+Environment=VAULT_UNSEALER_LOCAL_KEY_DIR=<%= @vault_unsealer_key_dir %>
+ExecStart=/opt/bin/vault-init.sh
+Restart=on-failure
+RestartSec=3
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -5,13 +5,7 @@ After=consul.service vault-assets.service
 
 [Service]
 Environment=AWS_REGION=<%= @region %>
-<% if @dev_mode -%>
-Environment=VAULT_DEV_ROOT_TOKEN_ID=dev-root-token
-Environment=VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
-ExecStart=/opt/bin/vault server -dev -config=/etc/vault/vault.hcl
-<% else -%>
 ExecStart=/opt/bin/vault server -config=/etc/vault/vault.hcl
-<% end -%>
 Restart=on-failure
 RestartSec=10
 
