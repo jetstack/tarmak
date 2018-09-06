@@ -74,7 +74,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 	}
 
 	// setup instance pools
-	var result error
+	var result *multierror.Error
 	for pos, _ := range cluster.conf.InstancePools {
 		instancePool := cluster.conf.InstancePools[pos]
 		// create instance pools
@@ -86,7 +86,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		cluster.instancePools = append(cluster.instancePools, pool)
 	}
 
-	return cluster, result
+	return cluster, result.ErrorOrNil()
 }
 
 func (c *Cluster) InstancePools() []interfaces.InstancePool {
@@ -357,7 +357,7 @@ func (c *Cluster) verifyHubState() error {
 }
 
 // Verify instance pools
-func (c *Cluster) VerifyInstancePools() (result error) {
+func (c *Cluster) VerifyInstancePools() error {
 	imageIDs, err := c.ImageIDs()
 	if err != nil {
 		return fmt.Errorf("error getting image IDs: %s]", err)
@@ -370,6 +370,7 @@ func (c *Cluster) VerifyInstancePools() (result error) {
 			return fmt.Errorf("error getting the image ID of %s", instancePool.TFName())
 		}
 	}
+
 	return nil
 }
 
@@ -416,7 +417,7 @@ func (c *Cluster) Validate() error {
 }
 
 // validate network configuration
-func (c *Cluster) validateNetwork() (result error) {
+func (c *Cluster) validateNetwork() error {
 	// make the choice between deploying into existing VPC or creating a new one
 	if _, ok := c.Config().Network.ObjectMeta.Annotations[clusterv1alpha1.ExistingVPCAnnotationKey]; ok {
 		// TODO: handle existing vpc
@@ -437,7 +438,7 @@ func (c *Cluster) validateNetwork() (result error) {
 }
 
 // validate logging configuration
-func (c *Cluster) validateLoggingSinks() (result error) {
+func (c *Cluster) validateLoggingSinks() error {
 
 	if c.Config().LoggingSinks != nil {
 		for index, loggingSink := range c.Config().LoggingSinks {
@@ -459,7 +460,7 @@ func (c *Cluster) validateLoggingSinks() (result error) {
 }
 
 // validate overprovisioning
-func (c *Cluster) validateClusterAutoscaler() (result error) {
+func (c *Cluster) validateClusterAutoscaler() error {
 
 	if c.Config().Kubernetes != nil && c.Config().Kubernetes.ClusterAutoscaler != nil && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning != nil {
 		if !c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Enabled {
@@ -490,7 +491,9 @@ func (c *Cluster) validateClusterAutoscaler() (result error) {
 }
 
 // Validate APIServer
-func (c *Cluster) validateAPIServer() (result error) {
+func (c *Cluster) validateAPIServer() error {
+	var result *multierror.Error
+
 	for _, cidr := range c.Config().Kubernetes.APIServer.AllowCIDRs {
 		_, _, err := net.ParseCIDR(cidr)
 		if err != nil {
@@ -498,12 +501,10 @@ func (c *Cluster) validateAPIServer() (result error) {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (c *Cluster) validatePrometheusMode() error {
-	var result error
-
 	allowedModes := sets.NewString(
 		clusterv1alpha1.PrometheusModeFull,
 		clusterv1alpha1.PrometheusModeExternalScrapeTargetsOnly,
@@ -517,7 +518,7 @@ func (c *Cluster) validatePrometheusMode() error {
 		}
 	}
 
-	return result
+	return nil
 }
 
 // Determine if this Cluster is a cluster or hub, single or multi environment

@@ -53,9 +53,7 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 		log:    tarmak.Log().WithField("environment", conf.Name),
 	}
 
-	var result error
 	var err error
-
 	// init provider
 	e.provider, err = tarmak.ProviderByName(conf.Provider)
 	if err != nil {
@@ -65,6 +63,7 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 	// TODO RENABLE
 	//networkCIDRs := []*net.IPNet{}
 
+	var result *multierror.Error
 	for posCluster, _ := range clusters {
 		clusterConf := clusters[posCluster]
 		clusterIntf, err := cluster.NewFromConfig(e, clusterConf)
@@ -72,13 +71,15 @@ func NewFromConfig(tarmak interfaces.Tarmak, conf *tarmakv1alpha1.Environment, c
 			result = multierror.Append(result, err)
 			continue
 		}
+
 		e.clusters = append(e.clusters, clusterIntf)
 		if len(clusters) == 1 || clusterConf.Name == "hub" {
 			e.HubCluster = clusterIntf
 		}
 	}
+
 	if result != nil {
-		return nil, result
+		return nil, result.ErrorOrNil()
 	}
 
 	if e.HubCluster != nil {
@@ -277,7 +278,8 @@ func (e *Environment) Log() *logrus.Entry {
 	return e.log
 }
 
-func (e *Environment) Validate() (result error) {
+func (e *Environment) Validate() error {
+	var result *multierror.Error
 
 	if err := e.Provider().Validate(); err != nil {
 		result = multierror.Append(result, err)
@@ -287,10 +289,12 @@ func (e *Environment) Validate() (result error) {
 		result = multierror.Append(result, err)
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
-func (e *Environment) ValidateAdminCIDRs() (result error) {
+func (e *Environment) ValidateAdminCIDRs() error {
+	var result *multierror.Error
+
 	for _, cidr := range e.Config().AdminCIDRs {
 		_, _, err := net.ParseCIDR(cidr)
 		if err != nil {
@@ -298,7 +302,7 @@ func (e *Environment) ValidateAdminCIDRs() (result error) {
 		}
 	}
 
-	return result
+	return result.ErrorOrNil()
 }
 
 func (e *Environment) Verify() error {
