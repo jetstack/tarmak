@@ -330,7 +330,7 @@ func (t *terraformTemplate) generateAWSSecurityGroup() (rules map[string][]*amaz
 	rules = make(map[string][]*amazon.AWSSGRule)
 	for _, role := range t.cluster.Roles() {
 
-		if role.Name() == "bastion" {
+		if role.Name() == "bastion" || role.Name() == "vault" {
 			continue
 		}
 
