@@ -133,27 +133,40 @@ func (t *terraformTemplate) Generate() error {
 		}
 	}
 
-	for _, tmpl := range []struct {
-		name, target string
-	}{
-		{"modules", "modules"},
-		{"inputs", "inputs"},
-		{"outputs", "outputs"},
-		{"providers", "providers"},
-		{"jenkins_elb", "modules/jenkins/jenkins_elb"},
-		{"wing_s3", "modules/kubernetes/wing_s3"},
-		{"wing_s3", "modules/vault/wing_s3"},
-		{"vault_instances", "modules/vault/vault_instances"},
-	} {
-		if err := t.generateTemplate(tmpl.name, tmpl.target, "tf"); err != nil {
-			result = multierror.Append(result, err)
+	if t.cluster.Type() != clusterv1alpha1.ClusterTypeHub {
+		for _, tmpl := range []struct {
+			name, target string
+		}{
+			{"modules", "modules"},
+			{"inputs", "inputs"},
+			{"outputs", "outputs"},
+			{"providers", "providers"},
+			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
+			{"wing_s3", "modules/kubernetes/wing_s3"},
+		} {
+			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "kubernetes"); err != nil {
+				result = multierror.Append(result, err)
+			}
 		}
 	}
 
-	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml"); err != nil {
+	if t.cluster.Type() != clusterv1alpha1.ClusterTypeClusterMulti {
+		for _, tmpl := range []struct {
+			name, target string
+		}{
+			{"vault_instances", "modules/vault/vault_instances"},
+			{"wing_s3", "modules/vault/wing_s3"},
+		} {
+			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "vault"); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
+	}
+
+	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml", "kubernetes"); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := t.generateTemplate("puppet_agent_user_data", "modules/vault/templates/puppet_agent_user_data", "yaml"); err != nil {
+	if err := t.generateTemplate("puppet_agent_vault_user_data", "modules/vault/templates/puppet_agent_vault_user_data", "yaml", "vault"); err != nil {
 		result = multierror.Append(result, err)
 	}
 	if err := t.generateTerraformVariables(); err != nil {
@@ -220,7 +233,7 @@ func (t *terraformTemplate) funcs() template.FuncMap {
 }
 
 // generate single file templates
-func (t *terraformTemplate) generateTemplate(name string, target string, fileType string) error {
+func (t *terraformTemplate) generateTemplate(name, target, fileType, module string) error {
 	templateFile := filepath.Clean(
 		filepath.Join(
 			t.rootPath,
@@ -252,8 +265,7 @@ func (t *terraformTemplate) generateTemplate(name string, target string, fileTyp
 
 	if err := mainTemplate.Execute(
 		file,
-		// TODO: change behaviour of data function to not have to use module kubernetes below
-		t.data("kubernetes"),
+		t.data(module),
 	); err != nil {
 		return fmt.Errorf("failed to execute template '%s' (%s) ", name, err)
 	}

@@ -37,6 +37,8 @@ data "template_file" "vault_policy" {
     vault_tls_ca_path             = "${aws_s3_bucket_object.ca-cert.key}"
     vault_unsealer_kms_key_id     = "${var.secrets_kms_arn}"
     vault_unsealer_ssm_key_prefix = "${local.vault_unseal_key_name}"
+    puppet_tar_gz_bucket_path     = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+    wing_binary_path              = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/wing-*"
   }
 }
 

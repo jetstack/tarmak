@@ -48,3 +48,13 @@ resource "aws_security_group_rule" "vault_in_allow_everything_inner_cluster" {
   security_group_id        = "${aws_security_group.vault.0.id}"
   source_security_group_id = "${aws_security_group.vault.0.id}"
 }
+
+# Allow vault to access wing server
+resource "aws_security_group_rule" "bastion_allow_wing_from_vault" {
+  type                     = "ingress"
+  from_port                = 9443
+  to_port                  = 9443
+  protocol                 = "tcp"
+  source_security_group_id = "${aws_security_group.vault.0.id}"
+  security_group_id        = "${var.bastion_security_group_id}"
+}

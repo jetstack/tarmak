@@ -1,0 +1,22 @@
+---
+
+consul::consul_master_token: "%{::consul_master_token}"
+consul::consul_encrypt: "%{::consul_encrypt}"
+consul::consul_bootstrap_expect: "%{::consul_bootstrap_expect}"
+consul::region: "%{::vault_region}"
+consul::environment: "%{::vault_environment}"
+consul::backup_prefix: "%{::backup_bucket_prefix}"
+consul::private_ip: "%{::vault_private_ip}"
+consul::cloud_provider: aws
+consul::backup_schedule: "%{::consul_backup_schedule}"
+
+vault_server::region: "%{::vault_region}"
+vault_server::environment: "%{::vault_environment}"
+vault_server::vault_tls_cert_path: "%{::vault_tls_cert_path}"
+vault_server::vault_tls_key_path: "%{::vault_tls_key_path}"
+vault_server::vault_tls_ca_path: "%{::vault_tls_ca_path}"
+vault_server::volume_id: "%{::vault_volume_id}"
+vault_server::vault_unsealer_kms_key_id: "%{::vault_unsealer_kms_key_id}"
+vault_server::vault_unsealer_ssm_key_prefix: "%{::vault_unsealer_ssm_key_prefix}"
+vault_server::consul_master_token: "%{::consul_master_token}"
+vault_server::cloud_provider: aws

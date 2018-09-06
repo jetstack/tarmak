@@ -14,6 +14,6 @@ hierarchy:
   - role/%{facts.tarmak_role}.yaml
   - cloudprovider/%{facts.tarmak_cloudprovider}.yaml
   - environment/%{facts.tarmak_environment}.yaml
-  - tarmak.yaml
-  - common.yaml
   - instance_pools/%{facts.tarmak_instance_pool}_classes.yaml
+  - ./%{facts.tarmak_type_instance}_common.yaml
+  - ./%{facts.tarmak_type_instance}_common_build.yaml

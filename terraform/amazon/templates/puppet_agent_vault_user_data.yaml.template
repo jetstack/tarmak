@@ -24,7 +24,7 @@ write_files:
 {{- else }}
     Environment=AIRWORTHY_VERSION=0.2.0
     Environment=AIRWORTHY_HASH=2d69cfe0b92f86481805c28d0b8ae47a8ffa6bb2373217e7c5215d61fc9efa1d
-    Environment=WING_VERSION=0.5.0
+    Environment=WING_VERSION=0.5.0-alpha2
     ExecStartPre=/bin/sh -c '\
       set -e ;\
       test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
@@ -36,53 +36,47 @@ write_files:
       fi ;\
       /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy download --output /opt/wing-$${WING_VERSION}/wing --sha256sums https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt  --signature-armored https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt.asc https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/wing_$${WING_VERSION}_linux_amd64'
 {{- end }}
-    ExecStart=/bin/sh -c '\
-      set -e ;\
-      exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${legacy_puppet_manifest}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
+    ExecStart=/bin/sh -c 'exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${puppet_tar_gz_bucket_path}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
 
     [Install]
     WantedBy=multi-user.target
 
-- path: /etc/vault/ca.pem
-  permissions: '0644'
-  encoding: b64
-  content: ${vault_ca}
-
-- path: /etc/sysconfig/tarmak
+- path: /etc/sysconfig/vault
   permissions: '0644'
   content: |
-    TARMAK_ROLE=${tarmak_role}
+    TARMAK_ROLE=vault
     TARMAK_CLUSTER=${tarmak_cluster}
     TARMAK_DNS_ROOT=${tarmak_dns_root}
     TARMAK_HOSTNAME=${tarmak_hostname}
     TARMAK_ENVIRONMENT=${tarmak_environment}
-    TARMAK_DESIRED_COUNT=${tarmak_desired_count}
-    TARMAK_VOLUME_ID=${tarmak_volume_id}
+    TARMAK_DESIRED_COUNT=${instance_count}
     TARMAK_INSTANCE_POOL=${tarmak_instance_pool}
-    TARMAK_TYPE_INSTANCE=kube
-    ETCD_BACKUP_BUCKET_PREFIX=${etcd_backup_bucket_prefix}
+    TARMAK_TYPE_INSTANCE=vault
+    VAULT_REGION=${region}
+    VAULT_ENVIRONMENT=${tarmak_environment}
+    VAULT_PRIVATE_IP=${private_ip}
+    VAULT_TLS_CERT_PATH=${vault_tls_cert_path}
+    VAULT_TLS_KEY_PATH=${vault_tls_key_path}
+    VAULT_TLS_CA_PATH=${vault_tls_ca_path}
+    VAULT_VOLUME_ID=${volume_id}
+    VAULT_UNSEALER_KMS_KEY_ID=${vault_unsealer_kms_key_id}
+    VAULT_UNSEALER_SSM_KEY_PREFIX=${vault_unsealer_ssm_key_prefix}
 
-- path: /etc/profile.d/tarmak.sh
-  permissions: '0644'
-  content: |
-    # Add /opt/bin to the path
-    if ! echo $PATH | grep -q /opt/bin ; then
-      export PATH=$PATH:/opt/bin
-    fi
-
-    export PS1="[\u@${tarmak_cluster}|${tarmak_hostname}|\h \W]\$ "
-
-- path: /etc/facter/facts.d/vault_token
+- path: /etc/facter/facts.d/vault
   permissions: '0700'
   content: |
     #!/bin/bash
-    echo VAULT_TOKEN=${vault_token}
+    cat /etc/sysconfig/vault
 
-- path: /etc/facter/facts.d/tarmak
+- path: /etc/facter/facts.d/consul
   permissions: '0700'
   content: |
     #!/bin/bash
-    cat /etc/sysconfig/tarmak
+    echo CONSUL_MASTER_TOKEN=${consul_master_token}
+    echo CONSUL_ENCRYPT=${consul_encrypt}
+    echo CONSUL_BOOTSTRAP_EXPECT=${instance_count}
+    echo CONSUL_BACKUP_PREFIX=${backup_bucket_prefix}
+    echo CONSUL_BACKUP_SCHEDULE=${backup_schedule}
 
 - path: /etc/sudoers
   permissions: '0440'
