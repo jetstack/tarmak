@@ -6,25 +6,33 @@ class tarmak::single_node(
   String $kubernetes_version = $tarmak::params::kubernetes_version,
   Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $kubernetes_authorization_mode = [],
 ) inherits tarmak::params{
-  ensure_resource('class', '::tarmak',{
-    dns_root                      => $dns_root,
-    cluster_name                  => $cluster_name,
-    etcd_advertise_client_network => $etcd_advertise_client_network,
-    kubernetes_api_url            => $kubernetes_api_url,
-    kubernetes_version            => $kubernetes_version,
-    kubernetes_authorization_mode => $kubernetes_authorization_mode,
-    etcd_cluster                  => ["${::hostname}.${cluster_name}.${dns_root}"],
-    etcd_instances                => 1,
-  })
+
+  # install airworthy if necessary
+  if !defined(Class['::tarmak']) {
+    class {'::tarmak':
+      dns_root                      => $dns_root,
+      cluster_name                  => $cluster_name,
+      etcd_advertise_client_network => $etcd_advertise_client_network,
+      kubernetes_api_url            => $kubernetes_api_url,
+      kubernetes_version            => $kubernetes_version,
+      kubernetes_authorization_mode => $kubernetes_authorization_mode,
+      etcd_cluster                  => ["${::hostname}.${cluster_name}.${dns_root}"],
+      etcd_instances                => 1,
+    }
+  }
 
   include '::tarmak::etcd'
 
-  ensure_resource('class', '::tarmak::master',{
-    disable_kubelet => true,
-    disable_proxy   => true,
-  })
+  if !defined(Class['::tarmak::master']) {
+    class {'::tarmak::master':
+      disable_kubelet => true,
+      disable_proxy   => true,
+    }
+  }
 
-  ensure_resource('class', '::tarmak::worker',{})
+  if !defined(Class['::tarmak::worker']) {
+    class {'::tarmak::worker':}
+  }
 
   Class['tarmak::etcd'] -> Class['tarmak::master']
 }

@@ -120,8 +120,8 @@ class consul(
   }
 
   # install airworthy if necessary
-  if !defined(Class[::airworthy]) {
-    ensure_resource('class', '::airworthy', {})
+  if !defined(Class['::airworthy']) {
+    class {'::airworthy':}
   }
 
   Class['::airworthy']

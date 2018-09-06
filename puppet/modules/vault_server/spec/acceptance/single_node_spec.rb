@@ -139,7 +139,6 @@ class{'consul':
 class{'vault_server':
   environment => 'dev',
   cloud_provider => 'aws',
-  volume_id => 'vol',
 }
         EOS
         # Run it twice and test for idempotency
