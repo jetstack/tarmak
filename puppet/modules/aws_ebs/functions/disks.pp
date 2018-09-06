@@ -1,6 +1,6 @@
 function aws_ebs::disks() >> Array[String] {
   # if disks fact is undefined then return empty array
-  if $::disks == undef {
+  if ! defined('$::disks') {
     []
   } else {
     # For each disk, we split by continuous non-number characters by Regexp.
