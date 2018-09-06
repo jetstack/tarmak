@@ -1,0 +1,5 @@
+---
+classes:
+- consul
+- vault_server
+- airworthy

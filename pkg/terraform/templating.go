@@ -142,6 +142,7 @@ func (t *terraformTemplate) Generate() error {
 		{"providers", "providers"},
 		{"jenkins_elb", "modules/jenkins/jenkins_elb"},
 		{"wing_s3", "modules/kubernetes/wing_s3"},
+		{"wing_s3", "modules/vault/wing_s3"},
 		{"vault_instances", "modules/vault/vault_instances"},
 	} {
 		if err := t.generateTemplate(tmpl.name, tmpl.target, "tf"); err != nil {
@@ -150,6 +151,9 @@ func (t *terraformTemplate) Generate() error {
 	}
 
 	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml"); err != nil {
+		result = multierror.Append(result, err)
+	}
+	if err := t.generateTemplate("puppet_agent_user_data", "modules/vault/templates/puppet_agent_user_data", "yaml"); err != nil {
 		result = multierror.Append(result, err)
 	}
 	if err := t.generateTerraformVariables(); err != nil {
@@ -314,7 +318,7 @@ func (t *terraformTemplate) generateAWSSecurityGroup() (rules map[string][]*amaz
 	rules = make(map[string][]*amazon.AWSSGRule)
 	for _, role := range t.cluster.Roles() {
 
-		if role.Name() == "vault" || role.Name() == "bastion" {
+		if role.Name() == "bastion" {
 			continue
 		}
 

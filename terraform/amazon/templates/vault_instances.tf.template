@@ -1,5 +1,7 @@
+{{/* vim: set ft=tf: */ -}}
+
 data "template_file" "vault" {
-  template = "${file("${path.module}/templates/vault_user_data.yaml")}"
+  template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
   count    = "${var.vault_min_instance_count}"
 
   vars {
@@ -28,6 +30,17 @@ data "template_file" "vault" {
 
     # run backup once per instance spread throughout the day
     backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.vault_min_instance_count))}:00:00"
+
+    puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+
+    # These are only used in the template when running in Wing dev mode
+    wing_binary_path          = "${var.secrets_bucket}/${var.wing_binary_path}"
+    wing_version              = "${var.wing_version}"
+
+    tarmak_role          = "{{.Role.Name}}"
+    tarmak_instance_pool = "{{.Name}}"
+    tarmak_cluster       = "${data.template_file.stack_name.rendered}"
+    tarmak_environment   = "${var.environment}"
   }
 }
 
