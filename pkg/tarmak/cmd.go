@@ -82,10 +82,12 @@ func (c *CmdTarmak) Apply() error {
 	default:
 	}
 
-	// wait for convergance in every mode
-	err := c.Cluster().WaitForConvergance()
-	if err != nil {
-		return err
+	// wait for convergance if not in infrastructure only
+	if !c.flags.Cluster.Apply.InfrastructureOnly {
+		err := c.cluster.WaitForConvergance()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
