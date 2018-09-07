@@ -66,9 +66,19 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 
 	// populate role information if the API server should be public
 	if k := cluster.Config().Kubernetes; k != nil {
-		if apiServer := k.APIServer; apiServer != nil && apiServer.Public == true {
+		if apiServer := k.APIServer; apiServer != nil {
 			if master := cluster.Role("master"); master != nil {
-				master.AWS.ELBAPIPublic = true
+
+				if apiServer.Public == true {
+					master.AWS.ELBAPIPublic = true
+					if a := apiServer.Amazon; a != nil && a.PublicELBAccessLogs != nil {
+						master.AWS.EnablePublicELBAccessLogs = a.PublicELBAccessLogs.Enabled
+					}
+				}
+
+				if a := apiServer.Amazon; a != nil && a.InternalELBAccessLogs != nil {
+					master.AWS.EnableInternalELBAccessLogs = a.InternalELBAccessLogs.Enabled
+				}
 			}
 		}
 	}
