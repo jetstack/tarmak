@@ -2,6 +2,7 @@
 package cluster
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -66,9 +67,19 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 
 	// populate role information if the API server should be public
 	if k := cluster.Config().Kubernetes; k != nil {
-		if apiServer := k.APIServer; apiServer != nil && apiServer.Public == true {
+		if apiServer := k.APIServer; apiServer != nil {
 			if master := cluster.Role("master"); master != nil {
-				master.AWS.ELBAPIPublic = true
+
+				if apiServer.Public == true {
+					master.AWS.ELBAPIPublic = true
+					if a := apiServer.Amazon; a != nil && a.PublicELBAccessLogs != nil {
+						master.AWS.EnablePublicELBAccessLogs = *a.PublicELBAccessLogs.Enabled
+					}
+				}
+
+				if a := apiServer.Amazon; a != nil && a.InternalELBAccessLogs != nil {
+					master.AWS.EnableInternalELBAccessLogs = *a.InternalELBAccessLogs.Enabled
+				}
 			}
 		}
 	}
@@ -498,6 +509,25 @@ func (c *Cluster) validateAPIServer() (result error) {
 		}
 	}
 
+	if a := c.Config().Kubernetes.APIServer.Amazon; a != nil {
+		for _, l := range []*clusterv1alpha1.ClusterKubernetesAPIServerAmazonAccessLogs{
+			a.PublicELBAccessLogs,
+			a.InternalELBAccessLogs,
+		} {
+
+			if l != nil && *l.Enabled {
+				if len(l.Bucket) == 0 {
+					result = multierror.Append(result, errors.New("access logs enabled with no bucket name"))
+				}
+
+				if *l.Interval != 5 && *l.Interval != 60 {
+					result = multierror.Append(result, errors.New("access logs interval may only be a value of 5 or 60"))
+				}
+			}
+
+		}
+	}
+
 	return result
 }
 
@@ -732,6 +762,30 @@ func (c *Cluster) Variables() map[string]interface{} {
 	// publish changed private zone
 	if privateZone := c.Environment().Config().PrivateZone; privateZone != "" {
 		output["private_zone"] = privateZone
+	}
+
+	// Get enabled elb access logs
+	if k := c.Config().Kubernetes; k != nil && k.APIServer != nil && k.APIServer.Amazon != nil {
+		if p := k.APIServer.Amazon.PublicELBAccessLogs; p != nil {
+			output["elb_access_logs_public_enabled"] = fmt.Sprintf("%v", *p.Enabled)
+			output["elb_access_logs_public_bucket"] = p.Bucket
+			output["elb_access_logs_public_bucket_prefix"] = p.BucketPrefix
+			output["elb_access_logs_public_bucket_interval"] = *p.Interval
+		} else {
+			output["elb_access_logs_public_enabled"] = "false"
+		}
+
+		if i := k.APIServer.Amazon.InternalELBAccessLogs; i != nil {
+			output["elb_access_logs_internal_enabled"] = fmt.Sprintf("%v", *i.Enabled)
+			output["elb_access_logs_internal_bucket"] = i.Bucket
+			output["elb_access_logs_internal_bucket_prefix"] = i.BucketPrefix
+			output["elb_access_logs_internal_bucket_interval"] = *i.Interval
+		} else {
+			output["elb_access_logs_internal_enabled"] = "false"
+		}
+	} else {
+		output["elb_access_logs_public_enabled"] = "false"
+		output["elb_access_logs_internal_enabled"] = "false"
 	}
 
 	output["name"] = c.Name()

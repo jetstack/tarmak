@@ -25,6 +25,15 @@ resource "aws_elb" "{{.Role.TFName}}" {
     interval            = 30
   }
 
+{{ if .Role.AWS.EnableInternalELBAccessLogs -}}
+  access_logs {
+    enabled       = "${var.elb_access_logs_internal_enabled}"
+    bucket        = "${var.elb_access_logs_internal_bucket}"
+    bucket_prefix = "${var.elb_access_logs_internal_bucket_prefix}"
+    interval      = "${var.elb_access_logs_internal_bucket_interval}"
+  }
+{{ end -}}
+
   tags {
     Name        = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
     Environment = "${var.environment}"
@@ -70,6 +79,15 @@ resource "aws_elb" "{{.Role.TFName}}_public" {
     target              = "TCP:6443"
     interval            = 30
   }
+
+{{ if .Role.AWS.EnablePublicELBAccessLogs -}}
+  access_logs {
+    enabled       = "${var.elb_access_logs_public_enabled}"
+    bucket        = "${var.elb_access_logs_public_bucket}"
+    bucket_prefix = "${var.elb_access_logs_public_bucket_prefix}"
+    interval      = "${var.elb_access_logs_public_bucket_interval}"
+  }
+{{ end -}}
 
   tags {
     Name        = "${format("%s-api-pub", data.template_file.stack_name.rendered)}"
@@ -129,6 +147,15 @@ resource "aws_elb" "{{.Role.TFName}}" {
   security_groups = [
     "${aws_security_group.{{.Role.TFName}}_elb.id}",
   ]
+
+{{ if .Role.AWS.EnableInternalELBAccessLogs -}}
+  access_logs {
+    enabled       = "${var.elb_access_logs_internal_enabled}"
+    bucket        = "${var.elb_access_logs_internal_bucket}"
+    bucket_prefix = "${var.elb_access_logs_internal_bucket_prefix}"
+    interval      = "${var.elb_access_logs_internal_bucket_interval}"
+  }
+{{ end -}}
 
 {{ if eq .Role.Name "jenkins" }}
   cross_zone_load_balancing = true

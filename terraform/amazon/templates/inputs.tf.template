@@ -137,6 +137,32 @@ variable "api_admin_cidrs" {
 variable "tools_cluster_name" {
   default = "hub"
 }
+
+variable "elb_access_logs_public_enabled" {
+  default = "false"
+}
+variable "elb_access_logs_public_bucket" {
+  default = ""
+}
+variable "elb_access_logs_public_bucket_prefix" {
+  default = ""
+}
+variable "elb_access_logs_public_bucket_interval" {
+  default = 60
+}
+variable "elb_access_logs_internal_enabled" {
+  default = "false"
+}
+variable "elb_access_logs_internal_bucket" {
+  default = ""
+}
+variable "elb_access_logs_internal_bucket_prefix" {
+  default = ""
+}
+variable "elb_access_logs_internal_bucket_interval" {
+  default = 60
+}
+
 {{end}}
 
 data "template_file" "stack_name" {

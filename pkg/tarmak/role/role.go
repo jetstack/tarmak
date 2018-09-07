@@ -19,6 +19,9 @@ type RoleAWS struct {
 	ELBAPI       bool // enable ELB ingress external
 	ELBAPIPublic bool // ELB public or internal
 
+	EnableInternalELBAccessLogs bool
+	EnablePublicELBAccessLogs   bool
+
 	// IAM Permissions
 	IAMELBController               bool // Controller access to ELB loadbalancers
 	IAMEC2Controller               bool // Controller access to all EC2 resources
