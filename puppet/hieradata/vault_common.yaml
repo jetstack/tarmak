@@ -5,7 +5,7 @@ consul::consul_encrypt: "%{::consul_encrypt}"
 consul::consul_bootstrap_expect: "%{::consul_bootstrap_expect}"
 consul::region: "%{::vault_region}"
 consul::environment: "%{::vault_environment}"
-consul::backup_prefix: "%{::backup_bucket_prefix}"
+consul::backup_bucket_prefix: "%{::consul_backup_bucket_prefix}"
 consul::private_ip: "%{::vault_private_ip}"
 consul::cloud_provider: aws
 consul::backup_schedule: "%{::consul_backup_schedule}"

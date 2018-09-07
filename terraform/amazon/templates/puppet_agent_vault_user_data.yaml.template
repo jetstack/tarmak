@@ -75,7 +75,7 @@ write_files:
     echo CONSUL_MASTER_TOKEN=${consul_master_token}
     echo CONSUL_ENCRYPT=${consul_encrypt}
     echo CONSUL_BOOTSTRAP_EXPECT=${instance_count}
-    echo CONSUL_BACKUP_PREFIX=${backup_bucket_prefix}
+    echo CONSUL_BACKUP_BUCKET_PREFIX=${backup_bucket_prefix}
     echo CONSUL_BACKUP_SCHEDULE=${backup_schedule}
 
 - path: /etc/sudoers
