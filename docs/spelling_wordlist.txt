@@ -94,3 +94,8 @@ unsealer
 username
 wrt
 yaml
+gid
+Alertmanager
+Adapter
+autoscale
+ServiceMonitors
