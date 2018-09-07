@@ -679,10 +679,10 @@ API Server ELB Access Logs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tarmak features storing access logs of the internal and public, if enabled, API
-server ELB.  This is achieved through enabling configuration options in the
-tarmak.yaml. Here you must specify the S3 storage bucket, prefix and
-publishing interval in minutes under the API server header within the
-Kubernetes options, as follows:
+server ELB. This is achieved through enabling configuration options in the
+tarmak.yaml. You must specify at least the S3 bucket name with options to also
+specify the bucket prefix and interval of 5 or 60 minutes. Interval defaults to
+5 minutes.
 
 .. code-block:: yaml
 
@@ -691,18 +691,13 @@ Kubernetes options, as follows:
       public: true
       amazon:
         internalELBAccessLogs:
-          bucket: cluster-accesslogs
-          bucketPrefix: internal
-          enabled: true
-          interval: 60
+          bucket: cluster-internal-accesslogs
         publicELBAccessLogs:
-          bucket: cluster-accesslogs
-          bucketPrefix: public
-          enabled: true
-          interval: 60
+          bucket: cluster-public-accesslogs
 
-Note that the S3 bucket needs to exist with the correct S3 policy permissions.
-`Information on how to correctly set these permissions can be found here
+Note that the S3 bucket needs to exist in the same region, with the correct S3
+policy permissions. `Information on how to correctly set these permissions can
+be found here
 <https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy>`_.
 
 Cluster Services
