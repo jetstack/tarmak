@@ -126,6 +126,6 @@ resource "tarmak_vault_cluster" "vault" {
   vault_kms_key_id      = "${var.secrets_kms_arn}"
   vault_unseal_key_name = "${local.vault_unseal_key_name}"
 
-  depends_on = ["aws_instance.vault", "tls_locally_signed_cert.vault", "aws_route53_record.per-instance", "tls_self_signed_cert.ca"]
+  depends_on = ["data.template_file.vault_policy"]
 }
 {{ end -}}
