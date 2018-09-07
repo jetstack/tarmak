@@ -3,7 +3,8 @@ require 'spec_helper'
 describe 'role: worker' do
   let(:facts) do
     {
-      :tarmak_role        => 'worker',
+      :tarmak_role          => 'worker',
+      :tarmak_type_instance => 'kube',
     }
   end
 

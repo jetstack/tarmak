@@ -6,6 +6,7 @@ describe 'role: etcd' do
       :tarmak_role               => 'etcd',
       :tarmak_hostname           => 'etcd-1',
       :tarmak_volume_id          => 'vol-XX',
+      :tarmak_type_instance      => 'kube',
       :etcd_backup_bucket_prefix => 'my-etcd-backup-bucket/prefix',
     }
   end
