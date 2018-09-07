@@ -1,4 +1,8 @@
+<% if @version_before_1_9 -%>
 apiVersion: extensions/v1beta1
+<% else -%>
+apiVersion: apps/v1
+<% end -%>
 kind: Deployment
 metadata:
   name: heapster
@@ -31,47 +35,73 @@ spec:
       serviceAccountName: heapster
 <%- end -%>
       containers:
-        - image: <%= @image %>:<%= @version %>
-          name: heapster
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8082
-              scheme: HTTP
-            initialDelaySeconds: 180
-            timeoutSeconds: 5
-          command:
-            - /heapster
-            - --source=kubernetes:https://kubernetes.default
+      - image: <%= @image %>:<%= @version %>
+        name: heapster
+        command:
+          - /heapster
+          - --source=kubernetes:https://kubernetes.default
 <%- if @sink -%>
-            - --sink=<%= @sink %>
+          - --sink=<%= @sink %>
 <%- end -%>
-        - image: <%= @nanny_image %>:<%= @nanny_version %>
-          name: heapster-nanny
-          resources:
-            limits:
-              cpu: <%= @nanny_limit_cpu %>
-              memory: <%= @nanny_limit_mem %>
-            requests:
-              cpu: <%= @nanny_request_cpu %>
-              memory: <%= @nanny_request_mem %>
-          env:
-            - name: MY_POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: MY_POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-          command:
-            - /pod_nanny
-            - --cpu=<%= @cpu %>
-            - --extra-cpu=<%= @extra_cpu %>
-            - --memory=<%= @mem %>
-            - --extra-memory=<%= @extra_mem %>
-            - --threshold=5
-            - --deployment=heapster
-            - --container=heapster
-            - --poll-period=300000
-            - --estimator=exponential
+        resources:
+          limits:
+            cpu: <%= @cpu %>
+            memory: <%= @mem %>
+          requests:
+            cpu: <%= @cpu %>
+            memory: <%= @mem %>
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8082
+            scheme: HTTP
+          initialDelaySeconds: 180
+          timeoutSeconds: 5
+      - image: <%= @nanny_image %>:<%= @nanny_version %>
+        name: heapster-nanny
+        resources:
+          limits:
+            cpu: <%= @nanny_limit_cpu %>
+            memory: <%= @nanny_limit_mem %>
+          requests:
+            cpu: <%= @nanny_request_cpu %>
+            memory: <%= @nanny_request_mem %>
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: MY_POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        command:
+          - /pod_nanny
+          - --config-dir=/etc/config
+          - --cpu=<%= @cpu %>
+          - --extra-cpu=<%= @extra_cpu %>
+          - --memory=<%= @mem %>
+          - --extra-memory=<%= @extra_mem %>
+          - --threshold=5
+          - --deployment=heapster
+          - --container=heapster
+          - --poll-period=300000
+          - --estimator=exponential
+        volumeMounts:
+        - mountPath: /etc/config
+          name: heapster-config-volume
+      volumes:
+      - name: heapster-config-volume
+        configMap:
+          name: heapster-config
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heapster-config
+  namespace: kube-system
+data:
+  NannyConfiguration: |-
+    apiVersion: nannyconfig/v1alpha1
+    kind: NannyConfiguration
