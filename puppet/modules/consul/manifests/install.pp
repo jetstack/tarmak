@@ -23,6 +23,13 @@ class consul::install(
     'G'
   )
 
+  $backinator_download_url = regsubst(
+    $consul::backinator_download_url,
+    '#VERSION#',
+    $consul::backinator_version,
+    'G'
+  )
+
   # install unzip if necessary
   ensure_resource('package', 'unzip', {})
 
@@ -89,6 +96,25 @@ class consul::install(
     file {$consul::exporter_dest_dir:
       ensure => absent,
     }
+  }
+
+
+  archive {"${consul::_dest_dir}/consul-backinator":
+    ensure        => present,
+    extract       => false,
+    source        => $backinator_download_url,
+    checksum      => $consul::backinator_sha256,
+    checksum_type => 'sha256',
+    cleanup       => false,
+    creates       => "${consul::_dest_dir}/consul-backinator",
+  }
+  -> file {"${consul::_dest_dir}/consul-backinator":
+    ensure => file,
+    mode   => '0755',
+  }
+  -> file {"${consul::link_path}/${consul::app_name}-backinator":
+    ensure => link,
+    target => "${consul::_dest_dir}/consul-backinator",
   }
 
   file { "${consul::_dest_dir}/consul-backup.sh":

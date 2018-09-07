@@ -43,5 +43,16 @@ describe 'consul::install' do
         :target => '/opt/consul-1.2.1/consul-backup.sh',
       )
     end
+
+    it 'should install consul backinator' do
+      should contain_file('/opt/consul-1.2.1/consul-backinator').with(
+        :ensure => 'file',
+        :mode => '0755',
+      )
+      should contain_file('/opt/bin/consul-backinator').with(
+        :ensure => 'link',
+        :target => '/opt/consul-1.2.1/consul-backinator',
+      )
+    end
   end
 end
