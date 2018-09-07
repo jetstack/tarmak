@@ -166,3 +166,22 @@ func SetDefaults_InstancePool(obj *InstancePool) {
 		}
 	}
 }
+
+func SetDefaults_ClusterKubernetesAPIServerAmazonAccessLogs(obj *ClusterKubernetesAPIServerAmazonAccessLogs) {
+	if obj.Enabled == nil {
+		var b bool
+
+		if len(obj.Bucket) > 0 {
+			b = true
+		} else {
+			b = false
+		}
+
+		obj.Enabled = &b
+	}
+
+	if obj.Interval == nil {
+		in := 5
+		obj.Interval = &in
+	}
+}

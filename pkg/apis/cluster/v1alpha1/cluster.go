@@ -172,10 +172,10 @@ type ClusterKubernetesAPIServerAmazon struct {
 }
 
 type ClusterKubernetesAPIServerAmazonAccessLogs struct {
-	Enabled      bool   `json:"enabled,omitempty"`
+	Enabled      *bool  `json:"enabled,omitempty"`
 	Bucket       string `json:"bucket,omitempty"`
 	BucketPrefix string `json:"bucketPrefix,omitempty"`
-	Interval     int    `json:"interval,omitempty"`
+	Interval     *int   `json:"interval,omitempty"`
 }
 
 type ClusterPodSecurityPolicy struct {
