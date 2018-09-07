@@ -1,0 +1,138 @@
+# This file should be kept in sync with https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+<% if @version_before_1_8 -%>
+  name: v1alpha1.metrics
+<% else -%>
+  name: v1beta1.metrics.k8s.io
+<% end -%>
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+<% if @version_before_1_8 -%>
+  group: metrics
+  version: v1alpha1
+<% else -%>
+  group: metrics.k8s.io
+  version: v1beta1
+<% end -%>
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+---
+<% if @version_before_1_9 -%>
+apiVersion: extensions/v1beta1
+<% else -%>
+apiVersion: apps/v1
+<% end -%>
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+<% if @rbac_enabled -%>
+      serviceAccountName: metrics-server
+<% end -%>
+      containers:
+      - name: metrics-server-nanny
+        image: <%= @nanny_image %>:<%= @nanny_version %>
+        command:
+        - /pod_nanny
+        - --config-dir=/etc/config
+        - --cpu=<%= @cpu %>
+        - --extra-cpu=<%= @extra_cpu %>
+        - --memory=<%= @mem %>
+        - --extra-memory=<%= @extra_mem %>
+        - --threshold=5
+        - --deployment=metrics-server
+        - --container=metrics-server
+        - --poll-period=300000
+        - --estimator=exponential
+        env:
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        resources:
+          limits:
+            cpu: <%= @nanny_limit_cpu %>
+            memory: <%= @nanny_limit_mem %>
+          requests:
+            cpu: <%= @nanny_request_cpu %>
+            memory: <%= @nanny_request_mem %>
+        volumeMounts:
+        - mountPath: /etc/config
+          name: metrics-server-config-volume
+      - name: metrics-server
+        image: <%= @image %>:v<%= @_version %> 
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 443
+          name: https
+          protocol: TCP
+        resources:
+          limits:
+            cpu: <%= @cpu %>
+            memory: <%= @mem %>
+          requests:
+            cpu: <%= @cpu %>
+            memory: <%= @mem %>
+<% unless @version_before_1_8 -%>
+        volumeMounts:
+        - name: tmp-dir
+          mountPath: /tmp
+<% end -%>
+      volumes:
+      - name: metrics-server-config-volume
+        configMap:
+          name: metrics-server-config
+<% unless @version_before_1_8 -%>
+      # mount in tmp so we can safely use from-scratch images and/or read-only containers
+      - name: tmp-dir
+        emptyDir: {}
+<% end -%>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    kubernetes.io/name: "Metrics-server"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-server-config
+  namespace: kube-system
+data:
+  NannyConfiguration: |-
+    apiVersion: nannyconfig/v1alpha1
+    kind: NannyConfiguration

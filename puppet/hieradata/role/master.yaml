@@ -3,6 +3,7 @@ classes:
 - tarmak::worker
 - tarmak::overlay_calico
 - kubernetes_addons::heapster
+- kubernetes_addons::metrics_server
 - kubernetes_addons::influxdb
 - kubernetes_addons::grafana
 
