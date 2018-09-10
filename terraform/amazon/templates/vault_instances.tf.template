@@ -40,7 +40,7 @@ resource "aws_cloudwatch_metric_alarm" "vault-autorecover" {
   alarm_description   = "This metric auto recovers Vault instances for the ${var.environment} cluster"
   alarm_actions       = ["arn:aws:automate:${var.region}:ec2:recover"]
   statistic           = "Minimum"
-  comparison_operator = "GreaterThanThreshold"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
   threshold           = "1"
   metric_name         = "StatusCheckFailed_System"
 
