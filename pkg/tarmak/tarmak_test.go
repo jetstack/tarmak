@@ -64,6 +64,7 @@ func (tt *testTarmak) fakeAWSProvider(name string) {
 	}
 
 	tt.fakeConfig.EXPECT().Provider(name).AnyTimes().Return(&tarmakv1alpha1.Provider{}, nil)
+	tt.fakeConfig.EXPECT().Force().Return(false).AnyTimes()
 }
 
 func (tt *testTarmak) addEnvironment(env *tarmakv1alpha1.Environment) {

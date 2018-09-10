@@ -59,6 +59,8 @@ func newFakeCluster(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeCluster
 	c.fakeProvider.EXPECT().Cloud().Return("provider").AnyTimes()
 	c.fakeProvider.EXPECT().Name().Return("provider-name").AnyTimes()
 
+	c.fakeConfig.EXPECT().Force().Return(false).AnyTimes()
+
 	c.fakeTarmak.EXPECT().Config().AnyTimes().Return(c.fakeConfig)
 
 	return c

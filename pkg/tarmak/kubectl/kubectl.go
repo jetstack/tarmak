@@ -49,8 +49,10 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 
 	k.log.Infof("request new certificate from vault (%s)", path)
 
-	if err := k.tarmak.Cluster().Environment().Validate(); err != nil {
-		k.log.Fatal("could not validate config: ", err)
+	if !k.tarmak.Config().Force() {
+		if err := k.tarmak.Cluster().Environment().Validate(); err != nil {
+			k.log.Fatal("could not validate config: ", err)
+		}
 	}
 
 	vault := k.tarmak.Environment().Vault()

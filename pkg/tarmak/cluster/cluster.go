@@ -56,8 +56,10 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		log:         environment.Log().WithField("cluster", conf.Name),
 	}
 
-	if err := cluster.Validate(); err != nil {
-		return nil, err
+	if !environment.Tarmak().Config().Force() {
+		if err := cluster.Validate(); err != nil {
+			return nil, err
+		}
 	}
 
 	cluster.roles = make(map[string]*role.Role)
