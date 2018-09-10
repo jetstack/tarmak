@@ -28,6 +28,9 @@ func SetObjectDefaults_Cluster(in *Cluster) {
 		SetObjectDefaults_InstancePool(a)
 	}
 	if in.Kubernetes != nil {
+		if in.Kubernetes.ClusterAutoscaler != nil {
+			SetDefaults_ClusterKubernetesClusterAutoscaler(in.Kubernetes.ClusterAutoscaler)
+		}
 		if in.Kubernetes.APIServer != nil {
 			if in.Kubernetes.APIServer.Amazon != nil {
 				if in.Kubernetes.APIServer.Amazon.PublicELBAccessLogs != nil {

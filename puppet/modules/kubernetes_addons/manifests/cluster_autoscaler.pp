@@ -11,7 +11,7 @@ class kubernetes_addons::cluster_autoscaler(
   Optional[Boolean] $enable_overprovisioning=undef,
   Optional[String] $proportional_image=undef,
   Optional[String] $proportional_version=undef,
-  $scale_down_utilization_threshold = undef,
+  Optional[Float] $scale_down_utilization_threshold = undef,
   Integer $reserved_millicores_per_replica = 0,
   Integer $reserved_megabytes_per_replica = 0,
   Integer $cores_per_replica = 0,

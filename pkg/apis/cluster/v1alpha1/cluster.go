@@ -93,7 +93,7 @@ type ClusterKubernetesClusterAutoscaler struct {
 	Enabled            bool                                                `json:"enabled,omitempty"`
 	Image              string                                              `json:"image,omitempty"`
 	Version            string                                              `json:"version,omitempty"`
-	ScaleDownThreshold float64                                             `json:"scaleDownUtilizationThreshold"`
+	ScaleDownThreshold *float64                                            `json:"scaleDownUtilizationThreshold"`
 	Overprovisioning   *ClusterKubernetesClusterAutoscalerOverprovisioning `json:"overprovisioning,omitempty"`
 }
 

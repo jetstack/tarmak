@@ -38,6 +38,9 @@ func SetObjectDefaults_Config(in *Config) {
 			}
 		}
 		if a.Kubernetes != nil {
+			if a.Kubernetes.ClusterAutoscaler != nil {
+				cluster_v1alpha1.SetDefaults_ClusterKubernetesClusterAutoscaler(a.Kubernetes.ClusterAutoscaler)
+			}
 			if a.Kubernetes.APIServer != nil {
 				if a.Kubernetes.APIServer.Amazon != nil {
 					if a.Kubernetes.APIServer.Amazon.PublicELBAccessLogs != nil {
