@@ -140,6 +140,7 @@ func (c *Cluster) validateClusterInstancePoolTypes() error {
 		poolMap = map[string]bool{
 			clusterv1alpha1.InstancePoolTypeVault:   true,
 			clusterv1alpha1.InstancePoolTypeBastion: true,
+			clusterv1alpha1.InstancePoolTypeJenkins: true,
 		}
 
 		break
