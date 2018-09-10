@@ -4,6 +4,7 @@ data "template_file" "iam_tarmak_bucket_read" {
   vars {
     puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
     wing_binary_path          = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/wing-*"
+    vault_kms_key_id          = "${var.vault_kms_key_id}"
   }
 }
 
