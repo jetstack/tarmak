@@ -299,6 +299,10 @@ func (c *Cluster) validateInstancePools() error {
 		return err
 	}
 
+	if err := c.validateSubnets(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -837,4 +841,30 @@ func (c *Cluster) PublicAPIHostname() string {
 		c.Name(),
 		c.Environment().Provider().PublicZone(),
 	)
+}
+
+func (c *Cluster) validateSubnets() error {
+	var result *multierror.Error
+
+	if c.Type() == clusterv1alpha1.ClusterTypeClusterMulti && c.Environment().Hub() != nil {
+		hSubnets := c.Environment().Hub().Subnets()
+
+		for _, cNet := range c.Subnets() {
+			found := false
+
+			for _, hNet := range hSubnets {
+				if cNet.Zone == hNet.Zone {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				err := fmt.Errorf("hub cluster does not include zone '%s'", cNet.Zone)
+				result = multierror.Append(result, err)
+			}
+		}
+	}
+
+	return result.ErrorOrNil()
 }

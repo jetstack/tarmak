@@ -35,12 +35,11 @@ func newFakeCluster(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeCluster
 			conf: cluster,
 		},
 	}
-
-	c.fakeEnvironment = mocks.NewMockEnvironment(c.ctrl)
 	c.fakeProvider = mocks.NewMockProvider(c.ctrl)
 	c.fakeTarmak = mocks.NewMockTarmak(c.ctrl)
 	c.fakeConfig = mocks.NewMockConfig(c.ctrl)
-	c.Cluster.environment = c.fakeEnvironment
+	c.fakeEnvironment = mocks.NewMockEnvironment(c.ctrl)
+	c.environment = c.fakeEnvironment
 
 	// setup custom logger
 	logger := logrus.New()
@@ -65,12 +64,25 @@ func newFakeCluster(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeCluster
 	return c
 }
 
+func newFakeHub(t *testing.T) *fakeCluster {
+	return &fakeCluster{
+		ctrl: gomock.NewController(t),
+		Cluster: &Cluster{
+			conf: &clusterv1alpha1.Cluster{
+				Type: clusterv1alpha1.ClusterTypeHub,
+			},
+		},
+	}
+}
+
 func TestCluster_NewMinimalClusterMulti(t *testing.T) {
 	clusterConfig := config.NewClusterMulti("multi", "cluster")
 	config.ApplyDefaults(clusterConfig)
 	clusterConfig.Location = "my-region"
 	c := newFakeCluster(t, nil)
 	defer c.Finish()
+
+	c.fakeEnvironment.EXPECT().Hub().AnyTimes().Return(newFakeHub(t))
 
 	// fake two clusters
 	c.fakeEnvironment.EXPECT().Name().Return("multi").AnyTimes()
@@ -225,6 +237,8 @@ func TestCluster_ValidateClusterInstancePoolTypesHub(t *testing.T) {
 	c := newFakeCluster(t, nil)
 	defer c.Finish()
 
+	c.fakeEnvironment.EXPECT().Hub().AnyTimes().Return(newFakeHub(t))
+
 	var err error
 	c.Cluster, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
 	if err != nil {
@@ -260,6 +274,8 @@ func TestCluster_ValidateClusterInstancePoolsMulti(t *testing.T) {
 	config.ApplyDefaults(clusterConfig)
 	c := newFakeCluster(t, nil)
 	defer c.Finish()
+
+	c.fakeEnvironment.EXPECT().Hub().AnyTimes().Return(newFakeHub(t))
 
 	var err error
 	c.Cluster, err = NewFromConfig(c.fakeEnvironment, clusterConfig)
@@ -406,6 +422,87 @@ func tryInstancePoolCount(c *fakeCluster, singleTypes, multiTypes []string, t *t
 	}
 
 	c.conf = baseConfig.DeepCopy()
+}
+
+func TestClusterValidateSubnetsIgnore(t *testing.T) {
+	clusterConfig := config.NewClusterMulti("multi", "cluster")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Location = "my-region"
+	c := newFakeCluster(t, &clusterv1alpha1.Cluster{
+		Type: clusterv1alpha1.ClusterTypeClusterSingle,
+	})
+	defer c.Finish()
+
+	if err := c.validateSubnets(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	c = newFakeCluster(t, &clusterv1alpha1.Cluster{
+		Type: clusterv1alpha1.ClusterTypeHub,
+	})
+	defer c.Finish()
+
+	if err := c.validateSubnets(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestClusterValidateSubnetsMulti(t *testing.T) {
+	clusterConfig := config.NewClusterMulti("multi", "cluster")
+	config.ApplyDefaults(clusterConfig)
+	clusterConfig.Location = "my-region"
+	c := newFakeCluster(t, &clusterv1alpha1.Cluster{
+		Type: clusterv1alpha1.ClusterTypeClusterMulti,
+	})
+	defer c.Finish()
+
+	superZones := []string{
+		"zone-1",
+		"zone-2",
+		"zone-3",
+	}
+
+	subZones := []string{
+		"zone-1",
+		"zone-2",
+	}
+
+	hub := newFakeCluster(t, &clusterv1alpha1.Cluster{
+		Type:          clusterv1alpha1.ClusterTypeHub,
+		InstancePools: instancePoolsWithZones(superZones),
+	})
+	c.fakeEnvironment.EXPECT().Hub().Times(4).Return(hub)
+	c.conf.InstancePools = instancePoolsWithZones(subZones)
+	if err := c.validateSubnets(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	c.conf.InstancePools = instancePoolsWithZones(superZones)
+	if err := c.validateSubnets(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	hub = newFakeCluster(t, &clusterv1alpha1.Cluster{
+		Type:          clusterv1alpha1.ClusterTypeHub,
+		InstancePools: instancePoolsWithZones(subZones),
+	})
+	c.fakeEnvironment.EXPECT().Hub().Times(2).Return(hub)
+	if err := c.validateSubnets(); err == nil {
+		t.Errorf("expected error due to hub not including zone, got=none")
+	}
+
+}
+
+func instancePoolsWithZones(zones []string) []clusterv1alpha1.InstancePool {
+	pool := clusterv1alpha1.InstancePool{}
+
+	for _, z := range zones {
+		pool.Subnets = append(pool.Subnets, &clusterv1alpha1.Subnet{
+			Zone: z,
+		})
+	}
+
+	return []clusterv1alpha1.InstancePool{pool}
 }
 
 /*
