@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/go-multierror"
@@ -33,10 +34,12 @@ type Amazon struct {
 	tarmak interfaces.Tarmak
 
 	availabilityZones *[]string
+	remoteStateKMSarn string
 
 	session  *session.Session
 	ec2      EC2
 	s3       S3
+	kms      KMS
 	dynamodb DynamoDB
 	route53  Route53
 	log      *logrus.Entry
@@ -69,6 +72,12 @@ type Route53 interface {
 	CreateHostedZone(input *route53.CreateHostedZoneInput) (*route53.CreateHostedZoneOutput, error)
 	GetHostedZone(input *route53.GetHostedZoneInput) (*route53.GetHostedZoneOutput, error)
 	ListHostedZonesByName(input *route53.ListHostedZonesByNameInput) (*route53.ListHostedZonesByNameOutput, error)
+}
+
+type KMS interface {
+	CreateAlias(input *kms.CreateAliasInput) (*kms.CreateAliasOutput, error)
+	CreateKey(input *kms.CreateKeyInput) (*kms.CreateKeyOutput, error)
+	DescribeKey(input *kms.DescribeKeyInput) (*kms.DescribeKeyOutput, error)
 }
 
 var _ interfaces.Provider = &Amazon{}
@@ -244,6 +253,17 @@ func (a *Amazon) S3() (S3, error) {
 	return a.s3, nil
 }
 
+func (a *Amazon) KMS() (KMS, error) {
+	if a.kms == nil {
+		sess, err := a.Session()
+		if err != nil {
+			return nil, fmt.Errorf("error getting Amazon session: %s", err)
+		}
+		a.kms = kms.New(sess)
+	}
+	return a.kms, nil
+}
+
 func (a *Amazon) DynamoDB() (DynamoDB, error) {
 	if a.dynamodb == nil {
 		sess, err := a.Session()
@@ -278,6 +298,7 @@ func (a *Amazon) Variables() map[string]interface{} {
 	output["public_zone"] = a.conf.Amazon.PublicZone
 	output["public_zone_id"] = a.conf.Amazon.PublicHostedZoneID
 	output["bucket_prefix"] = a.conf.Amazon.BucketPrefix
+	output["remote_kms_key_id"] = a.remoteStateKMSarn
 
 	return output
 }

@@ -42,6 +42,8 @@ variable "secrets_bucket" {
   default = ""
 }
 
+variable "remote_kms_key_id" {}
+
 {{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeHub)}}
 
 

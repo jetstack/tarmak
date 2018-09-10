@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
@@ -17,6 +18,10 @@ func (a *Amazon) RemoteStateName() string {
 		a.conf.Amazon.BucketPrefix,
 		a.Region(),
 	)
+}
+
+func (a *Amazon) RemoteStateKMSName() string {
+	return fmt.Sprintf("%s-kms", a.RemoteStateName())
 }
 
 const DynamoDBKey = "LockID"
@@ -33,12 +38,14 @@ func (a *Amazon) RemoteState(namespace string, clusterName string, stackName str
     key = "%s"
     region = "%s"
     dynamodb_table ="%s"
+    kms_key_id = "%s"
   }
 }`,
 		a.RemoteStateName(),
 		fmt.Sprintf("%s/%s/%s.tfstate", namespace, clusterName, stackName),
 		a.Region(),
 		a.RemoteStateName(),
+		a.remoteStateKMSarn,
 	)
 }
 
@@ -133,6 +140,26 @@ func (a *Amazon) validateRemoteStateBucket() error {
 		return err
 	}
 
+	svcKMS, err := a.KMS()
+	if err != nil {
+		return err
+	}
+
+	k, err := svcKMS.DescribeKey(&kms.DescribeKeyInput{
+		KeyId: aws.String(fmt.Sprintf("alias/%s", a.RemoteStateKMSName())),
+	})
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "NotFoundException" {
+				return a.initRemoteStateKMS()
+			}
+		}
+
+		return fmt.Errorf("error looking for terraform state kms alias: %s", err)
+	} else {
+		a.remoteStateKMSarn = *k.KeyMetadata.KeyId
+	}
+
 	var bucketRegion string
 	if location.LocationConstraint == nil {
 		bucketRegion = "us-east-1"
@@ -156,6 +183,41 @@ func (a *Amazon) validateRemoteStateBucket() error {
 
 	return nil
 
+}
+
+func (a *Amazon) initRemoteStateKMS() error {
+	svc, err := a.KMS()
+	if err != nil {
+		return err
+	}
+
+	k, err := svc.CreateKey(&kms.CreateKeyInput{
+		Tags: []*kms.Tag{
+			&kms.Tag{
+				TagKey:   aws.String("provider"),
+				TagValue: aws.String(a.Name()),
+			},
+			&kms.Tag{
+				TagKey:   aws.String("bucket"),
+				TagValue: aws.String(a.RemoteStateName()),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = svc.CreateAlias(&kms.CreateAliasInput{
+		TargetKeyId: aws.String(*k.KeyMetadata.KeyId),
+		AliasName:   aws.String(fmt.Sprintf("alias/%s", a.RemoteStateKMSName())),
+	})
+	if err != nil {
+		return err
+	}
+
+	a.remoteStateKMSarn = *k.KeyMetadata.Arn
+
+	return nil
 }
 
 func (a *Amazon) initRemoteStateDynamoDB() error {

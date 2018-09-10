@@ -193,9 +193,10 @@ data "terraform_remote_state" "hub_state" {
   backend = "s3"
 
   config {
-    region = "${var.region}"
-    bucket = "${var.state_bucket}"
-    key    = "${var.environment}/${var.state_cluster_name}/main.tfstate"
+    region     = "${var.region}"
+    bucket     = "${var.state_bucket}"
+    key        = "${var.environment}/${var.state_cluster_name}/main.tfstate"
+    kms_key_id = "${var.remote_kms_key_id}"
   }
 }
 
