@@ -2,10 +2,17 @@
 package tarmak
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
 
+	"github.com/blang/semver"
+	terraformVersion "github.com/hashicorp/terraform/version"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -114,6 +121,11 @@ func (t *Tarmak) CmdTerraformDestroy(args []string, ctx context.Context) error {
 }
 
 func (t *Tarmak) CmdTerraformShell(args []string) error {
+
+	if err := t.verifyTerraformBinaryVersion(); err != nil {
+		return err
+	}
+
 	if err := t.writeSSHConfigForClusterHosts(); err != nil {
 		return err
 	}
@@ -122,6 +134,47 @@ func (t *Tarmak) CmdTerraformShell(args []string) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (t *Tarmak) verifyTerraformBinaryVersion() error {
+
+	cmd := exec.Command("terraform", "version")
+	cmd.Env = os.Environ()
+	cmdOutput := &bytes.Buffer{}
+	cmd.Stdout = cmdOutput
+
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to run 'terraform version': %s. Please make sure that Terraform is installed", err)
+	}
+
+	reader := bufio.NewReader(cmdOutput)
+	versionLine, _, err := reader.ReadLine()
+	if err != nil {
+		return fmt.Errorf("failed to read 'terraform version' output: %s", err)
+	}
+
+	terraformBinaryVersion := strings.TrimPrefix(string(versionLine), "Terraform v")
+	terraformVendoredVersion := terraformVersion.Version
+
+	terraformBinaryVersionSemver, err := semver.Make(terraformBinaryVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Terraform binary version: %s", err)
+	}
+	terraformVendoredVersionSemver, err := semver.Make(terraformVendoredVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Terraform vendored version: %s", err)
+	}
+
+	// we need binary version == vendored version
+	if terraformBinaryVersionSemver.GT(terraformVendoredVersionSemver) {
+		return fmt.Errorf("Terraform binary version (%s) is greater than vendored version (%s). Please downgrade binary version to %s", terraformBinaryVersion, terraformVendoredVersion, terraformVendoredVersion)
+	} else if terraformBinaryVersionSemver.LT(terraformVendoredVersionSemver) {
+		return fmt.Errorf("Terraform binary version (%s) is less than vendored version (%s). Please upgrade binary version to %s", terraformBinaryVersion, terraformVendoredVersion, terraformVendoredVersion)
+	}
+
 	return nil
 }
 
