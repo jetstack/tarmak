@@ -76,11 +76,12 @@ class consul(
   Exec { path => $path }
 
   $_dest_dir = "${dest_dir}/${app_name}-${version}"
+  $_backinator_dest_dir = "${dest_dir}/${app_name}-backinator-${backinator_version}"
   $bin_path = "${_dest_dir}/${app_name}"
   $link_path = "${dest_dir}/bin"
   $config_path = "${config_dir}/consul.json"
 
-  $exporter_dest_dir = "${dest_dir}/${app_name}_exporter-${exporter_version}"
+  $exporter_dest_dir = "${dest_dir}/${app_name}-exporter-${exporter_version}"
   $exporter_bin_path = "${exporter_dest_dir}/${app_name}_exporter"
 
   $_consul_master_token = $consul_master_token ? {

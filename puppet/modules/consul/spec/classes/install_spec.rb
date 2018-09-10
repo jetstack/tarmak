@@ -28,8 +28,16 @@ describe 'consul::install' do
     end
 
     it 'should install consul exporter' do
-      should contain_file('/opt/consul_exporter-0.3.0').with(
+      should contain_file('/opt/consul-exporter-0.3.0').with(
         :ensure => 'directory',
+      )
+      should contain_file('/opt/consul-exporter-0.3.0/consul_exporter').with(
+        :ensure => 'file',
+        :mode => '0755',
+      )
+      should contain_file('/opt/bin/consul_exporter').with(
+        :ensure => 'link',
+        :target => '/opt/consul-exporter-0.3.0/consul_exporter',
       )
     end
 
@@ -45,13 +53,16 @@ describe 'consul::install' do
     end
 
     it 'should install consul backinator' do
-      should contain_file('/opt/consul-1.2.1/consul-backinator').with(
+      should contain_file('/opt/consul-backinator-1.3').with(
+        :ensure => 'directory',
+      )
+      should contain_file('/opt/consul-backinator-1.3/consul-backinator').with(
         :ensure => 'file',
         :mode => '0755',
       )
       should contain_file('/opt/bin/consul-backinator').with(
         :ensure => 'link',
-        :target => '/opt/consul-1.2.1/consul-backinator',
+        :target => '/opt/consul-backinator-1.3/consul-backinator',
       )
     end
   end

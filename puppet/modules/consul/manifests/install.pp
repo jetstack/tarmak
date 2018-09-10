@@ -91,6 +91,14 @@ class consul::install(
       extract_path      => $consul::exporter_dest_dir,
       extract_command   => 'tar xfz %s --strip-components=1'
     }
+    -> file {$consul::exporter_bin_path:
+      ensure => file,
+      mode   => '0755',
+    }
+    -> file {"${consul::link_path}/${consul::app_name}_exporter":
+      ensure => link,
+      target => $consul::exporter_bin_path,
+    }
   }
   else {
     file {$consul::exporter_dest_dir:
@@ -99,22 +107,26 @@ class consul::install(
   }
 
 
-  archive {"${consul::_dest_dir}/consul-backinator":
+  file {$consul::_backinator_dest_dir:
+    ensure => directory,
+    mode   => '0755',
+  }
+  -> archive {"${consul::_dest_dir}/consul-backinator":
     ensure        => present,
     extract       => false,
     source        => $backinator_download_url,
     checksum      => $consul::backinator_sha256,
     checksum_type => 'sha256',
     cleanup       => false,
-    creates       => "${consul::_dest_dir}/consul-backinator",
+    creates       => "${consul::_backinator_dest_dir}/consul-backinator",
   }
-  -> file {"${consul::_dest_dir}/consul-backinator":
+  -> file {"${consul::_backinator_dest_dir}/consul-backinator":
     ensure => file,
     mode   => '0755',
   }
   -> file {"${consul::link_path}/${consul::app_name}-backinator":
     ensure => link,
-    target => "${consul::_dest_dir}/consul-backinator",
+    target => "${consul::_backinator_dest_dir}/consul-backinator",
   }
 
   file { "${consul::_dest_dir}/consul-backup.sh":
