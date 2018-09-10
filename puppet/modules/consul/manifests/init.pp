@@ -39,6 +39,9 @@ class consul(
   String $sha256sums_url = $consul::params::sha256sums_url,
   String $exporter_download_url = $consul::params::exporter_download_url,
   String $exporter_signature_url = $consul::params::exporter_signature_url,
+  String $backinator_version = $consul::params::backinator_version,
+  String $backinator_download_url = $consul::params::backinator_download_url,
+  String $backinator_sha256 = $consul::params::backinator_sha256,
   Integer $uid = 871,
   Integer $gid = 871,
   String $user = 'consul',
@@ -73,11 +76,12 @@ class consul(
   Exec { path => $path }
 
   $_dest_dir = "${dest_dir}/${app_name}-${version}"
+  $_backinator_dest_dir = "${dest_dir}/${app_name}-backinator-${backinator_version}"
   $bin_path = "${_dest_dir}/${app_name}"
   $link_path = "${dest_dir}/bin"
   $config_path = "${config_dir}/consul.json"
 
-  $exporter_dest_dir = "${dest_dir}/${app_name}_exporter-${exporter_version}"
+  $exporter_dest_dir = "${dest_dir}/${app_name}-exporter-${exporter_version}"
   $exporter_bin_path = "${exporter_dest_dir}/${app_name}_exporter"
 
   $_consul_master_token = $consul_master_token ? {
