@@ -33,6 +33,7 @@ type InstancePool struct {
 	rootVolume *Volume
 
 	instanceType string
+	spotPrice    string
 
 	role *role.Role
 }
@@ -77,7 +78,7 @@ func NewFromConfig(cluster interfaces.Cluster, conf *clusterv1alpha1.InstancePoo
 		return nil, fmt.Errorf("minCount does not equal maxCount but role is stateful. minCount=%d maxCount=%d", instancePool.Config().MinCount, instancePool.Config().MaxCount)
 	}
 
-	var result error
+	var result *multierror.Error
 
 	count := 0
 	for pos, _ := range conf.Volumes {
@@ -98,7 +99,9 @@ func NewFromConfig(cluster interfaces.Cluster, conf *clusterv1alpha1.InstancePoo
 		return nil, errors.New("no root volume given")
 	}
 
-	return instancePool, result
+	instancePool.spotPrice = conf.SpotPrice
+
+	return instancePool, result.ErrorOrNil()
 }
 
 func (n *InstancePool) Role() *role.Role {
@@ -166,7 +169,20 @@ func (n *InstancePool) InstanceType() string {
 }
 
 func (n *InstancePool) SpotPrice() string {
-	return n.conf.SpotPrice
+	return n.spotPrice
+}
+
+func (n *InstancePool) CalculateSpotPrice() error {
+	if n.spotPrice == "" {
+		p, err := n.cluster.Environment().Provider().SpotPrice(n)
+		if err != nil {
+			return err
+		}
+
+		n.spotPrice = fmt.Sprint(p)
+	}
+
+	return nil
 }
 
 func (n *InstancePool) AmazonAdditionalIAMPolicies() string {

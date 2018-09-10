@@ -127,6 +127,7 @@ type Provider interface {
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
 	VerifyInstanceTypes(intstancePools []InstancePool) error
+	SpotPrice(instancePool InstancePool) (float64, error)
 }
 
 type Tarmak interface {
@@ -254,6 +255,7 @@ type InstancePool interface {
 	InstanceType() string
 	Labels() (string, error)
 	Taints() (string, error)
+	CalculateSpotPrice() error
 }
 
 type Volume interface {

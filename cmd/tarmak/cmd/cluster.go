@@ -34,6 +34,15 @@ func clusterApplyFlags(fs *flag.FlagSet) {
 		false,
 		"apply changes to infrastructure only, by running only terraform",
 	)
+
+	fs.BoolVarP(
+		&store.SpotPricing,
+		"spot-pricing",
+		"P",
+		false,
+		"Use a best effort spot pricing based on last 3 days pricing for instance pools",
+	)
+
 }
 
 func clusterDestroyFlags(fs *flag.FlagSet) {

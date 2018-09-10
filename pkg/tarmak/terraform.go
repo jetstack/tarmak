@@ -12,7 +12,9 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/hashicorp/go-multierror"
 	terraformVersion "github.com/hashicorp/terraform/version"
+
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -54,6 +56,21 @@ func (t *Tarmak) CmdTerraformApply(args []string, ctx context.Context) error {
 	t.cluster.Log().Info("verify steps")
 	if err := t.Verify(); err != nil {
 		return err
+	}
+
+	if t.flags.Cluster.Apply.SpotPricing {
+		t.cluster.Log().Info("calculating instance pool spot prices")
+
+		var result *multierror.Error
+		for _, i := range t.Cluster().InstancePools() {
+			if err := i.CalculateSpotPrice(); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
+
+		if result != nil {
+			return result.ErrorOrNil()
+		}
 	}
 
 	t.cluster.Log().Info("write SSH config")
