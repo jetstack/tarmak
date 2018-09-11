@@ -128,7 +128,7 @@ func (a *Amazon) initRemoteStateBucket() error {
 	}
 
 	_, err = svc.PutBucketEncryption(&s3.PutBucketEncryptionInput{
-		Bucket:                            aws.String(a.RemoteStateName()),
+		Bucket: aws.String(a.RemoteStateName()),
 		ServerSideEncryptionConfiguration: encConf,
 	})
 	if err != nil {
