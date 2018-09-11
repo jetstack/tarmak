@@ -103,7 +103,9 @@ func (w *Wing) Run(args []string) error {
 	w.signalHandler(signalCh)
 
 	// run converge loop after first start
-	go w.converge()
+	go func() {
+		err = w.converge()
+	}()
 
 	// start watching for API server events that trigger applies
 	w.watchForNotifications()
@@ -112,8 +114,7 @@ func (w *Wing) Run(args []string) error {
 	<-w.stopCh
 	w.convergeWG.Wait()
 
-	return nil
-
+	return err
 }
 
 func (w *Wing) Must(err error) *Wing {

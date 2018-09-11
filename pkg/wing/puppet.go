@@ -154,7 +154,7 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 	return status, nil
 }
 
-func (w *Wing) converge() {
+func (w *Wing) converge() error {
 	w.convergeWG.Add(1)
 	defer w.convergeWG.Done()
 
@@ -169,10 +169,11 @@ func (w *Wing) converge() {
 	}
 
 	// feedback puppet status to apiserver
-	err = w.reportStatus(status)
-	if err != nil {
+	if err := w.reportStatus(status); err != nil {
 		w.log.Warn("reporting status failed: ", err)
 	}
+
+	return err
 }
 
 func (w *Wing) puppetCommand(dir string) Command {
