@@ -120,8 +120,6 @@ mode. All replicas on other instances are in read mode which causes spire severs
 on those instances to panic. Spire servers have to connect to the PostgreSQL
 cluster master elected through Consul.
 
-Spire uses Elliptic Curve keys which is odd and can be annoying.
-
 .. _Patroni: https://github.com/zalando/patroni
 
 Road Map
