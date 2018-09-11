@@ -171,7 +171,9 @@ func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, rol
 			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::version: "%s"`, conf.ClusterAutoscaler.Version))
 		}
 
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::scale_down_utilization_threshold: %v`, *conf.ClusterAutoscaler.ScaleDownThreshold))
+		if conf.ClusterAutoscaler.ScaleDownThreshold != nil {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::scale_down_utilization_threshold: %v`, *conf.ClusterAutoscaler.ScaleDownThreshold))
+		}
 
 		if conf.ClusterAutoscaler.Overprovisioning != nil && conf.ClusterAutoscaler.Overprovisioning.Enabled {
 			hieraData.variables = append(hieraData.variables, `kubernetes_addons::cluster_autoscaler::enable_overprovisioning: true`)

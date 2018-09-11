@@ -73,7 +73,7 @@ spec:
 <% if @_enable_overprovisioning -%>
         - --expendable-pods-priority-cutoff=-10
 <% end -%>
-<% if @_enable_scale_down_utilization_threshold -%>
+<% if @scale_down_utilization_threshold -%>
         - --scale-down-utilization-threshold=<%= @scale_down_utilization_threshold %>
 <% end -%>
 <% if @aws_region -%>

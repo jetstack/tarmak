@@ -95,12 +95,6 @@ class kubernetes_addons::cluster_autoscaler(
   }
 
 
-  if $scale_down_utilization_threshold == undef {
-    $_enable_scale_down_utilization_threshold = false
-  } else {
-    $_enable_scale_down_utilization_threshold = true
-  }
-
   if $_enable_overprovisioning and versioncmp($::kubernetes::version, '1.9.0') >= 0 {
     kubernetes::apply{'cluster-autoscaler-overprovisioning':
       manifests => [
