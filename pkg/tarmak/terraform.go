@@ -182,7 +182,7 @@ func (c *CmdTerraform) Destroy() error {
 	return nil
 }
 
-func (c *CmdTerraform) Shell(args []string) error {
+func (c *CmdTerraform) Shell() error {
 	if err := c.verifyTerraformBinaryVersion(); err != nil {
 		return err
 	}
