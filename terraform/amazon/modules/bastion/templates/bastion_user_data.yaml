@@ -24,6 +24,8 @@ write_files:
     Environment=ETCD_HASH=0a75e794502e2e76417b19da2807a9915fa58dcbf0985e397741d570f4f305cd
     Environment=ETCD_DATA_DIR=/var/lib/etcd
     PermissionsStartOnly=true
+    Restart=on-failure
+    RestartSec=10
     ExecStartPre=/bin/sh -c '\
       set -e ;\
       test -x /opt/etcd-$${ETCD_VERSION}/etcd && exit 0 ;\
@@ -59,6 +61,8 @@ write_files:
     Environment=WING_VERSION=0.5.0-alpha2
     Environment=WING_DATA_DIR=/var/lib/wing
     PermissionsStartOnly=true
+    Restart=on-failure
+    RestartSec=10
     ExecStartPre=/bin/sh -c '\
       set -e ;\
       test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
