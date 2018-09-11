@@ -19,6 +19,8 @@ data "template_file" "{{.TFName}}_user_data" {
   vars {
     region = "${var.region}"
 
+    secret_bucket_path        = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}"
+    puppet_hash_bucket_path   = "${var.secrets_bucket}/${aws_s3_bucket_object.latest-puppet-hash.key}"
     puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
 
     # These are only used in the template when running in Wing dev mode

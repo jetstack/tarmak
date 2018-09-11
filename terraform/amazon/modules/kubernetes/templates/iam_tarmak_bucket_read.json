@@ -8,6 +8,7 @@
       "Effect": "Allow",
       "Resource": [
         "arn:aws:s3:::${puppet_tar_gz_bucket_path}",
+        "arn:aws:s3:::${puppet_hash_bucket_path}",
         "arn:aws:s3:::${wing_binary_path}"
       ]
     },
