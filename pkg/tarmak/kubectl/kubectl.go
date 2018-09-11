@@ -343,19 +343,17 @@ func (k *Kubectl) KubeConfig(flags *flag.FlagSet) (string, error) {
 		}
 		return "", fmt.Errorf("the current cluster '%s' is a hub and therefore does not contain a Kubernetes cluster", currentCluster)
 	}
-	if k := k.tarmak.Cluster().Config().Kubernetes; k == nil {
-		return "", fmt.Errorf("APIServer is not public and we are not able to connect to the APIserver without SSH tunnel, please use tarmak cluster kubectl")
-	} else if apiServer := k.APIServer; apiServer == nil || !apiServer.Public {
-		return "", fmt.Errorf("APIServer is not public and we are not able to connect to the APIserver without SSH tunnel, please use tarmak cluster kubectl")
-	}
 
 	var tunnel interfaces.Tunnel
 	var err error
+	var publicAPIEndpoint bool
+
 	kubeconfigPath, _ := flags.GetString("path")
+
 	if flags.Changed("public-api-endpoint") {
-		publicAPIEndpoint, err := flags.GetBool("public-api-endpoint")
+		publicAPIEndpoint, err = flags.GetBool("public-api-endpoint")
 		if err != nil {
-			return "", fmt.Errorf("Something went wrong: %s", err)
+			return "", fmt.Errorf("something went wrong: %s", err)
 		}
 		tunnel, err = k.ensureWorkingKubeconfig(kubeconfigPath, publicAPIEndpoint)
 	} else {
