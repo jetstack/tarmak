@@ -11,6 +11,7 @@ class kubernetes_addons::cluster_autoscaler(
   Optional[Boolean] $enable_overprovisioning=undef,
   Optional[String] $proportional_image=undef,
   Optional[String] $proportional_version=undef,
+  Optional[Float] $scale_down_utilization_threshold = undef,
   Integer $reserved_millicores_per_replica = 0,
   Integer $reserved_megabytes_per_replica = 0,
   Integer $cores_per_replica = 0,
@@ -92,6 +93,7 @@ class kubernetes_addons::cluster_autoscaler(
   } else {
     $_proportional_image = $proportional_image
   }
+
 
   if $_enable_overprovisioning and versioncmp($::kubernetes::version, '1.9.0') >= 0 {
     kubernetes::apply{'cluster-autoscaler-overprovisioning':

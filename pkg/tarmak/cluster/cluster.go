@@ -500,6 +500,10 @@ func (c *Cluster) validateClusterAutoscaler() (result error) {
 		if (c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Image != "" || c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.Version != "") && (c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.CoresPerReplica == 0 && c.Config().Kubernetes.ClusterAutoscaler.Overprovisioning.NodesPerReplica == 0) {
 			return fmt.Errorf("setting overprovisioning image or version is only valid when proportional overprovisioning is enabled")
 		}
+
+		if s := c.Config().Kubernetes.ClusterAutoscaler.ScaleDownThreshold; s != nil && (*s < 0 || *s > 1) {
+			return fmt.Errorf("scale down threshold '%v' unacceptable, must be value between 0 and 1", *c.Config().Kubernetes.ClusterAutoscaler.ScaleDownThreshold)
+		}
 	}
 
 	return nil
