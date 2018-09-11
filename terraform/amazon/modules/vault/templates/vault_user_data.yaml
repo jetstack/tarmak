@@ -115,6 +115,8 @@ write_files:
        -server \
        -config-dir=/etc/consul \
        -advertise=${private_ip}
+    Restart=on-failure
+    RestartSec=10
 
     [Install]
     WantedBy=multi-user.target

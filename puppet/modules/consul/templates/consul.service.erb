@@ -26,5 +26,8 @@ ExecStart=<%= @bin_path %> \
    agent \
    -config-file=<%= @config_path %> \
    -data-dir=<%= @data_dir %>/data
+Restart=on-failure
+RestartSec=10
+
 [Install]
 WantedBy=multi-user.target
