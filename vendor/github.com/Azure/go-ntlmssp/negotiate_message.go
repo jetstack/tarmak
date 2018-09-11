@@ -22,7 +22,8 @@ type negotiateMessageFields struct {
 var defaultFlags = negotiateFlagNTLMSSPNEGOTIATETARGETINFO |
 	negotiateFlagNTLMSSPNEGOTIATE56 |
 	negotiateFlagNTLMSSPNEGOTIATE128 |
-	negotiateFlagNTLMSSPNEGOTIATEUNICODE
+	negotiateFlagNTLMSSPNEGOTIATEUNICODE |
+	negotiateFlagNTLMSSPNEGOTIATEEXTENDEDSESSIONSECURITY
 
 //NewNegotiateMessage creates a new NEGOTIATE message with the
 //flags that this package supports.
