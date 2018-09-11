@@ -4,6 +4,7 @@ package interfaces
 import (
 	"io"
 	"net"
+	"os"
 
 	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack/vault-unsealer/pkg/kv"
@@ -152,6 +153,7 @@ type Tarmak interface {
 	HomeDirExpand(in string) (string, error)
 	HomeDir() string
 	KeepContainers() bool
+	CancellationContext() CancellationContext
 
 	// get a provider by name
 	ProviderByName(string) (Provider, error)
@@ -271,4 +273,11 @@ type Initialize interface {
 	Tarmak() Tarmak
 	CurrentProvider() Provider
 	CurrentEnvironment() Environment
+}
+
+type CancellationContext interface {
+	Done() <-chan struct{}
+	Err() error
+	Signal() os.Signal
+	WaitOrCancel(f func() error, ignoredExitStatuses ...int)
 }

@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/hashicorp/terraform/command"
 	"github.com/kardianos/osext"
@@ -31,6 +32,7 @@ var wingHash = ""
 type Terraform struct {
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
+	ctx    interfaces.CancellationContext
 }
 
 func New(tarmak interfaces.Tarmak) *Terraform {
@@ -39,6 +41,7 @@ func New(tarmak interfaces.Tarmak) *Terraform {
 	return &Terraform{
 		log:    log,
 		tarmak: tarmak,
+		ctx:    tarmak.CancellationContext(),
 	}
 }
 
@@ -109,15 +112,32 @@ func (t *Terraform) socketPath(c interfaces.Cluster) string {
 }
 
 func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
+	}
 
 	// generate tf code
 	if err := t.GenerateCode(cluster); err != nil {
 		return fmt.Errorf("failed to generate code: %s", err)
 	}
 
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
+	}
+
 	// symlink tarmak plugins into folder
 	if err := t.preparePlugins(cluster); err != nil {
 		return fmt.Errorf("failed to prepare plugins: %s", err)
+	}
+
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
 	}
 
 	// run init
@@ -136,17 +156,22 @@ func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 		return fmt.Errorf("failed to run terraform init: %s", err)
 	}
 
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
+	}
+
 	return nil
 }
 
 func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string, args []string) error {
-
 	if err := t.Prepare(cluster); err != nil {
 		return fmt.Errorf("failed to prepare terraform: %s", err)
 	}
 
 	// listen to rpc
-	stopCh := make(chan struct{})
+	stopRpcCh := make(chan struct{})
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -154,7 +179,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		if err := rpc.ListenUnixSocket(
 			rpc.New(t.tarmak.Cluster()),
 			t.socketPath(cluster),
-			stopCh,
+			stopRpcCh,
 		); err != nil {
 			t.log.Fatalf("error listening to unix socket: %s", err)
 		}
@@ -202,7 +227,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		}
 	}
 
-	close(stopCh)
+	close(stopRpcCh)
 	wg.Wait()
 
 	return nil
@@ -240,6 +265,14 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 		binaryPath,
 		args...,
 	)
+
+	// This ensures that processes are run in different process groups so a
+	// signal to the parent process is not propagated to the children. This is
+	// needed to control signaling and ensure graceful shutdown of
+	// subprocesses.
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -279,11 +312,27 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	cmd.Dir = t.codePath(cluster)
 	cmd.Env = envVars
 
-	if err := cmd.Run(); err != nil {
+	if err := cmd.Start(); err != nil {
 		return err
 	}
 
-	return nil
+	complete := make(chan struct{})
+	go func() {
+		err = cmd.Wait()
+		close(complete)
+	}()
+
+	select {
+	case <-t.tarmak.CancellationContext().Done():
+		if cmd.Process != nil {
+			cmd.Process.Signal(t.tarmak.CancellationContext().Signal())
+		}
+		<-complete
+
+	case <-complete:
+	}
+
+	return err
 }
 
 func (t *Terraform) Plan(cluster interfaces.Cluster) error {

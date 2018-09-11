@@ -21,6 +21,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
@@ -30,6 +31,7 @@ type Tarmak struct {
 	log             *logrus.Logger
 	flags           *tarmakv1alpha1.Flags
 	configDirectory string
+	ctx             interfaces.CancellationContext
 
 	config    interfaces.Config
 	terraform *terraform.Terraform
@@ -54,6 +56,7 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
 		log:   logrus.New(),
 		flags: flags,
+		ctx:   utils.NewCancellationContext(),
 	}
 
 	t.initializeModules()
@@ -234,6 +237,12 @@ func (t *Tarmak) Clusters() (clusters []interfaces.Cluster) {
 
 // this builds a temporary directory with the needed assets that are built into the go binary
 func (t *Tarmak) RootPath() (string, error) {
+	select {
+	case <-t.CancellationContext().Done():
+		return "", t.CancellationContext().Err()
+	default:
+	}
+
 	if t.rootPath != nil {
 		return *t.rootPath, nil
 	}
@@ -244,6 +253,12 @@ func (t *Tarmak) RootPath() (string, error) {
 	}
 
 	t.log.Debugf("created temporary directory: %s", dir)
+
+	select {
+	case <-t.CancellationContext().Done():
+		return "", t.CancellationContext().Err()
+	default:
+	}
 
 	err = assets.RestoreAssets(dir, "")
 	if err != nil {
@@ -341,4 +356,8 @@ func (t *Tarmak) CmdKubectl(args []string) error {
 		return err
 	}
 	return t.kubectl.Kubectl(args)
+}
+
+func (t *Tarmak) CancellationContext() interfaces.CancellationContext {
+	return t.ctx
 }

@@ -32,6 +32,7 @@ type image struct {
 	packer *Packer
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
+	ctx    interfaces.CancellationContext
 
 	environment string
 	imageName   string
@@ -47,6 +48,13 @@ func (i *image) tags() map[string]string {
 }
 
 func (i *image) Build() (amiID string, err error) {
+
+	select {
+	case <-i.ctx.Done():
+		return "", i.ctx.Err()
+	default:
+	}
+
 	rootPath, err := i.tarmak.RootPath()
 	if err != nil {
 		return "", fmt.Errorf("error getting rootPath: %s", err)
@@ -90,6 +98,12 @@ func (i *image) Build() (amiID string, err error) {
 		Variables:  i.tags(),
 	}
 
+	select {
+	case <-i.ctx.Done():
+		return "", i.ctx.Err()
+	default:
+	}
+
 	envVars, err := i.tarmak.Provider().Environment()
 	if err != nil {
 		return "", fmt.Errorf("faild to get provider credentials: %v", err)
@@ -114,18 +128,35 @@ func (i *image) Build() (amiID string, err error) {
 		return "", result.ErrorOrNil()
 	}
 
+	select {
+	case <-i.ctx.Done():
+		return "", i.ctx.Err()
+	default:
+	}
+
 	core, err := packer.NewCore(config)
 	if err != nil {
 		return "", fmt.Errorf("failed to get core: %v", err)
 	}
 
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 	var amiIDs []string
+	var builds []packer.Build
+
 	for _, buildName := range core.BuildNames() {
 		build, err := core.Build(buildName)
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
+		}
+		build.SetDebug(true)
+		builds = append(builds, build)
+
+		select {
+		case <-i.ctx.Done():
+			break
+		default:
 		}
 
 		if _, err := build.Prepare(); err != nil {
@@ -144,16 +175,37 @@ func (i *image) Build() (amiID string, err error) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			complete := make(chan struct{})
+
+			go func() {
+				select {
+				case <-i.ctx.Done():
+					i.log.Warnf("Attempting to cancel build '%s', please be patient while the builder shuts down.", build.Name())
+					build.Cancel()
+					<-complete
+
+				case <-complete:
+				}
+			}()
 
 			artifacts, err := build.Run(ui, nil)
 			if err != nil {
+				mu.Lock()
 				result = multierror.Append(result, err)
+				mu.Unlock()
+
+				close(complete)
 				return
 			}
 
 			for _, a := range artifacts {
+				mu.Lock()
 				amiIDs = append(amiIDs, a.Id())
+				mu.Unlock()
 			}
+
+			close(complete)
+			return
 		}()
 	}
 

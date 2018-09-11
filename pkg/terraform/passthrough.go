@@ -57,7 +57,8 @@ func newErrUI(out io.Writer, errOut io.Writer) cli.Ui {
 	}
 }
 
-func newMeta(ui cli.Ui) command.Meta {
+func newMeta(ui cli.Ui, stopCh <-chan struct{}) command.Meta {
+
 	if os.Getenv("TF_LOG") == "" {
 		log.SetOutput(ioutil.Discard)
 		os.Stderr = nil
@@ -76,6 +77,7 @@ func newMeta(ui cli.Ui) command.Meta {
 
 		RunningInAutomation: inAutomation,
 		OverrideDataDir:     dataDir,
+		ShutdownCh:          stopCh,
 	}
 }
 
@@ -111,45 +113,45 @@ func InternalPlugin(args []string) int {
 	return 0
 }
 
-func Plan(args []string) int {
+func Plan(args []string, stopCh <-chan struct{}) int {
 	c := &command.PlanCommand{
-		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
 	return c.Run(args)
 }
 
-func Apply(args []string) int {
+func Apply(args []string, stopCh <-chan struct{}) int {
 	c := &command.ApplyCommand{
-		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
 	return c.Run(args)
 }
 
-func Destroy(args []string) int {
+func Destroy(args []string, stopCh <-chan struct{}) int {
 	c := &command.ApplyCommand{
-		Meta:    newMeta(newUI(os.Stdout, os.Stderr)),
+		Meta:    newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 		Destroy: true,
 	}
 	return c.Run(args)
 }
 
-func Init(args []string) int {
+func Init(args []string, stopCh <-chan struct{}) int {
 	c := &command.InitCommand{
-		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
 	return c.Run(args)
 }
 
-func Output(args []string) int {
+func Output(args []string, stopCh <-chan struct{}) int {
 	c := &command.OutputCommand{
-		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
 	return c.Run(args)
 }
 
-func Unlock(args []string) int {
+func Unlock(args []string, stopCh <-chan struct{}) int {
 	c := &command.UnlockCommand{
-		Meta: newMeta(newUI(os.Stdout, os.Stderr)),
+		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
 	return c.Run(args)
 }

@@ -2,13 +2,11 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 var clusterApplyCmd = &cobra.Command{
@@ -37,11 +35,10 @@ var clusterApplyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
-		utils.WaitOrCancel(
-			func(ctx context.Context) error {
-				return t.CmdTerraformApply(args, ctx)
-			},
-		)
+
+		applyCmd := t.NewCmdTerraform(args)
+
+		t.CancellationContext().WaitOrCancel(applyCmd.Apply)
 	},
 }
 
