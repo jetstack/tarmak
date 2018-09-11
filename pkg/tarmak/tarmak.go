@@ -3,7 +3,6 @@ package tarmak
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
