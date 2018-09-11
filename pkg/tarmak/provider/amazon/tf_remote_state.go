@@ -21,7 +21,7 @@ func (a *Amazon) RemoteStateName() string {
 }
 
 func (a *Amazon) RemoteStateKMSName() string {
-	return fmt.Sprintf("%s-kms", a.RemoteStateName())
+	return fmt.Sprintf("alias/%s-kms", a.RemoteStateName())
 }
 
 const DynamoDBKey = "LockID"
@@ -45,7 +45,7 @@ func (a *Amazon) RemoteState(namespace string, clusterName string, stackName str
 		fmt.Sprintf("%s/%s/%s.tfstate", namespace, clusterName, stackName),
 		a.Region(),
 		a.RemoteStateName(),
-		a.remoteStateKMSarn,
+		a.RemoteStateKMSName(),
 	)
 }
 
@@ -112,10 +112,51 @@ func (a *Amazon) initRemoteStateBucket() error {
 			Status: aws.String("Enabled"),
 		},
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	encConf := &s3.ServerSideEncryptionConfiguration{
+		Rules: []*s3.ServerSideEncryptionRule{
+			&s3.ServerSideEncryptionRule{
+				ApplyServerSideEncryptionByDefault: &s3.ServerSideEncryptionByDefault{
+					KMSMasterKeyID: aws.String(a.RemoteStateKMSName()),
+					SSEAlgorithm:   aws.String(s3.ServerSideEncryptionAwsKms),
+				},
+			},
+		},
+	}
+
+	_, err = svc.PutBucketEncryption(&s3.PutBucketEncryptionInput{
+		Bucket:                            aws.String(a.RemoteStateName()),
+		ServerSideEncryptionConfiguration: encConf,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (a *Amazon) validateRemoteStateBucket() error {
+func (a *Amazon) verifyRemoteStateBucket() error {
+	svcKMS, err := a.KMS()
+	if err != nil {
+		return err
+	}
+
+	_, err = svcKMS.DescribeKey(&kms.DescribeKeyInput{
+		KeyId: aws.String(a.RemoteStateKMSName()),
+	})
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "NotFoundException" {
+				return a.initRemoteStateKMS()
+			}
+		}
+
+		return fmt.Errorf("error looking for terraform state kms alias: %s", err)
+	}
+
 	svc, err := a.S3()
 	if err != nil {
 		return err
@@ -140,26 +181,6 @@ func (a *Amazon) validateRemoteStateBucket() error {
 		return err
 	}
 
-	svcKMS, err := a.KMS()
-	if err != nil {
-		return err
-	}
-
-	k, err := svcKMS.DescribeKey(&kms.DescribeKeyInput{
-		KeyId: aws.String(fmt.Sprintf("alias/%s", a.RemoteStateKMSName())),
-	})
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				return a.initRemoteStateKMS()
-			}
-		}
-
-		return fmt.Errorf("error looking for terraform state kms alias: %s", err)
-	} else {
-		a.remoteStateKMSarn = *k.KeyMetadata.KeyId
-	}
-
 	var bucketRegion string
 	if location.LocationConstraint == nil {
 		bucketRegion = "us-east-1"
@@ -181,8 +202,25 @@ func (a *Amazon) validateRemoteStateBucket() error {
 		a.log.Warnf("state bucket %s has versioning disabled", a.RemoteStateName())
 	}
 
-	return nil
+	enc, err := svc.GetBucketEncryption(&s3.GetBucketEncryptionInput{
+		Bucket: aws.String(a.RemoteStateName()),
+	})
+	if err != nil {
+		return err
+	}
 
+	found := false
+	for _, r := range enc.ServerSideEncryptionConfiguration.Rules {
+		if ap := r.ApplyServerSideEncryptionByDefault; *ap.SSEAlgorithm == s3.ServerSideEncryptionAwsKms && *ap.KMSMasterKeyID == a.RemoteStateKMSName() {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("state bucket %s lacks encrytion rule with KMS alias '%s'", a.RemoteStateName(), a.RemoteStateKMSName())
+	}
+
+	return nil
 }
 
 func (a *Amazon) initRemoteStateKMS() error {
@@ -192,6 +230,7 @@ func (a *Amazon) initRemoteStateKMS() error {
 	}
 
 	k, err := svc.CreateKey(&kms.CreateKeyInput{
+		Description: aws.String(fmt.Sprintf("KMS key for Tarmak provider's '%s' remote states", a.Name())),
 		Tags: []*kms.Tag{
 			&kms.Tag{
 				TagKey:   aws.String("provider"),
@@ -209,13 +248,11 @@ func (a *Amazon) initRemoteStateKMS() error {
 
 	_, err = svc.CreateAlias(&kms.CreateAliasInput{
 		TargetKeyId: aws.String(*k.KeyMetadata.KeyId),
-		AliasName:   aws.String(fmt.Sprintf("alias/%s", a.RemoteStateKMSName())),
+		AliasName:   aws.String(a.RemoteStateKMSName()),
 	})
 	if err != nil {
 		return err
 	}
-
-	a.remoteStateKMSarn = *k.KeyMetadata.Arn
 
 	return nil
 }
@@ -248,7 +285,7 @@ func (a *Amazon) initRemoteStateDynamoDB() error {
 	return err
 }
 
-func (a *Amazon) validateRemoteStateDynamoDB() error {
+func (a *Amazon) verifyRemoteStateDynamoDB() error {
 	svc, err := a.DynamoDB()
 	if err != nil {
 		return err

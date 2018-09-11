@@ -34,7 +34,6 @@ type Amazon struct {
 	tarmak interfaces.Tarmak
 
 	availabilityZones *[]string
-	remoteStateKMSarn string
 
 	session  *session.Session
 	ec2      EC2
@@ -50,8 +49,10 @@ type S3 interface {
 	CreateBucket(input *s3.CreateBucketInput) (*s3.CreateBucketOutput, error)
 	GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error)
 	GetBucketLocation(input *s3.GetBucketLocationInput) (*s3.GetBucketLocationOutput, error)
+	GetBucketEncryption(input *s3.GetBucketEncryptionInput) (*s3.GetBucketEncryptionOutput, error)
 	PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error)
 	PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
+	PutBucketEncryption(input *s3.PutBucketEncryptionInput) (*s3.PutBucketEncryptionOutput, error)
 }
 
 type EC2 interface {
@@ -298,7 +299,7 @@ func (a *Amazon) Variables() map[string]interface{} {
 	output["public_zone"] = a.conf.Amazon.PublicZone
 	output["public_zone_id"] = a.conf.Amazon.PublicHostedZoneID
 	output["bucket_prefix"] = a.conf.Amazon.BucketPrefix
-	output["remote_kms_key_id"] = a.remoteStateKMSarn
+	output["remote_kms_key_id"] = a.RemoteStateKMSName()
 
 	return output
 }
@@ -351,24 +352,24 @@ func (a *Amazon) Verify() error {
 
 	// These checks only make sense with an environment given
 	if a.tarmak.Environment() != nil {
-		if err := a.validateRemoteStateBucket(); err != nil {
+		if err := a.verifyRemoteStateBucket(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		if err := a.validateRemoteStateDynamoDB(); err != nil {
+		if err := a.verifyRemoteStateDynamoDB(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		if err := a.validateAvailabilityZones(); err != nil {
+		if err := a.verifyAvailabilityZones(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		if err := a.validateAWSKeyPair(); err != nil {
+		if err := a.verifyAWSKeyPair(); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
 
-	if err := a.validatePublicZone(); err != nil {
+	if err := a.verifyPublicZone(); err != nil {
 		result = multierror.Append(result, err)
 	}
 
@@ -419,7 +420,7 @@ func (a *Amazon) getAvailablityZoneByRegion() (zones []string, err error) {
 	return zones, nil
 }
 
-func (a *Amazon) validateAvailabilityZones() error {
+func (a *Amazon) verifyAvailabilityZones() error {
 	var result error
 
 	zones, err := a.getAvailablityZoneByRegion()
