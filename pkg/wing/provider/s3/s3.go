@@ -9,18 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/sirupsen/logrus"
 )
 
-type S3 struct {
-	log *logrus.Entry
-}
-
-func New(log *logrus.Entry) *S3 {
-	return &S3{
-		log: log.WithField("provider", "s3"),
-	}
-}
+type S3 struct{}
 
 func (s *S3) GetManifest(manifestString string) (io.ReadCloser, error) {
 	manifestURL, err := url.Parse(manifestString)
@@ -42,5 +33,6 @@ func (s *S3) GetManifest(manifestString string) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting s3 object '%s' in bucket '%s': %s", key, bucket, err)
 	}
+
 	return result.Body, nil
 }

@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -24,8 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
-	"github.com/jetstack/tarmak/pkg/wing/provider/file"
-	"github.com/jetstack/tarmak/pkg/wing/provider/s3"
+	"github.com/jetstack/tarmak/pkg/wing/provider"
 )
 
 // This make sure puppet is converged when neccessary
@@ -154,7 +152,7 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 	return status, nil
 }
 
-func (w *Wing) converge() error {
+func (w *Wing) converge() {
 	w.convergeWG.Add(1)
 	defer w.convergeWG.Done()
 
@@ -172,8 +170,6 @@ func (w *Wing) converge() error {
 	if err := w.reportStatus(status); err != nil {
 		w.log.Warn("reporting status failed: ", err)
 	}
-
-	return err
 }
 
 func (w *Wing) puppetCommand(dir string) Command {
@@ -330,8 +326,5 @@ func (w *Wing) reportStatus(status *v1alpha1.InstanceStatus) error {
 }
 
 func (w *Wing) getManifests(manifestURL string) (io.ReadCloser, error) {
-	if strings.HasPrefix(manifestURL, "s3://") {
-		return s3.New(w.log).GetManifest(manifestURL)
-	}
-	return file.New(w.log).GetManifest(manifestURL)
+	return provider.GetManifest(w.log, manifestURL)
 }
