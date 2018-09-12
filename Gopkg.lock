@@ -833,6 +833,7 @@
 [[projects]]
   name = "github.com/hashicorp/terraform"
   packages = [
+    ".",
     "backend",
     "backend/atlas",
     "backend/init",
@@ -1096,6 +1097,12 @@
   version = "v0.0.4"
 
 [[projects]]
+  name = "github.com/mattn/go-shellwords"
+  packages = ["."]
+  revision = "02e3cf038dcea8290e44424da473dd12be796a8a"
+  version = "v1.0.3"
+
+[[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
   revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
@@ -1175,6 +1182,12 @@
   name = "github.com/mitchellh/panicwrap"
   packages = ["."]
   revision = "fce601fe55579125e1b3cb0b992287e7290f7b83"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/prefixedio"
+  packages = ["."]
+  revision = "6e6954073784f7ee67b28f2d22749d6479151ed7"
 
 [[projects]]
   name = "github.com/mitchellh/reflectwalk"
@@ -2107,6 +2120,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a83a3fe0028b82f65b9e992f1775c6783e693af0c2302f16071221483d7facd3"
+  inputs-digest = "3aa6520f79e439621ae0e4e7027d5a55675b3e3a8eefc2f80ed36ffc2b90311d"
   solver-name = "gps-cdcl"
   solver-version = 1
