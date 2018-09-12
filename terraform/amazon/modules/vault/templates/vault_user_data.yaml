@@ -367,6 +367,57 @@ write_files:
     export PATH=$PATH:/usr/local/bin
     export VAULT_ADDR=https://localhost:8200
     export VAULT_CACERT=/etc/vault/tls/ca.pem
+- path: /etc/systemd/system/download-vault-consul.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Download Vault and Consul
+    After=network-online.target
+    Requires=network-online.target
+
+    [Service]
+    Type=simple
+    Restart=on-failure
+    RestartSec=10
+    ExecStart=/usr/local/bin/download-vault-consul.sh
+    RemainAfterExit=yes
+
+    [Install]
+    WantedBy=multi-user.target
+- path: /etc/systemd/system/download-vault-unsealer.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Download Vault Unsealer
+    After=network-online.target
+    Requires=network-online.target
+
+    [Service]
+    Type=simple
+    Restart=on-failure
+    RestartSec=10
+    ExecStart=/usr/local/bin/download-vault-unsealer.sh
+    RemainAfterExit=yes
+
+    [Install]
+    WantedBy=multi-user.target
+- path: /etc/systemd/system/download-consul-backinator.service
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Download Consul Backinator
+    After=network-online.target
+    Requires=network-online.target
+
+    [Service]
+    Type=simple
+    Restart=on-failure
+    RestartSec=10
+    ExecStart=/usr/local/bin/download-consul-backinator.sh
+    RemainAfterExit=yes
+
+    [Install]
+    WantedBy=multi-user.target
 
 runcmd:
 - chown consul:consul /etc/consul/consul.json
@@ -374,8 +425,5 @@ runcmd:
 - hostnamectl set-hostname "${fqdn}"
 - yum -y install epel-release
 - yum -y install unzip jq curl gpg
-- /usr/local/bin/download-vault-consul.sh
-- /usr/local/bin/download-vault-unsealer.sh
-- /usr/local/bin/download-consul-backinator.sh
-- systemctl enable consul.service vault.service vault-unsealer.service consul-backup.timer
-- systemctl start consul.service vault.service vault-unsealer.service consul-backup.timer
+- systemctl enable download-vault-consul.service download-vault-unsealer.service download-consul-backinator.service consul.service vault.service vault-unsealer.service consul-backup.timer
+- systemctl start download-vault-consul.service download-vault-unsealer.service download-consul-backinator.service consul.service vault.service vault-unsealer.service consul-backup.timer
