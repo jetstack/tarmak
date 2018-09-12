@@ -6,9 +6,7 @@
 2. [Classes](#classes)
 3. [Defined Types](#defined-types)
 ## Description
-This module is part of [Tarmak](http://docs.tarmak.io) and should currently be considered alpha.
-
-[![Travis](https://img.shields.io/travis/jetstack/puppet-module-etcd.svg)](https://travis-ci.org/jetstack/puppet-module-etcd/)
+Install/configure an etcd node.
 
 ## Classes
 
@@ -127,6 +125,26 @@ etcd variable defaults
 
 * Type: `String`
 * Default: `nil`
+
+##### `systemd_wants`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_requires`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_after`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_before`
+
+* Type: `Array[String]`
+* Default: `[]`
 
 ##### `initial_cluster`
 

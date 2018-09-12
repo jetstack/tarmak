@@ -56,6 +56,24 @@ any component. It's just setting global variables for the cluster
 * Type: `String`
 * Default: `$tarmak::params::kubernetes_version`
 
+##### `kubernetes_ca_name`
+
+* Name of the PKI resource in Vault for main Kubernetes CA
+* Type: `String`
+* Default: `'k8s'`
+
+##### `kubernetes_api_proxy_ca_name`
+
+* Name of the PKI resource in Vault for the API server proxy
+* Type: `String`
+* Default: `'k8s-api-proxy'`
+
+##### `kubernetes_api_aggregation`
+
+* Enable API aggregation for Kubernetes, defaults to true for versions 1.7+
+* Type: `Optional[Boolean]`
+* Default: `undef`
+
 ##### `kubernetes_user`
 
 * Type: `String`
@@ -76,11 +94,6 @@ any component. It's just setting global variables for the cluster
 * Type: `Integer`
 * Default: `837`
 
-##### `kubernetes_ca_name`
-
-* Type: `String`
-* Default: `'k8s'`
-
 ##### `kubernetes_ssl_dir`
 
 * Type: `String`
@@ -90,6 +103,11 @@ any component. It's just setting global variables for the cluster
 
 * Type: `String`
 * Default: `'/etc/kubernetes'`
+
+##### `kubernetes_pod_security_policy`
+
+* Type: `Optional[Boolean]`
+* Default: `undef`
 
 ##### `kubernetes_api_insecure_port`
 
@@ -199,7 +217,7 @@ any component. It's just setting global variables for the cluster
 ##### `etcd_overlay_version`
 
 * Type: `String`
-* Default: `'3.2.17'`
+* Default: `'3.2.24'`
 
 ##### `etcd_k8s_main_client_port`
 
@@ -219,7 +237,7 @@ any component. It's just setting global variables for the cluster
 ##### `etcd_k8s_main_version`
 
 * Type: `String`
-* Default: `'3.2.17'`
+* Default: `'3.2.24'`
 
 ##### `etcd_k8s_events_client_port`
 
@@ -239,7 +257,12 @@ any component. It's just setting global variables for the cluster
 ##### `etcd_k8s_events_version`
 
 * Type: `String`
-* Default: `'3.2.17'`
+* Default: `'3.2.24'`
+
+##### `etcd_mount_unit`
+
+* Type: `Optional[String]`
+* Default: `undef`
 
 ##### `cloud_provider`
 
@@ -255,6 +278,11 @@ any component. It's just setting global variables for the cluster
 
 * Type: `String`
 * Default: `'/etc/systemd/system'`
+
+##### `fluent_bit_configs`
+
+* Type: `Array[Hash]`
+* Default: `$tarmak::params::fluent_bit_configs`
 
 #### Examples
 
@@ -276,6 +304,11 @@ class{'tarmak':
 
 
 
+### `tarmak::fluent_bit`
+
+
+
+
 ### `tarmak::master`
 
 
@@ -291,6 +324,16 @@ class{'tarmak':
 
 * Type: `Any`
 * Default: `true`
+
+##### `apiserver_additional_san_domains`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `apiserver_additional_san_ips`
+
+* Type: `Array[String]`
+* Default: `[]`
 
 
 ### `tarmak::overlay_calico`
@@ -338,6 +381,38 @@ Defines parameters for other classes to reuse
 
 * Type: `Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']]`
 * Default: `[]`
+
+
+### `tarmak::vault`
+
+
+
+#### Parameters
+
+##### `volume_id`
+
+* Type: `String`
+* Default: `''`
+
+##### `data_dir`
+
+* Type: `String`
+* Default: `'/var/lib/consul'`
+
+##### `dest_dir`
+
+* Type: `String`
+* Default: `'/opt/bin'`
+
+##### `systemd_dir`
+
+* Type: `String`
+* Default: `'/etc/systemd/system'`
+
+##### `cloud_provider`
+
+* Type: `Enum['aws', '']`
+* Default: `''`
 
 
 ### `tarmak::worker`

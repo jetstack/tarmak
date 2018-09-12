@@ -33,10 +33,10 @@ This module is part of [Tarmak](http://docs.tarmak.io) and should currently be c
 * Type: `Optional[Enum['etcd','master','worker']]`
 * Default: `$::prometheus::params::role`
 
-##### `etcd_cluster`
+##### `etcd_cluster_exporters`
 
 * Type: `Any`
-* Default: `$::prometheus::params::etcd_cluster`
+* Default: `$::prometheus::params::etcd_cluster_exporters`
 
 ##### `etcd_k8s_main_port`
 
@@ -52,6 +52,11 @@ This module is part of [Tarmak](http://docs.tarmak.io) and should currently be c
 
 * Type: `Integer[1024,65535]`
 * Default: `$::prometheus::params::etcd_overlay_port`
+
+##### `mode`
+
+* Type: `String`
+* Default: `'Full'`
 
 
 ### `prometheus::blackbox_exporter`
@@ -122,7 +127,7 @@ exporter_# Sets up a blackbox exporter to forward etcd metrics from etcd nodes
 ##### `version`
 
 * Type: `String`
-* Default: `'1.1.0'`
+* Default: `'1.2.0'`
 
 ##### `resizer_image`
 
@@ -237,6 +242,11 @@ exporter_# Sets up a blackbox exporter to forward etcd metrics from etcd nodes
 
 * Type: `String`
 * Default: `'/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'`
+
+##### `external_labels`
+
+* Type: `Hash[String,String]`
+* Default: `{}`
 
 ## DefinedTypes
 

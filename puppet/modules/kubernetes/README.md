@@ -80,8 +80,8 @@ Class: kubernetes
 
 ##### `master_url`
 
-* Type: `Any`
-* Default: `$::kubernetes::params::master_url`
+* Type: `String`
+* Default: `''`
 
 ##### `curl_path`
 
@@ -143,6 +143,16 @@ Class: kubernetes
 * Type: `Any`
 * Default: `true`
 
+##### `pod_security_policy`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `enable_pod_priority`
+
+* Type: `Optional[Boolean]`
+* Default: `undef`
+
 ##### `service_account_key_file`
 
 * Type: `Any`
@@ -152,6 +162,21 @@ Class: kubernetes
 
 * Type: `Any`
 * Default: `false`
+
+##### `pod_network`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `apiserver_insecure_port`
+
+* Type: `Integer[-1,65535]`
+* Default: `-`
+
+##### `apiserver_secure_port`
+
+* Type: `Integer[0,65535]`
+* Default: `6443`
 
 ##### `authorization_mode`
 
@@ -170,10 +195,35 @@ class kubernetes::master
 * Type: `Any`
 * Default: `true`
 
+##### `audit_enabled`
+
+* Type: `Optional[Boolean]`
+* Default: `undef`
+
+##### `audit_log_directory`
+
+* Type: `String`
+* Default: `'/var/log/kubernetes'`
+
+##### `audit_log_maxbackup`
+
+* Type: `Integer`
+* Default: `1`
+
+##### `audit_log_maxsize`
+
+* Type: `Integer`
+* Default: `100`
+
 ##### `admission_control`
 
 * Type: `Any`
 * Default: `undef`
+
+##### `feature_gates`
+
+* Type: `Any`
+* Default: `[]`
 
 ##### `count`
 
@@ -183,6 +233,11 @@ class kubernetes::master
 ##### `storage_backend`
 
 * Type: `Any`
+* Default: `undef`
+
+##### `encryption_config_file`
+
+* Type: `Optional[String]`
 * Default: `undef`
 
 ##### `etcd_nodes`
@@ -215,6 +270,51 @@ class kubernetes::master
 * Type: `Any`
 * Default: `undef`
 
+##### `kubelet_client_cert_file`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `kubelet_client_key_file`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `requestheader_allowed_names`
+
+* Type: `String`
+* Default: `'kube-apiserver-proxy'`
+
+##### `requestheader_extra_headers_prefix`
+
+* Type: `String`
+* Default: `'X-Remote-Extra-'`
+
+##### `requestheader_group_headers`
+
+* Type: `String`
+* Default: `'X-Remote-Group'`
+
+##### `requestheader_username_headers`
+
+* Type: `String`
+* Default: `'X-Remote-User'`
+
+##### `requestheader_client_ca_file`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `proxy_client_cert_file`
+
+* Type: `Any`
+* Default: `undef`
+
+##### `proxy_client_key_file`
+
+* Type: `Any`
+* Default: `undef`
+
 ##### `ca_file`
 
 * Type: `Any`
@@ -228,6 +328,41 @@ class kubernetes::master
 ##### `key_file`
 
 * Type: `Any`
+* Default: `undef`
+
+##### `oidc_client_id`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `oidc_groups_claim`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `oidc_groups_prefix`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `oidc_issuer_url`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `oidc_signing_algs`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `oidc_username_claim`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `oidc_username_prefix`
+
+* Type: `Optional[String]`
 * Default: `undef`
 
 ##### `systemd_wants`
@@ -312,6 +447,11 @@ class kubernetes::master
 * Type: `Any`
 * Default: `[]`
 
+##### `allocate_node_cidrs`
+
+* Type: `Boolean`
+* Default: `false`
+
 
 ### `kubernetes::dns`
 
@@ -394,66 +534,186 @@ class kubernetes::kubectl
 
 ### `kubernetes::kubelet`
 
-class kubernetes::kubelet
+
 
 #### Parameters
 
+##### `cgroup_kubernetes_name`
+
+* name of cgroup slice for kubernetes related processes
+
+##### `cgroup_kubernetes_reserved_memory`
+
+* memory reserved for kubernetes related processes
+
+##### `cgroup_kubernetes_reserved_cpu`
+
+* CPU reserved for kubernetes related processes
+
+##### `cgroup_system_name`
+
+* name of cgroup slice for system processes
+* Type: `Optional[String]`
+* Default: `'/system.slice'`
+
+##### `cgroup_system_reserved_memory`
+
+* memory reserved for system processes
+* Type: `Optional[String]`
+* Default: `'128Mi'`
+
+##### `cgroup_system_reserved_cpu`
+
+* CPU reserved for system processes
+* Type: `Optional[String]`
+* Default: `'100m'`
+
 ##### `role`
 
-* Type: `Any`
+* Type: `String`
 * Default: `'worker'`
 
 ##### `container_runtime`
 
-* Type: `Any`
+* Type: `String`
 * Default: `'docker'`
 
 ##### `kubelet_dir`
 
-* Type: `Any`
+* Type: `String`
 * Default: `'/var/lib/kubelet'`
+
+##### `eviction_hard_memory_available_threshold`
+
+* Type: `Optional[String]`
+* Default: `'5%'`
+
+##### `eviction_hard_nodefs_available_threshold`
+
+* Type: `Optional[String]`
+* Default: `'10%'`
+
+##### `eviction_hard_nodefs_inodes_free_threshold`
+
+* Type: `Optional[String]`
+* Default: `'5%'`
+
+##### `eviction_soft_enabled`
+
+* Type: `Boolean`
+* Default: `true`
+
+##### `eviction_soft_memory_available_threshold`
+
+* Type: `Optional[String]`
+* Default: `'10%'`
+
+##### `eviction_soft_nodefs_available_threshold`
+
+* Type: `Optional[String]`
+* Default: `'15%'`
+
+##### `eviction_soft_nodefs_inodes_free_threshold`
+
+* Type: `Optional[String]`
+* Default: `'10%'`
+
+##### `eviction_soft_memory_available_grace_period`
+
+* Type: `Optional[String]`
+* Default: `'0m'`
+
+##### `eviction_soft_nodefs_available_grace_period`
+
+* Type: `Optional[String]`
+* Default: `'0m'`
+
+##### `eviction_soft_nodefs_inodes_free_grace_period`
+
+* Type: `Optional[String]`
+* Default: `'0m'`
+
+##### `eviction_max_pod_grace_period`
+
+* Type: `String`
+* Default: `'-1'`
+
+##### `eviction_pressure_transition_period`
+
+* Type: `String`
+* Default: `'2m'`
+
+##### `eviction_minimum_reclaim_memory_available`
+
+* Type: `Optional[String]`
+* Default: `'100Mi'`
+
+##### `eviction_minimum_reclaim_nodefs_available`
+
+* Type: `Optional[String]`
+* Default: `'1Gi'`
+
+##### `eviction_minimum_reclaim_nodefs_inodes_free`
+
+* Type: `Optional[String]`
+* Default: `undef`
 
 ##### `network_plugin`
 
-* Type: `Any`
+* Type: `Optional[String]`
 * Default: `undef`
 
 ##### `network_plugin_mtu`
 
-* Type: `Any`
+* Type: `Integer`
 * Default: `1460`
 
 ##### `allow_privileged`
 
-* Type: `Any`
+* Type: `Boolean`
 * Default: `true`
 
 ##### `register_node`
 
-* Type: `Any`
+* Type: `Boolean`
 * Default: `true`
 
 ##### `register_schedulable`
 
-* Type: `Any`
+* Type: `Optional[Boolean]`
 * Default: `undef`
 
 ##### `ca_file`
 
-* Type: `Any`
+* Type: `Optional[String]`
 * Default: `undef`
 
 ##### `cert_file`
 
-* Type: `Any`
+* Type: `Optional[String]`
 * Default: `undef`
 
 ##### `key_file`
 
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `client_ca_file`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `feature_gates`
+
+* Type: `Any`
+* Default: `[]`
+
+##### `node_labels`
+
 * Type: `Any`
 * Default: `undef`
 
-##### `node_labels`
+##### `node_taints`
 
 * Type: `Any`
 * Default: `undef`
@@ -471,7 +731,47 @@ class kubernetes::kubelet
 ##### `cgroup_driver`
 
 * Type: `Enum['systemd', 'cgroupfs']`
-* Default: `'systemd'`
+* Default: `$::osfamily`
+
+##### `cgroup_root`
+
+* Type: `String`
+* Default: `'/'`
+
+##### `cgroup_kube_name`
+
+* Type: `Optional[String]`
+* Default: `'/podruntime.slice'`
+
+##### `cgroup_kube_reserved_memory`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
+##### `cgroup_kube_reserved_cpu`
+
+* Type: `Optional[String]`
+* Default: `'100m'`
+
+##### `systemd_wants`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_requires`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_after`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_before`
+
+* Type: `Array[String]`
+* Default: `[]`
 
 
 ### `kubernetes::master`
@@ -501,6 +801,11 @@ class kubernetes::master
 == Class kubernetes::params
 
 
+### `kubernetes::pod_security_policy`
+
+This class manages RBAC manifests
+
+
 ### `kubernetes::proxy`
 
 class kubernetes::kubelet
@@ -509,18 +814,38 @@ class kubernetes::kubelet
 
 ##### `ca_file`
 
-* Type: `Any`
+* Type: `Optional[String]`
 * Default: `undef`
 
 ##### `cert_file`
 
-* Type: `Any`
+* Type: `Optional[String]`
 * Default: `undef`
 
 ##### `key_file`
 
-* Type: `Any`
+* Type: `Optional[String]`
 * Default: `undef`
+
+##### `systemd_wants`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_requires`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_after`
+
+* Type: `Array[String]`
+* Default: `[]`
+
+##### `systemd_before`
+
+* Type: `Array[String]`
+* Default: `[]`
 
 
 ### `kubernetes::rbac`
@@ -565,6 +890,11 @@ class kubernetes::master
 * Default: `[]`
 
 ##### `systemd_before`
+
+* Type: `Any`
+* Default: `[]`
+
+##### `feature_gates`
 
 * Type: `Any`
 * Default: `[]`
