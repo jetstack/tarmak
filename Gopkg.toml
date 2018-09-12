@@ -92,7 +92,7 @@ required = [
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"
-  version = "0.11.7"
+  version = "0.11.8"
 
 [[constraint]]
   name = "github.com/terraform-providers/terraform-provider-aws"
@@ -157,6 +157,10 @@ required = [
 [[constraint]]
   name = "github.com/docker/docker"
   revision = "bc7424b4434443b036604277bfcdee3fa34a268a"
+
+[[override]]
+  name = "github.com/hashicorp/go-tfe"
+  version = "=v0.1.2"
 
 [prune]
   non-go = true
