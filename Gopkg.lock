@@ -735,11 +735,27 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:62278a6592ce63ed25d734f694a67c852f0aa281e420a62a2281bf8d365ff24a"
+  name = "github.com/google/goexpect"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "31a95e9b7189161fd216fb1f32b74eebbc3c982f"
+
+[[projects]]
+  branch = "master"
   digest = "1:52c5834e2bebac9030c97cc0798ac11c3aa8a39f098aeb419f142533da6cd3cc"
   name = "github.com/google/gofuzz"
   packages = ["."]
   pruneopts = "NUT"
   revision = "24818f796faf91cd76ec7bddd72458fbced7a6c1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:5b66c432b11dc4996e583c298c03a3120c9f2e1c68d05b72adceff13595892c3"
+  name = "github.com/google/goterm"
+  packages = ["term"]
+  pruneopts = "NUT"
+  revision = "70e1c263818522aa1ecbdd34d7e143639d447ced"
 
 [[projects]]
   digest = "1:1bb197a3b5db4e06e00b7560f8e89836c486627f2a0338332ed37daa003d259e"
@@ -2777,6 +2793,7 @@
     "github.com/go-ozzo/ozzo-validation/is",
     "github.com/golang/mock/gomock",
     "github.com/golang/mock/mockgen",
+    "github.com/google/goexpect",
     "github.com/google/uuid",
     "github.com/hashicorp/errwrap",
     "github.com/hashicorp/go-cleanhttp",
@@ -2821,6 +2838,7 @@
     "github.com/terraform-providers/terraform-provider-template/template",
     "github.com/terraform-providers/terraform-provider-tls/tls",
     "golang.org/x/crypto/ssh",
+    "golang.org/x/crypto/ssh/knownhosts",
     "golang.org/x/net/context",
     "gopkg.in/src-d/go-git.v4",
     "gopkg.in/src-d/go-git.v4/config",

@@ -71,7 +71,7 @@ build: generate go_build ## runs generate, and then go_build targets
 go_verify: go_fmt go_vet
 
 go_test:
-	go test $$(go list ./pkg/... ./cmd/... ./puppet)
+	go test $$(go list ./pkg/... ./cmd/... ./puppet | grep -v e2e)
 
 go_fmt:
 	@set -e; \
@@ -291,3 +291,6 @@ docker_%:
 
 	# remove container
 	docker rm $(CONTAINER_ID)
+
+e2e-test: build
+	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)'

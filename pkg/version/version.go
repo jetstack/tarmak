@@ -18,11 +18,19 @@ limitations under the License.
 package version
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"runtime"
 	"strings"
 
+	"github.com/blang/semver"
 	apimachineryversion "k8s.io/apimachinery/pkg/version"
+)
+
+const (
+	releasesURL = "https://api.github.com/repos/jetstack/tarmak/releases"
 )
 
 // Get returns the overall codebase version. It's for detecting
@@ -53,7 +61,7 @@ func CleanVersion() string {
 
 LOOP:
 	for _, s := range split {
-		for _, preRelease := range []string{"alpha", "beta"} {
+		for _, preRelease := range []string{"alpha", "beta", "rc"} {
 
 			if strings.Contains(s, preRelease) {
 				out = append(out, strings.Split(s, ".")[0])
@@ -69,4 +77,65 @@ LOOP:
 	}
 
 	return strings.Join(out, "-")
+}
+
+type Tag struct {
+	TagName string `json:"tag_name"`
+}
+
+func LastVersion() (string, error) {
+	resp, err := http.Get(releasesURL)
+	if err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	tags := new([]Tag)
+	err = json.Unmarshal(body, tags)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshalling body '%s': %s", body, err)
+	}
+
+	var versions semver.Versions
+	for _, tag := range *tags {
+		v, err := semver.Make(tag.TagName)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse release tag: %s", err)
+		}
+
+		versions = append(versions, v)
+	}
+
+	return lastVersionFromVersions(versions)
+}
+
+func lastVersionFromVersions(versions semver.Versions) (string, error) {
+	if versions.Len() < 1 {
+		return "", fmt.Errorf(
+			"no versions found in tarmak releases %s", releasesURL)
+	}
+
+	semver.Sort(versions)
+	currVersion, err := semver.Make(CleanVersion())
+	if err != nil {
+		return "", fmt.Errorf("failed to parse current version %s: %s", CleanVersion(), err)
+	}
+
+	lastVersion, err := semver.Make("0.0.0")
+	if err != nil {
+		return "", err
+	}
+
+	for _, v := range versions {
+		if v.GT(lastVersion) && len(v.Pre) == 0 &&
+			v.Minor < currVersion.Minor {
+			lastVersion = v
+		}
+	}
+
+	return lastVersion.String(), nil
 }
