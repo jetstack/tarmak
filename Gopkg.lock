@@ -273,8 +273,8 @@
     "service/waf",
     "service/wafregional"
   ]
-  revision = "468b9714c11f10b22e533253b35eb9c28f4be691"
-  version = "v1.14.32"
+  revision = "1186f7e6f000ce13edff71ed5ecc8b0e27ba38d7"
+  version = "v1.15.33"
 
 [[projects]]
   name = "github.com/beevik/etree"
@@ -536,6 +536,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
+
+[[projects]]
+  branch = "master"
   name = "github.com/google/gofuzz"
   packages = ["."]
   revision = "24818f796faf91cd76ec7bddd72458fbced7a6c1"
@@ -706,6 +712,18 @@
   revision = "b1a1dbde6fdc11e3ae79efd9039009e22d4ae240"
 
 [[projects]]
+  name = "github.com/hashicorp/go-slug"
+  packages = ["."]
+  revision = "cc9d70694ef317c2e6443e20b7927363d69c8b1e"
+  version = "v0.1.0"
+
+[[projects]]
+  name = "github.com/hashicorp/go-tfe"
+  packages = ["."]
+  revision = "dffc938c010479f92b9ff565f78534861fa8bb76"
+  version = "v0.1.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/hashicorp/go-uuid"
   packages = ["."]
@@ -813,6 +831,7 @@
     "backend/init",
     "backend/legacy",
     "backend/local",
+    "backend/remote",
     "backend/remote-state/azure",
     "backend/remote-state/consul",
     "backend/remote-state/etcdv3",
@@ -876,8 +895,8 @@
     "tfdiags",
     "version"
   ]
-  revision = "41e50bd32a8825a84535e353c3674af8ce799161"
-  version = "v0.11.7"
+  revision = "6dfc4d748de9cda23835bc5704307ed45e839622"
+  version = "v0.11.8"
 
 [[projects]]
   name = "github.com/hashicorp/vault"
@@ -1350,10 +1369,16 @@
   version = "v1.3.0"
 
 [[projects]]
+  name = "github.com/svanharmelen/jsonapi"
+  packages = ["."]
+  revision = "46d3ced0434461be12e555852e2f1a9ed382e139"
+  version = "1.0.0"
+
+[[projects]]
   name = "github.com/terraform-providers/terraform-provider-aws"
   packages = ["aws"]
-  revision = "fa6a9b77bc698cd84fcdb71527a3d6344834045f"
-  version = "v1.28.0"
+  revision = "7a246a13e15a1ab9a63b311129279972ef7dc273"
+  version = "v1.35.0"
 
 [[projects]]
   name = "github.com/terraform-providers/terraform-provider-openstack"
@@ -1364,8 +1389,8 @@
 [[projects]]
   name = "github.com/terraform-providers/terraform-provider-random"
   packages = ["random"]
-  revision = "6052486a84eca6750a72b18b6ba67349a7943967"
-  version = "v1.3.1"
+  revision = "09c8354edefba5483d208f55b5112c84ebf9e773"
+  version = "v2.0.0"
 
 [[projects]]
   name = "github.com/terraform-providers/terraform-provider-template"
@@ -1376,8 +1401,8 @@
 [[projects]]
   name = "github.com/terraform-providers/terraform-provider-tls"
   packages = ["tls"]
-  revision = "ea00f1769477c930e477afc285f0ea8e6a7e19ec"
-  version = "v1.1.0"
+  revision = "96687fa8c50f1793bd1c608286e21e1c46d36b18"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/ugorji/go"
@@ -2021,7 +2046,7 @@
     "util/workqueue"
   ]
   revision = "9389c055a838d4f208b699b3c7c51b70f2368861"
-  version = "kubernetes-1.9.1"
+  version = "kubernetes-1.9.3"
 
 [[projects]]
   name = "k8s.io/code-generator"
@@ -2044,7 +2069,7 @@
     "cmd/lister-gen/generators"
   ]
   revision = "91d3f6a57905178524105a085085901bb73bd3dc"
-  version = "kubernetes-1.9.1"
+  version = "kubernetes-1.9.3"
 
 [[projects]]
   name = "k8s.io/gengo"
@@ -2075,6 +2100,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "350cd972b230ebdf25c479aff9fdf5bded126874afd7c191ef77f66b590f2aff"
+  inputs-digest = "039372d06cd2d7cfca5b51bbaef7765a055bfd844619cb8bf1a343115076647d"
   solver-name = "gps-cdcl"
   solver-version = 1

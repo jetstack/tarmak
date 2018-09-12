@@ -1,7 +1,7 @@
 # Copyright Jetstack Ltd. See LICENSE for details.
 PACKAGE_NAME ?= github.com/jetstack/tarmak
 CONTAINER_DIR := /go/src/$(PACKAGE_NAME)
-GO_VERSION := 1.9.5
+GO_VERSION := 1.10.4
 
 BINDIR ?= $(CURDIR)/bin
 PATH   := $(BINDIR):$(PATH)
@@ -21,15 +21,15 @@ GOPATH ?= /tmp/go
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	SHASUM := sha256sum -c
-	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64
-	DEP_HASH := 31144e465e52ffbc0035248a10ddea61a09bf28b00784fd3fdd9882c8cbb2315
+	DEP_URL := https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64
+	DEP_HASH := 287b08291e14f1fae8ba44374b26a2b12eb941af3497ed0ca649253e21ba2f83
 	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.77.0/goreleaser_Linux_x86_64.tar.gz
 	GORELEASER_HASH := aae3c5bb76b282e29940f2654b48b13e51f664368c7589d0e86b391b7ef51cc8
 endif
 ifeq ($(UNAME_S),Darwin)
 	SHASUM := shasum -a 256 -c
-	DEP_URL := https://github.com/golang/dep/releases/download/v0.4.1/dep-darwin-amd64
-	DEP_HASH := 1544afdd4d543574ef8eabed343d683f7211202a65380f8b32035d07ce0c45ef
+	DEP_URL := https://github.com/golang/dep/releases/download/v0.5.0/dep-darwin-amd64
+	DEP_HASH := 1a7bdb0d6c31ecba8b3fd213a1170adf707657123e89dff234871af9e0498be2
 	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.77.0/goreleaser_Darwin_x86_64.tar.gz
 	GORELEASER_HASH := bc6cdf2dfe506f2cce5abceb30da009bfd5bcdb3e52608c536e6c2ceea1f24fe
 endif

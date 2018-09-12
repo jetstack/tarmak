@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 
+	goPlugin "github.com/hashicorp/go-plugin"
+	backendInit "github.com/hashicorp/terraform/backend/init"
 	"github.com/hashicorp/terraform/command"
 	"github.com/hashicorp/terraform/plugin"
 	"github.com/mitchellh/cli"
@@ -26,6 +28,17 @@ var InternalProviders = map[string]plugin.ProviderFunc{
 	"tarmak":   providertarmak.Provider,
 	"awstag":   providerawstag.Provider,
 	"template": providertemplate.Provider,
+}
+
+// Prepare passthrough environment
+func passthroughPrepare() {
+	// initialise backends
+	backendInit.Init(nil)
+}
+
+func passthroughCleanup() {
+	// cleanup clients
+	goPlugin.CleanupClients()
 }
 
 // create new terraform ui
@@ -114,6 +127,8 @@ func InternalPlugin(args []string) int {
 }
 
 func Plan(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
 	c := &command.PlanCommand{
 		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
@@ -121,6 +136,8 @@ func Plan(args []string, stopCh <-chan struct{}) int {
 }
 
 func Apply(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
 	c := &command.ApplyCommand{
 		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
@@ -128,6 +145,8 @@ func Apply(args []string, stopCh <-chan struct{}) int {
 }
 
 func Destroy(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
 	c := &command.ApplyCommand{
 		Meta:    newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 		Destroy: true,
@@ -136,6 +155,8 @@ func Destroy(args []string, stopCh <-chan struct{}) int {
 }
 
 func Init(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
 	c := &command.InitCommand{
 		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
@@ -143,6 +164,8 @@ func Init(args []string, stopCh <-chan struct{}) int {
 }
 
 func Output(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
 	c := &command.OutputCommand{
 		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
@@ -150,6 +173,8 @@ func Output(args []string, stopCh <-chan struct{}) int {
 }
 
 func Unlock(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
 	c := &command.UnlockCommand{
 		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
 	}
