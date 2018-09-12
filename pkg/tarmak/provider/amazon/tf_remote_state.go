@@ -46,7 +46,7 @@ func (a *Amazon) RemoteState(namespace string, clusterName string, stackName str
 		fmt.Sprintf("%s/%s/%s.tfstate", namespace, clusterName, stackName),
 		a.Region(),
 		a.RemoteStateName(),
-		a.RemoteStateKMSName(),
+		a.remoteStateKMS,
 	)
 }
 
@@ -122,7 +122,7 @@ func (a *Amazon) verifyRemoteStateBucket() error {
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
+			if strings.Contains(awsErr.Code(), "NotFound") {
 				return a.initRemoteStateBucket()
 			}
 		}
@@ -219,6 +219,30 @@ func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
 	}
 	if !found {
 		return a.initRemoteStateBucketEncryption()
+	}
+
+	key := a.RemoteState(a.tarmak.Environment().Name(), a.tarmak.Cluster().Name(), "main")
+	b, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(a.RemoteStateName()),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if strings.Contains(awsErr.Code(), "NotFound") {
+				return nil
+			}
+		}
+		return fmt.Errorf("failed to get encryption info on object '%s/%s': %s", a.RemoteStateName(), key, err)
+	}
+
+	if *b.ServerSideEncryption != s3.ServerSideEncryptionAwsKms || *b.SSEKMSKeyId != a.remoteStateKMS {
+		svc.PutObject(&s3.PutObjectInput{
+			Body:                 strings.NewReader(b.String()),
+			ServerSideEncryption: aws.String(s3.ServerSideEncryptionAwsKms),
+			Key:                  aws.String(a.RemoteStateName()),
+			SSEKMSKeyId:          aws.String(a.remoteStateKMS),
+		})
+
 	}
 
 	return nil

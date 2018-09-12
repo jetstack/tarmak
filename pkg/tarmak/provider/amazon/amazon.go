@@ -54,6 +54,7 @@ type S3 interface {
 	PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error)
 	PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
 	PutBucketEncryption(input *s3.PutBucketEncryptionInput) (*s3.PutBucketEncryptionOutput, error)
+	GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error)
 }
 
 type EC2 interface {
@@ -300,7 +301,7 @@ func (a *Amazon) Variables() map[string]interface{} {
 	output["public_zone"] = a.conf.Amazon.PublicZone
 	output["public_zone_id"] = a.conf.Amazon.PublicHostedZoneID
 	output["bucket_prefix"] = a.conf.Amazon.BucketPrefix
-	output["remote_kms_key_id"] = a.RemoteStateKMSName()
+	output["remote_kms_key_id"] = a.remoteStateKMS
 
 	return output
 }
