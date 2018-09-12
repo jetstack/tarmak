@@ -551,25 +551,6 @@
   version = "v1.38.1"
 
 [[projects]]
-  digest = "1:da40b9e5973892e2bd37a72c36464b8252a4034522925d920983edaabda03693"
-  name = "github.com/go-openapi/analysis"
-  packages = [
-    ".",
-    "internal",
-  ]
-  pruneopts = "NUT"
-  revision = "7c1bef8f6d9fa6148ce0d8a0ebf5339a084a6639"
-  version = "0.16.0"
-
-[[projects]]
-  digest = "1:747665117585f3d9e2f6c7635aac0410570289139f9a52b3a514f0e8b93ea517"
-  name = "github.com/go-openapi/errors"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "b2b2befaf267d082d779bcef52d682a47c779517"
-  version = "0.16.0"
-
-[[projects]]
   digest = "1:260f7ebefc63024c8dfe2c9f1a2935a89fa4213637a1f522f592f80c001cc441"
   name = "github.com/go-openapi/jsonpointer"
   packages = ["."]
@@ -586,28 +567,12 @@
   version = "0.15.0"
 
 [[projects]]
-  digest = "1:cc4186672d13bce6e14f7b39c6f51b2f8c5126532a020ced03841e7175886651"
-  name = "github.com/go-openapi/loads"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "2a2b323bab96e6b1fdee110e57d959322446e9c9"
-  version = "0.16.0"
-
-[[projects]]
   digest = "1:87216dc20d985010c4cbe3301b4f9d4c81eaea407a289bd6338d2ac66d61b5a4"
   name = "github.com/go-openapi/spec"
   packages = ["."]
   pruneopts = "NUT"
   revision = "bce47c9386f9ecd6b86f450478a80103c3fe1402"
   version = "0.15.0"
-
-[[projects]]
-  digest = "1:d9091d7447932ed64fe3584eabda47ad19753760f28b58bc6262e38155a5c1d9"
-  name = "github.com/go-openapi/strfmt"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "913ee058e387ac83a67e2d9f13acecdcd5769fc6"
-  version = "0.16.0"
 
 [[projects]]
   digest = "1:d6dca21942524b423bf8d3e273c61874f7cd5511c2797e67685c33f4ab971f57"
@@ -685,11 +650,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:05f95ffdfcf651bdb0f05b40b69e7f5663047f8da75c72d58728acb59b5cc107"
+  digest = "1:245bd4eb633039cd66106a5d340ae826d87f4e36a8602fcc940e14176fd26ea7"
   name = "github.com/google/btree"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
+  revision = "e89373fe6b4a7413d7acd6da1725b83ef713e6e4"
 
 [[projects]]
   branch = "master"
@@ -701,11 +666,27 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:c0c871240b85ea14304b4f6113c390b4390020cf4914c7ba78f63e9f54ef7927"
+  name = "github.com/google/goexpect"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "88b7cf98484152f464f685e94dc4334205362983"
+
+[[projects]]
+  branch = "master"
   digest = "1:52c5834e2bebac9030c97cc0798ac11c3aa8a39f098aeb419f142533da6cd3cc"
   name = "github.com/google/gofuzz"
   packages = ["."]
   pruneopts = "NUT"
   revision = "24818f796faf91cd76ec7bddd72458fbced7a6c1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:5b66c432b11dc4996e583c298c03a3120c9f2e1c68d05b72adceff13595892c3"
+  name = "github.com/google/goterm"
+  packages = ["term"]
+  pruneopts = "NUT"
+  revision = "70e1c263818522aa1ecbdd34d7e143639d447ced"
 
 [[projects]]
   digest = "1:1bb197a3b5db4e06e00b7560f8e89836c486627f2a0338332ed37daa003d259e"
@@ -2077,6 +2058,7 @@
   version = "v0.9.1"
 
 [[projects]]
+<<<<<<< HEAD
   branch = "v2"
   digest = "1:2642fd0b6900c77247d61d80cf2eb59a374ef4ffc2d25a1b95b87dc355b2894e"
   name = "gopkg.in/mgo.v2"
@@ -2088,6 +2070,8 @@
   revision = "9856a29383ce1c59f308dd1cf0363a79b5bef6b5"
 
 [[projects]]
+=======
+>>>>>>> Add vendoring
   digest = "1:80c34337e8a734e190f2d1b716cae774cca74db98315166f92074434e9af0227"
   name = "gopkg.in/natefinch/lumberjack.v2"
   packages = ["."]
@@ -2540,7 +2524,11 @@
 
 [[projects]]
   branch = "master"
+<<<<<<< HEAD
   digest = "1:c48a795cd7048bb1888273bc604b6e69b22f9b8089c3df65f77cc527757b515c"
+=======
+  digest = "1:a8a0fdd623b2a37c433d137bddfab6b155e988efbc7cd68c18f9923dce6c8742"
+>>>>>>> Add vendoring
   name = "k8s.io/kube-openapi"
   packages = [
     "cmd/openapi-gen",
@@ -2552,9 +2540,14 @@
     "pkg/handler",
     "pkg/util",
     "pkg/util/proto",
+<<<<<<< HEAD
     "pkg/util/sets",
   ]
   pruneopts = "NT"
+=======
+  ]
+  pruneopts = "NUT"
+>>>>>>> Add vendoring
   revision = "d8ea2fe547a448256204cfc68dfee7b26c720acb"
 
 [solve-meta]
@@ -2640,12 +2633,19 @@
     "github.com/cenkalti/backoff",
     "github.com/davecgh/go-spew/spew",
     "github.com/docker/docker/pkg/archive",
+<<<<<<< HEAD
     "github.com/go-openapi/spec",
+=======
+>>>>>>> Add vendoring
     "github.com/go-ozzo/ozzo-validation",
     "github.com/go-ozzo/ozzo-validation/is",
     "github.com/golang/glog",
     "github.com/golang/mock/gomock",
     "github.com/golang/mock/mockgen",
+<<<<<<< HEAD
+=======
+    "github.com/google/goexpect",
+>>>>>>> Add vendoring
     "github.com/google/uuid",
     "github.com/hashicorp/errwrap",
     "github.com/hashicorp/go-cleanhttp",
@@ -2675,7 +2675,10 @@
     "github.com/jetstack/vault-unsealer/pkg/vault",
     "github.com/jteeuwen/go-bindata/go-bindata",
     "github.com/kardianos/osext",
+<<<<<<< HEAD
     "github.com/kubernetes-incubator/reference-docs/gen-apidocs",
+=======
+>>>>>>> Add vendoring
     "github.com/mitchellh/cli",
     "github.com/mitchellh/go-homedir",
     "github.com/sirupsen/logrus",
@@ -2739,8 +2742,11 @@
     "k8s.io/code-generator/cmd/defaulter-gen",
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
+<<<<<<< HEAD
     "k8s.io/kube-openapi/cmd/openapi-gen",
     "k8s.io/kube-openapi/pkg/common",
+=======
+>>>>>>> Add vendoring
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
