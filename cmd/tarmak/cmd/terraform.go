@@ -4,7 +4,6 @@ package cmd
 import (
 	"os"
 
-	"github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
@@ -13,7 +12,6 @@ import (
 
 // ensure plugin clients get closed after subcommand run
 func terraformPassthrough(args []string, f func([]string, <-chan struct{}) int) int {
-	defer plugin.CleanupClients()
 	return f(args, utils.MakeShutdownCh())
 }
 
