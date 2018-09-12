@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
 type CmdTerraform struct {
@@ -122,6 +123,46 @@ func (c *CmdTerraform) Shell() error {
 	}
 
 	err := c.tarmak.terraform.Shell(c.tarmak.Cluster())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *CmdTerraform) ForceUnlock() error {
+	var err error
+	if err := c.validateVerify(); err != nil {
+		return err
+	}
+
+	var lockID string
+	if len(c.args) == 0 {
+		lockID, err = c.tarmak.Provider().RemoteStateLockID()
+		if err != nil {
+			return err
+		}
+	} else {
+		lockID = c.args[0]
+	}
+
+	in := input.New(os.Stdin, os.Stdout)
+	query := fmt.Sprintf(`Attempting force-unlock using lock id [%s]
+Are you sure you want to force-unlock the remote state? This can be potentially dangerous!`, lockID)
+	doUnlock, err := in.AskYesNo(&input.AskYesNo{
+		Default: false,
+		Query:   query,
+	})
+	if err != nil {
+		return err
+	}
+
+	if !doUnlock {
+		return nil
+	}
+
+	c.tarmak.cluster.Log().Info("running force-unlock")
+	err = c.tarmak.terraform.ForceUnlock(c.tarmak.Cluster(), lockID)
 	if err != nil {
 		return err
 	}

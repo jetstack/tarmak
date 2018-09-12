@@ -385,3 +385,26 @@ func (a *Amazon) initRemoteStateKMS() error {
 
 	return nil
 }
+
+func (a *Amazon) RemoteStateLockID() (string, error) {
+	svc, err := a.DynamoDB()
+	if err != nil {
+		return "", err
+	}
+
+	describeOut, err := svc.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(a.RemoteStateName()),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, params := range describeOut.Table.AttributeDefinitions {
+		//TODO:
+		if *params.AttributeName == "lock-id-name" {
+			return "lock-id", nil
+		}
+	}
+
+	return "", fmt.Errorf("failed to find lock ID in remote state '%s'", a.RemoteStateName())
+}
