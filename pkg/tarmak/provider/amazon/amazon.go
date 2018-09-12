@@ -34,6 +34,7 @@ type Amazon struct {
 	tarmak interfaces.Tarmak
 
 	availabilityZones *[]string
+	remoteStateKMS    string
 
 	session  *session.Session
 	ec2      EC2
@@ -352,7 +353,15 @@ func (a *Amazon) Verify() error {
 
 	// These checks only make sense with an environment given
 	if a.tarmak.Environment() != nil {
+		if err := a.verifyRemoteStateKMS(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
 		if err := a.verifyRemoteStateBucket(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := a.verifyRemoteStateBucketEncrytion(); err != nil {
 			result = multierror.Append(result, err)
 		}
 

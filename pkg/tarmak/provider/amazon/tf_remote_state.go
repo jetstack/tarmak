@@ -39,6 +39,7 @@ func (a *Amazon) RemoteState(namespace string, clusterName string, stackName str
     region = "%s"
     dynamodb_table ="%s"
     kms_key_id = "%s"
+	encrypt = true
   }
 }`,
 		a.RemoteStateName(),
@@ -85,71 +86,19 @@ func (a *Amazon) RemoteStateAvailable(bucketName string) (bool, error) {
 		return false, fmt.Errorf("error while checking if remote state is available: %s", err)
 	}
 }
-func (a *Amazon) initRemoteStateBucket() error {
-	svc, err := a.S3()
+
+func (a *Amazon) verifyRemoteStateKMS() error {
+	svc, err := a.KMS()
 	if err != nil {
 		return err
 	}
 
-	createBucketInput := &s3.CreateBucketInput{
-		Bucket: aws.String(a.RemoteStateName()),
-	}
-
-	if a.Region() != "us-east-1" {
-		createBucketInput.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
-			LocationConstraint: aws.String(a.Region()),
-		}
-	}
-
-	_, err = svc.CreateBucket(createBucketInput)
-	if err != nil {
-		return err
-	}
-
-	_, err = svc.PutBucketVersioning(&s3.PutBucketVersioningInput{
-		Bucket: aws.String(a.RemoteStateName()),
-		VersioningConfiguration: &s3.VersioningConfiguration{
-			Status: aws.String("Enabled"),
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	encConf := &s3.ServerSideEncryptionConfiguration{
-		Rules: []*s3.ServerSideEncryptionRule{
-			&s3.ServerSideEncryptionRule{
-				ApplyServerSideEncryptionByDefault: &s3.ServerSideEncryptionByDefault{
-					KMSMasterKeyID: aws.String(a.RemoteStateKMSName()),
-					SSEAlgorithm:   aws.String(s3.ServerSideEncryptionAwsKms),
-				},
-			},
-		},
-	}
-
-	_, err = svc.PutBucketEncryption(&s3.PutBucketEncryptionInput{
-		Bucket: aws.String(a.RemoteStateName()),
-		ServerSideEncryptionConfiguration: encConf,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *Amazon) verifyRemoteStateBucket() error {
-	svcKMS, err := a.KMS()
-	if err != nil {
-		return err
-	}
-
-	_, err = svcKMS.DescribeKey(&kms.DescribeKeyInput{
+	k, err := svc.DescribeKey(&kms.DescribeKeyInput{
 		KeyId: aws.String(a.RemoteStateKMSName()),
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
+			if strings.Contains(awsErr.Code(), "NotFound") {
 				return a.initRemoteStateKMS()
 			}
 		}
@@ -157,6 +106,12 @@ func (a *Amazon) verifyRemoteStateBucket() error {
 		return fmt.Errorf("error looking for terraform state kms alias: %s", err)
 	}
 
+	a.remoteStateKMS = *k.KeyMetadata.Arn
+
+	return nil
+}
+
+func (a *Amazon) verifyRemoteStateBucket() error {
 	svc, err := a.S3()
 	if err != nil {
 		return err
@@ -167,7 +122,7 @@ func (a *Amazon) verifyRemoteStateBucket() error {
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFound" {
+			if awsErr.Code() == "NotFoundException" {
 				return a.initRemoteStateBucket()
 			}
 		}
@@ -202,53 +157,99 @@ func (a *Amazon) verifyRemoteStateBucket() error {
 		a.log.Warnf("state bucket %s has versioning disabled", a.RemoteStateName())
 	}
 
-	enc, err := svc.GetBucketEncryption(&s3.GetBucketEncryptionInput{
-		Bucket: aws.String(a.RemoteStateName()),
-	})
+	return nil
+}
+
+func (a *Amazon) verifyRemoteStateDynamoDB() error {
+	svc, err := a.DynamoDB()
 	if err != nil {
 		return err
 	}
 
-	found := false
-	for _, r := range enc.ServerSideEncryptionConfiguration.Rules {
-		if ap := r.ApplyServerSideEncryptionByDefault; *ap.SSEAlgorithm == s3.ServerSideEncryptionAwsKms && *ap.KMSMasterKeyID == a.RemoteStateKMSName() {
-			found = true
-			break
+	describeOut, err := svc.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(a.RemoteStateName()),
+	})
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "ResourceNotFoundException" {
+				return a.initRemoteStateDynamoDB()
+			}
+		}
+		return fmt.Errorf("error looking for terraform state dynamodb: %s", err)
+	}
+
+	attributeFound := false
+	for _, params := range describeOut.Table.AttributeDefinitions {
+		if *params.AttributeName == DynamoDBKey {
+			attributeFound = true
 		}
 	}
-	if !found {
-		return fmt.Errorf("state bucket %s lacks encrytion rule with KMS alias '%s'", a.RemoteStateName(), a.RemoteStateKMSName())
+	if !attributeFound {
+		return fmt.Errorf("the DynamoDB table '%s' doesn't contain a parameter named '%s'", a.RemoteStateName(), DynamoDBKey)
 	}
 
 	return nil
 }
 
-func (a *Amazon) initRemoteStateKMS() error {
-	svc, err := a.KMS()
+func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
+	svc, err := a.S3()
 	if err != nil {
 		return err
 	}
 
-	k, err := svc.CreateKey(&kms.CreateKeyInput{
-		Description: aws.String(fmt.Sprintf("KMS key for Tarmak provider's '%s' remote states", a.Name())),
-		Tags: []*kms.Tag{
-			&kms.Tag{
-				TagKey:   aws.String("provider"),
-				TagValue: aws.String(a.Name()),
-			},
-			&kms.Tag{
-				TagKey:   aws.String("bucket"),
-				TagValue: aws.String(a.RemoteStateName()),
-			},
-		},
+	enc, err := svc.GetBucketEncryption(&s3.GetBucketEncryptionInput{
+		Bucket: aws.String(a.RemoteStateName()),
 	})
 	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if strings.Contains(awsErr.Code(), "NotFound") {
+				return a.initRemoteStateBucketEncryption()
+			}
+		}
+
+		return fmt.Errorf("failed to get encryption info on bucket '%s': %s", a.RemoteStateName(), err)
+	}
+
+	found := false
+	for _, r := range enc.ServerSideEncryptionConfiguration.Rules {
+		if ap := r.ApplyServerSideEncryptionByDefault; *ap.SSEAlgorithm == s3.ServerSideEncryptionAwsKms && *ap.KMSMasterKeyID == a.remoteStateKMS {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return a.initRemoteStateBucketEncryption()
+	}
+
+	return nil
+}
+
+func (a *Amazon) initRemoteStateBucket() error {
+	svc, err := a.S3()
+	if err != nil {
 		return err
 	}
 
-	_, err = svc.CreateAlias(&kms.CreateAliasInput{
-		TargetKeyId: aws.String(*k.KeyMetadata.KeyId),
-		AliasName:   aws.String(a.RemoteStateKMSName()),
+	createBucketInput := &s3.CreateBucketInput{
+		Bucket: aws.String(a.RemoteStateName()),
+	}
+
+	if a.Region() != "us-east-1" {
+		createBucketInput.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
+			LocationConstraint: aws.String(a.Region()),
+		}
+	}
+
+	_, err = svc.CreateBucket(createBucketInput)
+	if err != nil {
+		return err
+	}
+
+	_, err = svc.PutBucketVersioning(&s3.PutBucketVersioningInput{
+		Bucket: aws.String(a.RemoteStateName()),
+		VersioningConfiguration: &s3.VersioningConfiguration{
+			Status: aws.String("Enabled"),
+		},
 	})
 	if err != nil {
 		return err
@@ -285,33 +286,66 @@ func (a *Amazon) initRemoteStateDynamoDB() error {
 	return err
 }
 
-func (a *Amazon) verifyRemoteStateDynamoDB() error {
-	svc, err := a.DynamoDB()
+func (a *Amazon) initRemoteStateBucketEncryption() error {
+	svc, err := a.S3()
 	if err != nil {
 		return err
 	}
 
-	describeOut, err := svc.DescribeTable(&dynamodb.DescribeTableInput{
-		TableName: aws.String(a.RemoteStateName()),
-	})
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "ResourceNotFoundException" {
-				return a.initRemoteStateDynamoDB()
-			}
-		}
-		return fmt.Errorf("error looking for terraform state dynamodb: %s", err)
+	encConf := &s3.ServerSideEncryptionConfiguration{
+		Rules: []*s3.ServerSideEncryptionRule{
+			&s3.ServerSideEncryptionRule{
+				ApplyServerSideEncryptionByDefault: &s3.ServerSideEncryptionByDefault{
+					KMSMasterKeyID: aws.String(a.remoteStateKMS),
+					SSEAlgorithm:   aws.String(s3.ServerSideEncryptionAwsKms),
+				},
+			},
+		},
 	}
 
-	attributeFound := false
-	for _, params := range describeOut.Table.AttributeDefinitions {
-		if *params.AttributeName == DynamoDBKey {
-			attributeFound = true
-		}
+	_, err = svc.PutBucketEncryption(&s3.PutBucketEncryptionInput{
+		Bucket: aws.String(a.RemoteStateName()),
+		ServerSideEncryptionConfiguration: encConf,
+	})
+	if err != nil {
+		return fmt.Errorf("error looking for terraform state kms alias: %s", err)
 	}
-	if !attributeFound {
-		return fmt.Errorf("the DynamoDB table '%s' doesn't contain a parameter named '%s'", a.RemoteStateName(), DynamoDBKey)
+
+	return nil
+}
+
+func (a *Amazon) initRemoteStateKMS() error {
+	svc, err := a.KMS()
+	if err != nil {
+		return err
 	}
+
+	k, err := svc.CreateKey(&kms.CreateKeyInput{
+		Description: aws.String(fmt.Sprintf("KMS key for Tarmak provider's '%s' remote states", a.Name())),
+		Tags: []*kms.Tag{
+			&kms.Tag{
+				TagKey:   aws.String("provider"),
+				TagValue: aws.String(a.Name()),
+			},
+			&kms.Tag{
+				TagKey:   aws.String("bucket"),
+				TagValue: aws.String(a.RemoteStateName()),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = svc.CreateAlias(&kms.CreateAliasInput{
+		TargetKeyId: aws.String(*k.KeyMetadata.KeyId),
+		AliasName:   aws.String(a.RemoteStateKMSName()),
+	})
+	if err != nil {
+		return err
+	}
+
+	a.remoteStateKMS = *k.KeyMetadata.Arn
 
 	return nil
 }
