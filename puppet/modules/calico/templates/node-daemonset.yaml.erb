@@ -41,12 +41,14 @@ spec:
       terminationGracePeriodSeconds: 0
 <%- unless @version_before_1_6 -%>
       tolerations:
-      - key: "CriticalAddonsOnly"
-        operator: "Exists"
-      - key: "dedicated"
-        operator: "Exists"
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
+      # Make sure calico-node gets scheduled on all nodes.
+      - effect: NoSchedule
+        operator: Exists
+      # Mark the pod as a critical add-on for rescheduling.
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
 <%- end -%>
       hostNetwork: true
       containers:
