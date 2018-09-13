@@ -82,7 +82,7 @@ func newInstancePoolEtcd() *clusterv1alpha1.InstancePool {
 	sp.Type = clusterv1alpha1.InstancePoolTypeEtcd
 	sp.MinCount = 3
 	sp.MaxCount = 3
-	sp.Size = clusterv1alpha1.InstancePoolSizeSmall
+	sp.Size = clusterv1alpha1.InstancePoolSizeMedium
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},

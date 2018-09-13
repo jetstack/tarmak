@@ -53,7 +53,7 @@ func NewFromConfig(cluster interfaces.Cluster, conf *clusterv1alpha1.InstancePoo
 	provider := cluster.Environment().Provider()
 	instanceType, err := provider.InstanceType(conf.Size)
 	if err != nil {
-		return nil, fmt.Errorf("instanceType '%s' is not valid for this provier", conf.Size)
+		return nil, fmt.Errorf("instanceType '%s' is not valid for this provider: %v", conf.Size, err)
 	}
 	instancePool.instanceType = instanceType
 
