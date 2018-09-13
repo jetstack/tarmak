@@ -2,6 +2,7 @@
 package amazon
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -228,18 +229,22 @@ func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
-			if strings.Contains(awsErr.Code(), "NotFound") {
+			if strings.Contains(awsErr.Code(), "NotFound") || strings.Contains(awsErr.Code(), "NoSuchKey") {
 				return nil
 			}
 		}
 		return fmt.Errorf("failed to get encryption info on object '%s/%s': %s", a.RemoteStateName(), key, err)
 	}
 
+	defer b.Body.Close()
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(b.Body)
+
 	if b.ServerSideEncryption == nil || *b.ServerSideEncryption != s3.ServerSideEncryptionAwsKms || b.SSEKMSKeyId == nil || *b.SSEKMSKeyId != a.remoteStateKMS {
 		_, err := svc.PutObject(&s3.PutObjectInput{
 			Bucket:               aws.String(a.RemoteStateName()),
 			Key:                  aws.String(key),
-			Body:                 strings.NewReader(b.String()),
+			Body:                 bytes.NewReader([]byte(buf.String())),
 			ServerSideEncryption: aws.String(s3.ServerSideEncryptionAwsKms),
 			SSEKMSKeyId:          aws.String(a.remoteStateKMS),
 		})
