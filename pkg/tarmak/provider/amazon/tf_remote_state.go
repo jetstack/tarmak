@@ -39,7 +39,7 @@ func (a *Amazon) RemoteState(namespace string, clusterName string, stackName str
     region = "%s"
     dynamodb_table ="%s"
     kms_key_id = "%s"
-	encrypt = true
+	encrypt = "true"
   }
 }`,
 		a.RemoteStateName(),
@@ -221,7 +221,7 @@ func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
 		return a.initRemoteStateBucketEncryption()
 	}
 
-	key := a.RemoteState(a.tarmak.Environment().Name(), a.tarmak.Cluster().Name(), "main")
+	key := fmt.Sprintf("%s/%s/%s.tfstate", a.tarmak.Environment().Name(), a.tarmak.Cluster().Name(), "main")
 	b, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(a.RemoteStateName()),
 		Key:    aws.String(key),
@@ -235,13 +235,17 @@ func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
 		return fmt.Errorf("failed to get encryption info on object '%s/%s': %s", a.RemoteStateName(), key, err)
 	}
 
-	if *b.ServerSideEncryption != s3.ServerSideEncryptionAwsKms || *b.SSEKMSKeyId != a.remoteStateKMS {
-		svc.PutObject(&s3.PutObjectInput{
+	if b.ServerSideEncryption == nil || *b.ServerSideEncryption != s3.ServerSideEncryptionAwsKms || b.SSEKMSKeyId == nil || *b.SSEKMSKeyId != a.remoteStateKMS {
+		_, err := svc.PutObject(&s3.PutObjectInput{
+			Bucket:               aws.String(a.RemoteStateName()),
+			Key:                  aws.String(key),
 			Body:                 strings.NewReader(b.String()),
 			ServerSideEncryption: aws.String(s3.ServerSideEncryptionAwsKms),
-			Key:                  aws.String(a.RemoteStateName()),
 			SSEKMSKeyId:          aws.String(a.remoteStateKMS),
 		})
+		if err != nil {
+			return err
+		}
 
 	}
 

@@ -197,7 +197,7 @@ data "terraform_remote_state" "hub_state" {
     bucket     = "${var.state_bucket}"
     key        = "${var.environment}/${var.state_cluster_name}/main.tfstate"
     kms_key_id = "${var.remote_kms_key_id}"
-    encrypt    = true
+    encrypt    = "true"
   }
 }
 
