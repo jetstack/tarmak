@@ -57,6 +57,11 @@ calico init.pp
 * Type: `String`
 * Default: `'kube-system'`
 
+##### `pod_network`
+
+* Type: `Optional[String]`
+* Default: `undef`
+
 ##### `mtu`
 
 * Type: `Integer[1000,65535]`
@@ -72,12 +77,33 @@ calico init.pp
 
 This class disable the source/destination check on AWS instances
 
+#### Parameters
+
+##### `image`
+
+* Type: `String`
+* Default: `'ottoyiu/k8s-ec2-srcdst'`
+
+##### `version`
+
+* Type: `String`
+* Default: `'0.1.0'`
+
 
 ### `calico::node`
 
+Calico Node
 
+Calico Node contains a Daemon Set that spinsup the overlay network on every
+workern node.
 
 #### Parameters
+
+##### `metrics_port`
+
+* Port for felix metrics endpoint, 0 disables metrics collection
+* Type: `Integer[0,65535]`
+* Default: `9091`
 
 ##### `node_image`
 
@@ -87,7 +113,7 @@ This class disable the source/destination check on AWS instances
 ##### `node_version`
 
 * Type: `String`
-* Default: `'2.5.1'`
+* Default: `'3.1.1'`
 
 ##### `cni_image`
 
@@ -97,12 +123,7 @@ This class disable the source/destination check on AWS instances
 ##### `cni_version`
 
 * Type: `String`
-* Default: `'1.10.0'`
-
-##### `ipv4_pool_cidr`
-
-* Type: `String`
-* Default: `'10.231.0.0/16'`
+* Default: `'3.1.1'`
 
 ##### `ipv4_pool_ipip_mode`
 
@@ -124,9 +145,9 @@ calico params.pp
 ##### `image`
 
 * Type: `String`
-* Default: `'quay.io/calico/kube-policy-controller'`
+* Default: `'quay.io/calico/kube-controllers'`
 
 ##### `version`
 
 * Type: `String`
-* Default: `'0.7.0'`
+* Default: `'3.1.1'`

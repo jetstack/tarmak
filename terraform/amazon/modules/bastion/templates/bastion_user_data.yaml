@@ -20,8 +20,8 @@ write_files:
     After=network.target
 
     [Service]
-    Environment=ETCD_VERSION=3.2.17
-    Environment=ETCD_HASH=0a75e794502e2e76417b19da2807a9915fa58dcbf0985e397741d570f4f305cd
+    Environment=ETCD_VERSION=3.2.24
+    Environment=ETCD_HASH=947849dbcfa13927c81236fb76a7c01d587bbab42ab1e807184cd91b026ebed7
     Environment=ETCD_DATA_DIR=/var/lib/etcd
     PermissionsStartOnly=true
     Restart=on-failure
@@ -30,7 +30,7 @@ write_files:
       set -e ;\
       test -x /opt/etcd-$${ETCD_VERSION}/etcd && exit 0 ;\
       mkdir -p /opt/etcd-$${ETCD_VERSION} ;\
-      curl -sLo /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz https://github.com/coreos/etcd/releases/download/v$${ETCD_VERSION}/etcd-v$${ETCD_VERSION}-linux-amd64.tar.gz ;\
+      curl -sLo /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz https://storage.googleapis.com/etcd/v$${ETCD_VERSION}/etcd-v$${ETCD_VERSION}-linux-amd64.tar.gz ;\
       echo "$${ETCD_HASH}  /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz" | sha256sum -c ;\
       tar xvf /opt/etcd-$${ETCD_VERSION}/etcd.tar.gz -C /opt/etcd-$${ETCD_VERSION}/ --strip-components 1'
     ExecStartPre=/bin/sh -c '\
