@@ -18,3 +18,7 @@ func (f *File) GetManifest(manifestURL string) (io.ReadCloser, error) {
 	}
 	return filestream, nil
 }
+
+func (f *File) Name() string {
+	return "file"
+}

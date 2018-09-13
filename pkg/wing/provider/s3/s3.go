@@ -36,3 +36,7 @@ func (s *S3) GetManifest(manifestString string) (io.ReadCloser, error) {
 
 	return result.Body, nil
 }
+
+func (s *S3) Name() string {
+	return "s3"
+}

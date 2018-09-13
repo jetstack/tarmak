@@ -38,9 +38,7 @@ write_files:
 {{- end }}
     ExecStart=/bin/sh -c '\
       set -e ;\
-      aws s3 cp "s3://${puppet_hash_bucket_path}" /tmp/puppet_hash ;\
-      PUPPET_HASH=$(cat /tmp/puppet_hash) ;\
-      exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${secret_bucket_path}/$$PUPPET_HASH-puppet.tar.gz" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
+      exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${puppet_manifest_bucket}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
 
     [Install]
     WantedBy=multi-user.target
