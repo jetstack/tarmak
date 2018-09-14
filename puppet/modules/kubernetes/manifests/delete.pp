@@ -31,6 +31,11 @@ define kubernetes::delete(
   $kubectl_path = "${::kubernetes::bin_dir}/kubectl"
   $curl_path = $::kubernetes::curl_path
 
+  exec {"check_${apply_file}_exist":
+    command => '/bin/true',
+    onlyif  => "/bin/test -f ${::kubernetes::systemd_dir}/${service_name_apply}.service"
+  }
+
   case $type {
     'manifests': {
       file{$delete_file:
@@ -40,16 +45,18 @@ define kubernetes::delete(
         group   => $kubernetes::group,
         content => $manifests_content,
         notify  => Service["${service_name_delete}.service"],
+        require => Exec["check_${apply_file}_exist"],
       }
     }
     'concat': {
       concat { $delete_file:
-        ensure         => present,
+        ensure         => absent,
         ensure_newline => true,
         mode           => '0640',
         owner          => 'root',
         group          => $kubernetes::group,
         notify         => Service["${service_name_delete}.service"],
+        require        => Exec["check_${apply_file}_exist"],
       }
     }
     default: {
@@ -81,7 +88,8 @@ define kubernetes::delete(
     content => template('kubernetes/kubectl-delete.service.erb'),
     notify  => [
       Service["${service_name_delete}.service"],
-    ]
+    ],
+    require => Exec["check_${apply_file}_exist"],
   }
   ~> exec { "${service_name_delete}-daemon-reload":
     command     => 'systemctl daemon-reload',
@@ -95,8 +103,7 @@ define kubernetes::delete(
       Service[$service_apiserver],
     ]
   }
-
-  file{"${::kubernetes::systemd_dir}/${service_name_apply}.service":
+  -> file{"${::kubernetes::systemd_dir}/${service_name_apply}.service":
     ensure => absent,
   }
 }

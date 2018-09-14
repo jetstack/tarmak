@@ -95,8 +95,7 @@ define kubernetes::apply(
       Service[$service_apiserver],
     ]
   }
-
-  file{"${::kubernetes::systemd_dir}/${service_name_delete}.service":
+  -> file{"${::kubernetes::systemd_dir}/${service_name_delete}.service":
     ensure => absent,
   }
 }

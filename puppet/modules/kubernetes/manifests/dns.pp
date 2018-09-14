@@ -56,7 +56,6 @@ class kubernetes::dns(
       ],
     }
 
-
   } else {
 
     kubernetes::delete{'core-dns':
