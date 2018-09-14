@@ -45,6 +45,7 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 // +resource:path=clusters
 
 type Cluster struct {
@@ -92,11 +93,11 @@ type ClusterKubernetes struct {
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
-	Enabled            bool                                                `json:"enabled,omitempty"`
-	Image              string                                              `json:"image,omitempty"`
-	Version            string                                              `json:"version,omitempty"`
-	ScaleDownThreshold *float64                                            `json:"scaleDownUtilizationThreshold"`
-	Overprovisioning   *ClusterKubernetesClusterAutoscalerOverprovisioning `json:"overprovisioning,omitempty"`
+	Enabled                       bool                                                `json:"enabled,omitempty"`
+	Image                         string                                              `json:"image,omitempty"`
+	Version                       string                                              `json:"version,omitempty"`
+	ScaleDownUtilizationThreshold *float64                                            `json:"scaleDownUtilizationThreshold,omitempty"`
+	Overprovisioning              *ClusterKubernetesClusterAutoscalerOverprovisioning `json:"overprovisioning,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscalerOverprovisioning struct {
@@ -193,6 +194,7 @@ type ClusterKubernetesPrometheus struct {
 	Mode string `json:"mode,omitempty"`
 }
 
+// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ClusterList struct {

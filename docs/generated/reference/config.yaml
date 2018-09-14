@@ -1,0 +1,18 @@
+example_location: "examples"
+api_groups:
+  - "Tarmak"
+  - "Wing"
+  - "Cluster"
+resource_categories:
+- name: "Tarmak"
+  include: "tarmak"
+  resources:
+  - name: "Config"
+    version: "v1alpha1"
+    group: "tarmak"
+  - name: "Cluster"
+    version: "v1alpha1"
+    group: "cluster"
+  - name: "Instance"
+    version: "v1alpha1"
+    group: "wing"

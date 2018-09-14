@@ -25,7 +25,7 @@ const (
 type LoggingSinkType string
 
 type LoggingSink struct {
-	ElasticSearch *LoggingSinkElasticSearch `json:"elasticsearch,omitempty"`
+	ElasticSearch *LoggingSinkElasticSearch `json:"elasticSearch,omitempty"`
 	Types         []LoggingSinkType         `json:"types,omitempty"`
 }
 
