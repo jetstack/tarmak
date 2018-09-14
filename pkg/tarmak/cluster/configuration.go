@@ -3,6 +3,8 @@ package cluster
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -26,10 +28,13 @@ func (c *Cluster) UploadConfiguration() error {
 
 	// build reader from config
 	reader := bytes.NewReader(buffer.Bytes())
+	hasher := md5.New()
+	hasher.Write(buffer.Bytes())
 
 	return c.Environment().Provider().UploadConfiguration(
 		c,
 		reader,
+		hex.EncodeToString(hasher.Sum(nil)),
 	)
 }
 
