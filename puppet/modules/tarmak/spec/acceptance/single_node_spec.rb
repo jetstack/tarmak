@@ -111,15 +111,15 @@ class{'tarmak::single_node':
     end
 
     it 'should have three ready dns pods', :retry => 20, :retry_wait => 5 do
-      result = shell('kubectl get pods --namespace kube-system -l k8s-app=kube-dns')
+      result = shell('kubectl get pods --namespace kube-system -l k8s-app=core-dns')
       logger.notify "kubectl get pods:\n#{result.stdout}"
       expect(result.exit_code).to eq(0)
       expect(result.stdout.scan(/Running/m).size).to eq(3)
       expect(result.stdout.scan(/(4\/4|3\/3)/m).size).to eq(3)
     end
 
-    it 'should have a ready dns autoscaler pod', :retry => 20, :retry_wait => 5 do
-      result = shell('kubectl get pods --namespace kube-system -l k8s-app=kube-dns-autoscaler')
+    it 'should have a ready core autoscaler pod', :retry => 20, :retry_wait => 5 do
+      result = shell('kubectl get pods --namespace kube-system -l k8s-app=core-dns-autoscaler')
       logger.notify "kubectl get pods:\n#{result.stdout}"
       expect(result.exit_code).to eq(0)
       expect(result.stdout.scan(/Running/m).size).to eq(1)
