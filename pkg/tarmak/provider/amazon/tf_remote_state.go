@@ -32,6 +32,10 @@ func (a *Amazon) RemoteStateBucketName() string {
 	return a.RemoteStateName()
 }
 
+func (a *Amazon) RemoteStateObjectKey() string {
+	return fmt.Sprintf("%s/%s/main.tfstate", a.tarmak.Environment().Name(), a.tarmak.Cluster().Name())
+}
+
 func (a *Amazon) RemoteState(namespace string, clusterName string, stackName string) string {
 	return fmt.Sprintf(`terraform {
   backend "s3" {
@@ -40,13 +44,13 @@ func (a *Amazon) RemoteState(namespace string, clusterName string, stackName str
     region = "%s"
     dynamodb_table ="%s"
     kms_key_id = "%s"
-	encrypt = "true"
+    encrypt = "true"
   }
 }`,
 		a.RemoteStateName(),
-		fmt.Sprintf("%s/%s/%s.tfstate", namespace, clusterName, stackName),
 		a.Region(),
 		a.RemoteStateName(),
+		a.RemoteStateObjectKey(),
 		a.remoteStateKMS,
 	)
 }
@@ -222,10 +226,9 @@ func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
 		return a.initRemoteStateBucketEncryption()
 	}
 
-	key := fmt.Sprintf("%s/%s/%s.tfstate", a.tarmak.Environment().Name(), a.tarmak.Cluster().Name(), "main")
 	b, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(a.RemoteStateName()),
-		Key:    aws.String(key),
+		Key:    aws.String(a.RemoteStateObjectKey()),
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
@@ -233,7 +236,7 @@ func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
 				return nil
 			}
 		}
-		return fmt.Errorf("failed to get encryption info on object '%s/%s': %s", a.RemoteStateName(), key, err)
+		return fmt.Errorf("failed to get encryption info on object '%s/%s': %s", a.RemoteStateName(), a.RemoteStateObjectKey(), err)
 	}
 
 	defer b.Body.Close()
@@ -243,7 +246,7 @@ func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
 	if b.ServerSideEncryption == nil || *b.ServerSideEncryption != s3.ServerSideEncryptionAwsKms || b.SSEKMSKeyId == nil || *b.SSEKMSKeyId != a.remoteStateKMS {
 		_, err := svc.PutObject(&s3.PutObjectInput{
 			Bucket:               aws.String(a.RemoteStateName()),
-			Key:                  aws.String(key),
+			Key:                  aws.String(a.RemoteStateObjectKey()),
 			Body:                 bytes.NewReader([]byte(buf.String())),
 			ServerSideEncryption: aws.String(s3.ServerSideEncryptionAwsKms),
 			SSEKMSKeyId:          aws.String(a.remoteStateKMS),
