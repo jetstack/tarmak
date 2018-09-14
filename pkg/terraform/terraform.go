@@ -363,7 +363,7 @@ func (t *Terraform) ForceUnlock(cluster interfaces.Cluster, lockID string) error
 	return t.terraformWrapper(
 		cluster,
 		"force-unlock",
-		[]string{lockID},
+		[]string{"-force", lockID},
 	)
 }
 
