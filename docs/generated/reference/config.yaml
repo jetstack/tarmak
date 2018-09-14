@@ -1,0 +1,10 @@
+example_location: "examples"
+api_groups:
+  - "Tarmak"
+resource_categories:
+- name: "Tarmak"
+  include: "tarmak"
+  resources:
+  - name: "Config"
+    version: "v1alpha1"
+    group: "tarmak"
