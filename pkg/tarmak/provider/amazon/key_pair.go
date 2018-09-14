@@ -40,7 +40,7 @@ func fingerprintAWSStyle(signer interface{}) (string, error) {
 	}
 }
 
-func (a *Amazon) validateAWSKeyPair() error {
+func (a *Amazon) verifyAWSKeyPair() error {
 	svc, err := a.EC2()
 	if err != nil {
 		return err

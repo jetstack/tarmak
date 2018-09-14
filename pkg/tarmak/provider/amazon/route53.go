@@ -47,7 +47,7 @@ func (a *Amazon) initPublicZone() (*route53.HostedZone, error) {
 	return result.HostedZone, err
 }
 
-func (a *Amazon) validatePublicZone() error {
+func (a *Amazon) verifyPublicZone() error {
 	svc, err := a.Route53()
 	if err != nil {
 		return err

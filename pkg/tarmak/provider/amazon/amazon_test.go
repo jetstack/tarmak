@@ -52,7 +52,7 @@ func newFakeAmazon(t *testing.T) *fakeAmazon {
 	return f
 }
 
-func TestAmazon_validateAvailabilityZonesNoneGiven(t *testing.T) {
+func TestAmazon_verifyAvailabilityZonesNoneGiven(t *testing.T) {
 	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
@@ -79,7 +79,7 @@ func TestAmazon_validateAvailabilityZonesNoneGiven(t *testing.T) {
 		},
 	}, nil)
 
-	err := a.validateAvailabilityZones()
+	err := a.verifyAvailabilityZones()
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -89,7 +89,7 @@ func TestAmazon_validateAvailabilityZonesNoneGiven(t *testing.T) {
 	}
 }
 
-func TestAmazon_validateAvailabilityZonesCorrectGiven(t *testing.T) {
+func TestAmazon_verifyAvailabilityZonesCorrectGiven(t *testing.T) {
 	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
@@ -123,7 +123,7 @@ func TestAmazon_validateAvailabilityZonesCorrectGiven(t *testing.T) {
 		},
 	}, nil)
 
-	err := a.validateAvailabilityZones()
+	err := a.verifyAvailabilityZones()
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -133,7 +133,7 @@ func TestAmazon_validateAvailabilityZonesCorrectGiven(t *testing.T) {
 	}
 }
 
-func TestAmazon_validateAvailabilityZonesFalseGiven(t *testing.T) {
+func TestAmazon_verifyAvailabilityZonesFalseGiven(t *testing.T) {
 	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
@@ -171,7 +171,7 @@ func TestAmazon_validateAvailabilityZonesFalseGiven(t *testing.T) {
 		},
 	}, nil)
 
-	err := a.validateAvailabilityZones()
+	err := a.verifyAvailabilityZones()
 	if err == nil {
 		t.Error("expected an error")
 	} else if !strings.Contains(err.Error(), "specified invalid availability zone") {
