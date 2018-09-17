@@ -21,7 +21,7 @@ resource "aws_elb" "{{.Role.TFName}}" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 3
-    target              = "TCP:6443"
+    target              = "SSL:6443"
     interval            = 30
   }
 
@@ -76,7 +76,7 @@ resource "aws_elb" "{{.Role.TFName}}_public" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 3
-    target              = "TCP:6443"
+    target              = "SSL:6443"
     interval            = 30
   }
 
