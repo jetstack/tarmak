@@ -3,10 +3,25 @@ package plan
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func Open(path string) (*terraform.Plan, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("error opening file: %s", err)
+	}
+
+	plan, err := terraform.ReadPlan(file)
+	if err != nil {
+		return nil, fmt.Errorf("error reading plan: %s", err)
+	}
+
+	return plan, nil
+}
 
 func IsDestroyingEBSVolume(pl *terraform.Plan) (bool, []string) {
 	var resourceNames []string

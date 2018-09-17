@@ -21,10 +21,13 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/terraform/plan"
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
 
 const debugShell = "debug-shell"
+
+const terraformPlanFile = "tarmak.plan"
 
 // wingHash is set by a linker flag to the hash of the lastest wing binary
 var wingHash = ""
@@ -335,19 +338,57 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	return err
 }
 
+func (t *Terraform) terraformPlanPath(cluster interfaces.Cluster) string {
+	return filepath.Join(t.codePath(cluster), terraformPlanFile)
+}
+
 func (t *Terraform) Plan(cluster interfaces.Cluster) error {
-	return t.terraformWrapper(
+	if err := t.terraformWrapper(
 		cluster,
 		"plan",
-		[]string{"-detailed-exitcode", "-input=false"},
-	)
+		[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", terraformPlanFile)},
+	); err != nil {
+		return err
+	}
+
+	tfPlan, err := plan.Open(t.terraformPlanPath(cluster))
+	if err != nil {
+		return fmt.Errorf("error while trying to read plan file: %s", err)
+	}
+
+	isDestroyingEBSVolume, ebsVolumesToDestroy := plan.IsDestroyingEBSVolume(tfPlan)
+	if isDestroyingEBSVolume {
+		// TODO: add override flag
+		return fmt.Errorf("error this will destroy the following EBS volumes: %s", strings.Join(ebsVolumesToDestroy, ", "))
+	}
+
+	return nil
 }
 
 func (t *Terraform) Apply(cluster interfaces.Cluster) error {
+	// TODO: handle supplied plan
+
+	// generate a plan
+	if err := t.Plan(cluster); err == nil {
+		// nothing to do
+		return nil
+	} else {
+		if exitError, ok := err.(*exec.ExitError); !ok {
+			// handle error
+			return err
+		} else {
+			if status, ok := exitError.ProcessState.Sys().(syscall.WaitStatus); !ok || status.ExitStatus() != 2 {
+				// handle non 2 exit codes or not matching interface
+				return err
+			}
+		}
+	}
+
+	// apply necessary at this point
 	return t.terraformWrapper(
 		cluster,
 		"apply",
-		[]string{"-input=false", "-auto-approve=true"},
+		[]string{t.terraformPlanPath(cluster)},
 	)
 }
 

@@ -2,7 +2,6 @@
 package plan
 
 import (
-	"os"
 	"reflect"
 	"testing"
 
@@ -20,16 +19,10 @@ func expResources() map[string]bool {
 }
 
 func openReadPlan(t *testing.T, testCase string) *terraform.Plan {
-	file, err := os.Open(testCase)
+	plan, err := Open(testCase)
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
-
-	plan, err := terraform.ReadPlan(file)
-	if err != nil {
-		t.Fatalf("unexpected error %v", err)
-	}
-
 	return plan
 }
 
