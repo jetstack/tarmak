@@ -92,7 +92,7 @@ func (a *Amazon) RemoteStateAvailable(bucketName string) (bool, error) {
 	}
 }
 
-func (a *Amazon) verifyRemoteStateKMS() error {
+func (a *Amazon) ensureRemoteStateKMS() error {
 	svc, err := a.KMS()
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (a *Amazon) verifyRemoteStateKMS() error {
 	return nil
 }
 
-func (a *Amazon) verifyRemoteStateBucket() error {
+func (a *Amazon) ensureRemoteStateBucket() error {
 	svc, err := a.S3()
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func (a *Amazon) verifyRemoteStateBucket() error {
 	return nil
 }
 
-func (a *Amazon) verifyRemoteStateDynamoDB() error {
+func (a *Amazon) ensureRemoteStateDynamoDB() error {
 	svc, err := a.DynamoDB()
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ func (a *Amazon) verifyRemoteStateDynamoDB() error {
 	return nil
 }
 
-func (a *Amazon) verifyRemoteStateBucketEncrytion() error {
+func (a *Amazon) ensureRemoteStateBucketEncrytion() error {
 	svc, err := a.S3()
 	if err != nil {
 		return err

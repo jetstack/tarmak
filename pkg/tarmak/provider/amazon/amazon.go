@@ -371,23 +371,23 @@ func (a *Amazon) EnsureRemoteResources() error {
 	var result *multierror.Error
 
 	if a.tarmak.Environment() != nil {
-		if err := a.verifyRemoteStateKMS(); err != nil {
+		if err := a.ensureRemoteStateKMS(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		if err := a.verifyRemoteStateBucket(); err != nil {
+		if err := a.ensureRemoteStateBucket(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		if err := a.verifyRemoteStateBucketEncrytion(); err != nil {
+		if err := a.ensureRemoteStateBucketEncrytion(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		if err := a.verifyRemoteStateDynamoDB(); err != nil {
+		if err := a.ensureRemoteStateDynamoDB(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		if err := a.verifyAWSKeyPair(); err != nil {
+		if err := a.ensureAWSKeyPair(); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
