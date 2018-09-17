@@ -48,9 +48,9 @@ func (a *Amazon) RemoteState(namespace string, clusterName string, stackName str
   }
 }`,
 		a.RemoteStateName(),
+		a.RemoteStateObjectKey(),
 		a.Region(),
 		a.RemoteStateName(),
-		a.RemoteStateObjectKey(),
 		a.remoteStateKMS,
 	)
 }
