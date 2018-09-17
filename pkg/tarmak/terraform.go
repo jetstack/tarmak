@@ -114,7 +114,7 @@ func (c *CmdTerraform) Destroy() error {
 
 func (c *CmdTerraform) Shell() error {
 	if err := c.setup(); err != nil {
-		c.log.Warnf("error during validate/verify steps: %v", err)
+		c.log.Warnf("error setting up tarmak for terrafrom shell: %v", err)
 	}
 
 	if err := c.verifyTerraformBinaryVersion(); err != nil {
