@@ -1,10 +1,20 @@
 example_location: "examples"
 api_groups:
+<<<<<<< Updated upstream
   - "Tarmak"
+=======
+  - "Cluster"
+>>>>>>> Stashed changes
 resource_categories:
 - name: "Tarmak"
   include: "tarmak"
   resources:
+<<<<<<< Updated upstream
   - name: "Config"
     version: "v1alpha1"
     group: "tarmak"
+=======
+  - name: "Cluster"
+    version: "v1alpha1"
+    group: "cluster"
+>>>>>>> Stashed changes

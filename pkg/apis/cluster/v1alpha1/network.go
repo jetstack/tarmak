@@ -38,5 +38,5 @@ type Network struct {
 	CIDR              string      `json:"cidr,omitempty"`
 	Identifier        string      `json:"identifier,omitempty"`
 	Type              string      `json:"type,omitempty"`
-	InternetGW        *InternetGW `json:"internetgw,omitempty"`
+	InternetGW        *InternetGW `json:"internetGW,omitempty"`
 }

@@ -20,8 +20,8 @@ set -o pipefail
 
 # This script should be run via `bazel run //hack:update-reference-docs`
 REPO_ROOT=${BUILD_WORKSPACE_DIRECTORY:-"$(cd "$(dirname "$0")" && pwd -P)"/..}
-#runfiles="${runfiles:-$(pwd)}"
-#export PATH="${runfiles}/hack/bin:${runfiles}/hack/brodocs:${PATH}"
+runfiles="${runfiles:-$(pwd)}"
+export PATH="${runfiles}/hack/bin:${runfiles}/hack/brodocs:${PATH}"
 cd "${REPO_ROOT}"
 
 REFERENCE_PATH="docs/generated/reference"
@@ -57,45 +57,45 @@ rm -Rf "${OUTPUT_DIR}"
 
 echo "+++ Running gen-apidocs"
 # Generate Markdown docs
+=======
+cleanup() {
+    pushd "${REFERENCE_ROOT}"
+    echo "+++ Cleaning up temporary docsgen files"
+    # Clean up old temporary files
+    rm -Rf "openapi-spec" "includes" "manifest.json"
+    popd
+}
+
+# Ensure we start with a clean set of directories
+#trap cleanup EXIT
+cleanup
+echo "+++ Removing old output"
+rm -Rf "${OUTPUT_DIR}"
+mkdir -p "${OUTPUT_DIR}"
+
+echo "+++ Running openapi-gen"
+${BINDIR}/openapi-gen \
+        --input-dirs github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1,k8s.io/apimachinery/pkg/version \
+        --output-package "github.com/jetstack/tarmak/${REFERENCE_PATH}/openapi"
+        #github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1,\
+        #github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1,\
+
+## Generate swagger.json from the Golang generated openapi spec
+echo "+++ Running 'swagger-gen' to generate swagger.json"
+mkdir -p "${REFERENCE_ROOT}/openapi-spec"
+go build -o ${REFERENCE_ROOT}/swagger-gen/swagger-gen ${REFERENCE_ROOT}/swagger-gen/main.go
+${REFERENCE_ROOT}/swagger-gen/swagger-gen
+
+echo "+++ Running gen-apidocs"
+
 $BINDIR/gen-apidocs \
     --copyright "<a href=\"https://jetstack.io\">Copyright 2018 Jetstack Ltd.</a>" \
     --title "Tarmak API Reference" \
     --config-dir "${REFERENCE_ROOT}"
 
-#echo "+++ Running brodocs"
-#mkdir -p "${OUTPUT_DIR}"
-
-# Running a bazel-built target from the 'bazel run' context has some nuances
-# which cause runfiles to not be visible properly.
-# We fudge the vars used by the runfiles loader snippet to point to the correct
-# runfiles.
-# We depend on brodocs itself, and include all its dependencies as a dependency
-# of this target.
-#BRODOCS_RUNFILES="${runfiles}/.."
-#RUNFILES_DIR="${BRODOCS_RUNFILES}" brodocs \
-#    "${REFERENCE_ROOT}/manifest.json" \
-#    "${REFERENCE_ROOT}/includes" \
-#    "${OUTPUT_DIR}"
-#
-#BAZEL_BRODOCS_PATH="${BRODOCS_RUNFILES}/brodocs"
-#BAZEL_BRODOCS_NODE_MODULES="${BRODOCS_RUNFILES}/brodocs_modules/node_modules"
-#
-## Copy across support files for docs.
-## These commands had to be manually written after inspecting the required output.
-#cp "${BAZEL_BRODOCS_PATH}"/stylesheet.css \
-#   "${BAZEL_BRODOCS_PATH}"/scroll.js \
-#   "${BAZEL_BRODOCS_PATH}"/actions.js \
-#   "${BAZEL_BRODOCS_PATH}"/tabvisibility.js \
-#   "${OUTPUT_DIR}/"
-#mkdir -p "${OUTPUT_DIR}/node_modules/jquery/dist"
-#cp "${BAZEL_BRODOCS_NODE_MODULES}/jquery/dist/jquery.min.js" "${OUTPUT_DIR}/node_modules/jquery/dist/"
-#mkdir -p "${OUTPUT_DIR}/node_modules/bootstrap/dist/css"
-#cp "${BAZEL_BRODOCS_NODE_MODULES}/bootstrap/dist/css/bootstrap.min.css" "${OUTPUT_DIR}/node_modules/bootstrap/dist/css/"
-#mkdir -p "${OUTPUT_DIR}/node_modules/font-awesome/css"
-#cp "${BAZEL_BRODOCS_NODE_MODULES}/font-awesome/css/"* "${OUTPUT_DIR}/node_modules/font-awesome/css/"
-#mkdir -p "${OUTPUT_DIR}/node_modules/font-awesome/fonts"
-#cp "${BAZEL_BRODOCS_NODE_MODULES}/font-awesome/fonts/"* "${OUTPUT_DIR}/node_modules/font-awesome/fonts/"
-#mkdir -p "${OUTPUT_DIR}/node_modules/highlight.js/styles"
-#cp "${BAZEL_BRODOCS_NODE_MODULES}/highlight.js/styles/default.css" "${OUTPUT_DIR}/node_modules/highlight.js/styles/"
-#mkdir -p "${OUTPUT_DIR}/node_modules/jquery.scrollto"
-#cp "${BAZEL_BRODOCS_NODE_MODULES}/jquery.scrollto/jquery.scrollTo.min.js" "${OUTPUT_DIR}/node_modules/jquery.scrollto/"
+echo "+++ Running brodocs"
+mkdir -p "${OUTPUT_DIR}"
+INCLUDES_DIR="${REFERENCE_ROOT}/includes" \
+OUTPUT_DIR="${OUTPUT_DIR}" \
+MANIFEST_PATH="${REFERENCE_ROOT}/manifest.json" \
+node ./hack/brodocs/brodoc.js ${MANIFEST_PATH} ${INCLUDES_DIR} ${OUTPUT_DIR}

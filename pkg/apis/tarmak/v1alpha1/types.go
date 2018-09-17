@@ -26,6 +26,7 @@ type Config struct {
 	Environments []Environment             `json:"environments,omitempty"`
 }
 
+// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ConfigList struct {
@@ -67,6 +68,7 @@ type ProviderAzure struct {
 	SubscriptionID string `json:"subscriptionID,omitempty"`
 }
 
+// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ProviderList struct {
@@ -77,6 +79,7 @@ type ProviderList struct {
 }
 
 // +genclient=true
+// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +resource:path=environments
 
@@ -95,6 +98,7 @@ type Environment struct {
 	AdminCIDRs  []string             `json:"adminCIDRs,omitempty"`
 }
 
+// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type EnvironmentList struct {
@@ -104,6 +108,7 @@ type EnvironmentList struct {
 	Items []Environment `json:"items"`
 }
 
+// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type Image struct {

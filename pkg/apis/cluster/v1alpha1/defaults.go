@@ -187,7 +187,7 @@ func SetDefaults_ClusterKubernetesAPIServerAmazonAccessLogs(obj *ClusterKubernet
 }
 
 func SetDefaults_ClusterKubernetesClusterAutoscaler(obj *ClusterKubernetesClusterAutoscaler) {
-	if obj.ScaleDownThreshold == nil {
-		obj.ScaleDownThreshold = floatPointer(0.5)
+	if obj.ScaleDownUtilizationThreshold == nil {
+		obj.ScaleDownUtilizationThreshold = floatPointer(0.5)
 	}
 }

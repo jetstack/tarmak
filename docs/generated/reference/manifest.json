@@ -5,10 +5,109 @@
       "filename": "_tarmak.md"
     },
     {
+<<<<<<< Updated upstream
+=======
+      "filename": "_generated_cluster_v1alpha1_cluster_concept.md"
+    },
+    {
+>>>>>>> Stashed changes
       "filename": "_oldversions.md"
     },
     {
       "filename": "_definitions.md"
+<<<<<<< Updated upstream
+=======
+    },
+    {
+      "filename": "_generated_amazonesproxy_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusteramazon_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetes_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetesapiserver_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetesapiserveramazon_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetesapiserveramazonaccesslogs_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetesapiserveroidc_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetesclusterautoscaler_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetesclusterautoscaleroverprovisioning_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetesdashboard_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetesprometheus_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterkubernetestiller_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_clusterpodsecuritypolicy_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_egressrule_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_firewall_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_httpbasicauth_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_ingressrule_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_instancepool_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_instancepoolamazon_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_instancepoolkubernetes_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_internetgw_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_kubernetesapi_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_label_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_loggingsink_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_loggingsinkelasticsearch_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_network_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_subnet_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_taint_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_values_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_volume_v1alpha1_cluster_definition.md"
+>>>>>>> Stashed changes
     }
   ],
   "title": "Tarmak API Reference",
