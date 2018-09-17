@@ -40,26 +40,8 @@ func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
 }
 
 func (c *CmdTerraform) Plan() error {
-	c.log.Info("validate steps")
-	if err := c.tarmak.Validate(); err != nil {
-		return fmt.Errorf("failed to validate tarmak: %s", err)
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("verify steps")
-	if err := c.tarmak.Verify(); err != nil {
+	if err := c.validateVerify(); err != nil {
 		return err
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
 	}
 
 	c.log.Info("write SSH config")
@@ -77,25 +59,8 @@ func (c *CmdTerraform) Plan() error {
 }
 
 func (c *CmdTerraform) Apply() error {
-	c.log.Info("validate steps")
-	if err := c.tarmak.Validate(); err != nil {
-		return fmt.Errorf("failed to validate tarmak: %s", err)
-	}
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("verify steps")
-	if err := c.tarmak.Verify(); err != nil {
+	if err := c.validateVerify(); err != nil {
 		return err
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
 	}
 
 	c.log.Info("write SSH config")
@@ -144,26 +109,8 @@ func (c *CmdTerraform) Apply() error {
 }
 
 func (c *CmdTerraform) Destroy() error {
-	c.log.Info("validate steps")
-	if err := c.tarmak.Validate(); err != nil {
-		return fmt.Errorf("failed to validate tarmak: %s", err)
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("verify steps")
-	if err := c.tarmak.Verify(); err != nil {
+	if err := c.validateVerify(); err != nil {
 		return err
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
 	}
 
 	c.log.Info("write SSH config")
@@ -183,6 +130,10 @@ func (c *CmdTerraform) Destroy() error {
 }
 
 func (c *CmdTerraform) Shell() error {
+	if err := c.validateVerify(); err != nil {
+		c.log.Warnf("error during validate/verify steps: %v", err)
+	}
+
 	if err := c.verifyTerraformBinaryVersion(); err != nil {
 		return err
 	}
@@ -247,6 +198,32 @@ func (t *Tarmak) verifyImageExists() error {
 
 	if len(images) == 0 {
 		return errors.New("no images found")
+	}
+
+	return nil
+}
+
+func (c *CmdTerraform) validateVerify() error {
+	c.log.Info("validate steps")
+	if err := c.tarmak.Validate(); err != nil {
+		return fmt.Errorf("failed to validate tarmak: %s", err)
+	}
+
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
+	}
+
+	c.log.Info("verify steps")
+	if err := c.tarmak.Verify(); err != nil {
+		return err
+	}
+
+	select {
+	case <-c.ctx.Done():
+		return c.ctx.Err()
+	default:
 	}
 
 	return nil
