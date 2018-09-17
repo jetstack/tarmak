@@ -132,6 +132,8 @@ type Flags struct {
 
 	Cluster ClusterFlags `json:"cluster,omitempty"` // cluster specific flags
 
+	Environment EnvironmentFlags `json:"environment,omitempty"` // environment specific flags
+
 	WingDevMode bool `json:"wingDevMode,omitempty"` // use a bundled wing version rather than a tagged release from GitHub
 
 	PublicAPIEndpoint bool `json:"publicAPIEndpoint,omitempty"` // Use public endpoint to point kubeconfig to
@@ -153,6 +155,11 @@ type ClusterFlags struct {
 // Contains the cluster plan flags
 type ClusterPlanFlags struct {
 	PlanFileStore string `json:"planFileStore,omitempty"` // file location where plan file is to be stored
+}
+
+// This contains the environment specific operation flags
+type EnvironmentFlags struct {
+	Destroy EnvironmentDestroyFlags `json:"destroy,omitempty"` // flags for destroying environment
 }
 
 // Contains the cluster apply flags
@@ -195,4 +202,9 @@ type ClusterLogsFlags struct {
 	Path  string `json:"path,omitempty"`  // path to store logs bundle
 	Since string `json:"since,omitempty"` // fetch logs since date
 	Until string `json:"until,omitempty"` // fetch logs until date
+}
+
+// Contains the environment destroy flags
+type EnvironmentDestroyFlags struct {
+	AutoApprove bool `json:"autoApprove,omitempty"` // auto-approve destroying a whole environment
 }

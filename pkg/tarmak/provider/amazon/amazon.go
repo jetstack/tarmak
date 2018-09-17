@@ -53,6 +53,7 @@ type Amazon struct {
 type S3 interface {
 	HeadBucket(input *s3.HeadBucketInput) (*s3.HeadBucketOutput, error)
 	CreateBucket(input *s3.CreateBucketInput) (*s3.CreateBucketOutput, error)
+	DeleteBucket(input *s3.DeleteBucketInput) (*s3.DeleteBucketOutput, error)
 	GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error)
 	GetBucketLocation(input *s3.GetBucketLocationInput) (*s3.GetBucketLocationOutput, error)
 	GetBucketEncryption(input *s3.GetBucketEncryptionInput) (*s3.GetBucketEncryptionOutput, error)
@@ -60,6 +61,10 @@ type S3 interface {
 	PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
 	PutBucketEncryption(input *s3.PutBucketEncryptionInput) (*s3.PutBucketEncryptionOutput, error)
 	GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error)
+	DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error)
+	ListObjects(input *s3.ListObjectsInput) (*s3.ListObjectsOutput, error)
+	ListObjectVersions(input *s3.ListObjectVersionsInput) (*s3.ListObjectVersionsOutput, error)
+	DeleteObjects(input *s3.DeleteObjectsInput) (*s3.DeleteObjectsOutput, error)
 }
 
 type EC2 interface {
@@ -76,6 +81,9 @@ type DynamoDB interface {
 	GetItem(input *dynamodb.GetItemInput) (*dynamodb.GetItemOutput, error)
 	DescribeTable(input *dynamodb.DescribeTableInput) (*dynamodb.DescribeTableOutput, error)
 	CreateTable(input *dynamodb.CreateTableInput) (*dynamodb.CreateTableOutput, error)
+	DeleteTable(input *dynamodb.DeleteTableInput) (*dynamodb.DeleteTableOutput, error)
+	DeleteItem(input *dynamodb.DeleteItemInput) (*dynamodb.DeleteItemOutput, error)
+	Scan(input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error)
 }
 
 type Route53 interface {
@@ -407,6 +415,43 @@ func (a *Amazon) EnsureRemoteResources() error {
 	}
 
 	return result.ErrorOrNil()
+}
+
+func (a *Amazon) Remove() error {
+	var result *multierror.Error
+
+	if err := a.deleteRemoteStateItemDynamoDB(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	count, err := a.countRemoteStateItemsDynamoDB()
+	if err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if count == 0 {
+		if err := a.deleteRemoteStateDynamoDB(); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	if err := a.deleteRemoteStateObjectBucket(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	empty, err := a.bucketEmpty()
+	if err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if empty {
+		if err := a.deleteRemoteStateBucket(); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result.ErrorOrNil()
+
 }
 
 // Check if AWS credentials are setup correctly.

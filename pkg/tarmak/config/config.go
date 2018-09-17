@@ -212,6 +212,13 @@ func (c *Config) Environments() (environments []*tarmakv1alpha1.Environment) {
 	return environments
 }
 
+func (c *Config) AllClusters(environment string) (clusters []*clusterv1alpha1.Cluster) {
+	for _, environment := range c.Environments() {
+		clusters = append(c.Clusters(environment.Name))
+	}
+	return clusters
+}
+
 func (c *Config) Provider(name string) (cluster *tarmakv1alpha1.Provider, err error) {
 	for pos, _ := range c.conf.Providers {
 		provider := &c.conf.Providers[pos]
@@ -278,6 +285,33 @@ func (c *Config) AppendEnvironment(env *tarmakv1alpha1.Environment) error {
 
 	c.scheme.Default(env)
 	c.conf.Environments = append(c.conf.Environments, *env)
+	return c.writeYAML(c.conf)
+}
+
+func (c *Config) RemoveEnvironment(environment string) error {
+	for key, env := range c.conf.Environments {
+		if env.Name == environment {
+			c.conf.Environments = append(c.conf.Environments[:key], c.conf.Environments[key+1:]...)
+		}
+	}
+
+	for i := 0; i < len(c.conf.Clusters); i++ {
+		if c.conf.Clusters[i].Environment == environment {
+			c.conf.Clusters = append(c.conf.Clusters[:i], c.conf.Clusters[i+1:]...)
+			i -= 1
+		}
+	}
+
+	// Set currentCluster to another cluster if it is part of the environment we want to delete
+	currentConfigEnvironment, err := c.CurrentEnvironmentName()
+	if err != nil {
+		return err
+	}
+	// Pick the first found environment/cluster to replace currentCluster
+	if currentConfigEnvironment == environment {
+		c.SetCurrentCluster(fmt.Sprintf("%v-%v", c.conf.Clusters[0].Environment, c.conf.Clusters[0].Name))
+	}
+
 	return c.writeYAML(c.conf)
 }
 
