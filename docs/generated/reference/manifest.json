@@ -5,18 +5,13 @@
       "filename": "_tarmak.md"
     },
     {
-<<<<<<< Updated upstream
-=======
       "filename": "_generated_cluster_v1alpha1_cluster_concept.md"
     },
     {
->>>>>>> Stashed changes
       "filename": "_oldversions.md"
     },
     {
       "filename": "_definitions.md"
-<<<<<<< Updated upstream
-=======
     },
     {
       "filename": "_generated_amazonesproxy_v1alpha1_cluster_definition.md"
@@ -107,7 +102,6 @@
     },
     {
       "filename": "_generated_volume_v1alpha1_cluster_definition.md"
->>>>>>> Stashed changes
     }
   ],
   "title": "Tarmak API Reference",

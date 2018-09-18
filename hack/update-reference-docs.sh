@@ -18,57 +18,20 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# This script should be run via `bazel run //hack:update-reference-docs`
+set -e
+
 REPO_ROOT=${BUILD_WORKSPACE_DIRECTORY:-"$(cd "$(dirname "$0")" && pwd -P)"/..}
-runfiles="${runfiles:-$(pwd)}"
-export PATH="${runfiles}/hack/bin:${runfiles}/hack/brodocs:${PATH}"
 cd "${REPO_ROOT}"
+
+GIT_TAG=$(git describe --tags --abbrev=0)
 
 REFERENCE_PATH="docs/generated/reference"
 REFERENCE_ROOT=$(cd "${REPO_ROOT}/${REFERENCE_PATH}" 2> /dev/null && pwd -P)
 OUTPUT_DIR="${REFERENCE_ROOT}/includes"
 
 BINDIR=$REPO_ROOT/bin
+HACKDIR=$REPO_ROOT/hack
 
-## cleanup removes files that are leftover from running various tools and not required
-## for the actual output
-#cleanup() {
-#    pushd "${REFERENCE_ROOT}"
-#    echo "+++ Cleaning up temporary docsgen files"
-#    # Clean up old temporary files
-#    rm -Rf "openapi-spec" "includes" "manifest.json"
-#    popd
-#}
-
-# Ensure we start with a clean set of directories
-#trap cleanup EXIT
-#cleanup
-echo "+++ Removing old output"
-rm -Rf "${OUTPUT_DIR}"
-
-#echo "+++ Creating temporary output directories"
-
-## Generate swagger.json from the Golang generated openapi spec
-#echo "+++ Running 'swagger-gen' to generate swagger.json"
-#mkdir -p "${REFERENCE_ROOT}/openapi-spec"
-## Generate swagger.json
-## TODO: can we output to a tmpfile instead of in the repo?
-#swagger-gen > "${REFERENCE_ROOT}/openapi-spec/swagger.json"
-
-echo "+++ Running gen-apidocs"
-# Generate Markdown docs
-=======
-cleanup() {
-    pushd "${REFERENCE_ROOT}"
-    echo "+++ Cleaning up temporary docsgen files"
-    # Clean up old temporary files
-    rm -Rf "openapi-spec" "includes" "manifest.json"
-    popd
-}
-
-# Ensure we start with a clean set of directories
-#trap cleanup EXIT
-cleanup
 echo "+++ Removing old output"
 rm -Rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
@@ -76,26 +39,39 @@ mkdir -p "${OUTPUT_DIR}"
 echo "+++ Running openapi-gen"
 ${BINDIR}/openapi-gen \
         --input-dirs github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1,k8s.io/apimachinery/pkg/version \
-        --output-package "github.com/jetstack/tarmak/${REFERENCE_PATH}/openapi"
+        --output-package "github.com/jetstack/tarmak/${REFERENCE_ROOT}/openapi"
         #github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1,\
-        #github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1,\
+        #github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1, \
 
 ## Generate swagger.json from the Golang generated openapi spec
 echo "+++ Running 'swagger-gen' to generate swagger.json"
 mkdir -p "${REFERENCE_ROOT}/openapi-spec"
-go build -o ${REFERENCE_ROOT}/swagger-gen/swagger-gen ${REFERENCE_ROOT}/swagger-gen/main.go
-${REFERENCE_ROOT}/swagger-gen/swagger-gen
+go build -o ${HACKDIR}/swagger-gen/swagger-gen ${HACKDIR}/swagger-gen/main.go
+${HACKDIR}/swagger-gen/swagger-gen
 
 echo "+++ Running gen-apidocs"
-
+mkdir -p ${REFERENCE_ROOT}/static_includes
 $BINDIR/gen-apidocs \
     --copyright "<a href=\"https://jetstack.io\">Copyright 2018 Jetstack Ltd.</a>" \
     --title "Tarmak API Reference" \
     --config-dir "${REFERENCE_ROOT}"
 
 echo "+++ Running brodocs"
-mkdir -p "${OUTPUT_DIR}"
-INCLUDES_DIR="${REFERENCE_ROOT}/includes" \
-OUTPUT_DIR="${OUTPUT_DIR}" \
-MANIFEST_PATH="${REFERENCE_ROOT}/manifest.json" \
-node ./hack/brodocs/brodoc.js ${MANIFEST_PATH} ${INCLUDES_DIR} ${OUTPUT_DIR}
+OUTPUT_DIR="${REFERENCE_ROOT}/output"
+IMAGE_NAME="tarmak-update-reference-docs:${GIT_TAG}"
+BRODOC_DIR=${HACKDIR}/brodocs
+rm -rf ${OUTPUT_DIR}
+mkdir -p ${OUTPUT_DIR}
+cp -r ${BRODOC_DIR} ${REFERENCE_ROOT}/brodocs
+docker build -t ${IMAGE_NAME} ${REFERENCE_ROOT}
+CONTAINER_ID=$(docker create ${IMAGE_NAME})
+docker start -a ${CONTAINER_ID}
+docker cp ${CONTAINER_ID}:/docs/index.html ${OUTPUT_DIR}/.
+docker cp ${CONTAINER_ID}:/docs/navData.js ${OUTPUT_DIR}/.
+docker rm ${CONTAINER_ID}
+cp -r ${BRODOC_DIR}/{node_modules,*.js,*.css} ${OUTPUT_DIR}/.
+rm -rf ${REFERENCE_ROOT}/brodocs
+rm -rf ${REFERENCE_ROOT}/includes
+rm -rf ${REFERENCE_ROOT}/static_includes
+
+echo "+++ Reference docs created"

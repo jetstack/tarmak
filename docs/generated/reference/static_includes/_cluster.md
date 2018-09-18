@@ -1,5 +1,0 @@
-
-# <strong>Cluster</strong>
-
-------------
-

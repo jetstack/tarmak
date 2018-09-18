@@ -146,13 +146,24 @@ $(BINDIR)/goreleaser:
 	cd $(BINDIR) && tar xzvf $(shell basename $@).tar.gz goreleaser
 	rm $@.tar.gz
 
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx
+$(BINDIR)/openapi-gen:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/k8s.io/kube-openapi/cmd/openapi-gen
+
+$(BINDIR)/gen-apidocs:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/github.com/kubernetes-incubator/reference-docs/gen-apidocs
+
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
 
 go_codegen: depend $(TYPES_FILES)
 	$(HACK_DIR)/update-codegen.sh
+
+go_reference_docs: depend
+	$(HACK_DIR)/update-reference-docs.sh
 
 verify_boilerplate:
 	$(HACK_DIR)/verify-boilerplate.sh
@@ -161,7 +172,7 @@ verify_codegen:
 	$(HACK_DIR)/verify-codegen.sh
 
 verify_vendor: $(BINDIR)/dep
-	dep ensure -no-vendor -dry-run -v
+	$(BINDIR)/dep ensure -no-vendor -dry-run -v
 
 SUBTREES = etcd calico aws_ebs kubernetes kubernetes_addons prometheus tarmak vault_client
 subtrees:
