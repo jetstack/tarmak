@@ -31,6 +31,18 @@ OUTPUT_DIR="${REFERENCE_ROOT}/includes"
 BINDIR=$REPO_ROOT/bin
 HACKDIR=$REPO_ROOT/hack
 
+cleanup() {
+    pushd "${REFERENCE_ROOT}"
+    echo "+++ Cleaning up temporary docsgen files"
+    # Clean up old temporary files
+    rm -Rf "openapi-spec" "includes" "manifest.json" "openapi" "static_includes" "brodocs"
+    popd
+}
+
+# Ensure we start with a clean set of directories
+trap cleanup EXIT
+cleanup
+
 echo "+++ Removing old output"
 rm -Rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
@@ -43,7 +55,7 @@ ${BINDIR}/openapi-gen \
 
 ## Generate swagger.json from the Golang generated openapi spec
 echo "+++ Running 'swagger-gen' to generate swagger.json"
-mkdir -p "${REFERENCE_ROOT}/openapi-spec"
+mkdir -p "${REFERENCE_ROOT}/openapi-spec" "${REFERENCE_ROOT}/openapi-spec"
 go build -o ${HACKDIR}/swagger-gen/swagger-gen ${HACKDIR}/swagger-gen/main.go
 ${HACKDIR}/swagger-gen/swagger-gen
 
@@ -56,21 +68,12 @@ $BINDIR/gen-apidocs \
 
 echo "+++ Running brodocs"
 OUTPUT_DIR="${REFERENCE_ROOT}/output"
-IMAGE_NAME="tarmak-update-reference-docs:${GIT_TAG}"
-BRODOC_DIR=${HACKDIR}/brodocs
+BRODOC_DIR="${REFERENCE_ROOT}/brodocs"
 rm -rf ${OUTPUT_DIR}
-mkdir -p ${OUTPUT_DIR}
-cp -r ${BRODOC_DIR} ${REFERENCE_ROOT}/brodocs
-docker build -t ${IMAGE_NAME} ${REFERENCE_ROOT}
-CONTAINER_ID=$(docker create ${IMAGE_NAME})
-docker start -a ${CONTAINER_ID}
-docker cp ${CONTAINER_ID}:/docs/index.html ${OUTPUT_DIR}/.
-docker cp ${CONTAINER_ID}:/docs/navData.js ${OUTPUT_DIR}/.
-docker rm ${CONTAINER_ID}
-cp -r ${BRODOC_DIR}/{node_modules,*.js,*.css} ${OUTPUT_DIR}/.
-rm -rf ${REFERENCE_ROOT}/brodocs
-rm -rf ${REFERENCE_ROOT}/includes
-rm -rf ${REFERENCE_ROOT}/static_includes
-mv ${OUTPUT_DIR}/index.html ${OUTPUT_DIR}/api-docs.html
+cp -r "${HACKDIR}/brodocs" ${REFERENCE_ROOT}/.
+cp ${REFERENCE_ROOT}/manifest.json ${BRODOC_DIR}/.
+rm -rf ${BRODOC_DIR}/documents/* && cp -r ${REFERENCE_ROOT}/includes/* ${BRODOC_DIR}/documents/
+cd ${BRODOC_DIR} && node brodoc.js && cd ../.
+mkdir -p ${OUTPUT_DIR} && cp -r ${BRODOC_DIR}/{*.js,*.html,*.css} ${OUTPUT_DIR}/
 
 echo "+++ Reference docs created"

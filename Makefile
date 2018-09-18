@@ -171,8 +171,7 @@ verify_boilerplate:
 verify_codegen:
 	$(HACK_DIR)/verify-codegen.sh
 
-verify_reference_docs: depend
-	$(HACK_DIR)/verify-reference-docs.sh
+verify_reference_docs: go_reference_docs_gen
 
 verify_vendor: $(BINDIR)/dep
 	$(BINDIR)/dep ensure -no-vendor -dry-run -v
