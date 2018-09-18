@@ -67,7 +67,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpecManifest":                                  schema_pkg_apis_wing_v1alpha1_InstanceSpecManifest(ref),
 		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatus":                                        schema_pkg_apis_wing_v1alpha1_InstanceStatus(ref),
 		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatusManifest":                                schema_pkg_apis_wing_v1alpha1_InstanceStatusManifest(ref),
-		"k8s.io/apimachinery/pkg/version.Info":                                                                    schema_k8sio_apimachinery_pkg_version_Info(ref),
 	}
 }
 
@@ -2579,73 +2578,5 @@ func schema_pkg_apis_wing_v1alpha1_InstanceStatusManifest(ref common.ReferenceCa
 		},
 		Dependencies: []string{
 			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
-	}
-}
-
-func schema_k8sio_apimachinery_pkg_version_Info(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Info contains versioning information. how we'll want to distribute that information.",
-				Properties: map[string]spec.Schema{
-					"major": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"minor": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"gitVersion": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"gitCommit": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"gitTreeState": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"buildDate": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"goVersion": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"compiler": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"platform": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-				Required: []string{"major", "minor", "gitVersion", "gitCommit", "gitTreeState", "buildDate", "goVersion", "compiler", "platform"},
-			},
-		},
-		Dependencies: []string{},
 	}
 }

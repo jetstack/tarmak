@@ -37,7 +37,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 echo "+++ Running openapi-gen"
 ${BINDIR}/openapi-gen \
-        --input-dirs github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1,github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1,github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1,k8s.io/apimachinery/pkg/version\
+        --input-dirs github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1,github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1,github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1\
         --output-package "github.com/jetstack/tarmak/${REFERENCE_PATH}/openapi"\
         --go-header-file "${HACKDIR}/boilerplate/boilerplate.go.txt"
 
