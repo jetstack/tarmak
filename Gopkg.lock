@@ -451,6 +451,21 @@
   version = "v1.38.1"
 
 [[projects]]
+  name = "github.com/go-openapi/analysis"
+  packages = [
+    ".",
+    "internal"
+  ]
+  revision = "7c1bef8f6d9fa6148ce0d8a0ebf5339a084a6639"
+  version = "0.16.0"
+
+[[projects]]
+  name = "github.com/go-openapi/errors"
+  packages = ["."]
+  revision = "b2b2befaf267d082d779bcef52d682a47c779517"
+  version = "0.16.0"
+
+[[projects]]
   name = "github.com/go-openapi/jsonpointer"
   packages = ["."]
   revision = "3a0015ad55fa9873f41605d3e8f28cd279c32ab2"
@@ -463,10 +478,22 @@
   version = "0.15.0"
 
 [[projects]]
+  name = "github.com/go-openapi/loads"
+  packages = ["."]
+  revision = "2a2b323bab96e6b1fdee110e57d959322446e9c9"
+  version = "0.16.0"
+
+[[projects]]
   name = "github.com/go-openapi/spec"
   packages = ["."]
   revision = "bce47c9386f9ecd6b86f450478a80103c3fe1402"
   version = "0.15.0"
+
+[[projects]]
+  name = "github.com/go-openapi/strfmt"
+  packages = ["."]
+  revision = "913ee058e387ac83a67e2d9f13acecdcd5769fc6"
+  version = "0.16.0"
 
 [[projects]]
   name = "github.com/go-openapi/swag"
@@ -1038,6 +1065,16 @@
   packages = ["."]
   revision = "1455def202f6e05b95cc7bfc7e8ae67ae5141eba"
   version = "v0.1.0"
+
+[[projects]]
+  branch = "kubebuilder"
+  name = "github.com/kubernetes-incubator/reference-docs"
+  packages = [
+    "gen-apidocs",
+    "gen-apidocs/generators",
+    "gen-apidocs/generators/api"
+  ]
+  revision = "1959039a016c77efe6786b19f3f55f7b3042604f"
 
 [[projects]]
   branch = "master"
@@ -1657,6 +1694,15 @@
   version = "v0.9.1"
 
 [[projects]]
+  branch = "v2"
+  name = "gopkg.in/mgo.v2"
+  packages = [
+    "bson",
+    "internal/json"
+  ]
+  revision = "9856a29383ce1c59f308dd1cf0363a79b5bef6b5"
+
+[[projects]]
   name = "gopkg.in/natefinch/lumberjack.v2"
   packages = ["."]
   revision = "a96e63847dc3c67d17befa69c303767e2f84e54f"
@@ -2089,17 +2135,22 @@
   branch = "master"
   name = "k8s.io/kube-openapi"
   packages = [
+    "cmd/openapi-gen",
+    "cmd/openapi-gen/args",
     "pkg/builder",
     "pkg/common",
+    "pkg/generators",
+    "pkg/generators/rules",
     "pkg/handler",
     "pkg/util",
-    "pkg/util/proto"
+    "pkg/util/proto",
+    "pkg/util/sets"
   ]
   revision = "d8ea2fe547a448256204cfc68dfee7b26c720acb"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "039372d06cd2d7cfca5b51bbaef7765a055bfd844619cb8bf1a343115076647d"
+  inputs-digest = "afa3dc781429b0ae4895bccf1c8669df312ae67578e6f98a006e95c3547f3077"
   solver-name = "gps-cdcl"
   solver-version = 1
