@@ -21,7 +21,7 @@ set -o pipefail
 set -e
 
 REPO_ROOT=${BUILD_WORKSPACE_DIRECTORY:-"$(cd "$(dirname "$0")" && pwd -P)"/..}
-cd "${REPO_ROOT}"
+#cd "${REPO_ROOT}"
 
 GIT_TAG=$(git describe --tags --abbrev=0)
 
@@ -39,7 +39,7 @@ mkdir -p "${OUTPUT_DIR}"
 echo "+++ Running openapi-gen"
 ${BINDIR}/openapi-gen \
         --input-dirs github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1,k8s.io/apimachinery/pkg/version \
-        --output-package "github.com/jetstack/tarmak/${REFERENCE_ROOT}/openapi"
+        --output-package "${REFERENCE_ROOT}/openapi"
         #github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1,\
         #github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1, \
 
@@ -73,5 +73,6 @@ cp -r ${BRODOC_DIR}/{node_modules,*.js,*.css} ${OUTPUT_DIR}/.
 rm -rf ${REFERENCE_ROOT}/brodocs
 rm -rf ${REFERENCE_ROOT}/includes
 rm -rf ${REFERENCE_ROOT}/static_includes
+mv ${OUTPUT_DIR}/index.html ${OUTPUT_DIR}/api-docs.html
 
 echo "+++ Reference docs created"
