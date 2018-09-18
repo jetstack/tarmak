@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y python-enchant wbritish
 
 # install sphinx
 COPY requirements.txt .
+ADD hack /site/hack
 RUN pip install -r requirements.txt
 RUN mkdir -p venv/bin && ln -s $(which python) venv/bin/python && touch .venv
 

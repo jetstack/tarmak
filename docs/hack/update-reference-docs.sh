@@ -20,9 +20,8 @@ set -o pipefail
 
 set -e
 
-REPO_ROOT=${BUILD_WORKSPACE_DIRECTORY:-"$(cd "$(dirname "$0")" && pwd -P)"/..}
-
-GIT_TAG=$(git describe --tags --abbrev=0)
+REPO_ROOT=${BUILD_WORKSPACE_DIRECTORY:-"$(cd "$(dirname "$0")" && pwd -P)"/../..}
+cd ${REPO_ROOT}
 
 REFERENCE_PATH="docs/generated/reference"
 REFERENCE_ROOT=$(cd "${REPO_ROOT}/${REFERENCE_PATH}" 2> /dev/null && pwd -P)
@@ -32,11 +31,9 @@ BINDIR=$REPO_ROOT/bin
 HACKDIR=$REPO_ROOT/hack
 
 cleanup() {
-    pushd "${REFERENCE_ROOT}"
-    echo "+++ Cleaning up temporary docsgen files"
-    # Clean up old temporary files
+    echo "+++ Cleaning up temporary docs gen files"
     rm -Rf "openapi-spec" "includes" "manifest.json" "openapi" "static_includes" "brodocs"
-    popd
+    echo "+++ Done"
 }
 
 # Ensure we start with a clean set of directories
@@ -74,6 +71,6 @@ cp -r "${HACKDIR}/brodocs" ${REFERENCE_ROOT}/.
 cp ${REFERENCE_ROOT}/manifest.json ${BRODOC_DIR}/.
 rm -rf ${BRODOC_DIR}/documents/* && cp -r ${REFERENCE_ROOT}/includes/* ${BRODOC_DIR}/documents/
 cd ${BRODOC_DIR} && node brodoc.js && cd ../.
-mkdir -p ${OUTPUT_DIR} && cp -r ${BRODOC_DIR}/{*.js,*.html,*.css} ${OUTPUT_DIR}/
+mkdir -p ${OUTPUT_DIR} && cp -r ${BRODOC_DIR}/{*.js,*.html,*.css,documents/*} ${OUTPUT_DIR}/
 
 echo "+++ Reference docs created"

@@ -46,7 +46,7 @@ help:
 
 test: go_test
 
-verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_reference_docs
+verify: generate go_verify verify_boilerplate verify_codegen verify_vendor
 
 all: verify test build
 
@@ -146,15 +146,7 @@ $(BINDIR)/goreleaser:
 	cd $(BINDIR) && tar xzvf $(shell basename $@).tar.gz goreleaser
 	rm $@.tar.gz
 
-$(BINDIR)/openapi-gen:
-	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/k8s.io/kube-openapi/cmd/openapi-gen
-
-$(BINDIR)/gen-apidocs:
-	mkdir -p $(BINDIR)
-	go build -o $@ ./vendor/github.com/kubernetes-incubator/reference-docs/gen-apidocs
-
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
@@ -162,16 +154,11 @@ go_generate: depend
 go_codegen: depend $(TYPES_FILES)
 	$(HACK_DIR)/update-codegen.sh
 
-go_reference_docs_gen: depend
-	$(HACK_DIR)/update-reference-docs.sh
-
 verify_boilerplate:
 	$(HACK_DIR)/verify-boilerplate.sh
 
 verify_codegen:
 	$(HACK_DIR)/verify-codegen.sh
-
-verify_reference_docs: go_reference_docs_gen
 
 verify_vendor: $(BINDIR)/dep
 	$(BINDIR)/dep ensure -no-vendor -dry-run -v
