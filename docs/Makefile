@@ -35,7 +35,7 @@ docker_html: reference_docs_generate
 	$(eval IMAGE_ID := $(shell docker build -q .))
 	# start documentaion build
 	$(eval CONTAINER_ID := $(shell docker create $(IMAGE_ID)))
-	(git ls-files && git ls-files --others --exclude-standard) | tar cf -  -T - | docker cp - $(CONTAINER_ID):/site
+	(git ls-files && git ls-files --others --exclude-standard && ls -d generated/reference/output/*) | tar cf -  -T - | docker cp - $(CONTAINER_ID):/site
 	docker start -a $(CONTAINER_ID);\
 	EXITCODE=$$?;\
 	docker cp $(CONTAINER_ID):/site/_build - | tar xf -;\
