@@ -46,7 +46,7 @@ help:
 
 test: go_test
 
-verify: generate go_verify verify_boilerplate verify_codegen verify_vendor
+verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_reference_docs
 
 all: verify test build
 
@@ -162,7 +162,7 @@ go_generate: depend
 go_codegen: depend $(TYPES_FILES)
 	$(HACK_DIR)/update-codegen.sh
 
-go_ref_docs_gen: depend
+go_reference_docs_gen: depend
 	$(HACK_DIR)/update-reference-docs.sh
 
 verify_boilerplate:
@@ -170,6 +170,9 @@ verify_boilerplate:
 
 verify_codegen:
 	$(HACK_DIR)/verify-codegen.sh
+
+verify_reference_docs: depend
+	$(HACK_DIR)/verify-reference-docs.sh
 
 verify_vendor: $(BINDIR)/dep
 	$(BINDIR)/dep ensure -no-vendor -dry-run -v

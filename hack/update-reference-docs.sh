@@ -21,7 +21,6 @@ set -o pipefail
 set -e
 
 REPO_ROOT=${BUILD_WORKSPACE_DIRECTORY:-"$(cd "$(dirname "$0")" && pwd -P)"/..}
-#cd "${REPO_ROOT}"
 
 GIT_TAG=$(git describe --tags --abbrev=0)
 
@@ -39,7 +38,8 @@ mkdir -p "${OUTPUT_DIR}"
 echo "+++ Running openapi-gen"
 ${BINDIR}/openapi-gen \
         --input-dirs github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1,github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1,github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1,k8s.io/apimachinery/pkg/version\
-        --output-package "github.com/jetstack/tarmak/${REFERENCE_PATH}/openapi"
+        --output-package "github.com/jetstack/tarmak/${REFERENCE_PATH}/openapi"\
+        --go-header-file "${HACKDIR}/boilerplate/boilerplate.go.txt"
 
 ## Generate swagger.json from the Golang generated openapi spec
 echo "+++ Running 'swagger-gen' to generate swagger.json"
