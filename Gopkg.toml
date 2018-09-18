@@ -77,10 +77,6 @@ required = [
   version = "kubernetes-1.9.3"
 
 [[constraint]]
-  name = "k8s.io/kube-openapi"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/kubernetes-incubator/reference-docs"
   branch = "kubebuilder"
 
@@ -183,4 +179,7 @@ required = [
   [[prune.project]]
     name = "k8s.io/code-generator"
     non-go = false
+    unused-packages = false
+  [[prune.project]]
+    name = "k8s.io/kube-openapi"
     unused-packages = false

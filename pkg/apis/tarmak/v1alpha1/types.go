@@ -121,41 +121,41 @@ type Image struct {
 
 // This represents tarmaks global flags
 type Flags struct {
-	Verbose         bool   // logrus log level to run with
-	ConfigDirectory string // path to config directory
-	KeepContainers  bool   // do not clean-up terraform/packer containers after running them
+	Verbose         bool   `json:"verbose,omitempty"`         // logrus log level to run with
+	ConfigDirectory string `json:"configDirectory,omitempty"` // path to config directory
+	KeepContainers  bool   `json:"keepContainers,omitempty"`  // do not clean-up terraform/packer containers after running them
 
-	Initialize bool // run tarmak in initialize mode, don't parse config before rnning init
+	Initialize bool `json:"initialize,omitempty"` // run tarmak in initialize mode, don't parse config before rnning init
 
-	CurrentCluster string // override the current cluster set in tarmak config
+	CurrentCluster string `json:"currentCluster,omitempty"` // override the current cluster set in tarmak config
 
-	Cluster ClusterFlags // cluster specific flags
+	Cluster ClusterFlags `json:"cluster,omitempty"` // cluster specific flags
 
-	Version string // expose tarmak's build time version
+	Version string `json:"version,omitempty"` // expose tarmak's build time version
 
-	WingDevMode bool // use a bundled wing version rather than a tagged release from GitHub
+	WingDevMode bool `json:"wingDevMode,omitempty"` // use a bundled wing version rather than a tagged release from GitHub
 }
 
 // This contains the cluster specifc operation flags
 type ClusterFlags struct {
-	Apply   ClusterApplyFlags   // flags for applying clusters
-	Destroy ClusterDestroyFlags // flags for destroying clusters
+	Apply   ClusterApplyFlags   `json:"apply,omitempty"`   // flags for applying clusters
+	Destroy ClusterDestroyFlags `json:"destroy,omitempty"` // flags for destroying clusters
 }
 
 // Contains the cluster apply flags
 type ClusterApplyFlags struct {
-	DryRun bool // just show what would be done
+	DryRun bool `json:"dryRun,omitempty"` // just show what would be done
 
-	InfrastructureStacks []string // filter stacks to this list
-	InfrastructureOnly   bool     // only run terraform
+	InfrastructureStacks []string `json:"infrastructureStacks,omitempty"` // filter stacks to this list
+	InfrastructureOnly   bool     `json:"infrastructureOnly,omitempty"`   // only run terraform
 
-	ConfigurationOnly bool // only run puppet
+	ConfigurationOnly bool `json:"configurationOnly,omitempty"` // only run puppet
 }
 
 // Contains the cluster destroy flags
 type ClusterDestroyFlags struct {
-	DryRun bool // just show what would be done
+	DryRun bool `json:"dryRun,omitempty"` // just show what would be done
 
-	InfrastructureStacks   []string // filter stacks to this list
-	ForceDestroyStateStack bool     // force destroy state stack
+	InfrastructureStacks   []string `json:"infrastructureStacks,omitempty"`   // filter stacks to this list
+	ForceDestroyStateStack bool     `json:"forceDestroyStateStack,omitempty"` // force destroy state stack
 }

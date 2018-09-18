@@ -11,11 +11,75 @@
 <link rel="stylesheet" href="stylesheet.css" type="text/css">
 </head>
 <body>
-<div id="sidebar-wrapper" class="side-nav side-bar-nav"><ul><li class="nav-level-1 strong-nav"><a href="#-strong-tarmak-strong-" class="nav-item"><strong>Tarmak</strong></a></li></ul><ul><li class="nav-level-1"><a href="#cluster-v1alpha1" class="nav-item">Cluster v1alpha1</a></li></ul><ul><li class="nav-level-1 strong-nav"><a href="#-strong-old-api-versions-strong-" class="nav-item"><strong>Old API Versions</strong></a></li></ul><ul><li class="nav-level-1 strong-nav"><a href="#-strong-field-definitions-strong-" class="nav-item"><strong>Field Definitions</strong></a></li><ul id="-strong-field-definitions-strong--nav" style="display: none;"><li class="nav-level-2"><a href="#amazonesproxy-v1alpha1" class="nav-item">AmazonESProxy v1alpha1</a></li><li class="nav-level-2"><a href="#clusteramazon-v1alpha1" class="nav-item">ClusterAmazon v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetes-v1alpha1" class="nav-item">ClusterKubernetes v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesapiserver-v1alpha1" class="nav-item">ClusterKubernetesAPIServer v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesapiserveramazon-v1alpha1" class="nav-item">ClusterKubernetesAPIServerAmazon v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesapiserveramazonaccesslogs-v1alpha1" class="nav-item">ClusterKubernetesAPIServerAmazonAccessLogs v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesapiserveroidc-v1alpha1" class="nav-item">ClusterKubernetesAPIServerOIDC v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesclusterautoscaler-v1alpha1" class="nav-item">ClusterKubernetesClusterAutoscaler v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesclusterautoscaleroverprovisioning-v1alpha1" class="nav-item">ClusterKubernetesClusterAutoscalerOverprovisioning v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesdashboard-v1alpha1" class="nav-item">ClusterKubernetesDashboard v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesprometheus-v1alpha1" class="nav-item">ClusterKubernetesPrometheus v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetestiller-v1alpha1" class="nav-item">ClusterKubernetesTiller v1alpha1</a></li><li class="nav-level-2"><a href="#clusterpodsecuritypolicy-v1alpha1" class="nav-item">ClusterPodSecurityPolicy v1alpha1</a></li><li class="nav-level-2"><a href="#egressrule-v1alpha1" class="nav-item">EgressRule v1alpha1</a></li><li class="nav-level-2"><a href="#firewall-v1alpha1" class="nav-item">Firewall v1alpha1</a></li><li class="nav-level-2"><a href="#httpbasicauth-v1alpha1" class="nav-item">HTTPBasicAuth v1alpha1</a></li><li class="nav-level-2"><a href="#ingressrule-v1alpha1" class="nav-item">IngressRule v1alpha1</a></li><li class="nav-level-2"><a href="#instancepool-v1alpha1" class="nav-item">InstancePool v1alpha1</a></li><li class="nav-level-2"><a href="#instancepoolamazon-v1alpha1" class="nav-item">InstancePoolAmazon v1alpha1</a></li><li class="nav-level-2"><a href="#instancepoolkubernetes-v1alpha1" class="nav-item">InstancePoolKubernetes v1alpha1</a></li><li class="nav-level-2"><a href="#internetgw-v1alpha1" class="nav-item">InternetGW v1alpha1</a></li><li class="nav-level-2"><a href="#kubernetesapi-v1alpha1" class="nav-item">KubernetesAPI v1alpha1</a></li><li class="nav-level-2"><a href="#label-v1alpha1" class="nav-item">Label v1alpha1</a></li><li class="nav-level-2"><a href="#loggingsink-v1alpha1" class="nav-item">LoggingSink v1alpha1</a></li><li class="nav-level-2"><a href="#loggingsinkelasticsearch-v1alpha1" class="nav-item">LoggingSinkElasticSearch v1alpha1</a></li><li class="nav-level-2"><a href="#network-v1alpha1" class="nav-item">Network v1alpha1</a></li><li class="nav-level-2"><a href="#subnet-v1alpha1" class="nav-item">Subnet v1alpha1</a></li><li class="nav-level-2"><a href="#taint-v1alpha1" class="nav-item">Taint v1alpha1</a></li><li class="nav-level-2"><a href="#values-v1alpha1" class="nav-item">Values v1alpha1</a></li><li class="nav-level-2"><a href="#volume-v1alpha1" class="nav-item">Volume v1alpha1</a></li></ul></ul><br/><div class="copyright"><a href="https://jetstack.io">Copyright 2018 Jetstack Ltd.</a></div></div>
+<div id="sidebar-wrapper" class="side-nav side-bar-nav"><ul><li class="nav-level-1 strong-nav"><a href="#-strong-tarmak-strong-" class="nav-item"><strong>Tarmak</strong></a></li></ul><ul><li class="nav-level-1"><a href="#config-v1alpha1" class="nav-item">Config v1alpha1</a></li></ul><ul><li class="nav-level-1"><a href="#cluster-v1alpha1" class="nav-item">Cluster v1alpha1</a></li></ul><ul><li class="nav-level-1"><a href="#instance-v1alpha1" class="nav-item">Instance v1alpha1</a></li></ul><ul><li class="nav-level-1 strong-nav"><a href="#-strong-old-api-versions-strong-" class="nav-item"><strong>Old API Versions</strong></a></li></ul><ul><li class="nav-level-1 strong-nav"><a href="#-strong-field-definitions-strong-" class="nav-item"><strong>Field Definitions</strong></a></li><ul id="-strong-field-definitions-strong--nav" style="display: none;"><li class="nav-level-2"><a href="#amazonesproxy-v1alpha1" class="nav-item">AmazonESProxy v1alpha1</a></li><li class="nav-level-2"><a href="#clusteramazon-v1alpha1" class="nav-item">ClusterAmazon v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetes-v1alpha1" class="nav-item">ClusterKubernetes v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesapiserver-v1alpha1" class="nav-item">ClusterKubernetesAPIServer v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesapiserveramazon-v1alpha1" class="nav-item">ClusterKubernetesAPIServerAmazon v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesapiserveramazonaccesslogs-v1alpha1" class="nav-item">ClusterKubernetesAPIServerAmazonAccessLogs v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesapiserveroidc-v1alpha1" class="nav-item">ClusterKubernetesAPIServerOIDC v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesclusterautoscaler-v1alpha1" class="nav-item">ClusterKubernetesClusterAutoscaler v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesclusterautoscaleroverprovisioning-v1alpha1" class="nav-item">ClusterKubernetesClusterAutoscalerOverprovisioning v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesdashboard-v1alpha1" class="nav-item">ClusterKubernetesDashboard v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetesprometheus-v1alpha1" class="nav-item">ClusterKubernetesPrometheus v1alpha1</a></li><li class="nav-level-2"><a href="#clusterkubernetestiller-v1alpha1" class="nav-item">ClusterKubernetesTiller v1alpha1</a></li><li class="nav-level-2"><a href="#clusterpodsecuritypolicy-v1alpha1" class="nav-item">ClusterPodSecurityPolicy v1alpha1</a></li><li class="nav-level-2"><a href="#egressrule-v1alpha1" class="nav-item">EgressRule v1alpha1</a></li><li class="nav-level-2"><a href="#environment-v1alpha1" class="nav-item">Environment v1alpha1</a></li><li class="nav-level-2"><a href="#firewall-v1alpha1" class="nav-item">Firewall v1alpha1</a></li><li class="nav-level-2"><a href="#httpbasicauth-v1alpha1" class="nav-item">HTTPBasicAuth v1alpha1</a></li><li class="nav-level-2"><a href="#ingressrule-v1alpha1" class="nav-item">IngressRule v1alpha1</a></li><li class="nav-level-2"><a href="#instancepool-v1alpha1" class="nav-item">InstancePool v1alpha1</a></li><li class="nav-level-2"><a href="#instancepoolamazon-v1alpha1" class="nav-item">InstancePoolAmazon v1alpha1</a></li><li class="nav-level-2"><a href="#instancepoolkubernetes-v1alpha1" class="nav-item">InstancePoolKubernetes v1alpha1</a></li><li class="nav-level-2"><a href="#instancespecmanifest-v1alpha1" class="nav-item">InstanceSpecManifest v1alpha1</a></li><li class="nav-level-2"><a href="#instancestatusmanifest-v1alpha1" class="nav-item">InstanceStatusManifest v1alpha1</a></li><li class="nav-level-2"><a href="#internetgw-v1alpha1" class="nav-item">InternetGW v1alpha1</a></li><li class="nav-level-2"><a href="#kubernetesapi-v1alpha1" class="nav-item">KubernetesAPI v1alpha1</a></li><li class="nav-level-2"><a href="#label-v1alpha1" class="nav-item">Label v1alpha1</a></li><li class="nav-level-2"><a href="#loggingsink-v1alpha1" class="nav-item">LoggingSink v1alpha1</a></li><li class="nav-level-2"><a href="#loggingsinkelasticsearch-v1alpha1" class="nav-item">LoggingSinkElasticSearch v1alpha1</a></li><li class="nav-level-2"><a href="#network-v1alpha1" class="nav-item">Network v1alpha1</a></li><li class="nav-level-2"><a href="#provider-v1alpha1" class="nav-item">Provider v1alpha1</a></li><li class="nav-level-2"><a href="#provideramazon-v1alpha1" class="nav-item">ProviderAmazon v1alpha1</a></li><li class="nav-level-2"><a href="#providerazure-v1alpha1" class="nav-item">ProviderAzure v1alpha1</a></li><li class="nav-level-2"><a href="#providergcp-v1alpha1" class="nav-item">ProviderGCP v1alpha1</a></li><li class="nav-level-2"><a href="#ssh-v1alpha1" class="nav-item">SSH v1alpha1</a></li><li class="nav-level-2"><a href="#subnet-v1alpha1" class="nav-item">Subnet v1alpha1</a></li><li class="nav-level-2"><a href="#taint-v1alpha1" class="nav-item">Taint v1alpha1</a></li><li class="nav-level-2"><a href="#values-v1alpha1" class="nav-item">Values v1alpha1</a></li><li class="nav-level-2"><a href="#volume-v1alpha1" class="nav-item">Volume v1alpha1</a></li></ul></ul><br/><div class="copyright"><a href="https://jetstack.io">Copyright 2018 Jetstack Ltd.</a></div></div>
 <div id="wrapper">
 <div id="code-tabs-wrapper" class="code-tabs"><ul class="code-tab-list"></ul></div>
 <div id="page-content-wrapper" class="body-content container-fluid"><h1 id="-strong-tarmak-strong-"><strong>Tarmak</strong></h1>
 <hr>
+<hr>
+<h1 id="config-v1alpha1">Config v1alpha1</h1>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tarmak</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>Config</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apiVersion</code><br /> <em>string</em></td>
+<td>APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#resources">https://git.k8s.io/community/contributors/devel/api-conventions.md#resources</a></td>
+</tr>
+<tr>
+<td><code>clusters</code><br /> <em><a href="#cluster-v1alpha1">Cluster</a> array</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>contact</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>currentCluster</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>environments</code><br /> <em><a href="#environment-v1alpha1">Environment</a> array</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>kind</code><br /> <em>string</em></td>
+<td>Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds">https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds</a></td>
+</tr>
+<tr>
+<td><code>metadata</code><br /> <em>ObjectMeta</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>project</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>providers</code><br /> <em><a href="#provider-v1alpha1">Provider</a> array</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <hr>
 <h1 id="cluster-v1alpha1">Cluster v1alpha1</h1>
 <table>
@@ -34,6 +98,13 @@
 </tr>
 </tbody>
 </table>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#config-v1alpha1">Config v1alpha1</a></li>
+</ul> </aside>
+
 <table>
 <thead>
 <tr>
@@ -100,6 +171,114 @@
 </tr>
 <tr>
 <td><code>values</code><br /> <em><a href="#values-v1alpha1">Values</a></em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h1 id="instance-v1alpha1">Instance v1alpha1</h1>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wing</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>Instance</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apiVersion</code><br /> <em>string</em></td>
+<td>APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#resources">https://git.k8s.io/community/contributors/devel/api-conventions.md#resources</a></td>
+</tr>
+<tr>
+<td><code>instanceID</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>instancePool</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>kind</code><br /> <em>string</em></td>
+<td>Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds">https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds</a></td>
+</tr>
+<tr>
+<td><code>metadata</code><br /> <em>ObjectMeta</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>spec</code><br /> <em><a href="#instancespec-v1alpha1">InstanceSpec</a></em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code><br /> <em><a href="#instancestatus-v1alpha1">InstanceStatus</a></em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="instancespec-v1alpha1">InstanceSpec v1alpha1</h3>
+<aside class="notice">
+Appears In:
+
+<ul>
+<li><a href="#instance-v1alpha1">Instance v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>converge</code><br /> <em><a href="#instancespecmanifest-v1alpha1">InstanceSpecManifest</a></em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dryRun</code><br /> <em><a href="#instancespecmanifest-v1alpha1">InstanceSpecManifest</a></em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="instancestatus-v1alpha1">InstanceStatus v1alpha1</h3>
+<aside class="notice">
+Appears In:
+
+<ul>
+<li><a href="#instance-v1alpha1">Instance v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>converge</code><br /> <em><a href="#instancestatusmanifest-v1alpha1">InstanceStatusManifest</a></em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dryRun</code><br /> <em><a href="#instancestatusmanifest-v1alpha1">InstanceStatusManifest</a></em></td>
 <td></td>
 </tr>
 </tbody>
@@ -819,6 +998,80 @@ Appears In:
 </tr>
 </tbody>
 </table>
+<h2 id="environment-v1alpha1">Environment v1alpha1</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tarmak</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>Environment</code></td>
+</tr>
+</tbody>
+</table>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#config-v1alpha1">Config v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>adminCIDRs</code><br /> <em>string array</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>apiVersion</code><br /> <em>string</em></td>
+<td>APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#resources">https://git.k8s.io/community/contributors/devel/api-conventions.md#resources</a></td>
+</tr>
+<tr>
+<td><code>contact</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>kind</code><br /> <em>string</em></td>
+<td>Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds">https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds</a></td>
+</tr>
+<tr>
+<td><code>location</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>metadata</code><br /> <em>ObjectMeta</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>privateZone</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>project</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>provider</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ssh</code><br /> <em><a href="#ssh-v1alpha1">SSH</a></em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h2 id="firewall-v1alpha1">Firewall v1alpha1</h2>
 <table>
 <thead>
@@ -1174,6 +1427,108 @@ Appears In:
 </tr>
 </tbody>
 </table>
+<h2 id="instancespecmanifest-v1alpha1">InstanceSpecManifest v1alpha1</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wing</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>InstanceSpecManifest</code></td>
+</tr>
+</tbody>
+</table>
+<p> InstaceSpecManifest defines location and hash for a specific manifest</p>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#instancespec-v1alpha1">InstanceSpec v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hash</code><br /> <em>string</em></td>
+<td>PATH to manifests (tar.gz)</td>
+</tr>
+<tr>
+<td><code>path</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>requestTimestamp</code><br /> <em>Time</em></td>
+<td>hash of manifests, prefixed with type (eg: sha256:xyz)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="instancestatusmanifest-v1alpha1">InstanceStatusManifest v1alpha1</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wing</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>InstanceStatusManifest</code></td>
+</tr>
+</tbody>
+</table>
+<p> InstaceSpecManifest defines the state and hash of a run manifest</p>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#instancestatus-v1alpha1">InstanceStatus v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>exitCodes</code><br /> <em>integer array</em></td>
+<td>contains output of the retries</td>
+</tr>
+<tr>
+<td><code>hash</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>lastUpdateTimestamp</code><br /> <em>Time</em></td>
+<td>hash of manifests, prefixed with type (eg: sha256:xyz)</td>
+</tr>
+<tr>
+<td><code>messages</code><br /> <em>string array</em></td>
+<td>timestamp when a converge was requested</td>
+</tr>
+<tr>
+<td><code>state</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h2 id="internetgw-v1alpha1">InternetGW v1alpha1</h2>
 <table>
 <thead>
@@ -1487,6 +1842,272 @@ Appears In:
 </tr>
 <tr>
 <td><code>type</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="provider-v1alpha1">Provider v1alpha1</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tarmak</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>Provider</code></td>
+</tr>
+</tbody>
+</table>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#config-v1alpha1">Config v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>amazon</code><br /> <em><a href="#provideramazon-v1alpha1">ProviderAmazon</a></em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>apiVersion</code><br /> <em>string</em></td>
+<td>APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#resources">https://git.k8s.io/community/contributors/devel/api-conventions.md#resources</a></td>
+</tr>
+<tr>
+<td><code>azure</code><br /> <em><a href="#providerazure-v1alpha1">ProviderAzure</a></em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>gcp</code><br /> <em><a href="#providergcp-v1alpha1">ProviderGCP</a></em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>kind</code><br /> <em>string</em></td>
+<td>Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds">https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds</a></td>
+</tr>
+<tr>
+<td><code>metadata</code><br /> <em>ObjectMeta</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="provideramazon-v1alpha1">ProviderAmazon v1alpha1</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tarmak</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>ProviderAmazon</code></td>
+</tr>
+</tbody>
+</table>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#provider-v1alpha1">Provider v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>allowedAccountIDs</code><br /> <em>string array</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>bucketPrefix</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>keyName</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>profile</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>publicHostedZoneID</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>publicZone</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>vaultPath</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="providerazure-v1alpha1">ProviderAzure v1alpha1</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tarmak</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>ProviderAzure</code></td>
+</tr>
+</tbody>
+</table>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#provider-v1alpha1">Provider v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subscriptionID</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="providergcp-v1alpha1">ProviderGCP v1alpha1</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tarmak</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>ProviderGCP</code></td>
+</tr>
+</tbody>
+</table>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#provider-v1alpha1">Provider v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="ssh-v1alpha1">SSH v1alpha1</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Version</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cluster</code></td>
+<td><code>v1alpha1</code></td>
+<td><code>SSH</code></td>
+</tr>
+</tbody>
+</table>
+<aside class="notice">
+Appears In:
+
+<ul> 
+<li><a href="#environment-v1alpha1">Environment v1alpha1</a></li>
+</ul></aside>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apiVersion</code><br /> <em>string</em></td>
+<td>APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#resources">https://git.k8s.io/community/contributors/devel/api-conventions.md#resources</a></td>
+</tr>
+<tr>
+<td><code>identifier</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>kind</code><br /> <em>string</em></td>
+<td>Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: <a href="https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds">https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds</a></td>
+</tr>
+<tr>
+<td><code>metadata</code><br /> <em>ObjectMeta</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>privateKeyPath</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>publicKeyData</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>publicKeyFingerprint</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>publicKeyPath</code><br /> <em>string</em></td>
+<td></td>
+</tr>
+<tr>
+<td><code>user</code><br /> <em>string</em></td>
 <td></td>
 </tr>
 </tbody>

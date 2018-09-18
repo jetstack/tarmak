@@ -38,10 +38,8 @@ mkdir -p "${OUTPUT_DIR}"
 
 echo "+++ Running openapi-gen"
 ${BINDIR}/openapi-gen \
-        --input-dirs github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1,k8s.io/apimachinery/pkg/version \
-        --output-package "${REFERENCE_ROOT}/openapi"
-        #github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1,\
-        #github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1, \
+        --input-dirs github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1,github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1,github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1,k8s.io/apimachinery/pkg/version\
+        --output-package "github.com/jetstack/tarmak/${REFERENCE_PATH}/openapi"
 
 ## Generate swagger.json from the Golang generated openapi spec
 echo "+++ Running 'swagger-gen' to generate swagger.json"

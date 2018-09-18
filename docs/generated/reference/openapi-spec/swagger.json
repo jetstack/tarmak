@@ -954,6 +954,551 @@
             "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
         ]
     },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterApplyFlags": {
+        "Schema": {
+            "description": "Contains the cluster apply flags",
+            "properties": {
+                "configurationOnly": {
+                    "type": "boolean"
+                },
+                "dryRun": {
+                    "type": "boolean"
+                },
+                "infrastructureOnly": {
+                    "description": "filter stacks to this list",
+                    "type": "boolean"
+                },
+                "infrastructureStacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "Dependencies": []
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterDestroyFlags": {
+        "Schema": {
+            "description": "Contains the cluster destroy flags",
+            "properties": {
+                "dryRun": {
+                    "type": "boolean"
+                },
+                "forceDestroyStateStack": {
+                    "description": "filter stacks to this list",
+                    "type": "boolean"
+                },
+                "infrastructureStacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "Dependencies": []
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterFlags": {
+        "Schema": {
+            "description": "This contains the cluster specifc operation flags",
+            "properties": {
+                "apply": {
+                    "$ref": "#/definitions/tarmak.v1alpha1.ClusterApplyFlags"
+                },
+                "destroy": {
+                    "description": "flags for applying clusters",
+                    "$ref": "#/definitions/tarmak.v1alpha1.ClusterDestroyFlags"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterApplyFlags",
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterDestroyFlags"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Config": {
+        "Schema": {
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cluster.v1alpha1.Cluster"
+                    }
+                },
+                "contact": {
+                    "type": "string"
+                },
+                "currentCluster": {
+                    "type": "string"
+                },
+                "environments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tarmak.v1alpha1.Environment"
+                    }
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ObjectMeta"
+                },
+                "project": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tarmak.v1alpha1.Provider"
+                    }
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.Cluster",
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Environment",
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Provider",
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ConfigList": {
+        "Schema": {
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tarmak.v1alpha1.Config"
+                    }
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ObjectMeta"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Config",
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Environment": {
+        "Schema": {
+            "properties": {
+                "adminCIDRs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "contact": {
+                    "type": "string"
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ObjectMeta"
+                },
+                "privateZone": {
+                    "type": "string"
+                },
+                "project": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "ssh": {
+                    "$ref": "#/definitions/cluster.v1alpha1.SSH"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.SSH",
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.EnvironmentList": {
+        "Schema": {
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tarmak.v1alpha1.Environment"
+                    }
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ObjectMeta"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Environment",
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Flags": {
+        "Schema": {
+            "description": "This represents tarmaks global flags",
+            "properties": {
+                "cluster": {
+                    "$ref": "#/definitions/tarmak.v1alpha1.ClusterFlags"
+                },
+                "configDirectory": {
+                    "description": "logrus log level to run with",
+                    "type": "string"
+                },
+                "currentCluster": {
+                    "type": "string"
+                },
+                "initialize": {
+                    "type": "boolean"
+                },
+                "keepContainers": {
+                    "description": "path to config directory",
+                    "type": "boolean"
+                },
+                "verbose": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "wingDevMode": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterFlags"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Image": {
+        "Schema": {
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "baseImage": {
+                    "type": "string"
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ObjectMeta"
+                }
+            }
+        },
+        "Dependencies": [
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Provider": {
+        "Schema": {
+            "properties": {
+                "amazon": {
+                    "$ref": "#/definitions/tarmak.v1alpha1.ProviderAmazon"
+                },
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "azure": {
+                    "$ref": "#/definitions/tarmak.v1alpha1.ProviderAzure"
+                },
+                "gcp": {
+                    "$ref": "#/definitions/tarmak.v1alpha1.ProviderGCP"
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ObjectMeta"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAmazon",
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAzure",
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderGCP",
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAmazon": {
+        "Schema": {
+            "properties": {
+                "allowedAccountIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "bucketPrefix": {
+                    "type": "string"
+                },
+                "keyName": {
+                    "type": "string"
+                },
+                "profile": {
+                    "type": "string"
+                },
+                "publicHostedZoneID": {
+                    "type": "string"
+                },
+                "publicZone": {
+                    "type": "string"
+                },
+                "vaultPath": {
+                    "type": "string"
+                }
+            }
+        },
+        "Dependencies": []
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAzure": {
+        "Schema": {
+            "properties": {
+                "subscriptionID": {
+                    "type": "string"
+                }
+            }
+        },
+        "Dependencies": []
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderGCP": {
+        "Schema": {
+            "properties": {
+                "project": {
+                    "type": "string"
+                }
+            }
+        },
+        "Dependencies": []
+    },
+    "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderList": {
+        "Schema": {
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tarmak.v1alpha1.Provider"
+                    }
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ObjectMeta"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Provider",
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.Instance": {
+        "Schema": {
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "instanceID": {
+                    "type": "string"
+                },
+                "instancePool": {
+                    "type": "string"
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ObjectMeta"
+                },
+                "spec": {
+                    "$ref": "#/definitions/wing.v1alpha1.InstanceSpec"
+                },
+                "status": {
+                    "$ref": "#/definitions/wing.v1alpha1.InstanceStatus"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpec",
+            "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatus",
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceList": {
+        "Schema": {
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/wing.v1alpha1.Instance"
+                    }
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/meta.v1.ListMeta"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.Instance",
+            "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpec": {
+        "Schema": {
+            "description": "InstanceSpec defines the desired state of Instance",
+            "properties": {
+                "converge": {
+                    "$ref": "#/definitions/wing.v1alpha1.InstanceSpecManifest"
+                },
+                "dryRun": {
+                    "$ref": "#/definitions/wing.v1alpha1.InstanceSpecManifest"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpecManifest"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpecManifest": {
+        "Schema": {
+            "description": "\n InstaceSpecManifest defines location and hash for a specific manifest",
+            "properties": {
+                "hash": {
+                    "description": "PATH to manifests (tar.gz)",
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "requestTimestamp": {
+                    "description": "hash of manifests, prefixed with type (eg: sha256:xyz)",
+                    "$ref": "#/definitions/meta.v1.Time"
+                }
+            }
+        },
+        "Dependencies": [
+            "k8s.io/apimachinery/pkg/apis/meta/v1.Time"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatus": {
+        "Schema": {
+            "description": "InstanceStatus defines the observed state of Instance",
+            "properties": {
+                "converge": {
+                    "$ref": "#/definitions/wing.v1alpha1.InstanceStatusManifest"
+                },
+                "dryRun": {
+                    "$ref": "#/definitions/wing.v1alpha1.InstanceStatusManifest"
+                }
+            }
+        },
+        "Dependencies": [
+            "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatusManifest"
+        ]
+    },
+    "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatusManifest": {
+        "Schema": {
+            "description": "\n InstaceSpecManifest defines the state and hash of a run manifest",
+            "properties": {
+                "exitCodes": {
+                    "description": "contains output of the retries",
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "lastUpdateTimestamp": {
+                    "description": "hash of manifests, prefixed with type (eg: sha256:xyz)",
+                    "$ref": "#/definitions/meta.v1.Time"
+                },
+                "messages": {
+                    "description": "timestamp when a converge was requested",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "Dependencies": [
+            "k8s.io/apimachinery/pkg/apis/meta/v1.Time"
+        ]
+    },
     "k8s.io/apimachinery/pkg/version.Info": {
         "Schema": {
             "description": "Info contains versioning information. how we'll want to distribute that information.",

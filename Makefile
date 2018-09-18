@@ -162,7 +162,7 @@ go_generate: depend
 go_codegen: depend $(TYPES_FILES)
 	$(HACK_DIR)/update-codegen.sh
 
-go_reference_docs: depend
+go_ref_docs_gen: depend
 	$(HACK_DIR)/update-reference-docs.sh
 
 verify_boilerplate:

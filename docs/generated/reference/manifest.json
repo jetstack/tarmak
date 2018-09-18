@@ -5,7 +5,13 @@
       "filename": "_tarmak.md"
     },
     {
+      "filename": "_generated_config_v1alpha1_tarmak_concept.md"
+    },
+    {
       "filename": "_generated_cluster_v1alpha1_cluster_concept.md"
+    },
+    {
+      "filename": "_generated_instance_v1alpha1_wing_concept.md"
     },
     {
       "filename": "_oldversions.md"
@@ -56,6 +62,9 @@
       "filename": "_generated_egressrule_v1alpha1_cluster_definition.md"
     },
     {
+      "filename": "_generated_environment_v1alpha1_tarmak_definition.md"
+    },
+    {
       "filename": "_generated_firewall_v1alpha1_cluster_definition.md"
     },
     {
@@ -74,6 +83,12 @@
       "filename": "_generated_instancepoolkubernetes_v1alpha1_cluster_definition.md"
     },
     {
+      "filename": "_generated_instancespecmanifest_v1alpha1_wing_definition.md"
+    },
+    {
+      "filename": "_generated_instancestatusmanifest_v1alpha1_wing_definition.md"
+    },
+    {
       "filename": "_generated_internetgw_v1alpha1_cluster_definition.md"
     },
     {
@@ -90,6 +105,21 @@
     },
     {
       "filename": "_generated_network_v1alpha1_cluster_definition.md"
+    },
+    {
+      "filename": "_generated_provider_v1alpha1_tarmak_definition.md"
+    },
+    {
+      "filename": "_generated_provideramazon_v1alpha1_tarmak_definition.md"
+    },
+    {
+      "filename": "_generated_providerazure_v1alpha1_tarmak_definition.md"
+    },
+    {
+      "filename": "_generated_providergcp_v1alpha1_tarmak_definition.md"
+    },
+    {
+      "filename": "_generated_ssh_v1alpha1_cluster_definition.md"
     },
     {
       "filename": "_generated_subnet_v1alpha1_cluster_definition.md"

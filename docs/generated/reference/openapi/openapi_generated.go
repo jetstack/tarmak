@@ -61,6 +61,26 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.Taint":                                              schema_pkg_apis_cluster_v1alpha1_Taint(ref),
 		"github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.Values":                                             schema_pkg_apis_cluster_v1alpha1_Values(ref),
 		"github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.Volume":                                             schema_pkg_apis_cluster_v1alpha1_Volume(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterApplyFlags":                                   schema_pkg_apis_tarmak_v1alpha1_ClusterApplyFlags(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterDestroyFlags":                                 schema_pkg_apis_tarmak_v1alpha1_ClusterDestroyFlags(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterFlags":                                        schema_pkg_apis_tarmak_v1alpha1_ClusterFlags(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Config":                                              schema_pkg_apis_tarmak_v1alpha1_Config(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ConfigList":                                          schema_pkg_apis_tarmak_v1alpha1_ConfigList(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Environment":                                         schema_pkg_apis_tarmak_v1alpha1_Environment(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.EnvironmentList":                                     schema_pkg_apis_tarmak_v1alpha1_EnvironmentList(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Flags":                                               schema_pkg_apis_tarmak_v1alpha1_Flags(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Image":                                               schema_pkg_apis_tarmak_v1alpha1_Image(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Provider":                                            schema_pkg_apis_tarmak_v1alpha1_Provider(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAmazon":                                      schema_pkg_apis_tarmak_v1alpha1_ProviderAmazon(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAzure":                                       schema_pkg_apis_tarmak_v1alpha1_ProviderAzure(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderGCP":                                         schema_pkg_apis_tarmak_v1alpha1_ProviderGCP(ref),
+		"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderList":                                        schema_pkg_apis_tarmak_v1alpha1_ProviderList(ref),
+		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.Instance":                                              schema_pkg_apis_wing_v1alpha1_Instance(ref),
+		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceList":                                          schema_pkg_apis_wing_v1alpha1_InstanceList(ref),
+		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpec":                                          schema_pkg_apis_wing_v1alpha1_InstanceSpec(ref),
+		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpecManifest":                                  schema_pkg_apis_wing_v1alpha1_InstanceSpecManifest(ref),
+		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatus":                                        schema_pkg_apis_wing_v1alpha1_InstanceStatus(ref),
+		"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatusManifest":                                schema_pkg_apis_wing_v1alpha1_InstanceStatusManifest(ref),
 		"k8s.io/apimachinery/pkg/version.Info":                                                                    schema_k8sio_apimachinery_pkg_version_Info(ref),
 	}
 }
@@ -1672,6 +1692,907 @@ func schema_pkg_apis_cluster_v1alpha1_Volume(ref common.ReferenceCallback) commo
 		},
 		Dependencies: []string{
 			"k8s.io/apimachinery/pkg/api/resource.Quantity", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_ClusterApplyFlags(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Contains the cluster apply flags",
+				Properties: map[string]spec.Schema{
+					"dryRun": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"infrastructureStacks": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"infrastructureOnly": {
+						SchemaProps: spec.SchemaProps{
+							Description: "filter stacks to this list",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"configurationOnly": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_ClusterDestroyFlags(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Contains the cluster destroy flags",
+				Properties: map[string]spec.Schema{
+					"dryRun": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"infrastructureStacks": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"forceDestroyStateStack": {
+						SchemaProps: spec.SchemaProps{
+							Description: "filter stacks to this list",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_ClusterFlags(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "This contains the cluster specifc operation flags",
+				Properties: map[string]spec.Schema{
+					"apply": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterApplyFlags"),
+						},
+					},
+					"destroy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "flags for applying clusters",
+							Ref:         ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterDestroyFlags"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterApplyFlags", "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterDestroyFlags"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_Config(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"currentCluster": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"contact": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"project": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"clusters": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.Cluster"),
+									},
+								},
+							},
+						},
+					},
+					"providers": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Provider"),
+									},
+								},
+							},
+						},
+					},
+					"environments": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Environment"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.Cluster", "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Environment", "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Provider", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_ConfigList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Config"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Config", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_Environment(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"provider": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"contact": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"project": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"location": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"ssh": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.SSH"),
+						},
+					},
+					"privateZone": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"adminCIDRs": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1.SSH", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_EnvironmentList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Environment"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Environment", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_Flags(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "This represents tarmaks global flags",
+				Properties: map[string]spec.Schema{
+					"verbose": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"configDirectory": {
+						SchemaProps: spec.SchemaProps{
+							Description: "logrus log level to run with",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"keepContainers": {
+						SchemaProps: spec.SchemaProps{
+							Description: "path to config directory",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"initialize": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"currentCluster": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"cluster": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterFlags"),
+						},
+					},
+					"version": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"wingDevMode": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ClusterFlags"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_Image(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"baseImage": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"location": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_Provider(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"amazon": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAmazon"),
+						},
+					},
+					"gcp": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderGCP"),
+						},
+					},
+					"azure": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAzure"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAmazon", "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderAzure", "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.ProviderGCP", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_ProviderAmazon(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"vaultPath": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"allowedAccountIDs": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"profile": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"bucketPrefix": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"keyName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"publicZone": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"publicHostedZoneID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_ProviderAzure(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"subscriptionID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_ProviderGCP(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"project": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_pkg_apis_tarmak_v1alpha1_ProviderList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Provider"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1.Provider", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_wing_v1alpha1_Instance(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"instanceID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"instancePool": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpec", "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_wing_v1alpha1_InstanceList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.Instance"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.Instance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_wing_v1alpha1_InstanceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "InstanceSpec defines the desired state of Instance",
+				Properties: map[string]spec.Schema{
+					"converge": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpecManifest"),
+						},
+					},
+					"dryRun": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpecManifest"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceSpecManifest"},
+	}
+}
+
+func schema_pkg_apis_wing_v1alpha1_InstanceSpecManifest(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "\n InstaceSpecManifest defines location and hash for a specific manifest",
+				Properties: map[string]spec.Schema{
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"hash": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PATH to manifests (tar.gz)",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"requestTimestamp": {
+						SchemaProps: spec.SchemaProps{
+							Description: "hash of manifests, prefixed with type (eg: sha256:xyz)",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+	}
+}
+
+func schema_pkg_apis_wing_v1alpha1_InstanceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "InstanceStatus defines the observed state of Instance",
+				Properties: map[string]spec.Schema{
+					"converge": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatusManifest"),
+						},
+					},
+					"dryRun": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatusManifest"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1.InstanceStatusManifest"},
+	}
+}
+
+func schema_pkg_apis_wing_v1alpha1_InstanceStatusManifest(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "\n InstaceSpecManifest defines the state and hash of a run manifest",
+				Properties: map[string]spec.Schema{
+					"state": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"hash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"lastUpdateTimestamp": {
+						SchemaProps: spec.SchemaProps{
+							Description: "hash of manifests, prefixed with type (eg: sha256:xyz)",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"messages": {
+						SchemaProps: spec.SchemaProps{
+							Description: "timestamp when a converge was requested",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"exitCodes": {
+						SchemaProps: spec.SchemaProps{
+							Description: "contains output of the retries",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"integer"},
+										Format: "int32",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
