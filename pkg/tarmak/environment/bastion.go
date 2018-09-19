@@ -76,5 +76,7 @@ func (e *Environment) VerifyBastionAvailable() error {
 		return fmt.Errorf("failed to connect to bastion host: %v", err)
 	}
 
+	e.log.Info("connection to bastion host successful")
+
 	return nil
 }
