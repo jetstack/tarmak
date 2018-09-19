@@ -18,7 +18,9 @@ export LANG LC_ALL
 help:
 	make " help"
 
-.PHONY: help Makefile clean
+.PHONY: help Makefile clean ci
+
+ci: clean spelling linkcheck html copy_artifacts
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
