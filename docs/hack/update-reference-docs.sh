@@ -70,7 +70,7 @@ rm -rf ${OUTPUT_DIR}
 cp -r "${HACKDIR}/brodocs" ${REFERENCE_ROOT}/.
 cp ${REFERENCE_ROOT}/manifest.json ${BRODOC_DIR}/.
 rm -rf ${BRODOC_DIR}/documents/* && cp -r ${REFERENCE_ROOT}/includes/* ${BRODOC_DIR}/documents/
-cd ${BRODOC_DIR} && npm update && node brodoc.js && cd ../.
+cd ${BRODOC_DIR} && npm update && npm install . && node brodoc.js && cd ../.
 mkdir -p ${OUTPUT_DIR} && cp ${BRODOC_DIR}/index.html ${OUTPUT_DIR}/api-docs.html
 mv ${BRODOC_DIR}/index.html ${BRODOC_DIR}/api-docs.html
 cp -r ${BRODOC_DIR}/{*.js,*.html,*.css,documents/*,node_modules} ${OUTPUT_DIR}/
