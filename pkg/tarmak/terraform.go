@@ -40,30 +40,7 @@ func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
 }
 
 func (c *CmdTerraform) Plan() error {
-	c.log.Info("validate steps")
-	if err := c.tarmak.Validate(); err != nil {
-		return fmt.Errorf("failed to validate tarmak: %s", err)
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("verify steps")
-	if err := c.tarmak.Verify(); err != nil {
-		return err
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("write SSH config")
-	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
+	if err := c.setup(); err != nil {
 		return err
 	}
 
@@ -77,29 +54,7 @@ func (c *CmdTerraform) Plan() error {
 }
 
 func (c *CmdTerraform) Apply() error {
-	c.log.Info("validate steps")
-	if err := c.tarmak.Validate(); err != nil {
-		return fmt.Errorf("failed to validate tarmak: %s", err)
-	}
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("verify steps")
-	if err := c.tarmak.Verify(); err != nil {
-		return err
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("write SSH config")
-	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
+	if err := c.setup(); err != nil {
 		return err
 	}
 
@@ -144,36 +99,11 @@ func (c *CmdTerraform) Apply() error {
 }
 
 func (c *CmdTerraform) Destroy() error {
-	c.log.Info("validate steps")
-	if err := c.tarmak.Validate(); err != nil {
-		return fmt.Errorf("failed to validate tarmak: %s", err)
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("verify steps")
-	if err := c.tarmak.Verify(); err != nil {
-		return err
-	}
-
-	select {
-	case <-c.ctx.Done():
-		return c.ctx.Err()
-	default:
-	}
-
-	c.log.Info("write SSH config")
-	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
+	if err := c.setup(); err != nil {
 		return err
 	}
 
 	c.log.Info("running destroy")
-
-	c.tarmak.cluster.Log().Info("running destroy")
 	err := c.tarmak.terraform.Destroy(c.tarmak.Cluster())
 	if err != nil {
 		return err
@@ -183,11 +113,11 @@ func (c *CmdTerraform) Destroy() error {
 }
 
 func (c *CmdTerraform) Shell() error {
-	if err := c.verifyTerraformBinaryVersion(); err != nil {
-		return err
+	if err := c.setup(); err != nil {
+		c.log.Warnf("error setting up tarmak for terrafrom shell: %v", err)
 	}
 
-	if err := c.tarmak.writeSSHConfigForClusterHosts(); err != nil {
+	if err := c.verifyTerraformBinaryVersion(); err != nil {
 		return err
 	}
 
@@ -247,6 +177,33 @@ func (t *Tarmak) verifyImageExists() error {
 
 	if len(images) == 0 {
 		return errors.New("no images found")
+	}
+
+	return nil
+}
+
+func (c *CmdTerraform) setup() error {
+	type step struct {
+		log string
+		f   func() error
+	}
+
+	for _, s := range []step{
+		{"validating tarmak config", c.tarmak.Validate},
+		{"verifying tarmak config", c.tarmak.Verify},
+		{"writing SSH config", c.tarmak.writeSSHConfigForClusterHosts},
+		{"ensuring remote resources", c.tarmak.EnsureRemoteResources},
+	} {
+		c.log.Info(s.log)
+		if err := s.f(); err != nil {
+			return err
+		}
+
+		select {
+		case <-c.ctx.Done():
+			return c.ctx.Err()
+		default:
+		}
 	}
 
 	return nil

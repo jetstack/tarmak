@@ -354,33 +354,42 @@ func (a *Amazon) Verify() error {
 
 	// These checks only make sense with an environment given
 	if a.tarmak.Environment() != nil {
-		if err := a.verifyRemoteStateKMS(); err != nil {
-			result = multierror.Append(result, err)
-		}
-
-		if err := a.verifyRemoteStateBucket(); err != nil {
-			result = multierror.Append(result, err)
-		}
-
-		if err := a.verifyRemoteStateBucketEncrytion(); err != nil {
-			result = multierror.Append(result, err)
-		}
-
-		if err := a.verifyRemoteStateDynamoDB(); err != nil {
-			result = multierror.Append(result, err)
-		}
-
 		if err := a.verifyAvailabilityZones(); err != nil {
 			result = multierror.Append(result, err)
 		}
 
-		if err := a.verifyAWSKeyPair(); err != nil {
-			result = multierror.Append(result, err)
-		}
 	}
 
 	if err := a.verifyPublicZone(); err != nil {
 		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
+}
+
+func (a *Amazon) EnsureRemoteResources() error {
+	var result *multierror.Error
+
+	if a.tarmak.Environment() != nil {
+		if err := a.ensureRemoteStateKMS(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := a.ensureRemoteStateBucket(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := a.ensureRemoteStateBucketEncrytion(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := a.ensureRemoteStateDynamoDB(); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := a.ensureAWSKeyPair(); err != nil {
+			result = multierror.Append(result, err)
+		}
 	}
 
 	return result.ErrorOrNil()

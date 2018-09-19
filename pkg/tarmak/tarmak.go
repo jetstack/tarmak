@@ -328,6 +328,10 @@ func (t *Tarmak) Verify() error {
 	return nil
 }
 
+func (t *Tarmak) EnsureRemoteResources() error {
+	return t.Provider().EnsureRemoteResources()
+}
+
 func (t *Tarmak) Cleanup() {
 	// clean up assets directory
 	if t.rootPath != nil {

@@ -47,7 +47,7 @@ var fakeSSHKeyInsecureFingerprint = "c7:15:68:10:e9:39:6c:ab:99:fe:d0:8b:e8:ec:f
 var fakeSSHKeyInsecurePublic = "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ==\n"
 
 // test the happy path, local key matches the one existing in Amazon
-func TestAmazon_verifyAmazonKeyPairExistingHappyPath(t *testing.T) {
+func TestAmazon_ensureAmazonKeyPairExistingHappyPath(t *testing.T) {
 	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
@@ -71,13 +71,13 @@ func TestAmazon_verifyAmazonKeyPairExistingHappyPath(t *testing.T) {
 	}
 	a.fakeEnvironment.EXPECT().SSHPrivateKey().Return(signer)
 
-	err = a.Amazon.verifyAWSKeyPair()
+	err = a.Amazon.ensureAWSKeyPair()
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
 }
 
-func TestAmazon_verifyAmazonKeyPairExistingMismatch(t *testing.T) {
+func TestAmazon_ensureAmazonKeyPairExistingMismatch(t *testing.T) {
 	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
@@ -101,7 +101,7 @@ func TestAmazon_verifyAmazonKeyPairExistingMismatch(t *testing.T) {
 	}
 	a.fakeEnvironment.EXPECT().SSHPrivateKey().Return(signer)
 
-	err = a.Amazon.verifyAWSKeyPair()
+	err = a.Amazon.ensureAWSKeyPair()
 	if err == nil {
 		t.Errorf("expected an error: %s", err)
 	} else if !strings.Contains(err.Error(), "key pair does not match") {
@@ -109,7 +109,7 @@ func TestAmazon_verifyAmazonKeyPairExistingMismatch(t *testing.T) {
 	}
 }
 
-func TestAmazon_verifyAmazonKeyPairNotExisting(t *testing.T) {
+func TestAmazon_ensureAmazonKeyPairNotExisting(t *testing.T) {
 	a := newFakeAmazon(t)
 	defer a.ctrl.Finish()
 
@@ -140,7 +140,7 @@ func TestAmazon_verifyAmazonKeyPairNotExisting(t *testing.T) {
 	}
 	a.fakeEnvironment.EXPECT().SSHPrivateKey().Return(signer)
 
-	err = a.Amazon.verifyAWSKeyPair()
+	err = a.Amazon.ensureAWSKeyPair()
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}

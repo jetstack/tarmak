@@ -128,6 +128,7 @@ type Provider interface {
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
 	VerifyInstanceTypes(intstancePools []InstancePool) error
+	EnsureRemoteResources() error
 }
 
 type Tarmak interface {
@@ -159,6 +160,7 @@ type Tarmak interface {
 	ProviderByName(string) (Provider, error)
 	// get an environment by name
 	EnvironmentByName(string) (Environment, error)
+	EnsureRemoteResources() error
 }
 
 type Config interface {
