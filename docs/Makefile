@@ -9,8 +9,6 @@ SPHINXBUILD   = $(VENV_PATH)/bin/python -msphinx
 SPHINXPROJ    = Tarmak
 SOURCEDIR     = .
 BUILDDIR      = _build
-BINDIR       ?= $(CURDIR)/bin
-HACK_DIR     ?= ./hack
 
 LC_ALL = C.UTF-8
 LANG = C.UTF-8
@@ -20,9 +18,9 @@ export LANG LC_ALL
 help:
 	make " help"
 
-.PHONY: help Makefile clean ci reference_docs_generate depend
+.PHONY: help Makefile clean ci
 
-ci: clean reference_docs_generate spelling linkcheck html copy_artifacts
+ci: clean spelling linkcheck html copy_artifacts
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
@@ -30,12 +28,12 @@ ci: clean reference_docs_generate spelling linkcheck html copy_artifacts
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 # Make the site's html in docker
-docker_html: reference_docs_generate
+docker_html:
 	# create sphinx image
 	$(eval IMAGE_ID := $(shell docker build -q .))
 	# start documentaion build
 	$(eval CONTAINER_ID := $(shell docker create $(IMAGE_ID)))
-	(git ls-files && git ls-files --others --exclude-standard && ls -d generated/reference/output/*) | tar cf -  -T - | docker cp - $(CONTAINER_ID):/site
+	(git ls-files && git ls-files --others --exclude-standard) | tar cf -  -T - | docker cp - $(CONTAINER_ID):/site
 	docker start -a $(CONTAINER_ID);\
 	EXITCODE=$$?;\
 	docker cp $(CONTAINER_ID):/site/_build - | tar xf -;\
@@ -49,20 +47,6 @@ docker_html: reference_docs_generate
 
 clean:
 	rm -rf .venv "$(BUILDDIR)"
-	rm -rf $(BINDIR)
-
-reference_docs_generate: depend
-	./hack/update-reference-docs.sh
-
-depend: $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs
-
-$(BINDIR)/gen-apidocs:
-	mkdir -p $(BINDIR)
-	go build -o $@ ../vendor/github.com/kubernetes-incubator/reference-docs/gen-apidocs
-
-$(BINDIR)/openapi-gen:
-	mkdir -p $(BINDIR)
-	go build -o $@ ../vendor/k8s.io/kube-openapi/cmd/openapi-gen
 
 copy_artifacts:
 	mkdir -p ../_artifacts
