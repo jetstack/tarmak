@@ -3,7 +3,6 @@ package amazon
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -385,49 +384,4 @@ func (a *Amazon) initRemoteStateKMS() error {
 	a.remoteStateKMS = *k.KeyMetadata.Arn
 
 	return nil
-}
-
-func (a *Amazon) RemoteStateLockID() (string, error) {
-	svc, err := a.DynamoDB()
-	if err != nil {
-		return "", err
-	}
-
-	key := fmt.Sprintf("%s/%s/%s/%s.tfstate", a.RemoteStateName(), a.tarmak.Environment().Name(), a.tarmak.Cluster().Name(), "main")
-	retErr := fmt.Errorf("failed to find Lock ID '%s' in DynamoDB table '%s'", key, a.RemoteStateName())
-
-	item, err := svc.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(a.RemoteStateName()),
-		Key: map[string]*dynamodb.AttributeValue{
-			"LockID": {
-				S: aws.String(key),
-			},
-		},
-	})
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if strings.Contains(awsErr.Code(), "NotFound") || strings.Contains(awsErr.Code(), "NoSuchKey") {
-				return "", fmt.Errorf("%s: %s", retErr, err)
-			}
-		}
-		return "", fmt.Errorf("%s: %s", retErr, err)
-	}
-
-	d, ok := item.Item["Info"]
-	if !ok || d.S == nil || *d.S == "" {
-		return "", retErr
-	}
-
-	info := struct {
-		ID string `json:"ID"`
-	}{}
-
-	if err := json.Unmarshal([]byte(*d.S), &info); err != nil {
-		return "", fmt.Errorf("%s: %s", retErr, err)
-	}
-	if info.ID == "" {
-		return "", retErr
-	}
-
-	return info.ID, nil
 }

@@ -134,20 +134,13 @@ func (c *CmdTerraform) ForceUnlock() error {
 		return err
 	}
 
-	var err error
-	var lockID string
-	if len(c.args) == 0 {
-		lockID, err = c.tarmak.Provider().RemoteStateLockID()
-		if err != nil {
-			return err
-		}
-	} else {
-		lockID = c.args[0]
+	if len(c.args) != 1 {
+		return fmt.Errorf("expected single lock ID argument, got=%d", len(c.args))
 	}
 
 	in := input.New(os.Stdin, os.Stdout)
 	query := fmt.Sprintf(`Attempting force-unlock using lock ID [%s]
-Are you sure you want to force-unlock the remote state? This can be potentially dangerous!`, lockID)
+Are you sure you want to force-unlock the remote state? This can be potentially dangerous!`, c.args[0])
 	doUnlock, err := in.AskYesNo(&input.AskYesNo{
 		Default: false,
 		Query:   query,
@@ -162,7 +155,7 @@ Are you sure you want to force-unlock the remote state? This can be potentially 
 	}
 
 	c.tarmak.cluster.Log().Info("running force-unlock")
-	err = c.tarmak.terraform.ForceUnlock(c.tarmak.Cluster(), lockID)
+	err = c.tarmak.terraform.ForceUnlock(c.tarmak.Cluster(), c.args[0])
 	if err != nil {
 		return err
 	}

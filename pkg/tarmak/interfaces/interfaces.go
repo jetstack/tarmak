@@ -129,7 +129,6 @@ type Provider interface {
 	UploadConfiguration(Cluster, io.ReadSeeker) error
 	VerifyInstanceTypes(intstancePools []InstancePool) error
 	EnsureRemoteResources() error
-	RemoteStateLockID() (string, error)
 }
 
 type Tarmak interface {
