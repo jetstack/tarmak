@@ -69,7 +69,7 @@ $BINDIR/gen-apidocs \
 echo "+++ Running brodocs"
 OUTPUT_DIR="${REFERENCE_ROOT}/output"
 BRODOC_DIR="${REFERENCE_ROOT}/brodocs"
-BRODOC_VEN=./vendor/github.com/Birdrock/brodocs
+BRODOC_VEN="${HACKDIR}/brodocs"
 rm -rf ${OUTPUT_DIR}
 cp -r ${BRODOC_VEN} ${REFERENCE_ROOT}/.
 cp ${REFERENCE_ROOT}/manifest.json ${BRODOC_DIR}/.
