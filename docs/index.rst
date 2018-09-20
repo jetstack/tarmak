@@ -53,3 +53,4 @@ build and deploy Kubernetes in production at scale.
    vault-setup-config
    vault-helper-guide
    aws-centos-guide
+   api-docs

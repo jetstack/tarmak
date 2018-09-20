@@ -150,6 +150,8 @@ skipped_dirs = [
     "pkg/tarmak/assets",
     "puppet/modules",
     "pkg/wing/mocks",
+    "docs/generated",
+    "docs/_build/html/node_modules",
 ]
 
 

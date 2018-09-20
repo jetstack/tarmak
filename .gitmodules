@@ -1,0 +1,3 @@
+[submodule "hack/brodocs"]
+	path = hack/brodocs
+	url = https://github.com/pwittrock/brodocs

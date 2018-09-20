@@ -6,6 +6,8 @@ required = [
   "k8s.io/code-generator/cmd/defaulter-gen",
   "k8s.io/code-generator/cmd/informer-gen",
   "k8s.io/code-generator/cmd/lister-gen",
+  "k8s.io/kube-openapi/cmd/openapi-gen",
+  "github.com/kubernetes-incubator/reference-docs/gen-apidocs",
   "github.com/golang/mock/mockgen",
   "github.com/jteeuwen/go-bindata/go-bindata",
 ]
@@ -73,6 +75,10 @@ required = [
 [[constraint]]
   name = "k8s.io/code-generator"
   version = "kubernetes-1.9.3"
+
+[[constraint]]
+  name = "github.com/kubernetes-incubator/reference-docs"
+  branch = "kubebuilder"
 
 [[constraint]]
   name = "gopkg.in/src-d/go-git.v4"
@@ -173,4 +179,7 @@ required = [
   [[prune.project]]
     name = "k8s.io/code-generator"
     non-go = false
+    unused-packages = false
+  [[prune.project]]
+    name = "k8s.io/kube-openapi"
     unused-packages = false

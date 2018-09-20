@@ -37,7 +37,7 @@ type Shared struct {
 
 // IngressRule parameters for the firewall
 type IngressRule struct {
-	Shared
+	Shared          `json:",inline"`
 	IngressFromPort string `json:"ingressFromPort,omitempty"`
 	IngressToPort   string `json:"ingressToPort,omitempty"` //this thing should be a string.
 	IngressSource   string `json:"ingressSource,omitempty"`
@@ -46,8 +46,8 @@ type IngressRule struct {
 
 // EgressRule parameters for the firewall
 type EgressRule struct {
-	Shared
-	EgressToPort      string `json:"engressToPort,omitempty"` //this thing should be a string.
-	EgressDestination string `json:"engressDestination,omitempty"`
-	EgressProtocol    string `json:"engressProtocol,omitempty"`
+	Shared            `json:",inline"`
+	EgressToPort      string `json:"egressToPort,omitempty"` //this thing should be a string.
+	EgressDestination string `json:"egressDestination,omitempty"`
+	EgressProtocol    string `json:"egressProtocol,omitempty"`
 }
