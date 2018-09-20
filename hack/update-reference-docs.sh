@@ -75,7 +75,7 @@ cp -r ${BRODOC_VEN} ${REFERENCE_ROOT}/.
 cp ${REFERENCE_ROOT}/manifest.json ${BRODOC_DIR}/.
 rm -rf ${BRODOC_DIR}/documents/* && cp -r ${REFERENCE_ROOT}/includes/* ${BRODOC_DIR}/documents/
 cd ${BRODOC_DIR} && npm update && npm install && node brodoc.js && cd ../.
-mkdir -p ${OUTPUT_DIR} && cp -r ${BRODOC_DIR}/{*.js,*.html,*.css,documents/*,node_modules} ${OUTPUT_DIR}/
+mkdir -p ${OUTPUT_DIR} && cp -r ${BRODOC_DIR}/{*.js,*.html,*.css,node_modules} ${OUTPUT_DIR}/
 find ${OUTPUT_DIR}/node_modules -iname "*.html" -o -iname "*.rst" -type f -delete
 find ${OUTPUT_DIR} -iname "*.md" -type f -delete
 mv ${OUTPUT_DIR}/index.html ${OUTPUT_DIR}/api-docs.html
