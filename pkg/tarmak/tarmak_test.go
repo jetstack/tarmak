@@ -96,10 +96,10 @@ func newTestTarmak(t *testing.T) *testTarmak {
 		tarmak: &Tarmak{
 			log:   logger,
 			flags: &tarmakv1alpha1.Flags{},
-			ctx:   utils.NewCancellationContext(),
 		},
 		logger: logger,
 	}
+	tt.tarmak.ctx = utils.NewCancellationContext(tt.tarmak)
 
 	var err error
 	if tt.configDirectory, err = ioutil.TempDir("", "tarmak-test"); err != nil {
