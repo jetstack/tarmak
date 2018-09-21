@@ -176,8 +176,19 @@ Are you sure you want to force-unlock the remote state? This can be potentially 
 	return nil
 }
 
-func (c *CmdTerraform) verifyTerraformBinaryVersion() error {
+func (c *CmdTerraform) Validate() error {
+	if err := c.setup(); err != nil {
+		return err
+	}
 
+	if err := c.tarmak.terraform.Prepare(c.tarmak.Cluster()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *CmdTerraform) verifyTerraformBinaryVersion() error {
 	cmd := exec.Command("terraform", "version")
 	cmd.Env = os.Environ()
 	cmdOutput := &bytes.Buffer{}

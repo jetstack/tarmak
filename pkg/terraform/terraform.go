@@ -117,10 +117,8 @@ func (t *Terraform) socketPath(c interfaces.Cluster) string {
 }
 
 func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
-	select {
-	case <-t.ctx.Done():
-		return t.ctx.Err()
-	default:
+	if err := t.checkDone(); err != nil {
+		return err
 	}
 
 	// generate tf code
@@ -128,10 +126,8 @@ func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 		return fmt.Errorf("failed to generate code: %s", err)
 	}
 
-	select {
-	case <-t.ctx.Done():
-		return t.ctx.Err()
-	default:
+	if err := t.checkDone(); err != nil {
+		return err
 	}
 
 	// symlink tarmak plugins into folder
@@ -139,13 +135,14 @@ func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 		return fmt.Errorf("failed to prepare plugins: %s", err)
 	}
 
-	select {
-	case <-t.ctx.Done():
-		return t.ctx.Err()
-	default:
+	if err := t.checkDone(); err != nil {
+		return err
 	}
 
-	t.log.Info("initialising terraform")
+	type setupCommand struct {
+		log, name string
+		args      []string
+	}
 
 	var furtherErrorContext string
 	stderrReader, stderrWriter := io.Pipe()
@@ -160,26 +157,32 @@ this error is often caused due to the remote state being destroyed and can be fi
 		}
 	}()
 
-	// run init
-	if err := t.command(
-		cluster,
-		[]string{
+	for _, c := range []setupCommand{
+		{log: "initialising terraform", name: "init", args: []string{
 			"terraform",
 			"init",
 			"-get-plugins=false",
 			"-input=false",
-		},
-		nil,
-		nil,
-		stderrWriter,
-	); err != nil {
-		return fmt.Errorf("failed to run terraform init: %s%s", err, furtherErrorContext)
-	}
+		}},
+		{log: "formatting terraform code", name: "fmt", args: []string{
+			"terraform",
+			"fmt",
+			"-list=false",
+		}},
+		{log: "validating terraform code", name: "validate", args: []string{
+			"terraform",
+			"validate",
+		}},
+	} {
+		t.log.Info(c.log)
 
-	select {
-	case <-t.ctx.Done():
-		return t.ctx.Err()
-	default:
+		if err := t.command(cluster, c.args, nil, nil, stderrWriter); err != nil {
+			return fmt.Errorf("error running terraform %s: %s", c.name, err)
+		}
+
+		if err := t.checkDone(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -512,4 +515,13 @@ func MapToTerraformTfvars(input map[string]interface{}) (output string, err erro
 		}
 	}
 	return buf.String(), nil
+}
+
+func (t *Terraform) checkDone() error {
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
+		return nil
+	}
 }

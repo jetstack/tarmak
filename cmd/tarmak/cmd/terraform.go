@@ -84,6 +84,24 @@ var terraformForceUnlockCmd = &cobra.Command{
 	DisableFlagParsing: true,
 }
 
+var terraformFmtCmd = &cobra.Command{
+	Use: "fmt",
+	Run: func(cmd *cobra.Command, args []string) {
+		os.Exit(terraformPassthrough(args, terraform.Fmt))
+	},
+	Hidden:             true,
+	DisableFlagParsing: true,
+}
+
+var terraformValidateCmd = &cobra.Command{
+	Use: "validate",
+	Run: func(cmd *cobra.Command, args []string) {
+		os.Exit(terraformPassthrough(args, terraform.Validate))
+	},
+	Hidden:             true,
+	DisableFlagParsing: true,
+}
+
 func init() {
 	RootCmd.AddCommand(internalPluginCmd)
 	terraformCmd.AddCommand(terraformInitCmd)
@@ -92,5 +110,7 @@ func init() {
 	terraformCmd.AddCommand(terraformDestroyCmd)
 	terraformCmd.AddCommand(terraformForceUnlockCmd)
 	terraformCmd.AddCommand(terraformOutputCmd)
+	terraformCmd.AddCommand(terraformFmtCmd)
+	terraformCmd.AddCommand(terraformValidateCmd)
 	RootCmd.AddCommand(terraformCmd)
 }
