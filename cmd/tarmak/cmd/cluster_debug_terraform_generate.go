@@ -12,7 +12,7 @@ var clusterDebugTerraformGenerateCmd = &cobra.Command{
 	Short: "Generate terraform code for current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		t.Must(t.NewCmdTerraform(args).Generate())
+		t.CancellationContext().WaitOrCancel(t.NewCmdTerraform(args).Generate)
 	},
 }
 
