@@ -2,6 +2,7 @@
 package tarmak
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-plugin"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 
@@ -56,7 +58,6 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	t := &Tarmak{
 		log:   logrus.New(),
 		flags: flags,
-		ctx:   utils.NewCancellationContext(),
 	}
 
 	t.initializeModules()
@@ -128,6 +129,8 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 
 // this initializes tarmak modules, they can be overridden in tests
 func (t *Tarmak) initializeModules() {
+	// we must get new context ready as first module
+	t.ctx = utils.NewCancellationContext(t)
 	t.environmentByName = t.environmentByNameReal
 	t.providerByName = t.providerByNameReal
 	t.terraform = terraform.New(t)
@@ -342,6 +345,9 @@ func (t *Tarmak) Variables() map[string]interface{} {
 }
 
 func (t *Tarmak) Must(err error) {
+	t.Cleanup()
+	plugin.CleanupClients()
+
 	if err != nil {
 		t.log.Fatal(err)
 	}
@@ -356,4 +362,17 @@ func (t *Tarmak) CmdKubectl(args []string) error {
 
 func (t *Tarmak) CancellationContext() interfaces.CancellationContext {
 	return t.ctx
+}
+
+func (t *Tarmak) verifyImageExists() error {
+	images, err := t.Packer().List()
+	if err != nil {
+		return err
+	}
+
+	if len(images) == 0 {
+		return errors.New("no images found")
+	}
+
+	return nil
 }

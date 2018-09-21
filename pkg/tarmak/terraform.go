@@ -100,8 +100,7 @@ func (c *CmdTerraform) Destroy() error {
 		return err
 	}
 
-	err := c.tarmak.terraform.Destroy(c.tarmak.Cluster())
-	if err != nil {
+	if err := c.tarmak.terraform.Destroy(c.tarmak.Cluster()); err != nil {
 		return err
 	}
 
@@ -110,7 +109,7 @@ func (c *CmdTerraform) Destroy() error {
 
 func (c *CmdTerraform) Shell() error {
 	if err := c.setup(); err != nil {
-		c.log.Warnf("error setting up tarmak for terrafrom shell: %v", err)
+		return err
 	}
 
 	if err := c.verifyTerraformBinaryVersion(); err != nil {
@@ -118,6 +117,19 @@ func (c *CmdTerraform) Shell() error {
 	}
 
 	err := c.tarmak.terraform.Shell(c.tarmak.Cluster())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *CmdTerraform) Generate() error {
+	if err := c.setup(); err != nil {
+		return err
+	}
+
+	err := c.tarmak.terraform.GenerateCode(c.tarmak.Cluster())
 	if err != nil {
 		return err
 	}

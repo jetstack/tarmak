@@ -12,7 +12,6 @@ var clusterPlanCmd = &cobra.Command{
 	Short: "Plan changes on the currently configured cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		defer t.Cleanup()
 
 		t.CancellationContext().WaitOrCancelReturnCode(
 			t.NewCmdTerraform(args).Plan,

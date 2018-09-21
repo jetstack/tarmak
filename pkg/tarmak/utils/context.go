@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/hashicorp/go-plugin"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -19,13 +20,14 @@ type CancellationContext struct {
 	context.Context
 	cancel func()
 	sig    os.Signal
+	tarmak interfaces.Tarmak
 }
 
 var notifies = []os.Signal{syscall.SIGINT, syscall.SIGTERM}
 
 var _ interfaces.CancellationContext = &CancellationContext{}
 
-func NewCancellationContext() interfaces.CancellationContext {
+func NewCancellationContext(t interfaces.Tarmak) interfaces.CancellationContext {
 	ctx, cancel := context.WithCancel(context.Background())
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, notifies...)
@@ -34,6 +36,7 @@ func NewCancellationContext() interfaces.CancellationContext {
 		ctx,
 		cancel,
 		syscall.SIGCONT,
+		t,
 	}
 
 	go func() {
@@ -124,8 +127,14 @@ func (c *CancellationContext) WaitOrCancelReturnCode(f func() (int, error)) {
 		log.Exit(1)
 	default:
 		log.Errorf("Tarmak exited with an error: %s", err)
+		c.cleanup()
 		log.Exit(1)
 	}
+}
+
+func (c *CancellationContext) cleanup() {
+	plugin.CleanupClients()
+	c.tarmak.Cleanup()
 }
 
 func BasicSignalHandler(l *log.Entry) chan struct{} {

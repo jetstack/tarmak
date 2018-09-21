@@ -7,17 +7,15 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak"
 )
 
-var clusterInitCmd = &cobra.Command{
-	Use:     "init",
-	Aliases: []string{"initialise", "initialize"},
-	Short:   "Initialize a cluster",
+var clusterDebugTerraformGenerateCmd = &cobra.Command{
+	Use:   "generate",
+	Short: "Generate terraform code for current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		globalFlags.Initialize = true
 		t := tarmak.New(globalFlags)
-		t.Must(t.CmdClusterInit())
+		t.Must(t.NewCmdTerraform(args).Generate())
 	},
 }
 
 func init() {
-	clusterCmd.AddCommand(clusterInitCmd)
+	clusterDebugTerraformCmd.AddCommand(clusterDebugTerraformGenerateCmd)
 }

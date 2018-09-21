@@ -154,7 +154,7 @@ func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 		for stderrScanner.Scan() {
 			if strings.Contains(stderrScanner.Text(), remoteStateError) {
 				furtherErrorContext = fmt.Sprintf(`%s
-this error is often caused due to the remote state being destroyed and can be fixed my manually syncing both local and remote states`, furtherErrorContext)
+this error is often caused due to the remote state being destroyed and can be fixed by manually syncing both local and remote states`, furtherErrorContext)
 			}
 			t.log.WithField("std", "err").Debug(stderrScanner.Text())
 		}
@@ -201,7 +201,8 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 			t.socketPath(cluster),
 			stopRpcCh,
 		); err != nil {
-			t.log.Fatalf("error listening to unix socket: %s", err)
+			t.log.Errorf("error listening to unix socket: %s", err)
+			return
 		}
 	}()
 
