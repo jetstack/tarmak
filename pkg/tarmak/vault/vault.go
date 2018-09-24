@@ -229,7 +229,7 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 		return errors.New("failed to find a vault tunnel ready")
 	}
 
-	constBackoff := backoff.NewConstantBackOff(time.Second)
+	constBackoff := backoff.NewConstantBackOff(time.Second * 5)
 	b := backoff.WithMaxTries(constBackoff, Retries)
 	err = backoff.Retry(readyTunnelFunc, b)
 	if err != nil {
@@ -282,7 +282,7 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 		}
 	}
 
-	constBackoff = backoff.NewConstantBackOff(time.Second)
+	constBackoff = backoff.NewConstantBackOff(time.Second * 5)
 	b = backoff.WithMaxTries(constBackoff, Retries)
 	err = backoff.Retry(initVaultFunc, b)
 	if err != nil {
