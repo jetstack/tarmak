@@ -32,6 +32,15 @@ data "template_file" "{{.TFName}}_user_data" {
     tarmak_instance_pool = "{{.Name}}"
     tarmak_cluster       = "${data.template_file.stack_name.rendered}"
     tarmak_environment   = "${var.environment}"
+
+{{ if eq .Role.Name "etcd" -}}
+    etcd_backup_bucket_prefix = "${var.backups_bucket}/${data.template_file.stack_name.rendered}-etcd-${count.index+1}"
+    etcd_backup_schedule      = "*-*-* ${format("%02d",count.index * (24/var.kubernetes_{{.Role.Name}}_min_count))}:00:00"
+{{ else -}}
+    etcd_backup_bucket_prefix = ""
+    etcd_backup_schedule      = ""
+{{ end -}}
+
 {{ if not .Role.Stateful -}}
     tarmak_hostname      = "{{.Role.Name}}"
     tarmak_desired_count = "${var.{{.TFName}}_min_count}"

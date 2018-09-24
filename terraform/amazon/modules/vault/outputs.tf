@@ -7,7 +7,7 @@ output "vault_url" {
 }
 
 output "vault_kms_key_id" {
-  value = "${element(split("/", var.secrets_kms_arn), 1)}"
+  value = "${var.secrets_kms_arn}"
 }
 
 output "vault_unseal_key_name" {

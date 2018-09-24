@@ -13,6 +13,8 @@ class etcd(
   $gid = $::etcd::params::gid,
   $user = $::etcd::params::user,
   $group = $::etcd::params::group,
+  String $backup_bucket_prefix = '',
+  String $backup_schedule = '*-*-* 00:00:00',
 ) inherits ::etcd::params {
 
   $nologin = $::osfamily ? {

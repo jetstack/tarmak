@@ -3,4 +3,6 @@ classes:
 - tarmak::etcd
 - airworthy
 
+etcd::backup_bucket_prefix: "%{::etcd_backup_bucket_prefix}"
+etcd::backup_schedule: "%{::etcd_backup_schedule}"
 tarmak::hostname: "%{::tarmak_hostname}"

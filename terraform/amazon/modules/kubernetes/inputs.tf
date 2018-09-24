@@ -86,3 +86,5 @@ variable "elb_access_logs_internal_enabled" {}
 variable "elb_access_logs_internal_bucket" {}
 variable "elb_access_logs_internal_bucket_prefix" {}
 variable "elb_access_logs_internal_bucket_interval" {}
+
+variable "backups_bucket" {}
