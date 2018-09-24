@@ -154,7 +154,7 @@ exporter_# Sets up a blackbox exporter to forward etcd metrics from etcd nodes
 ##### `version`
 
 * Type: `String`
-* Default: `'0.15.2'`
+* Default: `'0.16.0'`
 
 ##### `download_url`
 

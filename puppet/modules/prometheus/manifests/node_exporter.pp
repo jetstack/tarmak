@@ -1,6 +1,6 @@
 class prometheus::node_exporter (
   String $image = 'prom/node-exporter',
-  String $version = '0.15.2',
+  String $version = '0.16.0',
   String $download_url = 'https://github.com/prometheus/node_exporter/releases/download/v#VERSION#/node_exporter-#VERSION#.linux-amd64.tar.gz',
   String $sha256sums_url = 'https://github.com/prometheus/node_exporter/releases/download/v#VERSION#/sha256sums.txt',
   String $signature_url = 'https://releases.tarmak.io/signatures/node_exporter/#VERSION#/sha256sums.txt.asc',
@@ -19,14 +19,14 @@ class prometheus::node_exporter (
     $kubernetes_ca_file = $::prometheus::server::kubernetes_ca_file
 
     prometheus::rule { 'NodeHighCPUUsage':
-      expr        => '(100 - (avg(irate(node_cpu{mode="idle"}[5m])) WITHOUT (cpu) * 100)) > 80',
+      expr        => '(100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) WITHOUT (cpu) * 100)) > 80',
       for         => '5m',
       summary     => '{{$labels.instance}}: High CPU usage detected',
       description => '{{$labels.instance}}: CPU usage is above 80% (current value is: {{ $value }})',
     }
 
     prometheus::rule { 'NodeHighLoadAverage':
-      expr        => '((node_load5 / count without (cpu, mode) (node_cpu{mode="system"})) > 3)',
+      expr        => '((node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode="system"})) > 3)',
       for         => '5m',
       summary     => '{{$labels.instance}}: High load average detected',
       description => '{{$labels.instance}}: 5 minute load average is {{$value}}',
@@ -34,7 +34,7 @@ class prometheus::node_exporter (
 
     # TODO: Alert if diskspace is running out in x hours
     prometheus::rule { 'NodeLowDiskSpace':
-      expr        => '((node_filesystem_size - node_filesystem_free ) / node_filesystem_size * 100) > 75',
+      expr        => '((node_filesystem_size_bytes - node_filesystem_free_bytes ) / node_filesystem_size_bytes * 100) > 75',
       for         => '2m',
       summary     => '{{$labels.instance}}: Low disk space',
       description => '{{$labels.instance}}: Disk usage is above 75% (current value is: {{ $value }}%)',
@@ -42,14 +42,14 @@ class prometheus::node_exporter (
 
     # TODO: Alert when swap is in use
     prometheus::rule { 'NodeSwapEnabled':
-      expr        => '(((node_memory_SwapTotal-node_memory_SwapFree)/node_memory_SwapTotal)*100) > 75',
+      expr        => '(((node_memory_SwapTotal_bytes-node_memory_SwapFree_bytes)/node_memory_SwapTotal_bytes)*100) > 75',
       for         => '2m',
       summary     => '{{$labels.instance}}: Swap usage detected',
       description => '{{$labels.instance}}: Swap usage usage is above 75% (current value is: {{ $value }})',
     }
 
     prometheus::rule { 'NodeHighMemoryUsage':
-      expr        => '(((node_memory_MemTotal-node_memory_MemFree-node_memory_Cached)/(node_memory_MemTotal)*100)) > 80',
+      expr        => '(((node_memory_MemTotal_bytes-node_memory_MemFree_bytes-node_memory_Cached_bytes)/(node_memory_MemTotal_bytes)*100)) > 80',
       for         => '5m',
       summary     => '{{$labels.instance}}: High memory usage detected',
       description => '{{$labels.instance}}: Memory usage usage is above 80% (current value is: {{ $value }})',
