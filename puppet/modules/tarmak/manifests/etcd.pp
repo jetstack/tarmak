@@ -4,13 +4,20 @@ class tarmak::etcd(
   include ::vault_client
 
   if $::tarmak::cloud_provider == 'aws' {
+    $disks = aws_ebs::disks()
+    case $disks.length {
+      0: {$ebs_device = ''}
+      1: {$ebs_device = $disks[0]}
+      default: {$ebs_device = $disks[1]}
+    }
+
     class{'::aws_ebs':
       bin_dir     => $::tarmak::bin_dir,
       systemd_dir => $::tarmak::systemd_dir,
     }
     aws_ebs::mount{'etcd-data':
       volume_id => $::tarmak_volume_id,
-      device    => '/dev/xvdd',
+      device    => $ebs_device,
       dest_path => '/var/lib/etcd',
     } -> Etcd::Instance  <||>
   }
