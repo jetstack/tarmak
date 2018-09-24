@@ -185,7 +185,16 @@ module "kubernetes" {
   elb_access_logs_internal_enabled         = "${var.elb_access_logs_internal_enabled}"
   elb_access_logs_internal_bucket          = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
+  elb_access_logs_public_enabled = "${var.elb_access_logs_public_enabled}"
+  elb_access_logs_public_bucket = "${var.elb_access_logs_public_bucket}"
+  elb_access_logs_public_bucket_prefix = "${var.elb_access_logs_public_bucket_prefix}"
+  elb_access_logs_public_bucket_interval = "${var.elb_access_logs_public_bucket_interval}"
+  elb_access_logs_internal_enabled = "${var.elb_access_logs_internal_enabled}"
+  elb_access_logs_internal_bucket = "${var.elb_access_logs_internal_bucket}"
+  elb_access_logs_internal_bucket_prefix = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
+
+  backups_bucket = "${module.state.backups_bucket[0]}"
 }
 {{- end -}}
 
@@ -251,5 +260,7 @@ module "kubernetes" {
   elb_access_logs_internal_bucket          = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
+
+  backups_bucket = "${module.state.backups_bucket[0]}"
 }
 {{- end }}

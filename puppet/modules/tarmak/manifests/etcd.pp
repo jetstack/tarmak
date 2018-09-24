@@ -115,4 +115,15 @@ class tarmak::etcd(
     systemd_after            => delete_undef_values([$::tarmak::etcd_mount_unit]),
     systemd_requires         => delete_undef_values([$::tarmak::etcd_mount_unit]),
   }
+
+  class {'etcd::service':
+    initial_cluster             => $::tarmak::_etcd_cluster,
+    etcd_overlay_client_port    => $::tarmak::etcd_overlay_client_port,
+    etcd_k8s_main_client_port   => $::tarmak::etcd_k8s_main_client_port,
+    etcd_k8s_events_client_port => $::tarmak::etcd_k8s_events_client_port,
+    k8s_main_ca_name            => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_k8s_main_ca_name}",
+    k8s_events_ca_name          => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_k8s_events_ca_name}",
+    overlay_ca_name             => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_overlay_ca_name}",
+    tls                         => true,
+  }
 }

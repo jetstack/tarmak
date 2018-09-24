@@ -80,6 +80,11 @@ class consul::service(
     notify  => Exec["${service_name}-systemctl-daemon-reload"],
     mode    => '0644'
   }
+  ~> service { "${backup_service_name}.service":
+    ensure  => 'stopped',
+    enable  => false,
+    require => Exec["${service_name}-systemctl-daemon-reload"],
+  }
 
   file { "${consul::systemd_dir}/${backup_service_name}.timer":
     ensure  => file,

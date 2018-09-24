@@ -80,7 +80,7 @@ define etcd::instance (
     },
   }
 
-  file { "/etc/systemd/system/${service_name}.service":
+  file { "${::etcd::systemd_dir}/${service_name}.service":
     ensure  => file,
     content => template('etcd/etcd.service.erb'),
     require => [

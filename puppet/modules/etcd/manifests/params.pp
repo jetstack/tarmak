@@ -12,4 +12,5 @@ class etcd::params {
   $data_dir = '/var/lib/etcd'
   $download_dir = '/tmp'
   $download_url = 'https://storage.googleapis.com/etcd/v#VERSION#/etcd-v#VERSION#-linux-amd64.tar.gz'
+  $systemd_dir = '/etc/systemd/system'
 }
