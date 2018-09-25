@@ -55,7 +55,9 @@ func newFakeConfig(t *testing.T) *fakeConfig {
 	}
 	c.fakeTarmak.EXPECT().Log().AnyTimes().Return(logger.WithField("app", "tarmak"))
 
-	c.Config, err = New(c.fakeTarmak, &tarmakv1alpha1.Flags{})
+	c.Config, err = New(c.fakeTarmak, &tarmakv1alpha1.Flags{
+		ConfigPrefixes: []string{"tarmak"},
+	})
 
 	if err != nil {
 		t.Error("unexpected error: ", err)

@@ -105,6 +105,18 @@ func init() {
 		"override the current cluster set in the config",
 	)
 
+	RootCmd.PersistentFlags().StringSliceVar(
+		&globalFlags.ConfigPrefixes,
+		"config-prefixes",
+		[]string{
+			"tarmak",
+			"cluster",
+			"environment",
+			"provider",
+		},
+		"set prefixes of files containing tarmak configuration to be used",
+	)
+
 	if version == "dev" {
 		RootCmd.PersistentFlags().BoolVar(
 			&globalFlags.WingDevMode,

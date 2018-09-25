@@ -2,6 +2,7 @@
 package config
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -319,16 +321,16 @@ func (c *Config) configPath() string {
 }
 
 func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
-	path := c.configPath()
+	var config *tarmakv1alpha1.Config
 
-	configBytes, err := ioutil.ReadFile(path)
+	configBytes, err := c.readConfigFragments(c.flags.ConfigPrefixes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read tarmak configs: %v", err)
 	}
 
 	configObj, gvk, err := c.codecs.UniversalDecoder(tarmakv1alpha1.SchemeGroupVersion).Decode(configBytes, nil, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode config bytes from file: %v", err)
 	}
 
 	config, ok := configObj.(*tarmakv1alpha1.Config)
@@ -338,6 +340,43 @@ func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 
 	c.conf = config
 	return config, nil
+}
+
+func (c *Config) readConfigFragments(prefixes []string) ([]byte, error) {
+	dir, err := ioutil.ReadDir(c.tarmak.ConfigPath())
+	if err != nil {
+		return nil, err
+	}
+
+	var fragFiles []os.FileInfo
+	for _, f := range dir {
+		if !f.IsDir() && strings.HasSuffix(f.Name(), ".yaml") {
+
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(f.Name(), prefix) {
+					fragFiles = append(fragFiles, f)
+					break
+				}
+			}
+
+		}
+	}
+
+	var buff bytes.Buffer
+	var result *multierror.Error
+	for _, f := range fragFiles {
+		b, err := ioutil.ReadFile(filepath.Join(c.tarmak.ConfigPath(), f.Name()))
+		if err != nil {
+			result = multierror.Append(result, err)
+			continue
+		}
+
+		if _, err := buff.Write(b); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return buff.Bytes(), result.ErrorOrNil()
 }
 
 func (c *Config) Contact() string {
