@@ -8,6 +8,9 @@ import (
 	"path/filepath"
 	"sort"
 
+	//TODO: 459
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -36,13 +39,14 @@ type Amazon struct {
 	availabilityZones *[]string
 	remoteStateKMS    string
 
-	session  *session.Session
-	ec2      EC2
-	s3       S3
-	kms      KMS
-	dynamodb DynamoDB
-	route53  Route53
-	log      *logrus.Entry
+	session      *session.Session
+	ec2          EC2
+	s3           S3
+	kms          KMS
+	dynamodb     DynamoDB
+	route53      Route53
+	log          *logrus.Entry
+	ebsEncrypted bool
 }
 
 type S3 interface {
@@ -64,6 +68,7 @@ type EC2 interface {
 	DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (*ec2.DescribeAvailabilityZonesOutput, error)
 	DescribeRegions(input *ec2.DescribeRegionsInput) (*ec2.DescribeRegionsOutput, error)
 	DescribeReservedInstancesOfferings(input *ec2.DescribeReservedInstancesOfferingsInput) (*ec2.DescribeReservedInstancesOfferingsOutput, error)
+	DescribeImages(input *ec2.DescribeImagesInput) (*ec2.DescribeImagesOutput, error)
 }
 
 type DynamoDB interface {
@@ -359,12 +364,15 @@ func (a *Amazon) Verify() error {
 		if err := a.verifyAvailabilityZones(); err != nil {
 			result = multierror.Append(result, err)
 		}
-
 	}
 
 	if err := a.verifyPublicZone(); err != nil {
 		result = multierror.Append(result, err)
 	}
+
+	// if err := a.verifyEBSEncrypted(); err != nil {
+	// 	result = multierror.Append(result, err)
+	// }
 
 	return result.ErrorOrNil()
 }
@@ -581,6 +589,7 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 		if err := a.verifyInstanceType(instanceType, instance.Zones(), svc); err != nil {
 			result = multierror.Append(result, err)
 		}
+
 	}
 
 	return result
@@ -656,4 +665,81 @@ func (a *Amazon) VolumeType(typeIn string) (typeOut string, err error) {
 	}
 	// TODO: Validate custom instance type here
 	return typeIn, nil
+}
+
+func (a *Amazon) verifyEBSEncrypted() error {
+
+	var result error
+	var matching bool
+
+	// TODO: 459 - pass an a.EC2() to this function to lower expense
+	svc, err := a.EC2()
+	if err != nil {
+		return err
+	}
+
+	imageids, err := a.tarmak.Cluster().ImageIDs()
+	if err != nil {
+		return err
+	}
+
+	packerimages, err := a.tarmak.Packer().List()
+	if err != nil {
+		return err
+	}
+
+	log.Println(packerimages)
+
+	// Convert map to slice to conform with AWS SDK ec2.DescribeImagesInput
+	idslice := []string{}
+	for _, imageid := range imageids {
+		idslice = append(idslice, imageid)
+	}
+
+	deduplicatedsliceofids := deduplicate(idslice)
+
+	request := &ec2.DescribeImagesInput{
+		ImageIds: aws.StringSlice(deduplicatedsliceofids),
+	}
+	awsamis, err := svc.DescribeImages(request)
+	if err != nil {
+		return fmt.Errorf("error reaching aws to request image descriptions: %v", err)
+	}
+
+	// THEN VERIFY THAT ENCRYPTED == TRUE  ON AWS AND ENCRYPTED == TRUE ON PACKER
+	//				OR	ENCRYPTED == FALSE ON AWS AND ENCRYPTED == FALSE ON PACKER
+	for key, awsami := range awsamis.Images {
+		tarmakimage := tarmakv1alpha1.Image{}
+		tarmakimage.Annotations = map[string]string{}
+		if *awsami.BlockDeviceMappings[key].Ebs.Encrypted == true {
+			log.Println("Encrypted true")
+		}
+		if *awsami.BlockDeviceMappings[key].Ebs.Encrypted == false {
+			log.Println("Encrypted false")
+		}
+		// if *awsami.BlockDeviceMappings[key].Ebs.Encrypted != a.tarmak.Config().Cluster().ImageIDs() {
+		if *awsami.BlockDeviceMappings[key].Ebs.Encrypted {
+			result = multierror.Append(result, fmt.Errorf("AMI ID '%s' expected encrypted =%v"), " ", *awsami.BlockDeviceMappings[key].Ebs.Encrypted)
+
+		}
+
+		// if == nil or false, result is:
+
+		// AMI id expected to be
+
+	}
+
+	return result
+}
+
+func deduplicate(stringSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range stringSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }

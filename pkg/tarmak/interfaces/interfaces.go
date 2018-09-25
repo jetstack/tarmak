@@ -109,7 +109,7 @@ type Provider interface {
 	Name() string
 	Parameters() map[string]string
 	Region() string
-	// Verify the cluster (these contain more expensive calls like AWS calls
+	// Verify the cluster (these contain more expensive calls like AWS calls)
 	Verify() error
 	// Validate the cluster (these contain less expensive local calls)
 	Validate() error
@@ -130,7 +130,7 @@ type Provider interface {
 	AskEnvironmentLocation(Initialize) (string, error)
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker) error
-	VerifyInstanceTypes(intstancePools []InstancePool) error
+	VerifyInstanceTypes(instancePools []InstancePool) error
 	EnsureRemoteResources() error
 }
 
