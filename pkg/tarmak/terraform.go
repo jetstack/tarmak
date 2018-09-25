@@ -124,19 +124,6 @@ func (c *CmdTerraform) Shell() error {
 	return nil
 }
 
-func (c *CmdTerraform) Generate() error {
-	if err := c.setup(); err != nil {
-		return err
-	}
-
-	err := c.tarmak.terraform.GenerateCode(c.tarmak.Cluster())
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (c *CmdTerraform) ForceUnlock() error {
 	if err := c.setup(); err != nil {
 		return err
@@ -162,21 +149,8 @@ Are you sure you want to force-unlock the remote state? This can be potentially 
 		return nil
 	}
 
-	c.tarmak.cluster.Log().Info("running force-unlock")
 	err = c.tarmak.terraform.ForceUnlock(c.tarmak.Cluster(), c.args[0])
 	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *CmdTerraform) Validate() error {
-	if err := c.setup(); err != nil {
-		return err
-	}
-
-	if err := c.tarmak.terraform.Prepare(c.tarmak.Cluster()); err != nil {
 		return err
 	}
 
