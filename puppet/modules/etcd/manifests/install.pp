@@ -33,11 +33,6 @@ define etcd::install (
     creates => "${dest_dir}/etcd",
     path    => ['/usr/bin/', '/bin'],
   }
-  -> file {"${etcd::bin_dir}/etcdctl":
-    ensure  => link,
-    target  => "${dest_dir}/etcdctl",
-    require => File[$etcd::bin_dir],
-  }
 
   file { "${dest_dir}/etcd-backup.sh":
     ensure  => file,

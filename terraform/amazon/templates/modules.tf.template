@@ -250,6 +250,6 @@ module "kubernetes" {
   elb_access_logs_internal_bucket = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
-  backups_bucket = "${module.state.backups_bucket[0]}"
+  backups_bucket = "${data.terraform_remote_state.hub_state.state_backups_bucket[0]}"
 }
 {{end}}
