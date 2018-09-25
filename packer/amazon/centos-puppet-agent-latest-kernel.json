@@ -23,7 +23,7 @@
       "instance_type": "c4.xlarge",
       "ssh_username": "centos",
       "ssh_pty": "true",
-      "ami_name": "Tarmak CentOS 7 x86_64 with puppet-agent and latest upstream kernel{{isotime \"2006-01-02_030405\"}}",
+      "ami_name": "{{user `tarmak_environment`}} - Tarmak CentOS 7 x86_64 with puppet-agent {{isotime \"2006-01-02_030405\"}}",
       "tags": {
         "Name": "tarmak_{{user `tarmak_environment`}}_{{user `tarmak_base_image_name`}}",
         "tarmak_environment": "{{user `tarmak_environment`}}",
