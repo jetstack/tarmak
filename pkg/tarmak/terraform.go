@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
 type CmdTerraform struct {
@@ -36,7 +37,6 @@ func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
 		args:   args,
 		ctx:    t.CancellationContext(),
 	}
-
 }
 
 func (c *CmdTerraform) Plan() error {
@@ -122,6 +122,40 @@ func (c *CmdTerraform) Shell() error {
 	}
 
 	err := c.tarmak.terraform.Shell(c.tarmak.Cluster())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *CmdTerraform) ForceUnlock() error {
+	if err := c.setup(); err != nil {
+		return err
+	}
+
+	if len(c.args) != 1 {
+		return fmt.Errorf("expected single lock ID argument, got=%d", len(c.args))
+	}
+
+	in := input.New(os.Stdin, os.Stdout)
+	query := fmt.Sprintf(`Attempting force-unlock using lock ID [%s]
+Are you sure you want to force-unlock the remote state? This can be potentially dangerous!`, c.args[0])
+	doUnlock, err := in.AskYesNo(&input.AskYesNo{
+		Default: false,
+		Query:   query,
+	})
+	if err != nil {
+		return err
+	}
+
+	if !doUnlock {
+		c.log.Infof("aborting force unlock")
+		return nil
+	}
+
+	c.tarmak.cluster.Log().Info("running force-unlock")
+	err = c.tarmak.terraform.ForceUnlock(c.tarmak.Cluster(), c.args[0])
 	if err != nil {
 		return err
 	}

@@ -359,6 +359,14 @@ func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
 	)
 }
 
+func (t *Terraform) ForceUnlock(cluster interfaces.Cluster, lockID string) error {
+	return t.terraformWrapper(
+		cluster,
+		"force-unlock",
+		[]string{"-force", lockID},
+	)
+}
+
 func (t *Terraform) Shell(cluster interfaces.Cluster) error {
 
 	if err := t.terraformWrapper(cluster, debugShell, nil); err != nil {
