@@ -130,7 +130,6 @@ type Provider interface {
 	AskEnvironmentLocation(Initialize) (string, error)
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker, string) error
-	VerifyInstanceTypes(intstancePools []InstancePool) error
 	EnsureRemoteResources() error
 }
 
