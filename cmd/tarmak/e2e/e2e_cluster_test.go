@@ -28,8 +28,8 @@ func TestAWSSingleCluster(t *testing.T) {
 	}
 
 	defer func() {
-		t.Log("run cluster destroy command")
-		c = ti.Command("cluster", "destroy")
+		t.Log("run environment destroy command")
+		c = ti.Command("environment", "destroy", "--name", ti.environmentName, "--auto-approve")
 		// write error out to my stdout
 		c.Stderr = os.Stderr
 		if err := c.Run(); err != nil {
@@ -75,8 +75,8 @@ func TestAWSMultiCluster(t *testing.T) {
 	}
 
 	defer func() {
-		t.Log("run hub destroy command")
-		c = ti.Command("--current-cluster", fmt.Sprintf("%s-hub", ti.environmentName), "cluster", "destroy")
+		t.Log("run environment destroy command")
+		c = ti.Command("environment", "destroy", "--name", ti.environmentName, "--auto-approve")
 		// write error out to my stdout
 		c.Stderr = os.Stderr
 		if err := c.Run(); err != nil {
@@ -91,15 +91,6 @@ func TestAWSMultiCluster(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	defer func() {
-		t.Log("run cluster destroy command")
-		c = ti.Command("cluster", "destroy")
-		// write error out to my stdout
-		c.Stderr = os.Stderr
-		if err := c.Run(); err != nil {
-			t.Errorf("unexpected error: %+v", err)
-		}
-	}()
 	t.Log("run cluster apply command")
 	c = ti.Command("cluster", "apply")
 	// write error out to my stdout
