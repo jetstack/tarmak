@@ -707,6 +707,41 @@ policy permissions. `Information on how to correctly set these permissions can
 be found here
 <https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy>`_.
 
+Instance storage
+~~~~~~~~~~~~~~~~
+
+Certain AWS instance types have support for `instance storage
+<https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html>`_.
+It is possible to use instance storage as ultra fast storage for your Docker
+containers with Tarmak. This can be activated by defining a instance type
+(e.g. ``c5d.xlarge``) that has instance storage capabilities in the ``size``
+parameter of your instance pool. Also make sure you don't define any volumes
+with the name ``data``.
+
+.. code-block:: yaml
+
+  instancePools:
+  - image: centos-puppet-agent
+    maxCount: 3
+    metadata:
+      name: worker
+    minCount: 3
+    size: c5d.xlarge	
+    subnets:
+      zone: eu-west-1a
+    - metadata:
+        creationTimestamp: null
+      zone: eu-west-1b
+    - metadata:
+        creationTimestamp: null
+      zone: eu-west-1c
+    type: worker
+    volumes:
+    - metadata:
+        name: root
+      size: 16Gi
+      type: ssd
+
 Cluster Services
 ----------------
 
