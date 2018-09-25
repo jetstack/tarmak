@@ -204,8 +204,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 			t.socketPath(cluster),
 			stopRpcCh,
 		); err != nil {
-			t.log.Errorf("error listening to unix socket: %s", err)
-			return
+			t.log.Fatalf("error listening to unix socket: %s", err)
 		}
 	}()
 

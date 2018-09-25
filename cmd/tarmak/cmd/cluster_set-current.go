@@ -31,10 +31,10 @@ var clusterSetCurrentCmd = &cobra.Command{
 		}
 
 		if !found {
-			t.Must(fmt.Errorf("Failed to find cluster '%s' in config", args[0]))
+			t.Conclude(fmt.Errorf("Failed to find cluster '%s' in config", args[0]))
 		}
 
-		t.Must(t.Config().SetCurrentCluster(args[0]))
+		t.Conclude(t.Config().SetCurrentCluster(args[0]))
 	},
 }
 

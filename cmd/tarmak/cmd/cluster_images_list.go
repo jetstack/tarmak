@@ -23,7 +23,7 @@ var clusterImagesListCmd = &cobra.Command{
 		w.Init(os.Stdout, 0, 8, 0, '\t', 0)
 
 		images, err := t.Packer().List()
-		t.Must(err)
+		t.Conclude(err)
 
 		format := "%s\t%s\t%s\t%v\t%s\t%s\n"
 		fmt.Fprintf(
