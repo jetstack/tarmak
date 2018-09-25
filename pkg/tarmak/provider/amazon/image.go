@@ -68,7 +68,6 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 				image.Encrypted = *d.Ebs.Encrypted
 				foundRoot = true
 				break
-
 			}
 		}
 
