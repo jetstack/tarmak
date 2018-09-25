@@ -1,4 +1,6 @@
 {{/* vim: set ft=tf: */ -}}
+{{ $AmazonEBSEncrypted := .AmazonEBSEncrypted -}}
+{{ with .InstancePool -}}
 {{ $instancePool := . -}}
 
 data "template_file" "{{.TFName}}_user_data" {
@@ -75,6 +77,7 @@ resource "aws_launch_configuration" "{{.TFName}}" {
     device_name = "{{.Device}}"
     volume_size = {{.Size}}
     volume_type = "{{.Type}}"
+    encrypted   = "{{$AmazonEBSEncrypted}}"
   }
 {{ end -}}
 
@@ -222,6 +225,7 @@ resource "aws_ebs_volume" "{{$instancePool.TFName}}_{{.Name}}" {
   availability_zone = "${element(var.availability_zones, count.index)}"
   size              = "${var.{{$instancePool.TFName}}_{{.Name}}_volume_size}"
   type              = "${var.{{$instancePool.TFName}}_{{.Name}}_volume_type}"
+  encrypted         = "{{$AmazonEBSEncrypted}}"
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}-{{$instancePool.DNSName}}-{{.Name}}-${count.index+1}"
@@ -252,5 +256,5 @@ resource "aws_route53_record" "{{.TFName}}-exporter-srv" {
   ]
 }
 {{ end -}}
-
+{{ end -}}
 {{ end -}}
