@@ -6,12 +6,10 @@ After=etcd-k8s-events.service etcd-k8s-main.service etcd-overlay.service
 [Service]
 Type=oneshot
 Environment=BUCKET_NAME=<%= @backup_bucket_prefix %>
-Environment=OVERLAY_ENDPOINTS=<%= @overlay_endpoints %>
-Environment=OVERLAY_CA=<%= @overlay_ca_name %>
-Environment=K8S_EVENTS_ENDPOINTS=<%= @k8s_events_endpoints %>
-Environment=K8S_EVENTS_CA=<%= @k8s_events_ca_name %>
-Environment=K8S_MAIN_ENDPOINTS=<%= @k8s_main_endpoints %>
-Environment=K8S_MAIN_CA=<%= @k8s_main_ca_name %>
+Environment=CLUSTER_NAME=<%= @name %>
+Environment=ENDPOINTS=<%= @endpoints %>
+Environment=CA_PATH=<%= @ca_path %>
+Environment=ETCD_VERSION=<%= @version %>
 ExecStart=/opt/bin/etcd-backup.sh
 
 [Install]
