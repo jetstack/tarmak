@@ -370,7 +370,7 @@ func (a *Amazon) Verify() error {
 		result = multierror.Append(result, err)
 	}
 
-	if err := a.verifyEBSEncrypted(); err != nil {
+	if err := a.verifyImageExists(); err != nil {
 		result = multierror.Append(result, err)
 	}
 

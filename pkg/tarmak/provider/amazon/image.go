@@ -2,12 +2,12 @@
 package amazon
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/go-multierror"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
@@ -38,7 +38,6 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 
 	formatRFC3339amazon := "2006-01-02T15:04:05.999Z07:00"
 
-	var result *multierror.Error
 	for _, ami := range amis.Images {
 		image := tarmakv1alpha1.Image{}
 		image.Annotations = map[string]string{}
@@ -52,8 +51,6 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 			}
 		}
 
-		// TODO: determine whether image encrypted and set flag accordingly
-
 		creationTimestamp, err := time.Parse(formatRFC3339amazon, *ami.CreationDate)
 		if err != nil {
 			return images, fmt.Errorf("error parsing time stamp '%s'", err)
@@ -62,9 +59,20 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 		image.Name = *ami.ImageId
 		image.Location = a.Region()
 
+		if ami.RootDeviceName == nil {
+			a.log.Warnf("failed to obtain root device name of ami '%s'", image.Name)
+			continue
+		}
+		rootName := *ami.RootDeviceName
+
 		foundRoot := false
 		for _, d := range ami.BlockDeviceMappings {
-			if *d.DeviceName == *ami.RootDeviceName {
+			if d.DeviceName != nil && *d.DeviceName == rootName {
+				if d.Ebs == nil || d.Ebs.Encrypted == nil {
+					a.log.Warnf("failed to determine the encryption state of ami '%s'", image.Name)
+					continue
+				}
+
 				image.Encrypted = *d.Ebs.Encrypted
 				foundRoot = true
 				break
@@ -72,31 +80,25 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 		}
 
 		if !foundRoot {
-			result = multierror.Append(result, fmt.Errorf("failed to find root device of ami '%s'", *ami.Name))
+			a.log.Warnf("failed to find root device of ami '%s'", image.Name)
+			continue
 		}
 
-		images = append(
-			images,
-			image,
-		)
+		images = append(images, image)
 	}
 
-	return images, result.ErrorOrNil()
+	return images, nil
 }
 
-func (a *Amazon) verifyEBSEncrypted() error {
+func (a *Amazon) verifyImageExists() error {
 	images, err := a.tarmak.Packer().List()
 	if err != nil {
 		return err
 	}
 
-	var result *multierror.Error
-	for _, image := range images {
-		if enc := *a.tarmak.Cluster().Config().Amazon.EBSEncrypted; image.Encrypted != enc {
-			err = fmt.Errorf("instance pool image '%s' has encrypted=%t, cluster wide expected=%t", image.Name, image.Encrypted, enc)
-			result = multierror.Append(result, err)
-		}
+	if len(images) == 0 {
+		return errors.New("no images found, please run `$ tarmak cluster images build`")
 	}
 
-	return result.ErrorOrNil()
+	return nil
 }

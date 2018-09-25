@@ -52,9 +52,21 @@ func (p *Packer) images() (images []*image) {
 
 // List existing images
 func (p *Packer) List() ([]tarmakv1alpha1.Image, error) {
-	return p.tarmak.Cluster().Environment().Provider().QueryImages(
+	allImages, err := p.tarmak.Cluster().Environment().Provider().QueryImages(
 		map[string]string{tarmakv1alpha1.ImageTagEnvironment: p.tarmak.Environment().Name()},
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	var prunedImages []tarmakv1alpha1.Image
+	for _, i := range allImages {
+		if i.Encrypted == p.tarmak.Cluster().AmazonEBSEncrypted() {
+			prunedImages = append(prunedImages, i)
+		}
+	}
+
+	return prunedImages, nil
 }
 
 // Build all images

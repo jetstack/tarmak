@@ -310,6 +310,10 @@ func (c *Cluster) validateInstancePools() error {
 func (c *Cluster) Verify() error {
 	var result *multierror.Error
 
+	if err := c.Environment().Verify(); err != nil {
+		return fmt.Errorf("failed to verify tarmak provider: %s", err)
+	}
+
 	if err := c.VerifyInstancePools(); err != nil {
 		result = multierror.Append(result, err)
 	}
