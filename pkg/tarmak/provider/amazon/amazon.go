@@ -26,6 +26,7 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
@@ -670,7 +671,6 @@ func (a *Amazon) VolumeType(typeIn string) (typeOut string, err error) {
 func (a *Amazon) verifyEBSEncrypted() error {
 
 	var result error
-	var matching bool
 
 	// TODO: 459 - pass an a.EC2() to this function to lower expense
 	svc, err := a.EC2()
@@ -696,10 +696,8 @@ func (a *Amazon) verifyEBSEncrypted() error {
 		idslice = append(idslice, imageid)
 	}
 
-	deduplicatedsliceofids := deduplicate(idslice)
-
 	request := &ec2.DescribeImagesInput{
-		ImageIds: aws.StringSlice(deduplicatedsliceofids),
+		ImageIds: aws.StringSlice(utils.RemoveDuplicateStrings(idslice)),
 	}
 	awsamis, err := svc.DescribeImages(request)
 	if err != nil {
@@ -719,8 +717,7 @@ func (a *Amazon) verifyEBSEncrypted() error {
 		}
 		// if *awsami.BlockDeviceMappings[key].Ebs.Encrypted != a.tarmak.Config().Cluster().ImageIDs() {
 		if *awsami.BlockDeviceMappings[key].Ebs.Encrypted {
-			result = multierror.Append(result, fmt.Errorf("AMI ID '%s' expected encrypted =%v"), " ", *awsami.BlockDeviceMappings[key].Ebs.Encrypted)
-
+			result = multierror.Append(result, fmt.Errorf("AMI'%s' expected encrypted =%v", *awsami.Name, *awsami.BlockDeviceMappings[key].Ebs.Encrypted))
 		}
 
 		// if == nil or false, result is:
@@ -730,16 +727,4 @@ func (a *Amazon) verifyEBSEncrypted() error {
 	}
 
 	return result
-}
-
-func deduplicate(stringSlice []string) []string {
-	keys := make(map[string]bool)
-	list := []string{}
-	for _, entry := range stringSlice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			list = append(list, entry)
-		}
-	}
-	return list
 }

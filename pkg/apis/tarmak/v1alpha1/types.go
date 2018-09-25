@@ -110,6 +110,7 @@ type Image struct {
 
 	BaseImage string `json:"baseImage,omitempty"`
 	Location  string `json:"location,omitempty"`
+	Encrypted bool   `json:"encrypted,omitempty"`
 }
 
 // This represents tarmaks global flags

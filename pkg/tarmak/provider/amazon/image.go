@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
@@ -37,6 +38,7 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 
 	formatRFC3339amazon := "2006-01-02T15:04:05.999Z07:00"
 
+	var result *multierror.Error
 	for _, ami := range amis.Images {
 		image := tarmakv1alpha1.Image{}
 		image.Annotations = map[string]string{}
@@ -59,11 +61,26 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 		image.CreationTimestamp.Time = creationTimestamp
 		image.Name = *ami.ImageId
 		image.Location = a.Region()
+
+		foundRoot := false
+		for _, d := range ami.BlockDeviceMappings {
+			if *d.DeviceName == *ami.RootDeviceName {
+				image.Encrypted = *d.Ebs.Encrypted
+				foundRoot = true
+				break
+
+			}
+		}
+
+		if !foundRoot {
+			result = multierror.Append(result, fmt.Errorf("failed to find root device of ami '%s'", *ami.Name))
+		}
+
 		images = append(
 			images,
 			image,
 		)
 	}
 
-	return images, nil
+	return images, result.ErrorOrNil()
 }
