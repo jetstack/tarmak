@@ -138,11 +138,12 @@ options you can set that are not exposed via `tarmak init`.
 
 Pod Security Policy
 ~~~~~~~~~~~~~~~~~~~
+
 **Note:** For cluster versions greater than 1.8.0 this is applied by default.
 For cluster versions before 1.6.0 is it not applied.
 
-To enable Pod Security Policy to an environment, include the following to the
-configuration file under the kubernetes field of that environment:
+To enable Pod Security Policy for an environment, include the following in the
+configuration file under the Kubernetes field of that environment:
 
 ::
 
@@ -150,9 +151,14 @@ configuration file under the kubernetes field of that environment:
         podSecurityPolicy:
             enabled: true
 
-The configuration file can be found at ``$HOME/.tarmak/tarmak.yaml`` (default).
-The Pod Security Policy manifests can be found within the tarmak directory at
-``puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb``
+(By default, the Tarmak configuration file is stored at
+``$HOME/.tarmak/tarmak.yaml``).
+
+The PodSecurityPolicy manifests - also listed below - can be found in the
+``puppet/modules/kubernetes/templates/`` directory.
+
+- `PodSecurityPolicy RBAC <https://github.com/jetstack/tarmak/blob/master/puppet/modules/kubernetes/templates/pod-security-policy-rbac.yaml.erb>`_
+- `PodSecurityPolicy <https://github.com/jetstack/tarmak/blob/master/puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb>`_
 
 Cluster Autoscaler
 ~~~~~~~~~~~~~~~~~~
