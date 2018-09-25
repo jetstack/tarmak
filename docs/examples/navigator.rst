@@ -28,6 +28,6 @@ in ``Pending`` until the PVC can be bound.
 **Note: Node Sizes for Elasticsearch**
 
 The `Elasticsearch example
-<https://github.com/jetstack/navigator/blob/v0.1.0-alpha.1/docs/quick-start/es-cluster-demo.yaml#L26-L54>`_
+<https://github.com/jetstack/navigator/blob/v0.1.0-alpha.1/docs/quick-start/es-cluster-demo.yaml#L26>`_
 creates five pods each requesting 2Gi of RAM. You may wish to provision a
 dedicated instance pool for this.

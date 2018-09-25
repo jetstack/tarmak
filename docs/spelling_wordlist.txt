@@ -28,6 +28,7 @@ ec
 Elasticsearch
 env
 etcd
+Gi
 gid
 golang
 Golang
