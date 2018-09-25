@@ -84,3 +84,20 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 
 	return images, result.ErrorOrNil()
 }
+
+func (a *Amazon) verifyEBSEncrypted() error {
+	images, err := a.tarmak.Packer().List()
+	if err != nil {
+		return err
+	}
+
+	var result *multierror.Error
+	for _, image := range images {
+		if enc := *a.tarmak.Cluster().Config().Amazon.EBSEncrypted; image.Encrypted != enc {
+			err = fmt.Errorf("instance pool image '%s' has encrypted=%t, cluster wide expected=%t", image.Name, image.Encrypted, enc)
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result.ErrorOrNil()
+}

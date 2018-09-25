@@ -8,9 +8,6 @@ import (
 	"path/filepath"
 	"sort"
 
-	//TODO: 459
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -26,7 +23,6 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
@@ -371,9 +367,13 @@ func (a *Amazon) Verify() error {
 		result = multierror.Append(result, err)
 	}
 
-	// if err := a.verifyEBSEncrypted(); err != nil {
-	// 	result = multierror.Append(result, err)
-	// }
+	if err := a.verifyInstanceTypes(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if err := a.verifyEBSEncrypted(); err != nil {
+		result = multierror.Append(result, err)
+	}
 
 	return result.ErrorOrNil()
 }
@@ -573,7 +573,7 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 	return sess, nil
 }
 
-func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) error {
+func (a *Amazon) verifyInstanceTypes() error {
 	var result error
 
 	svc, err := a.EC2()
@@ -581,7 +581,7 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 		return err
 	}
 
-	for _, instance := range instancePools {
+	for _, instance := range a.tarmak.Cluster().InstancePools() {
 		instanceType, err := a.InstanceType(instance.Config().Size)
 		if err != nil {
 			return err
@@ -666,65 +666,4 @@ func (a *Amazon) VolumeType(typeIn string) (typeOut string, err error) {
 	}
 	// TODO: Validate custom instance type here
 	return typeIn, nil
-}
-
-func (a *Amazon) verifyEBSEncrypted() error {
-
-	var result error
-
-	// TODO: 459 - pass an a.EC2() to this function to lower expense
-	svc, err := a.EC2()
-	if err != nil {
-		return err
-	}
-
-	imageids, err := a.tarmak.Cluster().ImageIDs()
-	if err != nil {
-		return err
-	}
-
-	packerimages, err := a.tarmak.Packer().List()
-	if err != nil {
-		return err
-	}
-
-	log.Println(packerimages)
-
-	// Convert map to slice to conform with AWS SDK ec2.DescribeImagesInput
-	idslice := []string{}
-	for _, imageid := range imageids {
-		idslice = append(idslice, imageid)
-	}
-
-	request := &ec2.DescribeImagesInput{
-		ImageIds: aws.StringSlice(utils.RemoveDuplicateStrings(idslice)),
-	}
-	awsamis, err := svc.DescribeImages(request)
-	if err != nil {
-		return fmt.Errorf("error reaching aws to request image descriptions: %v", err)
-	}
-
-	// THEN VERIFY THAT ENCRYPTED == TRUE  ON AWS AND ENCRYPTED == TRUE ON PACKER
-	//				OR	ENCRYPTED == FALSE ON AWS AND ENCRYPTED == FALSE ON PACKER
-	for key, awsami := range awsamis.Images {
-		tarmakimage := tarmakv1alpha1.Image{}
-		tarmakimage.Annotations = map[string]string{}
-		if *awsami.BlockDeviceMappings[key].Ebs.Encrypted == true {
-			log.Println("Encrypted true")
-		}
-		if *awsami.BlockDeviceMappings[key].Ebs.Encrypted == false {
-			log.Println("Encrypted false")
-		}
-		// if *awsami.BlockDeviceMappings[key].Ebs.Encrypted != a.tarmak.Config().Cluster().ImageIDs() {
-		if *awsami.BlockDeviceMappings[key].Ebs.Encrypted {
-			result = multierror.Append(result, fmt.Errorf("AMI'%s' expected encrypted =%v", *awsami.Name, *awsami.BlockDeviceMappings[key].Ebs.Encrypted))
-		}
-
-		// if == nil or false, result is:
-
-		// AMI id expected to be
-
-	}
-
-	return result
 }
