@@ -10,7 +10,7 @@ Environment=CLUSTER_NAME=<%= @name %>
 Environment=ENDPOINTS=<%= @endpoints %>
 Environment=CA_PATH=<%= @ca_path %>
 Environment=ETCD_VERSION=<%= @version %>
-ExecStart=/opt/bin/etcd-backup.sh
+ExecStart=/opt/etcd-<% @version %>/etcd-backup.sh
 
 [Install]
 WantedBy=multi-user.target
