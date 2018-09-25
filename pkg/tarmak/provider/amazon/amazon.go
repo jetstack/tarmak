@@ -36,14 +36,13 @@ type Amazon struct {
 	availabilityZones *[]string
 	remoteStateKMS    string
 
-	session      *session.Session
-	ec2          EC2
-	s3           S3
-	kms          KMS
-	dynamodb     DynamoDB
-	route53      Route53
-	log          *logrus.Entry
-	ebsEncrypted bool
+	session  *session.Session
+	ec2      EC2
+	s3       S3
+	kms      KMS
+	dynamodb DynamoDB
+	route53  Route53
+	log      *logrus.Entry
 }
 
 type S3 interface {
