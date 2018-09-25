@@ -39,18 +39,18 @@ func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
 	}
 }
 
-func (c *CmdTerraform) Plan() error {
+func (c *CmdTerraform) Plan() (returnCode int, err error) {
 	if err := c.setup(); err != nil {
-		return err
+		return 1, err
 	}
 
 	c.log.Info("running plan")
-	err := c.tarmak.terraform.Plan(c.tarmak.Cluster())
-	if err != nil {
-		return err
+	changesNeeded, err := c.tarmak.terraform.Plan(c.tarmak.Cluster())
+	if changesNeeded {
+		return 2, err
+	} else {
+		return 0, err
 	}
-
-	return nil
 }
 
 func (c *CmdTerraform) Apply() error {

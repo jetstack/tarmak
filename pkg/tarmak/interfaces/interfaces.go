@@ -284,5 +284,6 @@ type CancellationContext interface {
 	Done() <-chan struct{}
 	Err() error
 	Signal() os.Signal
-	WaitOrCancel(f func() error, ignoredExitStatuses ...int)
+	WaitOrCancel(f func() error)
+	WaitOrCancelReturnCode(f func() (int, error))
 }

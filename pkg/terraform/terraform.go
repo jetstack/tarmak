@@ -342,46 +342,63 @@ func (t *Terraform) terraformPlanPath(cluster interfaces.Cluster) string {
 	return filepath.Join(t.codePath(cluster), terraformPlanFile)
 }
 
-func (t *Terraform) Plan(cluster interfaces.Cluster) error {
-	if err := t.terraformWrapper(
+// this checks if an error is coming from an exec failing with exit code 2,
+// this is typicall for a terraform plan that has changes
+func errIsTerraformPlanChangesNeeded(err error) bool {
+	if err == nil {
+		return false
+	} else if exitError, ok := err.(*exec.ExitError); !ok {
+		return false
+	} else if status, ok := exitError.ProcessState.Sys().(syscall.WaitStatus); !ok {
+		return false
+	} else if status.ExitStatus() != 2 {
+		return false
+	}
+
+	return true
+}
+
+func (t *Terraform) Plan(cluster interfaces.Cluster) (changesNeeded bool, err error) {
+	err = t.terraformWrapper(
 		cluster,
 		"plan",
 		[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", terraformPlanFile)},
-	); err != nil {
-		return err
+	)
+	changesNeeded = errIsTerraformPlanChangesNeeded(err)
+	if err != nil && !changesNeeded {
+		return false, err
 	}
 
 	tfPlan, err := plan.Open(t.terraformPlanPath(cluster))
 	if err != nil {
-		return fmt.Errorf("error while trying to read plan file: %s", err)
+		return false, fmt.Errorf("error while trying to read plan file: %s", err)
 	}
 
 	isDestroyingEBSVolume, ebsVolumesToDestroy := plan.IsDestroyingEBSVolume(tfPlan)
 	if isDestroyingEBSVolume {
 		// TODO: add override flag
-		return fmt.Errorf("error this will destroy the following EBS volumes: %s", strings.Join(ebsVolumesToDestroy, ", "))
+		return false, fmt.Errorf("error this will destroy the following EBS volumes: %s", strings.Join(ebsVolumesToDestroy, ", "))
 	}
 
-	return nil
+	return changesNeeded, nil
 }
 
 func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 	// TODO: handle supplied plan
 
 	// generate a plan
-	if err := t.Plan(cluster); err == nil {
+	if changesNeeded, err := t.Plan(cluster); err != nil {
+		return err
+	} else if !changesNeeded {
 		// nothing to do
 		return nil
-	} else {
-		if exitError, ok := err.(*exec.ExitError); !ok {
-			// handle error
-			return err
-		} else {
-			if status, ok := exitError.ProcessState.Sys().(syscall.WaitStatus); !ok || status.ExitStatus() != 2 {
-				// handle non 2 exit codes or not matching interface
-				return err
-			}
-		}
+	}
+
+	// break after sigterm
+	select {
+	case <-t.ctx.Done():
+		return t.ctx.Err()
+	default:
 	}
 
 	// apply necessary at this point
