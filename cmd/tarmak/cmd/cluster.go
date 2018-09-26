@@ -55,6 +55,14 @@ func clusterApplyFlags(fs *flag.FlagSet) {
 		consts.DefaultPlanLocationPlaceholder,
 		"location of stored terraform plan executable file to be used",
 	)
+
+	fs.BoolVarP(
+		&store.WaitForConvergence,
+		"wait-for-convergence",
+		"W",
+		true,
+		"wait for wing convergence on applied instances",
+	)
 }
 
 func clusterDestroyFlags(fs *flag.FlagSet) {
