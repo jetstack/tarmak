@@ -1,4 +1,4 @@
-.. getting-started:
+.. _user_guide:
 
 User guide
 ==========
