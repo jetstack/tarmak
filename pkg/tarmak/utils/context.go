@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -80,7 +79,15 @@ func MakeShutdownCh() <-chan struct{} {
 	return resultCh
 }
 
-func (c *CancellationContext) WaitOrCancel(f func() error, ignoredExitStatuses ...int) {
+func (c *CancellationContext) WaitOrCancel(f func() error) {
+	c.WaitOrCancelReturnCode(
+		func() (int, error) {
+			return 0, f()
+		},
+	)
+}
+
+func (c *CancellationContext) WaitOrCancelReturnCode(f func() (int, error)) {
 	defer c.cancel()
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -107,35 +114,15 @@ func (c *CancellationContext) WaitOrCancel(f func() error, ignoredExitStatuses .
 		}
 	}()
 
-	err := f()
+	retCode, err := f()
 	switch err {
 	case nil:
 		log.Info("Tarmak performed all tasks successfully.")
-		log.Exit(0)
+		log.Exit(retCode)
 	case context.Canceled:
 		log.Errorf("Tarmak was canceled (%s). Re-run to complete any remaining tasks.", c.sig)
 		log.Exit(1)
 	default:
-		exitError, ok := err.(*exec.ExitError)
-		if ok {
-			status := exitError.ProcessState.Sys().(syscall.WaitStatus)
-			exitStatus := status.ExitStatus()
-
-			errorOk := false
-			for _, status := range ignoredExitStatuses {
-				if exitStatus == status {
-					errorOk = true
-					break
-				}
-			}
-			if !errorOk {
-				log.Errorf("Tarmak exited with an error: %s", err)
-				log.Exit(exitStatus)
-			}
-			log.Info("Tarmak performed all tasks successfully.")
-			log.Exit(exitStatus)
-		}
-
 		log.Errorf("Tarmak exited with an error: %s", err)
 		log.Exit(1)
 	}

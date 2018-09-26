@@ -191,6 +191,10 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
 	return fmt.Sprintf("[%s]", strings.Join(policies, ","))
 }
 
+func (n *InstancePool) Encrypted() bool {
+	return n.cluster.AmazonEBSEncrypted()
+}
+
 func (n *InstancePool) Validate() (result error) {
 	return n.ValidateAllowCIDRs()
 }

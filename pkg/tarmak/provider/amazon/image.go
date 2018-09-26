@@ -41,12 +41,16 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 		image := tarmakv1alpha1.Image{}
 		image.Annotations = map[string]string{}
 
+		// copy over tags from the AMI to image annotations
 		for _, tag := range ami.Tags {
 			image.Annotations[*tag.Key] = *tag.Value
+			// copy over base image name from AMI tags
 			if *tag.Key == tarmakv1alpha1.ImageTagBaseImageName {
 				image.BaseImage = *tag.Value
 			}
 		}
+
+		// TODO: determine whether image encrypted and set flag accordingly
 
 		creationTimestamp, err := time.Parse(formatRFC3339amazon, *ami.CreationDate)
 		if err != nil {
