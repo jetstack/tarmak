@@ -707,16 +707,16 @@ policy permissions. `Information on how to correctly set these permissions can
 be found here
 <https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy>`_.
 
-Instance storage
-~~~~~~~~~~~~~~~~
+Instance store
+~~~~~~~~~~~~~~
 
-Certain AWS instance types have support for `instance storage
+Certain AWS instance types have support for `instance store
 <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html>`_.
-It is possible to use instance storage as ultra fast storage for your Docker
+It is possible to use instance store as ultra fast storage for your Docker
 containers with Tarmak. This can be activated by defining a instance type
-(e.g. ``c5d.xlarge``) that has instance storage capabilities in the ``size``
+(e.g. ``c5d.xlarge``) that has instance store capabilities in the ``size``
 parameter of your instance pool. Also make sure you don't define any volumes
-with the name ``data``.
+with the name ``docker``.
 
 .. code-block:: yaml
 
