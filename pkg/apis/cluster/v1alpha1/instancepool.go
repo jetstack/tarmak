@@ -38,6 +38,7 @@ const (
 	InstancePoolTypeHybrid     = "hybrid"      // master + worker
 )
 
+// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type InstancePool struct {

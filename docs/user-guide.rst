@@ -254,7 +254,7 @@ shown below:
     - types:
       - application
       - platform
-      elasticsearch:
+      elasticSearch:
         host: example.amazonaws.com
         port: 443
         logstashPrefix: test
@@ -265,7 +265,7 @@ shown below:
           password: mypassword
     - types:
       - all
-      elasticsearch:
+      elasticSearch:
         host: example2.amazonaws.com
         port: 443
         tls: true
@@ -349,7 +349,7 @@ Both of those outputs can then be used in the tarmak configuration:
   - name: cluster
     loggingSinks:
     - types: ["all"]
-      elasticsearch:
+      elasticSearch:
         host: ${elasticsearch_endpoint}
         tls: true
         amazonESProxy: {}
