@@ -16,7 +16,7 @@ class tarmak::vault (
     $disks = aws_ebs::disks()
     case $disks.length {
       0: {$ebs_device = ''}
-      1: {$ebs_device = $disks[0]}
+      1: {$ebs_device = 'xvdd'}
       default: {$ebs_device = $disks[1]}
     }
 
@@ -26,7 +26,7 @@ class tarmak::vault (
     }
     aws_ebs::mount{'vault':
       volume_id => $volume_id,
-      device    => $ebs_device,
+      device    => "/dev/${ebs_device}",
       dest_path => $data_dir,
     }
   }
