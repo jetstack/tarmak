@@ -2,7 +2,6 @@
 package amazon
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -88,17 +87,4 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 	}
 
 	return images, nil
-}
-
-func (a *Amazon) verifyImageExists() error {
-	images, err := a.tarmak.Packer().List()
-	if err != nil {
-		return err
-	}
-
-	if len(images) == 0 {
-		return errors.New("no images found, please run `$ tarmak cluster images build`")
-	}
-
-	return nil
 }

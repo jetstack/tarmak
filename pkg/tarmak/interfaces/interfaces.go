@@ -193,7 +193,7 @@ type Config interface {
 }
 
 type Packer interface {
-	IDs() (map[string]string, error)
+	IDs(encrypted bool) (map[string]string, error)
 	List() ([]tarmakv1alpha1.Image, error)
 	Build() error
 }

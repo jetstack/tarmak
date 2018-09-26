@@ -370,10 +370,6 @@ func (a *Amazon) Verify() error {
 		result = multierror.Append(result, err)
 	}
 
-	if err := a.verifyImageExists(); err != nil {
-		result = multierror.Append(result, err)
-	}
-
 	return result.ErrorOrNil()
 }
 
