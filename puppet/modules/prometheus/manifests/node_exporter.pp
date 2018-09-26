@@ -55,13 +55,12 @@ class prometheus::node_exporter (
       description => '{{$labels.instance}}: Memory usage usage is above 80% (current value is: {{ $value }})',
     }
 
-
     # scrape node exporter running on etcd nodes
     prometheus::scrape_config { 'etcd-nodes-exporter':
       order  =>  135,
       config => {
         'dns_sd_configs'  => [{
-          'names' => $tarmak::etcd_cluster_exporters,
+          'names' => $tarmak::etcd_cluster_node_exporters,
         }],
       }
     }

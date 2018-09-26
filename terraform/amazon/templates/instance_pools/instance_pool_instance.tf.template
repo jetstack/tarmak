@@ -251,6 +251,16 @@ resource "aws_route53_record" "{{.TFName}}-exporter-srv" {
     "${formatlist("1 10 9115 %s.%s", aws_route53_record.{{.TFName}}.*.name, var.private_zone)}"
   ]
 }
+
+resource "aws_route53_record" "{{.TFName}}-node-exporter-srv" {
+  zone_id = "${var.private_zone_id}"
+  name    = "{{.Role.Name}}-node-exporters.${data.template_file.stack_name.rendered}"
+  type    = "SRV"
+  ttl     = "300"
+  records = [
+    "${formatlist("1 10 9100 %s.%s", aws_route53_record.{{.TFName}}.*.name, var.private_zone)}"
+  ]
+}
 {{ end -}}
 
 {{ end -}}
