@@ -50,8 +50,6 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 			}
 		}
 
-		// TODO: determine whether image encrypted and set flag accordingly
-
 		creationTimestamp, err := time.Parse(formatRFC3339amazon, *ami.CreationDate)
 		if err != nil {
 			return images, fmt.Errorf("error parsing time stamp '%s'", err)
@@ -59,10 +57,33 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 		image.CreationTimestamp.Time = creationTimestamp
 		image.Name = *ami.ImageId
 		image.Location = a.Region()
-		images = append(
-			images,
-			image,
-		)
+
+		if ami.RootDeviceName == nil {
+			a.log.Warnf("failed to obtain root device name of ami '%s'", image.Name)
+			continue
+		}
+		rootName := *ami.RootDeviceName
+
+		foundRoot := false
+		for _, d := range ami.BlockDeviceMappings {
+			if d.DeviceName != nil && *d.DeviceName == rootName {
+				if d.Ebs == nil || d.Ebs.Encrypted == nil {
+					a.log.Warnf("failed to determine the encryption state of ami '%s'", image.Name)
+					continue
+				}
+
+				image.Encrypted = *d.Ebs.Encrypted
+				foundRoot = true
+				break
+			}
+		}
+
+		if !foundRoot {
+			a.log.Warnf("failed to find root device of ami '%s'", image.Name)
+			continue
+		}
+
+		images = append(images, image)
 	}
 
 	return images, nil

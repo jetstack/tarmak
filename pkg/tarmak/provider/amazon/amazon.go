@@ -64,6 +64,7 @@ type EC2 interface {
 	DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (*ec2.DescribeAvailabilityZonesOutput, error)
 	DescribeRegions(input *ec2.DescribeRegionsInput) (*ec2.DescribeRegionsOutput, error)
 	DescribeReservedInstancesOfferings(input *ec2.DescribeReservedInstancesOfferingsInput) (*ec2.DescribeReservedInstancesOfferingsOutput, error)
+	DescribeImages(input *ec2.DescribeImagesInput) (*ec2.DescribeImagesOutput, error)
 }
 
 type DynamoDB interface {
@@ -359,10 +360,13 @@ func (a *Amazon) Verify() error {
 		if err := a.verifyAvailabilityZones(); err != nil {
 			result = multierror.Append(result, err)
 		}
-
 	}
 
 	if err := a.verifyPublicZone(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if err := a.verifyInstanceTypes(); err != nil {
 		result = multierror.Append(result, err)
 	}
 
@@ -564,7 +568,7 @@ func (a *Amazon) vaultSession() (*session.Session, error) {
 	return sess, nil
 }
 
-func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) error {
+func (a *Amazon) verifyInstanceTypes() error {
 	var result error
 
 	svc, err := a.EC2()
@@ -572,7 +576,7 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 		return err
 	}
 
-	for _, instance := range instancePools {
+	for _, instance := range a.tarmak.Cluster().InstancePools() {
 		instanceType, err := a.InstanceType(instance.Config().Size)
 		if err != nil {
 			return err
@@ -581,6 +585,7 @@ func (a *Amazon) VerifyInstanceTypes(instancePools []interfaces.InstancePool) er
 		if err := a.verifyInstanceType(instanceType, instance.Zones(), svc); err != nil {
 			result = multierror.Append(result, err)
 		}
+
 	}
 
 	return result

@@ -4,7 +4,6 @@ package tarmak
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -198,19 +197,6 @@ func (c *CmdTerraform) verifyTerraformBinaryVersion() error {
 		return fmt.Errorf("Terraform binary version (%s) is greater than vendored version (%s). Please downgrade binary version to %s", terraformBinaryVersion, terraformVendoredVersion, terraformVendoredVersion)
 	} else if terraformBinaryVersionSemver.LT(terraformVendoredVersionSemver) {
 		return fmt.Errorf("Terraform binary version (%s) is less than vendored version (%s). Please upgrade binary version to %s", terraformBinaryVersion, terraformVendoredVersion, terraformVendoredVersion)
-	}
-
-	return nil
-}
-
-func (t *Tarmak) verifyImageExists() error {
-	images, err := t.Packer().List()
-	if err != nil {
-		return err
-	}
-
-	if len(images) == 0 {
-		return errors.New("no images found")
 	}
 
 	return nil

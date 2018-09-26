@@ -25,13 +25,14 @@ var clusterImagesListCmd = &cobra.Command{
 		images, err := t.Packer().List()
 		t.Must(err)
 
-		format := "%s\t%s\t%s\t%s\t%s\n"
+		format := "%s\t%s\t%s\t%v\t%s\t%s\n"
 		fmt.Fprintf(
 			w,
 			format,
 			"Image ID",
 			"Base Image",
 			"Location",
+			"Encrypted",
 			"Tags",
 			"Created",
 		)
@@ -43,6 +44,7 @@ var clusterImagesListCmd = &cobra.Command{
 				image.Name,
 				image.BaseImage,
 				image.Location,
+				image.Encrypted,
 				image.Annotations,
 				image.CreationTimestamp.Format(time.RFC3339),
 			)

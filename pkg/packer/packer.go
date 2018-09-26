@@ -70,7 +70,7 @@ func (p *Packer) Build() error {
 }
 
 // Query images
-func (p *Packer) IDs() (map[string]string, error) {
+func (p *Packer) IDs(encrypted bool) (map[string]string, error) {
 	images, err := p.List()
 	if err != nil {
 		return nil, err
@@ -80,6 +80,9 @@ func (p *Packer) IDs() (map[string]string, error) {
 	imageIDByName := make(map[string]string)
 
 	for _, image := range images {
+		if image.Encrypted != encrypted {
+			continue
+		}
 		if changeTime, ok := imagesChangeTime[image.BaseImage]; !ok || changeTime.Before(image.CreationTimestamp.Time) {
 			imagesChangeTime[image.BaseImage] = image.CreationTimestamp.Time
 			imageIDByName[image.BaseImage] = image.Name

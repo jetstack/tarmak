@@ -310,6 +310,10 @@ func (c *Cluster) validateInstancePools() error {
 func (c *Cluster) Verify() error {
 	var result *multierror.Error
 
+	if err := c.Environment().Verify(); err != nil {
+		return fmt.Errorf("failed to verify tarmak provider: %s", err)
+	}
+
 	if err := c.VerifyInstancePools(); err != nil {
 		result = multierror.Append(result, err)
 	}
@@ -373,20 +377,27 @@ func (c *Cluster) verifyHubState() error {
 }
 
 // Verify instance pools
-func (c *Cluster) VerifyInstancePools() (result error) {
+func (c *Cluster) VerifyInstancePools() error {
 	imageIDs, err := c.ImageIDs()
 	if err != nil {
 		return fmt.Errorf("error getting image IDs: %s]", err)
 	}
 
+	if len(imageIDs) == 0 {
+		return errors.New("no images found, please run `$ tarmak cluster images build`")
+	}
+
+	var result *multierror.Error
 	for _, instancePool := range c.InstancePools() {
 		image := instancePool.Image()
-		_, ok := imageIDs[image]
-		if !ok {
-			return fmt.Errorf("error getting the image ID of %s", instancePool.TFName())
+		s, ok := imageIDs[image]
+		if !ok || s == "" {
+			err := fmt.Errorf("failed to find the image ID of image '%s' used by instance pool '%s'", image, instancePool.TFName())
+			result = multierror.Append(result, err)
 		}
 	}
-	return nil
+
+	return result.ErrorOrNil()
 }
 
 func (c *Cluster) Validate() error {
@@ -615,7 +626,7 @@ func (c *Cluster) Images() []string {
 
 func (c *Cluster) ImageIDs() (map[string]string, error) {
 	if c.imageIDs == nil {
-		imageMap, err := c.Environment().Tarmak().Packer().IDs()
+		imageMap, err := c.Environment().Tarmak().Packer().IDs(c.AmazonEBSEncrypted())
 		if err != nil {
 			return nil, err
 		}
