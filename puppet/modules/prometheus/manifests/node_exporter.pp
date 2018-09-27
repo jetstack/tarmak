@@ -129,9 +129,10 @@ class prometheus::node_exporter (
       content => template('prometheus/node-exporter.service.erb'),
       notify  => Exec["${module_name}-systemctl-daemon-reload"],
     }
-    -> service { 'node-exporter':
-      ensure => running,
-      enable => true,
+    ~> service { 'node-exporter.service':
+      ensure  => running,
+      enable  => true,
+      require => Exec["${module_name}-systemctl-daemon-reload"],
     }
   }
 }
