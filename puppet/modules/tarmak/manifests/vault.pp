@@ -25,9 +25,9 @@ class tarmak::vault (
       systemd_dir => $systemd_dir,
     }
     aws_ebs::mount{'vault':
-      volume_id     => $volume_id,
-      device        => "/dev/${ebs_device}",
-      dest_path     => $data_dir,
+      volume_id       => $volume_id,
+      device          => "/dev/${ebs_device}",
+      dest_path       => $data_dir,
       is_not_attached => $is_not_attached,
     }
   }
