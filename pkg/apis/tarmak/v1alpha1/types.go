@@ -161,8 +161,8 @@ type ClusterApplyFlags struct {
 	AutoApprove             bool `json:"autoApprove,omitempty"`             // auto approve apply queries
 	AutoApproveDeletingData bool `json:"autoApproveDeletingData,omitempty"` // auto approve apply queries about deleting data
 
-	PlanFileLocation   string `json:"planFileLocation,omitempty"`  // file location where plan file is to be used
-	WaitForConvergence bool   `json"waitForConvergence,omitempty"` // wait for wing convergence when applying
+	PlanFileLocation   string `json:"planFileLocation,omitempty"`   // file location where plan file is to be used
+	WaitForConvergence bool   `json:"waitForConvergence,omitempty"` // wait for wing convergence when applying
 }
 
 // Contains the cluster destroy flags
