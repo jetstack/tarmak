@@ -102,6 +102,15 @@ var terraformValidateCmd = &cobra.Command{
 	DisableFlagParsing: true,
 }
 
+var terraformTaintCmd = &cobra.Command{
+	Use: "taint",
+	Run: func(cmd *cobra.Command, args []string) {
+		os.Exit(terraformPassthrough(args, terraform.Taint))
+	},
+	Hidden:             true,
+	DisableFlagParsing: true,
+}
+
 func init() {
 	RootCmd.AddCommand(internalPluginCmd)
 	terraformCmd.AddCommand(terraformInitCmd)
@@ -112,5 +121,6 @@ func init() {
 	terraformCmd.AddCommand(terraformOutputCmd)
 	terraformCmd.AddCommand(terraformFmtCmd)
 	terraformCmd.AddCommand(terraformValidateCmd)
+	terraformCmd.AddCommand(terraformTaintCmd)
 	RootCmd.AddCommand(terraformCmd)
 }

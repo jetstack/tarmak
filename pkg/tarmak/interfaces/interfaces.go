@@ -131,6 +131,7 @@ type Provider interface {
 	AskInstancePoolZones(Initialize) (zones []string, err error)
 	UploadConfiguration(Cluster, io.ReadSeeker, string) error
 	EnsureRemoteResources() error
+	LegacyPuppetTFName() string
 }
 
 type Tarmak interface {

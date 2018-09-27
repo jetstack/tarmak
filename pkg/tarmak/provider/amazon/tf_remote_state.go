@@ -36,6 +36,10 @@ func (a *Amazon) RemoteStateObjectKey(namespace string, clusterName string) stri
 	return fmt.Sprintf("%s/%s/main.tfstate", namespace, clusterName)
 }
 
+func (a *Amazon) LegacyPuppetTFName() string {
+	return "aws_s3_bucket_object.legacy-puppet-tar-gz"
+}
+
 func (a *Amazon) RemoteState(namespace string, clusterName string, stackName string) string {
 	return fmt.Sprintf(`terraform {
   backend "s3" {
@@ -340,7 +344,7 @@ func (a *Amazon) initRemoteStateBucketEncryption() error {
 	}
 
 	_, err = svc.PutBucketEncryption(&s3.PutBucketEncryptionInput{
-		Bucket: aws.String(a.RemoteStateName()),
+		Bucket:                            aws.String(a.RemoteStateName()),
 		ServerSideEncryptionConfiguration: encConf,
 	})
 	if err != nil {

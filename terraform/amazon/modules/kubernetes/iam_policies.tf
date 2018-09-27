@@ -2,9 +2,11 @@ data "template_file" "iam_tarmak_bucket_read" {
   template = "${file("${path.module}/templates/iam_tarmak_bucket_read.json")}"
 
   vars {
-    puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests/*"
-    wing_binary_path          = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/wing-*"
-    vault_kms_key_id          = "${var.vault_kms_key_id}"
+    puppet_tar_gz_bucket_path        = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests/*"
+    legacy_puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet.tar.gz"
+
+    wing_binary_path = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/wing-*"
+    vault_kms_key_id = "${var.vault_kms_key_id}"
   }
 }
 
