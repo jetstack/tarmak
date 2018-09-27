@@ -1,7 +1,9 @@
 [Unit]
 Description=Formats the ebs volume if needed
+<% if @is_not_attached -%>
 Requires=<%= @attach_service_name %>
 After=<%= @attach_service_name %>
+<% end -%>
 
 [Service]
 Type=oneshot
