@@ -10,7 +10,7 @@ describe 'prometheus::rule', :type => :define do
 
   let :params do
     {
-      :expr        => '(100 - (avg by (instance) (irate(node_cpu{name="node-exporter",mode="idle"}[5m])) * 100)) > 75',
+      :expr        => '(100 - (avg by (instance) (irate(node_cpu_seconds_total{name="node-exporter",mode="idle"}[5m])) * 100)) > 75',
       :for         => "2m",
       :summary     => '{{$labels.instance}}: High CPU usage detected',
       :description => '{{$labels.instance}}: CPU usage is above 75% (current value is: {{ $value }})',
@@ -28,7 +28,7 @@ describe 'prometheus::rule', :type => :define do
   context 'specified alert_label severity' do
     let :params do
       {
-        :expr => '(100 - (avg by (instance) (irate(node_cpu{name="node-exporter",mode="idle"}[5m])) * 100)) > 75',
+        :expr => '(100 - (avg by (instance) (irate(node_cpu_seconds_total{name="node-exporter",mode="idle"}[5m])) * 100)) > 75',
         :for         => "2m",
         :summary     => '{{$labels.instance}}: High CPU usage detected',
         :description => '{{$labels.instance}}: CPU usage is above 75% (current value is: {{ $value }})',
