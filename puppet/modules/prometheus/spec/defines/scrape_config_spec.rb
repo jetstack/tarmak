@@ -22,7 +22,7 @@ describe 'prometheus::scrape_config', :type => :define do
             'regex' => '(.*)',
             'target_label' => '__param_target',
             'replacement' => 'https://127.0.0.1:1234/metrics',
-           }],
+          }],
         },
         :order             => 02,
       }

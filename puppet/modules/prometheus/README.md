@@ -38,6 +38,11 @@ This module is part of [Tarmak](http://docs.tarmak.io) and should currently be c
 * Type: `Any`
 * Default: `$::prometheus::params::etcd_cluster_exporters`
 
+##### `etcd_cluster_node_exporters`
+
+* Type: `Any`
+* Default: `$::prometheus::params::etcd_cluster_node_exporters`
+
 ##### `etcd_k8s_main_port`
 
 * Type: `Integer[1025,65535]`

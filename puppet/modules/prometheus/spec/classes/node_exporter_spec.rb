@@ -9,6 +9,7 @@ describe 'prometheus::node_exporter' do
       '  $etcd_k8s_events_client_port = 1235',
       '  $etcd_overlay_client_port = 1236',
       "  $etcd_cluster_exporters = ['etcd-exporters.example.tarmak.local']",
+      "  $etcd_cluster_node_exporters = ['etcd-node-exporters.example.tarmak.local']",
       '}',
       'include tarmak',
     ]}
@@ -24,6 +25,7 @@ describe 'prometheus::node_exporter' do
       '  $etcd_k8s_events_client_port = 1235',
       '  $etcd_overlay_client_port = 1236',
       "  $etcd_cluster_exporters = ['etcd-exporters.example.tarmak.local']",
+      "  $etcd_cluster_node_exporters = ['etcd-node-exporters.example.tarmak.local']",
       '}',
       'include tarmak',
       'class kubernetes::apiserver{}',
