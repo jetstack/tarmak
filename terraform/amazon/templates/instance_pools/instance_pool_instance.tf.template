@@ -265,5 +265,3 @@ resource "aws_route53_record" "{{.TFName}}-exporter-srv" {
 {{ end -}}
 {{ end -}}
 {{ end -}}
-
-{{ end -}}
