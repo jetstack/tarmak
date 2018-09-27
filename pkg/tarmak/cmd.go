@@ -48,13 +48,15 @@ func (c *CmdTarmak) Plan() (returnCode int, err error) {
 }
 
 func (c *CmdTarmak) Apply() error {
-	if err := c.setup(); err != nil {
+	err := c.setup()
+	if err != nil {
 		return err
 	}
 
+	hasChanged := false
 	// run terraform apply always, do not run it when in configuration only mode
 	if !c.flags.Cluster.Apply.ConfigurationOnly {
-		err := c.terraform.Apply(c.Cluster())
+		hasChanged, err = c.terraform.Apply(c.Cluster())
 		if err != nil {
 			return err
 		}
@@ -82,9 +84,9 @@ func (c *CmdTarmak) Apply() error {
 	default:
 	}
 
-	// wait for convergance if flag enabled
-	if c.flags.Cluster.Apply.WaitForConvergence {
-		err := c.cluster.WaitForConvergance()
+	// wait for convergance if flag enabled and has changed
+	if hasChanged && c.flags.Cluster.Apply.WaitForConvergence {
+		err := c.Cluster().WaitForConvergance()
 		if err != nil {
 			return err
 		}
