@@ -63,6 +63,12 @@ class prometheus::node_exporter (
         'dns_sd_configs'  => [{
           'names' => $tarmak::etcd_cluster_exporters,
         }],
+        'relabel_configs' => [{
+          'source_labels' => ['__address__'],
+          'regex'         => '(.+):(.+)',
+          'target_label'  => '__address__',
+          'replacement'   => '${1}:9100',
+        }],
       }
     }
 
