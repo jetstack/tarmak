@@ -16,9 +16,9 @@ class tarmak::etcd(
       systemd_dir => $::tarmak::systemd_dir,
     }
     aws_ebs::mount{'etcd-data':
-      volume_id     => $::tarmak_volume_id,
-      device        => "/dev/${ebs_device}",
-      dest_path     => '/var/lib/etcd',
+      volume_id       => $::tarmak_volume_id,
+      device          => "/dev/${ebs_device}",
+      dest_path       => '/var/lib/etcd',
       is_not_attached => $is_not_attached,
     } -> Etcd::Instance  <||>
   }

@@ -9,7 +9,8 @@ describe 'aws_ebs::mount', :type => :define do
     {
       'volume_id' => 'vol-deadbeef',
       'dest_path' => '/mnt/folder/test1',
-      'device' => '/dev/xvdy'
+      'device' => '/dev/xvdy',
+      'is_not_attached' => true
     }
   end
 
@@ -55,6 +56,7 @@ describe 'aws_ebs::mount', :type => :define do
           volume_id => 'vol-beefdead',
           dest_path => '/mnt/fodeler/test2',
           device => '/dev/xvdx',
+          is_not_attached => true,
         }
       """
     ]}
