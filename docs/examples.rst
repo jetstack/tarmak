@@ -1,7 +1,7 @@
 Examples
 ========
 
-This section covers extra add-ons you can install on Tarmak kubernetes 
+This section covers extra add-ons & services you can run on Tarmak Kubernetes
 clusters.
 
 .. toctree::
