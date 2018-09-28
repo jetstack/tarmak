@@ -1,4 +1,4 @@
-# Install/configure an etcd node.
+# Install/configure a node for an etcd setup
 #
 # @param data_dir The directory to store etcd data
 # @param config_dir The directory to store etcd config
@@ -13,7 +13,10 @@ class etcd(
   $gid = $::etcd::params::gid,
   $user = $::etcd::params::user,
   $group = $::etcd::params::group,
+  Boolean $backup_enabled = false,
+  Enum['aws:kms',''] $backup_sse = '',
   String $backup_bucket_prefix = '',
+  String $backup_bucket_endpoint = '',
 ) inherits ::etcd::params {
 
   $nologin = $::osfamily ? {

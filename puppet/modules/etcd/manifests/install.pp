@@ -34,9 +34,4 @@ define etcd::install (
     path    => ['/usr/bin/', '/bin'],
   }
 
-  file { "${dest_dir}/etcd-backup.sh":
-    ensure  => file,
-    content => file('etcd/etcd-backup.sh'),
-    mode    => '0755'
-  }
 }

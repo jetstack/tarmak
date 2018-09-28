@@ -1,0 +1,10 @@
+[Unit]
+Description=minio server for acceptance tests
+
+[Service]
+Environment=MINIO_ACCESS_KEY=minio-ci-access
+Environment=MINIO_SECRET_KEY=minio-ci-secret
+ExecStartPre=/bin/bash /etc/puppetlabs/code/modules/etcd/files/minio-server.sh download
+ExecStart=/bin/bash /etc/puppetlabs/code/modules/etcd/files/minio-server.sh
+RestartSec=5
+Restart=on-failure
