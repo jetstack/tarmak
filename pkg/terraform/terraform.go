@@ -197,8 +197,6 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		t.prepared = true
 	}
 
-	t.log.Infof("running %s", command)
-
 	// listen to rpc
 	stopRpcCh := make(chan struct{})
 	wg := sync.WaitGroup{}
