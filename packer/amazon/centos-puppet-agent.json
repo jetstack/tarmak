@@ -43,6 +43,11 @@
         "yum update -y",
         "yum install -y epel-release",
         "yum install -y git puppet-agent vim tmux socat python-pip at jq unzip awscli",
+        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=0 console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/sysconfig/grub",
+        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=0 console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/default/grub",
+        "grub2-mkconfig -o /boot/grub2/grub.cfg",
+        "rm -f /etc/sysconfig/network-scripts/ifcfg-ens*",
+        "systemctl disable kdump.service",
         "rm -f /etc/ssh/ssh_host_*"
       ]
     }
