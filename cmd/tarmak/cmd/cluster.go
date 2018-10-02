@@ -31,6 +31,20 @@ func clusterApplyFlags(fs *flag.FlagSet) {
 		false,
 		"apply changes to infrastructure only, by running only terraform",
 	)
+
+	fs.BoolVar(
+		&store.AutoApprove,
+		"auto-approve",
+		false,
+		"auto approve to responses when applying cluster",
+	)
+
+	fs.BoolVar(
+		&store.AutoApprove,
+		"auto-approve-deleting-data",
+		false,
+		"auto approve deletion of any data as a cause from applying cluster",
+	)
 }
 
 func clusterDestroyFlags(fs *flag.FlagSet) {

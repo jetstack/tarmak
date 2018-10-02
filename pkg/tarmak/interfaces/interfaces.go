@@ -143,6 +143,7 @@ type Tarmak interface {
 
 	Clusters() []Cluster
 	Cluster() Cluster
+	ClusterFlags() tarmakv1alpha1.ClusterFlags
 	Environments() []Environment
 	Environment() Environment
 	Providers() []Provider
