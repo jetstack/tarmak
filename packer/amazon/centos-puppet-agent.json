@@ -39,12 +39,12 @@
       "type": "shell",
       "execute_command": "sudo -E -S sh '{{ .Path }}'",
       "inline": [
-        "rm -f /etc/ssh/ssh_host_*",
         "rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm",
         "yum update -y",
         "yum install -y epel-release",
         "yum install -y git puppet-agent vim tmux socat python-pip at jq unzip",
-        "pip install awscli==1.15.17 --ignore-installed"
+        "pip install awscli==1.15.17 --ignore-installed",
+        "rm -f /etc/ssh/ssh_host_*"
       ]
     }
   ]
