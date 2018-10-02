@@ -23,6 +23,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 	"github.com/jetstack/tarmak/pkg/terraform/plan"
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
@@ -365,10 +366,6 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	return err
 }
 
-func (t *Terraform) terraformPlanPath(cluster interfaces.Cluster) string {
-	return filepath.Join(t.codePath(cluster), terraformPlanFile)
-}
-
 // this checks if an error is coming from an exec failing with exit code 2,
 // this is typicall for a terraform plan that has changes
 func errIsTerraformPlanChangesNeeded(err error) bool {
@@ -386,17 +383,27 @@ func errIsTerraformPlanChangesNeeded(err error) bool {
 }
 
 func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeeded bool, err error) {
+	// if we are doing an apply after this plan and we are ALSO using a custom
+	// executable plan file, we should skip doing a fresh plan against the
+	// current cluster in favour of just using this file
+	customPlanFile := t.tarmak.ClusterFlags().Apply.PlanFileLocation !=
+		consts.DefaultPlanLocationPlaceholder
+	if preApply && customPlanFile {
+		t.log.Warn("a custom plan file has been supplied, no plan will be made on the current cluster")
+		return true, nil
+	}
+
 	err = t.terraformWrapper(
 		cluster,
 		"plan",
-		[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", terraformPlanFile)},
+		[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", t.tarmak.PlanFileStore(cluster))},
 	)
 	changesNeeded = errIsTerraformPlanChangesNeeded(err)
 	if err != nil && !changesNeeded {
 		return false, err
 	}
 
-	tfPlan, err := plan.New(t.terraformPlanPath(cluster))
+	tfPlan, err := plan.New(t.tarmak.PlanFileStore(cluster))
 	if err != nil {
 		return false, fmt.Errorf("error while trying to read plan file: %s", err)
 	}
@@ -448,8 +455,6 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 }
 
 func (t *Terraform) Apply(cluster interfaces.Cluster) error {
-	// TODO: handle supplied plan
-
 	// generate a plan
 	if changesNeeded, err := t.Plan(cluster, true); err != nil {
 		return err
@@ -469,7 +474,7 @@ func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 	return t.terraformWrapper(
 		cluster,
 		"apply",
-		[]string{t.terraformPlanPath(cluster)},
+		[]string{t.tarmak.PlanFileLocation(cluster)},
 	)
 }
 
@@ -556,6 +561,10 @@ func MapToTerraformTfvars(input map[string]interface{}) (output string, err erro
 		}
 	}
 	return buf.String(), nil
+}
+
+func (t *Terraform) DefaultPlanFileLocation(cluster interfaces.Cluster) string {
+	return filepath.Join(t.codePath(cluster), consts.TerraformPlanFile)
 }
 
 func (t *Terraform) checkDone() error {

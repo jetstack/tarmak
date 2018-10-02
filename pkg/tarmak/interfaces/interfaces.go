@@ -166,6 +166,11 @@ type Tarmak interface {
 	// get an environment by name
 	EnvironmentByName(string) (Environment, error)
 	EnsureRemoteResources() error
+
+	// the file location to store the plan output
+	PlanFileStore(cluster Cluster) string
+	// the file location of the plan to use as the apply
+	PlanFileLocation(cluster Cluster) string
 }
 
 type Config interface {

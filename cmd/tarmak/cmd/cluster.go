@@ -4,6 +4,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 )
 
 var clusterCmd = &cobra.Command{
@@ -45,6 +47,14 @@ func clusterApplyFlags(fs *flag.FlagSet) {
 		true,
 		"auto approve deletion of any data as a cause from applying cluster",
 	)
+
+	fs.StringVarP(
+		&store.PlanFileLocation,
+		"plan-file-location",
+		"P",
+		consts.DefaultPlanLocationPlaceholder,
+		"location of stored terraform plan executable file to be used",
+	)
 }
 
 func clusterDestroyFlags(fs *flag.FlagSet) {
@@ -61,6 +71,18 @@ func clusterImagesBuildFlags(fs *flag.FlagSet) {
 		"R",
 		false,
 		"build all images regardless whether they already exist",
+	)
+}
+
+func clusterPlanFlags(fs *flag.FlagSet) {
+	store := &globalFlags.Cluster.Plan
+
+	fs.StringVarP(
+		&store.PlanFileStore,
+		"plan-file-store",
+		"P",
+		consts.DefaultPlanLocationPlaceholder,
+		"location to store terraform plan executable file",
 	)
 }
 

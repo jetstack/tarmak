@@ -10,7 +10,7 @@ import (
 )
 
 type Plan struct {
-	pl *terraform.Plan
+	*terraform.Plan
 }
 
 func New(path string) (*Plan, error) {
@@ -31,7 +31,7 @@ func (p *Plan) IsDestroyingEBSVolume() (bool, []string) {
 	var resourceNames []string
 	isDestroyed := false
 
-	for _, module := range p.pl.Diff.Modules {
+	for _, module := range p.Diff.Modules {
 		for key, resource := range module.Resources {
 			switch resource.ChangeType() {
 			case terraform.DiffDestroy, terraform.DiffDestroyCreate:
