@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-        "time"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
