@@ -366,8 +366,11 @@ func (a *Amazon) Verify() error {
 		result = multierror.Append(result, err)
 	}
 
-	if err := a.verifyInstanceTypes(); err != nil {
-		result = multierror.Append(result, err)
+	// if no cluster exists (i.e. tarmak init has not yet been run), skip this verification check
+	if a.tarmak.Cluster() != nil {
+		if err := a.verifyInstanceTypes(); err != nil {
+			result = multierror.Append(result, err)
+		}
 	}
 
 	return result.ErrorOrNil()

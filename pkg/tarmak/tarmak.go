@@ -179,7 +179,7 @@ func (t *Tarmak) writeSSHConfigForClusterHosts() error {
 	return t.ssh.Validate()
 }
 
-// This initializes a new tarmak cluster
+// CmdClusterInit initializes a new tarmak cluster from CLI input
 func (t *Tarmak) CmdClusterInit() error {
 	i := initialize.New(t, os.Stdin, os.Stdout)
 	t.init = i
@@ -188,12 +188,28 @@ func (t *Tarmak) CmdClusterInit() error {
 		return err
 	}
 
+	// if the multicluster environment being initialised is the only existing environment,
+	// ensure that the tarmak cli is pointing to that environment's 'hub' cluster
+	// resource, else set point tarmak cli to newly-initialised cluster
+	switch cluster.Type() {
+	case "cluster-multi":
+		if len(t.Environments()) == 1 {
+			err = t.config.SetCurrentCluster(cluster.Environment().HubName())
+			if err != nil {
+				return fmt.Errorf("error setting current cluster: %s", err)
+			}
+			t.log.Infof("%s set as current cluster", cluster.Environment().HubName())
+			t.log.Infof("run 'tarmak cluster apply' on hub before applying other cluster(s)")
+		}
+	default:
+		err = t.config.SetCurrentCluster(cluster.ClusterName())
+		if err != nil {
+			return fmt.Errorf("error setting current cluster: %s", err)
+		}
+	}
+
 	t.log.Infof("successfully initialized cluster '%s'", cluster.ClusterName())
 
-	err = t.config.SetCurrentCluster(cluster.ClusterName())
-	if err != nil {
-		return fmt.Errorf("error setting current cluster: %s", err)
-	}
 	return nil
 }
 
