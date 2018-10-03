@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/terraform/command"
 	"github.com/kardianos/osext"
+	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -30,9 +31,8 @@ import (
 )
 
 const (
-	debugShell        = "debug-shell"
-	terraformPlanFile = "tarmak.plan"
-	remoteStateError  = "Error locking destination state: Error acquiring the state lock: ConditionalCheckFailedException: The conditional request failed"
+	debugShell       = "debug-shell"
+	remoteStateError = "Error locking destination state: Error acquiring the state lock: ConditionalCheckFailedException: The conditional request failed"
 )
 
 // wingHash is set by a linker flag to the hash of the lastest wing binary
@@ -390,7 +390,11 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 	// plan file, we need to run a terraform plan.
 	customPlanFile := planPath != consts.DefaultPlanLocationPlaceholder
 	if !preApply || !customPlanFile {
-		planPath = t.tarmak.PlanFileStore(cluster)
+		planPath, err = t.planFileStore(cluster)
+		if err != nil {
+			return changesNeeded, err
+		}
+
 		err = t.terraformWrapper(
 			cluster,
 			"plan",
@@ -473,11 +477,16 @@ func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 	default:
 	}
 
+	planFilePath, err := t.planFileLocation(cluster)
+	if err != nil {
+		return err
+	}
+
 	// apply necessary at this point
 	return t.terraformWrapper(
 		cluster,
 		"apply",
-		[]string{t.tarmak.PlanFileLocation(cluster)},
+		[]string{planFilePath},
 	)
 }
 
@@ -566,10 +575,6 @@ func MapToTerraformTfvars(input map[string]interface{}) (output string, err erro
 	return buf.String(), nil
 }
 
-func (t *Terraform) DefaultPlanFileLocation(cluster interfaces.Cluster) string {
-	return filepath.Join(t.codePath(cluster), consts.TerraformPlanFile)
-}
-
 func (t *Terraform) checkDone() error {
 	select {
 	case <-t.ctx.Done():
@@ -585,4 +590,37 @@ func (t *Terraform) Cleanup() error {
 	}
 
 	return nil
+}
+
+// location to store the output of the plan executable file during plan
+func (t *Terraform) planFileStore(cluster interfaces.Cluster) (string, error) {
+	p := t.tarmak.ClusterFlags().Plan.PlanFileStore
+	if p == consts.DefaultPlanLocationPlaceholder {
+		return t.defaultPlanPath(cluster), nil
+	}
+
+	return t.expand(cluster, p)
+}
+
+// location to use as the plan executable file during apply
+func (t *Terraform) planFileLocation(cluster interfaces.Cluster) (string, error) {
+	p := t.tarmak.ClusterFlags().Apply.PlanFileLocation
+	if p == consts.DefaultPlanLocationPlaceholder {
+		return t.defaultPlanPath(cluster), nil
+	}
+
+	return t.expand(cluster, p)
+}
+
+func (t *Terraform) defaultPlanPath(cluster interfaces.Cluster) string {
+	return filepath.Join(t.codePath(cluster), consts.TerraformPlanFile)
+}
+
+func (t *Terraform) expand(cluster interfaces.Cluster, path string) (string, error) {
+	p, err := homedir.Expand(path)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Abs(p)
 }

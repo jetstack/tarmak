@@ -24,7 +24,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
@@ -393,26 +392,4 @@ func (t *Tarmak) verifyImageExists() error {
 
 func (t *Tarmak) ClusterFlags() tarmakv1alpha1.ClusterFlags {
 	return t.flags.Cluster
-}
-
-// location to store the output of the plan executable file
-func (t *Tarmak) PlanFileStore(cluster interfaces.Cluster) string {
-	p := t.flags.Cluster.Plan.PlanFileStore
-	// if we are in the default, we need to convert this to a real path
-	if p == consts.DefaultPlanLocationPlaceholder {
-		return t.terraform.DefaultPlanFileLocation(cluster)
-	}
-
-	return p
-}
-
-// location to use as the plan executable file
-func (t *Tarmak) PlanFileLocation(cluster interfaces.Cluster) string {
-	p := t.flags.Cluster.Apply.PlanFileLocation
-	// if we are in the default, we need to convert this to a real path
-	if p == consts.DefaultPlanLocationPlaceholder {
-		return t.terraform.DefaultPlanFileLocation(cluster)
-	}
-
-	return p
 }
