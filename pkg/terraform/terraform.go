@@ -383,27 +383,29 @@ func errIsTerraformPlanChangesNeeded(err error) bool {
 }
 
 func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeeded bool, err error) {
-	// if we are doing an apply after this plan and we are ALSO using a custom
-	// executable plan file, we should skip doing a fresh plan against the
-	// current cluster in favour of just using this file
-	customPlanFile := t.tarmak.ClusterFlags().Apply.PlanFileLocation !=
-		consts.DefaultPlanLocationPlaceholder
-	if preApply && customPlanFile {
-		t.log.Warn("a custom plan file has been supplied, no plan will be made on the current cluster")
-		return true, nil
+	planPath := t.tarmak.ClusterFlags().Apply.PlanFileLocation
+	changesNeeded = true
+
+	// If we are not doing an apply after this plan OR we are not using a custom
+	// plan file, we need to run a terraform plan.
+	customPlanFile := planPath != consts.DefaultPlanLocationPlaceholder
+	if !preApply || !customPlanFile {
+		planPath = t.tarmak.PlanFileStore(cluster)
+		err = t.terraformWrapper(
+			cluster,
+			"plan",
+			[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", planPath)},
+		)
+
+		changesNeeded = errIsTerraformPlanChangesNeeded(err)
+		if err != nil && !changesNeeded {
+			return false, err
+		}
+	} else {
+		t.log.Infof("using custom plan file %s", planPath)
 	}
 
-	err = t.terraformWrapper(
-		cluster,
-		"plan",
-		[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", t.tarmak.PlanFileStore(cluster))},
-	)
-	changesNeeded = errIsTerraformPlanChangesNeeded(err)
-	if err != nil && !changesNeeded {
-		return false, err
-	}
-
-	tfPlan, err := plan.New(t.tarmak.PlanFileStore(cluster))
+	tfPlan, err := plan.New(planPath)
 	if err != nil {
 		return false, fmt.Errorf("error while trying to read plan file: %s", err)
 	}
@@ -428,6 +430,7 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 		"the following EBS volumes will be destroyed during the next apply: [%s]",
 		strings.Join(ebsVolumesToDestroy, ", "))
 
+	// We exit early here since we are only doing a plan. Bubble the ebs error up.
 	if !preApply {
 		return changesNeeded, errors.New(destroyStr)
 	}
