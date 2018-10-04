@@ -8,7 +8,7 @@ describe 'consul::install' do
   end
 
   let :version do
-    '1.2.1'
+    '1.2.3'
   end
 
   context 'with default values for all parameters' do
@@ -23,7 +23,7 @@ describe 'consul::install' do
       )
       should contain_file('/opt/bin/consul').with(
         :ensure => 'link',
-        :target => '/opt/consul-1.2.1/consul',
+        :target => "/opt/consul-#{version}/consul",
       )
     end
 
@@ -42,13 +42,13 @@ describe 'consul::install' do
     end
 
     it 'should install consul backup script' do
-      should contain_file('/opt/consul-1.2.1/consul-backup.sh').with(
+      should contain_file("/opt/consul-#{version}/consul-backup.sh").with(
         :ensure => 'file',
         :mode => '0755',
       )
       should contain_file('/opt/bin/consul-backup.sh').with(
         :ensure => 'link',
-        :target => '/opt/consul-1.2.1/consul-backup.sh',
+        :target => "/opt/consul-#{version}/consul-backup.sh",
       )
     end
 
