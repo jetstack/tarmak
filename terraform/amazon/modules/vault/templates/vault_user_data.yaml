@@ -102,6 +102,8 @@ write_files:
     [Service]
     User=consul
     Group=consul
+    Type=notify
+    TimeoutStartSec=600s
     PermissionsStartOnly=true
     ExecStartPre=/bin/mkdir -p /var/lib/consul/data
     ExecStartPre=/bin/chown -c root:consul /var/lib/consul
