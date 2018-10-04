@@ -188,6 +188,7 @@ write_files:
       "acl_default_policy" : "deny",
       "acl_down_policy" : "deny",
       "acl_master_token" : "${consul_master_token}",
+      "acl_agent_token" : "${consul_master_token}",
       "acl_datacenter" : "${region}",
       "datacenter" : "${region}",
       "log_level" : "INFO",
