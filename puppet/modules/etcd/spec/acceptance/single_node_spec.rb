@@ -14,7 +14,7 @@ if hosts.length == 1
         # configure backup credentials manually
         on host, 'mkdir -p /etc/etcd'
         on host, 'echo "AWS_ACCESS_KEY_ID=minio-ci-access" > /etc/etcd/backup-environment'
-        on host, 'echo "AWS_SECRET_ACCESS_KEY=minio-ci-secret" > /etc/etcd/backup-environment'
+        on host, 'echo "AWS_SECRET_ACCESS_KEY=minio-ci-secret" >> /etc/etcd/backup-environment'
       end
     end
 
@@ -58,6 +58,19 @@ etcd::instance{'overlay':
       [2379, 2389, 2399].each do |port|
         it "test etcd on port #{port} on host #{host.name}" do
           result = host.shell "ETCDCTL=http://127.0.0.1:#{port} /opt/etcd-3.2.24/etcdctl cluster-health"
+        end
+      end
+
+      ['k8s-main','k8s-events','overlay'].each do |name|
+        it "should backup etcd #{name} successfully on host #{host.name}" do
+          # trigger backup
+          host.shell "systemctl start etcd-#{name}-backup.service"
+
+          # check backup bucket
+          backupsResult = host.shell("ls -l /tmp/minio-data/backup-bucket/etcd/#{name}/*snapshot.db").stdout.split("\n")
+          if backupsResult.length < 1
+            fail("no backup found for #{name}")
+          end
         end
       end
     end
