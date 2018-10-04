@@ -70,7 +70,7 @@ class kubernetes::apiserver(
 
   # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
   if $admission_control == undef {
-    $_admission_control = delete_undef_values([
+    $unfiltered_admission_control = delete_undef_values([
       $post_1_8 ? { true => 'Initializers', default => undef },
       'NamespaceLifecycle',
       'LimitRanger',
@@ -85,7 +85,14 @@ class kubernetes::apiserver(
       $::kubernetes::_enable_pod_priority ? { true => 'Priority', default => undef },
     ])
   } else {
-    $_admission_control = $admission_control
+    $unfiltered_admission_control = $admission_control
+  }
+
+  if $post_1_11 {
+    $defaults = ['NamespaceLifecycle','LimitRanger','ServiceAccount','PersistentVolumeLabel','DefaultStorageClass','DefaultTolerationSeconds','MutatingAdmissionWebhook','ValidatingAdmissionWebhook','ResourceQuota','Priority']
+    $_admission_control = $unfiltered_admission_control.filter |$value| { !($value in $defaults) }
+  } else {
+    $_admission_control = $unfiltered_admission_control
   }
 
   $_disable_admission_control = $disable_admission_control
@@ -105,7 +112,7 @@ class kubernetes::apiserver(
     $_oidc_signing_algs = []
   }
 
-  # Do not insecure bind the API server on kubernetes 1.6+
+  # Do not insecure bind the API server on kubernetes 1.11+
   if !$post_1_11 {
     $insecure_port = $::kubernetes::_apiserver_insecure_port
     $etcd_quorum_read = true

@@ -295,9 +295,10 @@ describe 'kubernetes::apiserver' do
             class{'kubernetes': version => '1.11.0'}
               """
           ]}
+          let(:params) { {'admission_control' => ['NamespaceLifecycle', 'LimitRanger', 'foo'] } }
 
           it {should_not contain_file(service_file).with_content(/#{Regexp.escape('--admission-control=')}/)}
-          it {should contain_file(service_file).with_content(/#{Regexp.escape('--enable-admission-plugins=')}/)}
+          it {should contain_file(service_file).with_content(/#{Regexp.escape('--enable-admission-plugins=foo')}/)}
           it {should contain_file(service_file).with_content(/#{Regexp.escape('--disable-admission-plugins=')}/)}
         end
       end
