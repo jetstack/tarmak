@@ -128,6 +128,9 @@ type ClusterKubernetesAPIServer struct {
 	Public     bool     `json:"public,omitempty"`
 	AllowCIDRs []string `json:"allowCIDRs,omitempty"`
 
+	EnableAdmissionControllers  []string `json:"enableAdmissionControllers,omitempty"`
+	DisableAdmissionControllers []string `json:"disableAdmissionControllers,omitempty"`
+
 	// OIDC
 	OIDC *ClusterKubernetesAPIServerOIDC `json:"oidc,omitempty"`
 

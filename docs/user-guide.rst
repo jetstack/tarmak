@@ -563,6 +563,24 @@ by limiting the access to a list of CIDR blocks. This can be configured on a
 environment level for all public endpoint and if wanted can be overwritten on a
 specific public endpoint.
 
+API Server Admission Plugins
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+API admission control plugins can be enabled and disabled through the Tarmak
+configuration file.
+`Information on admission plugins can be found here <https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/>`_.
+Enabled and disabled plugins can be configured as follows:
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+      enableAdmissionControllers: ["DefaultStorageClass", "DefaultTolerationSeconds"]
+      disableAdmissionControllers: ["MutatingAdmissionWebhook"]
+
+**Note:** Disabling admission control plugins is only available with Kubernetes
+version 1.11+
+
 Environment level
 +++++++++++++++++
 

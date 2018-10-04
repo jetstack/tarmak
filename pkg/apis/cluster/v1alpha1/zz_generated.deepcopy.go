@@ -226,6 +226,16 @@ func (in *ClusterKubernetesAPIServer) DeepCopyInto(out *ClusterKubernetesAPIServ
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.EnableAdmissionControllers != nil {
+		in, out := &in.EnableAdmissionControllers, &out.EnableAdmissionControllers
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.DisableAdmissionControllers != nil {
+		in, out := &in.DisableAdmissionControllers, &out.DisableAdmissionControllers
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.OIDC != nil {
 		in, out := &in.OIDC, &out.OIDC
 		if *in == nil {
