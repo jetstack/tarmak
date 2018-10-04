@@ -7,8 +7,8 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 Slice=podruntime.slice
 WorkingDirectory=<%= @kubelet_dir %>
 <% if @cloud_provider == 'aws' -%>
-    # prevent metadata service access on AWS
-    ExecStartPre=/bin/sh -e -c "iptables -C PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181 2> /dev/null || iptables -A PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181"
+# prevent metadata service access on AWS
+ExecStartPre=/bin/sh -e -c "iptables -C PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181 2> /dev/null || iptables -A PREROUTING -p tcp --destination 169.254.169.254 --dport 80 --in-interface <%= @container_interface %> --jump DNAT --table nat --to-destination 127.0.0.1:8181"
 <% end -%>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
@@ -53,13 +53,12 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @container_runtime -%>
   --container-runtime=<%= @container_runtime %> \
 <% end -%>
-  --logtostderr=true \
 <% if not @kernelversion.nil? and scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 and scope.function_versioncmp([scope['kubernetes::version'], '1.7.0']) < 0 and scope.function_versioncmp([@kernelversion, '4.9']) >= 0 -%>
   --cgroups-per-qos=false \
   --enforce-node-allocatable= \
 <% end -%>
 <% if @post_1_11 -%>
-  --config=<%= @kubelet_config_file  %> \
+  --config=<%= @config_file  %> \
 <% else -%>
   --cluster-dns=<%= @cluster_dns %> \
   --cluster-domain=<%= @cluster_domain %> \
@@ -159,6 +158,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --feature-gates=<%= @_feature_gates.join(',') %>
 <% end -%>
 <% end -%>
+  --logtostderr=true
 
 Restart=on-failure
 KillMode=process

@@ -7,7 +7,7 @@ class kubernetes::proxy(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
-  String $proxy_config_file = "${::kubernetes::config_dir}/kube-proxy-config.yaml",
+  String $config_file = "${::kubernetes::config_dir}/kube-proxy-config.yaml",
 ){
   require ::kubernetes
 
@@ -37,12 +37,16 @@ class kubernetes::proxy(
   }
 
   if $post_1_11 {
-    file{$proxy_config_file:
+    file{$config_file:
       ensure  => file,
       mode    => '0640',
       owner   => 'root',
       group   => $kubernetes::group,
       content => template('kubernetes/kube-proxy-config.yaml.erb'),
+    } ~> exec { "${service_name}-config-daemon-reload":
+      command     => 'systemctl daemon-reload',
+      path        => $::kubernetes::path,
+      refreshonly => true,
     }
   }
 
