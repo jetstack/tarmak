@@ -58,6 +58,7 @@ class consul::config (
       default =>  1,
     },
     server              => $consul::server,
+    leave_on_terminate  => true,
     disable_remote_exec => true,
     retry_join          => $consul::cloud_provider ? {
       'aws'   => ["provider=aws tag_key=VaultCluster tag_value=${environment}"],

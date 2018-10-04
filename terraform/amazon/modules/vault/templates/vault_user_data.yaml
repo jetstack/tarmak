@@ -194,6 +194,7 @@ write_files:
       "bind_addr" : "0.0.0.0",
       "encrypt" : "${consul_encrypt}",
       "server" : true,
+      "leave_on_terminate" : true,
       "bootstrap_expect" : ${instance_count},
       "retry_join": [
         "provider=aws tag_key=VaultCluster tag_value=${environment}"
