@@ -46,6 +46,13 @@ class{'consul':}
         apply_manifest(pp, :catch_failures => true)
         expect(apply_manifest(pp, :catch_failures => true).exit_code).to be_zero
       end
+
+      hosts_as('consul').each do |host|
+        it "test consul node output on host #{host.name}" do
+          nodes = host.shell("eval \"$(cat /etc/consul/master-token) /opt/bin/consul members -detailed\"").stdout.split("\n").drop(1)
+          expect(nodes.length).to eq(1)
+        end
+      end
     end
   end
 end

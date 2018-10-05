@@ -39,7 +39,7 @@ class CA
 
   def node_cert(subject, sans=[], validity=60*60)
     key = OpenSSL::PKey::RSA.new(2048)
-    
+
     cert = OpenSSL::X509::Certificate.new
     cert.subject = OpenSSL::X509::Name.parse(subject)
     cert.issuer = @ca_cert.issuer
@@ -97,13 +97,13 @@ EOS
     cert, key = $ca.node_cert("/CN=#{host.hostname}",["DNS:#{host.hostname}"])
 
     writer.add_file("etc/consul/consul-ca.pem", 0644) do |f| 
-	    f.write($ca.ca_cert_pem)
+      f.write($ca.ca_cert_pem)
     end
     writer.add_file("etc/consul/consul.pem", 0644) do |f| 
-	    f.write(cert)
+      f.write(cert)
     end
     writer.add_file("etc/consul/consul-key.pem", 0600) do |f| 
-	    f.write(key)
+      f.write(key)
     end
   end
   file.close
@@ -127,7 +127,7 @@ if hosts.length == 3
         end
 
         # Prepare each node
-	$ca = CA.new("/CN=Consul CI CA")
+        $ca = CA.new("/CN=Consul CI CA")
         hosts.each do |host|
           prepare_host_files(host)
         end
@@ -160,6 +160,13 @@ class{'consul':
         # wait for all nodes to be applied
         threads.each do |thr|
           thr.join
+        end
+      end
+
+      hosts_as('consul').each do |host|
+        it "test consul node output on host #{host.name}" do
+          nodes = host.shell("eval \"$(cat /etc/consul/master-token) /opt/bin/consul members -detailed\"").stdout.split("\n").drop(1)
+          expect(nodes.length).to eq(3)
         end
       end
     end

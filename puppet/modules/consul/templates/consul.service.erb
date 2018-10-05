@@ -16,8 +16,10 @@ Requires=<%= @_systemd_requires.join(' ') %>
 [Service]
 User=<%= @user %>
 Group=<%= @group %>
+<% if @consul_bootstrap_expect > 1 -%>
 Type=notify
 TimeoutStartSec=600s
+<% end -%>
 PermissionsStartOnly=true
 ExecStartPre=/bin/mkdir -p <%= @data_dir %>/data
 ExecStartPre=/bin/chown -c root:<%= @group %> <%= @data_dir %>
