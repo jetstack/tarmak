@@ -1,0 +1,6 @@
+modules/stdlib/* linguist-vendored
+modules/archive/* linguist-vendored
+modules/concat/* linguist-vendored
+*.rb linguist-language=Ruby
+*.erb linguist-language=Puppet
+*.pp linguist-language=Puppet
