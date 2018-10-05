@@ -43,10 +43,7 @@ class kubernetes::proxy(
       owner   => 'root',
       group   => $kubernetes::group,
       content => template('kubernetes/kube-proxy-config.yaml.erb'),
-    } ~> exec { "${service_name}-config-daemon-reload":
-      command     => 'systemctl daemon-reload',
-      path        => $::kubernetes::path,
-      refreshonly => true,
+      notify  => Service["${service_name}.service"],
     }
   }
 
