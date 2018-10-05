@@ -58,10 +58,18 @@ func (r *tarmakRPC) VaultInstanceRole(args *VaultInstanceRoleArgs, result *Vault
 	k := kubernetes.New(vaultClient, r.tarmak.Log())
 	k.SetClusterID(r.tarmak.Cluster().ClusterName())
 
-	if err := k.Ensure(); err != nil {
+	changesNeeded, err := k.EnsureDryRun()
+	if err != nil {
 		err = fmt.Errorf("vault cluster is not ready: %s", err)
 		r.tarmak.Log().Error(err)
 		return err
+	}
+	if changesNeeded {
+		if err := k.Ensure(); err != nil {
+			err = fmt.Errorf("vault cluster is not ready: %s", err)
+			r.tarmak.Log().Error(err)
+			return err
+		}
 	}
 
 	initTokens := k.InitTokens()

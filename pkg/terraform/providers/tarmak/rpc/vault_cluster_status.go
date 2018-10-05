@@ -65,10 +65,18 @@ func (r *tarmakRPC) VaultClusterStatus(args *VaultClusterStatusArgs, result *Vau
 	k := kubernetes.New(vaultClient, r.tarmak.Log())
 	k.SetClusterID(r.tarmak.Cluster().ClusterName())
 
-	if err := k.Ensure(); err != nil {
+	changesNeeded, err := k.EnsureDryRun()
+	if err != nil {
 		err = fmt.Errorf("vault cluster is not ready: %s", err)
 		r.tarmak.Log().Error(err)
 		return err
+	}
+	if changesNeeded {
+		if err := k.Ensure(); err != nil {
+			err = fmt.Errorf("vault cluster is not ready: %s", err)
+			r.tarmak.Log().Error(err)
+			return err
+		}
 	}
 
 	result.Status = "ready"
