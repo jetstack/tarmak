@@ -382,9 +382,15 @@ describe 'kubernetes::kubelet' do
         class{'kubernetes': version => '1.11.0'}
         """
       ]}
+      let(:params) { {
+        "feature_gates" => ["PodPriority=true", "foobar=true", "foo", "edge=case=true"]
+      }}
       it 'is used' do
           should contain_file(service_file).with_content(%r{--config=/var/lib/kubelet/kubelet-config\.yaml})
-          should contain_file(kubelet_config)
+          should contain_file(kubelet_config).with_content(%r{PodPriority: true})
+          should contain_file(kubelet_config).with_content(%r{foobar: true})
+          should contain_file(kubelet_config).with_content(%r{foo: true})
+          should contain_file(kubelet_config).with_content(%r{edge=case: true})
       end
     end
 

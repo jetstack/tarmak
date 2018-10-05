@@ -88,6 +88,7 @@ evictionMinimumReclaim:
 <% if !@eviction_minimum_reclaim_nodefs_inodes_free.nil? and @eviction_minimum_reclaim_nodefs_inodes_free != 'nil' -%>
     nodefs.inodesFree: <%= @eviction_minimum_reclaim_nodefs_inodes_free %>
 <% end -%>
-<% if @_feature_gates != [] -%>
-featureGates: <%= @_feature_gates.join(',') %>
+<% if @_config_feature_gates -%>
+    featureGates:
+        <%= @_config_feature_gates.join("\n        ") %>
 <% end -%>

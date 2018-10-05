@@ -125,6 +125,15 @@ class kubernetes::kubelet(
     $_feature_gates = $feature_gates
   }
 
+  $_config_feature_gates = $_feature_gates.map |$gate| {
+    $s = split($gate, '=')
+    if $s.length < 2 {
+      $feature = $s[0]; "${feature}: true"
+    } else {
+      $feature = $s[0,-2].join('='); $enable = $s[-1]; "${feature}: ${enable}"
+    }
+  }
+
   if !$_register_schedulable {
     $_default_node_taints = {
       'node-role.kubernetes.io/master' => ':NoSchedule',
