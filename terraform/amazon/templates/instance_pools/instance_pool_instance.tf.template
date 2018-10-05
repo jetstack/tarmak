@@ -34,6 +34,13 @@ data "template_file" "{{.TFName}}_user_data" {
     tarmak_instance_pool = "{{.Name}}"
     tarmak_cluster       = "${data.template_file.stack_name.rendered}"
     tarmak_environment   = "${var.environment}"
+
+{{ if eq .Role.Name "etcd" -}}
+    etcd_backup_bucket_prefix = "${var.backups_bucket}/${data.template_file.stack_name.rendered}-etcd-${count.index+1}"
+{{ else -}}
+    etcd_backup_bucket_prefix = ""
+{{ end -}}
+
 {{ if not .Role.Stateful -}}
     tarmak_hostname      = "{{.Role.Name}}"
     tarmak_desired_count = "${var.{{.TFName}}_min_count}"

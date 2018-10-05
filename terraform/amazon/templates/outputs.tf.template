@@ -41,6 +41,10 @@ output "state_public_zone_id" {
   value = "${module.state.public_zone_id}"
 }
 
+output "state_backups_bucket" {
+  value = "${module.state.backups_bucket}"
+}
+
 output "network_private_subnet_ids" {
   value = ["${module.network.private_subnet_ids}"]
 }

@@ -85,6 +85,10 @@ class tarmak::etcd(
     systemd_after            => delete_undef_values([$::tarmak::etcd_mount_unit]),
     systemd_requires         => delete_undef_values([$::tarmak::etcd_mount_unit]),
   }
+  -> etcd::backup{'k8s-main':
+    client_port => $::tarmak::etcd_k8s_main_client_port,
+    ca_path     => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_k8s_main_ca_name}",
+  }
   etcd::instance{'k8s-events':
     version                  => $::tarmak::etcd_k8s_events_version,
     nodename                 => $nodename,
@@ -100,6 +104,10 @@ class tarmak::etcd(
     systemd_after            => delete_undef_values([$::tarmak::etcd_mount_unit]),
     systemd_requires         => delete_undef_values([$::tarmak::etcd_mount_unit]),
   }
+  -> etcd::backup{'k8s-events':
+    client_port => $::tarmak::etcd_k8s_events_client_port,
+    ca_path     => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_k8s_events_ca_name}",
+  }
   etcd::instance{'overlay':
     version                  => $::tarmak::etcd_overlay_version,
     nodename                 => $nodename,
@@ -114,5 +122,9 @@ class tarmak::etcd(
     tls_ca_path              => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_overlay_ca_name}-ca.pem",
     systemd_after            => delete_undef_values([$::tarmak::etcd_mount_unit]),
     systemd_requires         => delete_undef_values([$::tarmak::etcd_mount_unit]),
+  }
+  -> etcd::backup{'overlay':
+    client_port => $::tarmak::etcd_overlay_client_port,
+    ca_path     => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_overlay_ca_name}",
   }
 }
