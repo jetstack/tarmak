@@ -122,6 +122,26 @@ func (e *Environment) Cluster(name string) (interfaces.Cluster, error) {
 }
 
 func (e *Environment) validateSSHKey() error {
+	f, err := os.Stat(e.SSHPrivateKeyPath())
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+
+		return fmt.Errorf("failed to read ssh file status: %v", err)
+	}
+
+	if f.IsDir() {
+		return fmt.Errorf("expected ssh file location '%s' is directory", e.SSHPrivateKeyPath())
+	}
+
+	if f.Mode() != os.FileMode(0600) && f.Mode() != os.FileMode(0400) {
+		e.log.Warnf("ssh file '%s' holds incorrect permissions (%v), setting to 0600", e.SSHPrivateKeyPath(), f.Mode())
+		if err := os.Chmod(e.SSHPrivateKeyPath(), os.FileMode(0600)); err != nil {
+			return fmt.Errorf("failed to set ssh private key file permissions: %v", err)
+		}
+	}
+
 	bytes, err := ioutil.ReadFile(e.SSHPrivateKeyPath())
 	if err != nil {
 		return fmt.Errorf("unable to read ssh private key: %s", err)
@@ -137,8 +157,7 @@ func (e *Environment) validateSSHKey() error {
 		return fmt.Errorf("unable to parse private key: %s", err)
 	}
 
-	return fmt.Errorf("please implement me !!!")
-
+	return nil
 }
 
 func (e *Environment) Variables() map[string]interface{} {
@@ -277,7 +296,8 @@ func (e *Environment) Log() *logrus.Entry {
 	return e.log
 }
 
-func (e *Environment) Validate() (result error) {
+func (e *Environment) Validate() error {
+	var result *multierror.Error
 
 	if err := e.Provider().Validate(); err != nil {
 		result = multierror.Append(result, err)
@@ -287,7 +307,11 @@ func (e *Environment) Validate() (result error) {
 		result = multierror.Append(result, err)
 	}
 
-	return result
+	if err := e.validateSSHKey(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
 }
 
 func (e *Environment) ValidateAdminCIDRs() (result error) {
