@@ -582,65 +582,31 @@ func (a *Amazon) verifyInstanceTypes() error {
 		return err
 	}
 
+	constBackoff := backoff.NewConstantBackOff(time.Second * 5)
+	var retries uint64 = 5
+	b := backoff.WithMaxTries(constBackoff, retries)
+
 	for _, instance := range a.tarmak.Cluster().InstancePools() {
 		instanceType, err := a.InstanceType(instance.Config().Size)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("\n======%s\n", instanceType)
-
-		noofattempts := 50
-
-		// <WITH-BACKOFF>
 
 		verifyInstanceTypeFunc := func() error {
-			reqlimiterr := a.verifyInstanceType(instanceType, instance.Zones(), svc)
-			if reqlimiterr != nil {
-				fmt.Printf("\nverifyInstanceType(%10s)\t === Error: %v\n", instanceType, reqlimiterr)
-				if strings.Contains(reqlimiterr.Error(), "RequestLimitExceeded") {
-					fmt.Println("WITH BACKOFF - THIS IS WHERE WE INVOKE BACKOFF RETRY")
-					return reqlimiterr
+			err = a.verifyInstanceType(instanceType, instance.Zones(), svc)
+			if err != nil {
+				// return an error if we're exceeding AWS API request limits
+				if strings.Contains(err.Error(), "RequestLimitExceeded") {
+					return err
 				}
 			}
 			return nil
 		}
 
-		constBackoff := backoff.NewConstantBackOff(time.Second * 5)
-		var retries uint64 = 5
-		b := backoff.WithMaxTries(constBackoff, retries)
-		fmt.Printf("\nTry with backoff\n")
-		for i := 0; i < noofattempts; i++ {
-			fmt.Printf("|%02d", i)
-			err = backoff.Retry(verifyInstanceTypeFunc, b)
-			if err != nil {
-				return fmt.Errorf("failed to verify instance types: %s", err)
-			}
+		err = backoff.Retry(verifyInstanceTypeFunc, b)
+		if err != nil {
+			return fmt.Errorf("failed to verify instance types: %s", err)
 		}
-
-		// </WITH-BACKOFF>
-
-		// // <RAW>
-
-		// verifyInstanceTypeFuncRaw := func() error {
-		// 	rawerr := a.verifyInstanceType(instanceType, instance.Zones(), svc)
-		// 	if rawerr != nil {
-		// 		fmt.Printf("\nverifyInstanceType(%10s)\t === Error: %v\n", instanceType, rawerr)
-		// 		if strings.Contains(rawerr.Error(), "RequestLimitExceeded") {
-		// 			fmt.Println("RAW - THIS IS WHERE WE INVOKE BACKOFF RETRY")
-		// 			return rawerr
-		// 		}
-		// 	}
-		// 	return nil
-		// }
-
-		// fmt.Printf("\nLaunching goroutines\n")
-		// for i := 0; i < noofattempts; i++ {
-		// 	fmt.Printf("|%02d", i)
-		// 	go verifyInstanceTypeFuncRaw()
-		// }
-
-		// // </RAW>
-		fmt.Println()
 	}
 
 	return result
