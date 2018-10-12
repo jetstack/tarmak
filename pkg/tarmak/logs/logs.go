@@ -73,6 +73,7 @@ func (l *Logs) Gather(pool, path string) error {
 		for _, r := range host.Roles() {
 			if strings.HasPrefix(r, pool) {
 				name = r
+				break
 			}
 		}
 
@@ -178,32 +179,27 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 
 func (l *Logs) listServices(host string) ([]string, error) {
 	args := "list-unit-files --type=service --no-pager | tail -n +2 | head -n -1 | awk '{print $1}'"
-	stdout, stderr, err := l.fetchCmdOutput(host, "systemctl", strings.Split(args, " "))
-	if stderr != nil && len(stderr) > 0 {
-		l.log.Warnf("stderr not nil for fetching host '%s' systemd units: %s", host, stderr)
-	}
+	stdout, err := l.fetchCmdOutput(host, "systemctl", strings.Split(args, " "))
 
 	return strings.Split(string(stdout), "\n"), err
 }
 
 func (l *Logs) fetchServiceJournal(host, service string) ([]byte, error) {
-	stdout, stderr, err := l.fetchCmdOutput(host, "journalctl", []string{"-u", service, "--no-pager"})
-	if stderr != nil && len(stderr) > 0 {
-		l.log.Warnf("stderr not nil for fetching host '%s' systemd journal '%s': %s", host, service, stderr)
-	}
-
-	return stdout, err
+	return l.fetchCmdOutput(host, "journalctl", []string{"-u", service, "--no-pager"})
 }
 
-func (l *Logs) fetchCmdOutput(host, command string, args []string) ([]byte, []byte, error) {
-	var stdout, stderr bytes.Buffer
-	_, err := l.ssh.ExecuteWithWriter(host, command, args, &stdout, &stderr)
-	return stdout.Bytes(), stderr.Bytes(), err
+func (l *Logs) fetchCmdOutput(host, command string, args []string) ([]byte, error) {
+	var stdout bytes.Buffer
+	ret, err := l.ssh.ExecuteWithWriter(host, command, args, &stdout)
+	if ret != 0 {
+		return nil, fmt.Errorf("command returned non-zero (%d): %v", ret, err)
+	}
+	return stdout.Bytes(), err
 }
 
 func (l *Logs) setPath(pool, path string) error {
 	if path == utils.DefaultLogsPathPlaceholder {
-		l.path = filepath.Join(l.tarmak.Cluster().ConfigPath(), fmt.Sprintf("%s.tar.gz", pool))
+		l.path = filepath.Join(l.tarmak.Cluster().ConfigPath(), fmt.Sprintf("%s-logs.tar.gz", pool))
 		return nil
 	}
 

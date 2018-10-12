@@ -2,7 +2,6 @@
 package interfaces
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"net"
@@ -212,10 +211,9 @@ type Terraform interface {
 
 type SSH interface {
 	WriteConfig(Cluster) error
-	PassThrough(additionalArguments []string) error
+	PassThrough([]string) error
 	Tunnel(destination, destinationPort, localPort string, daemonize bool) Tunnel
 	Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (returnCode int, err error)
-	ExecuteWithWriter(host string, cmd string, args []string, stdout, stderr *bytes.Buffer) (returnCode int, err error)
 	Validate() error
 	Cleanup()
 }

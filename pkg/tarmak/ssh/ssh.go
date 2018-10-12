@@ -235,36 +235,6 @@ func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr
 	return 0, nil
 }
 
-//func (s *SSH) ExecuteWithWriter(host string, command string, argsAdditional []string, stdout, stderr *bytes.Buffer) (returnCode int, err error) {
-//	args := append(s.args(), host, "--", command)
-//	args = append(args, argsAdditional...)
-//
-//	cmd := exec.Command(args[0], args[1:len(args)]...)
-//	cmd.Stdout = stdout
-//	cmd.Stderr = stderr
-//	cmd.SysProcAttr = &syscall.SysProcAttr{
-//		Setpgid: true,
-//	}
-//
-//	return s.executeCommand(cmd)
-//}
-
-func (s *SSH) executeCommand(cmd *exec.Cmd) (returnCode int, err error) {
-	err = cmd.Start()
-	if err != nil {
-		return -1, err
-	}
-
-	if err := sess.Wait(); err != nil {
-		if e, ok := err.(*ssh.ExitError); ok {
-			return e.ExitStatus(), e
-		}
-		return -1, err
-	}
-
-	return 0, nil
-}
-
 func (s *SSH) client(hostName string) (*ssh.Client, error) {
 	bastionClient, err := s.bastionClient()
 	if err != nil {
