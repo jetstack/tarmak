@@ -2,6 +2,7 @@
 package interfaces
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net"
@@ -214,8 +215,13 @@ type SSH interface {
 	PassThrough(additionalArguments []string) error
 	Tunnel(destination, destinationPort, localPort string, daemonize bool) Tunnel
 	Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (returnCode int, err error)
+	ExecuteWithWriter(host string, cmd string, args []string, stdout, stderr *bytes.Buffer) (returnCode int, err error)
 	Validate() error
 	Cleanup()
+}
+
+type Logs interface {
+	Gather(group, path string) error
 }
 
 type Tunnel interface {

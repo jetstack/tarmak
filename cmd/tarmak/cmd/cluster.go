@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 )
 
@@ -91,6 +92,17 @@ func clusterPlanFlags(fs *flag.FlagSet) {
 		"P",
 		consts.DefaultPlanLocationPlaceholder,
 		"location to store terraform plan executable file",
+	)
+}
+
+func clusterLogsFlags(fs *flag.FlagSet) {
+	store := &globalFlags.Cluster.Logs
+
+	fs.StringVar(
+		&store.Path,
+		"path",
+		utils.DefaultLogsPathPlaceholder,
+		"location to store tar ball of bundled systemd unit logs",
 	)
 }
 

@@ -23,6 +23,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/initialize"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
+	"github.com/jetstack/tarmak/pkg/tarmak/logs"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/terraform"
@@ -44,6 +45,7 @@ type Tarmak struct {
 	ssh       interfaces.SSH
 	init      *initialize.Initialize
 	kubectl   *kubectl.Kubectl
+	logs      *logs.Logs
 
 	environment interfaces.Environment
 	cluster     interfaces.Cluster
@@ -140,6 +142,7 @@ func (t *Tarmak) initializeModules() {
 	t.ssh = ssh.New(t)
 	t.puppet = puppet.New(t)
 	t.kubectl = kubectl.New(t)
+	t.logs = logs.New(t)
 }
 
 // Initialize default cluster, its environment and provider

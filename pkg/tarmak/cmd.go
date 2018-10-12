@@ -135,6 +135,17 @@ func (c *CmdTarmak) Shell() error {
 	return nil
 }
 
+func (c *CmdTarmak) Logs() error {
+	for _, a := range c.args {
+		err := c.logs.Gather(a, c.flags.Cluster.Logs.Path)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *CmdTarmak) ForceUnlock() error {
 	if err := c.setup(); err != nil {
 		return err
