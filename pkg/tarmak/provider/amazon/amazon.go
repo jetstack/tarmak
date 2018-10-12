@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/cenkalti/backoff"
 	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
@@ -367,8 +369,11 @@ func (a *Amazon) Verify() error {
 		result = multierror.Append(result, err)
 	}
 
-	if err := a.verifyInstanceTypes(); err != nil {
-		result = multierror.Append(result, err)
+	// if no cluster exists (i.e. tarmak init has not yet been run), skip this verification check
+	if a.tarmak.Cluster() != nil {
+		if err := a.verifyInstanceTypes(); err != nil {
+			result = multierror.Append(result, err)
+		}
 	}
 
 	return result.ErrorOrNil()
@@ -582,13 +587,60 @@ func (a *Amazon) verifyInstanceTypes() error {
 		if err != nil {
 			return err
 		}
+		fmt.Printf("\n======%s\n", instanceType)
 
-		if err := a.verifyInstanceType(instanceType, instance.Zones(), svc); err != nil {
-			result = multierror.Append(result, err)
+		noofattempts := 50
+
+		// <WITH-BACKOFF>
+
+		verifyInstanceTypeFunc := func() error {
+			reqlimiterr := a.verifyInstanceType(instanceType, instance.Zones(), svc)
+			if reqlimiterr != nil {
+				fmt.Printf("\nverifyInstanceType(%10s)\t === Error: %v\n", instanceType, reqlimiterr)
+				if strings.Contains(reqlimiterr.Error(), "RequestLimitExceeded") {
+					fmt.Println("WITH BACKOFF - THIS IS WHERE WE INVOKE BACKOFF RETRY")
+					return reqlimiterr
+				}
+			}
+			return nil
 		}
 
-		time.Sleep(200 * time.Millisecond)
+		constBackoff := backoff.NewConstantBackOff(time.Second * 5)
+		var retries uint64 = 5
+		b := backoff.WithMaxTries(constBackoff, retries)
+		fmt.Printf("\nTry with backoff\n")
+		for i := 0; i < noofattempts; i++ {
+			fmt.Printf("|%02d", i)
+			err = backoff.Retry(verifyInstanceTypeFunc, b)
+			if err != nil {
+				return fmt.Errorf("failed to verify instance types: %s", err)
+			}
+		}
 
+		// </WITH-BACKOFF>
+
+		// // <RAW>
+
+		// verifyInstanceTypeFuncRaw := func() error {
+		// 	rawerr := a.verifyInstanceType(instanceType, instance.Zones(), svc)
+		// 	if rawerr != nil {
+		// 		fmt.Printf("\nverifyInstanceType(%10s)\t === Error: %v\n", instanceType, rawerr)
+		// 		if strings.Contains(rawerr.Error(), "RequestLimitExceeded") {
+		// 			fmt.Println("RAW - THIS IS WHERE WE INVOKE BACKOFF RETRY")
+		// 			return rawerr
+		// 		}
+		// 	}
+		// 	return nil
+		// }
+
+		// fmt.Printf("\nLaunching goroutines\n")
+		// for i := 0; i < noofattempts; i++ {
+		// 	fmt.Printf("|%02d", i)
+		// 	go verifyInstanceTypeFuncRaw()
+		// }
+
+		// // </RAW>
+		fmt.Println()
 	}
 
 	return result
@@ -607,6 +659,7 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 		ProductDescription: aws.String("Linux/UNIX (Amazon VPC)"),
 		InstanceType:       aws.String(instanceType),
 	}
+
 	response, err := svc.DescribeReservedInstancesOfferings(request)
 	if err != nil {
 		return fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err)
