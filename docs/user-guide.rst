@@ -872,14 +872,14 @@ file under the Kubernetes code block like following:
 
     kubernetes:
       featureGates:
-          api-server:
+          apiServer:
               - "AllAlpha=true"
               - "APIResponseCompression=false"
           kubelet:
               - "CustomPodDNS=true"
-          kube-proxy:
+          kubeProxy:
               - "CSIPersistentVolume=false"
-          controller-manager:
+          controllerManager:
           scheduler:
 
 Cluster Services
