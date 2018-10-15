@@ -49,9 +49,21 @@ module.exports = function(hljs) {
         relevance: 10
       },
       {
+        className: 'meta',
+        begin: /<\?xml/, end: /\?>/, relevance: 10
+      },
+      {
         begin: /<\?(php)?/, end: /\?>/,
         subLanguage: 'php',
-        contains: [{begin: '/\\*', end: '\\*/', skip: true}]
+        contains: [
+          // We don't want the php closing tag ?> to close the PHP block when
+          // inside any of the following blocks:
+          {begin: '/\\*', end: '\\*/', skip: true},
+          {begin: 'b"', end: '"', skip: true},
+          {begin: 'b\'', end: '\'', skip: true},
+          hljs.inherit(hljs.APOS_STRING_MODE, {illegal: null, className: null, contains: null, skip: true}),
+          hljs.inherit(hljs.QUOTE_STRING_MODE, {illegal: null, className: null, contains: null, skip: true})
+        ]
       },
       {
         className: 'tag',
@@ -79,13 +91,6 @@ module.exports = function(hljs) {
           end: '\<\/script\>', returnEnd: true,
           subLanguage: ['actionscript', 'javascript', 'handlebars', 'xml']
         }
-      },
-      {
-        className: 'meta',
-        variants: [
-          {begin: /<\?xml/, end: /\?>/, relevance: 10},
-          {begin: /<\?\w+/, end: /\?>/}
-        ]
       },
       {
         className: 'tag',
