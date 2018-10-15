@@ -99,6 +99,8 @@ variable "bastion_root_size" {
   default = "16"
 }
 
+variable "bastion_min_instance_count" {}
+
 {{ if .JenkinsInstall -}}
 variable "jenkins_ami" {}
 
@@ -120,6 +122,10 @@ variable "jenkins_admin_cidrs" {
 {{ end -}}
 
 variable "bastion_admin_cidrs" {
+  type = "list"
+}
+
+variable "bastion_iam_additional_policy_arns" {
   type = "list"
 }
 
@@ -150,6 +156,10 @@ variable "vault_ami" {}
 
 # state
 variable "bucket_prefix" {}
+
+variable vault_iam_additional_policy_arns {
+  type = "list"
+}
 {{ end -}}
 {{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeClusterMulti) -}}
 {{ range .InstancePools -}}

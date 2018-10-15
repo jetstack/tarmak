@@ -83,3 +83,7 @@ data "template_file" "stack_name" {
 data "template_file" "vault_unseal_key_name" {
   template = "vault-${var.environment}-"
 }
+
+variable "vault_iam_additional_policy_arns" {
+  type = "list"
+}

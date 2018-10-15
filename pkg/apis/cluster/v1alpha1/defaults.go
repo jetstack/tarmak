@@ -80,6 +80,10 @@ func SetDefaults_Cluster(obj *Cluster) {
 		obj.Amazon.EBSEncrypted = boolPointer(false)
 	}
 
+	if obj.Amazon.AdditionalIAMPolicies == nil {
+		obj.Amazon.AdditionalIAMPolicies = []string{}
+	}
+
 	// logging
 	if obj.LoggingSinks == nil {
 		obj.LoggingSinks = []*LoggingSink{}
@@ -177,6 +181,13 @@ func SetDefaults_InstancePool(obj *InstancePool) {
 		if obj.Volumes[pos].Type == "" {
 			obj.Volumes[pos].Type = VolumeTypeSSD
 		}
+	}
+
+	if obj.Amazon == nil {
+		obj.Amazon = new(InstancePoolAmazon)
+	}
+	if obj.Amazon.AdditionalIAMPolicies == nil {
+		obj.Amazon.AdditionalIAMPolicies = []string{}
 	}
 }
 

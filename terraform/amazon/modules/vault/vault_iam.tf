@@ -39,3 +39,10 @@ data "template_file" "vault_policy" {
     vault_unsealer_ssm_key_prefix = "${data.template_file.vault_unseal_key_name.rendered}"
   }
 }
+
+resource "aws_iam_policy_attachment" "vault_additional_policies" {
+  name       = "${data.template_file.stack_name.rendered}-vault-additional-policy-${count.index+1}"
+  roles      = ["${aws_iam_role.vault.*.name}"]
+  count      = "${length(var.vault_iam_additional_policy_arns)}"
+  policy_arn = "${element(var.vault_iam_additional_policy_arns, count.index)}"
+}
