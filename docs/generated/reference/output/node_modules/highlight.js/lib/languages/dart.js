@@ -1,7 +1,10 @@
 module.exports = function (hljs) {
   var SUBST = {
     className: 'subst',
-    begin: '\\$\\{', end: '}',
+    variants: [
+       {begin: '\\${', end: '}'},
+       {begin: '\\$[A-Za-z0-9_]+'}
+    ],
     keywords: 'true false null this is new super'
   };
 
