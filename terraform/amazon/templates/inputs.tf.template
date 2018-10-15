@@ -104,7 +104,7 @@ variable "bastion_admin_cidrs" {
 
 # vault
 variable "consul_version" {
-  default = "1.0.6"
+  default = "1.2.3"
 }
 variable "vault_version" {
   default = "0.9.5"

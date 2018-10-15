@@ -5,7 +5,7 @@
 #
 class consul::params {
   $app_name = 'consul'
-  $version = '1.2.1'
+  $version = '1.2.3'
   $exporter_version = '0.3.0'
   $backinator_version = '1.3'
   $download_dir = '/tmp'

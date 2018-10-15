@@ -18,7 +18,7 @@
 class consul(
   Optional[String] $consul_master_token = undef,
   Optional[String] $consul_encrypt = undef,
-  Optional[String] $consul_bootstrap_expect = undef,
+  Optional[Integer] $consul_bootstrap_expect = undef,
   String $fqdn = '',
   String $private_ip = '127.0.0.1',
   String $region = '',
@@ -90,7 +90,10 @@ class consul(
   }
 
   $_consul_bootstrap_expect = $consul_bootstrap_expect ? {
-    undef   => $::consul_bootstrap_expect,
+    undef => defined('$::consul_bootstrap_expect') ? {
+      true    =>  $::consul_bootstrap_expect.scanf('%i')[0],
+      default =>  1,
+    },
     default => $consul_bootstrap_expect,
   }
 

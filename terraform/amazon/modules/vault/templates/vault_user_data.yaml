@@ -102,6 +102,8 @@ write_files:
     [Service]
     User=consul
     Group=consul
+    Type=notify
+    TimeoutStartSec=600s
     PermissionsStartOnly=true
     ExecStartPre=/bin/mkdir -p /var/lib/consul/data
     ExecStartPre=/bin/chown -c root:consul /var/lib/consul
@@ -186,6 +188,7 @@ write_files:
       "acl_default_policy" : "deny",
       "acl_down_policy" : "deny",
       "acl_master_token" : "${consul_master_token}",
+      "acl_agent_token" : "${consul_master_token}",
       "acl_datacenter" : "${region}",
       "datacenter" : "${region}",
       "log_level" : "INFO",
@@ -194,6 +197,7 @@ write_files:
       "bind_addr" : "0.0.0.0",
       "encrypt" : "${consul_encrypt}",
       "server" : true,
+      "leave_on_terminate" : true,
       "bootstrap_expect" : ${instance_count},
       "retry_join": [
         "provider=aws tag_key=VaultCluster tag_value=${environment}"

@@ -6,7 +6,7 @@ describe 'consul::config' do
       class{'consul':
         cloud_provider => 'aws',
         consul_master_token => 'master_token',
-        consul_bootstrap_expect => '3',
+        consul_bootstrap_expect => 3,
         consul_encrypt => 'enc',
         environment => 'env',
       }
