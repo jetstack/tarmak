@@ -43,7 +43,6 @@ func (c *CmdTerraform) Plan() (returnCode int, err error) {
 		return 1, err
 	}
 
-	c.log.Info("running plan")
 	changesNeeded, err := c.tarmak.terraform.Plan(c.tarmak.Cluster())
 	if changesNeeded {
 		return 2, err
@@ -57,7 +56,6 @@ func (c *CmdTerraform) Apply() error {
 		return err
 	}
 
-	c.log.Info("running apply")
 	// run terraform apply always, do not run it when in configuration only mode
 	if !c.tarmak.flags.Cluster.Apply.ConfigurationOnly {
 		err := c.tarmak.terraform.Apply(c.tarmak.Cluster())
@@ -102,7 +100,6 @@ func (c *CmdTerraform) Destroy() error {
 		return err
 	}
 
-	c.log.Info("running destroy")
 	err := c.tarmak.terraform.Destroy(c.tarmak.Cluster())
 	if err != nil {
 		return err

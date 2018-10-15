@@ -25,9 +25,11 @@ import (
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
 
-const debugShell = "debug-shell"
-
-const terraformPlanFile = "tarmak.plan"
+const (
+	debugShell        = "debug-shell"
+	terraformPlanFile = "tarmak.plan"
+	remoteStateError  = "Error locking destination state: Error acquiring the state lock: ConditionalCheckFailedException: The conditional request failed"
+)
 
 // wingHash is set by a linker flag to the hash of the lastest wing binary
 var wingHash = ""
@@ -143,6 +145,21 @@ func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 	default:
 	}
 
+	t.log.Info("initialising terraform")
+
+	var furtherErrorContext string
+	stderrReader, stderrWriter := io.Pipe()
+	stderrScanner := bufio.NewScanner(stderrReader)
+	go func() {
+		for stderrScanner.Scan() {
+			if strings.Contains(stderrScanner.Text(), remoteStateError) {
+				furtherErrorContext = fmt.Sprintf(`%s
+this error is often caused due to the remote state being destroyed and can be fixed my manually syncing both local and remote states`, furtherErrorContext)
+			}
+			t.log.WithField("std", "err").Debug(stderrScanner.Text())
+		}
+	}()
+
 	// run init
 	if err := t.command(
 		cluster,
@@ -154,9 +171,9 @@ func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 		},
 		nil,
 		nil,
-		nil,
+		stderrWriter,
 	); err != nil {
-		return fmt.Errorf("failed to run terraform init: %s", err)
+		return fmt.Errorf("failed to run terraform init: %s%s", err, furtherErrorContext)
 	}
 
 	select {
@@ -187,6 +204,8 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 			t.log.Fatalf("error listening to unix socket: %s", err)
 		}
 	}()
+
+	t.log.Infof("running %s", command)
 
 	// command
 	if command == debugShell {
@@ -277,18 +296,13 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 		Setpgid: true,
 	}
 
-	stdoutPipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	stderrPipe, err := cmd.StderrPipe()
-	if err != nil {
-		return err
-	}
-
 	// forward stdout
 	if stdout == nil {
+		stdoutPipe, err := cmd.StdoutPipe()
+		if err != nil {
+			return err
+		}
+
 		stdoutScanner := bufio.NewScanner(stdoutPipe)
 		go func() {
 			for stdoutScanner.Scan() {
@@ -301,6 +315,11 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 
 	// forward stderr
 	if stderr == nil {
+		stderrPipe, err := cmd.StderrPipe()
+		if err != nil {
+			return err
+		}
+
 		stderrScanner := bufio.NewScanner(stderrPipe)
 		go func() {
 			for stderrScanner.Scan() {

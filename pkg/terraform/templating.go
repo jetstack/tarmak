@@ -11,7 +11,8 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
+
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -20,6 +21,8 @@ import (
 )
 
 func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
+	t.log.Info("generating terraform code")
+
 	terraformCodePath := t.codePath(c)
 	if err := utils.EnsureDirectory(
 		terraformCodePath,
