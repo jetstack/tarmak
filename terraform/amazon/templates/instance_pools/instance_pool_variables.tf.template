@@ -28,11 +28,12 @@ variable "{{.TFName}}_iam_additional_policy_arns" {
   default = {{.AmazonAdditionalIAMPolicies}}
 }
 
-{{ $instancePool := . }}
-{{ range .Volumes }}
+{{ $instancePool := . -}}
+{{ range .Volumes -}}
 variable "{{$instancePool.TFName}}_{{.Name}}_volume_size" {
   default = {{.Size}}
 }
+
 variable "{{$instancePool.TFName}}_{{.Name}}_volume_type" {
   default = "{{.Type}}"
 }

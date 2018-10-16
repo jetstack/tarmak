@@ -4,16 +4,16 @@
 {{ $instancePool := . -}}
 
 data "template_file" "{{.TFName}}_user_data" {
-{{ if .Role.Stateful -}}
-  count    = "${var.{{.TFName}}_min_count}"
+{{- if .Role.Stateful }}
+  count = "${var.{{.TFName}}_min_count}"
 {{ end -}}
-{{ if eq .Name "jenkins" -}}
+{{- if eq .Name "jenkins" }}
   template = "${file("${path.module}/templates/jenkins_user_data.yaml")}"
   vars {
     region = "${var.region}"
     fqdn   = "jenkins.${var.private_zone}"
     volume_id = "${element(aws_ebs_volume.jenkins_data.*.id, 0)}"
-{{ else -}}
+{{- else }}
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
 
   vars {
@@ -22,8 +22,8 @@ data "template_file" "{{.TFName}}_user_data" {
     puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
 
     # These are only used in the template when running in Wing dev mode
-    wing_binary_path          = "${var.secrets_bucket}/${var.wing_binary_path}"
-    wing_version              = "${var.wing_version}"
+    wing_binary_path = "${var.secrets_bucket}/${var.wing_binary_path}"
+    wing_version     = "${var.wing_version}"
 
     vault_token = "${tarmak_vault_instance_role.{{.Role.Name}}.init_token}"
     vault_ca    = "${base64encode(var.vault_ca)}"
@@ -34,22 +34,22 @@ data "template_file" "{{.TFName}}_user_data" {
     tarmak_instance_pool = "{{.Name}}"
     tarmak_cluster       = "${data.template_file.stack_name.rendered}"
     tarmak_environment   = "${var.environment}"
-{{ if not .Role.Stateful -}}
+{{ if not .Role.Stateful }}
     tarmak_hostname      = "{{.Role.Name}}"
     tarmak_desired_count = "${var.{{.TFName}}_min_count}"
     tarmak_volume_id     = ""
-{{ else -}}
+{{- else }}
     tarmak_hostname      = "{{.Role.Name}}-${count.index+1}"
     tarmak_desired_count = "${var.{{.TFName}}_min_count}"
-{{if gt (len .Volumes) 0 -}}
+{{- if gt (len .Volumes) 0 }}
     tarmak_volume_id     = "${element(aws_ebs_volume.{{.TFName}}_{{(index .Volumes 0).Name}}.*.id, count.index)}"
-{{ end -}}
-{{ end -}}
-{{ end -}}
+{{- end -}}
+{{- end -}}
+{{- end }}
   }
 }
 
-{{if not .Role.Stateful -}}
+{{ if not .Role.Stateful -}}
 resource "aws_launch_configuration" "{{.TFName}}" {
   lifecycle {
     create_before_destroy = true
@@ -71,15 +71,14 @@ resource "aws_launch_configuration" "{{.TFName}}" {
     volume_type = "${var.{{.TFName}}_root_volume_type}"
     volume_size = "${var.{{.TFName}}_root_volume_size}"
   }
-
-{{ range .Volumes -}}
+{{ range .Volumes }}
   ebs_block_device {
     device_name = "{{.Device}}"
     volume_size = {{.Size}}
     volume_type = "{{.Type}}"
     encrypted   = "{{$AmazonEBSEncrypted}}"
   }
-{{ end -}}
+{{- end }}
 
   user_data = "${data.template_file.{{.TFName}}_user_data.rendered}"
 }
@@ -92,18 +91,19 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
   health_check_type         = "EC2"
   vpc_zone_identifier       = ["${var.private_subnet_ids}"]
   launch_configuration      = "${aws_launch_configuration.{{.TFName}}.name}"
-  load_balancers            = [
-{{ if .Role.AWS.ELBAPI -}}
+{{ if or .Role.AWS.ELBAPI (or .Role.AWS.ELBIngress .Role.AWS.ELBAPIPublic) }}
+  load_balancers = [
+    {{ if .Role.AWS.ELBAPI -}}
     "${aws_elb.{{.Role.TFName}}.name}",
-{{ end -}}
-{{ if .Role.AWS.ELBIngress -}}
+    {{- end -}}
+    {{- if .Role.AWS.ELBIngress -}}
     "${aws_elb.{{.Role.TFName}}.name}",
-{{ end -}}
-{{ if .Role.AWS.ELBAPIPublic -}}
+    {{- end -}}
+    {{- if .Role.AWS.ELBAPIPublic -}}
     "${aws_elb.{{.Role.TFName}}_public.name}",
-{{ end -}}
+    {{- end }}
   ]
-
+{{ end }}
   tag {
     key                 = "Name"
     value               = "${data.template_file.stack_name.rendered}-{{.DNSName}}"
@@ -152,10 +152,11 @@ resource "aws_autoscaling_group" "{{.TFName}}" {
 {{ if .Role.Stateful -}}
 resource "aws_instance" "{{.TFName}}" {
   depends_on = [
-{{ range .Volumes -}}
+{{- range .Volumes }}
     "aws_ebs_volume.{{$instancePool.TFName}}_{{.Name}}",
-{{ end -}}
+{{- end }}
   ]
+
   count                = "${var.{{.TFName}}_min_count}"
   availability_zone    = "${element(var.availability_zones, count.index)}"
   ami                  = "${var.{{.TFName}}_ami}"
@@ -175,13 +176,14 @@ resource "aws_instance" "{{.TFName}}" {
   }
 
   tags {
-    Name               = "${data.template_file.stack_name.rendered}-{{.DNSName}}-${count.index+1}"
-    Environment        = "${var.environment}"
-    Project            = "${var.project}"
-    Contact            = "${var.contact}"
+    Name        = "${data.template_file.stack_name.rendered}-{{.DNSName}}-${count.index+1}"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+    Contact     = "${var.contact}"
+    Role        = "{{.Role.Name}}"
+    tarmak_role = "{{.Role.Name}}-${count.index+1}"
+
     {{.TFName}}_Volume_Attach = "${data.template_file.stack_name.rendered}-k8s-{{.TFName}}-${count.index+1}"
-    Role               = "{{.Role.Name}}"
-    tarmak_role        = "{{.Role.Name}}-${count.index+1}"
   }
 
   user_data = "${element(data.template_file.{{.TFName}}_user_data.*.rendered, count.index)}"
@@ -193,10 +195,10 @@ resource "aws_instance" "{{.TFName}}" {
 
 # Add dynamic instance tags
 resource "awstag_ec2_tag" "{{.TFName}}" {
-  count = "${var.{{.TFName}}_min_count}"
+  count  = "${var.{{.TFName}}_min_count}"
   ec2_id = "${element(aws_instance.{{.TFName}}.*.id, count.index)}"
-  key = "kubernetes.io/cluster/${data.template_file.stack_name.rendered}"
-  value = ""
+  key    = "kubernetes.io/cluster/${data.template_file.stack_name.rendered}"
+  value  = ""
 }
 
 # This cloudwatch alarm sets up an autorecovery of the instance in case it fails the checks
@@ -251,8 +253,9 @@ resource "aws_route53_record" "{{.TFName}}-exporter-srv" {
   name    = "{{.Role.Name}}-exporters.${data.template_file.stack_name.rendered}"
   type    = "SRV"
   ttl     = "300"
+
   records = [
-    "${formatlist("1 10 9115 %s.%s", aws_route53_record.{{.TFName}}.*.name, var.private_zone)}"
+    "${formatlist("1 10 9115 %s.%s", aws_route53_record.{{.TFName}}.*.name, var.private_zone)}",
   ]
 }
 {{ end -}}

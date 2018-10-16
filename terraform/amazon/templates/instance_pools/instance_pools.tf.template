@@ -1,56 +1,50 @@
 # Etcd, Master, Worker
-{{ if eq .Module "kubernetes" }}
-
-{{range .Roles}}
-{{ if or (eq .Name "etcd") ( or (eq .Name "worker") (eq .Name "master") )  }}
+{{ if eq .Module "kubernetes" -}}
+{{ range .Roles -}}
+{{ if or (eq .Name "etcd") ( or (eq .Name "worker") (eq .Name "master") ) -}}
 ## TODO: Role definitions for {{.TFName}}
 # Variables for {{.TFName}}
-{{ template "role_variables.tf.template" .}}
+{{ template "role_variables.tf.template" . }}
 # ELB for {{.TFName}}
-{{template "role_elb.tf.template" dict "Role" .}}
-{{ end }}
-{{ end }}
+{{ template "role_elb.tf.template" dict "Role" . -}}
+{{ end -}}
+{{ end -}}
 
-# Security Groups for {{.TFName}}
-{{template "role_security_group.tf.template" .}}
-
-{{$AmazonEBSEncrypted := .AmazonEBSEncrypted}}
-{{range .InstancePools}}
-{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
+# Security Groups for {{.Module}}
+{{- template "role_security_group.tf.template" . }}
+{{ $AmazonEBSEncrypted := .AmazonEBSEncrypted -}}
+{{- range .InstancePools }}
+{{- if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") ) -}}
 ## {{.TFName}}
 # Variables for {{.TFName}}
-{{template "instance_pool_variables.tf.template" .}}
+{{ template "instance_pool_variables.tf.template" . -}}
 # Instance for {{.TFName}}
-{{template "instance_pool_instance.tf.template" dict "InstancePool" . "AmazonEBSEncrypted" $AmazonEBSEncrypted}}
+{{ template "instance_pool_instance.tf.template" dict "InstancePool" . "AmazonEBSEncrypted" $AmazonEBSEncrypted }}
 # IAM role for {{.TFName}}
-{{template "instance_pool_iam.tf.template" .}}
-{{ end }}
-{{ end }}
-
-{{ end }}
-
+{{ template "instance_pool_iam.tf.template" . }}
+{{- end }}
+{{- end -}}
+{{- end -}}
 
 # Jenkins
-{{ if eq .Module "jenkins" }}
+{{ if eq .Module "jenkins" -}}
+{{ $JenkinsCertificateARN := .JenkinsCertificateARN -}}
+{{range .Roles -}}
+{{ if eq .Name "jenkins" -}}
+{{template "role_elb.tf.template" dict "Role" . "JenkinsCertificateARN" $.JenkinsCertificateARN }}
+{{template "role_variables.tf.template" . }}
+{{- end -}}
+{{- end -}}
 
-{{$JenkinsCertificateARN := .JenkinsCertificateARN}}
-{{range .Roles}}
-{{ if eq .Name "jenkins" }}
-{{template "role_elb.tf.template" dict "Role" . "JenkinsCertificateARN" $.JenkinsCertificateARN}}
-{{template "role_variables.tf.template" .}}
-{{ end }}
-{{ end }}
-
-{{range .InstancePools}}
-{{ if eq .Role.Name "jenkins" }}
+{{range .InstancePools -}}
+{{ if eq .Role.Name "jenkins" -}}
 ## {{.TFName}}
 # Variables for {{.TFName}}
-{{template "instance_pool_variables.tf.template" .}}
+{{template "instance_pool_variables.tf.template" . }}
 # Instance for {{.TFName}}
-{{template "instance_pool_instance.tf.template" .}}
+{{template "instance_pool_instance.tf.template" . }}
 # IAM role for {{.TFName}}
-{{template "instance_pool_iam.tf.template" .}}
-{{ end }}
-{{ end }}
-
-{{ end }}
+{{template "instance_pool_iam.tf.template" . }}
+{{ end -}}
+{{- end -}}
+{{- end }}

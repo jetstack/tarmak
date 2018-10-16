@@ -19,13 +19,13 @@ resource "aws_security_group" "jenkins_elb" {
 resource "aws_security_group_rule" "jenkins_elb_ingress_allow_admins" {
   type              = "ingress"
   protocol          = "tcp"
-{{ if .JenkinsCertificateARN }}
+{{- if .JenkinsCertificateARN }}
   from_port         = 443
   to_port           = 443
-{{ else }}
+{{- else }}
   from_port         = 80
   to_port           = 80
-{{ end }}
+{{- end }}
   cidr_blocks       = ["${var.jenkins_admin_cidrs}"]
   security_group_id = "${aws_security_group.jenkins_elb.id}"
 }

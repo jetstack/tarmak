@@ -2,14 +2,11 @@ provider "tarmak" {
   socket_path = "{{ .SocketPath }}"
 }
 
-provider "template" {
-}
+provider "template" {}
 
-provider "random" {
-}
+provider "random" {}
 
-provider "tls" {
-}
+provider "tls" {}
 
 provider "aws" {
   region              = "${var.region}"

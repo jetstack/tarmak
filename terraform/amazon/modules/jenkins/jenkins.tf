@@ -33,7 +33,6 @@ resource "aws_security_group_rule" "jenkins_ingress_allow_bastion_all" {
   security_group_id        = "${aws_security_group.jenkins.id}"
 }
 
-
 data "aws_subnet" "private_subnet" {
   id = "${var.private_subnet_ids[0]}"
 }

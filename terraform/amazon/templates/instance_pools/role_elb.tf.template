@@ -1,4 +1,4 @@
-{{/* vim: set ft=tf: */}}
+{{/* vim: set ft=tf: */ -}}
 {{ if .Role.AWS.ELBAPI -}}
 resource "aws_elb" "{{.Role.TFName}}" {
   name         = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
@@ -24,16 +24,14 @@ resource "aws_elb" "{{.Role.TFName}}" {
     target              = "SSL:6443"
     interval            = 30
   }
-
-{{ if .Role.AWS.EnableInternalELBAccessLogs -}}
+{{ if .Role.AWS.EnableInternalELBAccessLogs }}
   access_logs {
     enabled       = "${var.elb_access_logs_internal_enabled}"
     bucket        = "${var.elb_access_logs_internal_bucket}"
     bucket_prefix = "${var.elb_access_logs_internal_bucket_prefix}"
     interval      = "${var.elb_access_logs_internal_bucket_interval}"
   }
-{{ end -}}
-
+{{- end }}
   tags {
     Name        = "${format("%.23s-api", data.template_file.stack_name.rendered)}"
     Environment = "${var.environment}"
@@ -79,16 +77,14 @@ resource "aws_elb" "{{.Role.TFName}}_public" {
     target              = "SSL:6443"
     interval            = 30
   }
-
-{{ if .Role.AWS.EnablePublicELBAccessLogs -}}
+{{ if .Role.AWS.EnablePublicELBAccessLogs }}
   access_logs {
     enabled       = "${var.elb_access_logs_public_enabled}"
     bucket        = "${var.elb_access_logs_public_bucket}"
     bucket_prefix = "${var.elb_access_logs_public_bucket_prefix}"
     interval      = "${var.elb_access_logs_public_bucket_interval}"
   }
-{{ end -}}
-
+{{- end }}
   tags {
     Name        = "${format("%s-api-pub", data.template_file.stack_name.rendered)}"
     Environment = "${var.environment}"
@@ -157,10 +153,10 @@ resource "aws_elb" "{{.Role.TFName}}" {
   }
 {{ end -}}
 
-{{ if eq .Role.Name "jenkins" }}
+{{ if eq .Role.Name "jenkins" -}}
   cross_zone_load_balancing = true
 
-{{ if .JenkinsCertificateARN }}
+{{ if .JenkinsCertificateARN -}}
   listener {
     instance_port      = "${var.jenkins_elb_instance_port_http}"
     instance_protocol  = "http"
@@ -168,14 +164,14 @@ resource "aws_elb" "{{.Role.TFName}}" {
     lb_protocol        = "https"
     ssl_certificate_id = "${var.certificate_arn}"
   }
-{{ else }}
+{{ else -}}
   listener {
     instance_port      = "${var.jenkins_elb_instance_port_http}"
     instance_protocol  = "http"
     lb_port            = 80
     lb_protocol        = "http"
   }
-{{ end }}
+{{ end -}}
 
   health_check {
     healthy_threshold   = 2
@@ -185,7 +181,7 @@ resource "aws_elb" "{{.Role.TFName}}" {
     interval            = 30
   }
 
-{{ else }}
+{{ else -}}
   listener {
     instance_port     = "${var.ingress_elb_nodeport_http}"
     instance_protocol = "http"
@@ -200,7 +196,7 @@ resource "aws_elb" "{{.Role.TFName}}" {
     target              = "TCP:${var.ingress_elb_nodeport_http}"
     interval            = 10
   }
-{{ end }}
+{{ end -}}
 
   #listener {
   #  instance_port      = "${var.ingress_elb_nodeport_http}"
@@ -216,5 +212,4 @@ resource "aws_elb" "{{.Role.TFName}}" {
     Contact     = "${var.contact}"
   }
 }
-
 {{ end -}}

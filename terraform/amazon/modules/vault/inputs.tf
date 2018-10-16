@@ -17,7 +17,7 @@ variable "state_bucket" {}
 variable "stack_name_prefix" {}
 
 variable "allowed_account_ids" {
-  type    = "list"
+  type = "list"
 }
 
 variable "environment" {}
@@ -83,5 +83,3 @@ data "template_file" "stack_name" {
 data "template_file" "vault_unseal_key_name" {
   template = "vault-${var.environment}-"
 }
-
-
