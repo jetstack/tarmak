@@ -164,11 +164,6 @@ this error is often caused due to the remote state being destroyed and can be fi
 			"-get-plugins=false",
 			"-input=false",
 		}},
-		{log: "formatting terraform code", name: "fmt", args: []string{
-			"terraform",
-			"fmt",
-			"-list=false",
-		}},
 		{log: "validating terraform code", name: "validate", args: []string{
 			"terraform",
 			"validate",
