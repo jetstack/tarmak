@@ -22,17 +22,17 @@ func TestLoggingDefaults(t *testing.T) {
 	cluster := &Cluster{
 		LoggingSinks: []*LoggingSink{
 			&LoggingSink{
-				ElasticSearch: &LoggingSinkElasticSearch{
+				Elasticsearch: &LoggingSinkElasticsearch{
 					TLS: boolPointer(true),
 				},
 			},
 			&LoggingSink{
-				ElasticSearch: &LoggingSinkElasticSearch{
+				Elasticsearch: &LoggingSinkElasticsearch{
 					TLS: boolPointer(false),
 				},
 			},
 			&LoggingSink{
-				ElasticSearch: &LoggingSinkElasticSearch{},
+				Elasticsearch: &LoggingSinkElasticsearch{},
 			},
 		},
 	}
@@ -43,16 +43,16 @@ func TestLoggingDefaults(t *testing.T) {
 		t.Errorf("logging sinks not set")
 	} else {
 		for index, loggingSink := range cluster.LoggingSinks {
-			if loggingSink.ElasticSearch == nil {
+			if loggingSink.Elasticsearch == nil {
 				t.Errorf("elasticsearch is not set for logging sink %d", index)
 			} else {
-				if loggingSink.ElasticSearch.TLS == nil {
+				if loggingSink.Elasticsearch.TLS == nil {
 					t.Errorf("elasticsearch tls is not set for logging sink %d", index)
 				} else {
-					if (index == 0 || index == 2) && *loggingSink.ElasticSearch.TLS != true {
+					if (index == 0 || index == 2) && *loggingSink.Elasticsearch.TLS != true {
 						t.Errorf("elasticsearch for logging sink %d does not have TLS enabled", index)
 					}
-					if index == 1 && *loggingSink.ElasticSearch.TLS != false {
+					if index == 1 && *loggingSink.Elasticsearch.TLS != false {
 						t.Errorf("elasticsearch for logging sink %d has TLS enabled", index)
 					}
 				}

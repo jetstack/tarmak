@@ -468,14 +468,14 @@ func (c *Cluster) validateLoggingSinks() (result error) {
 
 	if c.Config().LoggingSinks != nil {
 		for index, loggingSink := range c.Config().LoggingSinks {
-			if loggingSink.ElasticSearch != nil && loggingSink.ElasticSearch.AmazonESProxy != nil {
-				if loggingSink.ElasticSearch.HTTPBasicAuth != nil {
+			if loggingSink.Elasticsearch != nil && loggingSink.Elasticsearch.AmazonESProxy != nil {
+				if loggingSink.Elasticsearch.HTTPBasicAuth != nil {
 					return fmt.Errorf("cannot enable AWS elasticsearch proxy and HTTP basic auth for logging sink %d", index)
 				}
-				if loggingSink.ElasticSearch.TLSVerify {
+				if loggingSink.Elasticsearch.TLSVerify {
 					return fmt.Errorf("cannot enable AWS elasticsearch proxy and force certificate validation for logging sink %d", index)
 				}
-				if loggingSink.ElasticSearch.TLSCA != "" {
+				if loggingSink.Elasticsearch.TLSCA != "" {
 					return fmt.Errorf("cannot enable AWS elasticsearch proxy and specify a custom CA for logging sink %d", index)
 				}
 			}
