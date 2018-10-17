@@ -1,4 +1,5 @@
 module.exports = function(hljs) {
+  var JS_IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
   var KEYWORDS = {
     keyword:
       'in if for while finally var new function do return void else break catch ' +
@@ -16,6 +17,38 @@ module.exports = function(hljs) {
       'Float64Array Int16Array Int32Array Int8Array Uint16Array Uint32Array ' +
       'Uint8Array Uint8ClampedArray ArrayBuffer DataView JSON Intl arguments require ' +
       'module console window document any number boolean string void Promise'
+  };
+
+  var DECORATOR = {
+    className: 'meta',
+    begin: '@' + JS_IDENT_RE,
+  };
+
+  var ARGS =
+  {
+    begin: '\\(',
+    end: /\)/,
+    keywords: KEYWORDS,
+    contains: [
+      'self',
+      hljs.QUOTE_STRING_MODE,
+      hljs.APOS_STRING_MODE,
+      hljs.NUMBER_MODE
+    ]
+  };
+
+  var PARAMS = {
+    className: 'params',
+    begin: /\(/, end: /\)/,
+    excludeBegin: true,
+    excludeEnd: true,
+    keywords: KEYWORDS,
+    contains: [
+      hljs.C_LINE_COMMENT_MODE,
+      hljs.C_BLOCK_COMMENT_MODE,
+      DECORATOR,
+      ARGS
+    ]
   };
 
   return {
@@ -94,19 +127,8 @@ module.exports = function(hljs) {
         keywords: KEYWORDS,
         contains: [
           'self',
-          hljs.inherit(hljs.TITLE_MODE, {begin: /[A-Za-z$_][0-9A-Za-z$_]*/}),
-          {
-            className: 'params',
-            begin: /\(/, end: /\)/,
-            excludeBegin: true,
-            excludeEnd: true,
-            keywords: KEYWORDS,
-            contains: [
-              hljs.C_LINE_COMMENT_MODE,
-              hljs.C_BLOCK_COMMENT_MODE
-            ],
-            illegal: /["'\(]/
-          }
+          hljs.inherit(hljs.TITLE_MODE, { begin: JS_IDENT_RE }),
+          PARAMS
         ],
         illegal: /%/,
         relevance: 0 // () => {} is more typical in TypeScript
@@ -115,23 +137,12 @@ module.exports = function(hljs) {
         beginKeywords: 'constructor', end: /\{/, excludeEnd: true,
         contains: [
           'self',
-          {
-            className: 'params',
-            begin: /\(/, end: /\)/,
-            excludeBegin: true,
-            excludeEnd: true,
-            keywords: KEYWORDS,
-            contains: [
-              hljs.C_LINE_COMMENT_MODE,
-              hljs.C_BLOCK_COMMENT_MODE
-            ],
-            illegal: /["'\(]/
-          }
+          PARAMS
         ]
       },
       { // prevent references like module.id from being higlighted as module definitions
         begin: /module\./,
-        keywords: {built_in: 'module'},
+        keywords: { built_in: 'module' },
         relevance: 0
       },
       {
@@ -147,9 +158,8 @@ module.exports = function(hljs) {
       {
         begin: '\\.' + hljs.IDENT_RE, relevance: 0 // hack: prevents detection of keywords after dots
       },
-      {
-        className: 'meta', begin: '@[A-Za-z]+'
-      }
+      DECORATOR,
+      ARGS
     ]
   };
 };
