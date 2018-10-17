@@ -25,11 +25,11 @@ const (
 type LoggingSinkType string
 
 type LoggingSink struct {
-	ElasticSearch *LoggingSinkElasticSearch `json:"elasticSearch,omitempty"`
+	Elasticsearch *LoggingSinkElasticsearch `json:"elasticsearch,omitempty"`
 	Types         []LoggingSinkType         `json:"types,omitempty"`
 }
 
-type LoggingSinkElasticSearch struct {
+type LoggingSinkElasticsearch struct {
 	// https://fluentbit.io/documentation/0.12/output/elasticsearch.html
 	Host           string         `json:"host,omitempty"`
 	Port           int            `json:"port,omitempty"`
