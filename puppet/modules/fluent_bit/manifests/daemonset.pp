@@ -1,6 +1,6 @@
 class fluent_bit::daemonset(
   String $fluent_bit_image = 'fluent/fluent-bit',
-  String $fluent_bit_version = '0.13.1',
+  String $fluent_bit_version = '0.14.4',
   Array[String] $platform_namespaces = ['kube-system','service-broker','monitoring'],
 ){
   require ::kubernetes
