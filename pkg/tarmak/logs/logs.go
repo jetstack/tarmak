@@ -68,8 +68,8 @@ type SystemdEntry struct {
 }
 
 type instanceLogs struct {
-	host        string
-	serviceLogs map[string][]*SystemdEntry
+	host         string
+	journaldLogs map[string][]*SystemdEntry
 }
 
 func New(tarmak interfaces.Tarmak) *Logs {
@@ -115,7 +115,7 @@ func (l *Logs) Gather(pool, path string) error {
 	hostGatherFunc := func(host string) {
 		defer l.wg.Done()
 
-		l.log.Infof("fetching service logs from instance '%s'", host)
+		l.log.Infof("fetching journald logs from instance '%s'", host)
 		raw, err := l.fetchCmdOutput(host, "journalctl", []string{"-o", "json", "--no-pager"})
 		if err != nil {
 			l.mu.Lock()
@@ -124,7 +124,7 @@ func (l *Logs) Gather(pool, path string) error {
 			return
 		}
 
-		serviceLogs := make(map[string][]*SystemdEntry)
+		journaldLogs := make(map[string][]*SystemdEntry)
 		for _, r := range bytes.Split(raw, []byte("\n")) {
 			if r == nil || len(r) == 0 {
 				continue
@@ -139,14 +139,7 @@ func (l *Logs) Gather(pool, path string) error {
 				return
 			}
 
-			// ignore non-units
-			if entry.SystemdUnit == "" {
-				continue
-			}
-
-			entry.SystemdUnit = strings.TrimSuffix(entry.SystemdUnit, ".service")
-
-			serviceLogs[entry.SystemdUnit] = append(serviceLogs[entry.SystemdUnit], entry)
+			journaldLogs[entry.SyslogIdentifier] = append(journaldLogs[entry.SyslogIdentifier], entry)
 
 			select {
 			case <-l.ctx.Done():
@@ -156,7 +149,7 @@ func (l *Logs) Gather(pool, path string) error {
 		}
 
 		l.mu.Lock()
-		poolLogs = append(poolLogs, &instanceLogs{host, serviceLogs})
+		poolLogs = append(poolLogs, &instanceLogs{host, journaldLogs})
 		l.mu.Unlock()
 	}
 
@@ -207,7 +200,7 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 			continue
 		}
 
-		for unit, entries := range i.serviceLogs {
+		for unit, entries := range i.journaldLogs {
 			var fileData []byte
 			for _, entry := range entries {
 				t := time.Unix(entry.RealtimeTimestamp/1000000, 0)
@@ -216,14 +209,17 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 					[]byte(fmt.Sprintf("%s %s %s[%s]: %v\n",
 						t.Format(timeLayout),
 						entry.Hostname,
-						entry.SystemdUnit,
+						entry.SyslogIdentifier,
 						entry.Pid,
 						entry.Message),
 					)...,
 				)
 			}
 
-			ufile := filepath.Join(idir, fmt.Sprintf("%s.log", unit))
+			ufile := filepath.Join(idir, fmt.Sprintf(
+				"%s.log",
+				strings.Replace(unit, "/", "-", -1)),
+			)
 			f, err := os.Create(ufile)
 			if err != nil {
 				result = multierror.Append(result, err)
