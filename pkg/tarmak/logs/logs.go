@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/pkg/archive"
 	"github.com/hashicorp/go-multierror"
@@ -18,6 +19,10 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+)
+
+const (
+	timeLayout = "Jan _2 15:04:05"
 )
 
 type Logs struct {
@@ -32,8 +37,8 @@ type Logs struct {
 
 type SystemdEntry struct {
 	Cursor                  string `json:"__CURSOR"`
-	Realtime_timestamp      int64  `json:"__REALTIME_TIMESTAMP,string"`
-	Monotonic_timestamp     string `json:"__MONOTONIC_TIMESTAMP"`
+	RealtimeTimestamp       int64  `json:"__REALTIME_TIMESTAMP,string"`
+	MonotonicTimestamp      string `json:"__MONOTONIC_TIMESTAMP"`
 	Boot_id                 string `json:"_BOOT_ID"`
 	Transport               string `json:"_TRANSPORT"`
 	Priority                int32  `json:"PRIORITY,string"`
@@ -73,6 +78,8 @@ func New(tarmak interfaces.Tarmak) *Logs {
 }
 
 func (l *Logs) Gather(pool, path string) error {
+	l.log.Infof("fetching logs from target '%s'", pool)
+
 	if i := l.tarmak.Cluster().InstancePool(pool); i == nil {
 		return fmt.Errorf("unable to find instance pool '%s'", pool)
 	}
@@ -124,10 +131,12 @@ func (l *Logs) Gather(pool, path string) error {
 				return fmt.Errorf("failed to unmarshal entry [%s]: %s", r, err)
 			}
 
-			// ignore non-services
+			// ignore non-units
 			if entry.SystemdUnit == "" {
 				continue
 			}
+
+			entry.SystemdUnit = strings.TrimSuffix(entry.SystemdUnit, ".service")
 
 			serviceLogs[entry.SystemdUnit] = append(serviceLogs[entry.SystemdUnit], entry)
 		}
@@ -159,26 +168,33 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 			continue
 		}
 
-		var fileData []byte
 		for unit, entries := range i.serviceLogs {
+			var fileData []byte
 			for _, entry := range entries {
+				t := time.Unix(entry.RealtimeTimestamp/1000000, 0)
 				fileData = append(
 					fileData,
-					[]byte(fmt.Sprintf("%s %s %s %s\n", entry.Realtime_timestamp, entry.Hostname, entry.SystemdUnit, entry.Message))...,
+					[]byte(fmt.Sprintf("%s %s %s[%s]: %v\n",
+						t.Format(timeLayout),
+						entry.Hostname,
+						entry.SystemdUnit,
+						entry.Pid,
+						entry.Message),
+					)...,
 				)
 			}
 
-			ufile := filepath.Join(idir, unit)
+			ufile := filepath.Join(idir, fmt.Sprintf("%s.log", unit))
 			f, err := os.Create(ufile)
 			if err != nil {
 				result = multierror.Append(result, err)
 				continue
 			}
-			defer f.Close()
 
 			if _, err := f.Write(fileData); err != nil {
 				result = multierror.Append(result, err)
 			}
+			f.Close()
 		}
 	}
 
