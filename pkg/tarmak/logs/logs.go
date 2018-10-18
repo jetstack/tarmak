@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/docker/docker/pkg/archive"
@@ -33,6 +34,8 @@ type Logs struct {
 	log          *logrus.Entry
 
 	path string
+	mu   sync.Mutex
+	wg   sync.WaitGroup
 }
 
 type SystemdEntry struct {
@@ -100,7 +103,63 @@ func (l *Logs) Gather(pool, path string) error {
 		return err
 	}
 
+	select {
+	case <-l.ctx.Done():
+		return l.ctx.Err()
+	default:
+	}
+
 	var poolLogs []*instanceLogs
+	var result *multierror.Error
+
+	hostGatherFunc := func(host string) {
+		defer l.wg.Done()
+
+		l.log.Infof("fetching service logs from instance '%s'", host)
+		raw, err := l.fetchCmdOutput(host, "journalctl", []string{"-o", "json", "--no-pager"})
+		if err != nil {
+			l.mu.Lock()
+			result = multierror.Append(result, err)
+			l.mu.Unlock()
+			return
+		}
+
+		serviceLogs := make(map[string][]*SystemdEntry)
+		for _, r := range bytes.Split(raw, []byte("\n")) {
+			if r == nil || len(r) == 0 {
+				continue
+			}
+
+			entry := new(SystemdEntry)
+			if err := json.Unmarshal(r, entry); err != nil {
+				l.mu.Lock()
+				err = fmt.Errorf("failed to unmarshal entry [%s]: %s", r, err)
+				result = multierror.Append(result, err)
+				l.mu.Unlock()
+				return
+			}
+
+			// ignore non-units
+			if entry.SystemdUnit == "" {
+				continue
+			}
+
+			entry.SystemdUnit = strings.TrimSuffix(entry.SystemdUnit, ".service")
+
+			serviceLogs[entry.SystemdUnit] = append(serviceLogs[entry.SystemdUnit], entry)
+
+			select {
+			case <-l.ctx.Done():
+				return
+			default:
+			}
+		}
+
+		l.mu.Lock()
+		poolLogs = append(poolLogs, &instanceLogs{host, serviceLogs})
+		l.mu.Unlock()
+	}
+
 	for _, host := range hosts {
 		var name string
 		for _, r := range host.Roles() {
@@ -114,40 +173,20 @@ func (l *Logs) Gather(pool, path string) error {
 			continue
 		}
 
-		l.log.Infof("fetching service logs from instance '%s'", name)
-		raw, err := l.fetchCmdOutput(name, "journalctl", []string{"-o", "json", "--no-pager"})
-		if err != nil {
-			return err
-		}
+		l.wg.Add(1)
+		go hostGatherFunc(name)
+	}
 
-		serviceLogs := make(map[string][]*SystemdEntry)
-		for _, r := range bytes.Split(raw, []byte("\n")) {
-			if r == nil || len(r) == 0 {
-				continue
-			}
+	l.wg.Wait()
 
-			entry := new(SystemdEntry)
-			if err := json.Unmarshal(r, entry); err != nil {
-				return fmt.Errorf("failed to unmarshal entry [%s]: %s", r, err)
-			}
+	select {
+	case <-l.ctx.Done():
+		return l.ctx.Err()
+	default:
+	}
 
-			// ignore non-units
-			if entry.SystemdUnit == "" {
-				continue
-			}
-
-			entry.SystemdUnit = strings.TrimSuffix(entry.SystemdUnit, ".service")
-
-			serviceLogs[entry.SystemdUnit] = append(serviceLogs[entry.SystemdUnit], entry)
-		}
-
-		poolLogs = append(poolLogs, &instanceLogs{name, serviceLogs})
-
-		select {
-		case <-l.ctx.Done():
-			return l.ctx.Err()
-		default:
-		}
+	if result != nil {
+		return result.ErrorOrNil()
 	}
 
 	return l.bundleLogs(poolLogs)

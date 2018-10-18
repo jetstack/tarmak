@@ -225,7 +225,22 @@ func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr
 		return -1, err
 	}
 
-	if err := sess.Wait(); err != nil {
+	complete := make(chan struct{})
+
+	go func() {
+		err = sess.Wait()
+		close(complete)
+	}()
+
+	select {
+	case <-s.tarmak.CancellationContext().Done():
+		sess.Close()
+		<-complete
+
+	case <-complete:
+	}
+
+	if err != nil {
 		if e, ok := err.(*ssh.ExitError); ok {
 			return e.ExitStatus(), e
 		}
