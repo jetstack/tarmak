@@ -192,5 +192,7 @@ type ClusterKubeconfigFlags struct {
 
 // Contains the cluster logs flags
 type ClusterLogsFlags struct {
-	Path string `json:"path,omitempty"` // path to store logs bundle
+	Path  string `json:"path,omitempty"`  // path to store logs bundle
+	Since string `json:"since,omitempty"` // fetch logs since date
+	Until string `json:"until,omitempty"` // fetch logs until date
 }

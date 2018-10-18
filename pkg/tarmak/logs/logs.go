@@ -18,6 +18,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 
+	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
@@ -33,9 +34,12 @@ type Logs struct {
 	ctx          interfaces.CancellationContext
 	log          *logrus.Entry
 
-	path string
-	mu   sync.Mutex
-	wg   sync.WaitGroup
+	path  string
+	since string
+	until string
+
+	mu sync.Mutex
+	wg sync.WaitGroup
 }
 
 type SystemdEntry struct {
@@ -80,18 +84,16 @@ func New(tarmak interfaces.Tarmak) *Logs {
 	}
 }
 
-func (l *Logs) Gather(pool, path string) error {
+func (l *Logs) Gather(pool string, flags tarmakv1alpha1.ClusterLogsFlags) error {
 	l.log.Infof("fetching logs from target '%s'", pool)
 
 	if i := l.tarmak.Cluster().InstancePool(pool); i == nil {
 		return fmt.Errorf("unable to find instance pool '%s'", pool)
 	}
 
-	if err := l.setPath(pool, path); err != nil {
+	if err := l.initialise(pool, flags); err != nil {
 		return fmt.Errorf("failed to set tar gz log bundle path: %v", err)
 	}
-
-	l.ssh = l.tarmak.SSH()
 
 	err := l.ssh.WriteConfig(l.tarmak.Cluster())
 	if err != nil {
@@ -116,7 +118,18 @@ func (l *Logs) Gather(pool, path string) error {
 		defer l.wg.Done()
 
 		l.log.Infof("fetching journald logs from instance '%s'", host)
-		raw, err := l.fetchCmdOutput(host, "journalctl", []string{"-o", "json", "--no-pager"})
+		raw, err := l.fetchCmdOutput(
+			host,
+			"journalctl",
+			[]string{"-o",
+				"json",
+				"--no-pager",
+				"--since",
+				l.since,
+				"--until",
+				l.until,
+			},
+		)
 		if err != nil {
 			l.mu.Lock()
 			result = multierror.Append(result, err)
@@ -202,6 +215,7 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 
 		for unit, entries := range i.journaldLogs {
 			var fileData []byte
+
 			for _, entry := range entries {
 				t := time.Unix(entry.RealtimeTimestamp/1000000, 0)
 				fileData = append(
@@ -262,29 +276,35 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 
 func (l *Logs) fetchCmdOutput(host, command string, args []string) ([]byte, error) {
 	var stdout bytes.Buffer
+
 	ret, err := l.ssh.ExecuteWithWriter(host, command, args, &stdout)
 	if ret != 0 {
-		return nil, fmt.Errorf("command returned non-zero (%d): %v", ret, err)
+		cmdStr := fmt.Sprintf("%s %s", command, strings.Join(args, " "))
+		return nil, fmt.Errorf("command [%s] returned non-zero: %d", cmdStr, ret)
 	}
+
 	return stdout.Bytes(), err
 }
 
-func (l *Logs) setPath(pool, path string) error {
-	if path == utils.DefaultLogsPathPlaceholder {
+func (l *Logs) initialise(pool string, flags tarmakv1alpha1.ClusterLogsFlags) error {
+	if flags.Path == utils.DefaultLogsPathPlaceholder {
 		l.path = filepath.Join(l.tarmak.Cluster().ConfigPath(), fmt.Sprintf("%s-logs.tar.gz", pool))
-		return nil
+	} else {
+		p, err := homedir.Expand(flags.Path)
+		if err != nil {
+			return err
+		}
+
+		p, err = filepath.Abs(p)
+		if err != nil {
+			return err
+		}
+		l.path = p
 	}
 
-	p, err := homedir.Expand(path)
-	if err != nil {
-		return err
-	}
-
-	p, err = filepath.Abs(p)
-	if err != nil {
-		return err
-	}
-	l.path = p
+	l.ssh = l.tarmak.SSH()
+	l.since = fmt.Sprintf(`"%s"`, flags.Since)
+	l.until = fmt.Sprintf(`"%s"`, flags.Until)
 
 	return nil
 }

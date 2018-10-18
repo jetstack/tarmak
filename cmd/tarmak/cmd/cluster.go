@@ -2,11 +2,17 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
+)
+
+const (
+	logTimeLayout = "2006-01-02 15:04:05"
 )
 
 var clusterCmd = &cobra.Command{
@@ -97,12 +103,27 @@ func clusterPlanFlags(fs *flag.FlagSet) {
 
 func clusterLogsFlags(fs *flag.FlagSet) {
 	store := &globalFlags.Cluster.Logs
+	now := time.Now()
 
 	fs.StringVar(
 		&store.Path,
 		"path",
 		utils.DefaultLogsPathPlaceholder,
-		"location to store tar ball of bundled systemd unit logs",
+		"target tar ball path",
+	)
+
+	fs.StringVar(
+		&store.Since,
+		"since",
+		now.Add(-time.Hour*24).Format(logTimeLayout),
+		"gather logs since date",
+	)
+
+	fs.StringVar(
+		&store.Until,
+		"until",
+		now.Format(logTimeLayout),
+		"gather logs until date",
 	)
 }
 

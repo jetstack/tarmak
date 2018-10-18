@@ -219,7 +219,7 @@ type SSH interface {
 }
 
 type Logs interface {
-	Gather(group, path string) error
+	Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 }
 
 type Tunnel interface {

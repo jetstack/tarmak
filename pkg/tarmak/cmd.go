@@ -41,7 +41,7 @@ func (t *Tarmak) NewCmdTarmak(pflags *pflag.FlagSet, args []string) *CmdTarmak {
 }
 
 func (c *CmdTarmak) Plan() (returnCode int, err error) {
-	if err := c.setup(); err != nil {
+	if err := c.setupTerraform(); err != nil {
 		return 1, err
 	}
 
@@ -54,7 +54,7 @@ func (c *CmdTarmak) Plan() (returnCode int, err error) {
 }
 
 func (c *CmdTarmak) Apply() error {
-	err := c.setup()
+	err := c.setupTerraform()
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (c *CmdTarmak) Apply() error {
 }
 
 func (c *CmdTarmak) Destroy() error {
-	if err := c.setup(); err != nil {
+	if err := c.setupTerraform(); err != nil {
 		return err
 	}
 
@@ -119,7 +119,7 @@ func (c *CmdTarmak) Destroy() error {
 }
 
 func (c *CmdTarmak) Shell() error {
-	if err := c.setup(); err != nil {
+	if err := c.setupTerraform(); err != nil {
 		c.log.Warnf("error setting up tarmak for terrafrom shell: %v", err)
 	}
 
@@ -135,19 +135,8 @@ func (c *CmdTarmak) Shell() error {
 	return nil
 }
 
-func (c *CmdTarmak) Logs() error {
-	for _, a := range c.args {
-		err := c.logs.Gather(a, c.flags.Cluster.Logs.Path)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (c *CmdTarmak) ForceUnlock() error {
-	if err := c.setup(); err != nil {
+	if err := c.setupTerraform(); err != nil {
 		return err
 	}
 
@@ -301,6 +290,17 @@ func (c *CmdTarmak) kubePublicAPIEndpoint() bool {
 	return publicEndpoint
 }
 
+func (c *CmdTarmak) Logs() error {
+	for _, a := range c.args {
+		err := c.logs.Gather(a, c.flags.Cluster.Logs)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *CmdTarmak) verifyTerraformBinaryVersion() error {
 	cmd := exec.Command("terraform", "version")
 	cmd.Env = os.Environ()
@@ -340,7 +340,7 @@ func (c *CmdTarmak) verifyTerraformBinaryVersion() error {
 	return nil
 }
 
-func (c *CmdTarmak) setup() error {
+func (c *CmdTarmak) setupTerraform() error {
 	type step struct {
 		log string
 		f   func() error

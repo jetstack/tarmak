@@ -19,7 +19,7 @@ var clusterLogsCmd = &cobra.Command{
 			t.Log().Fatal("expecting at least a one instance pool name")
 		}
 
-		t.CancellationContext().WaitOrCancel(t.NewCmdTarmak(args).Logs)
+		t.CancellationContext().WaitOrCancel(t.NewCmdTarmak(cmd.Flags(), args).Logs)
 	},
 }
 
