@@ -12,15 +12,16 @@ import (
 
 // clusterLogsCmd handles `tarmak clusters logs`
 var clusterLogsCmd = &cobra.Command{
-	Use: "logs",
-	Short: fmt.Sprintf(
-		"Gather logs from a list of instances or target groups [%s]",
+	Use: "logs [target groups]",
+	Long: fmt.Sprintf(
+		"Gather logs from a list of instances or target groups %s",
 		logs.TargetGroups,
 	),
+	Short: "Gather logs from a list of instances or target groups",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return fmt.Errorf(
-				"expecting at least one instance or target group [%s]",
+				"expecting at least one instance or target group %s",
 				logs.TargetGroups,
 			)
 		}

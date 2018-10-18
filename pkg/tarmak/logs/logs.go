@@ -2,7 +2,7 @@
 package logs
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -48,9 +48,11 @@ type Logs struct {
 	until   string
 	targets []string
 
-	mu    sync.Mutex
-	wg    sync.WaitGroup
-	hosts []interfaces.Host
+	mu       sync.Mutex
+	wg       sync.WaitGroup
+	hosts    []interfaces.Host
+	tmpDir   string
+	tmpFiles map[string]*os.File
 }
 
 type SystemdEntry struct {
@@ -101,10 +103,6 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 		return fmt.Errorf("failed to set tar gz log bundle path: %v", err)
 	}
 
-	//if i := l.tarmak.Cluster().InstancePool(pool); i == nil {
-	//	return fmt.Errorf("unable to find instance pool '%s'", pool)
-	//}
-
 	err := l.ssh.WriteConfig(l.tarmak.Cluster())
 	if err != nil {
 		return err
@@ -116,24 +114,27 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 	default:
 	}
 
-	var groupLogs []*instanceLogs
+	dir, err := ioutil.TempDir("", filepath.Base(l.path))
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(dir)
+	l.tmpDir = dir
+
 	var result *multierror.Error
 
 	hostGatherFunc := func(host string) {
 		defer l.wg.Done()
 
+		reader, writer := io.Pipe()
+		go l.readStream(reader, host, result)
+
 		l.log.Infof("fetching journald logs from instance '%s'", host)
-		raw, err := l.fetchCmdOutput(
+		err := l.fetchCmdOutput(
 			host,
 			"journalctl",
-			[]string{"-o",
-				"json",
-				"--no-pager",
-				"--since",
-				l.since,
-				"--until",
-				l.until,
-			},
+			[]string{"-o", "json", "--no-pager", "--since", l.since, "--until", l.until},
+			writer,
 		)
 		if err != nil {
 			l.mu.Lock()
@@ -141,34 +142,6 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 			l.mu.Unlock()
 			return
 		}
-
-		journaldLogs := make(map[string][]*SystemdEntry)
-		for _, r := range bytes.Split(raw, []byte("\n")) {
-			if r == nil || len(r) == 0 {
-				continue
-			}
-
-			entry := new(SystemdEntry)
-			if err := json.Unmarshal(r, entry); err != nil {
-				l.mu.Lock()
-				err = fmt.Errorf("failed to unmarshal entry [%s]: %s", r, err)
-				result = multierror.Append(result, err)
-				l.mu.Unlock()
-				return
-			}
-
-			journaldLogs[entry.SyslogIdentifier] = append(journaldLogs[entry.SyslogIdentifier], entry)
-
-			select {
-			case <-l.ctx.Done():
-				return
-			default:
-			}
-		}
-
-		l.mu.Lock()
-		groupLogs = append(groupLogs, &instanceLogs{host, journaldLogs})
-		l.mu.Unlock()
 	}
 
 	aliases, err := l.hostAliases()
@@ -177,6 +150,12 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 	}
 
 	for _, a := range aliases {
+		if err := os.Mkdir(
+			filepath.Join(l.tmpDir, a),
+			os.FileMode(0755)); err != nil {
+			return err
+		}
+
 		l.wg.Add(1)
 		go hostGatherFunc(a)
 	}
@@ -193,7 +172,45 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 		return result.ErrorOrNil()
 	}
 
-	return l.bundleLogs(groupLogs)
+	for _, f := range l.tmpFiles {
+		f.Close()
+	}
+
+	return l.bundleLogs()
+}
+
+func (l *Logs) readStream(reader io.Reader, host string, result *multierror.Error) {
+	readerScanner := bufio.NewScanner(reader)
+
+	for readerScanner.Scan() {
+		r := readerScanner.Bytes()
+
+		if r == nil || len(r) == 0 {
+			continue
+		}
+
+		entry := new(SystemdEntry)
+		if err := json.Unmarshal(r, entry); err != nil {
+			l.mu.Lock()
+			err = fmt.Errorf("failed to unmarshal entry [%s]: %s", r, err)
+			result = multierror.Append(result, err)
+			l.mu.Unlock()
+			return
+		}
+
+		if err := l.writeToFile(host, entry); err != nil {
+			l.mu.Lock()
+			result = multierror.Append(result, err)
+			l.mu.Unlock()
+			return
+		}
+
+		select {
+		case <-l.ctx.Done():
+			return
+		default:
+		}
+	}
 }
 
 // return all aliases of instances in the target group
@@ -223,60 +240,36 @@ func (l *Logs) hostAliases() ([]string, error) {
 	return aliases, result.ErrorOrNil()
 }
 
-func (l *Logs) bundleLogs(groupLogs []*instanceLogs) error {
-	dir, err := ioutil.TempDir("", filepath.Base(l.path))
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(dir)
+func (l *Logs) writeToFile(host string, entry *SystemdEntry) error {
+	fname := filepath.Join(l.tmpDir, host,
+		fmt.Sprintf("%s.log",
+			strings.Replace(entry.SyslogIdentifier, "/", "-", -1),
+		),
+	)
 
-	var result *multierror.Error
-	for _, i := range groupLogs {
-		idir := filepath.Join(dir, i.host)
-		if err := os.Mkdir(idir, os.FileMode(0755)); err != nil {
-			result = multierror.Append(result, err)
-			continue
+	f, ok := l.tmpFiles[fname]
+	if !ok || f == nil {
+		var err error
+		f, err = os.Create(fname)
+		if err != nil {
+			return err
 		}
-
-		for unit, entries := range i.journaldLogs {
-			var fileData []byte
-
-			for _, entry := range entries {
-				t := time.Unix(entry.RealtimeTimestamp/1000000, 0)
-				fileData = append(
-					fileData,
-					[]byte(fmt.Sprintf("%s %s %s[%s]: %v\n",
-						t.Format(timeLayout),
-						entry.Hostname,
-						entry.SyslogIdentifier,
-						entry.Pid,
-						entry.Message),
-					)...,
-				)
-			}
-
-			// remove any slashes which breaks the filename
-			ufile := filepath.Join(idir, fmt.Sprintf(
-				"%s.log",
-				strings.Replace(unit, "/", "-", -1)),
-			)
-			f, err := os.Create(ufile)
-			if err != nil {
-				result = multierror.Append(result, err)
-				continue
-			}
-
-			if _, err := f.Write(fileData); err != nil {
-				result = multierror.Append(result, err)
-			}
-			f.Close()
-		}
+		l.tmpFiles[fname] = f
 	}
 
-	if result != nil {
-		return result.ErrorOrNil()
-	}
+	t := time.Unix(entry.RealtimeTimestamp/1000000, 0)
+	_, err := f.Write([]byte(fmt.Sprintf("%s %s %s[%s]: %v\n",
+		t.Format(timeLayout),
+		entry.Hostname,
+		entry.SyslogIdentifier,
+		entry.Pid,
+		entry.Message),
+	))
 
+	return err
+}
+
+func (l *Logs) bundleLogs() error {
 	f, err := os.Create(l.path)
 	if err != nil {
 		return err
@@ -284,7 +277,7 @@ func (l *Logs) bundleLogs(groupLogs []*instanceLogs) error {
 	defer f.Close()
 
 	reader, err := archive.Tar(
-		dir,
+		l.tmpDir,
 		archive.Gzip,
 	)
 	if err != nil {
@@ -300,16 +293,14 @@ func (l *Logs) bundleLogs(groupLogs []*instanceLogs) error {
 	return nil
 }
 
-func (l *Logs) fetchCmdOutput(host, command string, args []string) ([]byte, error) {
-	var stdout bytes.Buffer
-
-	ret, err := l.ssh.ExecuteWithWriter(host, command, args, &stdout)
+func (l *Logs) fetchCmdOutput(host, command string, args []string, stdout io.Writer) error {
+	ret, err := l.ssh.ExecuteWithWriter(host, command, args, stdout)
 	if ret != 0 {
 		cmdStr := fmt.Sprintf("%s %s", command, strings.Join(args, " "))
-		return nil, fmt.Errorf("command [%s] returned non-zero: %d", cmdStr, ret)
+		return fmt.Errorf("command [%s] returned non-zero: %d", cmdStr, ret)
 	}
 
-	return stdout.Bytes(), err
+	return err
 }
 
 func (l *Logs) initialise(group string, flags tarmakv1alpha1.ClusterLogsFlags) error {
@@ -340,6 +331,7 @@ func (l *Logs) initialise(group string, flags tarmakv1alpha1.ClusterLogsFlags) e
 	l.ssh = l.tarmak.SSH()
 	l.since = fmt.Sprintf(`"%s"`, flags.Since)
 	l.until = fmt.Sprintf(`"%s"`, flags.Until)
+	l.tmpFiles = make(map[string]*os.File)
 
 	switch group {
 	case "control-plane":
