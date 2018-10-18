@@ -84,11 +84,6 @@ type SystemdEntry struct {
 	Message interface{} `json:"MESSAGE"`
 }
 
-type instanceLogs struct {
-	host         string
-	journaldLogs map[string][]*SystemdEntry
-}
-
 func New(tarmak interfaces.Tarmak) *Logs {
 	return &Logs{
 		tarmak: tarmak,
@@ -122,7 +117,6 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 	l.tmpDir = dir
 
 	var result *multierror.Error
-
 	hostGatherFunc := func(host string) {
 		defer l.wg.Done()
 
@@ -140,7 +134,6 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 			l.mu.Lock()
 			result = multierror.Append(result, err)
 			l.mu.Unlock()
-			return
 		}
 	}
 
@@ -162,14 +155,14 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 
 	l.wg.Wait()
 
+	if result != nil {
+		return result.ErrorOrNil()
+	}
+
 	select {
 	case <-l.ctx.Done():
 		return l.ctx.Err()
 	default:
-	}
-
-	if result != nil {
-		return result.ErrorOrNil()
 	}
 
 	for _, f := range l.tmpFiles {
@@ -319,7 +312,7 @@ func (l *Logs) initialise(group string, flags tarmakv1alpha1.ClusterLogsFlags) e
 		l.path = p
 	}
 
-	// only need to list hosts once so we cache the list
+	// only need to list hosts once so we can cache the list
 	if len(l.hosts) == 0 {
 		hosts, err := l.tarmak.Cluster().ListHosts()
 		if err != nil {
