@@ -27,19 +27,30 @@ const (
 	timeLayout = "Jan _2 15:04:05"
 )
 
+var (
+	TargetGroups = []string{
+		"bastion",
+		"vault",
+		"etcd",
+		"worker",
+		"control-plane",
+	}
+)
+
 type Logs struct {
-	tarmak       interfaces.Tarmak
-	ssh          interfaces.SSH
-	instancePool interfaces.InstancePool
-	ctx          interfaces.CancellationContext
-	log          *logrus.Entry
+	tarmak interfaces.Tarmak
+	ssh    interfaces.SSH
+	ctx    interfaces.CancellationContext
+	log    *logrus.Entry
 
-	path  string
-	since string
-	until string
+	path    string
+	since   string
+	until   string
+	targets []string
 
-	mu sync.Mutex
-	wg sync.WaitGroup
+	mu    sync.Mutex
+	wg    sync.WaitGroup
+	hosts []interfaces.Host
 }
 
 type SystemdEntry struct {
@@ -84,23 +95,17 @@ func New(tarmak interfaces.Tarmak) *Logs {
 	}
 }
 
-func (l *Logs) Gather(pool string, flags tarmakv1alpha1.ClusterLogsFlags) error {
-	l.log.Infof("fetching logs from target '%s'", pool)
-
-	if i := l.tarmak.Cluster().InstancePool(pool); i == nil {
-		return fmt.Errorf("unable to find instance pool '%s'", pool)
-	}
-
-	if err := l.initialise(pool, flags); err != nil {
+func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error {
+	l.log.Infof("fetching logs from target '%s'", group)
+	if err := l.initialise(group, flags); err != nil {
 		return fmt.Errorf("failed to set tar gz log bundle path: %v", err)
 	}
 
-	err := l.ssh.WriteConfig(l.tarmak.Cluster())
-	if err != nil {
-		return err
-	}
+	//if i := l.tarmak.Cluster().InstancePool(pool); i == nil {
+	//	return fmt.Errorf("unable to find instance pool '%s'", pool)
+	//}
 
-	hosts, err := l.tarmak.Cluster().ListHosts()
+	err := l.ssh.WriteConfig(l.tarmak.Cluster())
 	if err != nil {
 		return err
 	}
@@ -111,7 +116,7 @@ func (l *Logs) Gather(pool string, flags tarmakv1alpha1.ClusterLogsFlags) error 
 	default:
 	}
 
-	var poolLogs []*instanceLogs
+	var groupLogs []*instanceLogs
 	var result *multierror.Error
 
 	hostGatherFunc := func(host string) {
@@ -162,25 +167,18 @@ func (l *Logs) Gather(pool string, flags tarmakv1alpha1.ClusterLogsFlags) error 
 		}
 
 		l.mu.Lock()
-		poolLogs = append(poolLogs, &instanceLogs{host, journaldLogs})
+		groupLogs = append(groupLogs, &instanceLogs{host, journaldLogs})
 		l.mu.Unlock()
 	}
 
-	for _, host := range hosts {
-		var name string
-		for _, r := range host.Roles() {
-			if strings.HasPrefix(r, pool) {
-				name = r
-				break
-			}
-		}
+	aliases, err := l.hostAliases()
+	if err != nil {
+		return err
+	}
 
-		if name == "" {
-			continue
-		}
-
+	for _, a := range aliases {
 		l.wg.Add(1)
-		go hostGatherFunc(name)
+		go hostGatherFunc(a)
 	}
 
 	l.wg.Wait()
@@ -195,10 +193,37 @@ func (l *Logs) Gather(pool string, flags tarmakv1alpha1.ClusterLogsFlags) error 
 		return result.ErrorOrNil()
 	}
 
-	return l.bundleLogs(poolLogs)
+	return l.bundleLogs(groupLogs)
 }
 
-func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
+// return all aliases of instances in the target group
+func (l *Logs) hostAliases() ([]string, error) {
+	var aliases []string
+	var result *multierror.Error
+
+	for _, host := range l.hosts {
+		for _, target := range l.targets {
+			if utils.SliceContainsPrefix(host.Roles(), target) {
+				if len(host.Aliases()) == 0 {
+					err := fmt.Errorf(
+						"host with correct role '%v' found without alias: %v",
+						host.Roles(),
+						host.ID(),
+					)
+					result = multierror.Append(result, err)
+					break
+				}
+
+				aliases = append(aliases, host.Aliases()[0])
+				break
+			}
+		}
+	}
+
+	return aliases, result.ErrorOrNil()
+}
+
+func (l *Logs) bundleLogs(groupLogs []*instanceLogs) error {
 	dir, err := ioutil.TempDir("", filepath.Base(l.path))
 	if err != nil {
 		return err
@@ -206,7 +231,7 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 	defer os.RemoveAll(dir)
 
 	var result *multierror.Error
-	for _, i := range poolLogs {
+	for _, i := range groupLogs {
 		idir := filepath.Join(dir, i.host)
 		if err := os.Mkdir(idir, os.FileMode(0755)); err != nil {
 			result = multierror.Append(result, err)
@@ -230,6 +255,7 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 				)
 			}
 
+			// remove any slashes which breaks the filename
 			ufile := filepath.Join(idir, fmt.Sprintf(
 				"%s.log",
 				strings.Replace(unit, "/", "-", -1)),
@@ -286,9 +312,9 @@ func (l *Logs) fetchCmdOutput(host, command string, args []string) ([]byte, erro
 	return stdout.Bytes(), err
 }
 
-func (l *Logs) initialise(pool string, flags tarmakv1alpha1.ClusterLogsFlags) error {
+func (l *Logs) initialise(group string, flags tarmakv1alpha1.ClusterLogsFlags) error {
 	if flags.Path == utils.DefaultLogsPathPlaceholder {
-		l.path = filepath.Join(l.tarmak.Cluster().ConfigPath(), fmt.Sprintf("%s-logs.tar.gz", pool))
+		l.path = filepath.Join(l.tarmak.Cluster().ConfigPath(), fmt.Sprintf("%s-logs.tar.gz", group))
 	} else {
 		p, err := homedir.Expand(flags.Path)
 		if err != nil {
@@ -302,9 +328,25 @@ func (l *Logs) initialise(pool string, flags tarmakv1alpha1.ClusterLogsFlags) er
 		l.path = p
 	}
 
+	// only need to list hosts once so we cache the list
+	if len(l.hosts) == 0 {
+		hosts, err := l.tarmak.Cluster().ListHosts()
+		if err != nil {
+			return err
+		}
+		l.hosts = hosts
+	}
+
 	l.ssh = l.tarmak.SSH()
 	l.since = fmt.Sprintf(`"%s"`, flags.Since)
 	l.until = fmt.Sprintf(`"%s"`, flags.Until)
+
+	switch group {
+	case "control-plane":
+		l.targets = []string{"master", "etcd"}
+	default:
+		l.targets = []string{group}
+	}
 
 	return nil
 }

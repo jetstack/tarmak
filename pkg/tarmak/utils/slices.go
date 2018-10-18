@@ -1,6 +1,10 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
 package utils
 
+import (
+	"strings"
+)
+
 func RemoveDuplicateStrings(slice []string) (result []string) {
 	seen := make(map[string]bool)
 
@@ -45,4 +49,14 @@ func IndexOfString(slice []string, str string) int {
 	}
 
 	return -1
+}
+
+func SliceContainsPrefix(slice []string, prefix string) bool {
+	for _, s := range slice {
+		if strings.HasPrefix(s, prefix) {
+			return true
+		}
+	}
+
+	return false
 }

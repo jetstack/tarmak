@@ -2,23 +2,33 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak"
+	"github.com/jetstack/tarmak/pkg/tarmak/logs"
 )
 
 // clusterLogsCmd handles `tarmak clusters logs`
 var clusterLogsCmd = &cobra.Command{
-	Use:   "logs",
-	Short: "Gather logs from an instance pool",
+	Use: "logs",
+	Short: fmt.Sprintf(
+		"Gather logs from a list of instances or target groups [%s]",
+		logs.TargetGroups,
+	),
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return fmt.Errorf(
+				"expecting at least one instance or target group [%s]",
+				logs.TargetGroups,
+			)
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
-
-		if len(args) == 0 {
-			t.Log().Fatal("expecting at least a one instance pool name")
-		}
-
 		t.CancellationContext().WaitOrCancel(t.NewCmdTarmak(cmd.Flags(), args).Logs)
 	},
 }
