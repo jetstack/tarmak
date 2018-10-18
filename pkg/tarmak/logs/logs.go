@@ -3,6 +3,7 @@ package logs
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,13 +30,38 @@ type Logs struct {
 	path string
 }
 
-type instanceLogs struct {
-	name         string
-	servicesLogs []*serviceLogs
+type SystemdEntry struct {
+	Cursor                  string `json:"__CURSOR"`
+	Realtime_timestamp      int64  `json:"__REALTIME_TIMESTAMP,string"`
+	Monotonic_timestamp     string `json:"__MONOTONIC_TIMESTAMP"`
+	Boot_id                 string `json:"_BOOT_ID"`
+	Transport               string `json:"_TRANSPORT"`
+	Priority                int32  `json:"PRIORITY,string"`
+	SyslogFacility          string `json:"SYSLOG_FACILITY"`
+	SyslogIdentifier        string `json:"SYSLOG_IDENTIFIER"`
+	Pid                     string `json:"_PID"`
+	Uid                     string `json:"_UID"`
+	Gid                     string `json:"_GID"`
+	Comm                    string `json:"_COMM"`
+	Exe                     string `json:"_EXE"`
+	Cmdline                 string `json:"_CMDLINE"`
+	SystemdCGroup           string `json:"_SYSTEMD_CGROUP"`
+	SystemdSession          string `json:"_SYSTEMD_SESSION"`
+	SystemdOwnerUID         string `json:"_SYSTEMD_OWNER_UID"`
+	SystemdUnit             string `json:"_SYSTEMD_UNIT"`
+	SourceRealtimeTimestamp string `json:"_SOURCE_REALTIME_TIMESTAMP"`
+	MachineID               string `json:"_MACHINE_ID"`
+	Hostname                string `json:"_HOSTNAME"`
+
+	// We require interface here since Message is not always a string. In the
+	// case of vault-assets.service for example, some output is displayed as a
+	// byte slice.
+	Message interface{} `json:"MESSAGE"`
 }
-type serviceLogs struct {
-	name string
-	logs []byte
+
+type instanceLogs struct {
+	host        string
+	serviceLogs map[string][]*SystemdEntry
 }
 
 func New(tarmak interfaces.Tarmak) *Logs {
@@ -82,39 +108,37 @@ func (l *Logs) Gather(pool, path string) error {
 		}
 
 		l.log.Infof("fetching service logs from instance '%s'", name)
-		services, err := l.listServices(name)
+		raw, err := l.fetchCmdOutput(name, "journalctl", []string{"-o", "json", "--no-pager"})
 		if err != nil {
-			l.log.Errorf("failed to gather unit service list from instance '%s', skipping...", name)
-			continue
+			return err
 		}
 
-		var servicesLogs []*serviceLogs
-		for _, s := range services {
-
-			select {
-			case <-l.ctx.Done():
-				return l.ctx.Err()
-			default:
+		serviceLogs := make(map[string][]*SystemdEntry)
+		for _, r := range bytes.Split(raw, []byte("\n")) {
+			if r == nil || len(r) == 0 {
+				continue
 			}
 
-			if s != "" {
-				l.log.Debugf("fetching logs [%s]: %s", name, s)
-				stdout, err := l.fetchServiceJournal(name, s)
-				if err != nil {
-					l.log.Errorf("failed to gather logs [%s]:%s, skipping... %v", name, s, err)
-				}
-
-				servicesLogs = append(servicesLogs, &serviceLogs{s, stdout})
+			entry := new(SystemdEntry)
+			if err := json.Unmarshal(r, entry); err != nil {
+				return fmt.Errorf("failed to unmarshal entry [%s]: %s", r, err)
 			}
+
+			// ignore non-services
+			if entry.SystemdUnit == "" {
+				continue
+			}
+
+			serviceLogs[entry.SystemdUnit] = append(serviceLogs[entry.SystemdUnit], entry)
 		}
 
-		poolLogs = append(poolLogs, &instanceLogs{name, servicesLogs})
-	}
+		poolLogs = append(poolLogs, &instanceLogs{name, serviceLogs})
 
-	select {
-	case <-l.ctx.Done():
-		return l.ctx.Err()
-	default:
+		select {
+		case <-l.ctx.Done():
+			return l.ctx.Err()
+		default:
+		}
 	}
 
 	return l.bundleLogs(poolLogs)
@@ -129,22 +153,30 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 
 	var result *multierror.Error
 	for _, i := range poolLogs {
-		idir := filepath.Join(dir, i.name)
+		idir := filepath.Join(dir, i.host)
 		if err := os.Mkdir(idir, os.FileMode(0755)); err != nil {
 			result = multierror.Append(result, err)
 			continue
 		}
 
-		for _, s := range i.servicesLogs {
-			sfile := filepath.Join(idir, s.name)
-			f, err := os.Create(sfile)
+		var fileData []byte
+		for unit, entries := range i.serviceLogs {
+			for _, entry := range entries {
+				fileData = append(
+					fileData,
+					[]byte(fmt.Sprintf("%s %s %s %s\n", entry.Realtime_timestamp, entry.Hostname, entry.SystemdUnit, entry.Message))...,
+				)
+			}
+
+			ufile := filepath.Join(idir, unit)
+			f, err := os.Create(ufile)
 			if err != nil {
 				result = multierror.Append(result, err)
 				continue
 			}
 			defer f.Close()
 
-			if _, err := f.Write(s.logs); err != nil {
+			if _, err := f.Write(fileData); err != nil {
 				result = multierror.Append(result, err)
 			}
 		}
@@ -175,17 +207,6 @@ func (l *Logs) bundleLogs(poolLogs []*instanceLogs) error {
 	l.log.Infof("logs bundle written to '%s'", f.Name())
 
 	return nil
-}
-
-func (l *Logs) listServices(host string) ([]string, error) {
-	args := "list-unit-files --type=service --no-pager | tail -n +2 | head -n -1 | awk '{print $1}'"
-	stdout, err := l.fetchCmdOutput(host, "systemctl", strings.Split(args, " "))
-
-	return strings.Split(string(stdout), "\n"), err
-}
-
-func (l *Logs) fetchServiceJournal(host, service string) ([]byte, error) {
-	return l.fetchCmdOutput(host, "journalctl", []string{"-u", service, "--no-pager"})
 }
 
 func (l *Logs) fetchCmdOutput(host, command string, args []string) ([]byte, error) {
