@@ -2,7 +2,7 @@
 Command Line Documentation
 ==========================
 
-Command line documentation for both tarmak and wing commands"
+Command line documentation for both tarmak and wing commands
 
 
 .. toctree::
