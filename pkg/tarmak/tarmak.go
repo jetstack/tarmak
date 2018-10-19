@@ -328,12 +328,18 @@ func (t *Tarmak) EnsureRemoteResources() error {
 }
 
 func (t *Tarmak) Cleanup() {
+	plugin.CleanupClients()
+
 	// clean up assets directory
 	if t.rootPath != nil {
 		if err := os.RemoveAll(*t.rootPath); err != nil {
 			t.log.Warnf("error cleaning up assets directory: %s", err)
 		}
 		t.rootPath = nil
+	}
+
+	if err := t.terraform.Cleanup(); err != nil {
+		t.log.Warnf("error cleaning up terraform assets: %s", err)
 	}
 }
 
@@ -346,7 +352,6 @@ func (t *Tarmak) Variables() map[string]interface{} {
 
 func (t *Tarmak) Perform(err error) {
 	t.Cleanup()
-	plugin.CleanupClients()
 	t.Must(err)
 }
 

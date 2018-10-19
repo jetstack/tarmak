@@ -97,6 +97,7 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 
 	// generate templates
 	templ := &terraformTemplate{
+		terraform:   t,
 		cluster:     c,
 		destDir:     terraformCodePath,
 		rootPath:    rootPath,
@@ -112,6 +113,7 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 }
 
 type terraformTemplate struct {
+	terraform   *Terraform
 	cluster     interfaces.Cluster
 	destDir     string
 	rootPath    string
@@ -180,7 +182,7 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 		"ExistingVPC":              existingVPC,
 		// cluster.Roles() returns a list of roles based off of the types of instancePools in tarmak.yaml
 		"Roles":                 t.cluster.Roles(),
-		"SocketPath":            tarmakSocketPath(t.cluster.ConfigPath()),
+		"SocketPath":            t.terraform.socketPath,
 		"JenkinsCertificateARN": jenkinsCertificateARN,
 		"JenkinsInstall":        jenkinsInstall,
 		"Module":                module,

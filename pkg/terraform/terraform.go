@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -38,6 +39,8 @@ type Terraform struct {
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
 	ctx    interfaces.CancellationContext
+
+	socketPath string
 }
 
 func New(tarmak interfaces.Tarmak) *Terraform {
@@ -108,14 +111,6 @@ func (t *Terraform) codePath(c interfaces.Cluster) string {
 	return filepath.Join(c.ConfigPath(), "terraform")
 }
 
-// socket path for the tarmak provider socket
-func tarmakSocketPath(clusterConfig string) string {
-	return filepath.Join(clusterConfig, "tarmak.sock")
-}
-func (t *Terraform) socketPath(c interfaces.Cluster) string {
-	return tarmakSocketPath(c.ConfigPath())
-}
-
 func (t *Terraform) Prepare(cluster interfaces.Cluster) error {
 	if err := t.checkDone(); err != nil {
 		return err
@@ -184,6 +179,14 @@ this error is often caused due to the remote state being destroyed and can be fi
 }
 
 func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string, args []string) error {
+	if t.socketPath == "" {
+		f, err := ioutil.TempFile(os.TempDir(), "tarmak.sock")
+		if err != nil {
+			return fmt.Errorf("failed to create socket file: %v", err)
+		}
+		t.socketPath = f.Name()
+	}
+
 	if err := t.Prepare(cluster); err != nil {
 		return fmt.Errorf("failed to prepare terraform: %s", err)
 	}
@@ -196,7 +199,7 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		defer wg.Done()
 		if err := rpc.ListenUnixSocket(
 			rpc.New(t.tarmak.Cluster()),
-			t.socketPath(cluster),
+			t.socketPath,
 			stopRpcCh,
 		); err != nil {
 			t.log.Fatalf("error listening to unix socket: %s", err)
@@ -518,4 +521,12 @@ func (t *Terraform) checkDone() error {
 	default:
 		return nil
 	}
+}
+
+func (t *Terraform) Cleanup() error {
+	if t.socketPath != "" {
+		return os.RemoveAll(t.socketPath)
+	}
+
+	return nil
 }
