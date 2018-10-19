@@ -183,3 +183,6 @@ required = [
   [[prune.project]]
     name = "k8s.io/kube-openapi"
     unused-packages = false
+  [[prune.project]]
+    name = "github.com/spf13/cobra"
+    unused-packages = false
