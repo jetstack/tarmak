@@ -575,8 +575,11 @@ Enabled and disabled plugins can be configured as follows:
 
   kubernetes:
     apiServer:
-      enableAdmissionControllers: ["DefaultStorageClass", "DefaultTolerationSeconds"]
-      disableAdmissionControllers: ["MutatingAdmissionWebhook"]
+      enableAdmissionControllers:
+         - "DefaultStorageClass"
+         - "DefaultTolerationSeconds"
+      disableAdmissionControllers:
+         - "MutatingAdmissionWebhook"
 
 **Note:** Disabling admission control plugins is only available with Kubernetes
 version 1.11+
