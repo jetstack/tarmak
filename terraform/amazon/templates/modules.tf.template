@@ -193,11 +193,6 @@ module "kubernetes" {
   elb_access_logs_internal_bucket          = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
-
-  api_feature_gates       = ["${var.api_feature_gates}"]
-  calico_feature_gates    = ["${var.calico_feature_gates}"]
-  kubelet_feature_gates   = ["${var.kubelet_feature_gates}"]
-  scheduler_feature_gates = ["${var.scheduler_feature_gates}"]
 }
 {{- end -}}
 
@@ -264,10 +259,5 @@ module "kubernetes" {
   elb_access_logs_internal_bucket          = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
-
-  api_feature_gates       = ["${var.api_feature_gates}"]
-  calico_feature_gates    = ["${var.calico_feature_gates}"]
-  kubelet_feature_gates   = ["${var.kubelet_feature_gates}"]
-  scheduler_feature_gates = ["${var.scheduler_feature_gates}"]
 }
 {{- end }}
