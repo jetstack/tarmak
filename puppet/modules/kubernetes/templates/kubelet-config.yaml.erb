@@ -26,7 +26,7 @@ kubeReserved:
 <% if !@cgroup_kube_reserved_cpu.nil? and @cgroup_kube_reserved_cpu != 'nil' -%>
     cpu: <%= @cgroup_kube_reserved_cpu %>
 <% end -%>
-<% if !@cgroup_kube_reserved_memory.nil? and @cgroup_kube_reserved_memory != 'nil' -%>
+<% if !@_cgroup_kube_reserved_memory.nil? and @_cgroup_kube_reserved_memory != 'nil' -%>
     memory: <%= @_cgroup_kube_reserved_memory %>
 <% end -%>
 <% end -%>
@@ -37,7 +37,7 @@ systemReserved:
     cpu: <%= @cgroup_system_reserved_cpu %>
 <% end -%>
 <% if !@cgroup_system_reserved_memory.nil? and @cgroup_system_reserved_memory != 'nil' -%>
-    memory: <%= @cgroup_system_reserved_cpu %>
+    memory: <%= @cgroup_system_reserved_memory %>
 <% end -%>
 <% end -%>
 <% if @cert_file and @key_file -%>
@@ -52,28 +52,28 @@ evictionHard:
     nodefs.available: <%= @eviction_hard_nodefs_available_threshold %>
 <% end -%>
 <% if !@eviction_hard_nodefs_inodes_free_threshold.nil? and @eviction_hard_nodefs_inodes_free_threshold != 'nil' -%>
-    nodefs.inodesFree: <%= @eviction_hard_nodefs_available_threshold %>
+    nodefs.inodesFree: <%= @eviction_hard_nodefs_inodes_free_threshold %>
 <% end -%>
 <% if @eviction_soft_enabled -%>
 evictionSoft:
 <% if !@eviction_soft_memory_available_threshold.nil? and @eviction_soft_memory_available_threshold != 'nil' -%>
     memory.available: <%= @eviction_soft_memory_available_threshold %>
 <% end -%>
-<% if !@eviction_soft_nodefs_available_threshold.nil? and @eviction_soft_nodefs_available_threshold != 'nil' -%>
-    nodefs.available: <%= @eviction_soft_nodefs_available_threshold %>
+<% if !@_eviction_soft_nodefs_available_threshold.nil? and @_eviction_soft_nodefs_available_threshold != 'nil' -%>
+    nodefs.available: <%= @_eviction_soft_nodefs_available_threshold %>
 <% end -%>
-<% if !@eviction_soft_nodefs_inodes_free_threshold.nil? and @eviction_soft_nodefs_inodes_free_threshold != 'nil' -%>
-    nodefs.inodesFree: <%= @eviction_soft_nodefs_available_threshold %>
+<% if !@_eviction_soft_nodefs_inodes_free_threshold.nil? and @_eviction_soft_nodefs_inodes_free_threshold != 'nil' -%>
+    nodefs.inodesFree: <%= @_eviction_soft_nodefs_available_threshold %>
 <% end -%>
 evictionSoftGracePeriod:
 <% if !@eviction_soft_memory_available_grace_period.nil? and @eviction_soft_memory_available_grace_period != 'nil' -%>
     memory.available: <%= @eviction_soft_memory_available_grace_period %>
 <% end -%>
-<% if !@eviction_soft_nodefs_available_grace_period.nil? and @eviction_soft_nodefs_available_grace_period != 'nil' -%>
-    nodefs.available: <%= @eviction_soft_nodefs_available_grace_period %>
+<% if !@_eviction_soft_nodefs_available_grace_period.nil? and @_eviction_soft_nodefs_available_grace_period != 'nil' -%>
+    nodefs.available: <%= @_eviction_soft_nodefs_available_grace_period %>
 <% end -%>
-<% if !@eviction_soft_nodefs_inodes_free_grace_period.nil? and @eviction_soft_nodefs_inodes_free_grace_period != 'nil' -%>
-    nodefs.inodesFree: <%= @eviction_soft_nodefs_available_grace_period %>
+<% if !@_eviction_soft_nodefs_inodes_free_grace_period.nil? and @_eviction_soft_nodefs_inodes_free_grace_period != 'nil' -%>
+    nodefs.inodesFree: <%= @_eviction_soft_nodefs_inodes_free_grace_period %>
 <% end -%>
 evictionMaxPodGracePeriod: <%= @eviction_max_pod_grace_period %>
 evictionPressureTransitionPeriod: <%= @eviction_pressure_transition_period %>
