@@ -31,11 +31,6 @@ build and deploy Kubernetes in production at scale.
 .. toctree::
    :maxdepth: 2
 
-   design_cli_ux
-
-.. toctree::
-   :maxdepth: 2
-
    developer-guide
 
 .. toctree::
@@ -53,4 +48,5 @@ build and deploy Kubernetes in production at scale.
    vault-setup-config
    vault-helper-guide
    aws-centos-guide
+   cmd-docs
    api-docs

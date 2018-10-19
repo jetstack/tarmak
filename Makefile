@@ -54,7 +54,7 @@ help:
 
 test: go_test
 
-verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_reference_docs
+verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_gen_docs
 
 all: verify test build
 
@@ -189,11 +189,17 @@ verify_boilerplate:
 verify_codegen:
 	$(HACK_DIR)/verify-codegen.sh
 
+verify_vendor: $(BINDIR)/dep
+	dep ensure -no-vendor -dry-run -v
+
+verify_gen_docs: verify_reference_docs verify_cmd_docs
+
 verify_reference_docs: $(BINDIR)/node
 	$(HACK_DIR)/verify-reference-docs.sh
 
-verify_vendor: $(BINDIR)/dep
-	dep ensure -no-vendor -dry-run -v
+verify_cmd_docs:
+	go build -o $(BINDIR)/cmd-gen ./hack/cmd-gen
+	$(HACK_DIR)/verify-cmd-docs.sh
 
 SUBTREES = etcd calico aws_ebs kubernetes kubernetes_addons prometheus tarmak vault_client
 subtrees:

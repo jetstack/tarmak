@@ -10,8 +10,9 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "wing",
-	Short: "wing is the agent component for tarmak, it runs on every instance of tarmak",
+	Use:               "wing",
+	Short:             "wing is the agent component for tarmak, it runs on every instance of tarmak",
+	DisableAutoGenTag: true,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
