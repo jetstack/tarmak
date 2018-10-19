@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -529,7 +530,8 @@ func (c *Cluster) validateAPIServer() (result error) {
 		}
 	}
 
-	if a := c.Config().Kubernetes.APIServer.Amazon; a != nil {
+	api := c.Config().Kubernetes.APIServer
+	if a := api.Amazon; a != nil {
 		for _, l := range []*clusterv1alpha1.ClusterKubernetesAPIServerAmazonAccessLogs{
 			a.PublicELBAccessLogs,
 			a.InternalELBAccessLogs,
@@ -546,6 +548,22 @@ func (c *Cluster) validateAPIServer() (result error) {
 			}
 
 		}
+	}
+
+	vK, err := version.NewVersion(c.Config().Kubernetes.Version)
+	if err != nil {
+		return multierror.Append(result, err)
+	}
+
+	v11, err := version.NewVersion("1.11.0")
+	if err != nil {
+		return multierror.Append(result, err)
+	}
+
+	if vK.LessThan(v11) && len(api.DisableAdmissionControllers) > 0 {
+		return multierror.Append(result, fmt.Errorf(
+			"kubernetes version less than 1.11.0 expects no disable admission controllers, found: %s",
+			api.DisableAdmissionControllers))
 	}
 
 	return result

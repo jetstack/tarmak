@@ -102,7 +102,7 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	if a := conf.APIServer; a != nil {
 
 		if len(a.EnableAdmissionControllers) > 0 {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::admission_control: ["%s"]`, strings.Join(a.DisableAdmissionControllers, ",")))
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::admission_control: ["%s"]`, strings.Join(a.EnableAdmissionControllers, ",")))
 		}
 
 		if len(a.DisableAdmissionControllers) > 0 {

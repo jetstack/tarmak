@@ -53,7 +53,6 @@ class kubernetes::apiserver(
   $_systemd_before = $systemd_before
 
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
-  $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
   $post_1_9 = versioncmp($::kubernetes::version, '1.9.0') >= 0
   $post_1_8 = versioncmp($::kubernetes::version, '1.8.0') >= 0
   $post_1_7 = versioncmp($::kubernetes::version, '1.7.0') >= 0
@@ -112,7 +111,7 @@ class kubernetes::apiserver(
     $_oidc_signing_algs = []
   }
 
-  # Do not insecure bind the API server on kubernetes 1.11+
+  # Do not set insecure_port variable of the API server on kubernetes 1.11+
   if !$post_1_11 {
     $insecure_port = $::kubernetes::_apiserver_insecure_port
     $etcd_quorum_read = true
