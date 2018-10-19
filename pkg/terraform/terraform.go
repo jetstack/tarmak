@@ -462,15 +462,9 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 
 func (t *Terraform) Apply(cluster interfaces.Cluster) (hasChanged bool, err error) {
 	// generate a plan
-<<<<<<< HEAD
 	changesNeeded, err := t.Plan(cluster, true)
 	if err != nil || !changesNeeded {
 		return false, err
-=======
-	changesNeeded, err := t.Plan(cluster)
-	if err != nil || !changesNeeded {
-		return changesNeeded, err
->>>>>>> Uses variable when returning
 	}
 
 	// break after sigterm

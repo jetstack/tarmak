@@ -27,6 +27,7 @@ Options
   -h, --help                         help for apply
   -I, --infrastructure-only          apply changes to infrastructure only, by running only terraform
   -P, --plan-file-location string    location of stored terraform plan executable file to be used (default "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/terraform/tarmak.plan")
+  -W, --wait-for-convergence         wait for wing convergence on applied instances (default true)
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
