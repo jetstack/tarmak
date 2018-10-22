@@ -59,8 +59,8 @@ Options
       --test.cpuprofile file                             write a cpu profile to file
       --test.failfast                                    do not start new tests after the first test failure
       --test.list regexp                                 list tests, examples, and benchmarks matching regexp then exit
-      --test.memprofile file                             write an allocation profile to file
-      --test.memprofilerate rate                         set memory allocation profiling rate (see runtime.MemProfileRate)
+      --test.memprofile file                             write a memory profile to file
+      --test.memprofilerate rate                         set memory profiling rate (see runtime.MemProfileRate)
       --test.mutexprofile string                         write a mutex contention profile to the named file after execution
       --test.mutexprofilefraction int                    if >= 0, calls runtime.SetMutexProfileFraction() (default 1)
       --test.outputdir dir                               write profiles to dir
