@@ -21,7 +21,7 @@ variable "state_bucket" {}
 variable "stack_name_prefix" {}
 
 variable "allowed_account_ids" {
-  type    = "list"
+  type = "list"
 }
 
 variable "environment" {}

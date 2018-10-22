@@ -2,140 +2,168 @@ variable "name" {}
 variable "project" {}
 variable "contact" {}
 variable "region" {}
+
 variable "stack" {
   default = ""
 }
+
 variable "state_bucket" {
   default = ""
 }
+
 variable "availability_zones" {
   type = "list"
 }
+
 variable "stack_name_prefix" {
   default = ""
 }
+
 variable "allowed_account_ids" {
   type    = "list"
   default = []
 }
+
 variable "environment" {
   default = "nonprod"
 }
+
 variable "private_zone" {
   default = ""
 }
+
 variable "state_cluster_name" {
   default = "hub"
 }
+
 variable "vault_cluster_name" {
   default = "hub"
 }
+
 # data.terraform_remote_state.vpc_peer_stack.private_zone_id
 variable "private_zone_id" {
   default = ""
 }
+
 variable "key_name" {}
 variable "public_zone" {}
 variable "public_zone_id" {}
+
 # data.terraform_remote_state.hub_state.secrets_bucket.0
 variable "secrets_bucket" {
   default = ""
 }
 
 variable "remote_kms_key_id" {}
-
-{{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeHub)}}
-
-
-{{ if .ExistingVPC }}
+{{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeHub) -}}
+{{ if .ExistingVPC -}}
 variable "public_subnets" {}
 variable "private_subnets" {}
 variable "vpc_id" {}
-{{end}}
-
+{{ end -}}
 variable "network" {}
+
 # data.terraform_remote_state.vpc_peer_stack.vpc_id
 variable "peer_vpc_id" {
   default = ""
 }
+
 variable "vpc_peer_stack" {
   default = ""
 }
+
 # data.terraform_remote_state.vpc_peer_stack.vpc_net
 variable "vpc_net" {
   default = ""
 }
+
 # data.terraform_remote_state.vpc_peer_stack.route_table_public_ids
 variable "route_table_public_ids" {
-  type = "list"
+  type    = "list"
   default = []
 }
+
 # data.terraform_remote_state.vpc_peer_stack.route_table_private_ids
 variable "route_table_private_ids" {
-  type = "list"
+  type    = "list"
   default = []
 }
+
 variable "bastion_ami" {}
+
 variable "bastion_instance_type" {
   default = "{{ .BastionInstancePool.InstanceType }}"
 }
+
 variable "bastion_root_size" {
   default = "16"
 }
+
 {{ if .JenkinsInstall -}}
 variable "jenkins_ami" {}
+
 variable "jenkins_root_size" {
   default = "16"
 }
+
 variable "jenkins_ebs_size" {
   default = "16"
 }
+
 variable "jenkins_certificate_arn" {
   default = ""
 }
+
 variable "jenkins_admin_cidrs" {
   type    = "list"
 }
 {{ end -}}
 
 variable "bastion_admin_cidrs" {
-  type    = "list"
+  type = "list"
 }
 
 # vault
 variable "consul_version" {
   default = "1.2.3"
 }
+
 variable "vault_version" {
   default = "0.9.5"
 }
+
 variable "vault_root_size" {
   default = "16"
 }
+
 variable "vault_data_size" {
   default = "10"
 }
+
 variable "vault_min_instance_count" {}
 
 variable "vault_instance_type" {
   default = "{{ .VaultInstancePool.InstanceType }}"
 }
+
 variable "vault_ami" {}
+
 # state
 variable "bucket_prefix" {}
-{{end}}
-
-{{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeClusterMulti)}}
-{{range .InstancePools}}
-{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") )  }}
+{{ end -}}
+{{ if or (eq .ClusterType .ClusterTypeClusterSingle) (eq .ClusterType .ClusterTypeClusterMulti) -}}
+{{ range .InstancePools -}}
+{{ if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") ) }}
 variable "{{.TFName}}_ami" {}
 {{ end }}
 variable "{{.TFName}}_root_volume_size" {}
 variable "{{.TFName}}_root_volume_type" {}
-{{ end }}
+{{- end }}
+
 variable "api_admin_cidrs" {
-    type = "list"
+  type = "list"
 }
+
 variable "tools_cluster_name" {
   default = "hub"
 }
@@ -143,30 +171,35 @@ variable "tools_cluster_name" {
 variable "elb_access_logs_public_enabled" {
   default = "false"
 }
+
 variable "elb_access_logs_public_bucket" {
   default = ""
 }
+
 variable "elb_access_logs_public_bucket_prefix" {
   default = ""
 }
+
 variable "elb_access_logs_public_bucket_interval" {
   default = 60
 }
+
 variable "elb_access_logs_internal_enabled" {
   default = "false"
 }
+
 variable "elb_access_logs_internal_bucket" {
   default = ""
 }
+
 variable "elb_access_logs_internal_bucket_prefix" {
   default = ""
 }
+
 variable "elb_access_logs_internal_bucket_interval" {
   default = 60
 }
-
-{{end}}
-
+{{ end }}
 data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }

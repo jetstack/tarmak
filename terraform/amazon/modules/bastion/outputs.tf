@@ -2,7 +2,6 @@ output "bastion_instance_id" {
   value = "${element(concat(aws_instance.bastion.*.id, list("")), 0)}"
 }
 
-
 output "bastion_fqdn" {
   value = "${aws_route53_record.bastion.fqdn}"
 }

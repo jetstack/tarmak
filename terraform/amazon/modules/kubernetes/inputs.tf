@@ -15,7 +15,7 @@ variable "state_bucket" {}
 variable "stack_name_prefix" {}
 
 variable "allowed_account_ids" {
-  type    = "list"
+  type = "list"
 }
 
 variable "environment" {}
@@ -31,12 +31,12 @@ variable "secrets_bucket" {}
 
 # data.terraform_remote_state.network.private_subnet_ids
 variable "private_subnet_ids" {
-  type    = "list"
+  type = "list"
 }
 
 # data.terraform_remote_state.network.public_subnet_ids
 variable "public_subnet_ids" {
-  type    = "list"
+  type = "list"
 }
 
 data "template_file" "stack_name" {

@@ -30,7 +30,6 @@ variable "jenkins_ebs_size" {}
 
 variable "certificate_arn" {}
 
-
 variable "public_zone_id" {}
 
 variable "stack_name_prefix" {}

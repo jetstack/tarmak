@@ -1,12 +1,12 @@
-{{/* vim: set ft=tf: */}}
-{{if .AWS.ELBIngress}}
-{{ if eq .Name "jenkins" }}
+{{- /* vim: set ft=tf: */ -}}
+{{- if .AWS.ELBIngress -}}
+{{- if eq .Name "jenkins" -}}
 variable "jenkins_elb_instance_port_http" {
   default = 8080
 }
-{{ else }}
+{{ else -}}
 variable "ingress_elb_nodeport_http" {
   default = 32080
 }
-{{ end }}
-{{end}}
+{{- end }}
+{{ end -}}
