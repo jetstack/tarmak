@@ -8,14 +8,14 @@ import (
 )
 
 var clusterSetCurrentCmd = &cobra.Command{
-	Use:   "set-current",
+	Use:   "set-current [environment-cluster]",
 	Short: "Set current cluster in config",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 		defer t.Cleanup()
 
 		if len(args) != 1 {
-			t.Log().Fatalf("Only one cluster can be set as current cluster")
+			t.Log().Fatal("Expecting a single environment-cluster argument to be set as current")
 		}
 
 		found := false
