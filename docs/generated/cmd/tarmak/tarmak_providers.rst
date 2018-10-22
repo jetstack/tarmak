@@ -33,8 +33,8 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak <tarmak.rst>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
-* `tarmak providers init <tarmak_providers_init.rst>`_ 	 - Initialize a provider
-* `tarmak providers list <tarmak_providers_list.rst>`_ 	 - Print a list of providers
-* `tarmak providers validate <tarmak_providers_validate.rst>`_ 	 - Validate provider(s) used by current cluster
+* `tarmak <tarmak.html>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
+* `tarmak providers init <tarmak_providers_init.html>`_ 	 - Initialize a provider
+* `tarmak providers list <tarmak_providers_list.html>`_ 	 - Print a list of providers
+* `tarmak providers validate <tarmak_providers_validate.html>`_ 	 - Validate provider(s) used by current cluster
 

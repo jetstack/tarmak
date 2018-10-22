@@ -37,5 +37,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak providers <tarmak_providers.rst>`_ 	 - Operations on providers
+* `tarmak providers <tarmak_providers.html>`_ 	 - Operations on providers
 

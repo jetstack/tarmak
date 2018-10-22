@@ -33,7 +33,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak <tarmak.rst>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
-* `tarmak environments init <tarmak_environments_init.rst>`_ 	 - Initialize a environment
-* `tarmak environments list <tarmak_environments_list.rst>`_ 	 - Print a list of environments
+* `tarmak <tarmak.html>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
+* `tarmak environments init <tarmak_environments_init.html>`_ 	 - Initialize a environment
+* `tarmak environments list <tarmak_environments_list.html>`_ 	 - Print a list of environments
 

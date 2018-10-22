@@ -37,5 +37,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters debug puppet <tarmak_clusters_debug_puppet.rst>`_ 	 - Operations for debugging Puppet configuration
+* `tarmak clusters debug puppet <tarmak_clusters_debug_puppet.html>`_ 	 - Operations for debugging Puppet configuration
 

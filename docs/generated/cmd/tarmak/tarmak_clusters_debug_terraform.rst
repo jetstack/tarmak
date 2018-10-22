@@ -33,6 +33,6 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters debug <tarmak_clusters_debug.rst>`_ 	 - Operations for debugging a cluster
-* `tarmak clusters debug terraform shell <tarmak_clusters_debug_terraform_shell.rst>`_ 	 - Prepares a Terraform container and executes a shell in this container
+* `tarmak clusters debug <tarmak_clusters_debug.html>`_ 	 - Operations for debugging a cluster
+* `tarmak clusters debug terraform shell <tarmak_clusters_debug_terraform_shell.html>`_ 	 - Prepares a Terraform container and executes a shell in this container
 

@@ -27,10 +27,10 @@ Options
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.rst>`_ 	 - Operations on clusters
-* `tarmak environments <tarmak_environments.rst>`_ 	 - Operations on environments
-* `tarmak init <tarmak_init.rst>`_ 	 - Initialize a cluster
-* `tarmak kubectl <tarmak_kubectl.rst>`_ 	 - Run kubectl on the current cluster
-* `tarmak providers <tarmak_providers.rst>`_ 	 - Operations on providers
-* `tarmak version <tarmak_version.rst>`_ 	 - Print the version number of tarmak
+* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak environments <tarmak_environments.html>`_ 	 - Operations on environments
+* `tarmak init <tarmak_init.html>`_ 	 - Initialize a cluster
+* `tarmak kubectl <tarmak_kubectl.html>`_ 	 - Run kubectl on the current cluster
+* `tarmak providers <tarmak_providers.html>`_ 	 - Operations on providers
+* `tarmak version <tarmak_version.html>`_ 	 - Print the version number of tarmak
 

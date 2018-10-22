@@ -37,6 +37,9 @@ echo "+++ Removing old output"
 rm -Rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 
+echo "+++ Building cmd-gen"
+go build -o ${BINDIR}/cmd-gen ./hack/cmd-gen
+
 echo "+++ Running cmd-gen"
 ${BINDIR}/cmd-gen ${OUTPUT_DIR}
 
@@ -51,13 +54,13 @@ Command line documentation for both tarmak and wing commands
 EOF
 
 for cmd in "tarmak" "wing"; do
-    for f in ${OUTPUT_DIR}/${cmd}/*.rst; do
+    farray=$(basename -s .rst -a ${OUTPUT_DIR}/${cmd}/* | sort)
+    for f in ${farray}; do
         cat >> "${REPO_ROOT}/docs/cmd-docs.rst" << EOF
-
 .. toctree::
    :maxdepth: 1
 
-   generated/cmd/${cmd}/$(eval basename ${f%.*})
+   generated/cmd/${cmd}/${f}
 
 EOF
     done

@@ -22,7 +22,7 @@ Options
 SEE ALSO
 ~~~~~~~~
 
-* `wing agent <wing_agent.rst>`_ 	 - 
-* `wing server <wing_server.rst>`_ 	 - Launch a wing API server
-* `wing version <wing_version.rst>`_ 	 - Print the version number of tarmak
+* `wing agent <wing_agent.html>`_ 	 - 
+* `wing server <wing_server.html>`_ 	 - Launch a wing API server
+* `wing version <wing_version.html>`_ 	 - Print the version number of tarmak
 

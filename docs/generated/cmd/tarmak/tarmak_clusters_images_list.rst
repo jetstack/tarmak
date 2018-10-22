@@ -37,5 +37,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters images <tarmak_clusters_images.rst>`_ 	 - Operations on images
+* `tarmak clusters images <tarmak_clusters_images.html>`_ 	 - Operations on images
 

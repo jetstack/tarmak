@@ -37,5 +37,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak <tarmak.rst>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
+* `tarmak <tarmak.html>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
 

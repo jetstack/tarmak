@@ -33,6 +33,6 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters debug <tarmak_clusters_debug.rst>`_ 	 - Operations for debugging a cluster
-* `tarmak clusters debug puppet build-tar <tarmak_clusters_debug_puppet_build-tar.rst>`_ 	 - Build a puppet.tar.gz in the current working directory
+* `tarmak clusters debug <tarmak_clusters_debug.html>`_ 	 - Operations for debugging a cluster
+* `tarmak clusters debug puppet build-tar <tarmak_clusters_debug_puppet_build-tar.html>`_ 	 - Build a puppet.tar.gz in the current working directory
 

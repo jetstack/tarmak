@@ -37,5 +37,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak environments <tarmak_environments.rst>`_ 	 - Operations on environments
+* `tarmak environments <tarmak_environments.html>`_ 	 - Operations on environments
 

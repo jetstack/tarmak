@@ -37,5 +37,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters instances <tarmak_clusters_instances.rst>`_ 	 - Operations on instances
+* `tarmak clusters instances <tarmak_clusters_instances.html>`_ 	 - Operations on instances
 

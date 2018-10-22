@@ -37,5 +37,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters debug terraform <tarmak_clusters_debug_terraform.rst>`_ 	 - Operations for debugging Terraform configuration
+* `tarmak clusters debug terraform <tarmak_clusters_debug_terraform.html>`_ 	 - Operations for debugging Terraform configuration
 

@@ -198,7 +198,6 @@ verify_reference_docs: $(BINDIR)/node
 	$(HACK_DIR)/verify-reference-docs.sh
 
 verify_cmd_docs:
-	go build -o $(BINDIR)/cmd-gen ./hack/cmd-gen
 	$(HACK_DIR)/verify-cmd-docs.sh
 
 SUBTREES = etcd calico aws_ebs kubernetes kubernetes_addons prometheus tarmak vault_client

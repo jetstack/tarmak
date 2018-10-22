@@ -41,5 +41,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.rst>`_ 	 - Operations on clusters
+* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
 

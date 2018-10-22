@@ -33,7 +33,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.rst>`_ 	 - Operations on clusters
-* `tarmak clusters instances list <tarmak_clusters_instances_list.rst>`_ 	 - Print a list of instances in the cluster
-* `tarmak clusters instances ssh <tarmak_clusters_instances_ssh.rst>`_ 	 - Log into an instance with SSH
+* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak clusters instances list <tarmak_clusters_instances_list.html>`_ 	 - Print a list of instances in the cluster
+* `tarmak clusters instances ssh <tarmak_clusters_instances_ssh.html>`_ 	 - Log into an instance with SSH
 

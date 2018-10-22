@@ -26,13 +26,18 @@ func main() {
 
 	must(ensureDirectory(root))
 
+	linkHandler := func(name, ref string) string {
+		return fmt.Sprintf("`%s <%s.html>`_", name, ref)
+	}
+	emptyStr := func(s string) string { return "" }
+
 	for _, c := range []*cobra.Command{
 		tarmakCmd.RootCmd,
 		wingCmd.RootCmd,
 	} {
 		dir := filepath.Join(root, c.Use)
 		must(ensureDirectory(dir))
-		must(doc.GenReSTTree(c, dir))
+		must(doc.GenReSTTreeCustom(c, dir, emptyStr, linkHandler))
 	}
 }
 

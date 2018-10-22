@@ -33,7 +33,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.rst>`_ 	 - Operations on clusters
-* `tarmak clusters debug puppet <tarmak_clusters_debug_puppet.rst>`_ 	 - Operations for debugging Puppet configuration
-* `tarmak clusters debug terraform <tarmak_clusters_debug_terraform.rst>`_ 	 - Operations for debugging Terraform configuration
+* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak clusters debug puppet <tarmak_clusters_debug_puppet.html>`_ 	 - Operations for debugging Puppet configuration
+* `tarmak clusters debug terraform <tarmak_clusters_debug_terraform.html>`_ 	 - Operations for debugging Terraform configuration
 

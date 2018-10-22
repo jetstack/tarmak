@@ -32,5 +32,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `wing <wing.rst>`_ 	 - wing is the agent component for tarmak, it runs on every instance of tarmak
+* `wing <wing.html>`_ 	 - wing is the agent component for tarmak, it runs on every instance of tarmak
 

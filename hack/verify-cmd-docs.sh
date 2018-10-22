@@ -34,7 +34,6 @@ cleanup
 mkdir -p "${TMP_DIFFROOT}"
 cp -a "${DIFFROOT}"/* "${TMP_DIFFROOT}"
 
-export BUILD_WORKSPACE_DIRECTORY="$(pwd)"
 "${SCRIPT_ROOT}/hack/update-cmd-docs.sh"
 echo "diffing ${DIFFROOT} against freshly generated cmd docs"
 ret=0
