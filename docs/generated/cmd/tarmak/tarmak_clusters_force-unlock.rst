@@ -13,7 +13,7 @@ Remove remote lock using lock ID
 
 ::
 
-  tarmak clusters force-unlock [flags]
+  tarmak clusters force-unlock [lock ID] [flags]
 
 Options
 ~~~~~~~

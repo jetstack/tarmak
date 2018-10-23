@@ -13,7 +13,7 @@ Set current cluster in config
 
 ::
 
-  tarmak clusters set-current [flags]
+  tarmak clusters set-current [environment-cluster] [flags]
 
 Options
 ~~~~~~~

@@ -13,7 +13,7 @@ Run kubectl on the current cluster
 
 ::
 
-  tarmak kubectl [flags]
+  tarmak kubectl [kubectl command arguments] [flags]
 
 Options
 ~~~~~~~

@@ -37,7 +37,7 @@ cp -a "${DIFFROOT}"/* "${TMP_DIFFROOT}"
 "${SCRIPT_ROOT}/hack/update-cmd-docs.sh"
 echo "diffing ${DIFFROOT} against freshly generated cmd docs"
 ret=0
-diff -Naupr "${DIFFROOT}" "${TMP_DIFFROOT}" || ret=$?
+diff -Naupr "${TMP_DIFFROOT}" "${DIFFROOT}" || ret=$?
 cp -a "${TMP_DIFFROOT}"/* "${DIFFROOT}"
 if [[ $ret -eq 0 ]]
 then

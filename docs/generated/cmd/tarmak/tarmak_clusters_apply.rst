@@ -20,11 +20,10 @@ Options
 
 ::
 
-  -C, --configuration-only                  apply changes to configuration only, by running only puppet
-      --dry-run                             don't actually change anything, just show changes that would occur
-  -h, --help                                help for apply
-  -I, --infrastructure-only                 apply changes to infrastructure only, by running only terraform
-  -S, --infrastructure-stacks stringArray   run operation on these stacks only, valid stacks are: state, network, tools, bastion, vault, kubernetes
+  -C, --configuration-only    apply changes to configuration only, by running only puppet
+      --dry-run               don't actually change anything, just show changes that would occur
+  -h, --help                  help for apply
+  -I, --infrastructure-only   apply changes to infrastructure only, by running only terraform
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

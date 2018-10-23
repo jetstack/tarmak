@@ -20,10 +20,8 @@ Options
 
 ::
 
-      --dry-run                             don't actually change anything, just show changes that would occur
-      --force-destroy-state-stack           force destroy the state stack, this is unreversible (!!!)
-  -h, --help                                help for destroy
-  -S, --infrastructure-stacks stringArray   run operation on these stacks only, valid stacks are: state, network, tools, bastion, vault, kubernetes
+      --dry-run   don't actually change anything, just show changes that would occur
+  -h, --help      help for destroy
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
