@@ -33,14 +33,17 @@ gid
 golang
 Golang
 Grafana
+gz
 hostname
 iam
 init
+initialize
 iptables
 isn
 Istio
 Jenkins
 kube
+kubectl
 kubelet
 kubernetes
 lifecycle

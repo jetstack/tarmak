@@ -17,8 +17,9 @@ var globalFlags = &tarmakv1alpha1.Flags{}
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "tarmak",
-	Short: "Tarmak is a toolkit for provisioning and managing Kubernetes clusters.",
+	Use:               "tarmak",
+	Short:             "Tarmak is a toolkit for provisioning and managing Kubernetes clusters.",
+	DisableAutoGenTag: true,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
