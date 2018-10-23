@@ -292,7 +292,7 @@ func (c *CmdTarmak) kubePublicAPIEndpoint() bool {
 
 func (c *CmdTarmak) Logs() error {
 	for _, a := range c.args {
-		err := c.logs.Gather(a, c.flags.Cluster.Logs)
+		err := c.logs.Aggregate(a, c.flags.Cluster.Logs)
 		if err != nil {
 			return err
 		}

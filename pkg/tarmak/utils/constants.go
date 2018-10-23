@@ -2,5 +2,7 @@
 package utils
 
 const (
-	DefaultLogsPathPlaceholder = "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/${INSTANCE_POOL}-logs.tar.gz"
+	DefaultLogsPathPlaceholder  = "./[target group]-logs.tar.gz"
+	DefaultLogsSincePlaceholder = `$(date --date='24 hours ago')`
+	DefaultLogsUntilPlaceholder = `$(date --date='now')`
 )

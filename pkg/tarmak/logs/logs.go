@@ -2,7 +2,6 @@
 package logs
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,10 +23,12 @@ import (
 )
 
 const (
-	timeLayout = "Jan _2 15:04:05"
+	logTimeLayout = "2006-01-02 15:04:05" // journalctl time format
+	timeLayout    = "Jan _2 15:04:05"     // journald style layout
 )
 
 var (
+	// target groups of one or more instance groups
 	TargetGroups = []string{
 		"bastion",
 		"vault",
@@ -43,16 +44,18 @@ type Logs struct {
 	ctx    interfaces.CancellationContext
 	log    *logrus.Entry
 
-	path    string
-	since   string
-	until   string
-	targets []string
+	path    string   // target tar ball path
+	since   string   // gather logs since datetime
+	until   string   // gather logs since datetime
+	targets []string // target instance groups
 
-	mu       sync.Mutex
-	wg       sync.WaitGroup
-	hosts    []interfaces.Host
-	tmpDir   string
-	tmpFiles map[string]*os.File
+	hosts    []interfaces.Host   //target hosts
+	tmpDir   string              // tmp logs dir
+	tmpFiles map[string]*os.File // tmp log files
+
+	fileLock  sync.RWMutex   // prevent collisions writing files
+	errorLock sync.Mutex     // prevent collisions writing global errors
+	wg        sync.WaitGroup // go routine waiter
 }
 
 type SystemdEntry struct {
@@ -92,8 +95,9 @@ func New(tarmak interfaces.Tarmak) *Logs {
 	}
 }
 
-func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error {
+func (l *Logs) Aggregate(group string, flags tarmakv1alpha1.ClusterLogsFlags) error {
 	l.log.Infof("fetching logs from target '%s'", group)
+
 	if err := l.initialise(group, flags); err != nil {
 		return fmt.Errorf("failed to set tar gz log bundle path: %v", err)
 	}
@@ -101,6 +105,15 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 	err := l.ssh.WriteConfig(l.tarmak.Cluster())
 	if err != nil {
 		return err
+	}
+
+	aliases, err := l.hostAliases()
+	if err != nil {
+		return err
+	}
+
+	if len(aliases) == 0 {
+		return fmt.Errorf("no host aliases found in target '%s'", group)
 	}
 
 	select {
@@ -131,15 +144,12 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 			writer,
 		)
 		if err != nil {
-			l.mu.Lock()
-			result = multierror.Append(result, err)
-			l.mu.Unlock()
-		}
-	}
 
-	aliases, err := l.hostAliases()
-	if err != nil {
-		return err
+			l.errorLock.Lock()
+			result = multierror.Append(result, err)
+			l.errorLock.Unlock()
+
+		}
 	}
 
 	for _, a := range aliases {
@@ -173,28 +183,25 @@ func (l *Logs) Gather(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 }
 
 func (l *Logs) readStream(reader io.Reader, host string, result *multierror.Error) {
-	readerScanner := bufio.NewScanner(reader)
+	dec := json.NewDecoder(reader)
 
-	for readerScanner.Scan() {
-		r := readerScanner.Bytes()
-
-		if r == nil || len(r) == 0 {
-			continue
-		}
-
+	for dec.More() {
 		entry := new(SystemdEntry)
-		if err := json.Unmarshal(r, entry); err != nil {
-			l.mu.Lock()
-			err = fmt.Errorf("failed to unmarshal entry [%s]: %s", r, err)
+		if err := dec.Decode(entry); err != nil {
+
+			l.errorLock.Lock()
 			result = multierror.Append(result, err)
-			l.mu.Unlock()
+			l.errorLock.Unlock()
+
 			return
 		}
 
 		if err := l.writeToFile(host, entry); err != nil {
-			l.mu.Lock()
+
+			l.errorLock.Lock()
 			result = multierror.Append(result, err)
-			l.mu.Unlock()
+			l.errorLock.Unlock()
+
 			return
 		}
 
@@ -234,22 +241,33 @@ func (l *Logs) hostAliases() ([]string, error) {
 }
 
 func (l *Logs) writeToFile(host string, entry *SystemdEntry) error {
+	// temporary logs filename
+	// some units contain '/' which must be replaced by '-' to save to file
 	fname := filepath.Join(l.tmpDir, host,
 		fmt.Sprintf("%s.log",
 			strings.Replace(entry.SyslogIdentifier, "/", "-", -1),
 		),
 	)
 
+	// get file or create if not existing
+	l.fileLock.RLock()
 	f, ok := l.tmpFiles[fname]
+	l.fileLock.RUnlock()
+
 	if !ok || f == nil {
 		var err error
 		f, err = os.Create(fname)
 		if err != nil {
 			return err
 		}
+
+		l.fileLock.Lock()
 		l.tmpFiles[fname] = f
+		l.fileLock.Unlock()
+
 	}
 
+	// expected journalctl formatting
 	t := time.Unix(entry.RealtimeTimestamp/1000000, 0)
 	_, err := f.Write([]byte(fmt.Sprintf("%s %s %s[%s]: %v\n",
 		t.Format(timeLayout),
@@ -298,7 +316,12 @@ func (l *Logs) fetchCmdOutput(host, command string, args []string, stdout io.Wri
 
 func (l *Logs) initialise(group string, flags tarmakv1alpha1.ClusterLogsFlags) error {
 	if flags.Path == utils.DefaultLogsPathPlaceholder {
-		l.path = filepath.Join(l.tarmak.Cluster().ConfigPath(), fmt.Sprintf("%s-logs.tar.gz", group))
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+
+		l.path = filepath.Join(wd, fmt.Sprintf("%s-logs.tar.gz", group))
 	} else {
 		p, err := homedir.Expand(flags.Path)
 		if err != nil {
@@ -322,13 +345,24 @@ func (l *Logs) initialise(group string, flags tarmakv1alpha1.ClusterLogsFlags) e
 	}
 
 	l.ssh = l.tarmak.SSH()
-	l.since = fmt.Sprintf(`"%s"`, flags.Since)
-	l.until = fmt.Sprintf(`"%s"`, flags.Until)
 	l.tmpFiles = make(map[string]*os.File)
+
+	now := time.Now()
+	if flags.Since == utils.DefaultLogsSincePlaceholder {
+		l.since = fmt.Sprintf("'%s'", now.Add(-time.Hour*24).Format(logTimeLayout))
+	} else {
+		l.since = fmt.Sprintf("'%s'", flags.Since)
+	}
+
+	if flags.Until == utils.DefaultLogsUntilPlaceholder {
+		l.until = fmt.Sprintf("'%s'", now.Format(logTimeLayout))
+	} else {
+		l.until = fmt.Sprintf("'%s'", flags.Until)
+	}
 
 	switch group {
 	case "control-plane":
-		l.targets = []string{"master", "etcd"}
+		l.targets = []string{"vault", "etcd", "master"}
 	default:
 		l.targets = []string{group}
 	}
