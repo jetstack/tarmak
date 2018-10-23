@@ -121,15 +121,15 @@ func (c *CancellationContext) WaitOrCancelReturnCode(f func() (int, error)) {
 	switch err {
 	case nil:
 		log.Info("Tarmak performed all tasks successfully.")
-		c.cleanup()
+		c.tarmak.Cleanup()
 		log.Exit(retCode)
 	case context.Canceled:
 		log.Errorf("Tarmak was canceled (%s). Re-run to complete any remaining tasks.", c.sig)
-		c.cleanup()
+		c.tarmak.Cleanup()
 		log.Exit(1)
 	default:
 		log.Errorf("Tarmak exited with an error: %s", err)
-		c.cleanup()
+		c.tarmak.Cleanup()
 		log.Exit(1)
 	}
 }

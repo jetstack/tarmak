@@ -12,11 +12,8 @@ var clusterForceUnlockCmd = &cobra.Command{
 	Short: "Remove remote lock using lock ID",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		defer t.Cleanup()
 
-		forceUnlockCmd := t.NewCmdTerraform(args)
-
-		t.CancellationContext().WaitOrCancel(forceUnlockCmd.ForceUnlock)
+		t.CancellationContext().WaitOrCancel(t.NewCmdTerraform(args).ForceUnlock)
 	},
 }
 

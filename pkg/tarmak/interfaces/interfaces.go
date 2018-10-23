@@ -157,13 +157,13 @@ type Tarmak interface {
 	HomeDir() string
 	KeepContainers() bool
 	CancellationContext() CancellationContext
+	Cleanup()
 
 	// get a provider by name
 	ProviderByName(string) (Provider, error)
 	// get an environment by name
 	EnvironmentByName(string) (Environment, error)
 	EnsureRemoteResources() error
-	Cleanup()
 }
 
 type Config interface {
