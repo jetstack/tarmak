@@ -20,10 +20,12 @@ Options
 
 ::
 
-  -C, --configuration-only    apply changes to configuration only, by running only puppet
-      --dry-run               don't actually change anything, just show changes that would occur
-  -h, --help                  help for apply
-  -I, --infrastructure-only   apply changes to infrastructure only, by running only terraform
+      --auto-approve                 auto approve to responses when applying cluster
+      --auto-approve-deleting-data   auto approve deletion of any data as a cause from applying cluster
+  -C, --configuration-only           apply changes to configuration only, by running only puppet
+      --dry-run                      don't actually change anything, just show changes that would occur
+  -h, --help                         help for apply
+  -I, --infrastructure-only          apply changes to infrastructure only, by running only terraform
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
