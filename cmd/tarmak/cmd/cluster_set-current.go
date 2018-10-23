@@ -2,6 +2,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak"
@@ -12,7 +14,6 @@ var clusterSetCurrentCmd = &cobra.Command{
 	Short: "Set current cluster in config",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		defer t.Cleanup()
 
 		if len(args) != 1 {
 			t.Log().Fatal("Expecting a single environment-cluster argument to be set as current")
@@ -30,13 +31,10 @@ var clusterSetCurrentCmd = &cobra.Command{
 		}
 
 		if !found {
-			t.Log().Fatalf("Failed to find cluster '%s' in config", args[0])
+			t.Perform(fmt.Errorf("Failed to find cluster '%s' in config", args[0]))
 		}
 
-		if err := t.Config().SetCurrentCluster(args[0]); err != nil {
-			t.Log().Fatalf("Failed to set current cluster in config: %v", err)
-		}
-
+		t.Perform(t.Config().SetCurrentCluster(args[0]))
 	},
 }
 

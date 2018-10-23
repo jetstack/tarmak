@@ -163,6 +163,7 @@ type Tarmak interface {
 	// get an environment by name
 	EnvironmentByName(string) (Environment, error)
 	EnsureRemoteResources() error
+	Cleanup()
 }
 
 type Config interface {

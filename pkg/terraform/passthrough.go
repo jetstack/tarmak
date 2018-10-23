@@ -180,3 +180,21 @@ func Unlock(args []string, stopCh <-chan struct{}) int {
 	}
 	return c.Run(args)
 }
+
+func Fmt(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
+	c := &command.FmtCommand{
+		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
+	}
+	return c.Run(args)
+}
+
+func Validate(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
+	c := &command.ValidateCommand{
+		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
+	}
+	return c.Run(args)
+}

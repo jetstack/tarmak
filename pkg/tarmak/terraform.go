@@ -100,8 +100,7 @@ func (c *CmdTerraform) Destroy() error {
 		return err
 	}
 
-	err := c.tarmak.terraform.Destroy(c.tarmak.Cluster())
-	if err != nil {
+	if err := c.tarmak.terraform.Destroy(c.tarmak.Cluster()); err != nil {
 		return err
 	}
 
@@ -150,7 +149,6 @@ Are you sure you want to force-unlock the remote state? This can be potentially 
 		return nil
 	}
 
-	c.tarmak.cluster.Log().Info("running force-unlock")
 	err = c.tarmak.terraform.ForceUnlock(c.tarmak.Cluster(), c.args[0])
 	if err != nil {
 		return err
@@ -160,7 +158,6 @@ Are you sure you want to force-unlock the remote state? This can be potentially 
 }
 
 func (c *CmdTerraform) verifyTerraformBinaryVersion() error {
-
 	cmd := exec.Command("terraform", "version")
 	cmd.Env = os.Environ()
 	cmdOutput := &bytes.Buffer{}

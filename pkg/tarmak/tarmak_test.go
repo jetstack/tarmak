@@ -15,6 +15,11 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/terraform"
+)
+
+var (
+	fmtArgs = []string{"-check=true", "-write=false", "-diff=true"}
 )
 
 type testTarmak struct {
@@ -52,7 +57,7 @@ func (tt *testTarmak) fakeAWSProvider(name string) {
 	tt.fakeProvider.EXPECT().InstanceType(gomock.Any()).AnyTimes().Return("t2.large", nil)
 	tt.fakeProvider.EXPECT().VolumeType(gomock.Any()).AnyTimes().Return("ssd", nil)
 	tt.fakeProvider.EXPECT().Validate().AnyTimes().Return(nil)
-	tt.fakeProvider.EXPECT().RemoteState(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return("")
+	tt.fakeProvider.EXPECT().RemoteState(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return("\n")
 	tt.fakeProvider.EXPECT().RemoteStateBucketName().AnyTimes().Return("my-remote-bucket")
 	tt.fakeProvider.EXPECT().QueryImages(gomock.Any()).AnyTimes().Return([]tarmakv1alpha1.Image{baseImage}, nil)
 	tt.fakeProvider.EXPECT().Variables().AnyTimes().Return(map[string]interface{}{
@@ -96,10 +101,10 @@ func newTestTarmak(t *testing.T) *testTarmak {
 		tarmak: &Tarmak{
 			log:   logger,
 			flags: &tarmakv1alpha1.Flags{},
-			ctx:   utils.NewCancellationContext(),
 		},
 		logger: logger,
 	}
+	tt.tarmak.ctx = utils.NewCancellationContext(tt.tarmak)
 
 	var err error
 	if tt.configDirectory, err = ioutil.TempDir("", "tarmak-test"); err != nil {
@@ -190,6 +195,10 @@ func TestTarmak_Terraform_Generate_ClusterSingle(t *testing.T) {
 
 	tt.logger.WithField("config_path", tt.tarmak.ConfigPath()).Debug("created temporary config folder")
 
+	retCode := terraform.Fmt(append(fmtArgs, tt.tarmak.ConfigPath()), nil)
+	if retCode != 0 {
+		t.Errorf("unexpected return code running fmt, exp=%d got=%d", 0, retCode)
+	}
 }
 
 func TestTarmak_Terraform_Generate_ClusterMulti(t *testing.T) {
@@ -207,6 +216,10 @@ func TestTarmak_Terraform_Generate_ClusterMulti(t *testing.T) {
 
 	tt.logger.WithField("config_path", tt.tarmak.ConfigPath()).Debug("created temporary config folder")
 
+	retCode := terraform.Fmt(append(fmtArgs, tt.tarmak.ConfigPath()), nil)
+	if retCode != 0 {
+		t.Errorf("unexpected return code running fmt, exp=%d got=%d", 0, retCode)
+	}
 }
 
 func TestTarmak_Terraform_Generate_Hub(t *testing.T) {
@@ -224,4 +237,8 @@ func TestTarmak_Terraform_Generate_Hub(t *testing.T) {
 
 	tt.logger.WithField("config_path", tt.tarmak.ConfigPath()).Debug("created temporary config folder")
 
+	retCode := terraform.Fmt(append(fmtArgs, tt.tarmak.ConfigPath()), nil)
+	if retCode != 0 {
+		t.Errorf("unexpected return code running fmt, exp=%d got=%d", 0, retCode)
+	}
 }

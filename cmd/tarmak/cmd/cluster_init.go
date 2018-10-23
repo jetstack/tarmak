@@ -14,8 +14,7 @@ var clusterInitCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		globalFlags.Initialize = true
 		t := tarmak.New(globalFlags)
-		defer t.Cleanup()
-		t.Must(t.CmdClusterInit())
+		t.Perform(t.CmdClusterInit())
 	},
 }
 

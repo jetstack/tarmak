@@ -23,11 +23,8 @@ var clusterDestroyCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		defer t.Cleanup()
 
-		destroyCmd := t.NewCmdTerraform(args)
-
-		t.CancellationContext().WaitOrCancel(destroyCmd.Destroy)
+		t.CancellationContext().WaitOrCancel(t.NewCmdTerraform(args).Destroy)
 	},
 }
 
