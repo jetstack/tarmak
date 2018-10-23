@@ -8,7 +8,7 @@ import (
 )
 
 var clusterForceUnlockCmd = &cobra.Command{
-	Use:   "force-unlock",
+	Use:   "force-unlock [lock ID]",
 	Short: "Remove remote lock using lock ID",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)

@@ -8,7 +8,7 @@ import (
 )
 
 var clusterSshCmd = &cobra.Command{
-	Use:   "ssh",
+	Use:   "ssh [instance alias]",
 	Short: "Log into an instance with SSH",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
