@@ -3,17 +3,17 @@
 tarmak clusters logs
 --------------------
 
-Gather logs from an instance pool
+Gather logs from a list of instances or target groups
 
 Synopsis
 ~~~~~~~~
 
 
-Gather logs from an instance pool
+Gather logs from a list of instances or target groups [bastion vault etcd worker control-plane]
 
 ::
 
-  tarmak clusters logs [flags]
+  tarmak clusters logs [target groups] [flags]
 
 Options
 ~~~~~~~
@@ -21,9 +21,9 @@ Options
 ::
 
   -h, --help           help for logs
-      --path string    target tar ball path (default "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/${INSTANCE_POOL}-logs.tar.gz")
-      --since string   gather logs since date (default "2018-11-27 10:10:08")
-      --until string   gather logs until date (default "2018-11-28 10:10:08")
+      --path string    target tar ball path (default "./[target group]-logs.tar.gz")
+      --since string   gather logs since date (default "$(date --date='24 hours ago')")
+      --until string   gather logs until date (default "$(date --date='now')")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
