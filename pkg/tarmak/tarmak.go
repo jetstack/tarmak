@@ -172,7 +172,8 @@ func (t *Tarmak) writeSSHConfigForClusterHosts() error {
 		}
 		return fmt.Errorf("failed to write ssh config for current cluster '%s': %v", clusterName, err)
 	}
-	return nil
+
+	return t.ssh.Validate()
 }
 
 // This initializes a new tarmak cluster

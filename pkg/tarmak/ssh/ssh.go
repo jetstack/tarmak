@@ -115,3 +115,28 @@ func (s *SSH) Execute(host string, command string, argsAdditional []string) (ret
 	return 0, nil
 
 }
+
+func (s *SSH) Validate() error {
+	keyPath := s.tarmak.Environment().SSHPrivateKeyPath()
+	f, err := os.Stat(keyPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+
+		return fmt.Errorf("failed to read ssh file status: %v", err)
+	}
+
+	if f.IsDir() {
+		return fmt.Errorf("expected ssh file location '%s' is directory", keyPath)
+	}
+
+	if f.Mode() != os.FileMode(0600) && f.Mode() != os.FileMode(0400) {
+		s.log.Warnf("ssh file '%s' holds incorrect permissions (%v), setting to 0600", keyPath, f.Mode())
+		if err := os.Chmod(keyPath, os.FileMode(0600)); err != nil {
+			return fmt.Errorf("failed to set ssh private key file permissions: %v", err)
+		}
+	}
+
+	return nil
+}

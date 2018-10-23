@@ -13,5 +13,10 @@ func (t *Tarmak) SSHPassThrough(argsAdditional []string) {
 	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
 		t.log.Fatal(err)
 	}
+
+	if err := t.ssh.Validate(); err != nil {
+		t.log.Fatal(err)
+	}
+
 	t.ssh.PassThrough(argsAdditional)
 }

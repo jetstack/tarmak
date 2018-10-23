@@ -122,24 +122,8 @@ func (e *Environment) Cluster(name string) (interfaces.Cluster, error) {
 }
 
 func (e *Environment) validateSSHKey() error {
-	f, err := os.Stat(e.SSHPrivateKeyPath())
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-
-		return fmt.Errorf("failed to read ssh file status: %v", err)
-	}
-
-	if f.IsDir() {
-		return fmt.Errorf("expected ssh file location '%s' is directory", e.SSHPrivateKeyPath())
-	}
-
-	if f.Mode() != os.FileMode(0600) && f.Mode() != os.FileMode(0400) {
-		e.log.Warnf("ssh file '%s' holds incorrect permissions (%v), setting to 0600", e.SSHPrivateKeyPath(), f.Mode())
-		if err := os.Chmod(e.SSHPrivateKeyPath(), os.FileMode(0600)); err != nil {
-			return fmt.Errorf("failed to set ssh private key file permissions: %v", err)
-		}
+	if err := e.tarmak.SSH().Validate(); err != nil {
+		return err
 	}
 
 	bytes, err := ioutil.ReadFile(e.SSHPrivateKeyPath())
