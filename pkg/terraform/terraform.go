@@ -172,7 +172,7 @@ this error is often caused due to the remote state being destroyed and can be fi
 		t.log.Info(c.log)
 
 		if err := t.command(cluster, c.args, nil, nil, stderrWriter); err != nil {
-			return fmt.Errorf("error running terraform %s: %s", c.name, err)
+			return fmt.Errorf("error running terraform %s: %s%s", c.name, err, furtherErrorContext)
 		}
 
 		if err := t.checkDone(); err != nil {
