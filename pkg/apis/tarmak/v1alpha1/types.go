@@ -147,8 +147,7 @@ type ClusterFlags struct {
 type ClusterApplyFlags struct {
 	DryRun bool `json:"dryRun,omitempty"` // just show what would be done
 
-	InfrastructureStacks []string `json:"infrastructureStacks,omitempty"` // filter stacks to this list
-	InfrastructureOnly   bool     `json:"infrastructureOnly,omitempty"`   // only run terraform
+	InfrastructureOnly bool `json:"infrastructureOnly,omitempty"` // only run terraform
 
 	ConfigurationOnly bool `json:"configurationOnly,omitempty"` // only run puppet
 }
@@ -156,7 +155,4 @@ type ClusterApplyFlags struct {
 // Contains the cluster destroy flags
 type ClusterDestroyFlags struct {
 	DryRun bool `json:"dryRun,omitempty"` // just show what would be done
-
-	InfrastructureStacks   []string `json:"infrastructureStacks,omitempty"`   // filter stacks to this list
-	ForceDestroyStateStack bool     `json:"forceDestroyStateStack,omitempty"` // force destroy state stack
 }

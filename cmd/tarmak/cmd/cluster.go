@@ -6,8 +6,6 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-var ClusterFlagInfrastructureStacks = "infrastructure-stacks"
-
 var clusterCmd = &cobra.Command{
 	Use:     "clusters",
 	Short:   "Operations on clusters",
@@ -17,7 +15,6 @@ var clusterCmd = &cobra.Command{
 func clusterApplyFlags(fs *flag.FlagSet) {
 	store := &globalFlags.Cluster.Apply
 	clusterFlagDryRun(fs, &store.DryRun)
-	clusterFlagInfrastructureStacks(fs, &store.InfrastructureStacks)
 
 	fs.BoolVarP(
 		&store.ConfigurationOnly,
@@ -39,14 +36,6 @@ func clusterApplyFlags(fs *flag.FlagSet) {
 func clusterDestroyFlags(fs *flag.FlagSet) {
 	store := &globalFlags.Cluster.Destroy
 	clusterFlagDryRun(fs, &store.DryRun)
-	clusterFlagInfrastructureStacks(fs, &store.InfrastructureStacks)
-
-	fs.BoolVar(
-		&store.ForceDestroyStateStack,
-		"force-destroy-state-stack",
-		false,
-		"force destroy the state stack, this is unreversible (!!!)",
-	)
 }
 
 func clusterFlagDryRun(fs *flag.FlagSet, store *bool) {
@@ -55,17 +44,6 @@ func clusterFlagDryRun(fs *flag.FlagSet, store *bool) {
 		"dry-run",
 		false,
 		"don't actually change anything, just show changes that would occur",
-	)
-}
-
-func clusterFlagInfrastructureStacks(fs *flag.FlagSet, store *[]string) {
-	fs.StringArrayVarP(
-		store,
-		"infrastructure-stacks",
-		"S",
-		[]string{},
-		// TODO: add validation based on cluster type
-		"run operation on these stacks only, valid stacks are: state, network, tools, bastion, vault, kubernetes",
 	)
 }
 
