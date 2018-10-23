@@ -69,7 +69,7 @@ class kubernetes::apiserver(
 
   # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
   if $admission_control == undef {
-    $unfiltered_admission_control = delete_undef_values([
+    $_admission_control = delete_undef_values([
       $post_1_8 ? { true => 'Initializers', default => undef },
       'NamespaceLifecycle',
       'LimitRanger',
@@ -84,14 +84,7 @@ class kubernetes::apiserver(
       $::kubernetes::_enable_pod_priority ? { true => 'Priority', default => undef },
     ])
   } else {
-    $unfiltered_admission_control = $admission_control
-  }
-
-  if $post_1_11 {
-    $defaults = ['NamespaceLifecycle','LimitRanger','ServiceAccount','PersistentVolumeLabel','DefaultStorageClass','DefaultTolerationSeconds','MutatingAdmissionWebhook','ValidatingAdmissionWebhook','ResourceQuota','Priority']
-    $_admission_control = $unfiltered_admission_control.filter |$value| { !($value in $defaults) }
-  } else {
-    $_admission_control = $unfiltered_admission_control
+    $_admission_control = $admission_control
   }
 
   $_disable_admission_control = $disable_admission_control
