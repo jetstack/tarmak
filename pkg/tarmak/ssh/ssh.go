@@ -3,6 +3,8 @@ package ssh
 
 import (
 	"bytes"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -136,6 +138,16 @@ func (s *SSH) Validate() error {
 		if err := os.Chmod(keyPath, os.FileMode(0600)); err != nil {
 			return fmt.Errorf("failed to set ssh private key file permissions: %v", err)
 		}
+	}
+
+	bytes, err := ioutil.ReadFile(keyPath)
+	if err != nil {
+		return fmt.Errorf("unable to read ssh private key: %s", err)
+	}
+
+	block, _ := pem.Decode(bytes)
+	if block == nil {
+		return errors.New("failed to parse PEM block containing the ssh private key")
 	}
 
 	return nil

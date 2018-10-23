@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -119,29 +118,6 @@ func (e *Environment) Cluster(name string) (interfaces.Cluster, error) {
 		}
 	}
 	return nil, fmt.Errorf("cluster '%s' in environment '%s' not found", name, e.Name())
-}
-
-func (e *Environment) validateSSHKey() error {
-	if err := e.tarmak.SSH().Validate(); err != nil {
-		return err
-	}
-
-	bytes, err := ioutil.ReadFile(e.SSHPrivateKeyPath())
-	if err != nil {
-		return fmt.Errorf("unable to read ssh private key: %s", err)
-	}
-
-	block, _ := pem.Decode(bytes)
-	if block == nil {
-		return errors.New("failed to parse PEM block containing the ssh private key")
-	}
-
-	e.sshKeyPrivate, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return fmt.Errorf("unable to parse private key: %s", err)
-	}
-
-	return nil
 }
 
 func (e *Environment) Variables() map[string]interface{} {
@@ -291,7 +267,7 @@ func (e *Environment) Validate() error {
 		result = multierror.Append(result, err)
 	}
 
-	if err := e.validateSSHKey(); err != nil {
+	if err := e.tarmak.SSH().Validate(); err != nil {
 		result = multierror.Append(result, err)
 	}
 
