@@ -183,6 +183,9 @@ go_codegen: depend $(TYPES_FILES)
 go_reference_docs_gen: depend
 	$(HACK_DIR)/update-reference-docs.sh
 
+go_cmd_docs_gen: depend
+	$(HACK_DIR)/update-cmd-docs.sh
+
 verify_boilerplate:
 	$(HACK_DIR)/verify-boilerplate.sh
 
