@@ -20,6 +20,10 @@ import (
 	client "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
+const (
+	DefaultInstanceName = "$(hostname)"
+)
+
 type Wing struct {
 	log       *logrus.Entry
 	flags     *Flags
@@ -60,6 +64,15 @@ func New(flags *Flags) *Wing {
 
 func (w *Wing) Run(args []string) error {
 	var errors []error
+
+	if w.flags.InstanceName == DefaultInstanceName {
+		instanceName, err := os.Hostname()
+		if err != nil {
+			return err
+		}
+
+		w.flags.InstanceName = instanceName
+	}
 
 	if w.flags.InstanceName == "" {
 		errors = append(errors, fmt.Errorf("--instance-name flag cannot be empty"))

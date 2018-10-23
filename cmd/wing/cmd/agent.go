@@ -2,8 +2,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/wing"
@@ -20,15 +18,10 @@ var agentCmd = &cobra.Command{
 }
 
 func init() {
-	instanceName, err := os.Hostname()
-	if err != nil {
-		instanceName = ""
-	}
-
 	agentCmd.Flags().StringVar(&agentFlags.ClusterName, "cluster-name", "myenv-mycluster", "this specifies the cluster name [environment]-[cluster]")
 	agentCmd.Flags().StringVar(&agentFlags.ServerURL, "server-url", "https://localhost:9443", "this specifies the URL to the wing server")
 	agentCmd.Flags().StringVar(&agentFlags.ManifestURL, "manifest-url", "", "this specifies the URL where the puppet.tar.gz can be found")
-	agentCmd.Flags().StringVar(&agentFlags.InstanceName, "instance-name", instanceName, "this specifies the instance's name")
+	agentCmd.Flags().StringVar(&agentFlags.InstanceName, "instance-name", wing.DefaultInstanceName, "this specifies the instance's name")
 
 	RootCmd.AddCommand(agentCmd)
 }

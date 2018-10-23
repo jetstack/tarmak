@@ -2,7 +2,6 @@
 package cmd
 
 import (
-	"flag"
 	"os"
 	"runtime"
 
@@ -23,6 +22,5 @@ func init() {
 	stopCh := genericapiserver.SetupSignalHandler()
 	serverCmd := server.NewCommandStartWingServer(os.Stdout, os.Stderr, stopCh)
 	serverCmd.Use = "server"
-	serverCmd.Flags().AddGoFlagSet(flag.CommandLine)
 	RootCmd.AddCommand(serverCmd)
 }
