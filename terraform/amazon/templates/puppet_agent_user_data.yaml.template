@@ -57,6 +57,7 @@ write_files:
     TARMAK_DESIRED_COUNT=${tarmak_desired_count}
     TARMAK_VOLUME_ID=${tarmak_volume_id}
     TARMAK_INSTANCE_POOL=${tarmak_instance_pool}
+    ETCD_BACKUP_BUCKET_PREFIX=${etcd_backup_bucket_prefix}
 
 - path: /etc/profile.d/tarmak.sh
   permissions: '0644'

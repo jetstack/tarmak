@@ -99,6 +99,7 @@ class tarmak::etcd(
     tls_ca_path              => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_k8s_events_ca_name}-ca.pem",
     systemd_after            => delete_undef_values([$::tarmak::etcd_mount_unit]),
     systemd_requires         => delete_undef_values([$::tarmak::etcd_mount_unit]),
+    backup_enabled           => false, # do not backup etcd for events
   }
   etcd::instance{'overlay':
     version                  => $::tarmak::etcd_overlay_version,

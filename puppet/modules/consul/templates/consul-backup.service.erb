@@ -9,3 +9,6 @@ Environment=AWS_DEFAULT_REGION=<%= @region %>
 Environment=BUCKET_NAME=<%= @backup_bucket_prefix %>
 Environment=CONSUL_HTTP_TOKEN=<%= @consul_master_token %>
 ExecStart=/opt/bin/consul-backup.sh
+
+[Install]
+WantedBy=multi-user.target

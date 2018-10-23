@@ -33,4 +33,5 @@ define etcd::install (
     creates => "${dest_dir}/etcd",
     path    => ['/usr/bin/', '/bin'],
   }
+
 }

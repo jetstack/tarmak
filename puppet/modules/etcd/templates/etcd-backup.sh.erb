@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -euo pipefail
+
+<% if @tls -%>
+export ETCDCTL_CERT=<%= @tls_cert_path %>
+export ETCDCTL_KEY=<%= @tls_key_path %>
+export ETCDCTL_CACERT=<%= @tls_ca_path %>
+<% end -%>
+
+export ETCDCTL_API=3
+export ETCDCTL_ENDPOINTS=<%= @endpoints %>
+
+date=$(date -u +"%Y-%m-%d_%H-%M-%S")
+local_backup_dir="<%= @local_backup_dir %>/<%= @name %>"
+local_backup_path="${local_backup_dir}/${date}-snapshot.db"
+
+# ensure directory is created
+mkdir -p "${local_backup_dir}"
+
+# no one else should be able to read backups
+chmod 700 "${local_backup_dir}"
+
+# create snapshot
+<%= @etcdctl_path %> snapshot save ${local_backup_path}
+
+s3_backup_path="s3://<%= @_bucket_prefix %>/etcd/<%= @name %>/${date}-<%= @hostname %>-snapshot.db"
+aws configure set s3.signature_version s3v4
+<%= (['aws', 's3', 'cp'] + @aws_s3_args).join(' ') %> "${local_backup_path}" "${s3_backup_path}"
+
+# remove the local backup
+rm -rf "${local_backup_dir}"

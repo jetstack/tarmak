@@ -1,0 +1,13 @@
+[Unit]
+Description=Backup etcd
+Requires=etcd-<%= @name %>.service
+After=etcd-<%= @name %>.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-<%= @config_dir %>/backup-environment
+EnvironmentFile=-<%= @config_dir %>/backup-<%= @name %>-environment
+ExecStart=<%= @backup_script_path %>
+
+[Install]
+WantedBy=multi-user.target

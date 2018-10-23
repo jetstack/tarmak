@@ -1,3 +1,4 @@
+# Create an instance of an etcd server
 define etcd::instance (
   String $version,
   Integer $client_port = 2379,
@@ -13,8 +14,11 @@ define etcd::instance (
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
-  Array $initial_cluster = []
-){
+  Array $initial_cluster = [],
+  Optional[Boolean] $backup_enabled = undef,
+  Optional[Enum['aws:kms','']]$backup_sse = undef,
+  Optional[String] $backup_bucket_prefix = undef
+) {
   include ::etcd
 
   $_systemd_wants = $systemd_wants
@@ -80,7 +84,7 @@ define etcd::instance (
     },
   }
 
-  file { "/etc/systemd/system/${service_name}.service":
+  file { "${::etcd::systemd_dir}/${service_name}.service":
     ensure  => file,
     content => template('etcd/etcd.service.erb'),
     require => [
@@ -98,4 +102,18 @@ define etcd::instance (
     ],
   }
 
+  # instantiate backup if enabled
+  if $backup_enabled == true or ($backup_enabled == undef and $::etcd::backup_enabled == true) {
+    etcd::backup { $name:
+      version       => $version,
+      client_port   => $client_port,
+      service_name  => $service_name,
+      tls           => $tls,
+      tls_cert_path => $tls_cert_path,
+      tls_key_path  => $tls_key_path,
+      tls_ca_path   => $tls_ca_path,
+      sse           => $backup_sse,
+      bucket_prefix => $backup_bucket_prefix,
+    }
+  }
 }

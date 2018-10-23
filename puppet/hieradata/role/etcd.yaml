@@ -3,4 +3,7 @@ classes:
 - tarmak::etcd
 - airworthy
 
+etcd::backup_enabled: true
+etcd::backup_sse: aws:kms
+etcd::backup_bucket_prefix: "%{::etcd_backup_bucket_prefix}"
 tarmak::hostname: "%{::tarmak_hostname}"

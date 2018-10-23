@@ -95,6 +95,27 @@ resource "aws_iam_role_policy_attachment" "{{$instancePool.TFName}}_ec2_ebs_atta
 }
 {{- end }}
 {{- end -}}
+{{- if eq .Name "etcd" }}
+
+resource "aws_iam_role_policy" "etcd_backup_bucket_write" {
+  name   = "${data.template_file.stack_name.rendered}-etcd-${count.index+1}"
+  count  = "${var.{{.TFName}}_min_count}"
+  role   = "${aws_iam_role.{{.TFName}}.name}"
+  policy = "${element(data.template_file.etcd_backup_bucket_write_policy.*.rendered, count.index)}"
+}
+
+data "template_file" "etcd_backup_bucket_write_policy" {
+  template = "${file("${path.module}/templates/iam_etcd_backup_bucket_write.json")}"
+  count    = "${var.{{.TFName}}_min_count}"
+
+  vars {
+    backup_bucket_prefix = "${var.backups_bucket}/${data.template_file.stack_name.rendered}-etcd-${count.index+1}"
+    backup_bucket        = "${var.backups_bucket}"
+    vault_kms_key_id     = "${var.vault_kms_key_id}"
+  }
+}
+{{- end -}}
+
 {{- if ne .Name "jenkins" }}
 
 resource "aws_iam_role_policy_attachment" "{{.TFName}}_ecr_read" {
