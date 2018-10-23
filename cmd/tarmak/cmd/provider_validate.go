@@ -12,7 +12,7 @@ var providerValidateCmd = &cobra.Command{
 	Short: "Validate provider(s) used by current cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		t.Conclude(t.Environment().Provider().Validate())
+		t.Perform(t.Environment().Provider().Validate())
 	},
 }
 

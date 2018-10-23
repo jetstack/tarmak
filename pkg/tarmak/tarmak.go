@@ -344,7 +344,7 @@ func (t *Tarmak) Variables() map[string]interface{} {
 	return output
 }
 
-func (t *Tarmak) Conclude(err error) {
+func (t *Tarmak) Perform(err error) {
 	t.Cleanup()
 	plugin.CleanupClients()
 	t.Must(err)

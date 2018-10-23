@@ -14,7 +14,7 @@ var providerInitCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		globalFlags.Initialize = true
 		t := tarmak.New(globalFlags)
-		t.Conclude(t.CmdProviderInit())
+		t.Perform(t.CmdProviderInit())
 	},
 }
 
