@@ -38,6 +38,7 @@ hostname
 iam
 init
 initialize
+initializers
 iptables
 isn
 Istio
