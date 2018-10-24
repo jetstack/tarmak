@@ -31,6 +31,7 @@ resource "aws_instance" "bastion" {
   subnet_id              = "${var.public_subnet_ids[0]}"
   key_name               = "${var.key_name}"
   vpc_security_group_ids = ["${aws_security_group.bastion.0.id}"]
+  iam_instance_profile   = "${aws_iam_instance_profile.bastion.name}"
 
   root_block_device = {
     volume_type = "gp2"

@@ -12,6 +12,7 @@ variable "project" {}
 variable "contact" {}
 variable "bastion_ami" {}
 variable "bastion_instance_type" {}
+variable "bastion_min_instance_count" {}
 
 # data.terraform_remote_state.network.public_subnet_ids
 variable "public_subnet_ids" {
@@ -31,3 +32,7 @@ variable "public_zone_id" {}
 
 # data.terraform_remote_state.network.private_zone_id.0
 variable "private_zone_id" {}
+
+variable "bastion_iam_additional_policy_arns" {
+  type = "list"
+}

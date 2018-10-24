@@ -736,6 +736,7 @@ func (c *Cluster) Variables() map[string]interface{} {
 		output[fmt.Sprintf("%s_max_instance_count", instancePool.TFName())] = instancePool.Config().MaxCount
 		output[fmt.Sprintf("%s_root_volume_size", instancePool.TFName())] = instancePool.RootVolume().Size()
 		output[fmt.Sprintf("%s_root_volume_type", instancePool.TFName())] = instancePool.RootVolume().Type()
+		output[fmt.Sprintf("%s_iam_additional_policy_arns", instancePool.TFName())] = instancePool.Config().Amazon.AdditionalIAMPolicies
 	}
 
 	// set network cidr
