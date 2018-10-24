@@ -10,7 +10,6 @@ class calico(
   String $namespace = 'kube-system',
   Optional[String] $pod_network = undef,
   Integer[1000,65535] $mtu = 1480,
-  Array[String] $feature_flags = [],
 ) inherits ::calico::params
 {
   $path = defined('$::path') ? {

@@ -27,13 +27,7 @@ class kubernetes::proxy(
     ensure => 'present',
   })
 
-  if $::kubernetes::proxy_feature_gates == [] {
-    $_feature_gates = delete_undef_values([
-      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
-    ])
-  } else {
-    $_feature_gates = $::kubernetes::proxy_feature_gates
-  }
+  $_feature_gates = $feature_gates
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-proxy"
   file{$kubeconfig_path:

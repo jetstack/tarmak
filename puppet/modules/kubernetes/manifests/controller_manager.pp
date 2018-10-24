@@ -29,13 +29,7 @@ class kubernetes::controller_manager(
     $version_before_1_6 = true
   }
 
-  if $::kubernetes::controller_feature_gates == [] {
-    $_feature_gates = delete_undef_values([
-      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
-    ])
-  } else {
-    $_feature_gates = $::kubernetes::controller_feature_gates
-  }
+  $_feature_gates = $feature_gates
 
   kubernetes::symlink{'controller-manager':}
   -> file{$kubeconfig_path:

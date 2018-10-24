@@ -98,7 +98,7 @@ class kubernetes::apiserver(
       $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
     ])
   } else {
-    $_feature_gates = $::kubernetes::api_feature_gates
+    $_feature_gates = $feature_gates
   }
 
   # check OIDC configuration parameters

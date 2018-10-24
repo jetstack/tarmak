@@ -166,16 +166,16 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	}
 
 	if a := conf.APIServer; a != nil && len(a.FeatureGates) > 0 {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::api_feature_gates: ["%s"]`, strings.Join(a.FeatureGates, `", "`)))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::feature_gates: ["%s"]`, strings.Join(a.FeatureGates, `", "`)))
 	}
 	if k := conf.Kubelet; k != nil && len(k.FeatureGates) > 0 {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::kubelet_feature_gates: ["%s"]`, strings.Join(k.FeatureGates, `", "`)))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::kubelet::feature_gates: ["%s"]`, strings.Join(k.FeatureGates, `", "`)))
 	}
 	if s := conf.Scheduler; s != nil && len(s.FeatureGates) > 0 {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::scheduler_feature_gates: ["%s"]`, strings.Join(s.FeatureGates, `", "`)))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::scheduler::feature_gates: ["%s"]`, strings.Join(s.FeatureGates, `", "`)))
 	}
 	if p := conf.KubeProxy; p != nil && len(p.FeatureGates) > 0 {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::proxy_feature_gates: ["%s"]`, strings.Join(p.FeatureGates, `", "`)))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::proxy::feature_gates: ["%s"]`, strings.Join(p.FeatureGates, `", "`)))
 	}
 	if c := conf.ControllerManager; c != nil && len(c.FeatureGates) > 0 {
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::controller_feature_gates: ["%s"]`, strings.Join(c.FeatureGates, `", "`)))

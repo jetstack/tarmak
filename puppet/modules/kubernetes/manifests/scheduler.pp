@@ -20,12 +20,12 @@ class kubernetes::scheduler(
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-scheduler"
 
-  if $::kubernetes::scheduler_feature_gates == [] {
+  if $feature_gates == [] {
     $_feature_gates = delete_undef_values([
       $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
     ])
   } else {
-    $_feature_gates = $::kubernetes::scheduler_feature_gates
+    $_feature_gates = $feature_gates
   }
 
   kubernetes::symlink{'scheduler':}
