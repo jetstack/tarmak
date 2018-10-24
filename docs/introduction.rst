@@ -64,9 +64,9 @@ The Tarmak configuration uses Kubernetes' API tooling and consists of various
 different resources. While the Tarmak specific resources (Providers_ and
 Environments_) are defined by the Tarmak project, Clusters_ are derived from a
 draft version of the `Cluster API
-<https://github.com/kubernetes/community/tree/master/wg-cluster-api>`_. This is
-a community effort to have a standardised way of defining Kubernetes clusters.
-By default, Tarmak configuration is located in ``~/.tarmak/tarmak.yaml``.
+<https://github.com/kubernetes-sigs/cluster-api>`_. This is a community effort
+to have a standardised way of defining Kubernetes clusters.  By default, Tarmak
+configuration is located in ``~/.tarmak/tarmak.yaml``.
 
 .. note::
    Although we do not anticipate breaking changes in our configuration, at this
