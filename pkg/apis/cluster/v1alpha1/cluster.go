@@ -89,10 +89,14 @@ type ClusterKubernetes struct {
 	ClusterAutoscaler *ClusterKubernetesClusterAutoscaler `json:"clusterAutoscaler,omitempty"`
 	Tiller            *ClusterKubernetesTiller            `json:"tiller,omitempty"`
 	Dashboard         *ClusterKubernetesDashboard         `json:"dashboard,omitempty"`
-	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
 	PodSecurityPolicy *ClusterPodSecurityPolicy           `json:"podSecurityPolicy,omitempty"`
 	Prometheus        *ClusterKubernetesPrometheus        `json:"prometheus,omitempty"`
-	FeatureGates      *FeatureGates                       `json:"featureGates,omitempty"`
+
+	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
+	Kubelet           *ClusterKubernetesKubelet           `json:"kubelet,omitempty"`
+	Scheduler         *ClusterKubernetesScheduler         `json:"scheduler,omitempty"`
+	KubeProxy         *ClusterKubernetesKubeProxy         `json:"kubeProxy,omitempty"`
+	ControllerManager *ClusterKubernetesControllerManager `json:"controllerManager,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
@@ -139,6 +143,8 @@ type ClusterKubernetesAPIServer struct {
 
 	// AWS specifc options
 	Amazon *ClusterKubernetesAPIServerAmazon `json:"amazon,omitempty"`
+
+	FeatureGates []string `json:"featureGates,omitempty"`
 }
 
 type ClusterKubernetesAPIServerOIDC struct {
@@ -202,6 +208,22 @@ type ClusterKubernetesPrometheus struct {
 
 type ClusterVaultHelper struct {
 	URL string `json:"url,omitempty"`
+}
+
+type ClusterKubernetesScheduler struct {
+	FeatureGates []string `json:"featureGates,omitempty"`
+}
+
+type ClusterKubernetesKubelet struct {
+	FeatureGates []string `json:"featureGates,omitempty"`
+}
+
+type ClusterKubernetesKubeProxy struct {
+	FeatureGates []string `json:"featureGates,omitempty"`
+}
+
+type ClusterKubernetesControllerManager struct {
+	FeatureGates []string `json:"featureGates,omitempty"`
 }
 
 // +k8s:openapi-gen=true

@@ -870,17 +870,23 @@ file under the Kubernetes code block like following:
 
 .. code-block:: yaml
 
-    kubernetes:
+  kubernetes:
+    apiServer:
       featureGates:
-          apiServer:
-              - "AllAlpha=true"
-              - "APIResponseCompression=false"
-          kubelet:
-              - "CustomPodDNS=true"
-          kubeProxy:
-              - "CSIPersistentVolume=false"
-          controllerManager:
-          scheduler:
+        - "AllAlpha=true"
+        - "APIResponseCompression=false"
+    kubelet:
+      featureGates:
+        - "CustomPodDNS=true"
+    kubeProxy:
+      featureGates:
+        - "CSIPersistentVolume=false"
+    controllerManager:
+      featureGates:
+        - "AllAlpha=true"
+    scheduler:
+      featureGates:
+        - "AllAlpha=true"
 
 Cluster Services
 ----------------
