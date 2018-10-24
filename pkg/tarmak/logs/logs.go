@@ -166,7 +166,7 @@ func (l *Logs) Aggregate(group string, flags tarmakv1alpha1.ClusterLogsFlags) er
 	l.wg.Wait()
 
 	if result != nil {
-		return result.ErrorOrNil()
+		return result
 	}
 
 	select {
