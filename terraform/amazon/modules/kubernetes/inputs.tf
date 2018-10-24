@@ -78,13 +78,36 @@ variable "vault_security_group_id" {}
 
 variable "bastion_security_group_id" {}
 
-variable "elb_access_logs_public_enabled" {}
-variable "elb_access_logs_public_bucket" {}
-variable "elb_access_logs_public_bucket_prefix" {}
-variable "elb_access_logs_public_bucket_interval" {}
-variable "elb_access_logs_internal_enabled" {}
-variable "elb_access_logs_internal_bucket" {}
-variable "elb_access_logs_internal_bucket_prefix" {}
-variable "elb_access_logs_internal_bucket_interval" {}
+variable "elb_access_logs_public_enabled" {
+  default = "false"
+}
+
+variable "elb_access_logs_public_bucket" {
+  default = ""
+}
+
+variable "elb_access_logs_public_bucket_prefix" {
+  default = ""
+}
+
+variable "elb_access_logs_public_bucket_interval" {
+  default = 60
+}
+
+variable "elb_access_logs_internal_enabled" {
+  default = "false"
+}
+
+variable "elb_access_logs_internal_bucket" {
+  default = ""
+}
+
+variable "elb_access_logs_internal_bucket_prefix" {
+  default = ""
+}
+
+variable "elb_access_logs_internal_bucket_interval" {
+  default = 60
+}
 
 variable "backups_bucket" {}
