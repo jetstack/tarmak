@@ -41,6 +41,7 @@ SEE ALSO
 * `tarmak clusters images <tarmak_clusters_images.html>`_ 	 - Operations on images
 * `tarmak clusters init <tarmak_clusters_init.html>`_ 	 - Initialize a cluster
 * `tarmak clusters instances <tarmak_clusters_instances.html>`_ 	 - Operations on instances
+* `tarmak clusters kubeconfig <tarmak_clusters_kubeconfig.html>`_ 	 - Verify and get path to Kubeconfig
 * `tarmak clusters kubectl <tarmak_clusters_kubectl.html>`_ 	 - Run kubectl on the current cluster
 * `tarmak clusters list <tarmak_clusters_list.html>`_ 	 - Print a list of clusters
 * `tarmak clusters plan <tarmak_clusters_plan.html>`_ 	 - Plan changes on the currently configured cluster
