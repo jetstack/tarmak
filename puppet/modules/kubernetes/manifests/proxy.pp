@@ -7,8 +7,8 @@ class kubernetes::proxy(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
-  String $config_file = "${::kubernetes::config_dir}/kube-proxy-config.yaml",
-){
+  String $config_file = "${::kubernetes::params::config_dir}/kube-proxy-config.yaml",
+) inherits kubernetes::params{
   require ::kubernetes
 
   $service_name = 'kube-proxy'

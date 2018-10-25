@@ -20,8 +20,8 @@ authorization:
 cgroupDriver: <%= @cgroup_driver %>
 cgroupRoot: <%= @cgroup_root %>
 <% if @cgroup_kube_name -%>
-kubeReservedCgroup: <%= @cgroup_kube_name %>
 kubeletCgroups: <%= @cgroup_kube_name %>
+kubeReservedCgroup: <%= @cgroup_kube_name %>
 kubeReserved:
 <% if !@cgroup_kube_reserved_cpu.nil? and @cgroup_kube_reserved_cpu != 'nil' -%>
     cpu: <%= @cgroup_kube_reserved_cpu %>
@@ -31,6 +31,7 @@ kubeReserved:
 <% end -%>
 <% end -%>
 <% if @cgroup_system_name -%>
+systemCgroups: <%= @cgroup_system_name %>
 systemReservedCgroup: <%= @cgroup_system_name %>
 systemReserved:
 <% if !@cgroup_system_reserved_cpu.nil? and @cgroup_system_reserved_cpu != 'nil' -%>
@@ -88,7 +89,7 @@ evictionMinimumReclaim:
 <% if !@eviction_minimum_reclaim_nodefs_inodes_free.nil? and @eviction_minimum_reclaim_nodefs_inodes_free != 'nil' -%>
     nodefs.inodesFree: <%= @eviction_minimum_reclaim_nodefs_inodes_free %>
 <% end -%>
-<% if @_config_feature_gates -%>
+<% if @_config_feature_gates != [] -%>
 featureGates:
     <%= @_config_feature_gates.join("\n    ") %>
 <% end -%>

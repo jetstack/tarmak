@@ -53,8 +53,8 @@ class kubernetes::kubelet(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
-  String $config_file = "${kubelet_dir}/kubelet-config.yaml",
-){
+  String $config_file = "${::kubernetes::params::config_dir}/kubelet-config.yaml",
+) inherits kubernetes::params{
   require ::kubernetes
 
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
