@@ -212,6 +212,7 @@ type SSH interface {
 	Tunnel(hostname string, destination string, destinationPort int) Tunnel
 	Execute(host string, cmd string, args []string) (returnCode int, err error)
 	Validate() error
+	Cleanup() error
 }
 
 type Tunnel interface {
@@ -233,6 +234,7 @@ type Host interface {
 	Roles() []string
 	SSHConfig() string
 	Parameters() map[string]string
+	SSHControlPath() string
 }
 
 type Puppet interface {

@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -23,6 +24,8 @@ var _ interfaces.SSH = &SSH{}
 type SSH struct {
 	tarmak interfaces.Tarmak
 	log    *logrus.Entry
+
+	controlPaths []string
 }
 
 func New(tarmak interfaces.Tarmak) *SSH {
@@ -49,6 +52,8 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 		if err != nil {
 			return err
 		}
+
+		s.controlPaths = append(s.controlPaths, host.SSHControlPath())
 	}
 
 	err = utils.EnsureDirectory(filepath.Dir(c.SSHConfigPath()), 0700)
@@ -151,4 +156,16 @@ func (s *SSH) Validate() error {
 	}
 
 	return nil
+}
+
+func (s *SSH) Cleanup() error {
+	var result *multierror.Error
+
+	for _, c := range utils.RemoveDuplicateStrings(s.controlPaths) {
+		if err := os.RemoveAll(c); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return result.ErrorOrNil()
 }
