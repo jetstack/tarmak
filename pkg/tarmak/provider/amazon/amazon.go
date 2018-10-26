@@ -325,7 +325,7 @@ func (a *Amazon) Environment() ([]string, error) {
 		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", creds.SecretAccessKey),
 		fmt.Sprintf("AWS_SESSION_TOKEN=%s", creds.SessionToken),
 		fmt.Sprintf("AWS_DEFAULT_REGION=%s", a.Region()),
-		fmt.Sprintf("EBS_VOLUME_ENCRYPTED=%s", fmt.Sprint(a.tarmak.Cluster().AmazonEBSEncrypted())),
+		fmt.Sprintf("EBS_VOLUME_ENCRYPTED=%s", fmt.Sprint(a.tarmak.Cluster().Encrypted())),
 	}, nil
 }
 

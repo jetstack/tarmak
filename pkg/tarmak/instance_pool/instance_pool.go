@@ -192,7 +192,7 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
 }
 
 func (n *InstancePool) Encrypted() bool {
-	return n.cluster.AmazonEBSEncrypted()
+	return n.cluster.Encrypted()
 }
 
 func (n *InstancePool) Validate() (result error) {

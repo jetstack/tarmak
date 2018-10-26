@@ -626,7 +626,7 @@ func (c *Cluster) Images() []string {
 
 func (c *Cluster) ImageIDs() (map[string]string, error) {
 	if c.imageIDs == nil {
-		imageMap, err := c.Environment().Tarmak().Packer().IDs(c.AmazonEBSEncrypted())
+		imageMap, err := c.Environment().Tarmak().Packer().IDs(c.Encrypted())
 		if err != nil {
 			return nil, err
 		}
@@ -859,12 +859,8 @@ func (c *Cluster) PublicAPIHostname() string {
 	)
 }
 
-// retrieve Amazons EBS encryption status
-func (c *Cluster) AmazonEBSEncrypted() bool {
-	if c.Config().Amazon != nil && c.Config().Amazon.EBSEncrypted != nil && *c.Config().Amazon.EBSEncrypted {
-		return true
-	}
-	return false
+func (c *Cluster) Encrypted() bool {
+	return *c.conf.Amazon.EBSEncrypted
 }
 
 func (c *Cluster) validateSubnets() error {
