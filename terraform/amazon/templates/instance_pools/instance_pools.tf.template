@@ -12,7 +12,7 @@
 
 # Security Groups for {{.Module}}
 {{- template "role_security_group.tf.template" . }}
-{{- range .InstancePools }}
+{{ range .InstancePools }}
 {{- if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") ) -}}
 ## {{.TFName}}
 # Variables for {{.TFName}}

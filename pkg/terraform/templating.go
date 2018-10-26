@@ -190,6 +190,7 @@ func (t *terraformTemplate) data(module string) map[string]interface{} {
 		"WingDevMode":           t.wingDevMode,
 		"VaultInstancePool":     t.cluster.InstancePool("vault"),
 		"BastionInstancePool":   t.cluster.InstancePool("bastion"),
+		"Encrypted":             t.cluster.Encrypted(),
 	}
 }
 

@@ -94,7 +94,7 @@ resource "aws_ebs_volume" "vault" {
   count             = "${var.vault_min_instance_count}"
   size              = "${var.vault_data_size}"
   availability_zone = "${element(var.availability_zones, count.index % length(var.availability_zones))}"
-  encrypted         = "{{.VaultInstancePool.Encrypted}}"
+  encrypted         = "{{.Encrypted}}"
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
