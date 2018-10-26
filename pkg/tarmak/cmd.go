@@ -233,6 +233,10 @@ Are you sure you want to re-build them?`, alreadyBuilt)
 	return c.packer.Build(c.args)
 }
 
+func (c *CmdTarmak) ImagesDestroy() error {
+	return c.Provider().DestroyImages(c.args)
+}
+
 func (c *CmdTarmak) Kubectl() error {
 	if err := c.writeSSHConfigForClusterHosts(); err != nil {
 		return err

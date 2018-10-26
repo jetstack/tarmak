@@ -121,6 +121,7 @@ type Provider interface {
 	Environment() ([]string, error)
 	Variables() map[string]interface{}
 	QueryImages(tags map[string]string) ([]tarmakv1alpha1.Image, error)
+	DestroyImages(ids []string) error
 	VaultKV() (kv.Service, error)
 	VaultKVWithParams(kmsKeyID, unsealKeyName string) (kv.Service, error)
 	ListHosts(Cluster) ([]Host, error)
