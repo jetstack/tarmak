@@ -65,6 +65,7 @@ func (p *Packer) Build(imageNames []string) error {
 			amiID, err := image.Build()
 
 			resultLock.Lock()
+			defer wg.Done()
 			defer resultLock.Unlock()
 
 			if err != nil {
@@ -72,7 +73,15 @@ func (p *Packer) Build(imageNames []string) error {
 				return
 			}
 
-			image.log.WithField("ami_id", amiID).Infof("successfully built image %s", name)
+			// ensure we catch the interrupt error
+			select {
+			case <-p.ctx.Done():
+				result = multierror.Append(result, p.ctx.Err())
+				return
+			default:
+			}
+
+			image.log.WithField("ami_id", amiID).Infof("successfully built image %s", image.imageName)
 		}()
 
 	}
