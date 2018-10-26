@@ -234,7 +234,22 @@ Are you sure you want to re-build them?`, alreadyBuilt)
 }
 
 func (c *CmdTarmak) ImagesDestroy() error {
-	return c.Provider().DestroyImages(c.args)
+	if c.flags.Cluster.Images.Destroy.All {
+		images, err := c.packer.List()
+		if err != nil {
+			return err
+		}
+
+		var ids []string
+		for _, i := range images {
+			ids = append(ids, i.Name)
+		}
+
+		return c.Provider().DestroyImages(ids)
+
+	} else {
+		return c.Provider().DestroyImages(c.args)
+	}
 }
 
 func (c *CmdTarmak) Kubectl() error {

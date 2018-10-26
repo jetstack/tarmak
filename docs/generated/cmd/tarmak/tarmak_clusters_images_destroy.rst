@@ -3,13 +3,13 @@
 tarmak clusters images destroy
 ------------------------------
 
-destroy images
+destroy remote tarmak images
 
 Synopsis
 ~~~~~~~~
 
 
-destroy images
+destroy remote tarmak images
 
 ::
 
@@ -20,6 +20,7 @@ Options
 
 ::
 
+  -A, --all    destroy all tarmak images for this cluster
   -h, --help   help for destroy
 
 Options inherited from parent commands

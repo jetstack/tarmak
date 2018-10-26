@@ -175,12 +175,18 @@ type ClusterDestroyFlags struct {
 
 // Contains the cluster images flags
 type ClusterImagesFlags struct {
-	Build ClusterImagesBuildFlags `json:"build,omitempty"` // flags for handling building images
+	Build   ClusterImagesBuildFlags   `json:"build,omitempty"`   // flags for handling building images
+	Destroy ClusterImagesDestroyFlags `json:"destroy,omitempty"` // just show what would be done
 }
 
 // Contains the cluster images build flags
 type ClusterImagesBuildFlags struct {
 	RebuildExisting bool `json:"rebuildExisting,omitempty"` // build all images regardless whether they already exist
+}
+
+// Contains the cluster images destroy flags
+type ClusterImagesDestroyFlags struct {
+	All bool `json:"all,omitempty"` // destroy all images
 }
 
 // Contains the cluster kubeconfig flags

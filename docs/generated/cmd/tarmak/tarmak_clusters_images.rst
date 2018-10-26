@@ -36,6 +36,6 @@ SEE ALSO
 
 * `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
 * `tarmak clusters images build <tarmak_clusters_images_build.html>`_ 	 - build specific or all images missing
-* `tarmak clusters images destroy <tarmak_clusters_images_destroy.html>`_ 	 - destroy images
+* `tarmak clusters images destroy <tarmak_clusters_images_destroy.html>`_ 	 - destroy remote tarmak images
 * `tarmak clusters images list <tarmak_clusters_images_list.html>`_ 	 - list images
 

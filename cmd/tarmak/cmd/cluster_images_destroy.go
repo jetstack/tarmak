@@ -11,10 +11,10 @@ import (
 
 var clusterImagesDestroyCmd = &cobra.Command{
 	Use:   "destroy [image ids]",
-	Short: "destroy images",
+	Short: "destroy remote tarmak images",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 {
-			return errors.New("expecting at least a single image ID argument")
+		if len(args) == 0 && !globalFlags.Cluster.Images.Destroy.All {
+			return errors.New("expecting at least a single image ID argument or --all")
 		}
 		return nil
 	},
@@ -25,5 +25,6 @@ var clusterImagesDestroyCmd = &cobra.Command{
 }
 
 func init() {
+	clusterImagesDestroyFlags(clusterImagesDestroyCmd.PersistentFlags())
 	clusterImagesCmd.AddCommand(clusterImagesDestroyCmd)
 }
