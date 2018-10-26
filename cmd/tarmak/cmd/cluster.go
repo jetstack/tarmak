@@ -38,6 +38,18 @@ func clusterDestroyFlags(fs *flag.FlagSet) {
 	clusterFlagDryRun(fs, &store.DryRun)
 }
 
+func clusterImagesBuildFlags(fs *flag.FlagSet) {
+	store := &globalFlags.Cluster.Images.Build
+
+	fs.BoolVarP(
+		&store.All,
+		"all",
+		"A",
+		false,
+		"build all images regardless whether they already exist",
+	)
+}
+
 func clusterFlagDryRun(fs *flag.FlagSet, store *bool) {
 	fs.BoolVar(
 		store,

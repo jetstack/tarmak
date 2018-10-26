@@ -14,36 +14,32 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
-type CmdTerraform struct {
-	StopCh chan struct{}
-	log    *logrus.Entry
-	tarmak *Tarmak
-	args   []string
-	ctx    interfaces.CancellationContext
+type CmdTarmak struct {
+	*Tarmak
+	log  *logrus.Entry
+	args []string
+	ctx  interfaces.CancellationContext
 }
 
-func (t *Tarmak) Terraform() interfaces.Terraform {
-	return t.terraform
-}
-
-func (t *Tarmak) NewCmdTerraform(args []string) *CmdTerraform {
-	return &CmdTerraform{
-		tarmak: t,
+func (t *Tarmak) NewCmdTarmak(args []string) *CmdTarmak {
+	return &CmdTarmak{
+		Tarmak: t,
 		log:    t.Log(),
 		args:   args,
 		ctx:    t.CancellationContext(),
 	}
 }
 
-func (c *CmdTerraform) Plan() (returnCode int, err error) {
+func (c *CmdTarmak) Plan() (returnCode int, err error) {
 	if err := c.setup(); err != nil {
 		return 1, err
 	}
 
-	changesNeeded, err := c.tarmak.terraform.Plan(c.tarmak.Cluster())
+	changesNeeded, err := c.terraform.Plan(c.Cluster())
 	if changesNeeded {
 		return 2, err
 	} else {
@@ -51,30 +47,30 @@ func (c *CmdTerraform) Plan() (returnCode int, err error) {
 	}
 }
 
-func (c *CmdTerraform) Apply() error {
+func (c *CmdTarmak) Apply() error {
 	if err := c.setup(); err != nil {
 		return err
 	}
 
 	// run terraform apply always, do not run it when in configuration only mode
-	if !c.tarmak.flags.Cluster.Apply.ConfigurationOnly {
-		err := c.tarmak.terraform.Apply(c.tarmak.Cluster())
+	if !c.flags.Cluster.Apply.ConfigurationOnly {
+		err := c.terraform.Apply(c.Cluster())
 		if err != nil {
 			return err
 		}
 	}
 
 	// upload tar gz only if terraform hasn't uploaded it yet
-	if c.tarmak.flags.Cluster.Apply.ConfigurationOnly {
-		err := c.tarmak.Cluster().UploadConfiguration()
+	if c.flags.Cluster.Apply.ConfigurationOnly {
+		err := c.Cluster().UploadConfiguration()
 		if err != nil {
 			return err
 		}
 	}
 
 	// reapply config expect if we are in infrastructure only
-	if !c.tarmak.flags.Cluster.Apply.InfrastructureOnly {
-		err := c.tarmak.Cluster().ReapplyConfiguration()
+	if !c.flags.Cluster.Apply.InfrastructureOnly {
+		err := c.Cluster().ReapplyConfiguration()
 		if err != nil {
 			return err
 		}
@@ -87,7 +83,7 @@ func (c *CmdTerraform) Apply() error {
 	}
 
 	// wait for convergance in every mode
-	err := c.tarmak.Cluster().WaitForConvergance()
+	err := c.Cluster().WaitForConvergance()
 	if err != nil {
 		return err
 	}
@@ -95,19 +91,19 @@ func (c *CmdTerraform) Apply() error {
 	return nil
 }
 
-func (c *CmdTerraform) Destroy() error {
+func (c *CmdTarmak) Destroy() error {
 	if err := c.setup(); err != nil {
 		return err
 	}
 
-	if err := c.tarmak.terraform.Destroy(c.tarmak.Cluster()); err != nil {
+	if err := c.terraform.Destroy(c.Cluster()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *CmdTerraform) Shell() error {
+func (c *CmdTarmak) Shell() error {
 	if err := c.setup(); err != nil {
 		c.log.Warnf("error setting up tarmak for terrafrom shell: %v", err)
 	}
@@ -116,7 +112,7 @@ func (c *CmdTerraform) Shell() error {
 		return err
 	}
 
-	err := c.tarmak.terraform.Shell(c.tarmak.Cluster())
+	err := c.terraform.Shell(c.Cluster())
 	if err != nil {
 		return err
 	}
@@ -124,7 +120,7 @@ func (c *CmdTerraform) Shell() error {
 	return nil
 }
 
-func (c *CmdTerraform) ForceUnlock() error {
+func (c *CmdTarmak) ForceUnlock() error {
 	if err := c.setup(); err != nil {
 		return err
 	}
@@ -149,7 +145,7 @@ Are you sure you want to force-unlock the remote state? This can be potentially 
 		return nil
 	}
 
-	err = c.tarmak.terraform.ForceUnlock(c.tarmak.Cluster(), c.args[0])
+	err = c.terraform.ForceUnlock(c.Cluster(), c.args[0])
 	if err != nil {
 		return err
 	}
@@ -157,7 +153,73 @@ Are you sure you want to force-unlock the remote state? This can be potentially 
 	return nil
 }
 
-func (c *CmdTerraform) verifyTerraformBinaryVersion() error {
+func (c *CmdTarmak) ImagesBuild() error {
+	requiredImages := c.cluster.Images()
+	c.args = utils.RemoveDuplicateStrings(c.args)
+
+	// all flag so build the duplicated list of existing and given args
+	if c.flags.Cluster.Images.Build.All {
+		return c.packer.Build(
+			utils.RemoveDuplicateStrings(
+				append(requiredImages, c.args...),
+			))
+	}
+
+	images, err := c.Packer().List()
+	if err != nil {
+		return err
+	}
+
+	var currentImages []string
+	for _, i := range images {
+		currentImages = append(currentImages, i.BaseImage)
+	}
+
+	var missingImages []string
+	for _, i := range requiredImages {
+		if !utils.SliceContains(currentImages, i) {
+			missingImages = append(missingImages, i)
+		}
+	}
+
+	if len(c.args) == 0 {
+		if len(missingImages) == 0 {
+			c.log.Infof("all images have been built for this cluster")
+			return nil
+		}
+
+		return c.packer.Build(missingImages)
+	}
+
+	var alreadyBuilt []string
+	for _, i := range c.args {
+		if utils.SliceContains(currentImages, i) {
+			alreadyBuilt = append(alreadyBuilt, i)
+		}
+	}
+
+	if len(alreadyBuilt) != 0 {
+		in := input.New(os.Stdin, os.Stdout)
+		query := fmt.Sprintf(`The following images have already been built %s
+Are you sure you want to re-build them?`, alreadyBuilt)
+		b, err := in.AskYesNo(&input.AskYesNo{
+			Default: false,
+			Query:   query,
+		})
+		if err != nil {
+			return err
+		}
+
+		if !b {
+			c.log.Info("aborting building images")
+			return nil
+		}
+	}
+
+	return c.packer.Build(c.args)
+}
+
+func (c *CmdTarmak) verifyTerraformBinaryVersion() error {
 	cmd := exec.Command("terraform", "version")
 	cmd.Env = os.Environ()
 	cmdOutput := &bytes.Buffer{}
@@ -196,17 +258,17 @@ func (c *CmdTerraform) verifyTerraformBinaryVersion() error {
 	return nil
 }
 
-func (c *CmdTerraform) setup() error {
+func (c *CmdTarmak) setup() error {
 	type step struct {
 		log string
 		f   func() error
 	}
 
 	for _, s := range []step{
-		{"validating tarmak config", c.tarmak.Validate},
-		{"verifying tarmak config", c.tarmak.Verify},
-		{"writing SSH config", c.tarmak.writeSSHConfigForClusterHosts},
-		{"ensuring remote resources", c.tarmak.EnsureRemoteResources},
+		{"validating tarmak config", c.Validate},
+		{"verifying tarmak config", c.Verify},
+		{"writing SSH config", c.writeSSHConfigForClusterHosts},
+		{"ensuring remote resources", c.EnsureRemoteResources},
 	} {
 		c.log.Info(s.log)
 		if err := s.f(); err != nil {

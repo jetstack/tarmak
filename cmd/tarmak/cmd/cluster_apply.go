@@ -28,7 +28,7 @@ var clusterApplyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 
-		applyCmd := t.NewCmdTerraform(args)
+		applyCmd := t.NewCmdTarmak(args)
 
 		t.CancellationContext().WaitOrCancel(applyCmd.Apply)
 	},

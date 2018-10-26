@@ -3,23 +3,24 @@
 tarmak clusters images build
 ----------------------------
 
-build images
+build specific or all images missing
 
 Synopsis
 ~~~~~~~~
 
 
-build images
+build specific or all images missing
 
 ::
 
-  tarmak clusters images build [flags]
+  tarmak clusters images build [base names] [flags]
 
 Options
 ~~~~~~~
 
 ::
 
+  -A, --all    build all images regardless whether they already exist
   -h, --help   help for build
 
 Options inherited from parent commands

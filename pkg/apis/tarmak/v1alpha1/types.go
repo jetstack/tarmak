@@ -141,6 +141,7 @@ type Flags struct {
 type ClusterFlags struct {
 	Apply   ClusterApplyFlags   `json:"apply,omitempty"`   // flags for applying clusters
 	Destroy ClusterDestroyFlags `json:"destroy,omitempty"` // flags for destroying clusters
+	Images  ClusterImagesFlags  `json:"images,omitempty"`  // flags for handling images
 }
 
 // Contains the cluster apply flags
@@ -155,4 +156,14 @@ type ClusterApplyFlags struct {
 // Contains the cluster destroy flags
 type ClusterDestroyFlags struct {
 	DryRun bool `json:"dryRun,omitempty"` // just show what would be done
+}
+
+// Contains the cluster images flags
+type ClusterImagesFlags struct {
+	Build ClusterImagesBuildFlags `json:"build,omitempty"` // flags for handling building images
+}
+
+// Contains the cluster images build flags
+type ClusterImagesBuildFlags struct {
+	All bool `json:"all,omitempty"` // build all images regardless whether they exist
 }

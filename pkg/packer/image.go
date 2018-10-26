@@ -180,7 +180,7 @@ func (i *image) Build() (amiID string, err error) {
 			go func() {
 				select {
 				case <-i.ctx.Done():
-					i.log.Warnf("Attempting to cancel build '%s', please be patient while the builder shuts down.", build.Name())
+					i.log.Warnf("attempting to cancel build '%s', please be patient while the builder shuts down.", build.Name())
 					build.Cancel()
 					<-complete
 
