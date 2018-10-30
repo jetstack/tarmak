@@ -3,6 +3,7 @@ package vault
 
 import (
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/google/uuid"
+	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack/vault-unsealer/pkg/vault"
 	"github.com/sirupsen/logrus"
 
@@ -214,7 +217,24 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 		return err
 	}
 
-	cl := tunnels[0].VaultClient()
+	var cl *vault.Client
+	readyTunnelFunc := func() error {
+		for _, t := range tunnels {
+			if t.Status() != VaultStateErr {
+				cl = t.VaultClient()
+				return nil
+			}
+		}
+
+		return errors.New("failed to find a vault tunnel ready")
+	}
+
+	constBackoff := backoff.NewConstantBackOff(time.Second)
+	b := backoff.WithMaxTries(constBackoff, Retries)
+	err = backoff.Retry(readyTunnelFunc, b)
+	if err != nil {
+		return fmt.Errorf("failed to obtain vault tunnel: %s", err)
+	}
 
 	// get state of all instances
 	err = nil
