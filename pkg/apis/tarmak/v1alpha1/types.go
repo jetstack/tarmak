@@ -165,5 +165,5 @@ type ClusterImagesFlags struct {
 
 // Contains the cluster images build flags
 type ClusterImagesBuildFlags struct {
-	All bool `json:"all,omitempty"` // build all images regardless whether they exist
+	RebuildExisting bool `json:"rebuildExisting,omitempty"` // build all images regardless whether they already exist
 }

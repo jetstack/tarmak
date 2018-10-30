@@ -20,8 +20,8 @@ Options
 
 ::
 
-  -A, --all    build all images regardless whether they already exist
-  -h, --help   help for build
+  -h, --help               help for build
+  -R, --rebuild-existing   build all images regardless whether they already exist
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

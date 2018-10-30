@@ -158,7 +158,7 @@ func (c *CmdTarmak) ImagesBuild() error {
 	c.args = utils.RemoveDuplicateStrings(c.args)
 
 	// all flag so build the duplicated list of existing and given args
-	if c.flags.Cluster.Images.Build.All {
+	if c.flags.Cluster.Images.Build.RebuildExisting {
 		return c.packer.Build(
 			utils.RemoveDuplicateStrings(
 				append(requiredImages, c.args...),

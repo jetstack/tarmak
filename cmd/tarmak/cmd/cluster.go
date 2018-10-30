@@ -42,9 +42,9 @@ func clusterImagesBuildFlags(fs *flag.FlagSet) {
 	store := &globalFlags.Cluster.Images.Build
 
 	fs.BoolVarP(
-		&store.All,
-		"all",
-		"A",
+		&store.RebuildExisting,
+		"rebuild-existing",
+		"R",
 		false,
 		"build all images regardless whether they already exist",
 	)
