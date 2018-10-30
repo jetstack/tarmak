@@ -3,6 +3,7 @@ package vault
 
 import (
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/google/uuid"
+	vault "github.com/hashicorp/vault/api"
 	vaultUnsealer "github.com/jetstack/vault-unsealer/pkg/vault"
 	"github.com/sirupsen/logrus"
 
@@ -214,50 +217,77 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 		return err
 	}
 
-	cl := tunnels[0].VaultClient()
-
-	// get state of all instances
-	err = nil
-	for retries := Retries; retries > 0; retries-- {
-
-		time.Sleep(time.Second * 1)
-
-		health, err := cl.Sys().Health()
-		if err == nil {
-			if !health.Sealed {
+	var cl *vault.Client
+	readyTunnelFunc := func() error {
+		for _, t := range tunnels {
+			if t.Status() != VaultStateErr {
+				cl = t.VaultClient()
 				return nil
-			} else if !health.Initialized {
-
-				unsealer, err := vaultUnsealer.New(kv, cl, vaultUnsealer.Config{
-					KeyPrefix: "vault",
-
-					SecretShares:    1,
-					SecretThreshold: 1,
-
-					InitRootToken:  rootToken,
-					StoreRootToken: false,
-
-					OverwriteExisting: true,
-				})
-				if err != nil {
-					err = fmt.Errorf("error creating new unsealer: %s", err)
-					continue
-				}
-
-				err = unsealer.Init()
-				if err != nil {
-					err = fmt.Errorf("error initialising vault: %s", err)
-					continue
-				}
-				v.log.Info("vault succesfully initialised")
-				return nil
-			} else if health.Sealed {
-				v.log.Debug("a quorum of vault instances is sealed, retrying")
-			} else {
-				v.log.Debug("a quorum of vault instances is in unknown state, retrying")
 			}
+		}
+
+		return errors.New("failed to find a vault tunnel ready")
+	}
+
+	constBackoff := backoff.NewConstantBackOff(time.Second * 5)
+	b := backoff.WithMaxTries(constBackoff, Retries)
+	err = backoff.Retry(readyTunnelFunc, b)
+	if err != nil {
+		return fmt.Errorf("failed to obtain vault tunnel: %s", err)
+	}
+
+	initVaultFunc := func() error {
+		health, err := cl.Sys().Health()
+		if err != nil {
+			err = fmt.Errorf("failed to get vault status: %s", err)
+			v.log.Warn(err)
+			return err
+		}
+
+		if !health.Sealed {
+			return nil
+
+		} else if !health.Initialized {
+			unsealer, err := vaultUnsealer.New(kv, cl, vaultUnsealer.Config{
+				KeyPrefix: "vault",
+
+				SecretShares:    1,
+				SecretThreshold: 1,
+
+				InitRootToken:  rootToken,
+				StoreRootToken: false,
+
+				OverwriteExisting: true,
+			})
+			if err != nil {
+				return fmt.Errorf("error creating new unsealer connection: %s", err)
+			}
+
+			if err := unsealer.Init(); err != nil {
+				return fmt.Errorf("error initialising vault: %s", err)
+			}
+
+			v.log.Info("vault successfully initialised")
+
+			return nil
+
+		} else if health.Sealed {
+			err := errors.New("a quorum of vault instances is sealed, retrying")
+			v.log.Debug(err)
+			return err
+		} else {
+			err := errors.New("a quorum of vault instances is in unknown state, retrying")
+			v.log.Debug(err)
+			return err
 		}
 	}
 
-	return fmt.Errorf("time out verifying that vault cluster is initialiased and unsealed: %s", err)
+	constBackoff = backoff.NewConstantBackOff(time.Second * 5)
+	b = backoff.WithMaxTries(constBackoff, Retries)
+	err = backoff.Retry(initVaultFunc, b)
+	if err != nil {
+		return fmt.Errorf("time out verifying that vault cluster is initialised and unsealed: %s", err)
+	}
+
+	return nil
 }
