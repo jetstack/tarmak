@@ -157,7 +157,8 @@ func (c *CmdTarmak) ImagesBuild() error {
 	requiredImages := c.cluster.Images()
 	c.args = utils.RemoveDuplicateStrings(c.args)
 
-	// all flag so build the duplicated list of existing and given args
+	// rebuild existing flag so build the de-duplicated list of existing and
+	// given args
 	if c.flags.Cluster.Images.Build.RebuildExisting {
 		return c.packer.Build(
 			utils.RemoveDuplicateStrings(
@@ -172,7 +173,9 @@ func (c *CmdTarmak) ImagesBuild() error {
 
 	var currentImages []string
 	for _, i := range images {
-		currentImages = append(currentImages, i.BaseImage)
+		if c.cluster.AmazonEBSEncrypted() == i.Encrypted {
+			currentImages = append(currentImages, i.BaseImage)
+		}
 	}
 
 	var missingImages []string
