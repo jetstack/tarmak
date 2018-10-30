@@ -860,7 +860,10 @@ func (c *Cluster) PublicAPIHostname() string {
 }
 
 func (c *Cluster) Encrypted() bool {
-	return *c.conf.Amazon.EBSEncrypted
+	if a := c.conf.Amazon; a != nil && a.EBSEncrypted != nil {
+		return *a.EBSEncrypted
+	}
+	return false
 }
 
 func (c *Cluster) validateSubnets() error {

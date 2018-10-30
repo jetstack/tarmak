@@ -65,6 +65,7 @@ type Cluster interface {
 	// return public api hostname
 	PublicAPIHostname() string
 
+	// cluster uses encrypted base images
 	Encrypted() bool
 }
 
