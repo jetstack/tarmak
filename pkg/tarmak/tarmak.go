@@ -238,6 +238,10 @@ func (t *Tarmak) Clusters() (clusters []interfaces.Cluster) {
 	return clusters
 }
 
+func (t *Tarmak) Terraform() interfaces.Terraform {
+	return t.terraform
+}
+
 // this builds a temporary directory with the needed assets that are built into the go binary
 func (t *Tarmak) RootPath() (string, error) {
 	select {

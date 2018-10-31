@@ -13,7 +13,7 @@ var clusterForceUnlockCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 
-		t.CancellationContext().WaitOrCancel(t.NewCmdTerraform(args).ForceUnlock)
+		t.CancellationContext().WaitOrCancel(t.NewCmdTarmak(args).ForceUnlock)
 	},
 }
 

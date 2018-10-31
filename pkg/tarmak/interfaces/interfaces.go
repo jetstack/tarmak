@@ -196,7 +196,7 @@ type Config interface {
 type Packer interface {
 	IDs(encrypted bool) (map[string]string, error)
 	List() ([]tarmakv1alpha1.Image, error)
-	Build() error
+	Build(imageNames []string) error
 }
 
 type Terraform interface {

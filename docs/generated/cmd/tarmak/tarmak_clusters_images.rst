@@ -34,6 +34,6 @@ SEE ALSO
 ~~~~~~~~
 
 * `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
-* `tarmak clusters images build <tarmak_clusters_images_build.html>`_ 	 - build images
+* `tarmak clusters images build <tarmak_clusters_images_build.html>`_ 	 - build specific or all images missing
 * `tarmak clusters images list <tarmak_clusters_images_list.html>`_ 	 - list images
 

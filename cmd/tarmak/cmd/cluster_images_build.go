@@ -8,14 +8,15 @@ import (
 )
 
 var clusterImagesBuildCmd = &cobra.Command{
-	Use:   "build",
-	Short: "build images",
+	Use:   "build [base names]",
+	Short: "build specific or all images missing",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		t.CancellationContext().WaitOrCancel(t.Packer().Build)
+		t.CancellationContext().WaitOrCancel(t.NewCmdTarmak(args).ImagesBuild)
 	},
 }
 
 func init() {
+	clusterImagesBuildFlags(clusterImagesBuildCmd.PersistentFlags())
 	clusterImagesCmd.AddCommand(clusterImagesBuildCmd)
 }
