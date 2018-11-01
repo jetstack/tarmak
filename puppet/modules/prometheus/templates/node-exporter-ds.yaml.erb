@@ -35,7 +35,7 @@ spec:
           command:
           - /bin/sh
           - -c
-          - cp /bin/node_exporter /host/tmp/node_exporter/node_exporter && exec nsenter --mount=/host/proc/1/ns/mnt -- /tmp/node_exporter/node_exporter --web.listen-address=:<%= @port %> --collector.filesystem.ignored-mount-points "<%= @ignored_mount_points %>"
+          - cp /bin/node_exporter /host/tmp/node_exporter/node_exporter && exec nsenter --mount=/host/proc/1/ns/mnt -- /tmp/node_exporter/node_exporter --collector.systemd --web.listen-address=:<%= @port %> --collector.filesystem.ignored-mount-points "<%= @ignored_mount_points %>"
           volumeMounts:
             - name: proc
               mountPath: /host/proc
