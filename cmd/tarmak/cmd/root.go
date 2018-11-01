@@ -44,7 +44,7 @@ func Execute(args []string) {
 	command, commandArgs, err := RootCmd.Traverse(args)
 
 	// escape pass through commands (kubectl, ssh) if necessary
-	if err == nil && (command.Use == "kubectl" || command.Use == "ssh") {
+	if err == nil && (command.Use == clusterKubectlCmd.Use || command.Use == clusterSshCmd.Use) {
 		// if no escape exists already add one
 		if !stringSliceContains(commandArgs, "--") {
 			pos := len(args) - len(commandArgs)
