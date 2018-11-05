@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"path"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -13,7 +14,9 @@ import (
 )
 
 const (
-	S3HashObjest = "latest-puppet-hash"
+	S3HashObject   = "latest-puppet-hash"
+	S3HashDir      = "puppet-manifests"
+	S3LegacyObject = "puppet.tar.gz"
 )
 
 type Hash struct{}
@@ -24,8 +27,14 @@ func (h *Hash) GetManifest(hashPath string) (io.ReadCloser, error) {
 		return nil, err
 	}
 
+	// if we are pointing to the legacy object, change the key to point to the
+	// hash object directory to get the latest hash
 	bucket := manifestURL.Host
-	key := fmt.Sprintf("%s/%s", manifestURL.Path, S3HashObjest)
+	key := manifestURL.Path
+	if path.Base(manifestURL.Path) == S3LegacyObject {
+		key = path.Join(path.Dir(key), S3HashDir)
+	}
+	key = path.Join(key, S3HashObject)
 
 	cfg := aws.NewConfig()
 	awsSession := session.New(cfg)
@@ -42,7 +51,7 @@ func (h *Hash) GetManifest(hashPath string) (io.ReadCloser, error) {
 	b := new(bytes.Buffer)
 	b.ReadFrom(obj.Body)
 
-	key = fmt.Sprintf("%s/%s-puppet.tar.gz", manifestURL.Path, b.String())
+	key = fmt.Sprintf("%s/%s-puppet.tar.gz", path.Dir(key), b.String())
 	obj, err = s3Service.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),

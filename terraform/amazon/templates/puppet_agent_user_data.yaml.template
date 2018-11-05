@@ -38,7 +38,7 @@ write_files:
 {{- end }}
     ExecStart=/bin/sh -c '\
       set -e ;\
-      exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${puppet_manifest_bucket}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
+      exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${legacy_puppet_manifest}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
 
     [Install]
     WantedBy=multi-user.target

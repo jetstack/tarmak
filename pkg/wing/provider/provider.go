@@ -21,9 +21,9 @@ func GetManifest(log *logrus.Entry, manifestURL string) (io.ReadCloser, error) {
 	var result *multierror.Error
 
 	for _, p := range []Provider{
-		&hash.Hash{},
-		&s3.S3{},
-		&file.File{},
+		new(hash.Hash),
+		new(s3.S3),
+		new(file.File),
 	} {
 		rc, err := p.GetManifest(manifestURL)
 		if err != nil {
