@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 ExecStart=<%= @dest_dir %>/node_exporter \
+  --collector.systemd \
   --web.listen-address=:<%= @port %> \
   --collector.filesystem.ignored-mount-points "<%= @ignored_mount_points %>"
 Restart=on-failure

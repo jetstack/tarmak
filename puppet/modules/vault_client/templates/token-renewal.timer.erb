@@ -2,6 +2,7 @@
 Description=trigger vault token renewal service
 
 [Timer]
+OnBootSec=60
 OnUnitActiveSec=<%= @frequency %>
 Persistent=true
 
