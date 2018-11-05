@@ -35,7 +35,7 @@ describe 'fluent_bit::output', :type => :define do
     end
 
     it do
-      should_not contain_class('aws_es_proxy')
+      should contain_class('aws_es_proxy')
     end
 
     it 'should configure output right' do
@@ -108,7 +108,7 @@ describe 'fluent_bit::output', :type => :define do
     end
 
     it do
-      should_not contain_class('aws_es_proxy')
+      should contain_class('aws_es_proxy')
     end
 
     it 'should configure output right' do
@@ -139,7 +139,7 @@ describe 'fluent_bit::output', :type => :define do
     end
 
     it do
-      should_not contain_class('aws_es_proxy')
+      should contain_class('aws_es_proxy')
     end
 
     it 'should configure output right' do
