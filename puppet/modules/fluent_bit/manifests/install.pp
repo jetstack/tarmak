@@ -1,6 +1,8 @@
 class fluent_bit::install {
+  include ::fluent_bit::params
 
   include stdlib
+  $fluent_bit_version = $::fluent_bit::params::version
 
   ensure_resource('package', [$::fluent_bit::package_name, 'curl'],{
     ensure => present
@@ -14,7 +16,7 @@ class fluent_bit::install {
         owner   => 'root',
         group   => 'root',
         require => Package['curl'],
-        content => file('fluent_bit/td-agent-bit.repo'),
+        content => template('fluent_bit/td-agent-bit.repo.erb'),
       }
     }
     'Debian': {
