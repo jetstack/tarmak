@@ -110,7 +110,7 @@ func (c *CancellationContext) WaitOrCancelReturnCode(f func() (int, error)) {
 				wg.Done()
 				return
 			case <-time.After(time.Second * 3):
-				log.Warn("tarmak is shutting down")
+				log.Warn("tarmak is shutting down...")
 				log.Warn("* tarmak will attempt to kill the current task")
 				log.Warn("* send another SIGTERM or SIGINT (ctrl-c) to exit immediately")
 			}

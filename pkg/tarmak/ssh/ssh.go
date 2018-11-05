@@ -177,6 +177,7 @@ func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr
 		if e, ok := err.(*ssh.ExitError); ok {
 			return e.ExitStatus(), e
 		}
+
 		return -1, err
 	}
 
