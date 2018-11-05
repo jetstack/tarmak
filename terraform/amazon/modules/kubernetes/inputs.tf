@@ -93,11 +93,11 @@ variable "api_feature_gates" {
   type = "list"
 }
 
-variable "calico_feature_gates"{
+variable "calico_feature_gates" {
   type = "list"
 }
 
-variable "kubelet_feature_gates"{
+variable "kubelet_feature_gates" {
   type = "list"
 }
 
