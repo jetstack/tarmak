@@ -360,10 +360,10 @@ write_files:
     backup_s3_path="$${backup_s3_prefix}/consul-backup"
     backup_s3_acls_path="$${backup_s3_prefix}/consul-backup-acls"
 
-    aws s3 cp "$${backup_local_path}"          "$${backup_s3_path}"
-    aws s3 cp "$${backup_local_path}.sig"      "$${backup_s3_path}.sig"
-    aws s3 cp "$${backup_local_acls_path}"     "$${backup_s3_acls_path}"
-    aws s3 cp "$${backup_local_acls_path}.sig" "$${backup_s3_acls_path}.sig"
+    aws s3 cp --sse aws:kms "$${backup_local_path}"          "$${backup_s3_path}"
+    aws s3 cp --sse aws:kms "$${backup_local_path}.sig"      "$${backup_s3_path}.sig"
+    aws s3 cp --sse aws:kms "$${backup_local_acls_path}"     "$${backup_s3_acls_path}"
+    aws s3 cp --sse aws:kms "$${backup_local_acls_path}.sig" "$${backup_s3_acls_path}.sig"
 
     rm -rf "$${backup_local_path}" "$${backup_local_path}.sig" "$${backup_local_acls_path}" "$${backup_local_acls_path}.sig"
 
