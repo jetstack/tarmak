@@ -40,10 +40,25 @@ func (a *Amazon) UploadConfiguration(cluster interfaces.Cluster, stateFile io.Re
 		return err
 	}
 
-	dirPath := filepath.Join(cluster.ClusterName(), "puppet-manifests")
-	manifestKey := filepath.Join(dirPath, fmt.Sprintf("%s-puppet.tar.gz", md5Hash))
-	hashPointerKey := filepath.Join(dirPath, "latest-puppet-hash")
+	manifestKey := filepath.Join(cluster.ClusterName(), "puppet.tar.gz")
+	_, err = svc.PutObject(&s3.PutObjectInput{
+		Bucket:               aws.String(bucketName),
+		Key:                  aws.String(manifestKey),
+		Body:                 stateFile,
+		ServerSideEncryption: aws.String(s3.ServerSideEncryptionAwsKms),
+		SSEKMSKeyId:          aws.String(*k.KeyMetadata.Arn),
+	})
+	if err != nil {
+		return err
+	}
 
+	if _, err := stateFile.Seek(0, 0); err != nil {
+		return fmt.Errorf("failed to rewind puppet state file: %s", err)
+	}
+
+	dirPath := filepath.Join(cluster.ClusterName(), "puppet-manifests")
+	hashPointerKey := filepath.Join(dirPath, "latest-puppet-hash")
+	manifestKey = filepath.Join(dirPath, fmt.Sprintf("%s-puppet.tar.gz", md5Hash))
 	_, err = svc.PutObject(&s3.PutObjectInput{
 		Bucket:               aws.String(bucketName),
 		Key:                  aws.String(manifestKey),
