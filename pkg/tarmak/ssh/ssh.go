@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -30,6 +31,34 @@ func New(tarmak interfaces.Tarmak) *SSH {
 	}
 
 	return s
+}
+
+func (s *SSH) Validate() error {
+	var result *multierror.Error
+
+	for _, path := range []string{
+		s.tarmak.Cluster().SSHConfigPath(),
+		s.tarmak.Environment().SSHPrivateKeyPath(),
+	} {
+
+		f, err := os.Stat(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+
+			result = multierror.Append(result, fmt.Errorf("failed to get '%s' file stat: %v", path, err))
+			continue
+		}
+
+		if (f.Mode() & 0077) != 0 {
+			err := fmt.Errorf("'%s' does not match permissions (0600): %v", path, f.Mode())
+			result = multierror.Append(result, err)
+			continue
+		}
+	}
+
+	return result.ErrorOrNil()
 }
 
 func (s *SSH) WriteConfig(c interfaces.Cluster) error {

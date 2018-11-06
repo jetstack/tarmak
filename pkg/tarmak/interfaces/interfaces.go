@@ -209,6 +209,7 @@ type SSH interface {
 	PassThrough([]string)
 	Tunnel(hostname string, destination string, destinationPort int) Tunnel
 	Execute(host string, cmd string, args []string) (returnCode int, err error)
+	Validate() error
 }
 
 type Tunnel interface {
@@ -244,6 +245,7 @@ type Vault interface {
 	RootToken() (string, error)
 	TunnelFromFQDNs(vaultInternalFQDNs []string, vaultCA string) (VaultTunnel, error)
 	VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, vaultUnsealKeyName string) error
+	Validate() error
 }
 
 type InstancePool interface {
