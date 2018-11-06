@@ -4,6 +4,7 @@ package terraform
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -411,14 +412,18 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 		}
 	}
 
-	isDestroyingEBSVolume, ebsVolumesToDestroy := tfPlan.IsDestroyingEBSVolume()
-	if !preApply || !isDestroyingEBSVolume {
-		return changesNeeded, err
+	destroyingEBSVolume, ebsVolumesToDestroy := tfPlan.IsDestroyingEBSVolume()
+	if !destroyingEBSVolume {
+		return changesNeeded, nil
 	}
 
 	destroyStr := fmt.Sprintf(
-		"the following EBS volumes will be destroyed during the next apply: %s",
+		"the following EBS volumes will be destroyed during the next apply: [%s]",
 		strings.Join(ebsVolumesToDestroy, ", "))
+
+	if !preApply {
+		return changesNeeded, errors.New(destroyStr)
+	}
 
 	if t.tarmak.ClusterFlags().Apply.AutoApproveDeletingData || t.tarmak.ClusterFlags().Apply.AutoApprove {
 		t.log.Warnf("auto approved deleting, %s", destroyStr)
