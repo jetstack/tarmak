@@ -43,10 +43,6 @@ type Terraform struct {
 	ctx    interfaces.CancellationContext
 
 	socketPath string
-
-	// if dryRun we are only running `plan`
-	// this prevents querying actions that effect changing remote state
-	dryRun bool
 }
 
 func New(tarmak interfaces.Tarmak) *Terraform {
@@ -56,7 +52,6 @@ func New(tarmak interfaces.Tarmak) *Terraform {
 		log:    log,
 		tarmak: tarmak,
 		ctx:    tarmak.CancellationContext(),
-		dryRun: true,
 	}
 }
 
@@ -385,7 +380,7 @@ func errIsTerraformPlanChangesNeeded(err error) bool {
 	return true
 }
 
-func (t *Terraform) Plan(cluster interfaces.Cluster) (changesNeeded bool, err error) {
+func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeeded bool, err error) {
 	err = t.terraformWrapper(
 		cluster,
 		"plan",
@@ -407,7 +402,7 @@ func (t *Terraform) Plan(cluster interfaces.Cluster) (changesNeeded bool, err er
 	}
 
 	destoryStr := fmt.Sprintf("the following EBS volumes will be destroyed during the next apply: %s", strings.Join(ebsVolumesToDestroy, ", "))
-	if t.dryRun {
+	if !preApply {
 		return changesNeeded, errors.New(destoryStr)
 	}
 
@@ -434,11 +429,10 @@ func (t *Terraform) Plan(cluster interfaces.Cluster) (changesNeeded bool, err er
 }
 
 func (t *Terraform) Apply(cluster interfaces.Cluster) error {
-	t.dryRun = false
 	// TODO: handle supplied plan
 
 	// generate a plan
-	if changesNeeded, err := t.Plan(cluster); err != nil {
+	if changesNeeded, err := t.Plan(cluster, true); err != nil {
 		return err
 	} else if !changesNeeded {
 		// nothing to do
@@ -461,8 +455,6 @@ func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 }
 
 func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
-	t.dryRun = false
-
 	return t.terraformWrapper(
 		cluster,
 		"destroy",
@@ -471,8 +463,6 @@ func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
 }
 
 func (t *Terraform) ForceUnlock(cluster interfaces.Cluster, lockID string) error {
-	t.dryRun = false
-
 	return t.terraformWrapper(
 		cluster,
 		"force-unlock",
