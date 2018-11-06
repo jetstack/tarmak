@@ -43,7 +43,10 @@ type Terraform struct {
 	ctx    interfaces.CancellationContext
 
 	socketPath string
-	dryrun     bool
+
+	// if dryRun we are only running `plan`
+	// this prevents querying actions that effect changing remote state
+	dryRun bool
 }
 
 func New(tarmak interfaces.Tarmak) *Terraform {
@@ -53,7 +56,7 @@ func New(tarmak interfaces.Tarmak) *Terraform {
 		log:    log,
 		tarmak: tarmak,
 		ctx:    tarmak.CancellationContext(),
-		dryrun: true,
+		dryRun: true,
 	}
 }
 
@@ -404,35 +407,34 @@ func (t *Terraform) Plan(cluster interfaces.Cluster) (changesNeeded bool, err er
 	}
 
 	destoryStr := fmt.Sprintf("the following EBS volumes will be destroyed during the next apply: %s", strings.Join(ebsVolumesToDestroy, ", "))
-	if t.dryrun {
+	if t.dryRun {
 		return changesNeeded, errors.New(destoryStr)
 	}
 
 	if t.tarmak.ClusterFlags().Apply.AutoApproveDeletingData || t.tarmak.ClusterFlags().Apply.AutoApprove {
 		t.log.Warnf("auto approved deleting, %s", destoryStr)
-
-	} else {
-		query := fmt.Sprintf("%s\nThis cannot be undone. Are you sure you want to continue?", destoryStr)
-		d, err := input.New(os.Stdin, os.Stdout).AskYesNo(&input.AskYesNo{
-			Default: false,
-			Query:   query,
-		})
-		if err != nil {
-			return changesNeeded, err
-		}
-
-		if d {
-			t.log.Warnf(destoryStr)
-		} else {
-			return changesNeeded, fmt.Errorf("error: %s", destoryStr)
-		}
+		return changesNeeded, nil
 	}
 
+	query := fmt.Sprintf("%s\nThis cannot be undone. Are you sure you want to continue?", destoryStr)
+	d, err := input.New(os.Stdin, os.Stdout).AskYesNo(&input.AskYesNo{
+		Default: false,
+		Query:   query,
+	})
+	if err != nil {
+		return changesNeeded, err
+	}
+
+	if !d {
+		return changesNeeded, fmt.Errorf("error: %s", destoryStr)
+	}
+
+	t.log.Warnf(destoryStr)
 	return changesNeeded, nil
 }
 
 func (t *Terraform) Apply(cluster interfaces.Cluster) error {
-	t.dryrun = false
+	t.dryRun = false
 	// TODO: handle supplied plan
 
 	// generate a plan
@@ -459,7 +461,7 @@ func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 }
 
 func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
-	t.dryrun = false
+	t.dryRun = false
 
 	return t.terraformWrapper(
 		cluster,
@@ -469,7 +471,7 @@ func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
 }
 
 func (t *Terraform) ForceUnlock(cluster interfaces.Cluster, lockID string) error {
-	t.dryrun = false
+	t.dryRun = false
 
 	return t.terraformWrapper(
 		cluster,
