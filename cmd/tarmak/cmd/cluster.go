@@ -35,14 +35,14 @@ func clusterApplyFlags(fs *flag.FlagSet) {
 	fs.BoolVar(
 		&store.AutoApprove,
 		"auto-approve",
-		false,
+		true,
 		"auto approve to responses when applying cluster",
 	)
 
 	fs.BoolVar(
 		&store.AutoApproveDeletingData,
 		"auto-approve-deleting-data",
-		false,
+		true,
 		"auto approve deletion of any data as a cause from applying cluster",
 	)
 }
