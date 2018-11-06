@@ -49,6 +49,7 @@ func (in *ClusterFlags) DeepCopyInto(out *ClusterFlags) {
 	out.Apply = in.Apply
 	out.Destroy = in.Destroy
 	out.Images = in.Images
+	out.Kubeconfig = in.Kubeconfig
 	return
 }
 
