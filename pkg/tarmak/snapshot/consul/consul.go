@@ -5,9 +5,12 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
@@ -18,14 +21,11 @@ import (
 var _ interfaces.Snapshot = &Consul{}
 
 const (
-	snapshotTimeLayout = "2006-01-02_15-04-05"
+	consulCmd = "consul snapshot %s %s > /dev/null;"
 )
 
 var (
-	exportCmd = []string{
-		"export",
-		"CONSUL_HTTP_TOKEN=$(sudo cat /etc/consul/consul.json | jq -r '.acl_master_token');",
-	}
+	envCmd = []string{"CONSUL_HTTP_TOKEN=$(sudo cat /etc/consul/consul.json | jq -r '.acl_master_token')"}
 )
 
 type Consul struct {
@@ -54,27 +54,33 @@ func (c *Consul) Save() error {
 	c.aliases = aliases
 
 	c.log.Infof("saving snapshot from instance %s", aliases[0])
-	targetPath := fmt.Sprintf("/tmp/consul-snapshot-%s.snap", time.Now().Format(snapshotTimeLayout))
 
-	cmdArgs := append(exportCmd, "consul", "snapshot", "save", targetPath)
+	var result *multierror.Error
+	var errLock sync.Mutex
+
+	reader, writer := io.Pipe()
+	go snapshot.ReadTarFromStream(c.path, reader, result, errLock)
+
+	hostPath := fmt.Sprintf("/tmp/consul-snapshot-%s.snap",
+		time.Now().Format(snapshot.TimeLayout))
+	cmdArgs := append(envCmd,
+		strings.Split(fmt.Sprintf(consulCmd, "save", hostPath), " ")...)
+	cmdArgs = append(cmdArgs,
+		strings.Split(fmt.Sprintf(snapshot.TarCCmd, hostPath), " ")...)
+
 	err = c.sshCmd(
 		aliases[0],
-		cmdArgs[0],
-		cmdArgs[1:],
+		cmdArgs,
+		nil,
+		writer,
 	)
 	if err != nil {
 		return err
 	}
 
-	ret, err := c.ssh.ScpToLocal(aliases[0], targetPath, c.path)
-	if ret != 0 {
-		cmdStr := fmt.Sprintf("%s", strings.Join(cmdArgs, " "))
-		return fmt.Errorf("command [%s] returned non-zero: %d, %s", cmdStr, ret, err)
-	}
-
 	c.log.Infof("consul snapshot saved to %s", c.path)
 
-	return err
+	return nil
 }
 
 func (c *Consul) Restore() error {
@@ -86,18 +92,27 @@ func (c *Consul) Restore() error {
 
 	for _, a := range aliases {
 		c.log.Infof("restoring snapshot to instance %s", a)
-		targetPath := fmt.Sprintf("/tmp/consul-snapshot-%s.snap", time.Now().Format(snapshotTimeLayout))
 
-		ret, err := c.ssh.ScpToHost(a, c.path, targetPath)
-		if ret != 0 {
-			return fmt.Errorf("command scp returned non-zero: %d, %s", ret, err)
-		}
+		hostPath := fmt.Sprintf("/tmp/consul-snapshot-%s.snap",
+			time.Now().Format(snapshot.TimeLayout))
 
-		cmdArgs := append(exportCmd, "consul", "snapshot", "restore", targetPath)
+		cmdArgs := strings.Split(fmt.Sprintf(snapshot.TarXCmd, hostPath), " ")
+		//cmdArgs := strings.Split(snapshot.TarXCmd, " ")
+		//cmdArgs = append(cmdArgs,
+		//	append(envCmd,
+		//		strings.Split(fmt.Sprintf(consulCmd, "restore", hostPath), " ")...)...)
+
+		var result *multierror.Error
+		var errLock sync.Mutex
+
+		reader, writer := io.Pipe()
+		go snapshot.WriteTarToStream(c.path, writer, result, errLock)
+
 		err = c.sshCmd(
 			a,
-			cmdArgs[0],
-			cmdArgs[1:],
+			cmdArgs,
+			reader,
+			os.Stdout,
 		)
 		if err != nil {
 			return err
@@ -106,20 +121,12 @@ func (c *Consul) Restore() error {
 
 	c.log.Infof("consul snapshot restored from %s", c.path)
 
-	return err
+	return nil
 }
 
-func (c *Consul) sshCmd(host, command string, args []string) error {
-	readerO, writerO := io.Pipe()
+func (c *Consul) sshCmd(host string, args []string, stdin io.Reader, stdout io.Writer) error {
 	readerE, writerE := io.Pipe()
-	scannerO := bufio.NewScanner(readerO)
 	scannerE := bufio.NewScanner(readerE)
-
-	go func() {
-		for scannerO.Scan() {
-			c.log.WithField("std", "out").Debug(scannerO.Text())
-		}
-	}()
 
 	go func() {
 		for scannerE.Scan() {
@@ -127,10 +134,9 @@ func (c *Consul) sshCmd(host, command string, args []string) error {
 		}
 	}()
 
-	ret, err := c.ssh.ExecuteWithWriter(host, command, args, writerO, writerE)
+	ret, err := c.ssh.ExecuteWithPipe(host, args[0], args[1:], stdin, stdout, writerE)
 	if ret != 0 {
-		cmdStr := fmt.Sprintf("%s %s", command, strings.Join(args, " "))
-		return fmt.Errorf("command [%s] returned non-zero: %d", cmdStr, ret)
+		return fmt.Errorf("command [%s] returned non-zero: %d", strings.Join(args, " "), ret)
 	}
 
 	return err

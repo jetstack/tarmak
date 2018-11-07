@@ -3,15 +3,12 @@ package etcd
 
 import (
 	"bufio"
-	"compress/gzip"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
-	//"github.com/docker/docker/pkg/archive"
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 
@@ -23,10 +20,7 @@ import (
 var _ interfaces.Snapshot = &Etcd{}
 
 const (
-	snapshotTimeLayout = "2006-01-02_15-04-05"
-
 	etcdctlCmd = "/opt/bin/etcdctl snapshot %s %s > /dev/null;"
-	tarCmd     = "tar -czPf - %s"
 )
 
 var (
@@ -36,7 +30,7 @@ var (
 		{"store": "overlay", "file": "overlay", "port": "2359"},
 	}
 
-	exportCmd = []string{
+	envCmd = []string{
 		"ETCDCTL_CERT=/etc/etcd/ssl/etcd-{{file}}.pem",
 		"ETCDCTL_KEY=/etc/etcd/ssl/etcd-{{file}}-key.pem",
 		"ETCDCTL_CACERT=/etc/etcd/ssl/etcd-{{file}}-ca.pem",
@@ -53,7 +47,6 @@ type Etcd struct {
 
 	path    string
 	aliases []string
-	errLock sync.Mutex // prevent multiple writes to result error
 }
 
 func New(tarmak interfaces.Tarmak, path string) *Etcd {
@@ -77,21 +70,22 @@ func (e *Etcd) Save() error {
 
 	var wg sync.WaitGroup
 	var result *multierror.Error
+	var errLock sync.Mutex
 
 	saveFunc := func(store map[string]string) {
 		defer wg.Done()
 
-		hostPath := fmt.Sprintf("/tmp/etcd-snapshot-%s-%s.db",
-			store["store"], time.Now().Format(snapshotTimeLayout))
 		targetPath := fmt.Sprintf("%s%s.db", e.path, store["store"])
 
-		cmdArgs := append(e.template(exportCmd, store),
+		reader, writer := io.Pipe()
+		go snapshot.ReadTarFromStream(targetPath, reader, result, errLock)
+
+		hostPath := fmt.Sprintf("/tmp/etcd-snapshot-%s-%s.db",
+			store["store"], time.Now().Format(snapshot.TimeLayout))
+		cmdArgs := append(e.template(envCmd, store),
 			strings.Split(fmt.Sprintf(etcdctlCmd, "save", hostPath), " ")...)
 		cmdArgs = append(cmdArgs,
-			strings.Split(fmt.Sprintf(tarCmd, hostPath), " ")...)
-
-		reader, writer := io.Pipe()
-		go e.readTarFromStream(targetPath, reader, result)
+			strings.Split(fmt.Sprintf(snapshot.TarCCmd, hostPath), " ")...)
 
 		err = e.sshCmd(
 			aliases[0],
@@ -100,9 +94,9 @@ func (e *Etcd) Save() error {
 		)
 		if err != nil {
 
-			e.errLock.Lock()
+			errLock.Lock()
 			result = multierror.Append(result, err)
-			e.errLock.Unlock()
+			errLock.Unlock()
 
 			return
 		}
@@ -154,44 +148,12 @@ func (e *Etcd) sshCmd(host string, args []string, stdout io.Writer) error {
 	}()
 
 	args = append([]string{"sudo"}, args...)
-	ret, err := e.ssh.ExecuteWithWriter(host, args[0], args[1:], stdout, writerE)
+	ret, err := e.ssh.ExecuteWithPipe(host, args[0], args[1:], nil, stdout, writerE)
 	if ret != 0 {
-		cmdStr := fmt.Sprintf("%s", strings.Join(args, " "))
-		return fmt.Errorf("command [%s] returned non-zero: %d", cmdStr, ret)
+		return fmt.Errorf("command [%s] returned non-zero: %d", strings.Join(args, " "), ret)
 	}
 
 	return err
-}
-
-func (e *Etcd) readTarFromStream(dest string, stream io.Reader, result *multierror.Error) {
-	gzr, err := gzip.NewReader(stream)
-	if err != nil {
-
-		e.errLock.Lock()
-		result = multierror.Append(result, err)
-		e.errLock.Unlock()
-
-		return
-	}
-
-	f, err := os.Create(dest)
-	if err != nil {
-
-		e.errLock.Lock()
-		result = multierror.Append(result, err)
-		e.errLock.Unlock()
-
-		return
-	}
-
-	if _, err := io.Copy(f, gzr); err != nil {
-
-		e.errLock.Lock()
-		result = multierror.Append(result, err)
-		e.errLock.Unlock()
-
-		return
-	}
 }
 
 func (e *Etcd) template(args []string, vars map[string]string) []string {
