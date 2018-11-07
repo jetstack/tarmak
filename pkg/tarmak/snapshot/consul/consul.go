@@ -1,3 +1,4 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 package consul
 
 import (
@@ -36,7 +37,7 @@ type Consul struct {
 	aliases []string
 }
 
-func NewConsul(tarmak interfaces.Tarmak, path string) *Consul {
+func New(tarmak interfaces.Tarmak, path string) *Consul {
 	return &Consul{
 		tarmak: tarmak,
 		ssh:    tarmak.SSH(),

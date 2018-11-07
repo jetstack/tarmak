@@ -22,8 +22,8 @@ var clusterSnapshotConsulRestoreCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		c := consul.NewConsul(t, args[0])
-		t.CancellationContext().WaitOrCancel(t.NewCmdSnapshot(cmd.Flags(), args, c).Restore)
+		s := consul.New(t, args[0])
+		t.CancellationContext().WaitOrCancel(t.NewCmdSnapshot(cmd.Flags(), args, s).Restore)
 	},
 }
 

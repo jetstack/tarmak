@@ -10,12 +10,12 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/snapshot/etcd"
 )
 
-var clusterSnapshotEtcdSaveCmd = &cobra.Command{
-	Use:   "save [target path prefix]",
-	Short: "save etcd snapshot to target path prefix, i.e 'backup-'",
+var clusterSnapshotEtcdRestoreCmd = &cobra.Command{
+	Use:   "restore [source path]",
+	Short: "restore etcd cluster with source snapshot",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
-			return fmt.Errorf("expecting single target path, got=%d", len(args))
+			return fmt.Errorf("expecting single source path, got=%d", len(args))
 		}
 
 		return nil
@@ -23,10 +23,10 @@ var clusterSnapshotEtcdSaveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
 		s := etcd.New(t, args[0])
-		t.CancellationContext().WaitOrCancel(t.NewCmdSnapshot(cmd.Flags(), args, s).Save)
+		t.CancellationContext().WaitOrCancel(t.NewCmdSnapshot(cmd.Flags(), args, s).Restore)
 	},
 }
 
 func init() {
-	clusterSnapshotEtcdCmd.AddCommand(clusterSnapshotEtcdSaveCmd)
+	clusterSnapshotEtcdCmd.AddCommand(clusterSnapshotEtcdRestoreCmd)
 }

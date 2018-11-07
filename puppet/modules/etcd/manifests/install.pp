@@ -33,5 +33,8 @@ define etcd::install (
     creates => "${dest_dir}/etcd",
     path    => ['/usr/bin/', '/bin'],
   }
-
+  -> file { "${bin_dir}/etcdctl":
+      ensure => 'link',
+      target => "${dest_dir}/etcdctl",
+  }
 }

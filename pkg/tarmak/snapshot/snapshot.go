@@ -1,3 +1,4 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 package snapshot
 
 import (
@@ -41,7 +42,7 @@ func Prepare(tarmak interfaces.Tarmak, role string) (aliases []string, err error
 	}
 
 	if len(aliases) == 0 {
-		return nil, fmt.Errorf("no host aliases were found with the role %s", role)
+		return nil, fmt.Errorf("no host aliases were found with role %s", role)
 	}
 
 	return aliases, result.ErrorOrNil()
