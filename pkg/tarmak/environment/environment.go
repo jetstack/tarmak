@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -119,26 +118,6 @@ func (e *Environment) Cluster(name string) (interfaces.Cluster, error) {
 		}
 	}
 	return nil, fmt.Errorf("cluster '%s' in environment '%s' not found", name, e.Name())
-}
-
-func (e *Environment) validateSSHKey() error {
-	bytes, err := ioutil.ReadFile(e.SSHPrivateKeyPath())
-	if err != nil {
-		return fmt.Errorf("unable to read ssh private key: %s", err)
-	}
-
-	block, _ := pem.Decode(bytes)
-	if block == nil {
-		return errors.New("failed to parse PEM block containing the ssh private key")
-	}
-
-	e.sshKeyPrivate, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return fmt.Errorf("unable to parse private key: %s", err)
-	}
-
-	return fmt.Errorf("please implement me !!!")
-
 }
 
 func (e *Environment) Variables() map[string]interface{} {
@@ -277,7 +256,8 @@ func (e *Environment) Log() *logrus.Entry {
 	return e.log
 }
 
-func (e *Environment) Validate() (result error) {
+func (e *Environment) Validate() error {
+	var result *multierror.Error
 
 	if err := e.Provider().Validate(); err != nil {
 		result = multierror.Append(result, err)
@@ -287,7 +267,11 @@ func (e *Environment) Validate() (result error) {
 		result = multierror.Append(result, err)
 	}
 
-	return result
+	if err := e.tarmak.SSH().Validate(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result.ErrorOrNil()
 }
 
 func (e *Environment) ValidateAdminCIDRs() (result error) {
