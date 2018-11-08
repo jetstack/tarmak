@@ -1,7 +1,7 @@
 resource "tarmak_vault_cluster" "vault" {
   internal_fqdns        = ["${var.internal_fqdns}"]
   vault_ca              = "${var.vault_ca}"
-  vault_kms_key_id      = "${var.vault_kms_key_id}"
+  vault_kms_key_id      = "${element(split("/", var.vault_kms_key_id), 1)}"
   vault_unseal_key_name = "${var.vault_unseal_key_name}"
 }
 

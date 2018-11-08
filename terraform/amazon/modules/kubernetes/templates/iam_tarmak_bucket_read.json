@@ -8,7 +8,17 @@
       "Effect": "Allow",
       "Resource": [
         "arn:aws:s3:::${puppet_tar_gz_bucket_path}",
+        "arn:aws:s3:::${legacy_puppet_tar_gz_bucket_path}",
         "arn:aws:s3:::${wing_binary_path}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Resource": [
+          "${vault_kms_key_id}"
       ]
     }
   ],

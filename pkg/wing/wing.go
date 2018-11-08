@@ -112,8 +112,7 @@ func (w *Wing) Run(args []string) error {
 	<-w.stopCh
 	w.convergeWG.Wait()
 
-	return nil
-
+	return err
 }
 
 func (w *Wing) Must(err error) *Wing {

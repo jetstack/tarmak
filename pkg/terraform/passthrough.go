@@ -198,3 +198,12 @@ func Validate(args []string, stopCh <-chan struct{}) int {
 	}
 	return c.Run(args)
 }
+
+func Taint(args []string, stopCh <-chan struct{}) int {
+	passthroughPrepare()
+	defer passthroughCleanup()
+	c := &command.TaintCommand{
+		Meta: newMeta(newUI(os.Stdout, os.Stderr), stopCh),
+	}
+	return c.Run(args)
+}

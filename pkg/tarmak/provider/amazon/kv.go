@@ -9,6 +9,10 @@ import (
 	"github.com/jetstack/vault-unsealer/pkg/kv/aws_ssm"
 )
 
+func (a *Amazon) SecretsKMSName() string {
+	return fmt.Sprintf("alias/tarmak/%s/secrets", a.tarmak.Environment().Name())
+}
+
 func (a *Amazon) secretsKMSKeyID() (string, error) {
 	output, err := a.tarmak.Cluster().Environment().Hub().TerraformOutput()
 	if err != nil {

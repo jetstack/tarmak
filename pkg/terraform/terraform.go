@@ -43,6 +43,7 @@ type Terraform struct {
 	ctx    interfaces.CancellationContext
 
 	socketPath string
+	prepared   bool
 }
 
 func New(tarmak interfaces.Tarmak) *Terraform {
@@ -189,8 +190,12 @@ func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string,
 		t.socketPath = f.Name()
 	}
 
-	if err := t.Prepare(cluster); err != nil {
-		return fmt.Errorf("failed to prepare terraform: %s", err)
+	if !t.prepared {
+		if err := t.Prepare(cluster); err != nil {
+			return fmt.Errorf("failed to prepare terraform: %s", err)
+		}
+
+		t.prepared = true
 	}
 
 	// listen to rpc
@@ -391,27 +396,41 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 		return false, err
 	}
 
-	tfPlan, err := plan.Open(t.terraformPlanPath(cluster))
+	tfPlan, err := plan.New(t.terraformPlanPath(cluster))
 	if err != nil {
 		return false, fmt.Errorf("error while trying to read plan file: %s", err)
 	}
 
-	isDestroyingEBSVolume, ebsVolumesToDestroy := plan.IsDestroyingEBSVolume(tfPlan)
-	if !isDestroyingEBSVolume {
+	if tfPlan.UpdatingPuppet() {
+		t.log.Info("tainting legacy s3 puppet module object to force update")
+
+		if err := t.terraformWrapper(cluster, "taint", []string{
+			"-allow-missing", "-module=kubernetes",
+			cluster.Environment().Provider().LegacyPuppetTFName(),
+		}); err != nil {
+			return changesNeeded, err
+		}
+	}
+
+	destroyingEBSVolume, ebsVolumesToDestroy := tfPlan.IsDestroyingEBSVolume()
+	if !destroyingEBSVolume {
 		return changesNeeded, nil
 	}
 
-	destoryStr := fmt.Sprintf("the following EBS volumes will be destroyed during the next apply: %s", strings.Join(ebsVolumesToDestroy, ", "))
+	destroyStr := fmt.Sprintf(
+		"the following EBS volumes will be destroyed during the next apply: [%s]",
+		strings.Join(ebsVolumesToDestroy, ", "))
+
 	if !preApply {
-		return changesNeeded, errors.New(destoryStr)
+		return changesNeeded, errors.New(destroyStr)
 	}
 
 	if t.tarmak.ClusterFlags().Apply.AutoApproveDeletingData || t.tarmak.ClusterFlags().Apply.AutoApprove {
-		t.log.Warnf("auto approved deleting, %s", destoryStr)
+		t.log.Warnf("auto approved deleting, %s", destroyStr)
 		return changesNeeded, nil
 	}
 
-	query := fmt.Sprintf("%s\nThis cannot be undone. Are you sure you want to continue?", destoryStr)
+	query := fmt.Sprintf("%s\nThis cannot be undone. Are you sure you want to continue?", destroyStr)
 	d, err := input.New(os.Stdin, os.Stdout).AskYesNo(&input.AskYesNo{
 		Default: false,
 		Query:   query,
@@ -421,10 +440,10 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 	}
 
 	if !d {
-		return changesNeeded, fmt.Errorf("error: %s", destoryStr)
+		return changesNeeded, fmt.Errorf("error: %s", destroyStr)
 	}
 
-	t.log.Warnf(destoryStr)
+	t.log.Warn(destroyStr)
 	return changesNeeded, nil
 }
 

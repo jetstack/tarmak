@@ -4,8 +4,6 @@ package plan
 import (
 	"reflect"
 	"testing"
-
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func expResources() map[string]bool {
@@ -18,8 +16,8 @@ func expResources() map[string]bool {
 
 }
 
-func openReadPlan(t *testing.T, testCase string) *terraform.Plan {
-	plan, err := Open(testCase)
+func NewTest(t *testing.T, testCase string) *Plan {
+	plan, err := New(testCase)
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
@@ -27,7 +25,7 @@ func openReadPlan(t *testing.T, testCase string) *terraform.Plan {
 }
 
 func TestIsDestroyedCreate(t *testing.T) {
-	isDestroyed, resourceNames := IsDestroyingEBSVolume(openReadPlan(t, "test_data/create.plan"))
+	isDestroyed, resourceNames := NewTest(t, "test_data/create.plan").IsDestroyingEBSVolume()
 
 	if exp, act := false, isDestroyed; exp != act {
 		t.Errorf("unexpected value exp=%+v\n act=%+v\n", exp, act)
@@ -40,7 +38,7 @@ func TestIsDestroyedCreate(t *testing.T) {
 }
 
 func TestIsDestroyedTainted(t *testing.T) {
-	isDestroyed, resourceNames := IsDestroyingEBSVolume(openReadPlan(t, "test_data/tainted.plan"))
+	isDestroyed, resourceNames := NewTest(t, "test_data/tainted.plan").IsDestroyingEBSVolume()
 
 	if exp, act := true, isDestroyed; exp != act {
 		t.Errorf("unexpected value exp=%+v\n act=%+v\n", exp, act)
@@ -57,7 +55,7 @@ func TestIsDestroyedTainted(t *testing.T) {
 }
 
 func TestIsDestroyedModify(t *testing.T) {
-	isDestroyed, resourceNames := IsDestroyingEBSVolume(openReadPlan(t, "test_data/modify.plan"))
+	isDestroyed, resourceNames := NewTest(t, "test_data/modify.plan").IsDestroyingEBSVolume()
 
 	if exp, act := false, isDestroyed; exp != act {
 		t.Errorf("unexpected value exp=%+v\n act=%+v\n", exp, act)
@@ -70,7 +68,7 @@ func TestIsDestroyedModify(t *testing.T) {
 }
 
 func TestIsDestroyedDestroy(t *testing.T) {
-	isDestroyed, resourceNames := IsDestroyingEBSVolume(openReadPlan(t, "test_data/destroy.plan"))
+	isDestroyed, resourceNames := NewTest(t, "test_data/destroy.plan").IsDestroyingEBSVolume()
 
 	if exp, act := true, isDestroyed; exp != act {
 		t.Errorf("unexpected value exp=%+v\n act=%+v\n", exp, act)
@@ -91,7 +89,7 @@ func TestIsDestroyedDestroy(t *testing.T) {
 }
 
 func TestIsDestroyedRecreate(t *testing.T) {
-	isDestroyed, resourceNames := IsDestroyingEBSVolume(openReadPlan(t, "test_data/recreate.plan"))
+	isDestroyed, resourceNames := NewTest(t, "test_data/recreate.plan").IsDestroyingEBSVolume()
 
 	if exp, act := true, isDestroyed; exp != act {
 		t.Errorf("unexpected value exp=%+v\n act=%+v\n", exp, act)
@@ -112,7 +110,7 @@ func TestIsDestroyedRecreate(t *testing.T) {
 }
 
 func TestIsDestroyedNochanges(t *testing.T) {
-	isDestroyed, resourceNames := IsDestroyingEBSVolume(openReadPlan(t, "test_data/nochanges.plan"))
+	isDestroyed, resourceNames := NewTest(t, "test_data/nochanges.plan").IsDestroyingEBSVolume()
 
 	if exp, act := false, isDestroyed; exp != act {
 		t.Errorf("unexpected value exp=%+v\n act=%+v\n", exp, act)
@@ -124,7 +122,7 @@ func TestIsDestroyedNochanges(t *testing.T) {
 }
 
 func TestIsDestroyedNonEbs(t *testing.T) {
-	isDestroyed, resourceNames := IsDestroyingEBSVolume(openReadPlan(t, "test_data/destroy_non_ebs.plan"))
+	isDestroyed, resourceNames := NewTest(t, "test_data/destroy_non_ebs.plan").IsDestroyingEBSVolume()
 
 	if exp, act := false, isDestroyed; exp != act {
 		t.Errorf("unexpected value exp=%+v\n act=%+v\n", exp, act)
@@ -137,7 +135,7 @@ func TestIsDestroyedNonEbs(t *testing.T) {
 }
 
 func TestIsDestroyedDestroyNonModuleEbs(t *testing.T) {
-	isDestroyed, resourceNames := IsDestroyingEBSVolume(openReadPlan(t, "test_data/destroy_non_module_ebs.plan"))
+	isDestroyed, resourceNames := NewTest(t, "test_data/destroy_non_module_ebs.plan").IsDestroyingEBSVolume()
 
 	if exp, act := true, isDestroyed; exp != act {
 		t.Errorf("unexpected value exp=%+v\n act=%+v\n", exp, act)

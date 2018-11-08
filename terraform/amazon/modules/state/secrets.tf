@@ -3,6 +3,8 @@ resource "aws_s3_bucket" "secrets" {
   bucket = "${var.bucket_prefix}${var.environment}-${var.region}-secrets"
   acl    = "private"
 
+  force_destroy = true
+
   tags {
     Description = "Secrets for environment ${var.environment}"
   }
