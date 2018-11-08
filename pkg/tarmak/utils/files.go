@@ -4,6 +4,8 @@ package utils
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/mitchellh/go-homedir"
 )
 
 func EnsureDirectory(path string, mode os.FileMode) error {
@@ -16,4 +18,13 @@ func EnsureDirectory(path string, mode os.FileMode) error {
 		return err
 	}
 	return nil
+}
+
+func Expand(path string) (string, error) {
+	p, err := homedir.Expand(path)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Abs(p)
 }

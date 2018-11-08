@@ -19,7 +19,6 @@ import (
 
 	"github.com/hashicorp/terraform/command"
 	"github.com/kardianos/osext"
-	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -403,7 +402,7 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 
 		changesNeeded = errIsTerraformPlanChangesNeeded(err)
 		if err != nil && !changesNeeded {
-			return false, err
+			return changesNeeded, err
 		}
 	} else {
 		t.log.Infof("using custom plan file %s", planPath)
@@ -411,7 +410,7 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 
 	tfPlan, err := plan.New(planPath)
 	if err != nil {
-		return false, fmt.Errorf("error while trying to read plan file: %s", err)
+		return changesNeeded, fmt.Errorf("error while trying to read plan file: %s", err)
 	}
 
 	if tfPlan.UpdatingPuppet() {
@@ -463,11 +462,9 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 
 func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 	// generate a plan
-	if changesNeeded, err := t.Plan(cluster, true); err != nil {
+	changesNeeded, err := t.Plan(cluster, true)
+	if err != nil || !changesNeeded {
 		return err
-	} else if !changesNeeded {
-		// nothing to do
-		return nil
 	}
 
 	// break after sigterm
@@ -599,7 +596,7 @@ func (t *Terraform) planFileStore(cluster interfaces.Cluster) (string, error) {
 		return t.defaultPlanPath(cluster), nil
 	}
 
-	return t.expand(cluster, p)
+	return utils.Expand(p)
 }
 
 // location to use as the plan executable file during apply
@@ -609,18 +606,9 @@ func (t *Terraform) planFileLocation(cluster interfaces.Cluster) (string, error)
 		return t.defaultPlanPath(cluster), nil
 	}
 
-	return t.expand(cluster, p)
+	return utils.Expand(p)
 }
 
 func (t *Terraform) defaultPlanPath(cluster interfaces.Cluster) string {
 	return filepath.Join(t.codePath(cluster), consts.TerraformPlanFile)
-}
-
-func (t *Terraform) expand(cluster interfaces.Cluster, path string) (string, error) {
-	p, err := homedir.Expand(path)
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Abs(p)
 }

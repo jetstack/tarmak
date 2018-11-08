@@ -52,7 +52,7 @@ func (p *Plan) IsDestroyingEBSVolume() (bool, []string) {
 }
 
 func (p *Plan) UpdatingPuppet() bool {
-	for _, module := range p.pl.Diff.Modules {
+	for _, module := range p.Diff.Modules {
 		for key, resource := range module.Resources {
 			s := strings.Split(key, ".")
 			if len(s) > 1 && s[0] == "aws_s3_bucket_object" {
