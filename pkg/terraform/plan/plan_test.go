@@ -21,6 +21,7 @@ func NewTest(t *testing.T, testCase string) *Plan {
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
+
 	return plan
 }
 

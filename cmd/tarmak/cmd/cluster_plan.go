@@ -20,5 +20,6 @@ var clusterPlanCmd = &cobra.Command{
 }
 
 func init() {
+	clusterPlanFlags(clusterPlanCmd.PersistentFlags())
 	clusterCmd.AddCommand(clusterPlanCmd)
 }

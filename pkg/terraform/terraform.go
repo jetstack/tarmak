@@ -23,15 +23,15 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 	"github.com/jetstack/tarmak/pkg/terraform/plan"
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
 
 const (
-	debugShell        = "debug-shell"
-	terraformPlanFile = "tarmak.plan"
-	remoteStateError  = "Error locking destination state: Error acquiring the state lock: ConditionalCheckFailedException: The conditional request failed"
+	debugShell       = "debug-shell"
+	remoteStateError = "Error locking destination state: Error acquiring the state lock: ConditionalCheckFailedException: The conditional request failed"
 )
 
 // wingHash is set by a linker flag to the hash of the lastest wing binary
@@ -365,10 +365,6 @@ func (t *Terraform) command(cluster interfaces.Cluster, args []string, stdin io.
 	return err
 }
 
-func (t *Terraform) terraformPlanPath(cluster interfaces.Cluster) string {
-	return filepath.Join(t.codePath(cluster), terraformPlanFile)
-}
-
 // this checks if an error is coming from an exec failing with exit code 2,
 // this is typicall for a terraform plan that has changes
 func errIsTerraformPlanChangesNeeded(err error) bool {
@@ -386,19 +382,35 @@ func errIsTerraformPlanChangesNeeded(err error) bool {
 }
 
 func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeeded bool, err error) {
-	err = t.terraformWrapper(
-		cluster,
-		"plan",
-		[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", terraformPlanFile)},
-	)
-	changesNeeded = errIsTerraformPlanChangesNeeded(err)
-	if err != nil && !changesNeeded {
-		return false, err
+	planPath := t.tarmak.ClusterFlags().Apply.PlanFileLocation
+	changesNeeded = true
+
+	// If we are not doing an apply after this plan OR we are not using a custom
+	// plan file, we need to run a terraform plan.
+	customPlanFile := planPath != consts.DefaultPlanLocationPlaceholder
+	if !preApply || !customPlanFile {
+		planPath, err = t.planFileStore(cluster)
+		if err != nil {
+			return changesNeeded, err
+		}
+
+		err = t.terraformWrapper(
+			cluster,
+			"plan",
+			[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", planPath)},
+		)
+
+		changesNeeded = errIsTerraformPlanChangesNeeded(err)
+		if err != nil && !changesNeeded {
+			return changesNeeded, err
+		}
+	} else {
+		t.log.Infof("using custom plan file %s", planPath)
 	}
 
-	tfPlan, err := plan.New(t.terraformPlanPath(cluster))
+	tfPlan, err := plan.New(planPath)
 	if err != nil {
-		return false, fmt.Errorf("error while trying to read plan file: %s", err)
+		return changesNeeded, fmt.Errorf("error while trying to read plan file: %s", err)
 	}
 
 	if tfPlan.UpdatingPuppet() {
@@ -421,6 +433,7 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 		"the following EBS volumes will be destroyed during the next apply: [%s]",
 		strings.Join(ebsVolumesToDestroy, ", "))
 
+	// We exit early here since we are only doing a plan. Bubble the ebs error up.
 	if !preApply {
 		return changesNeeded, errors.New(destroyStr)
 	}
@@ -448,14 +461,10 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 }
 
 func (t *Terraform) Apply(cluster interfaces.Cluster) error {
-	// TODO: handle supplied plan
-
 	// generate a plan
-	if changesNeeded, err := t.Plan(cluster, true); err != nil {
+	changesNeeded, err := t.Plan(cluster, true)
+	if err != nil || !changesNeeded {
 		return err
-	} else if !changesNeeded {
-		// nothing to do
-		return nil
 	}
 
 	// break after sigterm
@@ -465,11 +474,16 @@ func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 	default:
 	}
 
+	planFilePath, err := t.planFileLocation(cluster)
+	if err != nil {
+		return err
+	}
+
 	// apply necessary at this point
 	return t.terraformWrapper(
 		cluster,
 		"apply",
-		[]string{t.terraformPlanPath(cluster)},
+		[]string{planFilePath},
 	)
 }
 
@@ -573,4 +587,28 @@ func (t *Terraform) Cleanup() error {
 	}
 
 	return nil
+}
+
+// location to store the output of the plan executable file during plan
+func (t *Terraform) planFileStore(cluster interfaces.Cluster) (string, error) {
+	p := t.tarmak.ClusterFlags().Plan.PlanFileStore
+	if p == consts.DefaultPlanLocationPlaceholder {
+		return t.defaultPlanPath(cluster), nil
+	}
+
+	return utils.Expand(p)
+}
+
+// location to use as the plan executable file during apply
+func (t *Terraform) planFileLocation(cluster interfaces.Cluster) (string, error) {
+	p := t.tarmak.ClusterFlags().Apply.PlanFileLocation
+	if p == consts.DefaultPlanLocationPlaceholder {
+		return t.defaultPlanPath(cluster), nil
+	}
+
+	return utils.Expand(p)
+}
+
+func (t *Terraform) defaultPlanPath(cluster interfaces.Cluster) string {
+	return filepath.Join(t.codePath(cluster), consts.TerraformPlanFile)
 }

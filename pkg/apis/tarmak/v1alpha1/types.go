@@ -142,6 +142,12 @@ type ClusterFlags struct {
 	Apply   ClusterApplyFlags   `json:"apply,omitempty"`   // flags for applying clusters
 	Destroy ClusterDestroyFlags `json:"destroy,omitempty"` // flags for destroying clusters
 	Images  ClusterImagesFlags  `json:"images,omitempty"`  // flags for handling images
+	Plan    ClusterPlanFlags    `json:"plan,omitempty"`    // flags for planning clusters
+}
+
+// Contains the cluster plan flags
+type ClusterPlanFlags struct {
+	PlanFileStore string `json:"planFileStore,omitempty"` // file location where plan file is to be stored
 }
 
 // Contains the cluster apply flags
@@ -154,6 +160,8 @@ type ClusterApplyFlags struct {
 
 	AutoApprove             bool `json:"autoApprove,omitempty"`             // auto approve apply queries
 	AutoApproveDeletingData bool `json:"autoApproveDeletingData,omitempty"` // auto approve apply queries about deleting data
+
+	PlanFileLocation string `json:"planFileLocation,omitempty"` // file location where plan file is to be used
 }
 
 // Contains the cluster destroy flags

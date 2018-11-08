@@ -20,7 +20,8 @@ Options
 
 ::
 
-  -h, --help   help for plan
+  -h, --help                     help for plan
+  -P, --plan-file-store string   location to store terraform plan executable file (default "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/terraform/tarmak.plan")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
