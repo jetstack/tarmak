@@ -39,7 +39,7 @@ func (c *CmdTarmak) Plan() (returnCode int, err error) {
 		return 1, err
 	}
 
-	changesNeeded, err := c.terraform.Plan(c.Cluster())
+	changesNeeded, err := c.terraform.Plan(c.Cluster(), false)
 	if changesNeeded {
 		return 2, err
 	} else {

@@ -388,3 +388,7 @@ func (t *Tarmak) verifyImageExists() error {
 
 	return nil
 }
+
+func (t *Tarmak) ClusterFlags() tarmakv1alpha1.ClusterFlags {
+	return t.flags.Cluster
+}

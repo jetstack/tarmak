@@ -151,6 +151,9 @@ type ClusterApplyFlags struct {
 	InfrastructureOnly bool `json:"infrastructureOnly,omitempty"` // only run terraform
 
 	ConfigurationOnly bool `json:"configurationOnly,omitempty"` // only run puppet
+
+	AutoApprove             bool `json:"autoApprove,omitempty"`             // auto approve apply queries
+	AutoApproveDeletingData bool `json:"autoApproveDeletingData,omitempty"` // auto approve apply queries about deleting data
 }
 
 // Contains the cluster destroy flags

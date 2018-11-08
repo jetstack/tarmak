@@ -4,6 +4,7 @@ package terraform
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 	"github.com/jetstack/tarmak/pkg/terraform/plan"
 	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
@@ -378,7 +380,7 @@ func errIsTerraformPlanChangesNeeded(err error) bool {
 	return true
 }
 
-func (t *Terraform) Plan(cluster interfaces.Cluster) (changesNeeded bool, err error) {
+func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeeded bool, err error) {
 	err = t.terraformWrapper(
 		cluster,
 		"plan",
@@ -395,11 +397,34 @@ func (t *Terraform) Plan(cluster interfaces.Cluster) (changesNeeded bool, err er
 	}
 
 	isDestroyingEBSVolume, ebsVolumesToDestroy := plan.IsDestroyingEBSVolume(tfPlan)
-	if isDestroyingEBSVolume {
-		// TODO: add override flag
-		return false, fmt.Errorf("error this will destroy the following EBS volumes: %s", strings.Join(ebsVolumesToDestroy, ", "))
+	if !isDestroyingEBSVolume {
+		return changesNeeded, nil
 	}
 
+	destoryStr := fmt.Sprintf("the following EBS volumes will be destroyed during the next apply: %s", strings.Join(ebsVolumesToDestroy, ", "))
+	if !preApply {
+		return changesNeeded, errors.New(destoryStr)
+	}
+
+	if t.tarmak.ClusterFlags().Apply.AutoApproveDeletingData || t.tarmak.ClusterFlags().Apply.AutoApprove {
+		t.log.Warnf("auto approved deleting, %s", destoryStr)
+		return changesNeeded, nil
+	}
+
+	query := fmt.Sprintf("%s\nThis cannot be undone. Are you sure you want to continue?", destoryStr)
+	d, err := input.New(os.Stdin, os.Stdout).AskYesNo(&input.AskYesNo{
+		Default: false,
+		Query:   query,
+	})
+	if err != nil {
+		return changesNeeded, err
+	}
+
+	if !d {
+		return changesNeeded, fmt.Errorf("error: %s", destoryStr)
+	}
+
+	t.log.Warnf(destoryStr)
 	return changesNeeded, nil
 }
 
@@ -407,7 +432,7 @@ func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 	// TODO: handle supplied plan
 
 	// generate a plan
-	if changesNeeded, err := t.Plan(cluster); err != nil {
+	if changesNeeded, err := t.Plan(cluster, true); err != nil {
 		return err
 	} else if !changesNeeded {
 		// nothing to do
@@ -446,10 +471,10 @@ func (t *Terraform) ForceUnlock(cluster interfaces.Cluster, lockID string) error
 }
 
 func (t *Terraform) Shell(cluster interfaces.Cluster) error {
-
 	if err := t.terraformWrapper(cluster, debugShell, nil); err != nil {
 		return err
 	}
+
 	return nil
 }
 
