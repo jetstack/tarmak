@@ -53,7 +53,8 @@ func (c *CmdTarmak) Apply() error {
 		return err
 	}
 
-	hasChanged := false
+	// assume a change so that we wait for convergence in configuration only
+	hasChanged := true
 	// run terraform apply always, do not run it when in configuration only mode
 	if !c.flags.Cluster.Apply.ConfigurationOnly {
 		hasChanged, err = c.terraform.Apply(c.Cluster())
