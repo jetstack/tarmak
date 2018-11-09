@@ -338,13 +338,17 @@ func (t *Tarmak) Cleanup() {
 	// clean up assets directory
 	if t.rootPath != nil {
 		if err := os.RemoveAll(*t.rootPath); err != nil {
-			t.log.Warnf("error cleaning up assets directory: %s", err)
+			t.log.Warnf("error cleaning up tarmak run time assets: %s", err)
 		}
 		t.rootPath = nil
 	}
 
+	if err := t.SSH().Cleanup(); err != nil {
+		t.log.Warnf("error cleaning up ssh run time assets: %s", err)
+	}
+
 	if err := t.terraform.Cleanup(); err != nil {
-		t.log.Warnf("error cleaning up terraform assets: %s", err)
+		t.log.Warnf("error cleaning up terraform run time assets: %s", err)
 	}
 }
 
