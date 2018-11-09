@@ -66,7 +66,7 @@ type Cluster interface {
 	PublicAPIHostname() string
 
 	// cluster uses encrypted EBS
-	EBSEncrypted() bool
+	AmazonEBSEncrypted() bool
 }
 
 type Environment interface {

@@ -173,7 +173,7 @@ func (c *CmdTarmak) ImagesBuild() error {
 
 	var currentImages []string
 	for _, i := range images {
-		if c.cluster.EBSEncrypted() == i.Encrypted {
+		if c.cluster.AmazonEBSEncrypted() == i.Encrypted {
 			currentImages = append(currentImages, i.BaseImage)
 		}
 	}

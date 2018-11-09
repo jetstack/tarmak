@@ -191,8 +191,8 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
 	return fmt.Sprintf("[%s]", strings.Join(policies, ","))
 }
 
-func (n *InstancePool) EBSEncrypted() bool {
-	return n.cluster.EBSEncrypted()
+func (n *InstancePool) AmazonEBSEncrypted() bool {
+	return n.cluster.AmazonEBSEncrypted()
 }
 
 func (n *InstancePool) Validate() (result error) {

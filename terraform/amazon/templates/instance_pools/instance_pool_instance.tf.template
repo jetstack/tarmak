@@ -76,7 +76,7 @@ resource "aws_launch_configuration" "{{.TFName}}" {
     device_name = "{{.Device}}"
     volume_size = {{.Size}}
     volume_type = "{{.Type}}"
-    encrypted   = "{{$instancePool.EBSEncrypted}}"
+    encrypted   = "{{$instancePool.AmazonEBSEncrypted}}"
   }
 {{- end }}
 
@@ -227,7 +227,7 @@ resource "aws_ebs_volume" "{{$instancePool.TFName}}_{{.Name}}" {
   availability_zone = "${element(var.availability_zones, count.index)}"
   size              = "${var.{{$instancePool.TFName}}_{{.Name}}_volume_size}"
   type              = "${var.{{$instancePool.TFName}}_{{.Name}}_volume_type}"
-  encrypted         = "{{$instancePool.EBSEncrypted}}"
+  encrypted         = "{{$instancePool.AmazonEBSEncrypted}}"
 
   tags {
     Name        = "${data.template_file.stack_name.rendered}-{{$instancePool.DNSName}}-{{.Name}}-${count.index+1}"
