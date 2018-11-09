@@ -85,7 +85,7 @@ func (e *Etcd) Save() error {
 		cmdArgs := append(e.template(envCmd, store),
 			strings.Split(fmt.Sprintf(etcdctlCmd, "save", hostPath), " ")...)
 		cmdArgs = append(cmdArgs,
-			strings.Split(fmt.Sprintf(snapshot.TarCCmd, hostPath), " ")...)
+			strings.Split(fmt.Sprintf(snapshot.GZipCCmd, hostPath), " ")...)
 
 		err = e.sshCmd(
 			aliases[0],

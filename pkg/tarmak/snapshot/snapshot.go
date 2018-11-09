@@ -16,9 +16,8 @@ import (
 
 const (
 	TimeLayout = "2006-01-02_15-04-05"
-	TarCCmd    = "tar -czPf - %s"
-	//TarXCmd    = "cat | tar -xz | cat > /tmp/foo" //| cat > %s"
-	TarXCmd = "cat > %s"
+	GZipCCmd   = "gzip -c %s;"
+	GZipDCmd   = "cat > %s.gz; gzip -d %s.gz;"
 )
 
 func Prepare(tarmak interfaces.Tarmak, role string) (aliases []string, err error) {
@@ -79,6 +78,7 @@ func ReadTarFromStream(dest string, stream io.Reader, result *multierror.Error, 
 
 		return
 	}
+	defer f.Close()
 
 	if _, err := io.Copy(f, gzr); err != nil {
 
@@ -91,8 +91,7 @@ func ReadTarFromStream(dest string, stream io.Reader, result *multierror.Error, 
 }
 
 func WriteTarToStream(src string, stream io.WriteCloser, result *multierror.Error, errLock sync.Mutex) {
-	//defer stream.Close()
-
+	defer stream.Close()
 	f, err := os.Open(src)
 	if err != nil {
 
@@ -102,8 +101,11 @@ func WriteTarToStream(src string, stream io.WriteCloser, result *multierror.Erro
 
 		return
 	}
+	defer f.Close()
 
 	gzw := gzip.NewWriter(stream)
+	defer gzw.Close()
+
 	if _, err := io.Copy(gzw, f); err != nil {
 
 		errLock.Lock()

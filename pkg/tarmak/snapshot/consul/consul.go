@@ -66,7 +66,7 @@ func (c *Consul) Save() error {
 	cmdArgs := append(envCmd,
 		strings.Split(fmt.Sprintf(consulCmd, "save", hostPath), " ")...)
 	cmdArgs = append(cmdArgs,
-		strings.Split(fmt.Sprintf(snapshot.TarCCmd, hostPath), " ")...)
+		strings.Split(fmt.Sprintf(snapshot.GZipCCmd, hostPath), " ")...)
 
 	err = c.sshCmd(
 		aliases[0],
@@ -96,11 +96,10 @@ func (c *Consul) Restore() error {
 		hostPath := fmt.Sprintf("/tmp/consul-snapshot-%s.snap",
 			time.Now().Format(snapshot.TimeLayout))
 
-		cmdArgs := strings.Split(fmt.Sprintf(snapshot.TarXCmd, hostPath), " ")
-		//cmdArgs := strings.Split(snapshot.TarXCmd, " ")
-		//cmdArgs = append(cmdArgs,
-		//	append(envCmd,
-		//		strings.Split(fmt.Sprintf(consulCmd, "restore", hostPath), " ")...)...)
+		cmdArgs := strings.Split(fmt.Sprintf(snapshot.GZipDCmd, hostPath, hostPath), " ")
+		cmdArgs = append(cmdArgs,
+			append(envCmd,
+				strings.Split(fmt.Sprintf(consulCmd, "restore", hostPath), " ")...)...)
 
 		var result *multierror.Error
 		var errLock sync.Mutex
