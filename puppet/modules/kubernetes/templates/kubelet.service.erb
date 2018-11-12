@@ -154,7 +154,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   "--eviction-minimum-reclaim=<%= @eviction_minimum_reclaim.join(',') %>" \
 <% end -%>
 <% if @_feature_gates != [] -%>
-  --feature-gates=<%= @_feature_gates.join(',') %>
+  --feature-gates=<%= @_feature_gates.join(',') %> \
 <% end -%>
 <% end -%>
   --logtostderr=true
