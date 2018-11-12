@@ -17,5 +17,6 @@ var clusterKubectlCmd = &cobra.Command{
 }
 
 func init() {
+	clusterKubectlCmd.Flags().SetInterspersed(false)
 	clusterCmd.AddCommand(clusterKubectlCmd)
 }
