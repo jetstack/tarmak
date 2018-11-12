@@ -266,6 +266,12 @@ func contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::fluent_bit_configs: %s`, string(jsonLoggingSink)))
 	}
 
+	if v := cluster.Config().VaultHelper; v != nil {
+		if v.URL != "" {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf("vault_client::_download_url: %s", v.URL))
+		}
+	}
+
 	classes, variables := serialiseHieraData(hieraData)
 
 	return append(classes, variables...), nil

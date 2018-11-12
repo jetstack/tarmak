@@ -844,6 +844,23 @@ make sure you don't define any volumes with the name ``docker``.
       size: 16Gi
       type: ssd
 
+Configuration of vault-helper
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is possible to configure the download URL of vault-helper to something other
+than the default github store. To make this cluster wide change, add the custom
+URL to the ``url`` attribute, under the ``vaultHelper`` header in the cluster:
+
+.. code-block:: yaml
+
+  clusters:
+  - amazon:
+      ebsEncrypted: true
+    environment: env
+    vaultHelper:
+      url: https://example.com/custom_vault-helper_location
+
+
 Cluster Services
 ----------------
 
