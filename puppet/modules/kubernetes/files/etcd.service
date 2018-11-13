@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=notify
-Environment=ETCD_VER=v3.2.24
+Environment=ETCD_VER=v3.2.25
 Environment=DOWNLOAD_URL=https://storage.googleapis.com/etcd
 ExecStartPre=/bin/bash -c 'test -x /tmp/test-etcd/etcd || curl -sL ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz && mkdir -p /tmp/test-etcd && tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/test-etcd --strip-components=1'
 ExecStart=/tmp/test-etcd/etcd
