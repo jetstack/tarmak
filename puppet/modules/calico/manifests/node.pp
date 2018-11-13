@@ -5,9 +5,9 @@
 # @param metrics_port Port for felix metrics endpoint, 0 disables metrics collection
 class calico::node (
   String $node_image = 'quay.io/calico/node',
-  String $node_version = '3.1.3',
+  String $node_version = '3.1.4',
   String $cni_image = 'quay.io/calico/cni',
-  String $cni_version = '3.1.3',
+  String $cni_version = '3.1.4',
   Enum['always', 'cross-subnet', 'off'] $ipv4_pool_ipip_mode = 'always',
   Integer[0,65535] $metrics_port = 9091,
 )
