@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
@@ -87,6 +89,22 @@ func (tt *testTarmak) addCluster(cluster *clusterv1alpha1.Cluster) {
 	tt.fakeConfig.EXPECT().Clusters(cluster.Environment).AnyTimes().Return(tt.clusters)
 }
 
+func (tt *testTarmak) addJenkinsInstancePool(cluster *clusterv1alpha1.Cluster) {
+	cluster.InstancePools = append(cluster.InstancePools, clusterv1alpha1.InstancePool{
+		Amazon:   new(clusterv1alpha1.InstancePoolAmazon),
+		Type:     clusterv1alpha1.InstancePoolTypeJenkins,
+		MinCount: 3,
+		MaxCount: 3,
+		Size:     clusterv1alpha1.InstancePoolSizeTiny,
+		Volumes: []clusterv1alpha1.Volume{
+			clusterv1alpha1.Volume{
+				ObjectMeta: metav1.ObjectMeta{Name: "root"},
+				Type:       clusterv1alpha1.VolumeTypeSSD,
+				Size:       resource.NewQuantity(1, resource.BinarySI),
+			},
+		}})
+}
+
 func newTestTarmak(t *testing.T) *testTarmak {
 
 	logger := logrus.New()
@@ -136,7 +154,9 @@ func newTestTarmakClusterSingle(t *testing.T) *testTarmak {
 	env := config.NewEnvironment("single", "test", "tech+test@jetstack.io")
 	env.Provider = "aws"
 	tt.addEnvironment(env)
-	tt.addCluster(config.NewClusterSingle(env.Name, "cluster"))
+	conf := config.NewClusterSingle(env.Name, "cluster")
+	tt.addJenkinsInstancePool(conf)
+	tt.addCluster(conf)
 
 	if err := tt.tarmak.initializeConfig(); err != nil {
 		t.Fatal("error intializing tarmak: ", err)
@@ -171,7 +191,9 @@ func newTestTarmakHub(t *testing.T) *testTarmak {
 	env := config.NewEnvironment("multi", "test", "tech+test@jetstack.io")
 	env.Provider = "aws"
 	tt.addEnvironment(env)
-	tt.addCluster(config.NewHub(env.Name))
+	conf := config.NewHub(env.Name)
+	tt.addJenkinsInstancePool(conf)
+	tt.addCluster(conf)
 
 	if err := tt.tarmak.initializeConfig(); err != nil {
 		t.Fatal("error intializing tarmak: ", err)
