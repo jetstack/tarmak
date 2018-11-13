@@ -127,7 +127,7 @@ exporter_# Sets up a blackbox exporter to forward etcd metrics from etcd nodes
 ##### `version`
 
 * Type: `String`
-* Default: `'1.2.0'`
+* Default: `'1.4.0'`
 
 ##### `resizer_image`
 
@@ -137,7 +137,7 @@ exporter_# Sets up a blackbox exporter to forward etcd metrics from etcd nodes
 ##### `resizer_version`
 
 * Type: `String`
-* Default: `'1.0'`
+* Default: `'1.8.4'`
 
 
 ### `prometheus::node_exporter`
@@ -196,7 +196,7 @@ exporter_# Sets up a blackbox exporter to forward etcd metrics from etcd nodes
 ##### `version`
 
 * Type: `String`
-* Default: `'2.2.1'`
+* Default: `'2.3.2'`
 
 ##### `reloader_image`
 

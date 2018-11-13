@@ -1,8 +1,8 @@
 class prometheus::kube_state_metrics (
   String $image = 'gcr.io/google_containers/kube-state-metrics',
-  String $version = '1.2.0',
+  String $version = '1.4.0',
   String $resizer_image = 'gcr.io/google_containers/addon-resizer',
-  String $resizer_version = '1.0',
+  String $resizer_version = '1.8.4',
 ){
   require ::kubernetes
   include ::prometheus
