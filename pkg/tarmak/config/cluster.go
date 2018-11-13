@@ -43,6 +43,15 @@ func NewClusterMulti(environment string, name string) *clusterv1alpha1.Cluster {
 	return c
 }
 
+// AddJenkinsInstancePool is adding a instance pool of jenkins to the cluster
+func AddJenkinsInstancePool(c *clusterv1alpha1.Cluster) {
+	c.InstancePools = append(
+		c.InstancePools,
+		*newInstancePoolJenkins(),
+	)
+	ApplyDefaults(c)
+}
+
 // This creates a new hub for a multi cluster environment
 func NewHub(environment string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, clusterv1alpha1.ClusterTypeHub)
@@ -154,6 +163,27 @@ func newInstancePoolWorker() *clusterv1alpha1.InstancePool {
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "docker"},
 			Size:       resource.NewQuantity(50*1024*1024*1024, resource.BinarySI),
+			Type:       clusterv1alpha1.VolumeTypeSSD,
+		},
+	}
+	return sp
+}
+
+// This creates a jenkins instancePool
+func newInstancePoolJenkins() *clusterv1alpha1.InstancePool {
+	sp := newInstancePool()
+	sp.Type = clusterv1alpha1.InstancePoolTypeJenkins
+	sp.MinCount = 1
+	sp.MaxCount = 1
+	sp.Size = clusterv1alpha1.InstancePoolSizeMedium
+	sp.Volumes = []clusterv1alpha1.Volume{
+		clusterv1alpha1.Volume{
+			ObjectMeta: metav1.ObjectMeta{Name: "root"},
+			Type:       clusterv1alpha1.VolumeTypeSSD,
+		},
+		clusterv1alpha1.Volume{
+			ObjectMeta: metav1.ObjectMeta{Name: "data"},
+			Size:       resource.NewQuantity(16*1024*1024*1024, resource.BinarySI),
 			Type:       clusterv1alpha1.VolumeTypeSSD,
 		},
 	}

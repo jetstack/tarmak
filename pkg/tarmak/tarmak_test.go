@@ -8,8 +8,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
@@ -65,6 +63,7 @@ func (tt *testTarmak) fakeAWSProvider(name string) {
 	tt.fakeProvider.EXPECT().Variables().AnyTimes().Return(map[string]interface{}{
 		"test": "ffs",
 	})
+	tt.fakeProvider.EXPECT().Environment().AnyTimes().Return([]string{"COOL_ENVIRONMENT=true"}, nil)
 
 	// override provider creation method
 	tt.tarmak.providerByName = func(providerName string) (interfaces.Provider, error) {
@@ -87,22 +86,6 @@ func (tt *testTarmak) addCluster(cluster *clusterv1alpha1.Cluster) {
 	tt.fakeConfig.EXPECT().CurrentClusterName().Return(cluster.Name, nil)
 	// TODO: support multiple environments
 	tt.fakeConfig.EXPECT().Clusters(cluster.Environment).AnyTimes().Return(tt.clusters)
-}
-
-func (tt *testTarmak) addJenkinsInstancePool(cluster *clusterv1alpha1.Cluster) {
-	cluster.InstancePools = append(cluster.InstancePools, clusterv1alpha1.InstancePool{
-		Amazon:   new(clusterv1alpha1.InstancePoolAmazon),
-		Type:     clusterv1alpha1.InstancePoolTypeJenkins,
-		MinCount: 3,
-		MaxCount: 3,
-		Size:     clusterv1alpha1.InstancePoolSizeTiny,
-		Volumes: []clusterv1alpha1.Volume{
-			clusterv1alpha1.Volume{
-				ObjectMeta: metav1.ObjectMeta{Name: "root"},
-				Type:       clusterv1alpha1.VolumeTypeSSD,
-				Size:       resource.NewQuantity(1, resource.BinarySI),
-			},
-		}})
 }
 
 func newTestTarmak(t *testing.T) *testTarmak {
@@ -155,7 +138,6 @@ func newTestTarmakClusterSingle(t *testing.T) *testTarmak {
 	env.Provider = "aws"
 	tt.addEnvironment(env)
 	conf := config.NewClusterSingle(env.Name, "cluster")
-	tt.addJenkinsInstancePool(conf)
 	tt.addCluster(conf)
 
 	if err := tt.tarmak.initializeConfig(); err != nil {
@@ -192,7 +174,6 @@ func newTestTarmakHub(t *testing.T) *testTarmak {
 	env.Provider = "aws"
 	tt.addEnvironment(env)
 	conf := config.NewHub(env.Name)
-	tt.addJenkinsInstancePool(conf)
 	tt.addCluster(conf)
 
 	if err := tt.tarmak.initializeConfig(); err != nil {
@@ -204,48 +185,32 @@ func newTestTarmakHub(t *testing.T) *testTarmak {
 
 func TestTarmak_Terraform_Generate_ClusterSingle(t *testing.T) {
 	tt := newTestTarmakClusterSingle(t)
-	defer tt.finish()
-	tarmak := tt.tarmak
+	testTarmakGeneration(t, tt)
+}
 
-	if err := tarmak.Validate(); err != nil {
-		t.Fatal("Unexpected error:", err)
-	}
-
-	if err := tarmak.terraform.GenerateCode(tarmak.Cluster()); err != nil {
-		t.Fatal("Unexpected error:", err)
-	}
-
-	tt.logger.WithField("config_path", tt.tarmak.ConfigPath()).Debug("created temporary config folder")
-
-	retCode := terraform.Fmt(append(fmtArgs, tt.tarmak.ConfigPath()), nil)
-	if retCode != 0 {
-		t.Errorf("unexpected return code running fmt, exp=%d got=%d", 0, retCode)
-	}
+func TestTarmak_Terraform_Generate_ClusterSingle_With_Jenkins(t *testing.T) {
+	tt := newTestTarmakClusterSingle(t)
+	config.AddJenkinsInstancePool(tt.clusters[0])
+	testTarmakGeneration(t, tt)
 }
 
 func TestTarmak_Terraform_Generate_ClusterMulti(t *testing.T) {
 	tt := newTestTarmakClusterMulti(t)
-	defer tt.finish()
-	tarmak := tt.tarmak
-
-	if err := tarmak.Validate(); err != nil {
-		t.Fatal("Unexpected error:", err)
-	}
-
-	if err := tarmak.terraform.GenerateCode(tarmak.Cluster()); err != nil {
-		t.Fatal("Unexpected error:", err)
-	}
-
-	tt.logger.WithField("config_path", tt.tarmak.ConfigPath()).Debug("created temporary config folder")
-
-	retCode := terraform.Fmt(append(fmtArgs, tt.tarmak.ConfigPath()), nil)
-	if retCode != 0 {
-		t.Errorf("unexpected return code running fmt, exp=%d got=%d", 0, retCode)
-	}
+	testTarmakGeneration(t, tt)
 }
 
 func TestTarmak_Terraform_Generate_Hub(t *testing.T) {
 	tt := newTestTarmakHub(t)
+	testTarmakGeneration(t, tt)
+}
+
+func TestTarmak_Terraform_Generate_Hub_With_Jenkins(t *testing.T) {
+	tt := newTestTarmakHub(t)
+	config.AddJenkinsInstancePool(tt.clusters[0])
+	testTarmakGeneration(t, tt)
+}
+
+func testTarmakGeneration(t *testing.T, tt *testTarmak) {
 	defer tt.finish()
 	tarmak := tt.tarmak
 
