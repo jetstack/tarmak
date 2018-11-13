@@ -2,6 +2,8 @@
 package consts
 
 const (
+	AmazonRateLimitErr = "RequestLimitExceeded"
+
 	DefaultPlanLocationPlaceholder = "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/terraform/tarmak.plan"
 	TerraformPlanFile              = "tarmak.plan"
 )
