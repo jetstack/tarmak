@@ -2,13 +2,16 @@
 package amazon
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -16,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/cenkalti/backoff"
 	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
@@ -23,6 +27,7 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
@@ -585,7 +590,6 @@ func (a *Amazon) verifyInstanceTypes() error {
 		if err := a.verifyInstanceType(instanceType, instance.Zones(), svc); err != nil {
 			result = multierror.Append(result, err)
 		}
-
 	}
 
 	return result
@@ -604,7 +608,35 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 		ProductDescription: aws.String("Linux/UNIX (Amazon VPC)"),
 		InstanceType:       aws.String(instanceType),
 	}
-	response, err := svc.DescribeReservedInstancesOfferings(request)
+
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.MaxElapsedTime = time.Second * 10
+	ctx, cancelRetries := context.WithCancel(context.Background())
+	b := backoff.WithContext(expBackoff, ctx)
+
+	var response *ec2.DescribeReservedInstancesOfferingsOutput
+	describeInstanceOfferingFunc := func() error {
+		var err error
+		response, err = svc.DescribeReservedInstancesOfferings(request)
+		if err == nil {
+			return nil
+		}
+
+		// if err and it's a rate limiting error, try again
+		awsErr, ok := err.(awserr.Error)
+		if ok && awsErr.Code() == consts.AmazonRateLimitErr {
+			a.log.Warnf(
+				"retrying after rate limiting error describing amazon instance offerings: %s",
+				err)
+			return err
+		}
+
+		// err and ! a rate limiting error so stop retries
+		cancelRetries()
+		return err
+	}
+
+	err := backoff.Retry(describeInstanceOfferingFunc, b)
 	if err != nil {
 		return fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err)
 	}
