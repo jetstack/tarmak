@@ -5,7 +5,7 @@ class kubernetes_addons::metrics_server(
   String $mem='100Mi',
   String $extra_cpu='0.5m',
   String $extra_mem='4Mi',
-  String $nanny_version='1.8.1',
+  String $nanny_version='1.8.4',
   String $nanny_image='gcr.io/google_containers/addon-resizer',
   String $nanny_request_cpu='5m',
   String $nanny_request_mem='50Mi',

@@ -67,9 +67,9 @@ class kubernetes_addons::params{
   $heapster_extra_mem='4Mi'
 
   $influxdb_image='gcr.io/google_containers/heapster-influxdb-amd64'
-  $influxdb_version='v1.1.1'
+  $influxdb_version='v1.5.2'
 
   $grafana_image='gcr.io/google_containers/heapster-grafana-amd64'
-  $grafana_version='v4.0.2'
+  $grafana_version='v5.0.4'
 
 }
