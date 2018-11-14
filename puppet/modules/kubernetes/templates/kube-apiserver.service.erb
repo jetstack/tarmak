@@ -64,7 +64,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --proxy-client-key-file=<%= @proxy_client_key_file %> \
 <%- end -%>
   "--etcd-servers=<%= @etcd_servers %>" \
+<% if @etcd_quorum_read -%>
   "--etcd-quorum-read=true" \
+<% end -%>
 <% @etcd_servers_overrides.each do |override| -%>
   "--etcd-servers-overrides=<%= override %>" \
 <% end -%>
@@ -78,7 +80,12 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   --etcd-keyfile=<%= scope['kubernetes::apiserver::etcd_key_file'] %> \
 <% end -%>
   --service-cluster-ip-range=<%= scope['kubernetes::service_ip_range_network'] %>/<%= scope['kubernetes::service_ip_range_mask'] %> \
+<% if @post_1_11 -%>
+  --enable-admission-plugins=<%= @_admission_control.join(',') %> \
+  --disable-admission-plugins=<%= @_disable_admission_control.join(',') %> \
+<%- else -%>
   --admission-control=<%= @_admission_control.join(',') %> \
+<% end -%>
 <%- if scope['kubernetes::_service_account_key_file'] -%>
   --service-account-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>

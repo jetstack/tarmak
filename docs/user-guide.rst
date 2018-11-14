@@ -621,6 +621,59 @@ to the kubernetes block.
         allowCIDRs:
         - y.y.y.y/24
 
+API Server Admission Plugins
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+API admission control plugins can be enabled and disabled through the Tarmak
+configuration file.  `Information on admission plugins can be found here
+<https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/>`_.
+Enabled and disabled plugins can be configured as follows:
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+      enableAdmissionControllers:
+         - "DefaultStorageClass"
+         - "DefaultTolerationSeconds"
+      disableAdmissionControllers:
+         - "MutatingAdmissionWebhook"
+
+.. note::
+  Disabling admission control plugins is only available with Kubernetes
+  version 1.11+
+
+Unless one or more enabled admission controller has been defined, the following
+defaults will be applied in this order:
+
++-------------------------------+-----------------------------+
+| *Admission Controller Plugin* | *Minimum Requirement*       |
++-------------------------------+-----------------------------+
+| Initializers                  | v1.8.x                      |
++-------------------------------+-----------------------------+
+| NamespaceLifecycle            | none                        |
++-------------------------------+-----------------------------+
+| LimitRanger                   | none                        |
++-------------------------------+-----------------------------+
+| ServiceAccount                | none                        |
++-------------------------------+-----------------------------+
+| DefaultStorageClass           | v1.4.x                      |
++-------------------------------+-----------------------------+
+| DefaultTolerationSeconds      | v1.6.x                      |
++-------------------------------+-----------------------------+
+| MutatingAdmissionWebhook      | v1.9.x                      |
++-------------------------------+-----------------------------+
+| ValidatingAdmissionWebhook    | v1.9.x                      |
++-------------------------------+-----------------------------+
+| ResourceQuota                 | none                        |
++-------------------------------+-----------------------------+
+| PodSecurityPolicy             | Pod Security Policy Enabled |
++-------------------------------+-----------------------------+
+| NodeRestriction               | v1.8.x                      |
++-------------------------------+-----------------------------+
+| Priority                      | Pod Priority Enabled        |
++-------------------------------+-----------------------------+
+
 Additional IAM policies
 ~~~~~~~~~~~~~~~~~~~~~~~
 

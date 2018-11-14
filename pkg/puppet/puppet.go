@@ -99,39 +99,50 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	}
 
 	// forward oidc settings
-	if conf.APIServer != nil && conf.APIServer.OIDC != nil {
-		oidc := conf.APIServer.OIDC
-		t := reflect.TypeOf(oidc).Elem()
-		v := reflect.ValueOf(oidc).Elem()
-		for i := 0; i < t.NumField(); i++ {
-			tagValue := t.Field(i).Tag.Get("hiera")
+	if a := conf.APIServer; a != nil {
 
-			// skip fields without hiera tag
-			if tagValue == "" {
-				continue
-			}
+		if len(a.EnableAdmissionControllers) > 0 {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::admission_control: ["%s"]`, strings.Join(a.EnableAdmissionControllers, ",")))
+		}
 
-			val := v.Field(i)
-			switch val.Kind() {
-			case reflect.String:
-				// skip empty string
-				if val.String() == "" {
-					continue
-				}
-				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`%s: "%s"`, tagValue, val.String()))
-			case reflect.Slice:
-				// skip empty slice
-				if val.Len() == 0 {
+		if len(a.DisableAdmissionControllers) > 0 {
+			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::disable_admission_control: ["%s"]`, strings.Join(a.DisableAdmissionControllers, ",")))
+		}
+
+		if a.OIDC != nil {
+			oidc := a.OIDC
+			t := reflect.TypeOf(oidc).Elem()
+			v := reflect.ValueOf(oidc).Elem()
+			for i := 0; i < t.NumField(); i++ {
+				tagValue := t.Field(i).Tag.Get("hiera")
+
+				// skip fields without hiera tag
+				if tagValue == "" {
 					continue
 				}
 
-				data, err := json.Marshal(val.Interface())
-				if err != nil {
-					panic(err)
+				val := v.Field(i)
+				switch val.Kind() {
+				case reflect.String:
+					// skip empty string
+					if val.String() == "" {
+						continue
+					}
+					hieraData.variables = append(hieraData.variables, fmt.Sprintf(`%s: "%s"`, tagValue, val.String()))
+				case reflect.Slice:
+					// skip empty slice
+					if val.Len() == 0 {
+						continue
+					}
+
+					data, err := json.Marshal(val.Interface())
+					if err != nil {
+						panic(err)
+					}
+					hieraData.variables = append(hieraData.variables, fmt.Sprintf("%s: %s", tagValue, string(data)))
+				default:
+					panic(fmt.Sprintf("unknown type: %v", val.Kind()))
 				}
-				hieraData.variables = append(hieraData.variables, fmt.Sprintf("%s: %s", tagValue, string(data)))
-			default:
-				panic(fmt.Sprintf("unknown type: %v", val.Kind()))
 			}
 		}
 	}
