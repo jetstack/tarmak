@@ -8,10 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -623,7 +623,8 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 		}
 
 		// if err and it's a rate limiting error, try again
-		if strings.Contains(err.Error(), consts.AmazonRateLimitErr) {
+		awsErr, ok := err.(awserr.Error)
+		if ok && awsErr.Code() == consts.AmazonRateLimitErr {
 			a.log.Warnf(
 				"retrying after rate limiting error describing amazon instance offerings: %s",
 				err)
