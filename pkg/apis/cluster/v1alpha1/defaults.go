@@ -79,7 +79,6 @@ func SetDefaults_Cluster(obj *Cluster) {
 	if obj.Amazon.EBSEncrypted == nil {
 		obj.Amazon.EBSEncrypted = boolPointer(false)
 	}
-
 	if obj.Amazon.AdditionalIAMPolicies == nil {
 		obj.Amazon.AdditionalIAMPolicies = []string{}
 	}

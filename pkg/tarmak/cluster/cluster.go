@@ -879,8 +879,8 @@ func (c *Cluster) PublicAPIHostname() string {
 
 // retrieve Amazons EBS encryption status
 func (c *Cluster) AmazonEBSEncrypted() bool {
-	if c.Config().Amazon != nil && c.Config().Amazon.EBSEncrypted != nil && *c.Config().Amazon.EBSEncrypted {
-		return true
+	if a := c.conf.Amazon; a != nil && a.EBSEncrypted != nil {
+		return *a.EBSEncrypted
 	}
 	return false
 }

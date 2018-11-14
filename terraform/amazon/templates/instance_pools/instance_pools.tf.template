@@ -12,14 +12,13 @@
 
 # Security Groups for {{.Module}}
 {{- template "role_security_group.tf.template" . }}
-{{ $AmazonEBSEncrypted := .AmazonEBSEncrypted -}}
-{{- range .InstancePools }}
+{{ range .InstancePools }}
 {{- if or (eq .Role.Name "etcd") ( or (eq .Role.Name "worker") (eq .Role.Name "master") ) -}}
 ## {{.TFName}}
 # Variables for {{.TFName}}
 {{ template "instance_pool_variables.tf.template" . -}}
 # Instance for {{.TFName}}
-{{ template "instance_pool_instance.tf.template" dict "InstancePool" . "AmazonEBSEncrypted" $AmazonEBSEncrypted }}
+{{ template "instance_pool_instance.tf.template" . }}
 # IAM role for {{.TFName}}
 {{ template "instance_pool_iam.tf.template" . }}
 {{- end }}

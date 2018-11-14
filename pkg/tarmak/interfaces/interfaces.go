@@ -65,7 +65,7 @@ type Cluster interface {
 	// return public api hostname
 	PublicAPIHostname() string
 
-	// get status of Aamazon EBS encryption
+	// cluster uses encrypted EBS
 	AmazonEBSEncrypted() bool
 }
 
