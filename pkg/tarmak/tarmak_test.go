@@ -140,10 +140,6 @@ func newTestTarmakClusterSingle(t *testing.T) *testTarmak {
 	conf := config.NewClusterSingle(env.Name, "cluster")
 	tt.addCluster(conf)
 
-	if err := tt.tarmak.initializeConfig(); err != nil {
-		t.Fatal("error intializing tarmak: ", err)
-	}
-
 	return tt
 }
 
@@ -158,10 +154,6 @@ func newTestTarmakClusterMulti(t *testing.T) *testTarmak {
 	tt.addEnvironment(env)
 	tt.addCluster(config.NewClusterMulti(env.Name, "test"))
 
-	if err := tt.tarmak.initializeConfig(); err != nil {
-		t.Fatal("error intializing tarmak: ", err)
-	}
-
 	return tt
 }
 
@@ -175,10 +167,6 @@ func newTestTarmakHub(t *testing.T) *testTarmak {
 	tt.addEnvironment(env)
 	conf := config.NewHub(env.Name)
 	tt.addCluster(conf)
-
-	if err := tt.tarmak.initializeConfig(); err != nil {
-		t.Fatal("error intializing tarmak: ", err)
-	}
 
 	return tt
 }
@@ -213,6 +201,10 @@ func TestTarmak_Terraform_Generate_Hub_With_Jenkins(t *testing.T) {
 func testTarmakGeneration(t *testing.T, tt *testTarmak) {
 	defer tt.finish()
 	tarmak := tt.tarmak
+
+	if err := tarmak.initializeConfig(); err != nil {
+		t.Fatal("error intializing tarmak: ", err)
+	}
 
 	if err := tarmak.Validate(); err != nil {
 		t.Fatal("Unexpected error:", err)
