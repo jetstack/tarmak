@@ -43,8 +43,8 @@ func NewCancellationContext(t interfaces.Tarmak) interfaces.CancellationContext 
 		select {
 		case sig := <-sigCh:
 			c.sig = sig
-			log.Infof("Caught signal %s.", sig)
-			log.Info("Attempting to shutdown gracefully.")
+			log.Infof("caught signal %s", sig)
+			log.Info("attempting to shutdown gracefully")
 			cancel()
 		case <-ctx.Done():
 		}
@@ -110,9 +110,9 @@ func (c *CancellationContext) WaitOrCancelReturnCode(f func() (int, error)) {
 				wg.Done()
 				return
 			case <-time.After(time.Second * 3):
-				log.Warn("Tarmak is shutting down.")
-				log.Warn("* Tarmak will attempt to kill the current task.")
-				log.Warn("* Send another SIGTERM or SIGINT (ctrl-c) to exit immediately.")
+				log.Warn("tarmak is shutting down")
+				log.Warn("* tarmak will attempt to kill the current task")
+				log.Warn("* send another SIGTERM or SIGINT (ctrl-c) to exit immediately")
 			}
 		}
 	}()
@@ -120,15 +120,15 @@ func (c *CancellationContext) WaitOrCancelReturnCode(f func() (int, error)) {
 	retCode, err := f()
 	switch err {
 	case nil:
-		log.Info("Tarmak performed all tasks successfully.")
+		log.Info("tarmak performed all tasks successfully")
 		c.tarmak.Cleanup()
 		log.Exit(retCode)
 	case context.Canceled:
-		log.Errorf("Tarmak was canceled (%s). Re-run to complete any remaining tasks.", c.sig)
+		log.Errorf("tarmak was canceled (%s), re-run to complete any remaining tasks", c.sig)
 		c.tarmak.Cleanup()
 		log.Exit(1)
 	default:
-		log.Errorf("Tarmak exited with an error: %s", err)
+		log.Errorf("tarmak exited with an error: %s", err)
 		c.tarmak.Cleanup()
 		log.Exit(1)
 	}
@@ -146,10 +146,10 @@ func BasicSignalHandler(l *log.Entry) chan struct{} {
 
 	go func(l *log.Entry) {
 		sig := <-ch
-		l.Infof("Received signal %s. Shutting down...", sig)
+		l.Infof("received signal %s, shutting down...", sig)
 		close(stopCh)
 		sig = <-ch
-		l.Infof("Received signal %s. Force closing.", sig)
+		l.Infof("received signal %s, force closing", sig)
 		os.Exit(1)
 	}(l)
 
