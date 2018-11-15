@@ -117,8 +117,9 @@ variable "jenkins_certificate_arn" {
 }
 
 variable "jenkins_admin_cidrs" {
-  type    = "list"
+  type = "list"
 }
+
 {{ end -}}
 
 variable "bastion_admin_cidrs" {

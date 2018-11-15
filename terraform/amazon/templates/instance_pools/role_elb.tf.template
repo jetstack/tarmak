@@ -121,11 +121,11 @@ output "ingress_wildcard_fqdn" {
 resource "aws_route53_record" "{{.Role.TFName}}_elb" {
   count   = 1
   zone_id = "${var.public_zone_id}"
-{{ if eq .Role.Name "jenkins" -}}
+{{- if eq .Role.Name "jenkins" }}
   name    = "jenkins.${var.environment}"
-{{ else -}}
+{{- else }}
   name    = "*.${var.name}"
-{{ end -}}
+{{- end }}
   type    = "A"
 
   alias {
@@ -144,7 +144,7 @@ resource "aws_elb" "{{.Role.TFName}}" {
     "${aws_security_group.{{.Role.TFName}}_elb.id}",
   ]
 
-{{ if .Role.AWS.EnableInternalELBAccessLogs -}}
+{{- if .Role.AWS.EnableInternalELBAccessLogs }}
   access_logs {
     enabled       = "${var.elb_access_logs_internal_enabled}"
     bucket        = "${var.elb_access_logs_internal_bucket}"
@@ -153,10 +153,12 @@ resource "aws_elb" "{{.Role.TFName}}" {
   }
 {{ end -}}
 
-{{ if eq .Role.Name "jenkins" -}}
+{{- if eq .Role.Name "jenkins" }}
+
   cross_zone_load_balancing = true
 
-{{ if .JenkinsCertificateARN -}}
+{{- if .JenkinsCertificateARN }}
+
   listener {
     instance_port      = "${var.jenkins_elb_instance_port_http}"
     instance_protocol  = "http"
@@ -164,14 +166,15 @@ resource "aws_elb" "{{.Role.TFName}}" {
     lb_protocol        = "https"
     ssl_certificate_id = "${var.certificate_arn}"
   }
-{{ else -}}
+{{- else }}
+
   listener {
-    instance_port      = "${var.jenkins_elb_instance_port_http}"
-    instance_protocol  = "http"
-    lb_port            = 80
-    lb_protocol        = "http"
+    instance_port     = "${var.jenkins_elb_instance_port_http}"
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
-{{ end -}}
+{{- end }}
 
   health_check {
     healthy_threshold   = 2
@@ -180,8 +183,7 @@ resource "aws_elb" "{{.Role.TFName}}" {
     target              = "TCP:${var.jenkins_elb_instance_port_http}"
     interval            = 30
   }
-
-{{ else -}}
+{{- else }}
   listener {
     instance_port     = "${var.ingress_elb_nodeport_http}"
     instance_protocol = "http"
@@ -196,15 +198,7 @@ resource "aws_elb" "{{.Role.TFName}}" {
     target              = "TCP:${var.ingress_elb_nodeport_http}"
     interval            = 10
   }
-{{ end -}}
-
-  #listener {
-  #  instance_port      = "${var.ingress_elb_nodeport_http}"
-  #  instance_protocol  = "http"
-  #  lb_port            = 443
-  #  lb_protocol        = "https"
-  #  ssl_certificate_id = "${data.aws_acm_certificate.wildcard.arn}"
-  #}
+{{- end }}
 
   tags {
     Environment = "${var.environment}"

@@ -35,11 +35,11 @@
 {{- end -}}
 {{- end -}}
 
-{{range .InstancePools -}}
-{{ if eq .Role.Name "jenkins" -}}
+{{range .InstancePools }}
+{{- if eq .Role.Name "jenkins" -}}
 ## {{.TFName}}
 # Variables for {{.TFName}}
-{{template "instance_pool_variables.tf.template" . }}
+{{template "instance_pool_variables.tf.template" . -}}
 # Instance for {{.TFName}}
 {{template "instance_pool_instance.tf.template" . }}
 # IAM role for {{.TFName}}
