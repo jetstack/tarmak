@@ -22,28 +22,28 @@
 # IAM role for {{.TFName}}
 {{ template "instance_pool_iam.tf.template" . }}
 {{- end }}
-{{- end -}}
+{{- end }}
 {{- end -}}
 
 # Jenkins
 {{ if eq .Module "jenkins" -}}
 {{ $JenkinsCertificateARN := .JenkinsCertificateARN -}}
-{{range .Roles -}}
+{{ range .Roles -}}
 {{ if eq .Name "jenkins" -}}
-{{template "role_elb.tf.template" dict "Role" . "JenkinsCertificateARN" $.JenkinsCertificateARN }}
-{{template "role_variables.tf.template" . }}
-{{- end -}}
+{{ template "role_elb.tf.template" dict "Role" . "JenkinsCertificateARN" $.JenkinsCertificateARN }}
+{{ template "role_variables.tf.template" . -}}
+{{ end -}}
 {{- end -}}
 
-{{range .InstancePools }}
-{{- if eq .Role.Name "jenkins" -}}
+{{- range .InstancePools -}}
+{{ if eq .Role.Name "jenkins" -}}
 ## {{.TFName}}
 # Variables for {{.TFName}}
 {{template "instance_pool_variables.tf.template" . -}}
 # Instance for {{.TFName}}
 {{template "instance_pool_instance.tf.template" . }}
 # IAM role for {{.TFName}}
-{{template "instance_pool_iam.tf.template" . }}
+{{template "instance_pool_iam.tf.template" . -}}
 {{ end -}}
-{{- end -}}
+{{ end -}}
 {{- end }}
