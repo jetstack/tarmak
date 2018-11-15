@@ -15,6 +15,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
@@ -220,6 +221,25 @@ Are you sure you want to re-build them?`, alreadyBuilt)
 	}
 
 	return c.packer.Build(c.args)
+}
+
+func (c *CmdTarmak) Kubeconfig() error {
+	path := c.flags.Cluster.Kubeconfig.Path
+	if path == consts.DefaultKubeconfigPath {
+		path = c.kubectl.ConfigPath()
+	} else {
+		c.log.Debugf("using custom kubeconfig path %s", path)
+	}
+
+	kubeconfig, err := c.kubectl.Kubeconfig(path,
+		c.flags.Cluster.Kubeconfig.PublicAPIEndpoint)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s\n", kubeconfig)
+
+	return nil
 }
 
 func (c *CmdTarmak) verifyTerraformBinaryVersion() error {

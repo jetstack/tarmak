@@ -145,9 +145,14 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	return nil
 }
 
-func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
+func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint bool) (interfaces.Tunnel, error) {
+	if publicAPIEndpoint {
+		if k := k.tarmak.Cluster().Config().Kubernetes; k == nil || k.APIServer == nil || !k.APIServer.Public {
+			return nil, errors.New("public API server not set in tarmak configuration")
+		}
+	}
+
 	c := api.NewConfig()
-	configPath := k.ConfigPath()
 
 	// cluster name in tarmak is cluster name in kubeconfig
 	key := k.tarmak.Cluster().ClusterName()
@@ -201,28 +206,30 @@ func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
 	}
 
 	retries := 5
-	firstRun := true
-	var tunnel interfaces.Tunnel
+	tunnel := k.tarmak.Cluster().APITunnel()
+	if err := tunnel.Start(); err != nil {
+		return tunnel, err
+	}
+
+	if publicAPIEndpoint {
+		cluster.Server = fmt.Sprintf("https://api.%s-%s.%s",
+			k.tarmak.Environment().Name(),
+			k.tarmak.Cluster().Name(),
+			k.tarmak.Provider().PublicZone())
+	} else {
+		cluster.Server = fmt.Sprintf("https://%s:%d",
+			tunnel.BindAddress(), tunnel.Port())
+		k.log.Warnf("ssh tunnel connecting to Kubernetes API server will close after 10 minutes: %s",
+			cluster.Server)
+	}
 
 	for {
-
-		if !firstRun || cluster.Server == "" {
-			if tunnel != nil {
-				tunnel.Stop()
-			}
-			tunnel = k.tarmak.Cluster().APITunnel()
-			err := tunnel.Start()
-			if err != nil {
-				return tunnel, err
-			}
-			cluster.Server = fmt.Sprintf("https://%s:%d", tunnel.BindAddress(), tunnel.Port())
-		}
 
 		k.log.Debugf("trying to connect to %+v", cluster.Server)
 
 		version, err := k.verifyAPIVersion(*c)
 		if err == nil {
-			k.log.Debugf("connected to kubernetes api %s", version)
+			k.log.Debugf("connected to Kubernetes API %s", version)
 			break
 		} else if strings.Contains(err.Error(), "certificate signed by unknown authority") {
 			// TODO: this not really clean, if CA mismatched request new certificate
@@ -234,9 +241,14 @@ func (k *Kubectl) ensureWorkingKubeconfig() (interfaces.Tunnel, error) {
 		}
 
 		retries -= 1
-		firstRun = false
 		if retries == 0 {
 			return tunnel, errors.New("unable to connect to kubernetes after 5 tries")
+		}
+
+		tunnel.Stop()
+		tunnel = k.tarmak.Cluster().APITunnel()
+		if err := tunnel.Start(); err != nil {
+			return tunnel, err
 		}
 	}
 
@@ -282,7 +294,7 @@ func (k *Kubectl) Kubectl(args []string) error {
 		return fmt.Errorf("the current cluster '%s' is a hub and therefore does not contain a Kubernetes cluster", currentCluster)
 	}
 
-	tunnel, err := k.ensureWorkingKubeconfig()
+	tunnel, err := k.ensureWorkingKubeconfig(k.ConfigPath(), false)
 	if err != nil {
 		if tunnel != nil {
 			tunnel.Stop()
@@ -307,4 +319,23 @@ func (k *Kubectl) Kubectl(args []string) error {
 	cmd.Wait()
 
 	return nil
+}
+
+func (k *Kubectl) Kubeconfig(path string, publicAPIEndpoint bool) (string, error) {
+	if k.tarmak.Cluster().Type() == clusterv1alpha1.ClusterTypeHub {
+		return "", fmt.Errorf(
+			"current cluster is of type %s so has no Kubernetes cluster: %s",
+			clusterv1alpha1.ClusterTypeHub, k.tarmak.Cluster().Name())
+	}
+
+	tunnel, err := k.ensureWorkingKubeconfig(path, publicAPIEndpoint)
+	if err != nil {
+		if tunnel != nil {
+			tunnel.Stop()
+		}
+
+		return "", err
+	}
+
+	return fmt.Sprintf("KUBECONFIG=%s", path), nil
 }
