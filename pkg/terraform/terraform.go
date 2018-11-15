@@ -382,6 +382,7 @@ func errIsTerraformPlanChangesNeeded(err error) bool {
 }
 
 func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeeded bool, err error) {
+	var tfPlan *plan.Plan
 	planPath := t.tarmak.ClusterFlags().Apply.PlanFileLocation
 	changesNeeded = true
 
@@ -394,23 +395,17 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 			return changesNeeded, err
 		}
 
-		err = t.terraformWrapper(
-			cluster,
-			"plan",
-			[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", planPath)},
-		)
-
-		changesNeeded = errIsTerraformPlanChangesNeeded(err)
-		if err != nil && !changesNeeded {
+		changesNeeded, tfPlan, err = t.planWrapper(cluster, planPath)
+		if err != nil {
 			return changesNeeded, err
 		}
 	} else {
 		t.log.Infof("using custom plan file %s", planPath)
-	}
 
-	tfPlan, err := plan.New(planPath)
-	if err != nil {
-		return changesNeeded, fmt.Errorf("error while trying to read plan file: %s", err)
+		tfPlan, err = plan.New(planPath)
+		if err != nil {
+			return changesNeeded, fmt.Errorf("error while trying to read plan file: %s", err)
+		}
 	}
 
 	if tfPlan.UpdatingPuppet() {
@@ -420,6 +415,13 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 			"-allow-missing", "-module=kubernetes",
 			cluster.Environment().Provider().LegacyPuppetTFName(),
 		}); err != nil {
+			return changesNeeded, err
+		}
+
+		t.log.Info("running plan again to update plan file against new state")
+
+		changesNeeded, tfPlan, err = t.planWrapper(cluster, planPath)
+		if err != nil {
 			return changesNeeded, err
 		}
 	}
@@ -485,6 +487,26 @@ func (t *Terraform) Apply(cluster interfaces.Cluster) error {
 		"apply",
 		[]string{planFilePath},
 	)
+}
+
+func (t *Terraform) planWrapper(cluster interfaces.Cluster, planPath string) (changesNeeded bool, tfPlan *plan.Plan, err error) {
+	err = t.terraformWrapper(
+		cluster,
+		"plan",
+		[]string{"-detailed-exitcode", "-input=false", fmt.Sprintf("-out=%s", planPath)},
+	)
+
+	changesNeeded = errIsTerraformPlanChangesNeeded(err)
+	if err != nil && !changesNeeded {
+		return false, nil, err
+	}
+
+	tfPlan, err = plan.New(planPath)
+	if err != nil {
+		return changesNeeded, nil, fmt.Errorf("error while trying to read plan file: %s", err)
+	}
+
+	return changesNeeded, tfPlan, err
 }
 
 func (t *Terraform) Destroy(cluster interfaces.Cluster) error {
