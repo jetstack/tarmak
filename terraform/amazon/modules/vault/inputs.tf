@@ -85,5 +85,5 @@ variable "vault_iam_additional_policy_arns" {
 }
 
 locals {
- vault_unseal_key_name = "vault-${var.environment}-"
+  vault_unseal_key_name = "vault-${var.environment}-"
 }
