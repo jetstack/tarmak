@@ -98,6 +98,7 @@ module "jenkins" {
   availability_zones        = ["${var.availability_zones}"]
   name                      = "${var.name}"
 }
+
 {{ end -}}
 
 module "vault" {

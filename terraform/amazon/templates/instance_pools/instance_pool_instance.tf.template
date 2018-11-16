@@ -7,9 +7,10 @@ data "template_file" "{{.TFName}}_user_data" {
 {{ end -}}
 {{- if eq .Name "jenkins" }}
   template = "${file("${path.module}/templates/jenkins_user_data.yaml")}"
+
   vars {
-    region = "${var.region}"
-    fqdn   = "jenkins.${var.private_zone}"
+    region    = "${var.region}"
+    fqdn      = "jenkins.${var.private_zone}"
     volume_id = "${element(aws_ebs_volume.jenkins_data.*.id, 0)}"
 {{- else }}
   template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
@@ -246,8 +247,7 @@ resource "aws_route53_record" "{{.TFName}}" {
   records = ["${element(aws_instance.{{.TFName}}.*.private_ip, count.index)}"]
   count   = "${var.{{.TFName}}_min_count}"
 }
-
-{{ if eq .Role.Name "etcd" -}}
+{{ if eq .Role.Name "etcd" }}
 resource "aws_route53_record" "{{.TFName}}-exporter-srv" {
   zone_id = "${var.private_zone_id}"
   name    = "{{.Role.Name}}-exporters.${data.template_file.stack_name.rendered}"

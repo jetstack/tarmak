@@ -63,6 +63,7 @@ func (tt *testTarmak) fakeAWSProvider(name string) {
 	tt.fakeProvider.EXPECT().Variables().AnyTimes().Return(map[string]interface{}{
 		"test": "ffs",
 	})
+	tt.fakeProvider.EXPECT().Environment().AnyTimes().Return([]string{"COOL_ENVIRONMENT=true"}, nil)
 
 	// override provider creation method
 	tt.tarmak.providerByName = func(providerName string) (interfaces.Provider, error) {
@@ -136,11 +137,8 @@ func newTestTarmakClusterSingle(t *testing.T) *testTarmak {
 	env := config.NewEnvironment("single", "test", "tech+test@jetstack.io")
 	env.Provider = "aws"
 	tt.addEnvironment(env)
-	tt.addCluster(config.NewClusterSingle(env.Name, "cluster"))
-
-	if err := tt.tarmak.initializeConfig(); err != nil {
-		t.Fatal("error intializing tarmak: ", err)
-	}
+	conf := config.NewClusterSingle(env.Name, "cluster")
+	tt.addCluster(conf)
 
 	return tt
 }
@@ -156,10 +154,6 @@ func newTestTarmakClusterMulti(t *testing.T) *testTarmak {
 	tt.addEnvironment(env)
 	tt.addCluster(config.NewClusterMulti(env.Name, "test"))
 
-	if err := tt.tarmak.initializeConfig(); err != nil {
-		t.Fatal("error intializing tarmak: ", err)
-	}
-
 	return tt
 }
 
@@ -171,61 +165,46 @@ func newTestTarmakHub(t *testing.T) *testTarmak {
 	env := config.NewEnvironment("multi", "test", "tech+test@jetstack.io")
 	env.Provider = "aws"
 	tt.addEnvironment(env)
-	tt.addCluster(config.NewHub(env.Name))
-
-	if err := tt.tarmak.initializeConfig(); err != nil {
-		t.Fatal("error intializing tarmak: ", err)
-	}
+	conf := config.NewHub(env.Name)
+	tt.addCluster(conf)
 
 	return tt
 }
 
 func TestTarmak_Terraform_Generate_ClusterSingle(t *testing.T) {
 	tt := newTestTarmakClusterSingle(t)
-	defer tt.finish()
-	tarmak := tt.tarmak
+	testTarmakGeneration(t, tt)
+}
 
-	if err := tarmak.Validate(); err != nil {
-		t.Fatal("Unexpected error:", err)
-	}
-
-	if err := tarmak.terraform.GenerateCode(tarmak.Cluster()); err != nil {
-		t.Fatal("Unexpected error:", err)
-	}
-
-	tt.logger.WithField("config_path", tt.tarmak.ConfigPath()).Debug("created temporary config folder")
-
-	retCode := terraform.Fmt(append(fmtArgs, tt.tarmak.ConfigPath()), nil)
-	if retCode != 0 {
-		t.Errorf("unexpected return code running fmt, exp=%d got=%d", 0, retCode)
-	}
+func TestTarmak_Terraform_Generate_ClusterSingle_With_Jenkins(t *testing.T) {
+	tt := newTestTarmakClusterSingle(t)
+	config.AddJenkinsInstancePool(tt.clusters[0])
+	testTarmakGeneration(t, tt)
 }
 
 func TestTarmak_Terraform_Generate_ClusterMulti(t *testing.T) {
 	tt := newTestTarmakClusterMulti(t)
-	defer tt.finish()
-	tarmak := tt.tarmak
-
-	if err := tarmak.Validate(); err != nil {
-		t.Fatal("Unexpected error:", err)
-	}
-
-	if err := tarmak.terraform.GenerateCode(tarmak.Cluster()); err != nil {
-		t.Fatal("Unexpected error:", err)
-	}
-
-	tt.logger.WithField("config_path", tt.tarmak.ConfigPath()).Debug("created temporary config folder")
-
-	retCode := terraform.Fmt(append(fmtArgs, tt.tarmak.ConfigPath()), nil)
-	if retCode != 0 {
-		t.Errorf("unexpected return code running fmt, exp=%d got=%d", 0, retCode)
-	}
+	testTarmakGeneration(t, tt)
 }
 
 func TestTarmak_Terraform_Generate_Hub(t *testing.T) {
 	tt := newTestTarmakHub(t)
+	testTarmakGeneration(t, tt)
+}
+
+func TestTarmak_Terraform_Generate_Hub_With_Jenkins(t *testing.T) {
+	tt := newTestTarmakHub(t)
+	config.AddJenkinsInstancePool(tt.clusters[0])
+	testTarmakGeneration(t, tt)
+}
+
+func testTarmakGeneration(t *testing.T, tt *testTarmak) {
 	defer tt.finish()
 	tarmak := tt.tarmak
+
+	if err := tarmak.initializeConfig(); err != nil {
+		t.Fatal("error intializing tarmak: ", err)
+	}
 
 	if err := tarmak.Validate(); err != nil {
 		t.Fatal("Unexpected error:", err)
