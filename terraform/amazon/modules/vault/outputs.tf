@@ -11,7 +11,7 @@ output "vault_kms_key_id" {
 }
 
 output "vault_unseal_key_name" {
-  value = "${data.template_file.vault_unseal_key_name.rendered}"
+  value = "${local.vault_unseal_key_name}"
 }
 
 output "instance_fqdns" {

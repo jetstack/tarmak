@@ -80,10 +80,10 @@ data "template_file" "stack_name" {
   template = "${var.stack_name_prefix}${var.environment}-${var.name}"
 }
 
-data "template_file" "vault_unseal_key_name" {
-  template = "vault-${var.environment}-"
-}
-
 variable "vault_iam_additional_policy_arns" {
   type = "list"
+}
+
+locals {
+  vault_unseal_key_name = "vault-${var.environment}-"
 }

@@ -39,11 +39,11 @@ output "route_table_private_ids" {
 }
 
 output "private_zone_id" {
-  value = ["${aws_route53_zone.private.*.id}"]
+  value = "${concat(aws_route53_zone.private.*.id, list(""))}"
 }
 
 output "private_zone" {
-  value = ["${aws_route53_zone.private.*.name}"]
+  value = "${concat(aws_route53_zone.private.*.name, list(""))}"
 }
 
 output "environment" {

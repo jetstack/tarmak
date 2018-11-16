@@ -36,7 +36,7 @@ data "template_file" "vault_policy" {
     vault_tls_key_path            = "${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
     vault_tls_ca_path             = "${aws_s3_bucket_object.ca-cert.key}"
     vault_unsealer_kms_key_id     = "${var.secrets_kms_arn}"
-    vault_unsealer_ssm_key_prefix = "${data.template_file.vault_unseal_key_name.rendered}"
+    vault_unsealer_ssm_key_prefix = "${local.vault_unseal_key_name}"
   }
 }
 

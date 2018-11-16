@@ -19,7 +19,7 @@ output "bucket_prefix" {
 }
 
 output "secrets_bucket" {
-  value = "${aws_s3_bucket.secrets.*.bucket}"
+  value = "${concat(aws_s3_bucket.secrets.*.bucket, list(""))}"
 }
 
 output "secrets_kms_arn" {
