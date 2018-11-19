@@ -87,11 +87,6 @@ Command line documentation for both tarmak and wing commands
 .. toctree::
    :maxdepth: 1
 
-   generated/cmd/tarmak/tarmak_clusters_kubeconfig
-
-.. toctree::
-   :maxdepth: 1
-
    generated/cmd/tarmak/tarmak_clusters_list
 
 .. toctree::
@@ -128,6 +123,11 @@ Command line documentation for both tarmak and wing commands
    :maxdepth: 1
 
    generated/cmd/tarmak/tarmak_init
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tarmak/tarmak_kubeconfig
 
 .. toctree::
    :maxdepth: 1

@@ -112,6 +112,40 @@ To complete the cluster provisioning, run ``tarmak clusters apply`` once again.
    It will wait for the currently running step to finish and then exit.
    You can complete the process by re-running the command.
 
+.. _interacting_with_kubernetes:
+
+Interacting with Kubernetes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Once a Kubernetes cluster has been provisioned and it's state has converged, it
+can now be interacted with ``kubectl`` as usual.
+
+::
+
+  % tarmak cluster kubectl get all --all-namespaces
+
+A Kubeconfig file can also be generated with it's file path output.
+
+::
+
+  % tarmak cluster kubeconfig
+
+This command also supports environment evaluation to write to ``KUBECONFIG`` so
+is able to perform conveniences like follows.
+
+::
+
+  % eval $(tarmak cluster kubeconfig)
+  % kubectl get nodes
+  % helm install
+
+.. note::
+  Both ``kubectl`` and ``kubeconfig`` support targeting public and private
+  Kubernetes API endpoints according to how the cluster has been configured in
+  the tarmak yaml configuration. This can be overridden through use of a global
+  flag.
+
+  ``% tarmak cluster --public-api-endpoint=false kubectl``
+
 .. _destroy_cluster:
 
 Destroy the cluster

@@ -1,7 +1,7 @@
-.. _tarmak_clusters_kubeconfig:
+.. _tarmak_kubeconfig:
 
-tarmak clusters kubeconfig
---------------------------
+tarmak kubeconfig
+-----------------
 
 Verify and print path to Kubeconfig
 
@@ -13,16 +13,15 @@ Verify and print path to Kubeconfig
 
 ::
 
-  tarmak clusters kubeconfig [flags]
+  tarmak kubeconfig [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help                  help for kubeconfig
-  -p, --path string           Path to store kubeconfig file (default "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/kubeconfig")
-      --public-api-endpoint   Override kubeconfig to point to cluster's public API endpoint
+  -h, --help          help for kubeconfig
+  -p, --path string   Path to store kubeconfig file (default "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/kubeconfig")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -33,11 +32,12 @@ Options inherited from parent commands
       --current-cluster string         override the current cluster set in the config
       --keep-containers                do not clean-up terraform/packer containers after running them
       --log-flush-frequency duration   Maximum number of seconds between log flushes (default 5s)
+      --public-api-endpoint            Override kubeconfig to point to cluster's public API endpoint
   -v, --verbose                        enable verbose logging
       --wing-dev-mode                  use a bundled wing version rather than a tagged release from GitHub
 
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak <tarmak.html>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
 
