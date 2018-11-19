@@ -12,6 +12,7 @@ import (
 	"github.com/blang/semver"
 	terraformVersion "github.com/hashicorp/terraform/version"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
@@ -21,16 +22,19 @@ import (
 
 type CmdTarmak struct {
 	*Tarmak
-	log  *logrus.Entry
-	args []string
-	ctx  interfaces.CancellationContext
+
+	log    *logrus.Entry
+	args   []string
+	pflags *pflag.FlagSet
+	ctx    interfaces.CancellationContext
 }
 
-func (t *Tarmak) NewCmdTarmak(args []string) *CmdTarmak {
+func (t *Tarmak) NewCmdTarmak(pflags *pflag.FlagSet, args []string) *CmdTarmak {
 	return &CmdTarmak{
 		Tarmak: t,
 		log:    t.Log(),
 		args:   args,
+		pflags: pflags,
 		ctx:    t.CancellationContext(),
 	}
 }
@@ -231,8 +235,22 @@ func (c *CmdTarmak) Kubeconfig() error {
 		c.log.Debugf("using custom kubeconfig path %s", path)
 	}
 
-	kubeconfig, err := c.kubectl.Kubeconfig(path,
-		c.flags.Cluster.Kubeconfig.PublicAPIEndpoint)
+	// first set bool to what we have set in the config
+	usePublicEndpoint := false
+	if k := c.Cluster().Config().Kubernetes; k != nil && k.APIServer != nil {
+		usePublicEndpoint = k.APIServer.Public
+	}
+
+	// if the flag default is different to the config AND we have changed the
+	// flag (overridden), we set the bool and warn we are using a different
+	// setting than the config
+	if p := c.flags.Cluster.Kubeconfig.PublicAPIEndpoint; usePublicEndpoint != p &&
+		c.pflags.Changed(consts.KubeconfigFlagName) {
+		c.log.Warnf("overriding %s from tarmak config to %v", consts.KubeconfigFlagName, p)
+		usePublicEndpoint = p
+	}
+
+	kubeconfig, err := c.kubectl.Kubeconfig(path, usePublicEndpoint)
 	if err != nil {
 		return err
 	}

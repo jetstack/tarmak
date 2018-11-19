@@ -146,12 +146,6 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 }
 
 func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint bool) (interfaces.Tunnel, error) {
-	if publicAPIEndpoint {
-		if k := k.tarmak.Cluster().Config().Kubernetes; k == nil || k.APIServer == nil || !k.APIServer.Public {
-			return nil, errors.New("public API server not set in tarmak configuration")
-		}
-	}
-
 	c := api.NewConfig()
 
 	// cluster name in tarmak is cluster name in kubeconfig

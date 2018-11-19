@@ -100,9 +100,9 @@ func clusterKubeconfigFlags(fs *flag.FlagSet) {
 
 	fs.BoolVar(
 		&store.PublicAPIEndpoint,
-		"public-api-endpoint",
+		consts.KubeconfigFlagName,
 		false,
-		"Point kubeconfig to cluster's public API endpoint",
+		"Override kubeconfig to point to cluster's public API endpoint",
 	)
 
 	fs.StringVarP(

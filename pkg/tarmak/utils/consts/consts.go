@@ -8,4 +8,5 @@ const (
 	TerraformPlanFile              = "tarmak.plan"
 
 	DefaultKubeconfigPath = "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/kubeconfig"
+	KubeconfigFlagName    = "public-api-endpoint"
 )

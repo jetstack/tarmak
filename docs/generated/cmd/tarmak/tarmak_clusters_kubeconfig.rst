@@ -22,7 +22,7 @@ Options
 
   -h, --help                  help for kubeconfig
   -p, --path string           Path to store kubeconfig file (default "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/kubeconfig")
-      --public-api-endpoint   Point kubeconfig to cluster's public API endpoint
+      --public-api-endpoint   Override kubeconfig to point to cluster's public API endpoint
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

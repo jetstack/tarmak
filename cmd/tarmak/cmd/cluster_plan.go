@@ -14,7 +14,7 @@ var clusterPlanCmd = &cobra.Command{
 		t := tarmak.New(globalFlags)
 
 		t.CancellationContext().WaitOrCancelReturnCode(
-			t.NewCmdTarmak(args).Plan,
+			t.NewCmdTarmak(cmd.Flags(), args).Plan,
 		)
 	},
 }

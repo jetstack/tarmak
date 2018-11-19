@@ -12,7 +12,7 @@ var clusterKubeconfigCmd = &cobra.Command{
 	Short: "Verify and print path to Kubeconfig",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		t.Perform(t.NewCmdTarmak(args).Kubeconfig())
+		t.Perform(t.NewCmdTarmak(cmd.Flags(), args).Kubeconfig())
 	},
 }
 
