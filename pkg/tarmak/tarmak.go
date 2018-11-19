@@ -14,6 +14,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/packer"
 	"github.com/jetstack/tarmak/pkg/puppet"
@@ -179,7 +180,7 @@ func (t *Tarmak) writeSSHConfigForClusterHosts() error {
 	return t.ssh.Validate()
 }
 
-// This initializes a new tarmak cluster
+// CmdClusterInit initializes a new tarmak cluster from CLI input
 func (t *Tarmak) CmdClusterInit() error {
 	i := initialize.New(t, os.Stdin, os.Stdout)
 	t.init = i
@@ -188,12 +189,24 @@ func (t *Tarmak) CmdClusterInit() error {
 		return err
 	}
 
+	// if the multicluster environment being initialised is the only existing environment,
+	// ensure that the tarmak cli is pointing to that environment's 'hub' cluster
+	// resource, else point tarmak cli to newly-initialised cluster
+	switch cluster.Type() {
+	case clusterv1alpha1.ClusterTypeClusterMulti:
+		if len(t.Environments()) == 1 {
+			err = t.config.SetCurrentCluster(cluster.Environment().HubName())
+			if err != nil {
+				return fmt.Errorf("error setting current cluster: %s", err)
+			}
+			t.log.Infof("%s set as current cluster", cluster.Environment().HubName())
+			t.log.Infof("run 'tarmak cluster apply' on hub before applying other cluster(s)")
+		}
+	default:
+		t.log.Infof("%s set as current cluster", cluster.ClusterName())
+	}
 	t.log.Infof("successfully initialized cluster '%s'", cluster.ClusterName())
 
-	err = t.config.SetCurrentCluster(cluster.ClusterName())
-	if err != nil {
-		return fmt.Errorf("error setting current cluster: %s", err)
-	}
 	return nil
 }
 
