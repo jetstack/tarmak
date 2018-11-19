@@ -227,6 +227,14 @@ Are you sure you want to re-build them?`, alreadyBuilt)
 	return c.packer.Build(c.args)
 }
 
+func (c *CmdTarmak) Kubectl() error {
+	if err := c.writeSSHConfigForClusterHosts(); err != nil {
+		return err
+	}
+
+	return c.kubectl.Kubectl(c.args, c.kubePublicAPIEndpoint())
+}
+
 func (c *CmdTarmak) Kubeconfig() error {
 	path := c.flags.Cluster.Kubeconfig.Path
 	if path == consts.DefaultKubeconfigPath {
@@ -235,22 +243,7 @@ func (c *CmdTarmak) Kubeconfig() error {
 		c.log.Debugf("using custom kubeconfig path %s", path)
 	}
 
-	// first set bool to what we have set in the config
-	usePublicEndpoint := false
-	if k := c.Cluster().Config().Kubernetes; k != nil && k.APIServer != nil {
-		usePublicEndpoint = k.APIServer.Public
-	}
-
-	// if the flag default is different to the config AND we have changed the
-	// flag (overridden), we set the bool and warn we are using a different
-	// setting than the config
-	if p := c.flags.Cluster.Kubeconfig.PublicAPIEndpoint; usePublicEndpoint != p &&
-		c.pflags.Changed(consts.KubeconfigFlagName) {
-		c.log.Warnf("overriding %s from tarmak config to %v", consts.KubeconfigFlagName, p)
-		usePublicEndpoint = p
-	}
-
-	kubeconfig, err := c.kubectl.Kubeconfig(path, usePublicEndpoint)
+	kubeconfig, err := c.kubectl.Kubeconfig(path, c.kubePublicAPIEndpoint())
 	if err != nil {
 		return err
 	}
@@ -258,6 +251,25 @@ func (c *CmdTarmak) Kubeconfig() error {
 	fmt.Printf("%s\n", kubeconfig)
 
 	return nil
+}
+
+func (c *CmdTarmak) kubePublicAPIEndpoint() bool {
+	// first set bool to what we have set in the config
+	publicEndpoint := false
+	if k := c.Cluster().Config().Kubernetes; k != nil && k.APIServer != nil {
+		publicEndpoint = k.APIServer.Public
+	}
+
+	// if the flag default is different to the config AND we have changed the
+	// flag (overridden), we set the bool and warn we are using a different
+	// setting than the config
+	if p := c.flags.PublicAPIEndpoint; publicEndpoint != p &&
+		c.pflags.Changed(consts.KubeconfigFlagName) {
+		c.log.Warnf("overriding %s from tarmak config to %v", consts.KubeconfigFlagName, p)
+		publicEndpoint = p
+	}
+
+	return publicEndpoint
 }
 
 func (c *CmdTarmak) verifyTerraformBinaryVersion() error {

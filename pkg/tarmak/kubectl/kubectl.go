@@ -279,16 +279,14 @@ func (k *Kubectl) verifyAPIVersion(c api.Config) (version string, err error) {
 	return versionInfo.String(), nil
 }
 
-func (k *Kubectl) Kubectl(args []string) error {
+func (k *Kubectl) Kubectl(args []string, publicEndpoint bool) error {
 	if k.tarmak.Cluster().Type() == clusterv1alpha1.ClusterTypeHub {
-		currentCluster, err := k.tarmak.Config().CurrentCluster()
-		if err != nil {
-			return fmt.Errorf("error retrieving current cluster: %s", err)
-		}
-		return fmt.Errorf("the current cluster '%s' is a hub and therefore does not contain a Kubernetes cluster", currentCluster)
+		return fmt.Errorf(
+			"current cluster is of type %s so has no Kubernetes cluster: %s",
+			clusterv1alpha1.ClusterTypeHub, k.tarmak.Cluster().Name())
 	}
 
-	tunnel, err := k.ensureWorkingKubeconfig(k.ConfigPath(), false)
+	tunnel, err := k.ensureWorkingKubeconfig(k.ConfigPath(), publicEndpoint)
 	if err != nil {
 		if tunnel != nil {
 			tunnel.Stop()

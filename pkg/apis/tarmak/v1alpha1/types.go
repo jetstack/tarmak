@@ -135,6 +135,8 @@ type Flags struct {
 	Version string `json:"version,omitempty"` // expose tarmak's build time version
 
 	WingDevMode bool `json:"wingDevMode,omitempty"` // use a bundled wing version rather than a tagged release from GitHub
+
+	PublicAPIEndpoint bool `json:"publicAPIEndpoint,omitempty"` // Use public endpoint to point kubeconfig to
 }
 
 // This contains the cluster specifc operation flags
@@ -182,6 +184,5 @@ type ClusterImagesBuildFlags struct {
 
 // Contains the cluster kubeconfig flags
 type ClusterKubeconfigFlags struct {
-	PublicAPIEndpoint bool   `json:"publicAPIEndpoint,omitempty"` // Use public endpoint to point kubeconfig to
-	Path              string `json:"path,omitempty"`              // Path to save kubeconfig to
+	Path string `json:"path,omitempty"` // Path to save kubeconfig to
 }

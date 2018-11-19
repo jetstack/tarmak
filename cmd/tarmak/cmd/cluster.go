@@ -98,13 +98,6 @@ func clusterFlagDryRun(fs *flag.FlagSet, store *bool) {
 func clusterKubeconfigFlags(fs *flag.FlagSet) {
 	store := &globalFlags.Cluster.Kubeconfig
 
-	fs.BoolVar(
-		&store.PublicAPIEndpoint,
-		consts.KubeconfigFlagName,
-		false,
-		"Override kubeconfig to point to cluster's public API endpoint",
-	)
-
 	fs.StringVarP(
 		&store.Path,
 		"path",
