@@ -18,5 +18,7 @@ func (t *Tarmak) SSHPassThrough(argsAdditional []string) {
 		t.log.Fatal(err)
 	}
 
-	t.ssh.PassThrough(argsAdditional)
+	if err := t.ssh.PassThrough(argsAdditional); err != nil {
+		t.log.Fatal(err)
+	}
 }

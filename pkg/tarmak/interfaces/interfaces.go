@@ -208,7 +208,7 @@ type Terraform interface {
 
 type SSH interface {
 	WriteConfig(Cluster) error
-	PassThrough([]string)
+	PassThrough([]string) error
 	Tunnel(hostname string, destination string, destinationPort int) Tunnel
 	Execute(host string, cmd string, args []string) (returnCode int, err error)
 	Validate() error
@@ -235,6 +235,7 @@ type Host interface {
 	SSHConfig() string
 	Parameters() map[string]string
 	SSHControlPath() string
+	Aliases() []string
 }
 
 type Puppet interface {
