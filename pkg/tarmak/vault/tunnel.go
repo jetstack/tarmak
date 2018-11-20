@@ -64,8 +64,8 @@ func (v *vaultTunnel) Start() error {
 	return nil
 }
 
-func (v *vaultTunnel) Stop() error {
-	return v.tunnel.Stop()
+func (v *vaultTunnel) Stop() {
+	v.tunnel.Stop()
 }
 
 func (v *vaultTunnel) Port() int {

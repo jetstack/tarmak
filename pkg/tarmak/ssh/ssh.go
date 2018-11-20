@@ -32,6 +32,7 @@ type SSH struct {
 
 	controlPaths []string
 	hosts        []interfaces.Host
+	bastion      interfaces.Host
 }
 
 func New(tarmak interfaces.Tarmak) *SSH {
@@ -86,6 +87,7 @@ func (s *SSH) PassThrough(hostName string, argsAdditional []string) error {
 	if err != nil {
 		return err
 	}
+	defer client.Close()
 
 	sess, err := client.NewSession()
 	if err != nil {
@@ -138,6 +140,7 @@ func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr
 	if err != nil {
 		return -1, err
 	}
+	defer client.Close()
 
 	sess, err := client.NewSession()
 	if err != nil {
@@ -163,8 +166,12 @@ func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr
 		sess.Stdin = stdin
 	}
 
-	err = sess.Run(strings.Join(cmd, " "))
+	err = sess.Start(strings.Join(cmd, " "))
 	if err != nil {
+		return -1, err
+	}
+
+	if err := sess.Wait(); err != nil {
 		if e, ok := err.(*ssh.ExitError); ok {
 			return e.ExitStatus(), e
 		}
@@ -233,6 +240,7 @@ func (s *SSH) client(hostName string) (*ssh.Client, error) {
 
 			if a == clusterv1alpha1.InstancePoolTypeBastion {
 				bastion = h
+				s.bastion = h
 			}
 		}
 	}
@@ -242,6 +250,12 @@ func (s *SSH) client(hostName string) (*ssh.Client, error) {
 			fmt.Errorf("failed to resolve target hosts for ssh: found %s=%v %s=%v",
 				clusterv1alpha1.InstancePoolTypeBastion,
 				!(bastion == nil), hostName, !(host == nil))
+	}
+
+	if _, err := os.Create(bastion.SSHControlPath()); err != nil {
+		if !os.IsExist(err) {
+			return nil, err
+		}
 	}
 
 	b, err := ioutil.ReadFile(s.tarmak.Environment().SSHPrivateKeyPath())
@@ -254,14 +268,14 @@ func (s *SSH) client(hostName string) (*ssh.Client, error) {
 		return nil, fmt.Errorf("failed to parse ssh private key: %s", err)
 	}
 
-	confProxy := &ssh.ClientConfig{
+	conf := &ssh.ClientConfig{
 		Timeout:         time.Minute * 10,
 		User:            host.User(),
 		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	proxyClient, err := ssh.Dial("tcp", net.JoinHostPort(bastion.Hostname(), "22"), confProxy)
+	proxyClient, err := ssh.Dial("tcp", net.JoinHostPort(bastion.Hostname(), "22"), conf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set up connection to bastion: %s", err)
 	}
@@ -269,13 +283,6 @@ func (s *SSH) client(hostName string) (*ssh.Client, error) {
 	// ssh into bastion so no need to set up proxy hop
 	if hostName == clusterv1alpha1.InstancePoolTypeBastion {
 		return proxyClient, nil
-	}
-
-	conf := &ssh.ClientConfig{
-		Timeout:         time.Minute * 10,
-		User:            host.User(),
-		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
 	conn, err := proxyClient.Dial("tcp", net.JoinHostPort(host.Hostname(), "22"))

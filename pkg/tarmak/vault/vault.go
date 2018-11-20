@@ -198,10 +198,7 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 			wg.Add(1)
 			go func(pos int) {
 				defer wg.Done()
-				err := tunnels[pos].Stop()
-				if err != nil {
-					v.log.Warn(err)
-				}
+				tunnels[pos].Stop()
 			}(pos)
 		}
 		wg.Wait()

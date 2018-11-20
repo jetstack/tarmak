@@ -217,7 +217,7 @@ type SSH interface {
 
 type Tunnel interface {
 	Start() error
-	Stop() error
+	Stop()
 	Port() int
 	BindAddress() string
 }
