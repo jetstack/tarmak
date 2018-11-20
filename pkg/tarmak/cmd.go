@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/blang/semver"
@@ -236,10 +237,18 @@ func (c *CmdTarmak) Kubectl() error {
 }
 
 func (c *CmdTarmak) Kubeconfig() error {
+	var err error
+
 	path := c.flags.Cluster.Kubeconfig.Path
 	if path == consts.DefaultKubeconfigPath {
 		path = c.kubectl.ConfigPath()
+
 	} else {
+		path, err = filepath.Abs(path)
+		if err != nil {
+			return fmt.Errorf("failed to get absolute path of custom path: %s", err)
+		}
+
 		c.log.Debugf("using custom kubeconfig path %s", path)
 	}
 

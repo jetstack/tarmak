@@ -21,6 +21,7 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	//"github.com/jetstack/tarmak/pkg/tarmak/ssh"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
@@ -145,7 +146,7 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	return nil
 }
 
-func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint bool) (interfaces.Tunnel, error) {
+func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint bool) error {
 	c := api.NewConfig()
 
 	// cluster name in tarmak is cluster name in kubeconfig
@@ -155,7 +156,7 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 	if _, err := os.Stat(configPath); err == nil {
 		conf, err := clientcmd.LoadFromFile(configPath)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		c = conf
 	}
@@ -191,71 +192,94 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 	if len(authInfo.ClientCertificateData) == 0 || len(authInfo.ClientKeyData) == 0 || len(cluster.CertificateAuthorityData) == 0 {
 
 		if err := k.tarmak.Terraform().Prepare(k.tarmak.Environment().Hub()); err != nil {
-			return nil, fmt.Errorf("failed to prepare terraform: %s", err)
+			return fmt.Errorf("failed to prepare terraform: %s", err)
 		}
 
 		if err := k.requestNewAdminCert(cluster, authInfo); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	retries := 5
-	tunnel := k.tarmak.Cluster().APITunnel()
-	if err := tunnel.Start(); err != nil {
-		return tunnel, err
-	}
-
+	// If we are using a public endpoint then we don't need to set up a tunnel
+	// but we need to keep a tunnel var around so we can close is later on if is
+	// being used. Use k.stopTunnel(tunnel) to ensure no panics.
+	var tunnel interfaces.Tunnel
 	if publicAPIEndpoint {
 		cluster.Server = fmt.Sprintf("https://api.%s-%s.%s",
 			k.tarmak.Environment().Name(),
 			k.tarmak.Cluster().Name(),
 			k.tarmak.Provider().PublicZone())
+
 	} else {
+		tunnel = k.tarmak.Cluster().APITunnel()
+		if err := tunnel.Start(); err != nil {
+			k.stopTunnel(tunnel)
+			return err
+		}
+
 		cluster.Server = fmt.Sprintf("https://%s:%d",
 			tunnel.BindAddress(), tunnel.Port())
 		k.log.Warnf("ssh tunnel connecting to Kubernetes API server will close after 10 minutes: %s",
 			cluster.Server)
 	}
 
+	var err error
+	retries := 5
 	for {
-
 		k.log.Debugf("trying to connect to %+v", cluster.Server)
 
-		version, err := k.verifyAPIVersion(*c)
+		var version string
+		version, err = k.verifyAPIVersion(*c)
 		if err == nil {
 			k.log.Debugf("connected to Kubernetes API %s", version)
+			// break with err == nil with successful connection
 			break
-		} else if strings.Contains(err.Error(), "certificate signed by unknown authority") {
+		}
+
+		if strings.Contains(err.Error(), "certificate signed by unknown authority") {
 			// TODO: this not really clean, if CA mismatched request new certificate
-			if err := k.requestNewAdminCert(cluster, authInfo); err != nil {
-				return tunnel, err
+			err = k.requestNewAdminCert(cluster, authInfo)
+			if err != nil {
+				break
 			}
+
 		} else {
 			k.log.Warnf("error connecting to cluster: %s", err)
 		}
 
 		retries -= 1
 		if retries == 0 {
-			return tunnel, errors.New("unable to connect to kubernetes after 5 tries")
+			err = errors.New("unable to connect to kubernetes after 5 tries")
+			break
 		}
 
-		tunnel.Stop()
-		tunnel = k.tarmak.Cluster().APITunnel()
-		if err := tunnel.Start(); err != nil {
-			return tunnel, err
+		if !publicAPIEndpoint {
+			k.stopTunnel(tunnel)
+			tunnel = k.tarmak.Cluster().APITunnel()
+			err = tunnel.Start()
+			if err != nil {
+				break
+			}
 		}
+	}
+
+	// ensure we close the tunnel on error
+	if err != nil {
+		k.stopTunnel(tunnel)
+		return err
 	}
 
 	if err := utils.EnsureDirectory(filepath.Dir(configPath), 0700); err != nil {
-		return tunnel, err
+		k.stopTunnel(tunnel)
+		return err
 	}
 
 	if err := clientcmd.WriteToFile(*c, configPath); err != nil {
-		return tunnel, err
+		k.stopTunnel(tunnel)
+		return err
 	}
 
-	return tunnel, nil
-
+	return nil
 }
 
 func (k *Kubectl) verifyAPIVersion(c api.Config) (version string, err error) {
@@ -286,11 +310,8 @@ func (k *Kubectl) Kubectl(args []string, publicEndpoint bool) error {
 			clusterv1alpha1.ClusterTypeHub, k.tarmak.Cluster().Name())
 	}
 
-	tunnel, err := k.ensureWorkingKubeconfig(k.ConfigPath(), publicEndpoint)
+	err := k.ensureWorkingKubeconfig(k.ConfigPath(), publicEndpoint)
 	if err != nil {
-		if tunnel != nil {
-			tunnel.Stop()
-		}
 		return err
 	}
 
@@ -320,14 +341,16 @@ func (k *Kubectl) Kubeconfig(path string, publicAPIEndpoint bool) (string, error
 			clusterv1alpha1.ClusterTypeHub, k.tarmak.Cluster().Name())
 	}
 
-	tunnel, err := k.ensureWorkingKubeconfig(path, publicAPIEndpoint)
+	err := k.ensureWorkingKubeconfig(path, publicAPIEndpoint)
 	if err != nil {
-		if tunnel != nil {
-			tunnel.Stop()
-		}
-
 		return "", err
 	}
 
 	return fmt.Sprintf("KUBECONFIG=%s", path), nil
+}
+
+func (k *Kubectl) stopTunnel(tunnel interfaces.Tunnel) {
+	if tunnel != nil {
+		tunnel.Stop()
+	}
 }
