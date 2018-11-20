@@ -208,18 +208,18 @@ type Terraform interface {
 }
 
 type SSH interface {
-	WriteConfig(cluster Cluster, interactive bool) error
-	PassThrough([]string)
-	Tunnel(hostname string, destination string, destinationPort int) Tunnel
-	Execute(host string, cmd string, args []string) (returnCode int, err error)
+	WriteConfig(Cluster) error
+	PassThrough(host string, additionalArguments []string) error
+	Tunnel(destination, destinationPort, localPort string, daemonize bool) Tunnel
+	Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (returnCode int, err error)
 	Validate() error
-	Cleanup() error
+	Cleanup()
 }
 
 type Tunnel interface {
 	Start() error
-	Stop() error
-	Port() int
+	Stop()
+	Port() string
 	BindAddress() string
 }
 
@@ -237,6 +237,7 @@ type Host interface {
 	Parameters() map[string]string
 	SSHControlPath() string
 	SSHKnownHostConfig() (string, error)
+	Aliases() []string
 }
 
 type Puppet interface {

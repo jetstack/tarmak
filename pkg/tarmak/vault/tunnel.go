@@ -38,7 +38,7 @@ func NewTunnel(
 	}
 	err = vaultClient.SetAddress(
 		fmt.Sprintf(
-			"https://%s:%d", tunnel.BindAddress(), tunnel.Port(),
+			"https://%s:%s", tunnel.BindAddress(), tunnel.Port(),
 		),
 	)
 	if err != nil {
@@ -64,11 +64,11 @@ func (v *vaultTunnel) Start() error {
 	return nil
 }
 
-func (v *vaultTunnel) Stop() error {
-	return v.tunnel.Stop()
+func (v *vaultTunnel) Stop() {
+	v.tunnel.Stop()
 }
 
-func (v *vaultTunnel) Port() int {
+func (v *vaultTunnel) Port() string {
 	return v.tunnel.Port()
 }
 

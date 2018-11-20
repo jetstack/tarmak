@@ -6,16 +6,20 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
+	"sync"
+	"time"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
@@ -26,7 +30,12 @@ type SSH struct {
 	tarmak interfaces.Tarmak
 	log    *logrus.Entry
 
-	controlPaths []string
+	hosts   map[string]interfaces.Host
+	tunnels []interfaces.Tunnel
+
+	bastionClientLock sync.Mutex // ensure we set up connection to bastion one at a time to keep single connection
+	bastionClientConn *ssh.Client
+	bastionConfig     *ssh.ClientConfig
 }
 
 func New(tarmak interfaces.Tarmak) *SSH {
@@ -38,7 +47,7 @@ func New(tarmak interfaces.Tarmak) *SSH {
 	return s
 }
 
-func (s *SSH) WriteConfig(c interfaces.Cluster, interactive bool) error {
+func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	err := utils.EnsureDirectory(filepath.Dir(c.SSHConfigPath()), 0700)
 	if err != nil {
 		return err
@@ -64,6 +73,7 @@ func (s *SSH) WriteConfig(c interfaces.Cluster, interactive bool) error {
 	var sshConfig bytes.Buffer
 	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
 
+	s.hosts = make(map[string]interfaces.Host)
 	for _, host := range hosts {
 		strictChecking := "yes"
 
@@ -75,16 +85,9 @@ func (s *SSH) WriteConfig(c interfaces.Cluster, interactive bool) error {
 			}
 
 			if entry == "" && s.tarmak.Config().IgnoreMissingPublicKeyTags() {
-				// We need to change strict 'yes' to 'no' or 'ask' since entry doesn't
-				// exist and we have 'ignore missing instances tags' set to true.  Set
-				// to no for programmatic uses of ssh which will be changed when the in
-				// package solution is used.
-
-				if interactive {
-					strictChecking = "ask"
-				} else {
-					strictChecking = "no"
-				}
+				// We need to change strict 'yes' to 'ask' since entry doesn't exist
+				// and we have 'ignore missing instances tags' set to true
+				strictChecking = "ask"
 			}
 
 			if _, err := knownHosts.WriteString(entry); err != nil {
@@ -97,7 +100,11 @@ func (s *SSH) WriteConfig(c interfaces.Cluster, interactive bool) error {
 			return err
 		}
 
-		s.controlPaths = append(s.controlPaths, host.SSHControlPath())
+		if len(host.Aliases()) == 0 {
+			return fmt.Errorf("found host with no aliases: %s", host.Hostname())
+		}
+
+		s.hosts[host.Aliases()[0]] = host
 	}
 
 	err = ioutil.WriteFile(c.SSHConfigPath(), sshConfig.Bytes(), 0600)
@@ -126,58 +133,107 @@ func (s *SSH) parseKnownHosts() (map[string]string, error) {
 	return entries, nil
 }
 
-func (s *SSH) args() []string {
-	return []string{
-		"ssh",
-		"-F",
-		s.tarmak.Cluster().SSHConfigPath(),
-	}
-}
-
 // Pass through a local CLI session
-func (s *SSH) PassThrough(argsAdditional []string) {
-	args := append(s.args(), argsAdditional...)
+func (s *SSH) PassThrough(hostName string, argsAdditional []string) error {
+	args := append(
+		[]string{
+			"ssh", "-F",
+			s.tarmak.Cluster().SSHConfigPath(),
+			hostName, "--",
+		},
+		argsAdditional...,
+	)
 
-	cmd := exec.Command(args[0], args[1:len(args)]...)
-	cmd.Stderr = os.Stdout
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 
 	err := cmd.Start()
 	if err != nil {
-		s.log.Fatal(err)
+		return err
 	}
 
-	err = cmd.Wait()
-	if err != nil {
-		s.log.Fatal(err)
-	}
+	return cmd.Wait()
 }
 
-func (s *SSH) Execute(host string, command string, argsAdditional []string) (returnCode int, err error) {
-	args := append(s.args(), host, "--", command)
-	args = append(args, argsAdditional...)
-
-	cmd := exec.Command(args[0], args[1:len(args)]...)
-
-	err = cmd.Start()
+func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (int, error) {
+	client, err := s.client(host)
 	if err != nil {
 		return -1, err
 	}
 
-	err = cmd.Wait()
+	sess, err := client.NewSession()
 	if err != nil {
-		perr, ok := err.(*exec.ExitError)
-		if ok {
-			if status, ok := perr.Sys().(syscall.WaitStatus); ok {
-				return status.ExitStatus(), nil
-			}
+		return -1, err
+	}
+	defer sess.Close()
+
+	if stderr == nil {
+		sess.Stderr = os.Stderr
+	} else {
+		sess.Stderr = stderr
+	}
+
+	if stdout == nil {
+		sess.Stdout = os.Stdout
+	} else {
+		sess.Stdout = stdout
+	}
+
+	if stdin == nil {
+		sess.Stdin = os.Stdin
+	} else {
+		sess.Stdin = stdin
+	}
+
+	err = sess.Start(strings.Join(cmd, " "))
+	if err != nil {
+		return -1, err
+	}
+
+	if err := sess.Wait(); err != nil {
+		if e, ok := err.(*ssh.ExitError); ok {
+			return e.ExitStatus(), e
 		}
 		return -1, err
 	}
 
 	return 0, nil
+}
 
+func (s *SSH) client(hostName string) (*ssh.Client, error) {
+	bastionClient, err := s.bastionClient()
+	if err != nil {
+		return nil, err
+	}
+
+	// ssh into bastion so no need to set up proxy hop
+	if hostName == clusterv1alpha1.InstancePoolTypeBastion {
+		return bastionClient, nil
+	}
+
+	host, err := s.host(hostName)
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := bastionClient.Dial("tcp", net.JoinHostPort(host.Hostname(), "22"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up connection to %s from basiton: %s", host.Hostname(), err)
+	}
+
+	conf, err := s.config()
+	if err != nil {
+		return nil, err
+	}
+
+	ncc, chans, reqs, err := ssh.NewClientConn(conn, net.JoinHostPort(host.Hostname(), "22"), conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up ssh client: %s", err)
+	}
+
+	return ssh.NewClient(ncc, chans, reqs), nil
 }
 
 func (s *SSH) Validate() error {
@@ -220,14 +276,109 @@ func (s *SSH) Validate() error {
 	return nil
 }
 
-func (s *SSH) Cleanup() error {
-	var result *multierror.Error
-
-	for _, c := range utils.RemoveDuplicateStrings(s.controlPaths) {
-		if err := os.RemoveAll(c); err != nil {
-			result = multierror.Append(result, err)
-		}
+func (s *SSH) Cleanup() {
+	for _, tunnel := range s.tunnels {
+		tunnel.Stop()
 	}
 
-	return result.ErrorOrNil()
+	if s.bastionClientConn != nil {
+		s.bastionClientConn.Close()
+	}
+}
+
+func (s *SSH) bastionClient() (*ssh.Client, error) {
+	s.bastionClientLock.Lock()
+	defer s.bastionClientLock.Unlock()
+
+	// if the current bastion client is healthy we can use this
+	if s.bastionClientConn != nil {
+		sess, err := s.bastionClientConn.NewSession()
+		if err == nil {
+			err = sess.Run("/bin/true")
+			if err == nil {
+				return s.bastionClientConn, nil
+			}
+		}
+		s.log.Info("current connection to bastion failed: %s", err)
+	}
+
+	conf, err := s.config()
+	if err != nil {
+		return nil, err
+	}
+
+	bastion, err := s.host(clusterv1alpha1.InstancePoolTypeBastion)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := ssh.Dial("tcp", net.JoinHostPort(bastion.Hostname(), "22"), conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up connection to bastion: %s", err)
+	}
+	s.bastionClientConn = client
+
+	s.log.Infof("new connection to bastion host successful")
+
+	return client, nil
+}
+
+func (s *SSH) config() (*ssh.ClientConfig, error) {
+	if s.bastionConfig != nil {
+		return s.bastionConfig, nil
+	}
+
+	bastion, err := s.host(clusterv1alpha1.InstancePoolTypeBastion)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadFile(s.tarmak.Environment().SSHPrivateKeyPath())
+	if err != nil {
+		return nil, fmt.Errorf("failed to read ssh private key: %s", err)
+	}
+
+	signer, err := ssh.ParsePrivateKey(b)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse ssh private key: %s", err)
+	}
+
+	return &ssh.ClientConfig{
+		Timeout:         time.Minute * 10,
+		User:            bastion.User(),
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}, nil
+}
+
+func (s *SSH) host(name string) (interfaces.Host, error) {
+	host, ok := s.hosts[name]
+	if ok {
+		return host, nil
+	}
+
+	// we have already have all hosts, we can't find it
+	if len(s.hosts) > 0 {
+		return nil, fmt.Errorf("failed to resolve host: %s", name)
+	}
+
+	err := s.WriteConfig(s.tarmak.Cluster())
+	if err != nil {
+		return nil, err
+	}
+
+	_, bok := s.hosts[clusterv1alpha1.InstancePoolTypeBastion]
+	err = fmt.Errorf("failed to resolve target hosts for ssh: found %s=%v",
+		clusterv1alpha1.InstancePoolTypeBastion,
+		bok)
+	if !bok && name == clusterv1alpha1.InstancePoolTypeBastion {
+		return nil, err
+	}
+
+	host, hok := s.hosts[name]
+	if !hok {
+		return nil, fmt.Errorf("%s %s=%v", err, name, hok)
+	}
+
+	return host, nil
 }

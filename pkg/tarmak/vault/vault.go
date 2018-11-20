@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -154,7 +155,7 @@ func (v *Vault) createTunnelsWithCA(instances []string, vaultCA string) ([]*vaul
 	for pos := range instances {
 		fqdn := instances[pos]
 		sshTunnel := v.cluster.Environment().Tarmak().SSH().Tunnel(
-			"bastion", fqdn, 8200,
+			fqdn, "8200", strconv.Itoa(utils.UnusedPort()), false,
 		)
 		vaultTunnel, err := NewTunnel(
 			sshTunnel,
@@ -198,10 +199,7 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 			wg.Add(1)
 			go func(pos int) {
 				defer wg.Done()
-				err := tunnels[pos].Stop()
-				if err != nil {
-					v.log.Warn(err)
-				}
+				tunnels[pos].Stop()
 			}(pos)
 		}
 		wg.Wait()
