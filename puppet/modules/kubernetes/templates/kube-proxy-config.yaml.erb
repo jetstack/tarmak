@@ -1,0 +1,8 @@
+kind: KubeProxyConfiguration
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+clusterCIDR: <%= scope['kubernetes::pod_network'] %>
+resourceContainer: podruntime.slice
+<% if @kubeconfig_path -%>
+clientConnection:
+    kubeconfig: <%= @kubeconfig_path %>
+<% end -%>

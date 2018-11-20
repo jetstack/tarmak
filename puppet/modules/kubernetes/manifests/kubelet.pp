@@ -53,8 +53,11 @@ class kubernetes::kubelet(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
-){
+  String $config_file = "${::kubernetes::params::config_dir}/kubelet-config.yaml",
+) inherits kubernetes::params{
   require ::kubernetes
+
+  $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
 
   if ! $eviction_soft_memory_available_threshold or ! $eviction_soft_memory_available_grace_period {
     $_eviction_soft_memory_available_threshold = undef
@@ -120,6 +123,15 @@ class kubernetes::kubelet(
     ])
   } else {
     $_feature_gates = $feature_gates
+  }
+
+  $_config_feature_gates = $_feature_gates.map |$gate| {
+    $s = split($gate, '=')
+    if $s.length < 2 {
+      $feature = $s[0]; "${feature}: true"
+    } else {
+      $feature = $s[0,-2].join('='); $enable = $s[-1]; "${feature}: ${enable}"
+    }
   }
 
   if !$_register_schedulable {
@@ -264,6 +276,17 @@ class kubernetes::kubelet(
     notify  => Service["${service_name}.service"],
   }
 
+  if $post_1_11 {
+    file{$config_file:
+      ensure  => file,
+      mode    => '0640',
+      owner   => 'root',
+      group   => $kubernetes::group,
+      content => template('kubernetes/kubelet-config.yaml.erb'),
+      notify  => Service["${service_name}.service"],
+    }
+  }
+
   kubernetes::symlink{'kubelet':}
   -> file{"${::kubernetes::systemd_dir}/${service_name}.service":
     ensure  => file,
@@ -287,5 +310,4 @@ class kubernetes::kubelet(
   ensure_resource('package', 'socat',{
     ensure => 'present',
   })
-
 }

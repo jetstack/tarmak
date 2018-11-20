@@ -9,10 +9,14 @@ ExecStartPre=/sbin/sysctl -w net.bridge.bridge-nf-call-iptables=1
 ExecStartPre=/sbin/sysctl -w net.bridge.bridge-nf-call-ip6tables=1
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/proxy \
   --v=<%= scope['kubernetes::log_level'] %> \
+<% if @post_1_11 -%>
+  --config=<%= @config_file  %> \
+<% else -%>
   --cluster-cidr=<%= scope['kubernetes::pod_network'] %> \
   --resource-container=podruntime.slice \
 <% if @kubeconfig_path -%>
   --kubeconfig=<%= @kubeconfig_path %> \
+<% end -%>
 <% end -%>
   --logtostderr=true
 
