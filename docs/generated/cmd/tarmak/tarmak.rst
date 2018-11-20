@@ -21,6 +21,7 @@ Options
   -h, --help                           help for tarmak
       --keep-containers                do not clean-up terraform/packer containers after running them
       --log-flush-frequency duration   Maximum number of seconds between log flushes (default 5s)
+      --public-api-endpoint            Override kubeconfig to point to cluster's public API endpoint
   -v, --verbose                        enable verbose logging
       --wing-dev-mode                  use a bundled wing version rather than a tagged release from GitHub
 
@@ -30,6 +31,7 @@ SEE ALSO
 * `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
 * `tarmak environments <tarmak_environments.html>`_ 	 - Operations on environments
 * `tarmak init <tarmak_init.html>`_ 	 - Initialize a cluster
+* `tarmak kubeconfig <tarmak_kubeconfig.html>`_ 	 - Verify and print path to Kubeconfig
 * `tarmak kubectl <tarmak_kubectl.html>`_ 	 - Run kubectl on the current cluster
 * `tarmak providers <tarmak_providers.html>`_ 	 - Operations on providers
 * `tarmak version <tarmak_version.html>`_ 	 - Print the version number of tarmak

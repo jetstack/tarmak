@@ -7,29 +7,35 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/blang/semver"
 	terraformVersion "github.com/hashicorp/terraform/version"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
 type CmdTarmak struct {
 	*Tarmak
-	log  *logrus.Entry
-	args []string
-	ctx  interfaces.CancellationContext
+
+	log    *logrus.Entry
+	args   []string
+	pflags *pflag.FlagSet
+	ctx    interfaces.CancellationContext
 }
 
-func (t *Tarmak) NewCmdTarmak(args []string) *CmdTarmak {
+func (t *Tarmak) NewCmdTarmak(pflags *pflag.FlagSet, args []string) *CmdTarmak {
 	return &CmdTarmak{
 		Tarmak: t,
 		log:    t.Log(),
 		args:   args,
+		pflags: pflags,
 		ctx:    t.CancellationContext(),
 	}
 }
@@ -225,6 +231,59 @@ Are you sure you want to re-build them?`, alreadyBuilt)
 	}
 
 	return c.packer.Build(c.args)
+}
+
+func (c *CmdTarmak) Kubectl() error {
+	if err := c.writeSSHConfigForClusterHosts(); err != nil {
+		return err
+	}
+
+	return c.kubectl.Kubectl(c.args, c.kubePublicAPIEndpoint())
+}
+
+func (c *CmdTarmak) Kubeconfig() error {
+	var err error
+
+	path := c.flags.Cluster.Kubeconfig.Path
+	if path == consts.DefaultKubeconfigPath {
+		path = c.kubectl.ConfigPath()
+
+	} else {
+		path, err = filepath.Abs(path)
+		if err != nil {
+			return fmt.Errorf("failed to get absolute path of custom path: %s", err)
+		}
+
+		c.log.Debugf("using custom kubeconfig path %s", path)
+	}
+
+	kubeconfig, err := c.kubectl.Kubeconfig(path, c.kubePublicAPIEndpoint())
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s\n", kubeconfig)
+
+	return nil
+}
+
+func (c *CmdTarmak) kubePublicAPIEndpoint() bool {
+	// first set bool to what we have set in the config
+	publicEndpoint := false
+	if k := c.Cluster().Config().Kubernetes; k != nil && k.APIServer != nil {
+		publicEndpoint = k.APIServer.Public
+	}
+
+	// if the flag default is different to the config AND we have changed the
+	// flag (overridden), we set the bool and warn we are using a different
+	// setting than the config
+	if p := c.flags.PublicAPIEndpoint; publicEndpoint != p &&
+		c.pflags.Changed(consts.KubeconfigFlagName) {
+		c.log.Warnf("overriding %s from tarmak config to %v", consts.KubeconfigFlagName, p)
+		publicEndpoint = p
+	}
+
+	return publicEndpoint
 }
 
 func (c *CmdTarmak) verifyTerraformBinaryVersion() error {

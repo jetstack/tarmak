@@ -1,26 +1,27 @@
-.. _tarmak_clusters_instances_ssh:
+.. _tarmak_kubeconfig:
 
-tarmak clusters instances ssh
------------------------------
+tarmak kubeconfig
+-----------------
 
-Log into an instance with SSH
+Verify and print path to Kubeconfig
 
 Synopsis
 ~~~~~~~~
 
 
-Log into an instance with SSH
+Verify and print path to Kubeconfig
 
 ::
 
-  tarmak clusters instances ssh [instance alias] [flags]
+  tarmak kubeconfig [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for ssh
+  -h, --help          help for kubeconfig
+  -p, --path string   Path to store kubeconfig file (default "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/kubeconfig")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,5 +39,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters instances <tarmak_clusters_instances.html>`_ 	 - Operations on instances
+* `tarmak <tarmak.html>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
 

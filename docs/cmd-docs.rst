@@ -127,6 +127,11 @@ Command line documentation for both tarmak and wing commands
 .. toctree::
    :maxdepth: 1
 
+   generated/cmd/tarmak/tarmak_kubeconfig
+
+.. toctree::
+   :maxdepth: 1
+
    generated/cmd/tarmak/tarmak_kubectl
 
 .. toctree::

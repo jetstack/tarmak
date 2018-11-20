@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 	"github.com/jetstack/tarmak/pkg/terraform"
 )
 
@@ -114,4 +115,11 @@ func init() {
 			"use a bundled wing version rather than a tagged release from GitHub",
 		)
 	}
+
+	RootCmd.PersistentFlags().BoolVar(
+		&globalFlags.PublicAPIEndpoint,
+		consts.KubeconfigFlagName,
+		false,
+		"Override kubeconfig to point to cluster's public API endpoint",
+	)
 }

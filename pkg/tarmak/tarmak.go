@@ -383,13 +383,6 @@ func (t *Tarmak) Must(err error) {
 	}
 }
 
-func (t *Tarmak) CmdKubectl(args []string) error {
-	if err := t.writeSSHConfigForClusterHosts(); err != nil {
-		return err
-	}
-	return t.kubectl.Kubectl(args)
-}
-
 func (t *Tarmak) CancellationContext() interfaces.CancellationContext {
 	return t.ctx
 }

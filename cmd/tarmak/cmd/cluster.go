@@ -103,6 +103,18 @@ func clusterFlagDryRun(fs *flag.FlagSet, store *bool) {
 	)
 }
 
+func clusterKubeconfigFlags(fs *flag.FlagSet) {
+	store := &globalFlags.Cluster.Kubeconfig
+
+	fs.StringVarP(
+		&store.Path,
+		"path",
+		"p",
+		consts.DefaultKubeconfigPath,
+		"Path to store kubeconfig file",
+	)
+}
+
 func init() {
 	RootCmd.AddCommand(clusterCmd)
 }
