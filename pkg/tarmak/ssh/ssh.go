@@ -2,18 +2,16 @@
 package ssh
 
 import (
-	//"bufio"
 	"bytes"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
-	"os/exec"
-	//	"os/signal"
 	"path/filepath"
-	"syscall"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -21,6 +19,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
@@ -32,6 +31,7 @@ type SSH struct {
 	log    *logrus.Entry
 
 	controlPaths []string
+	hosts        []interfaces.Host
 }
 
 func New(tarmak interfaces.Tarmak) *SSH {
@@ -44,11 +44,11 @@ func New(tarmak interfaces.Tarmak) *SSH {
 }
 
 func (s *SSH) WriteConfig(c interfaces.Cluster) error {
-
 	hosts, err := c.ListHosts()
 	if err != nil {
 		return err
 	}
+	s.hosts = hosts
 
 	var sshConfig bytes.Buffer
 	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
@@ -75,72 +75,18 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	return nil
 }
 
-func (s *SSH) args() []string {
-	return []string{
-		"ssh",
-		"-F",
-		s.tarmak.Cluster().SSHConfigPath(),
-	}
-}
-
 // Pass through a local CLI session
-func (s *SSH) PassThrough(argsAdditional []string) error {
-	hosts, err := s.tarmak.Cluster().ListHosts()
+func (s *SSH) PassThrough(hostName string, argsAdditional []string) error {
+	if len(argsAdditional) > 0 {
+		_, err := s.Execute(hostName, argsAdditional, nil, nil, nil)
+		return err
+	}
+
+	client, err := s.client(hostName)
 	if err != nil {
 		return err
 	}
 
-	var host interfaces.Host
-	var bastion interfaces.Host
-	for _, h := range hosts {
-		if h.Aliases()[0] == argsAdditional[0] {
-			host = h
-			continue
-		}
-		if h.Aliases()[0] == "bastion" {
-			bastion = h
-		}
-	}
-
-	b, err := ioutil.ReadFile(s.tarmak.Environment().SSHPrivateKeyPath())
-	if err != nil {
-		return err
-	}
-	signer, err := ssh.ParsePrivateKey(b)
-	if err != nil {
-		return err
-	}
-
-	conf := &ssh.ClientConfig{
-		Timeout:         time.Minute * 10,
-		User:            host.User(),
-		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	confProxy := &ssh.ClientConfig{
-		Timeout:         time.Minute * 10,
-		User:            host.User(),
-		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	proxyClient, err := ssh.Dial("tcp", net.JoinHostPort(bastion.Hostname(), "22"), confProxy)
-	if err != nil {
-		return fmt.Errorf("failed to set up connection to bastion: %s", err)
-	}
-
-	conn, err := proxyClient.Dial("tcp", net.JoinHostPort(host.Hostname(), "22"))
-	if err != nil {
-		return fmt.Errorf("failed to set up connection to %s from basiton: %s", host.Hostname(), err)
-	}
-
-	ncc, chans, reqs, err := ssh.NewClientConn(conn, net.JoinHostPort(host.Hostname(), "22"), conf)
-	if err != nil {
-		return fmt.Errorf("failed to set up ssh client: %s", err)
-	}
-
-	client := ssh.NewClient(ncc, chans, reqs)
 	sess, err := client.NewSession()
 	if err != nil {
 		return err
@@ -187,30 +133,45 @@ func (s *SSH) PassThrough(argsAdditional []string) error {
 	return nil
 }
 
-func (s *SSH) Execute(host string, command string, argsAdditional []string) (returnCode int, err error) {
-	args := append(s.args(), host, "--", command)
-	args = append(args, argsAdditional...)
-
-	cmd := exec.Command(args[0], args[1:len(args)]...)
-
-	err = cmd.Start()
+func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (int, error) {
+	client, err := s.client(host)
 	if err != nil {
 		return -1, err
 	}
 
-	err = cmd.Wait()
+	sess, err := client.NewSession()
 	if err != nil {
-		perr, ok := err.(*exec.ExitError)
-		if ok {
-			if status, ok := perr.Sys().(syscall.WaitStatus); ok {
-				return status.ExitStatus(), nil
-			}
+		return -1, err
+	}
+	defer sess.Close()
+
+	if stderr == nil {
+		sess.Stderr = os.Stderr
+	} else {
+		sess.Stderr = stderr
+	}
+
+	if stdout == nil {
+		sess.Stdout = os.Stdout
+	} else {
+		sess.Stdout = stdout
+	}
+
+	if stdin == nil {
+		sess.Stdin = os.Stdin
+	} else {
+		sess.Stdin = stdin
+	}
+
+	err = sess.Run(strings.Join(cmd, " "))
+	if err != nil {
+		if e, ok := err.(*ssh.ExitError); ok {
+			return e.ExitStatus(), e
 		}
 		return -1, err
 	}
 
 	return 0, nil
-
 }
 
 func (s *SSH) Validate() error {
@@ -251,6 +212,83 @@ func (s *SSH) Validate() error {
 	}
 
 	return nil
+}
+
+func (s *SSH) client(hostName string) (*ssh.Client, error) {
+	// if we don't have a cache of hosts, write config
+	if len(s.hosts) == 0 {
+		err := s.WriteConfig(s.tarmak.Cluster())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var host interfaces.Host
+	var bastion interfaces.Host
+	for _, h := range s.hosts {
+		for _, a := range h.Aliases() {
+			if a == hostName {
+				host = h
+			}
+
+			if a == clusterv1alpha1.InstancePoolTypeBastion {
+				bastion = h
+			}
+		}
+	}
+
+	if host == nil || bastion == nil {
+		return nil,
+			fmt.Errorf("failed to resolve target hosts for ssh: found %s=%v %s=%v",
+				clusterv1alpha1.InstancePoolTypeBastion,
+				!(bastion == nil), hostName, !(host == nil))
+	}
+
+	b, err := ioutil.ReadFile(s.tarmak.Environment().SSHPrivateKeyPath())
+	if err != nil {
+		return nil, fmt.Errorf("failed to read ssh private key: %s", err)
+	}
+
+	signer, err := ssh.ParsePrivateKey(b)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse ssh private key: %s", err)
+	}
+
+	confProxy := &ssh.ClientConfig{
+		Timeout:         time.Minute * 10,
+		User:            host.User(),
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	proxyClient, err := ssh.Dial("tcp", net.JoinHostPort(bastion.Hostname(), "22"), confProxy)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up connection to bastion: %s", err)
+	}
+
+	// ssh into bastion so no need to set up proxy hop
+	if hostName == clusterv1alpha1.InstancePoolTypeBastion {
+		return proxyClient, nil
+	}
+
+	conf := &ssh.ClientConfig{
+		Timeout:         time.Minute * 10,
+		User:            host.User(),
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	conn, err := proxyClient.Dial("tcp", net.JoinHostPort(host.Hostname(), "22"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up connection to %s from basiton: %s", host.Hostname(), err)
+	}
+
+	ncc, chans, reqs, err := ssh.NewClientConn(conn, net.JoinHostPort(host.Hostname(), "22"), conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up ssh client: %s", err)
+	}
+
+	return ssh.NewClient(ncc, chans, reqs), nil
 }
 
 func (s *SSH) Cleanup() error {

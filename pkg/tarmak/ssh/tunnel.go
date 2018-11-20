@@ -42,6 +42,14 @@ func (s *SSH) Tunnel(hostname string, destination string, destinationPort int) i
 	return t
 }
 
+func (s *SSH) args() []string {
+	return []string{
+		"ssh",
+		"-F",
+		s.tarmak.Cluster().SSHConfigPath(),
+	}
+}
+
 // Start tunnel and wait till a tcp socket is reachable
 func (t *Tunnel) Start() error {
 	var err error
