@@ -180,7 +180,7 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 
 	retries := 5
 	for {
-		k.log.Debugf("trying to connect to %+v", cluster.Server)
+		k.log.Debugf("trying to connect to %s", cluster.Server)
 
 		var version string
 		version, err = k.verifyAPIVersion(*c)

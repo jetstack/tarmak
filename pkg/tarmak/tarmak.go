@@ -361,13 +361,11 @@ func (t *Tarmak) Cleanup() {
 		t.rootPath = nil
 	}
 
-	if err := t.SSH().Cleanup(); err != nil {
-		t.log.Warnf("error cleaning up ssh run time assets: %s", err)
-	}
-
 	if err := t.terraform.Cleanup(); err != nil {
 		t.log.Warnf("error cleaning up terraform run time assets: %s", err)
 	}
+
+	t.ssh.Cleanup()
 }
 
 func (t *Tarmak) Variables() map[string]interface{} {
