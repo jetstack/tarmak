@@ -462,27 +462,27 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 	return changesNeeded, nil
 }
 
-func (t *Terraform) Apply(cluster interfaces.Cluster) error {
+func (t *Terraform) Apply(cluster interfaces.Cluster) (hasChanged bool, err error) {
 	// generate a plan
 	changesNeeded, err := t.Plan(cluster, true)
 	if err != nil || !changesNeeded {
-		return err
+		return false, err
 	}
 
 	// break after sigterm
 	select {
 	case <-t.ctx.Done():
-		return t.ctx.Err()
+		return changesNeeded, t.ctx.Err()
 	default:
 	}
 
 	planFilePath, err := t.planFileLocation(cluster)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// apply necessary at this point
-	return t.terraformWrapper(
+	return changesNeeded, t.terraformWrapper(
 		cluster,
 		"apply",
 		[]string{planFilePath},
