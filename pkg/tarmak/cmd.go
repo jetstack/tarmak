@@ -183,7 +183,7 @@ func (c *CmdTarmak) DestroyEnvironment() error {
 		c.log.Info("moving environment folder to .archive")
 
 		archivePath := filepath.Join(c.ConfigPath(), ".archive")
-		environmentArchivePath := filepath.Join(archivePath, fmt.Sprintf("%v-%v",c.Environment().Name(),time.Now().Format(time.RFC3339)))
+		environmentArchivePath := filepath.Join(archivePath, fmt.Sprintf("%v-%v", c.Environment().Name(), time.Now().Format(time.RFC3339)))
 
 		if _, err = os.Stat(archivePath); err != nil {
 			if !os.IsNotExist(err) {
