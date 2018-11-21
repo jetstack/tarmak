@@ -44,7 +44,7 @@ func clusterApplyFlags(fs *flag.FlagSet) {
 	fs.BoolVar(
 		&store.AutoApproveDeletingData,
 		"auto-approve-deleting-data",
-		true,
+		false,
 		"auto approve deletion of any data as a cause from applying cluster",
 	)
 

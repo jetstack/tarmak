@@ -440,7 +440,7 @@ func (t *Terraform) Plan(cluster interfaces.Cluster, preApply bool) (changesNeed
 		return changesNeeded, errors.New(destroyStr)
 	}
 
-	if t.tarmak.ClusterFlags().Apply.AutoApproveDeletingData || t.tarmak.ClusterFlags().Apply.AutoApprove {
+	if t.tarmak.ClusterFlags().Apply.AutoApproveDeletingData && t.tarmak.ClusterFlags().Apply.AutoApprove {
 		t.log.Warnf("auto approved deleting, %s", destroyStr)
 		return changesNeeded, nil
 	}
