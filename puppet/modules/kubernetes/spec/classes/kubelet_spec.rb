@@ -677,6 +677,7 @@ describe 'kubernetes::kubelet' do
       end
     end
   end
+
   context 'with service_ensure => stopped' do
     let(:params) { { 
       "service_ensure" => 'stopped',

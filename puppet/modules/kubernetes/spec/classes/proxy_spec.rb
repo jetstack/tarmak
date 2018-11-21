@@ -37,6 +37,8 @@ describe 'kubernetes::proxy' do
           should contain_file(service_file).with_content(%r{--config=/etc/kubernetes/kube-proxy-config\.yaml})
           should contain_file(proxy_config)
       end
+    end
+  end
 
       context 'feature gates' do
         context 'none' do
