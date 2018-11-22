@@ -57,7 +57,11 @@ class kubernetes::kubelet(
 ) inherits kubernetes::params{
   require ::kubernetes
 
+  $tls_min_version = $::kubernetes::tls_min_version
+  $tls_cipher_suites = $::kubernetes::tls_cipher_suites
+
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
+  $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
 
   if ! $eviction_soft_memory_available_threshold or ! $eviction_soft_memory_available_grace_period {
     $_eviction_soft_memory_available_threshold = undef

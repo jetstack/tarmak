@@ -52,7 +52,11 @@ class kubernetes::apiserver(
   $_systemd_after = ['network.target'] + $systemd_after
   $_systemd_before = $systemd_before
 
+  $tls_min_version = $::kubernetes::tls_min_version
+  $tls_cipher_suites = $::kubernetes::tls_cipher_suites
+
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
+  $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
   $post_1_9 = versioncmp($::kubernetes::version, '1.9.0') >= 0
   $post_1_8 = versioncmp($::kubernetes::version, '1.8.0') >= 0
   $post_1_7 = versioncmp($::kubernetes::version, '1.7.0') >= 0

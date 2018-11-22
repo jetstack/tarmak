@@ -46,6 +46,8 @@ systemReserved:
 tlsCertFile: <%= @cert_file %>
 tlsPrivateKeyFile: <%= @key_file %>
 <% end -%>
+tlsCipherSuites: <%= @tls_cipher_suites.inspect %>
+tlsMinVersion: <%= @tls_min_version %>
 evictionHard:
 <% if !@eviction_hard_memory_available_threshold.nil? and @eviction_hard_memory_available_threshold != 'nil' -%>
     memory.available: <%= @eviction_hard_memory_available_threshold %>

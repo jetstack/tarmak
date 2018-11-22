@@ -138,6 +138,10 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
   "--oidc-username-prefix=<%= @oidc_username_prefix %>" \
 <% end -%>
   --profiling=false \
+<% if @post_1_10 -%>
+ "--tls-min-version=<%= @tls_min_version %>" \
+ "--tls-cipher-suites=<%= @tls_cipher_suites.join(',') %>" \
+<% end -%>
   --logtostderr=true
 
 Restart=on-failure

@@ -160,6 +160,10 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @_feature_gates != [] -%>
   --feature-gates=<%= @_feature_gates.join(',') %> \
 <% end -%>
+<% if @post_1_10 -%>
+ "--tls-min-version=<%= @tls_min_version %>" \
+ "--tls-cipher-suites=<%= @tls_cipher_suites.join(',') %>" \
+<% end -%>
 <% end -%>
   --logtostderr=true
 

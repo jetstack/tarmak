@@ -33,6 +33,17 @@ class kubernetes (
   Integer[-1,65535] $apiserver_insecure_port = -1,
   Integer[0,65535] $apiserver_secure_port = 6443,
   Array[Enum['AlwaysAllow', 'ABAC', 'RBAC']] $authorization_mode = [],
+  String $tls_min_version = 'VersionTLS12',
+  Array[String] $tls_cipher_suites = [
+    'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256',
+    'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256',
+    'TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305',
+    'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384',
+    'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305',
+    'TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384',
+    'TLS_RSA_WITH_AES_256_GCM_SHA384',
+    'TLS_RSA_WITH_AES_128_GCM_SHA256',
+  ],
 ) inherits ::kubernetes::params
 {
 
