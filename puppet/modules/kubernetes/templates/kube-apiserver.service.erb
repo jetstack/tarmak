@@ -17,6 +17,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% else -%>
   --allow-privileged=false \
 <% end -%>
+<% if not @post_1_11 -%>
+  --repair-malformed-updates=false \
+<% end -%>
 <% if @_audit_enabled -%>
   --audit-policy-file=<%= scope['kubernetes::apiserver::audit_policy_file'] %> \
   --audit-log-path=<%= scope['kubernetes::apiserver::audit_log_path'] %> \
