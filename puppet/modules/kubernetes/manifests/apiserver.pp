@@ -108,11 +108,14 @@ class kubernetes::apiserver(
     $_oidc_signing_algs = []
   }
 
-  # Do not set insecure_port variable of the API server on kubernetes 1.11+
+  # Do not set etcd_qorum_read
   if !$post_1_11 {
-    $insecure_port = $::kubernetes::_apiserver_insecure_port
     $etcd_quorum_read = true
   }
+
+  # insecure_port variable of the API server (needs to be set to 0 at least up to 1.13)
+  $insecure_port = $::kubernetes::_apiserver_insecure_port
+
   $secure_port = $::kubernetes::apiserver_secure_port
 
   # Default to etcd3 for versions bigger than 1.5
