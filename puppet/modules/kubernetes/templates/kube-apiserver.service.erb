@@ -88,6 +88,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% end -%>
 <%- if scope['kubernetes::_service_account_key_file'] -%>
   --service-account-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
+  --service-account-lookup \
 <% end -%>
 <% if @_feature_gates != [] -%>
   --feature-gates=<%= @_feature_gates.join(',') %> \
