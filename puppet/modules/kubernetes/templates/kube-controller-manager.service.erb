@@ -30,6 +30,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/controller-manager \
   --use-service-account-credentials \
 <% end -%>
   --leader-elect=true \
+  --profiling=false \
   --logtostderr=true
 
 Restart=on-failure

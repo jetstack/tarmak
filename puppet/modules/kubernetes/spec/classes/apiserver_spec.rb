@@ -245,14 +245,14 @@ describe 'kubernetes::apiserver' do
           it {should contain_file(service_file).with_content(/#{Regexp.escape('--insecure-port=')}/)}
         end
 
-        context 'should not exist after 1.11' do
+        context 'should exist after 1.11' do
           let(:pre_condition) {[
             """
             class{'kubernetes': version => '1.11.0'}
               """
           ]}
 
-          it {should_not contain_file(service_file).with_content(/#{Regexp.escape('--insecure-port=')}/)}
+          it {should contain_file(service_file).with_content(/#{Regexp.escape('--insecure-port=0')}/)}
         end
       end
 

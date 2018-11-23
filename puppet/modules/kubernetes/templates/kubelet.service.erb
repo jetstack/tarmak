@@ -12,6 +12,9 @@ ExecStartPre=/bin/sh -e -c "iptables -C PREROUTING -p tcp --destination 169.254.
 <% end -%>
 ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
   --v=<%= scope['kubernetes::log_level'] %> \
+<% if not @post_1_11 -%>
+  --cadvisor-port=0 \
+<% end -%>
 <% if scope.function_versioncmp([scope['kubernetes::version'], '1.6.0']) >= 0 -%>
 <% if @_node_taints_string and @_node_taints_string.length > 0 -%>
   "--register-with-taints=<%= @_node_taints_string %>" \
@@ -60,6 +63,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @post_1_11 -%>
   --config=<%= @config_file  %> \
 <% else -%>
+  --read-only-port=0 \
   --cluster-dns=<%= @cluster_dns %> \
   --cluster-domain=<%= @cluster_domain %> \
 <% if @pod_cidr -%>
@@ -155,6 +159,10 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% end -%>
 <% if @_feature_gates != [] -%>
   --feature-gates=<%= @_feature_gates.join(',') %> \
+<% end -%>
+<% if @post_1_10 -%>
+ "--tls-min-version=<%= @tls_min_version %>" \
+ "--tls-cipher-suites=<%= @tls_cipher_suites.join(',') %>" \
 <% end -%>
 <% end -%>
   --logtostderr=true
