@@ -154,7 +154,6 @@ func (t *Tarmak) initializeConfig() error {
 	if err != nil {
 		return fmt.Errorf("error retrieving current environment name: %s", err)
 	}
-
 	t.environment, err = t.EnvironmentByName(currentEnvironmentName)
 	if err != nil {
 		return err
