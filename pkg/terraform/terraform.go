@@ -60,7 +60,6 @@ func New(tarmak interfaces.Tarmak) *Terraform {
 // terraform providers and provisioners in general. We are pointing through
 // symlinks to the tarmak binary, which contains all relevant providers
 func (t *Terraform) preparePlugins(c interfaces.Cluster) error {
-	osext.Executable()
 	binaryPath, err := osext.Executable()
 	if err != nil {
 		return fmt.Errorf("error finding tarmak executable: %s", err)
