@@ -207,6 +207,11 @@ func (t *Tarmak) CmdClusterInit() error {
 	}
 	t.log.Infof("successfully initialized cluster '%s'", cluster.ClusterName())
 
+	err = t.Config().SetCurrentCluster(cluster.ClusterName())
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

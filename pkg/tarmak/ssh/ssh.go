@@ -124,6 +124,11 @@ func (s *SSH) Execute(host string, command string, argsAdditional []string) (ret
 }
 
 func (s *SSH) Validate() error {
+	// no environment in tarmak so we have no SSH to validate
+	if s.tarmak.Environment() == nil {
+		return nil
+	}
+
 	keyPath := s.tarmak.Environment().SSHPrivateKeyPath()
 	f, err := os.Stat(keyPath)
 	if err != nil {
