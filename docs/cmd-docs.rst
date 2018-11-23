@@ -82,11 +82,6 @@ Command line documentation for both tarmak and wing commands
 .. toctree::
    :maxdepth: 1
 
-   generated/cmd/tarmak/tarmak_clusters_instances_ssh
-
-.. toctree::
-   :maxdepth: 1
-
    generated/cmd/tarmak/tarmak_clusters_list
 
 .. toctree::
