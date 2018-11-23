@@ -6,3 +6,7 @@ resourceContainer: podruntime.slice
 clientConnection:
     kubeconfig: <%= @kubeconfig_path %>
 <% end -%>
+<% if @_config_feature_gates != [] -%>
+featureGates:
+    <%= @_config_feature_gates.join("\n    ") %>
+<% end -%>

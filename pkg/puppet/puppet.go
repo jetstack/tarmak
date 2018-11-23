@@ -178,7 +178,7 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::proxy::feature_gates: ["%s"]`, strings.Join(p.FeatureGates, `", "`)))
 	}
 	if c := conf.ControllerManager; c != nil && len(c.FeatureGates) > 0 {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::controller_feature_gates: ["%s"]`, strings.Join(c.FeatureGates, `", "`)))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::controller_manager::feature_gates: ["%s"]`, strings.Join(c.FeatureGates, `", "`)))
 	}
 
 	return

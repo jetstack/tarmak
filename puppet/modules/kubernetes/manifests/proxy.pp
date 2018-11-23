@@ -1,4 +1,4 @@
-# class kubernetes::kubelet
+# class kubernetes::proxy
 class kubernetes::proxy(
   Optional[String] $ca_file = undef,
   Optional[String] $cert_file = undef,
@@ -7,7 +7,7 @@ class kubernetes::proxy(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
-  Array[String] feature_gates = [],
+  Array[String] $feature_gates = [],
   String $config_file = "${::kubernetes::params::config_dir}/kube-proxy-config.yaml",
 ) inherits kubernetes::params{
   require ::kubernetes
@@ -19,6 +19,16 @@ class kubernetes::proxy(
   $_systemd_requires = $systemd_after
   $_systemd_before = $systemd_before
 
+  $_feature_gates = $feature_gates
+  $_config_feature_gates = $_feature_gates.map |$gate| {
+    $s = split($gate, '=')
+    if $s.length < 2 {
+      $feature = $s[0]; "${feature}: true"
+    } else {
+      $feature = $s[0,-2].join('='); $enable = $s[-1]; "${feature}: ${enable}"
+    }
+  }
+
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
 
   # ensure ipvsadm and contrack installed (for kube-proxy)
@@ -26,8 +36,6 @@ class kubernetes::proxy(
   ensure_resource('package', [$conntrack_package_name,'ipvsadm'],{
     ensure => 'present',
   })
-
-  $_feature_gates = $feature_gates
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-proxy"
   file{$kubeconfig_path:
