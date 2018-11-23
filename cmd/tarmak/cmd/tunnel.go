@@ -24,13 +24,8 @@ var tunnelCmd = &cobra.Command{
 		t := tarmak.New(globalFlags)
 		tunnel := t.SSH().Tunnel(args[0], args[1], args[2], false)
 
-		retries := 10
+		retries := 5
 		for {
-			if retries == 0 {
-				t.Cleanup()
-				os.Exit(1)
-			}
-
 			err := tunnel.Start()
 			if err == nil {
 				t.Log().Infof("tunnel started: %s", args)
@@ -38,8 +33,14 @@ var tunnelCmd = &cobra.Command{
 			}
 
 			t.Log().Errorf("failed to start tunnel: %s", err)
-			time.Sleep(time.Second * 2)
 			retries--
+			if retries == 0 {
+				t.Log().Error("failed to start tunnel after 5 attempts")
+				t.Cleanup()
+				os.Exit(1)
+			}
+
+			time.Sleep(time.Second * 2)
 		}
 
 		time.Sleep(time.Minute * 10)
