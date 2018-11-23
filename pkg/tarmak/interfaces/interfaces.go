@@ -209,7 +209,7 @@ type Terraform interface {
 type SSH interface {
 	WriteConfig(Cluster) error
 	PassThrough(host string, additionalArguments []string) error
-	Tunnel(destination, destinationPort string, daemonize bool) Tunnel
+	Tunnel(destination, destinationPort, localPort string, daemonize bool) Tunnel
 	Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (returnCode int, err error)
 	Validate() error
 	Cleanup()

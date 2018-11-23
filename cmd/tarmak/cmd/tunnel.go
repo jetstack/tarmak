@@ -6,25 +6,23 @@ import (
 	"os"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/jetstack/tarmak/pkg/tarmak"
 )
 
 var tunnelCmd = &cobra.Command{
-	Use: "tunnel [destination] [port]",
+	Use: "tunnel [destination] [destination port] [local port]",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 2 {
+		if len(args) != 3 {
 			return fmt.Errorf(
-				"expecting only a destination and port argument, got=%s", args)
+				"expecting only a destination, destination and local port argument, got=%s", args)
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		logrus.Errorf("HERE")
 		t := tarmak.New(globalFlags)
-		tunnel := t.SSH().Tunnel(args[0], args[1], false)
+		tunnel := t.SSH().Tunnel(args[0], args[1], args[2], false)
 
 		retries := 10
 		for {
@@ -35,6 +33,7 @@ var tunnelCmd = &cobra.Command{
 
 			err := tunnel.Start()
 			if err == nil {
+				t.Log().Infof("tunnel started: %s", args)
 				break
 			}
 

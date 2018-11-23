@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"strconv"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/go-version"
@@ -16,6 +17,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/instance_pool"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
@@ -662,6 +664,7 @@ func (c *Cluster) APITunnel() interfaces.Tunnel {
 	return c.Environment().Tarmak().SSH().Tunnel(
 		fmt.Sprintf("api.%s.%s", c.ClusterName(), c.Environment().Config().PrivateZone),
 		"6443",
+		strconv.Itoa(utils.UnusedPort()),
 		true,
 	)
 }

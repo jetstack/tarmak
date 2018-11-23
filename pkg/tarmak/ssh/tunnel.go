@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 	"os/exec"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -17,12 +16,12 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type Tunnel struct {
-	log *logrus.Entry
-	ssh *SSH
+	log    *logrus.Entry
+	ssh    *SSH
+	stopCh chan struct{}
 
 	dest      string
 	destPort  string
@@ -38,14 +37,15 @@ type Tunnel struct {
 var _ interfaces.Tunnel = &Tunnel{}
 
 // This opens a local tunnel through a SSH connection
-func (s *SSH) Tunnel(dest, destPort string, daemonize bool) interfaces.Tunnel {
+func (s *SSH) Tunnel(dest, destPort, localPort string, daemonize bool) interfaces.Tunnel {
 	tunnel := &Tunnel{
 		log:       s.log.WithField("destination", dest),
 		ssh:       s,
 		dest:      dest,
 		destPort:  destPort,
 		daemonize: daemonize,
-		localPort: strconv.Itoa(utils.UnusedPort()),
+		localPort: localPort,
+		stopCh:    make(chan struct{}),
 	}
 
 	s.tunnels = append(s.tunnels, tunnel)
@@ -64,7 +64,13 @@ func (t *Tunnel) Start() error {
 	t.log.Debug("connection to bastion successful")
 
 	if t.daemonize {
-		return t.startDaemon()
+		err := t.startDaemon()
+		if err != nil {
+			return err
+		}
+
+		time.Sleep(time.Second * 2)
+		return nil
 	}
 
 	conf, err := t.ssh.config()
@@ -99,15 +105,19 @@ func (t *Tunnel) handle() {
 		remoteConn, err := t.serverConn.Dial("tcp",
 			net.JoinHostPort(t.dest, t.destPort))
 		if err != nil {
-			net.ErrWriteToConnected.
-				t.log.Errorf("failed to create tunnel: %s", err)
-			time.Sleep(time.Second * 2)
-			continue
+			t.log.Errorf("failed to create tunnel: %s", err)
+			return
 		}
 		t.remoteConns = append(t.remoteConns, remoteConn)
 
 		conn, err := t.listener.Accept()
 		if err != nil {
+			select {
+			case <-t.stopCh:
+				return
+			default:
+			}
+
 			t.log.Warnf("error accepting ssh tunnel connection: %s", err)
 			continue
 		}
@@ -126,6 +136,12 @@ func (t *Tunnel) handle() {
 }
 
 func (t *Tunnel) Stop() {
+	select {
+	case <-t.stopCh:
+	default:
+		close(t.stopCh)
+	}
+
 	for _, l := range t.localConns {
 		if l != nil {
 			l.Close()
@@ -159,7 +175,7 @@ func (t *Tunnel) startDaemon() error {
 		return fmt.Errorf("error finding tarmak executable: %s", err)
 	}
 
-	cmd := exec.Command(binaryPath, "tunnel", t.dest, t.destPort)
+	cmd := exec.Command(binaryPath, "tunnel", t.dest, t.destPort, t.localPort)
 
 	outR, outW := io.Pipe()
 	errR, errW := io.Pipe()
@@ -172,12 +188,12 @@ func (t *Tunnel) startDaemon() error {
 
 	go func() {
 		for outS.Scan() {
-			t.log.WithField("tunnel", t.dest).Info(outS.Text())
+			t.log.WithField("tunnel", t.dest).Debug(outS.Text())
 		}
 	}()
 	go func() {
 		for errS.Scan() {
-			t.log.WithField("tunnel", t.dest).Error(errS.Text())
+			t.log.WithField("tunnel", t.dest).Debug(errS.Text())
 		}
 	}()
 

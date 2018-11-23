@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -154,7 +155,7 @@ func (v *Vault) createTunnelsWithCA(instances []string, vaultCA string) ([]*vaul
 	for pos := range instances {
 		fqdn := instances[pos]
 		sshTunnel := v.cluster.Environment().Tarmak().SSH().Tunnel(
-			fqdn, "8200", false,
+			fqdn, "8200", strconv.Itoa(utils.UnusedPort()), false,
 		)
 		vaultTunnel, err := NewTunnel(
 			sshTunnel,

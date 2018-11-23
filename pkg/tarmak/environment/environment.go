@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
@@ -299,6 +300,7 @@ func (e *Environment) WingTunnel() interfaces.Tunnel {
 	return e.Tarmak().SSH().Tunnel(
 		"localhost",
 		"9443",
+		strconv.Itoa(utils.UnusedPort()),
 		false,
 	)
 }
