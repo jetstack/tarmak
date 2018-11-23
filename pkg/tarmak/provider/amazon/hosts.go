@@ -4,7 +4,6 @@ package amazon
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -193,9 +192,4 @@ func (a *Amazon) ListHosts(c interfaces.Cluster) ([]interfaces.Host, error) {
 	}
 
 	return hostsInterfaces, nil
-}
-
-func (h *host) SSHControlPath() string {
-	return filepath.Join(os.TempDir(), fmt.Sprintf(
-		"ssh-control-%s@%s:22", h.user, h.hostname))
 }

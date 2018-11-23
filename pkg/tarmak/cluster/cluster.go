@@ -660,9 +660,9 @@ func (c *Cluster) NetworkCIDR() *net.IPNet {
 
 func (c *Cluster) APITunnel() interfaces.Tunnel {
 	return c.Environment().Tarmak().SSH().Tunnel(
-		"bastion",
 		fmt.Sprintf("api.%s.%s", c.ClusterName(), c.Environment().Config().PrivateZone),
-		6443,
+		"6443",
+		true,
 	)
 }
 
