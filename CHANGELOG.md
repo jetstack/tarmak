@@ -26,6 +26,97 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Etcd        |                    | `3.2.25` |
 
 
+## [0.5.0]: 0.5.0 - 2018-11-26
+
+The 0.5 release of Tarmak adds support for Kubernetes up to minor version 1.12.
+A focus of the release was to ensure all data stores are encrypted at rest.
+Another focus was on the stability of tarmak. Various components had version
+and/or configuration upgrades to ensure resiliency in the operation.
+
+This detailed changes have happend since the last minor version of Tarmak:
+
+### Added
+
+* Update default kubernetes version for new clusters to 1.11.4 (#638, [@simonswine](https://github.com/simonswine))
+* Istio example in documentation (#551, [@charlieegan3](https://github.com/charlieegan3))
+* Option to enable EBS encryption (#496, [@alljames](https://github.com/alljames))
+* Toogle EBS encryption and protect EBS data from being deleted (#531, [@simonswine](https://github.com/simonswine))
+* Kube bench proposed security fixes (#639, [@simonswine](https://github.com/simonswine))
+* Point Tarmak CLI to new multicluster environment's 'hub' cluster by default (#566, [@alljames](https://github.com/alljames))
+* Jetstack Navigator example in documentation (#539, [@charlieegan3](https://github.com/charlieegan3))
+* SPIFFE/SPIRE proposal/feasibility document. (#445, [@JoshVanL](https://github.com/JoshVanL))
+* Documentation regarding using AWS instance storage (#545, [@MattiasGees](https://github.com/MattiasGees))
+* Prometheus collection of systemd unit status (#612, [@simonswine](https://github.com/simonswine))
+* Bastion and Vault instance pools now support additional policies declared in the config (#579, [@JoshVanL](https://github.com/JoshVanL))
+* Etcd backup strategy (daily push of KMS encrypted snapshots of every instance) (#558, [@simonswine](https://github.com/simonswine))
+* Auto-generated CLI documentation (#589, [@JoshVanL](https://github.com/JoshVanL))
+* Flag --auto-approve and --auto-approve-deleting-data for `cluster apply` command (#560, [@JoshVanL](https://github.com/JoshVanL))
+* KMS Server Side Encryption to Consul S3 backups (#614, [@JoshVanL](https://github.com/JoshVanL))
+* KMS encrypt terraform remote S3 state data. (#505, [@JoshVanL](https://github.com/JoshVanL))
+* `plan --plan-file-store` and `apply --plan-file-location` (#563, [@JoshVanL](https://github.com/JoshVanL))
+* `cluster apply --auto-approve` and `cluster apply --auto-approve-deleting-data` (#560, [@JoshVanL](https://github.com/JoshVanL))
+* Format terraform code for CI (#580, [@JoshVanL](https://github.com/JoshVanL))
+* Tests for auto-generated terraform code (#535, [@JoshVanL](https://github.com/JoshVanL))
+* Restart Consul on failure (#502, [@dippynark](https://github.com/dippynark))
+* Restart etcd and wing-server on the bastion automatically on failure (#510, [@dippynark](https://github.com/dippynark))
+* Metrics-server add-on from Kubernetes version 1.7 onwards (#487, [@dippynark](https://github.com/dippynark))
+* Vault_server puppet module to initiate vault servers (#476, [@JoshVanL](https://github.com/JoshVanL))
+* Support to enable API Server ELB access logs (#492, [@JoshVanL](https://github.com/JoshVanL))
+* Set root volume attribute variables, previously only default was used. (#447, [@charlieegan3](https://github.com/charlieegan3))
+* Cluster force-unlock subcommand for to release terraform state lock. (#522, [@JoshVanL](https://github.com/JoshVanL))
+* Expose auto-cluster's `--scale-down-utilization-threshold` in .tarmak.yaml (#456, [@JoshVanL](https://github.com/JoshVanL))
+* Validate configuration, so that hubs in multi cluster environments contain all zones of their clusters  (#471, [@JoshVanL](https://github.com/JoshVanL))
+* `cluster kubeconfig` (#632, [@JoshVanL](https://github.com/JoshVanL))
+* Configuration file for Kubelet and Kube-Proxy for Kubrnetes clusters >= 1.11  (#442, [@JoshVanL](https://github.com/JoshVanL))
+
+### Changed
+
+* Unset API Server depreciated flags for Kubernetes version >= 1.11 (#440, [@JoshVanL](https://github.com/JoshVanL))
+* Only wait for wing conversion when infrastructure-only mode specified (#493, [@JoshVanL](https://github.com/JoshVanL))
+* Encrypt S3 puppet tar ball and consul backup buckets. (#504, [@JoshVanL](https://github.com/JoshVanL))
+* Generate API documentation in site (#533, [@JoshVanL](https://github.com/JoshVanL))
+* Use SSL protocol for API server health checks (#524, [@lostick](https://github.com/lostick))
+* Ensure connected vault tunnel is healthy (#512, [@JoshVanL](https://github.com/JoshVanL))
+* Move tarmak terraform provider socket to /tmp (#587, [@JoshVanL](https://github.com/JoshVanL))
+* Better advice when remote state has been destroyed (#576, [@JoshVanL](https://github.com/JoshVanL))
+* Make Jenkins a valid instancepool for hub (#478, [@MattiasGees](https://github.com/MattiasGees))
+* Bump default Kubernetes version for new clusters to 1.11.4 (#638, [@simonswine](https://github.com/simonswine))
+* Bump fluentbit to 0.14.6 (#585, [@MattiasGees](https://github.com/MattiasGees))
+* Bump node-exporter to 0.16.0 (#537, [@lostick](https://github.com/lostick))
+* Bump etcd to 3.2.25 (#623, [@JoshVanL](https://github.com/JoshVanL))
+* Bump Terraform to v0.11.8 (#516, [@simonswine](https://github.com/simonswine))
+* Bump Calico to 3.1.4 (#622, [@JoshVanL](https://github.com/JoshVanL))
+* Bump Heapster to 1.5.4 (#491, [@dippynark](https://github.com/dippynark))
+* Bump Prometheus to 2.3.2 and related components to latest version (#624, [@JoshVanL](https://github.com/JoshVanL))
+
+### Fixed
+
+* Terraform debug shell error when binary version is incompatible (#495, [@dippynark](https://github.com/dippynark))
+* Bug with conversion of yaml loggingsink to puppetcode (#581, [@MattiasGees](https://github.com/MattiasGees))
+* Bug with Grafana in cluster service (#460, [@MattiasGees](https://github.com/MattiasGees))
+* Better `cluster images build` behavior (#604, [@JoshVanL](https://github.com/JoshVanL))
+* Node exporter port on etcd nodes (#553, [@simonswine](https://github.com/simonswine))
+* Consul and update behaviour (#570, [@simonswine](https://github.com/simonswine))
+* Packer image updates to fix failing services (#562, [@simonswine](https://github.com/simonswine))
+* Clean up ssh run time assets (#597, [@JoshVanL](https://github.com/JoshVanL))
+* Correctly mount docker storage on NVMe driver AWS instances. (#461, [@JoshVanL](https://github.com/JoshVanL))
+* Ensure code generation is verified correctly (#462, [@simonswine](https://github.com/simonswine))
+* Propagate interrupt signals to sub-processes and tasks (#356, [@JoshVanL](https://github.com/JoshVanL))
+
+### Versions
+
+| Application | Supported versions | Default  |
+|-------------|-------------------:|---------:|
+| Packer      |                    | `1.0.2`  |
+| Terraform   |                    | `0.11.8` |
+| Consul      |                    | `1.2.3`  |
+| Vault       |                    | `0.9.5`  |
+| Kubernetes  | `>= 1.9 && < 1.13` | `1.11.4` |
+| Calico      |                    | `3.1.4`  |
+| Vault Helper|                    | `0.9.13` |
+| Etcd        |                    | `3.2.25` |
+
+
 ## [0.4.1]: 0.4.1 - 2018-08-24
 
 ### Fixed
@@ -198,6 +289,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
+[0.5.0]: https://github.com/jetstack/tarmak/compare/0.4.1...0.5.0
 [0.4.1]: https://github.com/jetstack/tarmak/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/jetstack/tarmak/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/jetstack/tarmak/compare/0.2.0...0.3.0
