@@ -212,13 +212,6 @@ func (c *Config) Environments() (environments []*tarmakv1alpha1.Environment) {
 	return environments
 }
 
-func (c *Config) AllClusters(environment string) (clusters []*clusterv1alpha1.Cluster) {
-	for _, environment := range c.Environments() {
-		clusters = append(c.Clusters(environment.Name))
-	}
-	return clusters
-}
-
 func (c *Config) Provider(name string) (cluster *tarmakv1alpha1.Provider, err error) {
 	for pos, _ := range c.conf.Providers {
 		provider := &c.conf.Providers[pos]
@@ -308,7 +301,7 @@ func (c *Config) RemoveEnvironment(environment string) error {
 		return err
 	}
 	// Pick the first found environment/cluster to replace currentCluster
-	if currentConfigEnvironment == environment {
+	if currentConfigEnvironment == environment && len(c.conf.Clusters) != 0 {
 		c.SetCurrentCluster(fmt.Sprintf("%v-%v", c.conf.Clusters[0].Environment, c.conf.Clusters[0].Name))
 	}
 
