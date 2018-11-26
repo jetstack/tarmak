@@ -70,10 +70,10 @@ func resourceTarmakVaultInstanceRoleCreate(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] calling rpc vault instance role for role %s", roleName)
 	var reply tarmakRPC.VaultInstanceRoleReply
-	err = client.Call(tarmakRPC.VaultInstanceRole, args, &reply)
+	err = client.Call(tarmakRPC.VaultInstanceRoleCreate, args, &reply)
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("call to %s failed: %s", tarmakRPC.VaultInstanceRole, err)
+		return fmt.Errorf("call to %s failed: %s", tarmakRPC.VaultInstanceRoleCreate, err)
 	}
 
 	if err = d.Set("init_token", reply.InitToken); err != nil {
@@ -106,7 +106,7 @@ func resourceTarmakVaultInstanceRoleRead(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] calling rpc vault instance role for role %s", roleName)
 	var reply tarmakRPC.VaultInstanceRoleReply
-	err = client.Call(tarmakRPC.VaultInstanceRole, args, &reply)
+	err = client.Call(tarmakRPC.VaultInstanceRoleRead, args, &reply)
 	if err != nil {
 		d.SetId("")
 		return nil

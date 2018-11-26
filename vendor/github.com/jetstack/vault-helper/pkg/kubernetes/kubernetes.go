@@ -250,11 +250,6 @@ func (k *Kubernetes) Ensure() error {
 		result = multierror.Append(result, err)
 	}
 
-	// setup init tokens
-	if err := k.ensureInitTokens(); err != nil {
-		result = multierror.Append(result, err)
-	}
-
 	return result.ErrorOrNil()
 }
 
@@ -277,7 +272,11 @@ func (k *Kubernetes) EnsureDryRun() (bool, error) {
 	}
 
 	if len(k.initTokens) == 0 {
-		k.initTokens = k.NewInitTokens()
+		initTokens, err := k.NewInitTokens()
+		if err != nil {
+			return true, err
+		}
+		k.initTokens = initTokens
 	}
 
 	for _, b := range k.backends() {
@@ -377,48 +376,46 @@ func GetMountByPath(vaultClient Vault, mountPath string) (*vault.MountOutput, er
 	return nil, nil
 }
 
-func (k *Kubernetes) NewInitToken(role, expected string, policies []string) *InitToken {
+func (k *Kubernetes) NewInitToken(role string) (*InitToken, error) {
+
+	var policies []string
+	var expected string
+	switch {
+	case role == "etcd":
+		expected = k.FlagInitTokens.Etcd
+		policies = []string{k.etcdPolicy().Name}
+	case role == "master":
+		expected = k.FlagInitTokens.Master
+		policies = []string{k.masterPolicy().Name, k.workerPolicy().Name}
+	case role == "worker":
+		expected = k.FlagInitTokens.Worker
+		policies = []string{k.workerPolicy().Name}
+	case role == "all":
+		expected = k.FlagInitTokens.All
+		policies = []string{k.etcdPolicy().Name, k.masterPolicy().Name, k.workerPolicy().Name}
+	default:
+		return nil, fmt.Errorf("role %s is not supported", role)
+	}
+
 	return &InitToken{
 		Role:          role,
 		Policies:      policies,
 		kubernetes:    k,
 		ExpectedToken: expected,
-	}
+	}, nil
 }
 
-func (k *Kubernetes) NewInitTokens() []*InitToken {
+func (k *Kubernetes) NewInitTokens() ([]*InitToken, error) {
 	var initTokens []*InitToken
 
-	initTokens = append(initTokens, k.NewInitToken("etcd", k.FlagInitTokens.Etcd, []string{
-		k.etcdPolicy().Name,
-	}))
-	initTokens = append(initTokens, k.NewInitToken("master", k.FlagInitTokens.Master, []string{
-		k.masterPolicy().Name,
-		k.workerPolicy().Name,
-	}))
-	initTokens = append(initTokens, k.NewInitToken("worker", k.FlagInitTokens.Worker, []string{
-		k.workerPolicy().Name,
-	}))
-	initTokens = append(initTokens, k.NewInitToken("all", k.FlagInitTokens.All, []string{
-		k.etcdPolicy().Name,
-		k.masterPolicy().Name,
-		k.workerPolicy().Name,
-	}))
-
-	return initTokens
-}
-
-func (k *Kubernetes) ensureInitTokens() error {
-	var result *multierror.Error
-
-	k.initTokens = append(k.initTokens, k.NewInitTokens()...)
-
-	for _, initToken := range k.initTokens {
-		if err := initToken.Ensure(); err != nil {
-			result = multierror.Append(result, err)
+	for _, role := range []string{"etcd", "master", "worker", "all"} {
+		initToken, err := k.NewInitToken(role)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create init tokens: %s", err)
 		}
+		initTokens = append(initTokens, initToken)
 	}
-	return result
+	return initTokens, nil
 }
 
 func (k *Kubernetes) ensureDryRunInitTokens() (bool, error) {
