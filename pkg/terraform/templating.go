@@ -141,7 +141,6 @@ func (t *terraformTemplate) Generate() error {
 			{"inputs", "inputs"},
 			{"outputs", "outputs"},
 			{"providers", "providers"},
-			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
 			{"wing_s3", "modules/kubernetes/wing_s3"},
 			{"wing_s3", "modules/vault/wing_s3"},
 		} {
@@ -159,8 +158,6 @@ func (t *terraformTemplate) Generate() error {
 			{"inputs", "inputs"},
 			{"outputs", "outputs"},
 			{"providers", "providers"},
-			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
-			{"wing_s3", "modules/vault/wing_s3"},
 		} {
 			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "vault"); err != nil {
 				result = multierror.Append(result, err)
@@ -172,6 +169,7 @@ func (t *terraformTemplate) Generate() error {
 		for _, tmpl := range []struct {
 			name, target string
 		}{
+			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
 			{"vault_instances", "modules/vault/vault_instances"},
 			{"wing_s3", "modules/vault/wing_s3"},
 		} {

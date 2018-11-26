@@ -19,5 +19,6 @@ RSpec.configure do |c|
     :ipaddress => '1.2.3.4',
     :osfamily => 'RedHat',
     :vault_token => 'init-token1',
+    :consul_bootstrap_expect => '3',
   }
 end
