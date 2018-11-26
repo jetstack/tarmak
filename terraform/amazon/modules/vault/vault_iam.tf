@@ -18,6 +18,18 @@ resource "aws_iam_role_policy" "vault" {
   policy = "${element(data.template_file.vault_policy.*.rendered, count.index)}"
 }
 
+resource "aws_iam_policy" "vault_tarmak_bucket_read" {
+  name   = "vault.${data.template_file.stack_name.rendered}.tarmak_bucket_read"
+  policy = "${data.template_file.iam_vault_tarmak_bucket_read.rendered}"
+}
+
+resource "aws_iam_policy_attachment" "vault_tarmak_bucket_read" {
+  name        = "${data.template_file.stack_name.rendered}-vault-tarmak-bucket-read-${count.index+1}"
+  roles       = ["${aws_iam_role.vault.*.name}"]
+  count       = "${var.vault_min_instance_count}"
+  policy_arn  = "${aws_iam_policy.vault_tarmak_bucket_read.arn}"
+}
+
 data "template_file" "vault_policy" {
   template = "${file("${path.module}/templates/vault_role_policy.json")}"
   count    = "${var.vault_min_instance_count}"
@@ -35,10 +47,18 @@ data "template_file" "vault_policy" {
     vault_tls_cert_path           = "${element(aws_s3_bucket_object.node-certs.*.key, count.index)}"
     vault_tls_key_path            = "${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
     vault_tls_ca_path             = "${aws_s3_bucket_object.ca-cert.key}"
-    vault_unsealer_kms_key_id     = "${var.secrets_kms_arn}"
     vault_unsealer_ssm_key_prefix = "${local.vault_unseal_key_name}"
-    puppet_tar_gz_bucket_path     = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+  }
+}
+
+data "template_file" "iam_vault_tarmak_bucket_read" {
+  template = "${file("${path.module}/templates/iam_tarmak_bucket_read.json")}"
+
+  vars {
+    puppet_tar_gz_bucket_path    = "${var.secrets_bucket}/${aws_s3_bucket_object.latest-puppet-hash.key}"
+    puppet_tar_gz_bucket_postfix  = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests/*-puppet.tar.gz"
     wing_binary_path              = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/wing-*"
+    vault_unsealer_kms_key_id     = "${var.secrets_kms_arn}"
   }
 }
 

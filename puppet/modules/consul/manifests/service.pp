@@ -23,7 +23,7 @@ class consul::service(
 
   $consul_encrypt = $consul::_consul_encrypt
   $consul_master_token = $consul::_consul_master_token
-  $consul_bootstrap_expect = $consul::_consul_bootstrap_expect
+  $consul_bootstrap_expect = 0 + $consul::_consul_bootstrap_expect
 
   $user = $consul::user
   $group = $consul::group

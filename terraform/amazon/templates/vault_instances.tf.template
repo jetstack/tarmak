@@ -35,12 +35,14 @@ data "template_file" "vault" {
     # run backup once per instance spread throughout the day
     backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.vault_min_instance_count))}:00:00"
 
-    puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${aws_s3_bucket_object.puppet-tar-gz.key}"
+    puppet_tar_gz_bucket_dir     = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests"
 
     # These are only used in the template when running in Wing dev mode
     wing_binary_path          = "${var.secrets_bucket}/${var.wing_binary_path}"
     wing_version              = "${var.wing_version}"
   }
+
+  depends_on = ["data.tarmak_bastion_instance.bastion","aws_iam_policy_attachment.vault_tarmak_bucket_read"]
 }
 
 resource "aws_cloudwatch_metric_alarm" "vault-autorecover" {
@@ -98,8 +100,6 @@ resource "aws_instance" "vault" {
   lifecycle {
     ignore_changes = ["volume_tags"]
   }
-
-  depends_on = ["data.tarmak_bastion_instance.bastion", "aws_security_group_rule.bastion_allow_wing_from_vault"]
 }
 
 resource "aws_ebs_volume" "vault" {

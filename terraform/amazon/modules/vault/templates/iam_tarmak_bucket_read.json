@@ -1,0 +1,27 @@
+{
+  "Statement": [
+    {
+      "Action": [
+        "s3:GetObject",
+        "s3:HeadObjectAcl"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::${puppet_tar_gz_bucket_path}",
+        "arn:aws:s3:::${puppet_tar_gz_bucket_postfix}",
+        "arn:aws:s3:::${wing_binary_path}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt"
+      ],
+      "Resource": [
+          "${vault_unsealer_kms_key_id}"
+      ]
+    }
+  ],
+  "Version": "2012-10-17"
+}

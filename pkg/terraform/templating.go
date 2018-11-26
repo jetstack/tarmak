@@ -143,8 +143,26 @@ func (t *terraformTemplate) Generate() error {
 			{"providers", "providers"},
 			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
 			{"wing_s3", "modules/kubernetes/wing_s3"},
+			{"wing_s3", "modules/vault/wing_s3"},
 		} {
 			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "kubernetes"); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
+	}
+
+	if t.cluster.Type() == clusterv1alpha1.ClusterTypeHub {
+		for _, tmpl := range []struct {
+			name, target string
+		}{
+			{"modules", "modules"},
+			{"inputs", "inputs"},
+			{"outputs", "outputs"},
+			{"providers", "providers"},
+			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
+			{"wing_s3", "modules/vault/wing_s3"},
+		} {
+			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "vault"); err != nil {
 				result = multierror.Append(result, err)
 			}
 		}

@@ -24,7 +24,7 @@ write_files:
 {{- else }}
     Environment=AIRWORTHY_VERSION=0.2.0
     Environment=AIRWORTHY_HASH=2d69cfe0b92f86481805c28d0b8ae47a8ffa6bb2373217e7c5215d61fc9efa1d
-    Environment=WING_VERSION=0.5.0-alpha2
+    Environment=WING_VERSION=0.5.0
     ExecStartPre=/bin/sh -c '\
       set -e ;\
       test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
@@ -36,7 +36,7 @@ write_files:
       fi ;\
       /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy download --output /opt/wing-$${WING_VERSION}/wing --sha256sums https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt  --signature-armored https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt.asc https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/wing_$${WING_VERSION}_linux_amd64'
 {{- end }}
-    ExecStart=/bin/sh -c 'exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${puppet_tar_gz_bucket_path}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
+    ExecStart=/bin/sh -c 'exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${puppet_tar_gz_bucket_dir}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
 
     [Install]
     WantedBy=multi-user.target

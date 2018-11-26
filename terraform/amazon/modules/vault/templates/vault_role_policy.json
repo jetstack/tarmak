@@ -38,16 +38,6 @@
       ]
     },
     {
-      "Effect": "Allow",
-      "Action": [
-        "kms:Encrypt",
-        "kms:Decrypt"
-      ],
-      "Resource": [
-          "${vault_unsealer_kms_key_id}"
-      ]
-    },
-    {
       "Action": [
         "s3:PutObject",
         "s3:PutObjectAcl"
@@ -69,17 +59,6 @@
       ],
       "Effect": "Allow",
       "Resource":["arn:aws:ssm:${region}:${account_id}:parameter/${vault_unsealer_ssm_key_prefix}*"]
-    },
-    {
-      "Action": [
-        "s3:GetObject",
-        "s3:HeadObjectAcl"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "arn:aws:s3:::${puppet_tar_gz_bucket_path}",
-        "arn:aws:s3:::${wing_binary_path}"
-      ]
     }
   ]
 }
