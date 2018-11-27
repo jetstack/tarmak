@@ -21,7 +21,6 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	//"github.com/jetstack/tarmak/pkg/tarmak/ssh"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
@@ -30,6 +29,7 @@ var _ interfaces.Kubectl = &Kubectl{}
 type Kubectl struct {
 	tarmak interfaces.Tarmak
 	log    *logrus.Entry
+	tunnel interfaces.Tunnel
 }
 
 func New(tarmak interfaces.Tarmak) *Kubectl {
@@ -200,10 +200,6 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 		}
 	}
 
-	// If we are using a public endpoint then we don't need to set up a tunnel
-	// but we need to keep a tunnel var around so we can close is later on if is
-	// being used. Use k.stopTunnel(tunnel) to ensure no panics.
-	var tunnel interfaces.Tunnel
 	if publicAPIEndpoint {
 		cluster.Server = fmt.Sprintf("https://api.%s-%s.%s",
 			k.tarmak.Environment().Name(),
@@ -211,14 +207,14 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 			k.tarmak.Provider().PublicZone())
 
 	} else {
-		tunnel = k.tarmak.Cluster().APITunnel()
-		if err := tunnel.Start(); err != nil {
-			k.stopTunnel(tunnel)
+		k.tunnel = k.tarmak.Cluster().APITunnel()
+		if err := k.tunnel.Start(); err != nil {
+			k.stopTunnel()
 			return err
 		}
 
-		cluster.Server = fmt.Sprintf("https://%s:%d",
-			tunnel.BindAddress(), tunnel.Port())
+		cluster.Server = fmt.Sprintf("https://%s:%s",
+			k.tunnel.BindAddress(), k.tunnel.Port())
 		k.log.Warnf("ssh tunnel connecting to Kubernetes API server will close after 10 minutes: %s",
 			cluster.Server)
 	}
@@ -226,7 +222,7 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 	var err error
 	retries := 5
 	for {
-		k.log.Debugf("trying to connect to %+v", cluster.Server)
+		k.log.Debugf("trying to connect to %s", cluster.Server)
 
 		var version string
 		version, err = k.verifyAPIVersion(*c)
@@ -254,9 +250,9 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 		}
 
 		if !publicAPIEndpoint {
-			k.stopTunnel(tunnel)
-			tunnel = k.tarmak.Cluster().APITunnel()
-			err = tunnel.Start()
+			k.stopTunnel()
+			k.tunnel = k.tarmak.Cluster().APITunnel()
+			err = k.tunnel.Start()
 			if err != nil {
 				break
 			}
@@ -265,17 +261,17 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 
 	// ensure we close the tunnel on error
 	if err != nil {
-		k.stopTunnel(tunnel)
+		k.stopTunnel()
 		return err
 	}
 
 	if err := utils.EnsureDirectory(filepath.Dir(configPath), 0700); err != nil {
-		k.stopTunnel(tunnel)
+		k.stopTunnel()
 		return err
 	}
 
 	if err := clientcmd.WriteToFile(*c, configPath); err != nil {
-		k.stopTunnel(tunnel)
+		k.stopTunnel()
 		return err
 	}
 
@@ -349,8 +345,8 @@ func (k *Kubectl) Kubeconfig(path string, publicAPIEndpoint bool) (string, error
 	return fmt.Sprintf("KUBECONFIG=%s", path), nil
 }
 
-func (k *Kubectl) stopTunnel(tunnel interfaces.Tunnel) {
-	if tunnel != nil {
-		tunnel.Stop()
+func (k *Kubectl) stopTunnel() {
+	if k.tunnel != nil {
+		k.tunnel.Stop()
 	}
 }

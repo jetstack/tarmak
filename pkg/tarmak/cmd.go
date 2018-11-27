@@ -30,6 +30,11 @@ type CmdTarmak struct {
 	ctx    interfaces.CancellationContext
 }
 
+type CmdSnapshot struct {
+	*CmdTarmak
+	snapshot interfaces.Snapshot
+}
+
 func (t *Tarmak) NewCmdTarmak(pflags *pflag.FlagSet, args []string) *CmdTarmak {
 	return &CmdTarmak{
 		Tarmak: t,
@@ -37,6 +42,13 @@ func (t *Tarmak) NewCmdTarmak(pflags *pflag.FlagSet, args []string) *CmdTarmak {
 		args:   args,
 		pflags: pflags,
 		ctx:    t.CancellationContext(),
+	}
+}
+
+func (t *Tarmak) NewCmdSnapshot(pflags *pflag.FlagSet, args []string, sh interfaces.Snapshot) *CmdSnapshot {
+	return &CmdSnapshot{
+		CmdTarmak: t.NewCmdTarmak(pflags, args),
+		snapshot:  sh,
 	}
 }
 
@@ -284,6 +296,14 @@ func (c *CmdTarmak) kubePublicAPIEndpoint() bool {
 	}
 
 	return publicEndpoint
+}
+
+func (c *CmdSnapshot) Save() error {
+	return c.snapshot.Save()
+}
+
+func (c *CmdSnapshot) Restore() error {
+	return c.snapshot.Restore()
 }
 
 func (c *CmdTarmak) verifyTerraformBinaryVersion() error {

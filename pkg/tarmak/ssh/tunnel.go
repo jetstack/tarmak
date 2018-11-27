@@ -2,124 +2,215 @@
 package ssh
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net"
 	"os/exec"
+	"syscall"
 	"time"
 
+	"github.com/kardianos/osext"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type Tunnel struct {
-	localPort int
-	log       *logrus.Entry
-	stdin     io.WriteCloser
+	log    *logrus.Entry
+	ssh    *SSH
+	stopCh chan struct{}
 
-	retryCount int
-	retryWait  time.Duration
+	dest      string
+	destPort  string
+	localPort string
+	daemonize bool
 
-	forwardSpec string
-	sshCommand  []string
+	serverConn *ssh.Client
+	listener   net.Listener
+
+	remoteConns, localConns []net.Conn
 }
 
 var _ interfaces.Tunnel = &Tunnel{}
 
 // This opens a local tunnel through a SSH connection
-func (s *SSH) Tunnel(hostname string, destination string, destinationPort int) interfaces.Tunnel {
-	t := &Tunnel{
-		localPort:  utils.UnusedPort(),
-		log:        s.log.WithField("destination", destination),
-		retryCount: 30,
-		retryWait:  500 * time.Millisecond,
-		sshCommand: s.args(),
+func (s *SSH) Tunnel(dest, destPort, localPort string, daemonize bool) interfaces.Tunnel {
+	tunnel := &Tunnel{
+		log:       s.log.WithField("destination", dest),
+		ssh:       s,
+		dest:      dest,
+		destPort:  destPort,
+		daemonize: daemonize,
+		localPort: localPort,
+		stopCh:    make(chan struct{}),
 	}
-	t.forwardSpec = fmt.Sprintf("-L%s:%d:%s:%d", t.BindAddress(), t.localPort, destination, destinationPort)
 
-	return t
+	s.tunnels = append(s.tunnels, tunnel)
+	return tunnel
 }
 
 // Start tunnel and wait till a tcp socket is reachable
 func (t *Tunnel) Start() error {
-	var err error
-
 	// ensure there is connectivity to the bastion
-	args := append(t.sshCommand, "bastion", "/bin/true")
-	cmd := exec.Command(args[0], args[1:len(args)]...)
-
-	t.log.Debugf("check SSH connection to bastion cmd=%s", cmd.Args)
-	err = cmd.Start()
-	if err != nil {
-		return err
+	ret, err := t.ssh.Execute("bastion", "/bin/true", nil, nil, nil)
+	if err != nil || ret != 0 {
+		return fmt.Errorf("error checking SSH connecting to bastion (%d): %s", ret, err)
 	}
 
-	// check for errors
-	err = cmd.Wait()
-	if err != nil {
-		return fmt.Errorf("error checking SSH connecting to bastion: %s", err)
-	}
-
-	args = append(t.sshCommand, "-O", "forward", t.forwardSpec, "bastion")
-	cmd = exec.Command(args[0], args[1:len(args)]...)
-
-	t.log.Debugf("start tunnel cmd=%s", cmd.Args)
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-
-	// check for errors
-	err = cmd.Wait()
-	if err != nil {
-		return fmt.Errorf("error starting SSH tunnel via bastion: %s", err)
-	}
-
-	// wait for TCP socket to be reachable
-	tries := t.retryCount
-	for {
-		if conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", t.Port()), t.retryWait); err != nil {
-			t.log.Debug("error connecting to tunnel: ", err)
-		} else {
-			conn.Close()
-			return nil
+	if t.daemonize {
+		err := t.startDaemon()
+		if err != nil {
+			return err
 		}
 
-		tries -= 1
-		if tries == 0 {
-			break
-		}
-		time.Sleep(t.retryWait)
+		// allow for some warm up time
+		time.Sleep(time.Second * 2)
+		return nil
 	}
 
-	return fmt.Errorf("could not establish a connection to destination via tunnel after %d tries", t.retryCount)
-}
-
-func (t *Tunnel) Stop() error {
-	args := append(t.sshCommand, "-O", "cancel", t.forwardSpec, "bastion")
-	cmd := exec.Command(args[0], args[1:len(args)]...)
-
-	t.log.Debugf("stop tunnel cmd=%s", cmd.Args)
-	err := cmd.Start()
+	conf, err := t.ssh.config()
 	if err != nil {
 		return err
 	}
 
-	// check for errors
-	err = cmd.Wait()
+	bastion, err := t.ssh.host(clusterv1alpha1.InstancePoolTypeBastion)
 	if err != nil {
-		t.log.Warn("stopping ssh tunnel failed with error: ", err)
+		return err
 	}
+
+	serverConn, err := ssh.Dial("tcp", net.JoinHostPort(bastion.Hostname(), "22"), conf)
+	if err != nil {
+		return err
+	}
+	t.serverConn = serverConn
+
+	listener, err := net.Listen("tcp", net.JoinHostPort(t.BindAddress(), t.Port()))
+	if err != nil {
+		return err
+	}
+	t.listener = listener
+
+	go t.handle()
 
 	return nil
 }
 
-func (t *Tunnel) Port() int {
+func (t *Tunnel) handle() {
+	tries := 5
+	for {
+		remoteConn, err := t.serverConn.Dial("tcp",
+			net.JoinHostPort(t.dest, t.destPort))
+		if err != nil {
+			t.log.Warnf("failed to create tunnel to remote connection: %s", err)
+			tries--
+			if tries == 0 {
+				t.log.Error("failed to create tunnel after 5 tries")
+				return
+			}
+
+			time.Sleep(time.Second * 3)
+			continue
+		}
+		t.remoteConns = append(t.remoteConns, remoteConn)
+
+		conn, err := t.listener.Accept()
+		if err != nil {
+			select {
+			case <-t.stopCh:
+				return
+			default:
+			}
+
+			t.log.Warnf("error accepting ssh tunnel connection: %s", err)
+			continue
+		}
+		t.localConns = append(t.localConns, conn)
+
+		go func() {
+			io.Copy(remoteConn, conn)
+			remoteConn.Close()
+		}()
+
+		go func() {
+			io.Copy(conn, remoteConn)
+			conn.Close()
+		}()
+	}
+}
+
+func (t *Tunnel) Stop() {
+	select {
+	case <-t.stopCh:
+	default:
+		close(t.stopCh)
+	}
+
+	for _, l := range t.localConns {
+		if l != nil {
+			l.Close()
+		}
+	}
+	for _, r := range t.remoteConns {
+		if r != nil {
+			r.Close()
+		}
+	}
+
+	if t.listener != nil {
+		t.listener.Close()
+	}
+	if t.serverConn != nil {
+		t.serverConn.Close()
+	}
+}
+
+func (t *Tunnel) Port() string {
 	return t.localPort
 }
 
 func (t *Tunnel) BindAddress() string {
 	return "127.0.0.1"
+}
+
+func (t *Tunnel) startDaemon() error {
+	binaryPath, err := osext.Executable()
+	if err != nil {
+		return fmt.Errorf("error finding tarmak executable: %s", err)
+	}
+
+	cmd := exec.Command(binaryPath, "tunnel", t.dest, t.destPort, t.localPort)
+
+	outR, outW := io.Pipe()
+	errR, errW := io.Pipe()
+	outS := bufio.NewScanner(outR)
+	errS := bufio.NewScanner(errR)
+
+	cmd.Stdin = nil
+	cmd.Stdout = outW
+	cmd.Stderr = errW
+
+	go func() {
+		for outS.Scan() {
+			t.log.WithField("tunnel", t.dest).Debug(outS.Text())
+		}
+	}()
+	go func() {
+		for errS.Scan() {
+			t.log.WithField("tunnel", t.dest).Debug(errS.Text())
+		}
+	}()
+
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid:    true,
+		Foreground: false,
+	}
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	return nil
 }

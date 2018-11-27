@@ -2,8 +2,10 @@
 package environment
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"sync"
@@ -48,11 +50,19 @@ func (e *Environment) VerifyBastionAvailable() error {
 	expBackoff.MaxElapsedTime = time.Minute * 2
 	b := backoff.WithContext(expBackoff, ctx)
 
+	stderrR, stderrW := io.Pipe()
+	stderrScanner := bufio.NewScanner(stderrR)
+	go func() {
+		for stderrScanner.Scan() {
+			e.log.WithField("std", "err").Debug(stderrScanner.Text())
+		}
+	}()
+
 	executeSSH := func() error {
 		retCode, err := ssh.Execute(
 			"bastion",
 			"/bin/true",
-			[]string{},
+			nil, nil, stderrW,
 		)
 
 		msg := "error while connecting to bastion host"

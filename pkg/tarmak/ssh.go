@@ -9,14 +9,18 @@ func (t *Tarmak) SSH() interfaces.SSH {
 	return t.ssh
 }
 
-func (t *Tarmak) SSHPassThrough(argsAdditional []string) {
+func (t *Tarmak) SSHPassThrough(host string, argsAdditional string) error {
 	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
-		t.log.Fatal(err)
+		return err
 	}
 
 	if err := t.ssh.Validate(); err != nil {
-		t.log.Fatal(err)
+		return err
 	}
 
-	t.ssh.PassThrough(argsAdditional)
+	if err := t.ssh.PassThrough(host, argsAdditional); err != nil {
+		return err
+	}
+
+	return nil
 }

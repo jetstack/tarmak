@@ -13,6 +13,7 @@ class etcd(
   $gid = $::etcd::params::gid,
   $user = $::etcd::params::user,
   $group = $::etcd::params::group,
+  $bin_dir = $::etcd::params::bin_dir,
   Boolean $backup_enabled = false,
   Enum['aws:kms',''] $backup_sse = '',
   String $backup_bucket_prefix = '',
