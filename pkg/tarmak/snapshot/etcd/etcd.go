@@ -2,7 +2,7 @@
 package etcd
 
 import (
-	"bufio"
+	//"bufio"
 	"fmt"
 	"io"
 	"strings"
@@ -20,7 +20,7 @@ import (
 var _ interfaces.Snapshot = &Etcd{}
 
 const (
-	etcdctlCmd = "/opt/bin/etcdctl snapshot %s %s > /dev/null;"
+	etcdctlCmd = `/opt/bin/etcdctl snapshot %s %s`
 )
 
 var (
@@ -30,13 +30,13 @@ var (
 		{"store": "overlay", "file": "overlay", "port": "2359"},
 	}
 
-	envCmd = []string{
-		"ETCDCTL_CERT=/etc/etcd/ssl/etcd-{{file}}.pem",
-		"ETCDCTL_KEY=/etc/etcd/ssl/etcd-{{file}}-key.pem",
-		"ETCDCTL_CACERT=/etc/etcd/ssl/etcd-{{file}}-ca.pem",
-		"ETCDCTL_API=3",
-		"ETCDCTL_ENDPOINTS=https://127.0.0.1:{{port}}",
-	}
+	envCmd = `
+export ETCDCTL_CERT=/etc/etcd/ssl/etcd-{{file}}.pem;
+export ETCDCTL_KEY=/etc/etcd/ssl/etcd-{{file}}-key.pem;
+export ETCDCTL_CACERT=/etc/etcd/ssl/etcd-{{file}}-ca.pem;
+export ETCDCTL_API=3;
+export ETCDCTL_ENDPOINTS=https://127.0.0.1:{{port}}
+`
 )
 
 type Etcd struct {
@@ -75,25 +75,30 @@ func (e *Etcd) Save() error {
 	saveFunc := func(store map[string]string) {
 		defer wg.Done()
 
-		targetPath := fmt.Sprintf("%s%s.db", e.path, store["store"])
-
-		reader, writer := io.Pipe()
-		go snapshot.ReadTarFromStream(targetPath, reader, result, errLock)
-
 		hostPath := fmt.Sprintf("/tmp/etcd-snapshot-%s-%s.db",
 			store["store"], time.Now().Format(snapshot.TimeLayout))
-		cmdArgs := append(e.template(envCmd, store),
-			strings.Split(fmt.Sprintf(etcdctlCmd, "save", hostPath), " ")...)
-		cmdArgs = append(cmdArgs,
-			strings.Split(fmt.Sprintf(snapshot.GZipCCmd, hostPath), " ")...)
 
-		err = e.sshCmd(
-			aliases[0],
-			cmdArgs,
-			writer,
-		)
+		cmdArgs := fmt.Sprintf(`sudo /bin/bash -c "%s; %s"`, e.template(envCmd, store),
+			fmt.Sprintf(etcdctlCmd, "save", hostPath))
+		err = snapshot.SSHCmd(e, aliases[0], cmdArgs, nil, nil, nil)
 		if err != nil {
 
+			errLock.Lock()
+			result = multierror.Append(result, err)
+			errLock.Unlock()
+
+			return
+		}
+
+		targetPath := fmt.Sprintf("%s%s.db", e.path, store["store"])
+		reader, writer := io.Pipe()
+		err = snapshot.TarFromStream(func() error {
+			err := snapshot.SSHCmd(e, aliases[0], fmt.Sprintf(snapshot.GZipCCmd, hostPath),
+				nil, writer, nil)
+			writer.Close()
+			return err
+		}, reader, targetPath)
+		if err != nil {
 			errLock.Lock()
 			result = multierror.Append(result, err)
 			errLock.Unlock()
@@ -111,7 +116,6 @@ func (e *Etcd) Save() error {
 	}
 
 	wg.Add(len(stores))
-
 	for _, store := range stores {
 		go saveFunc(store)
 	}
@@ -137,31 +141,18 @@ func (e *Etcd) Restore() error {
 	return nil
 }
 
-func (e *Etcd) sshCmd(host string, args []string, stdout io.Writer) error {
-	readerE, writerE := io.Pipe()
-	scannerE := bufio.NewScanner(readerE)
-
-	go func() {
-		for scannerE.Scan() {
-			e.log.WithField("std", "err").Warn(scannerE.Text())
-		}
-	}()
-
-	args = append([]string{"sudo"}, args...)
-	ret, err := e.ssh.ExecuteWithPipe(host, args[0], args[1:], nil, stdout, writerE)
-	if ret != 0 {
-		return fmt.Errorf("command [%s] returned non-zero: %d", strings.Join(args, " "), ret)
-	}
-
-	return err
-}
-
-func (e *Etcd) template(args []string, vars map[string]string) []string {
-	for i := range args {
-		for k, v := range vars {
-			args[i] = strings.Replace(args[i], fmt.Sprintf("{{%s}}", k), v, -1)
-		}
+func (e *Etcd) template(args string, vars map[string]string) string {
+	for k, v := range vars {
+		args = strings.Replace(args, fmt.Sprintf("{{%s}}", k), v, -1)
 	}
 
 	return args
+}
+
+func (e *Etcd) Log() *logrus.Entry {
+	return e.log
+}
+
+func (e *Etcd) SSH() interfaces.SSH {
+	return e.ssh
 }

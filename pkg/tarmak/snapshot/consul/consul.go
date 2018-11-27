@@ -2,7 +2,6 @@
 package consul
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -55,25 +54,26 @@ func (c *Consul) Save() error {
 
 	c.log.Infof("saving snapshot from instance %s", aliases[0])
 
-	var result *multierror.Error
-	var errLock sync.Mutex
-
-	reader, writer := io.Pipe()
-	go snapshot.ReadTarFromStream(c.path, reader, result, errLock)
-
 	hostPath := fmt.Sprintf("/tmp/consul-snapshot-%s.snap",
 		time.Now().Format(snapshot.TimeLayout))
-	cmdArgs := append(envCmd,
-		strings.Split(fmt.Sprintf(consulCmd, "save", hostPath), " ")...)
-	cmdArgs = append(cmdArgs,
-		strings.Split(fmt.Sprintf(snapshot.GZipCCmd, hostPath), " ")...)
+	cmdArgs := fmt.Sprintf(`
+export CONSUL_HTTP_TOKEN=$(sudo cat /etc/consul/consul.json | jq -r '.acl_master_token');
+export DATACENTER=$(sudo cat /etc/consul/consul.json | jq -r '.datacenter');
+/usr/local/bin/consul snapshot save -datacenter $DATACENTER %s;
+/usr/local/bin/consul snapshot inspect %s`, hostPath, hostPath)
 
-	err = c.sshCmd(
-		aliases[0],
-		cmdArgs,
-		nil,
-		writer,
-	)
+	err = snapshot.SSHCmd(c, aliases[0], cmdArgs, nil, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	reader, writer := io.Pipe()
+	err = snapshot.TarFromStream(func() error {
+		err := snapshot.SSHCmd(c, aliases[0], fmt.Sprintf(snapshot.GZipCCmd, hostPath),
+			nil, writer, nil)
+		writer.Close()
+		return err
+	}, reader, c.path)
 	if err != nil {
 		return err
 	}
@@ -107,11 +107,11 @@ func (c *Consul) Restore() error {
 		reader, writer := io.Pipe()
 		go snapshot.WriteTarToStream(c.path, writer, result, errLock)
 
-		err = c.sshCmd(
-			a,
-			cmdArgs,
+		err = snapshot.SSHCmd(c, a,
+			strings.Join(cmdArgs, " "),
 			reader,
 			os.Stdout,
+			nil,
 		)
 		if err != nil {
 			return err
@@ -123,20 +123,10 @@ func (c *Consul) Restore() error {
 	return nil
 }
 
-func (c *Consul) sshCmd(host string, args []string, stdin io.Reader, stdout io.Writer) error {
-	readerE, writerE := io.Pipe()
-	scannerE := bufio.NewScanner(readerE)
+func (c *Consul) Log() *logrus.Entry {
+	return c.log
+}
 
-	go func() {
-		for scannerE.Scan() {
-			c.log.WithField("std", "err").Warn(scannerE.Text())
-		}
-	}()
-
-	ret, err := c.ssh.ExecuteWithPipe(host, args[0], args[1:], stdin, stdout, writerE)
-	if ret != 0 {
-		return fmt.Errorf("command [%s] returned non-zero: %d", strings.Join(args, " "), ret)
-	}
-
-	return err
+func (c *Consul) SSH() interfaces.SSH {
+	return c.ssh
 }

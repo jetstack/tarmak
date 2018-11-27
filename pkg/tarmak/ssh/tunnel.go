@@ -55,7 +55,7 @@ func (s *SSH) Tunnel(dest, destPort, localPort string, daemonize bool) interface
 // Start tunnel and wait till a tcp socket is reachable
 func (t *Tunnel) Start() error {
 	// ensure there is connectivity to the bastion
-	ret, err := t.ssh.Execute("bastion", []string{"/bin/true"}, nil, nil, nil)
+	ret, err := t.ssh.Execute("bastion", "/bin/true", nil, nil, nil)
 	if err != nil || ret != 0 {
 		return fmt.Errorf("error checking SSH connecting to bastion (%d): %s", ret, err)
 	}
@@ -99,12 +99,20 @@ func (t *Tunnel) Start() error {
 }
 
 func (t *Tunnel) handle() {
+	tries := 5
 	for {
 		remoteConn, err := t.serverConn.Dial("tcp",
 			net.JoinHostPort(t.dest, t.destPort))
 		if err != nil {
-			t.log.Errorf("failed to create tunnel: %s", err)
-			return
+			t.log.Warnf("failed to create tunnel to remote connection: %s", err)
+			tries--
+			if tries == 0 {
+				t.log.Error("failed to create tunnel after 5 tries")
+				return
+			}
+
+			time.Sleep(time.Second * 3)
+			continue
 		}
 		t.remoteConns = append(t.remoteConns, remoteConn)
 

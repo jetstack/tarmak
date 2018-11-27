@@ -2,6 +2,7 @@
 package snapshot
 
 import (
+	"bufio"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -16,7 +17,7 @@ import (
 
 const (
 	TimeLayout = "2006-01-02_15-04-05"
-	GZipCCmd   = "gzip -c %s;"
+	GZipCCmd   = "gzip -c %s"
 	GZipDCmd   = "cat > %s.gz; gzip -d %s.gz;"
 )
 
@@ -58,7 +59,31 @@ func Prepare(tarmak interfaces.Tarmak, role string) (aliases []string, err error
 	return aliases, result.ErrorOrNil()
 }
 
-func ReadTarFromStream(dest string, stream io.Reader, result *multierror.Error, errLock sync.Mutex) {
+func TarFromStream(sshCmd func() error, stream io.ReadCloser, path string) error {
+	var result *multierror.Error
+	var errLock sync.Mutex
+	var wg sync.WaitGroup
+
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err = sshCmd()
+		if err != nil {
+
+			errLock.Lock()
+			result = multierror.Append(result, err)
+			errLock.Unlock()
+
+		}
+		return
+	}()
+
 	gzr, err := gzip.NewReader(stream)
 	if err != nil {
 
@@ -66,19 +91,8 @@ func ReadTarFromStream(dest string, stream io.Reader, result *multierror.Error, 
 		result = multierror.Append(result, err)
 		errLock.Unlock()
 
-		return
 	}
-
-	f, err := os.Create(dest)
-	if err != nil {
-
-		errLock.Lock()
-		result = multierror.Append(result, err)
-		errLock.Unlock()
-
-		return
-	}
-	defer f.Close()
+	defer gzr.Close()
 
 	if _, err := io.Copy(f, gzr); err != nil {
 
@@ -86,11 +100,18 @@ func ReadTarFromStream(dest string, stream io.Reader, result *multierror.Error, 
 		result = multierror.Append(result, err)
 		errLock.Unlock()
 
-		return
 	}
+
+	wg.Wait()
+
+	if result != nil {
+		return result
+	}
+
+	return nil
 }
 
-func WriteTarToStream(src string, stream io.WriteCloser, result *multierror.Error, errLock sync.Mutex) {
+func WriteTarToStream(src string, stream io.WriteCloser, result error, errLock sync.Mutex) {
 	defer stream.Close()
 	f, err := os.Open(src)
 	if err != nil {
@@ -114,4 +135,34 @@ func WriteTarToStream(src string, stream io.WriteCloser, result *multierror.Erro
 
 		return
 	}
+}
+
+func SSHCmd(s interfaces.Snapshot, host, cmd string, stdin io.Reader, stdout, stderr io.Writer) error {
+	for _, w := range []struct {
+		writer io.Writer
+		out    string
+	}{
+		{stdout, "out"},
+		{stderr, "err"},
+	} {
+
+		if w.writer == nil {
+			var reader *io.PipeReader
+			reader, w.writer = io.Pipe()
+			scanner := bufio.NewScanner(reader)
+
+			go func() {
+				for scanner.Scan() {
+					s.Log().WithField("std", w.out).Warn(scanner.Text())
+				}
+			}()
+		}
+	}
+
+	ret, err := s.SSH().Execute(host, cmd, stdin, stdout, stderr)
+	if ret != 0 {
+		return fmt.Errorf("command [%s] returned non-zero (%d): %s", cmd, ret, err)
+	}
+
+	return err
 }

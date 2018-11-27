@@ -11,7 +11,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -79,8 +78,8 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 }
 
 // Pass through a local CLI session
-func (s *SSH) PassThrough(hostName string, argsAdditional []string) error {
-	if len(argsAdditional) > 0 {
+func (s *SSH) PassThrough(hostName string, argsAdditional string) error {
+	if argsAdditional != "" {
 		_, err := s.Execute(hostName, argsAdditional, nil, nil, nil)
 		return err
 	}
@@ -137,7 +136,7 @@ func (s *SSH) PassThrough(hostName string, argsAdditional []string) error {
 	return nil
 }
 
-func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (int, error) {
+func (s *SSH) Execute(host string, cmd string, stdin io.Reader, stdout, stderr io.Writer) (int, error) {
 	client, err := s.client(host)
 	if err != nil {
 		return -1, err
@@ -168,7 +167,7 @@ func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr
 		sess.Stdin = stdin
 	}
 
-	err = sess.Start(strings.Join(cmd, " "))
+	err = sess.Start(cmd)
 	if err != nil {
 		return -1, err
 	}

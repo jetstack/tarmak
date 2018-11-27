@@ -208,9 +208,9 @@ type Terraform interface {
 
 type SSH interface {
 	WriteConfig(Cluster) error
-	PassThrough(host string, additionalArguments []string) error
+	PassThrough(host string, additionalArguments string) error
 	Tunnel(destination, destinationPort, localPort string, daemonize bool) Tunnel
-	Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (returnCode int, err error)
+	Execute(host string, cmd string, stdin io.Reader, stdout, stderr io.Writer) (returnCode int, err error)
 	Validate() error
 	Cleanup()
 }
@@ -296,4 +296,6 @@ type CancellationContext interface {
 type Snapshot interface {
 	Save() error
 	Restore() error
+	Log() *logrus.Entry
+	SSH() SSH
 }

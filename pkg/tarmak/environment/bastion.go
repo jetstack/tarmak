@@ -61,7 +61,7 @@ func (e *Environment) VerifyBastionAvailable() error {
 	executeSSH := func() error {
 		retCode, err := ssh.Execute(
 			"bastion",
-			[]string{"/bin/true"},
+			"/bin/true",
 			nil, nil, stderrW,
 		)
 

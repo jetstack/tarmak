@@ -15,7 +15,7 @@ var clusterSnapshotEtcdRestoreCmd = &cobra.Command{
 	Short: "restore etcd cluster with source snapshot",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
-			return fmt.Errorf("expecting single source path, got=%d", len(args))
+			return fmt.Errorf("expecting single target path, got=%d", len(args))
 		}
 
 		return nil
