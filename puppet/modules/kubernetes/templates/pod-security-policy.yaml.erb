@@ -2,7 +2,8 @@ apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: restricted
-  annotations:
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   hostPID: false
   hostIPC: false
@@ -30,6 +31,8 @@ apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
   annotations:
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
 spec:

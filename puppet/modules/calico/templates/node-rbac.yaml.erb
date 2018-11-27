@@ -9,6 +9,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: calico-node
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
   - apiGroups: [""]
     resources:
@@ -25,6 +27,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: calico-node
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -49,6 +53,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: calico-policy-controller
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
   - apiGroups:
     - ""
@@ -77,6 +83,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: calico-policy-controller
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -91,4 +99,6 @@ kind: ServiceAccount
 metadata:
   name: calico-policy-controller
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 <%- end -%>

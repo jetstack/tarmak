@@ -1,0 +1,16 @@
+[Unit]
+Description=Reconcile kubernetes addons
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+<%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
+
+[Service]
+User=<%= scope['kubernetes::user'] %>
+Group=<%= scope['kubernetes::group'] %>
+Environment=KUBECONFIG=<%= @kubeconfig_path %>
+# Apply template
+ExecStart=<%= @kube_addon_manager_path %>
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

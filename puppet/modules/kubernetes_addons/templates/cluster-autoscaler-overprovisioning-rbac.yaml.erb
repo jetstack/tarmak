@@ -4,6 +4,8 @@ apiVersion: v1
 metadata:
   name: cluster-proportional-autoscaler
   namespace: overprovisioning
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 <%- if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -13,6 +15,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: cluster-proportional-autoscaler
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
@@ -35,6 +39,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: cluster-proportional-autoscaler
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 subjects:
 - kind: ServiceAccount
   name: cluster-proportional-autoscaler

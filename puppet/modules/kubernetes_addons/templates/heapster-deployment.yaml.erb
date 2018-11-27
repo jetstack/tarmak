@@ -11,6 +11,7 @@ metadata:
     k8s-app: heapster
     kubernetes.io/cluster-service: "true"
     version: <%= @version %>
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
   selector:
@@ -101,6 +102,8 @@ kind: ConfigMap
 metadata:
   name: heapster-config
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 data:
   NannyConfiguration: |-
     apiVersion: nannyconfig/v1alpha1

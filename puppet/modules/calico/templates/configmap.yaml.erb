@@ -4,6 +4,8 @@ apiVersion: v1
 metadata:
   name: calico-config
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 data:
   # Configure this with the location of your etcd cluster.
   etcd_endpoints: "<%= @etcd_endpoints %>"

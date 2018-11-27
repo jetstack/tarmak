@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: default-http-backend
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
 <% if @replicas -%>
   replicas: <%= @replicas %>

@@ -18,6 +18,8 @@ apiVersion: v1
 metadata:
   name: kube-dns-autoscaler
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 kind: ClusterRole
 <%- if @version_before_1_6 -%>
@@ -27,6 +29,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 <%- end -%>
 metadata:
   name: system:kube-dns-autoscaler
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
@@ -51,6 +55,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 <%- end -%>
 metadata:
   name: system:kube-dns-autoscaler
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 subjects:
   - kind: ServiceAccount
     name: kube-dns-autoscaler

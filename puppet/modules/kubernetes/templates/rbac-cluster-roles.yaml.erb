@@ -8,6 +8,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: admin
   rules:
   - apiGroups:
@@ -170,6 +171,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: cluster-admin
   rules:
   - apiGroups:
@@ -190,6 +192,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: edit
   rules:
   - apiGroups:
@@ -332,6 +335,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:auth-delegator
   rules:
   - apiGroups:
@@ -354,6 +358,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:basic-user
   rules:
   - apiGroups:
@@ -370,6 +375,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:discovery
   rules:
   - nonResourceURLs:
@@ -391,6 +397,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:heapster
   rules:
   - apiGroups:
@@ -412,6 +419,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:kube-aggregator
   rules:
   - apiGroups:
@@ -431,6 +439,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:kube-controller-manager
   rules:
   - apiGroups:
@@ -563,6 +572,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:kube-dns
   rules:
   - apiGroups:
@@ -581,6 +591,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:kube-scheduler
   rules:
   - apiGroups:
@@ -672,6 +683,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:node
   rules:
   - apiGroups:
@@ -786,6 +798,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:node-bootstrapper
   rules:
   - apiGroups:
@@ -805,6 +818,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:node-problem-detector
   rules:
   - apiGroups:
@@ -835,6 +849,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:node-proxier
   rules:
   - apiGroups:
@@ -867,6 +882,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:persistent-volume-provisioner
   rules:
   - apiGroups:
@@ -918,6 +934,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: view
   rules:
   - apiGroups:

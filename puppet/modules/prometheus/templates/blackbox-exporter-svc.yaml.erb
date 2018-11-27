@@ -3,6 +3,7 @@ kind: Service
 metadata:
   labels:
     app: blackbox-exporter
+    addonmanager.kubernetes.io/mode: Reconcile
   name: blackbox-exporter
   namespace: <%= @namespace %>
 spec:

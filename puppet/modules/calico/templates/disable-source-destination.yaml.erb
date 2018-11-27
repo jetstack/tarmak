@@ -6,6 +6,7 @@ metadata:
   labels:
     k8s-app: k8s-ec2-srcdst
     role.kubernetes.io/networking: "1"
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
   selector:

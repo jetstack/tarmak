@@ -11,6 +11,7 @@ metadata:
   labels:
     k8s-app: kubernetes-dashboard
     kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
 <% if @replicas -%>
   replicas: <%= @replicas %>
@@ -77,6 +78,7 @@ metadata:
   labels:
     k8s-app: kubernetes-dashboard
     kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
   name: kubernetes-dashboard
   namespace: kube-system
 spec:

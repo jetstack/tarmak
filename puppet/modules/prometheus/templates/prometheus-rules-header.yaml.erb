@@ -2,5 +2,7 @@ kind: ConfigMap
 metadata:
   name: prometheus-rules
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 apiVersion: v1
 data:

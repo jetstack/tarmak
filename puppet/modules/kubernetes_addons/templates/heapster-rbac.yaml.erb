@@ -6,6 +6,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 <% if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -17,6 +18,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: system:heapster
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -37,6 +40,8 @@ kind: Role
 metadata:
   namespace: kube-system
   name: system:heapster-addon-resizer
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
 - apiGroups:
   - ""
@@ -60,6 +65,8 @@ kind: RoleBinding
 metadata:
   namespace: kube-system
   name: system:heapster-addon-resizer
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

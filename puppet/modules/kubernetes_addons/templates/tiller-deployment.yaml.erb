@@ -8,6 +8,7 @@ metadata:
   labels:
     app: helm
     name: tiller
+    addonmanager.kubernetes.io/mode: Reconcile
   name: tiller-deploy
   namespace: <%= @namespace %>
 spec:

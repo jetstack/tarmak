@@ -3,4 +3,6 @@ kind: ConfigMap
 metadata:
   name: prometheus
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 data:
