@@ -19,6 +19,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: kube-dns-autoscaler
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
 spec:
   template:
