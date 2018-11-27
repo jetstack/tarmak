@@ -4,12 +4,8 @@ package consul
 import (
 	"fmt"
 	"io"
-	"os"
-	"strings"
-	"sync"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
@@ -56,7 +52,7 @@ func (c *Consul) Save() error {
 
 	hostPath := fmt.Sprintf("/tmp/consul-snapshot-%s.snap",
 		time.Now().Format(snapshot.TimeLayout))
-	cmdArgs := fmt.Sprintf(`
+	cmdArgs := fmt.Sprintf(`set -e;
 export CONSUL_HTTP_TOKEN=$(sudo cat /etc/consul/consul.json | jq -r '.acl_master_token');
 export DATACENTER=$(sudo cat /etc/consul/consul.json | jq -r '.datacenter');
 /usr/local/bin/consul snapshot save -datacenter $DATACENTER %s;
@@ -93,26 +89,27 @@ func (c *Consul) Restore() error {
 	for _, a := range aliases {
 		c.log.Infof("restoring snapshot to instance %s", a)
 
+		reader, writer := io.Pipe()
 		hostPath := fmt.Sprintf("/tmp/consul-snapshot-%s.snap",
 			time.Now().Format(snapshot.TimeLayout))
 
-		cmdArgs := strings.Split(fmt.Sprintf(snapshot.GZipDCmd, hostPath, hostPath), " ")
-		cmdArgs = append(cmdArgs,
-			append(envCmd,
-				strings.Split(fmt.Sprintf(consulCmd, "restore", hostPath), " ")...)...)
+		err = snapshot.TarToStream(func() error {
+			err := snapshot.SSHCmd(c, a, fmt.Sprintf(snapshot.GZipDCmd, hostPath), reader, nil, nil)
+			return err
+		}, writer, c.path)
+		if err != nil {
+			return err
+		}
 
-		var result *multierror.Error
-		var errLock sync.Mutex
+		cmdArgs := fmt.Sprintf(`set -e;
+export CONSUL_HTTP_TOKEN=$(sudo cat /etc/consul/consul.json | jq -r '.acl_master_token');
+export DATACENTER=$(sudo cat /etc/consul/consul.json | jq -r '.datacenter');
+/usr/local/bin/consul snapshot inspect %s;
+/usr/local/bin/consul snapshot restore -datacenter $DATACENTER %s;
+echo number of keys: $(curl  --header "X-Consul-Token: $CONSUL_HTTP_TOKEN" -s 'http://127.0.0.1:8500/v1/kv/?keys' | jq '. | length');
+`, hostPath, hostPath)
 
-		reader, writer := io.Pipe()
-		go snapshot.WriteTarToStream(c.path, writer, result, errLock)
-
-		err = snapshot.SSHCmd(c, a,
-			strings.Join(cmdArgs, " "),
-			reader,
-			os.Stdout,
-			nil,
-		)
+		err = snapshot.SSHCmd(c, a, cmdArgs, nil, nil, nil)
 		if err != nil {
 			return err
 		}

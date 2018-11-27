@@ -31,11 +31,12 @@ var (
 	}
 
 	envCmd = `
+set -e;
 export ETCDCTL_CERT=/etc/etcd/ssl/etcd-{{file}}.pem;
 export ETCDCTL_KEY=/etc/etcd/ssl/etcd-{{file}}-key.pem;
 export ETCDCTL_CACERT=/etc/etcd/ssl/etcd-{{file}}-ca.pem;
 export ETCDCTL_API=3;
-export ETCDCTL_ENDPOINTS=https://127.0.0.1:{{port}}
+export ETCDCTL_ENDPOINTS=https://127.0.0.1:{{port}};
 `
 )
 
@@ -78,7 +79,7 @@ func (e *Etcd) Save() error {
 		hostPath := fmt.Sprintf("/tmp/etcd-snapshot-%s-%s.db",
 			store["store"], time.Now().Format(snapshot.TimeLayout))
 
-		cmdArgs := fmt.Sprintf(`sudo /bin/bash -c "%s; %s"`, e.template(envCmd, store),
+		cmdArgs := fmt.Sprintf(`sudo /bin/bash -c "%s %s"`, e.template(envCmd, store),
 			fmt.Sprintf(etcdctlCmd, "save", hostPath))
 		err = snapshot.SSHCmd(e, aliases[0], cmdArgs, nil, nil, nil)
 		if err != nil {

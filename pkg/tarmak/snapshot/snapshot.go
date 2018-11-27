@@ -18,7 +18,7 @@ import (
 const (
 	TimeLayout = "2006-01-02_15-04-05"
 	GZipCCmd   = "gzip -c %s"
-	GZipDCmd   = "cat > %s.gz; gzip -d %s.gz;"
+	GZipDCmd   = "gzip -d > %s"
 )
 
 func Prepare(tarmak interfaces.Tarmak, role string) (aliases []string, err error) {
@@ -59,7 +59,7 @@ func Prepare(tarmak interfaces.Tarmak, role string) (aliases []string, err error
 	return aliases, result.ErrorOrNil()
 }
 
-func TarFromStream(sshCmd func() error, stream io.ReadCloser, path string) error {
+func TarFromStream(sshCmd func() error, stream io.Reader, path string) error {
 	var result *multierror.Error
 	var errLock sync.Mutex
 	var wg sync.WaitGroup
@@ -111,30 +111,51 @@ func TarFromStream(sshCmd func() error, stream io.ReadCloser, path string) error
 	return nil
 }
 
-func WriteTarToStream(src string, stream io.WriteCloser, result error, errLock sync.Mutex) {
-	defer stream.Close()
+func TarToStream(sshCmd func() error, stream io.WriteCloser, src string) error {
+	var result *multierror.Error
+	var errLock sync.Mutex
+	var wg sync.WaitGroup
+
 	f, err := os.Open(src)
 	if err != nil {
-
-		errLock.Lock()
-		result = multierror.Append(result, err)
-		errLock.Unlock()
-
-		return
+		return err
 	}
 	defer f.Close()
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err = sshCmd()
+		if err != nil {
+
+			errLock.Lock()
+			result = multierror.Append(result, err)
+			errLock.Unlock()
+
+		}
+		return
+	}()
+
 	gzw := gzip.NewWriter(stream)
 	defer gzw.Close()
-
 	if _, err := io.Copy(gzw, f); err != nil {
 
 		errLock.Lock()
 		result = multierror.Append(result, err)
 		errLock.Unlock()
 
-		return
 	}
+
+	f.Close()
+	gzw.Close()
+	stream.Close()
+	wg.Wait()
+
+	if result != nil {
+		return result
+	}
+
+	return nil
 }
 
 func SSHCmd(s interfaces.Snapshot, host, cmd string, stdin io.Reader, stdout, stderr io.Writer) error {
