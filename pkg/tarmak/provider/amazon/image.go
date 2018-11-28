@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 )
@@ -87,4 +88,53 @@ func (a *Amazon) QueryImages(tags map[string]string) (images []tarmakv1alpha1.Im
 	}
 
 	return images, nil
+}
+
+func (a *Amazon) DestroyImages(ids []string) error {
+	var result *multierror.Error
+
+	images, err := a.tarmak.Packer().List()
+	if err != nil {
+		return err
+	}
+
+	for _, id := range ids {
+		found := false
+		for _, image := range images {
+			if id == image.Name {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			result = multierror.Append(result,
+				fmt.Errorf("failed to find tarmak image with id %s", id))
+		}
+	}
+
+	if result != nil {
+		return result
+	}
+
+	svc, err := a.EC2()
+	if err != nil {
+		return err
+	}
+
+	for _, id := range ids {
+		_, err := svc.DeregisterImage(&ec2.DeregisterImageInput{
+			DryRun:  aws.Bool(false),
+			ImageId: aws.String(id),
+		})
+
+		if err != nil {
+			result = multierror.Append(result, err)
+			continue
+		}
+
+		a.log.Infof("deregistered image %s", id)
+	}
+
+	return result.ErrorOrNil()
 }

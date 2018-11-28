@@ -94,6 +94,18 @@ func clusterPlanFlags(fs *flag.FlagSet) {
 	)
 }
 
+func clusterImagesDestroyFlags(fs *flag.FlagSet) {
+	store := &globalFlags.Cluster.Images.Destroy
+
+	fs.BoolVarP(
+		&store.All,
+		"all",
+		"A",
+		false,
+		"destroy all tarmak images for this cluster",
+	)
+}
+
 func clusterFlagDryRun(fs *flag.FlagSet, store *bool) {
 	fs.BoolVar(
 		store,
