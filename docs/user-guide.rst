@@ -854,9 +854,7 @@ URL to the ``url`` attribute, under the ``vaultHelper`` header in the cluster:
 .. code-block:: yaml
 
   clusters:
-  - amazon:
-      ebsEncrypted: true
-    environment: env
+  - environment: env
     vaultHelper:
       url: https://example.com/custom_vault-helper_location
 
