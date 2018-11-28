@@ -101,7 +101,7 @@ func resourceTarmakVaultInstanceRoleRead(d *schema.ResourceData, meta interface{
 		RoleName:           roleName,
 		VaultInternalFQDNs: vaultInternalFQDNs,
 		VaultCA:            vaultCA,
-		Create:             true,
+		Create:             false,
 	}
 
 	log.Printf("[DEBUG] calling rpc vault instance role for role %s", roleName)

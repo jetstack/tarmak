@@ -2,6 +2,7 @@
 package rpc
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/jetstack/vault-helper/pkg/kubernetes"
@@ -58,10 +59,25 @@ func (r *tarmakRPC) VaultInstanceRole(args *VaultInstanceRoleArgs, result *Vault
 	k := kubernetes.New(vaultClient, r.tarmak.Log())
 	k.SetClusterID(r.tarmak.Cluster().ClusterName())
 
-	if err := k.Ensure(); err != nil {
+	r.vaultLock.Lock()
+	defer r.vaultLock.Unlock()
+
+	changesNeeded, err := k.EnsureDryRun()
+	if err != nil {
 		err = fmt.Errorf("vault cluster is not ready: %s", err)
 		r.tarmak.Log().Error(err)
 		return err
+	}
+	if changesNeeded {
+		if args.Create {
+			if err := k.Ensure(); err != nil {
+				err = fmt.Errorf("vault cluster is not ready: %s", err)
+				r.tarmak.Log().Error(err)
+				return err
+			}
+		} else {
+			return errors.New("changes needed on vault cluster")
+		}
 	}
 
 	initTokens := k.InitTokens()

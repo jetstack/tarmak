@@ -6,6 +6,7 @@ import (
 	"net/rpc"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -21,6 +22,8 @@ const (
 type tarmakRPC struct {
 	cluster interfaces.Cluster
 	tarmak  interfaces.Tarmak
+
+	vaultLock sync.Mutex // prevent multiple simultaneous writes to vault cluster
 }
 
 func (r *tarmakRPC) log() *logrus.Entry {

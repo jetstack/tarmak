@@ -70,6 +70,7 @@ func resourceTarmakVaultClusterCreate(d *schema.ResourceData, meta interface{}) 
 		VaultCA:            vaultCA,
 		VaultKMSKeyID:      vaultKMSKeyID,
 		VaultUnsealKeyName: vaultUnsealKeyName,
+		Create:             true,
 	}
 
 	log.Print("[DEBUG] calling rpc vault cluster status")
@@ -105,6 +106,7 @@ func resourceTarmakVaultClusterRead(d *schema.ResourceData, meta interface{}) (e
 	args := &tarmakRPC.VaultClusterStatusArgs{
 		VaultInternalFQDNs: vaultInternalFQDNs,
 		VaultCA:            vaultCA,
+		Create:             false,
 	}
 
 	log.Print("[DEBUG] calling rpc vault cluster init status")

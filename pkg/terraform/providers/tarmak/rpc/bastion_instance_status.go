@@ -32,7 +32,7 @@ func (r *tarmakRPC) BastionInstanceStatus(args *BastionInstanceStatusArgs, resul
 	var err error
 	for i := 1; i <= Retries; i++ {
 		if err = r.cluster.Environment().VerifyBastionAvailable(); err != nil {
-			r.tarmak.Log().Error(err)
+			r.tarmak.Log().Warn(err)
 			time.Sleep(time.Second)
 		} else {
 			break
