@@ -3,6 +3,7 @@ class kubernetes (
   $version = $::kubernetes::params::version,
   $bin_dir = $::kubernetes::params::bin_dir,
   $download_dir = $::kubernetes::params::download_dir,
+  $download_url = $::kubernetes::params::download_url,
   $dest_dir = $::kubernetes::params::dest_dir,
   $config_dir = $::kubernetes::params::config_dir,
   $systemd_dir = $::kubernetes::params::systemd_dir,
@@ -106,8 +107,8 @@ class kubernetes (
       $_master_url = $master_url
   }
 
-  $download_url = regsubst(
-    $::kubernetes::params::download_url,
+  $real_download_url = regsubst(
+    $download_url,
     '#VERSION#',
     $version,
     'G'
