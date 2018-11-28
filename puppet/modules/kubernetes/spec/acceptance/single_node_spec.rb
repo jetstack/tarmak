@@ -112,7 +112,7 @@ class{'kubernetes::worker':
 
 kubernetes::apply { 'hello':
   type      => 'manifests',
-  manifests => ['kind: Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing']
+  manifests => ['kind: Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing\n    addonmanager.kubernetes.io/mode: Reconcile']
 }
 "
       end
@@ -161,7 +161,7 @@ kubernetes::apply { 'hello-invalid-namespace':
 
 kubernetes::apply { 'configmap':
   type      => 'manifests',
-  manifests => ['kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: configmap-test\n  labels:\n    name: configmap-test\ndata:\n  example.hello: world']
+  manifests => ['kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: configmap-test\n  labels:\n    name: configmap-test\n    addonmanager.kubernetes.io/mode: Reconcile\ndata:\n  example.hello: world']
 }
 "
       end
@@ -226,6 +226,11 @@ kubernetes::apply_fragment { 'hello2-metadata-label':
 kubernetes::apply_fragment { 'hello2-metadata-labelname':
   content => '    name: testing2',
   order   => '05',
+  target  => 'hello2',
+}
+kubernetes::apply_fragment { 'hello2-metadata-labeladdonmanager':
+  content => '    addonmanager.kubernetes.io/mode: Reconcile',
+  order   => '06',
   target  => 'hello2',
 }
 "

@@ -25,14 +25,14 @@ class kubernetes::addon_manager(
   $kubeconfig_path = $::kubernetes::kubectl::kubeconfig_path
   $manifest_dir = $::kubernetes::apply_dir
   $kubectl_path = "${::kubernetes::_dest_dir}/kubectl"
-  $kube_addon_manager_path = "${::kubernetes::_dest_dir}/addon-manager"
+  $kube_addon_manager_path = "${::kubernetes::_dest_dir}/kube-addon-manager"
 
   file {$kube_addon_manager_path:
     ensure  => file,
     mode    => '0755',
     owner   => 'root',
     group   => $kubernetes::group,
-    content => template('kubernetes/kube-addons.sh.erb'),
+    content => template('kubernetes/kube-addon-manager.sh.erb'),
     notify  => Service["${service_name}.service"],
   }
 
