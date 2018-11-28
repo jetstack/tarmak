@@ -20,7 +20,7 @@ var clusterImagesDestroyCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		t.CancellationContext().WaitOrCancel(t.NewCmdTarmak(args).ImagesDestroy)
+		t.CancellationContext().WaitOrCancel(t.NewCmdTarmak(cmd.Flags(), args).ImagesDestroy)
 	},
 }
 
