@@ -14,6 +14,7 @@ var clusterKubectlCmd = &cobra.Command{
 		t := tarmak.New(globalFlags)
 		t.Perform(t.NewCmdTarmak(cmd.Flags(), args).Kubectl())
 	},
+	DisableFlagsInUseLine: true,
 }
 
 func init() {

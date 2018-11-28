@@ -13,7 +13,7 @@ Log into an instance with SSH
 
 ::
 
-  tarmak clusters instances ssh [instance alias] [flags]
+  tarmak clusters instances ssh [instance alias] [optional ssh command]
 
 Options
 ~~~~~~~
