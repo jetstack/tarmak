@@ -117,6 +117,10 @@ func SetDefaults_Cluster(obj *Cluster) {
 		}
 	}
 
+	// Vault
+	if obj.VaultHelper == nil {
+		obj.VaultHelper = new(ClusterVaultHelper)
+	}
 }
 
 func boolPointer(x bool) *bool {

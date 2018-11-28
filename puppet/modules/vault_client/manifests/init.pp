@@ -23,9 +23,10 @@
 #   TODO
 class vault_client (
   $version = $::vault_client::params::version,
+  $_download_url = $::vault_client::params::download_url,
   $bin_dir = $::vault_client::params::bin_dir,
-  $download_dir = $::vault_client::params::download_dir,
   $dest_dir = $::vault_client::params::dest_dir,
+  $download_dir = $::vault_client::params::download_dir,
   $server_url = $::vault_client::params::server_url,
   $systemd_dir = $::vault_client::params::systemd_dir,
   $init_token = undef,
@@ -52,7 +53,7 @@ class vault_client (
 
   ## build download URL
   $download_url = regsubst(
-    $::vault_client::params::download_url,
+    $_download_url,
     '#VERSION#',
     $version,
     'G'
