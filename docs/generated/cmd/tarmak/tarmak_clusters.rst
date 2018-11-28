@@ -47,5 +47,6 @@ SEE ALSO
 * `tarmak clusters list <tarmak_clusters_list.html>`_ 	 - Print a list of clusters
 * `tarmak clusters plan <tarmak_clusters_plan.html>`_ 	 - Plan changes on the currently configured cluster
 * `tarmak clusters set-current <tarmak_clusters_set-current.html>`_ 	 - Set current cluster in config
+* `tarmak clusters snapshot <tarmak_clusters_snapshot.html>`_ 	 - Manage snapshots of remote consul and etcd clusters
 * `tarmak clusters ssh <tarmak_clusters_ssh.html>`_ 	 - Log into an instance with SSH
 

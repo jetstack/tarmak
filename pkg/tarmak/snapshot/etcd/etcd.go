@@ -2,7 +2,8 @@
 package etcd
 
 import (
-	//"bufio"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/snapshot"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/consts"
 )
 
 var _ interfaces.Snapshot = &Etcd{}
@@ -25,9 +27,9 @@ const (
 
 var (
 	stores = []map[string]string{
-		{"store": "k8s-main", "file": "k8s", "port": "2379"},
-		{"store": "k8s-events", "file": "k8s", "port": "2369"},
-		{"store": "overlay", "file": "overlay", "port": "2359"},
+		{"cluster": consts.RestoreK8sMainFlagName, "file": "k8s", "client_port": "2379", "peer_port": "2380"},
+		{"cluster": consts.RestoreK8sEventsFlagName, "file": "k8s", "client_port": "2369", "peer_port": "2370"},
+		{"cluster": consts.RestoreOverlayFlagName, "file": "overlay", "client_port": "2359", "peer_port": "2360"},
 	}
 
 	envCmd = `
@@ -36,7 +38,7 @@ export ETCDCTL_CERT=/etc/etcd/ssl/etcd-{{file}}.pem;
 export ETCDCTL_KEY=/etc/etcd/ssl/etcd-{{file}}-key.pem;
 export ETCDCTL_CACERT=/etc/etcd/ssl/etcd-{{file}}-ca.pem;
 export ETCDCTL_API=3;
-export ETCDCTL_ENDPOINTS=https://127.0.0.1:{{port}};
+export ETCDCTL_ENDPOINTS=https://127.0.0.1:{{client_port}};
 `
 )
 
@@ -77,7 +79,7 @@ func (e *Etcd) Save() error {
 		defer wg.Done()
 
 		hostPath := fmt.Sprintf("/tmp/etcd-snapshot-%s-%s.db",
-			store["store"], time.Now().Format(snapshot.TimeLayout))
+			store["cluster"], time.Now().Format(snapshot.TimeLayout))
 
 		cmdArgs := fmt.Sprintf(`sudo /bin/bash -c "%s %s"`, e.template(envCmd, store),
 			fmt.Sprintf(etcdctlCmd, "save", hostPath))
@@ -91,7 +93,7 @@ func (e *Etcd) Save() error {
 			return
 		}
 
-		targetPath := fmt.Sprintf("%s%s.db", e.path, store["store"])
+		targetPath := fmt.Sprintf("%s%s.db", e.path, store["cluster"])
 		reader, writer := io.Pipe()
 		err = snapshot.TarFromStream(func() error {
 			err := snapshot.SSHCmd(e, aliases[0], fmt.Sprintf(snapshot.GZipCCmd, hostPath),
@@ -107,7 +109,7 @@ func (e *Etcd) Save() error {
 			return
 		}
 
-		e.log.Infof("etcd %s snapshot saved to %s", store["store"], targetPath)
+		e.log.Infof("etcd %s snapshot saved to %s", store["cluster"], targetPath)
 
 		select {
 		case <-e.ctx.Done():
@@ -139,7 +141,169 @@ func (e *Etcd) Restore() error {
 	}
 	e.aliases = aliases
 
+	restoreFunc := func(host, path, token string, store map[string]string) error {
+		reader, writer := io.Pipe()
+		hostPath := fmt.Sprintf("/tmp/etcd-snapshot-%s-%s.db",
+			store["cluster"], time.Now().Format(snapshot.TimeLayout))
+
+		err = snapshot.TarToStream(func() error {
+			err := snapshot.SSHCmd(e, host, fmt.Sprintf(snapshot.GZipDCmd, hostPath), reader, nil, nil)
+			return err
+		}, writer, path)
+		if err != nil {
+			return err
+		}
+
+		cmdArgs := fmt.Sprintf(`set -e;
+sudo systemctl stop etcd-%s
+`, store["cluster"])
+		err = snapshot.SSHCmd(e, host, cmdArgs, nil, nil, nil)
+		if err != nil {
+			return err
+		}
+
+		cmdArgs = e.template(`set -e;
+sudo mkdir -p /var/lib/etcd_backup;
+sudo rsync -a --delete --ignore-missing-args /var/lib/etcd/{{cluster}} /var/lib/etcd_backup/;
+sudo rm -rf /var/lib/etcd/{{cluster}};
+`, store)
+		err = snapshot.SSHCmd(e, host, cmdArgs, nil, nil, nil)
+		if err != nil {
+			return err
+		}
+
+		initialCluster := e.initialClusterString(host, store)
+		for _, a := range aliases[1:] {
+			initialCluster = strings.Join(
+				[]string{initialCluster, e.initialClusterString(a, store)}, ",",
+			)
+		}
+
+		cmdArgs = e.template(fmt.Sprintf(`set -e;
+sudo ETCDCTL_API=3 /opt/bin/etcdctl snapshot restore %s \
+--name=%s.%s.%s \
+--data-dir=/var/lib/etcd/{{cluster}} \
+--initial-advertise-peer-urls=https://%s.%s.%s:{{peer_port}} \
+--initial-cluster=%s \
+--initial-cluster-token=etcd-{{cluster}}-%s
+`,
+			hostPath,
+			host, e.clusterName(), e.privateZone(),
+			host, e.clusterName(), e.privateZone(),
+			initialCluster,
+			token,
+		), store)
+		err = snapshot.SSHCmd(e, host, cmdArgs, nil, nil, nil)
+		if err != nil {
+			return err
+		}
+
+		cmdArgs = e.template(`set -e;
+ sudo chown -R etcd:etcd /var/lib/etcd/{{cluster}}
+ `, store)
+		err = snapshot.SSHCmd(e, host, cmdArgs, nil, nil, nil)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	startEtcdFunc := func(host string, store map[string]string) error {
+		cmdArgs := e.template(`set -e;
+sudo systemctl start etcd-{{cluster}}
+ `, store)
+		err = snapshot.SSHCmd(e, host, cmdArgs, nil, nil, nil)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	healthCheckFunc := func(host string, store map[string]string) error {
+		endpoints := e.endpointsString(host, store)
+		for _, a := range aliases[1:] {
+			endpoints = strings.Join(
+				[]string{endpoints, e.endpointsString(a, store)}, ",",
+			)
+		}
+
+		cmdArgs := e.template(fmt.Sprint(`%s
+sudo /opt/bin/etcdctl endpoint health
+--endpoints=%s
+ `, envCmd, endpoints), store)
+		err = snapshot.SSHCmd(e, host, cmdArgs, nil, nil, nil)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	for _, store := range stores {
+		value := e.restoreFlagValue(store["cluster"])
+		if value == "" {
+			continue
+		}
+
+		b := make([]byte, 32)
+		_, err := rand.Read(b)
+		if err != nil {
+			return fmt.Errorf("failed to create random etcd initial token: %s", err)
+		}
+		token := base64.URLEncoding.EncodeToString(b)
+
+		for _, a := range aliases {
+			e.log.Infof("restoring etcd %s on host %s", store["cluster"], a)
+			err := restoreFunc(a, value, token, store)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, a := range aliases {
+			e.log.Infof("starting etcd %s on host %s", store["cluster"], a)
+			err := startEtcdFunc(a, store)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, a := range aliases {
+			e.log.Infof("checking health of etcd %s on host %s", store["cluster"], a)
+			err := healthCheckFunc(a, store)
+			if err != nil {
+				return err
+			}
+		}
+
+		e.log.Infof("successfully restored etcd cluster %s with snapshot %s", store["cluster"], value)
+	}
+
+	e.log.Info("restarting API servers on master hosts")
+	masters, err := snapshot.Prepare(e.tarmak, clusterv1alpha1.InstancePoolTypeMaster)
+	for _, master := range masters {
+		cmdArgs := " sudo systemctl restart kube-apiserver"
+		err = snapshot.SSHCmd(e, master, cmdArgs, nil, nil, nil)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func (e *Etcd) initialClusterString(host string, store map[string]string) string {
+	return fmt.Sprintf("%s.%s.%s=https://%s.%s.%s:%s",
+		host, e.clusterName(), e.privateZone(),
+		host, e.clusterName(), e.privateZone(), store["peer_port"])
+}
+
+func (e *Etcd) endpointsString(host string, store map[string]string) string {
+	return fmt.Sprintf("%s.%s.%s=https://%s.%s.%s:%s",
+		host, e.clusterName(), e.privateZone(),
+		host, e.clusterName(), e.privateZone(), store["client_port"])
 }
 
 func (e *Etcd) template(args string, vars map[string]string) string {
@@ -156,4 +320,29 @@ func (e *Etcd) Log() *logrus.Entry {
 
 func (e *Etcd) SSH() interfaces.SSH {
 	return e.ssh
+}
+
+func (e *Etcd) clusterName() string {
+	return e.tarmak.Cluster().ClusterName()
+}
+
+func (e *Etcd) privateZone() string {
+	return e.tarmak.Environment().Config().PrivateZone
+}
+
+func (e *Etcd) restoreFlagValue(flag string) string {
+	rf := e.tarmak.ClusterFlags().Snapshot.Etcd.Restore
+	for _, db := range []struct {
+		name, value string
+	}{
+		{consts.RestoreK8sMainFlagName, rf.K8sMain},
+		{consts.RestoreK8sEventsFlagName, rf.K8sEvents},
+		{consts.RestoreOverlayFlagName, rf.Overlay},
+	} {
+		if db.name == flag {
+			return db.value
+		}
+	}
+
+	return ""
 }

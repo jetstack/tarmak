@@ -115,6 +115,31 @@ func clusterKubeconfigFlags(fs *flag.FlagSet) {
 	)
 }
 
+func clusterSnapshotEtcdRestoreFlags(fs *flag.FlagSet) {
+	store := &globalFlags.Cluster.Snapshot.Etcd.Restore
+
+	fs.StringVar(
+		&store.K8sMain,
+		consts.RestoreK8sMainFlagName,
+		"",
+		"location of k8s-main snapshot backup",
+	)
+
+	fs.StringVar(
+		&store.K8sEvents,
+		consts.RestoreK8sEventsFlagName,
+		"",
+		"location of k8s-events snapshot backup",
+	)
+
+	fs.StringVar(
+		&store.Overlay,
+		consts.RestoreOverlayFlagName,
+		"",
+		"location of overlay snapshot backup",
+	)
+}
+
 func init() {
 	RootCmd.AddCommand(clusterCmd)
 }

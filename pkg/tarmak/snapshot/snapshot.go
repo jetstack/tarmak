@@ -159,6 +159,8 @@ func TarToStream(sshCmd func() error, stream io.WriteCloser, src string) error {
 }
 
 func SSHCmd(s interfaces.Snapshot, host, cmd string, stdin io.Reader, stdout, stderr io.Writer) error {
+	fmt.Printf("$ %s\n", cmd)
+
 	for _, w := range []struct {
 		writer io.Writer
 		out    string
