@@ -7,7 +7,7 @@ class kubernetes::proxy(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
-  Array[String] $feature_gates = [],
+  Hash[String,Boolean] $feature_gates = {},
   String $config_file = "${::kubernetes::params::config_dir}/kube-proxy-config.yaml",
 ) inherits kubernetes::params{
   require ::kubernetes
@@ -19,14 +19,13 @@ class kubernetes::proxy(
   $_systemd_requires = $systemd_after
   $_systemd_before = $systemd_before
 
-  $_feature_gates = $feature_gates
-  $_config_feature_gates = $_feature_gates.map |$gate| {
-    $s = split($gate, '=')
-    if $s.length < 2 {
-      $feature = $s[0]; "${feature}: true"
-    } else {
-      $feature = $s[0,-2].join('='); $enable = $s[-1]; "${feature}: ${enable}"
+  if $feature_gates == {} {
+    $_feature_gates = $::kubernetes::_enable_pod_priority ? {
+      true    => 'PodPriority=true',
+      default => undef,
     }
+  } else {
+    $_feature_gates = $feature_gates
   }
 
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0

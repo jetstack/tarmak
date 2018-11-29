@@ -11,8 +11,8 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/scheduler \
   --v=<%= scope['kubernetes::log_level'] %> \
   --kubeconfig=<%= @kubeconfig_path %> \
   --leader-elect=true \
-<% if @_feature_gates != [] -%>
-  --feature-gates=<%= @_feature_gates.join(',') %> \
+<% if @_feature_gates && @_feature_gates.length > 0 -%>
+  --feature-gates=<% g = @_feature_gates.to_a.collect{|k| k.join('=')}.join(',') -%><%= g %> \
 <% end -%>
   --profiling=false \
   --logtostderr=true

@@ -367,7 +367,7 @@ describe 'kubernetes::kubelet' do
           """
       ]}
       let(:params) { {
-        "feature_gates" => []
+        "feature_gates" => {}
       }}
       it 'none with no pod priority' do
         should_not contain_file(service_file).with_content(%r{--feature-gates=})
@@ -387,10 +387,10 @@ describe 'kubernetes::kubelet' do
 
     context 'some' do
       let(:params) { {
-        "feature_gates" => ["PodPriority=true", "foobar=true", "foo", "edge=case=true"]
+        "feature_gates" => {"PodPriority" => true, "foobar" => false, "foo" => true, "edge=case" => true}
       }}
       it do
-        should contain_file(service_file).with_content(%r{--feature-gates=PodPriority=true,foobar=true,foo,edge=case=true})
+        should contain_file(service_file).with_content(%r{--feature-gates=PodPriority=true,foobar=false,foo=true,edge=case=true \\\n})
       end
     end
   end
@@ -431,7 +431,7 @@ describe 'kubernetes::kubelet' do
         it 'config contain' do
           should contain_file(kubelet_config).with_content(/kind: KubeletConfiguration/)
           should contain_file(kubelet_config).with_content(/apiVersion: kubelet.config.k8s.io\/v1beta1/)
-          should contain_file(kubelet_config).with_content(%r{clusterDNS:\n    - 10.254.0.10})
+          should contain_file(kubelet_config).with_content(%r{clusterDNS:\n  - 10.254.0.10})
           should contain_file(kubelet_config).with_content(%r{clusterDomain: cluster.local})
         end
       end
@@ -447,14 +447,14 @@ describe 'kubernetes::kubelet' do
 
         it 'config contain' do
           should contain_file(kubelet_config).with_content(%r{authentication:})
-          should contain_file(kubelet_config).with_content(%r{    x509:})
-          should contain_file(kubelet_config).with_content(%r{        clientCAFile: /tmp/client_ca\.pem})
-          should contain_file(kubelet_config).with_content(%r{    anonymous:})
-          should contain_file(kubelet_config).with_content(%r{        enabled: false})
-          should contain_file(kubelet_config).with_content(%r{    webook:})
-          should contain_file(kubelet_config).with_content(%r{        enabled: true})
+          should contain_file(kubelet_config).with_content(%r{  x509:})
+          should contain_file(kubelet_config).with_content(%r{    clientCAFile: /tmp/client_ca\.pem})
+          should contain_file(kubelet_config).with_content(%r{  anonymous:})
+          should contain_file(kubelet_config).with_content(%r{    enabled: false})
+          should contain_file(kubelet_config).with_content(%r{  webook:})
+          should contain_file(kubelet_config).with_content(%r{    enabled: true})
           should contain_file(kubelet_config).with_content(%r{authorization:})
-          should contain_file(kubelet_config).with_content(%r{    mode: Webhook})
+          should contain_file(kubelet_config).with_content(%r{  mode: Webhook})
         end
       end
 
@@ -466,7 +466,7 @@ describe 'kubernetes::kubelet' do
               """
           ]}
           let(:params) { {
-            "feature_gates" => []
+            "feature_gates" => {}
           }}
           it 'none with no pod priority' do
             should_not contain_file(kubelet_config).with_content(%r{featureGates:})
@@ -480,19 +480,20 @@ describe 'kubernetes::kubelet' do
             """
           ]}
           it 'none with pod priority' do
-            should contain_file(kubelet_config).with_content(%r{featureGates:\n    PodPriority: true})
+            should contain_file(kubelet_config).with_content(%r{featureGates:\n  PodPriority: true})
           end
         end
 
         context 'some' do
           let(:params) { {
-            "feature_gates" => ["PodPriority=true", "foobar=true", "foo", "edge=case=true"]
+            "feature_gates" => {"PodPriority" => true, "foobar" => false, "foo" => true, "edge=case" => true}
           }}
           it 'config contain' do
-            should contain_file(kubelet_config).with_content(%r{featureGates:\n    PodPriority: true})
-            should contain_file(kubelet_config).with_content(%r{    foobar: true})
-            should contain_file(kubelet_config).with_content(%r{    foo: true})
-            should contain_file(kubelet_config).with_content(%r{    edge=case: true})
+            should contain_file(kubelet_config).with_content(%r{featureGates:\n})
+            should contain_file(kubelet_config).with_content(%r{  PodPriority: true\n})
+            should contain_file(kubelet_config).with_content(%r{  foobar: false\n})
+            should contain_file(kubelet_config).with_content(%r{  foo: true\n})
+            should contain_file(kubelet_config).with_content(%r{  edge=case: true\n})
           end
         end
       end
@@ -518,7 +519,7 @@ describe 'kubernetes::kubelet' do
               }}
               it do
                 should_not contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=cpu=100m,memory=128Mi})
-                should contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n    cpu: 100m\n    memory: 128Mi})
+                should contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n  cpu: 100m\n  memory: 128Mi})
               end
             end
 
@@ -529,8 +530,8 @@ describe 'kubernetes::kubelet' do
               }}
               it do
                 should_not contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=cpu=100m})
-                should contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n    cpu: 100m})
-                should_not contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n    cpu: 100m\n    memory:})
+                should contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n  cpu: 100m})
+                should_not contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n  cpu: 100m\n  memory:})
               end
             end
 
@@ -541,8 +542,8 @@ describe 'kubernetes::kubelet' do
               }}
               it do
                 should_not contain_file(service_file).with_content(%r{--#{cgroup_type}-reserved=memory=128Mi})
-                should contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n    memory: 128Mi})
-                should_not contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n    cpu:})
+                should contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n  memory: 128Mi})
+                should_not contain_file(kubelet_config).with_content(%r{#{cgroup_type}Reserved:\n  cpu:})
               end
             end
 
@@ -596,28 +597,37 @@ describe 'kubernetes::kubelet' do
         context 'hard' do
           it do
             should_not contain_file(service_file).with_content(%r{--eviction-hard=})
-            should contain_file(kubelet_config).with_content(%r{evictionHard:\n    memory.available: 5%\n    nodefs.available: 10%\n    nodefs.inodesFree: 5%})
+            should contain_file(kubelet_config).with_content(%r{evictionHard:\n})
+            should contain_file(kubelet_config).with_content(%r{  memory.available: 5%\n})
+            should contain_file(kubelet_config).with_content(%r{  nodefs.available: 10%\n})
+            should contain_file(kubelet_config).with_content(%r{  nodefs.inodesFree: 5%\n})
           end
         end
 
         context 'soft' do
           it do
             should_not contain_file(service_file).with_content(%r{--eviction-soft=})
-            should contain_file(kubelet_config).with_content(%r{evictionSoft:\n    memory.available: 10%\n    nodefs.available: 15%\n    nodefs.inodesFree: 15%})
+            should contain_file(kubelet_config).with_content(%r{evictionSoft:\n})
+            should contain_file(kubelet_config).with_content(%r{  memory.available: 10%\n})
+            should contain_file(kubelet_config).with_content(%r{  nodefs.available: 15%\n})
+            should contain_file(kubelet_config).with_content(%r{  nodefs.inodesFree: 15%\n})
           end
         end
 
         context 'soft grace period' do
           it do
             should_not contain_file(service_file).with_content(%r{--eviction-soft-grace-period=})
-            should contain_file(kubelet_config).with_content(%r{evictionSoftGracePeriod:\n    memory.available: 0m\n    nodefs.available: 0m\n    nodefs.inodesFree: 0m})
+            should contain_file(kubelet_config).with_content(%r{evictionSoftGracePeriod:\n})
+            should contain_file(kubelet_config).with_content(%r{  memory.available: 0m\n})
+            should contain_file(kubelet_config).with_content(%r{  nodefs.available: 0m\n})
+            should contain_file(kubelet_config).with_content(%r{  nodefs.inodesFree: 0m})
           end
         end
 
         context "minimum reclaim" do
           it do
             should_not contain_file(service_file).with_content(%r{--eviction-minimum-reclaim=})
-            should contain_file(kubelet_config).with_content(%r{evictionMinimumReclaim:\n    memory.available: 100Mi\n    nodefs.available: 1Gi\n})
+            should contain_file(kubelet_config).with_content(%r{evictionMinimumReclaim:\n  memory.available: 100Mi\n  nodefs.available: 1Gi\n})
           end
         end
 
@@ -633,7 +643,7 @@ describe 'kubernetes::kubelet' do
 
   context 'feature gates' do
     context 'without given feature gates and not enabled pod priority' do
-      let(:params) { {'feature_gates' => []}}
+      let(:params) { {'feature_gates' => {}}}
       it 'should have default feature gates' do
         should_not contain_file(service_file).with_content(/#{Regexp.escape('--feature-gates=')}/)
       end
@@ -652,7 +662,7 @@ describe 'kubernetes::kubelet' do
     end
 
     context 'with given feature gates' do
-      let(:params) { {'feature_gates' => ['foo=true', 'bar=true']}}
+      let(:params) { {'feature_gates' => {'foo' => true, 'bar' => true}}}
       it 'should have custom feature gates' do
         should contain_file(service_file).with_content(/#{Regexp.escape('--feature-gates=foo=true,bar=true')}/)
       end

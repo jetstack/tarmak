@@ -17,7 +17,7 @@ describe 'kubernetes::scheduler' do
 
   context 'feature gates' do
     context 'without given feature gates and not enabled pod priority' do
-      let(:params) { {'feature_gates' => []}}
+      let(:params) { {'feature_gates' => {}}}
       it 'should have default feature gates' do
         should_not contain_file(service_file).with_content(/#{Regexp.escape('--feature-gates=')}/)
       end
@@ -36,7 +36,7 @@ describe 'kubernetes::scheduler' do
     end
 
     context 'with given feature gates' do
-      let(:params) { {'feature_gates' => ['foo=true', 'bar=true']}}
+      let(:params) { {'feature_gates' => {'foo' => true, 'bar' => true}}}
       it 'should have custom feature gates' do
         should contain_file(service_file).with_content(/#{Regexp.escape('--feature-gates=foo=true,bar=true')}/)
       end

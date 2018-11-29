@@ -7,7 +7,7 @@ class kubernetes::apiserver(
   Integer $audit_log_maxsize = 100,
   $admission_control = undef,
   $disable_admission_control = [],
-  $feature_gates = [],
+  Hash[String,Boolean] $feature_gates = {},
   $count = 1,
   $storage_backend = undef,
   Optional[String] $encryption_config_file = undef,
@@ -93,10 +93,11 @@ class kubernetes::apiserver(
 
   $_disable_admission_control = $disable_admission_control
 
-  if $feature_gates == [] {
-    $_feature_gates = delete_undef_values([
-      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
-    ])
+  if $feature_gates == {} {
+    $_feature_gates = $::kubernetes::_enable_pod_priority ? {
+      true    => {'PodPriority' => true},
+      default => undef,
+    }
   } else {
     $_feature_gates = $feature_gates
   }

@@ -7,7 +7,7 @@ class kubernetes::scheduler(
   $systemd_requires = [],
   $systemd_after = [],
   $systemd_before = [],
-  $feature_gates = [],
+  Hash[String,Boolean] $feature_gates = {},
 )  {
   require ::kubernetes
 
@@ -20,10 +20,11 @@ class kubernetes::scheduler(
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-scheduler"
 
-  if $feature_gates == [] {
-    $_feature_gates = delete_undef_values([
-      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
-    ])
+  if $feature_gates == {} {
+    $_feature_gates = $::kubernetes::_enable_pod_priority ? {
+      true    => {'PodPriority' => true},
+      default => undef,
+    }
   } else {
     $_feature_gates = $feature_gates
   }

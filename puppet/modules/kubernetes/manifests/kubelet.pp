@@ -34,7 +34,7 @@ class kubernetes::kubelet(
   Optional[String] $cert_file = undef,
   Optional[String] $key_file = undef,
   Optional[String] $client_ca_file = undef,
-  $feature_gates = [],
+  Hash[String,Boolean] $feature_gates = {},
   $node_labels = undef,
   $node_taints = undef,
   $pod_cidr = undef,
@@ -121,21 +121,13 @@ class kubernetes::kubelet(
     $_register_schedulable = $register_schedulable
   }
 
-  if $feature_gates == [] {
-    $_feature_gates = delete_undef_values([
-      $::kubernetes::_enable_pod_priority ? { true => 'PodPriority=true', default => undef },
-    ])
+  if $feature_gates == {} {
+    $_feature_gates = $::kubernetes::_enable_pod_priority ? {
+      true    =>  {'PodPriority' =>true},
+      default => undef,
+    }
   } else {
     $_feature_gates = $feature_gates
-  }
-
-  $_config_feature_gates = $_feature_gates.map |$gate| {
-    $s = split($gate, '=')
-    if $s.length < 2 {
-      $feature = $s[0]; "${feature}: true"
-    } else {
-      $feature = $s[0,-2].join('='); $enable = $s[-1]; "${feature}: ${enable}"
-    }
   }
 
   if !$_register_schedulable {

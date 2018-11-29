@@ -44,11 +44,6 @@ class kubernetes (
     'TLS_RSA_WITH_AES_256_GCM_SHA384',
     'TLS_RSA_WITH_AES_128_GCM_SHA256',
   ],
-  Array[String] $api_feature_gates = [],
-  Array[String] $kubelet_feature_gates = [],
-  Array[String] $scheduler_feature_gates = [],
-  Array[String] $controller_feature_gates = [],
-  Array[String] $proxy_feature_gates = [],
 ) inherits ::kubernetes::params
 {
 

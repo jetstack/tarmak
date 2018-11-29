@@ -26,8 +26,8 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/controller-manager \
 <%- if scope['kubernetes::_service_account_key_file'] -%>
   --service-account-private-key-file=<%= scope['kubernetes::_service_account_key_file'] %> \
 <% end -%>
-<% if @_feature_gates != [] -%>
-  --feature-gates=<%= @_feature_gates.join(',') %> \
+<% if @_feature_gates && @_feature_gates.length > 0 -%>
+  --feature-gates=<% g = @_feature_gates.to_a.collect{|k| k.join('=')}.join(',') -%><%= g %> \
 <% end -%>
 <%- if @authorization_mode.include? 'RBAC' and not @version_before_1_6 -%>
   --use-service-account-credentials \

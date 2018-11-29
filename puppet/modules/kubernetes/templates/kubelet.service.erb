@@ -157,8 +157,8 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/kubelet \
 <% if @eviction_minimum_reclaim.length > 0 -%>
   "--eviction-minimum-reclaim=<%= @eviction_minimum_reclaim.join(',') %>" \
 <% end -%>
-<% if @_feature_gates != [] -%>
-  --feature-gates=<%= @_feature_gates.join(',') %> \
+<% if @_feature_gates && @_feature_gates.length > 0 -%>
+  --feature-gates=<% g = @_feature_gates.to_a.collect{|k| k.join('=')}.join(',') -%><%= g %> \
 <% end -%>
 <% if @post_1_10 -%>
  "--tls-min-version=<%= @tls_min_version %>" \

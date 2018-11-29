@@ -43,7 +43,7 @@ describe 'kubernetes::proxy' do
               """
           ]}
           let(:params) { {
-            "feature_gates" => []
+            "feature_gates" => {}
           }}
           it 'none with no pod priority' do
             should_not contain_file(proxy_config).with_content(%r{featureGates:})
@@ -52,13 +52,14 @@ describe 'kubernetes::proxy' do
 
         context 'some' do
           let(:params) { {
-            "feature_gates" => ["PodPriority=true", "foobar=true", "foo", "edge=case=true"]
+            "feature_gates" => {"PodPriority" => true, "foobar" => false, "foo" => true, "edge=case" => true}
           }}
           it 'config contain' do
-            should contain_file(proxy_config).with_content(%r{featureGates:\n    PodPriority: true})
-            should contain_file(proxy_config).with_content(%r{    foobar: true})
-            should contain_file(proxy_config).with_content(%r{    foo: true})
-            should contain_file(proxy_config).with_content(%r{    edge=case: true})
+            should contain_file(proxy_config).with_content(%r{featureGates:\n})
+            should contain_file(proxy_config).with_content(%r{  PodPriority: true\n})
+            should contain_file(proxy_config).with_content(%r{  foobar: false\n})
+            should contain_file(proxy_config).with_content(%r{  foo: true\n})
+            should contain_file(proxy_config).with_content(%r{  edge=case: true})
           end
         end
       end
