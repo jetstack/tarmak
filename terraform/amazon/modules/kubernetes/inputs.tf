@@ -88,19 +88,3 @@ variable "elb_access_logs_internal_bucket_prefix" {}
 variable "elb_access_logs_internal_bucket_interval" {}
 
 variable "backups_bucket" {}
-
-variable "api_feature_gates" {
-  type = "list"
-}
-
-variable "calico_feature_gates" {
-  type = "list"
-}
-
-variable "kubelet_feature_gates" {
-  type = "list"
-}
-
-variable "scheduler_feature_gates" {
-  type = "list"
-}

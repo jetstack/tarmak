@@ -863,30 +863,35 @@ Feature Gates
 
 Feature gates can be enabled or disabled on Kubernetes components through the
 Tarmak configuration file. The feature gates can be set on the API server,
-Kubelet, Scheduler, Controller Manager and Kube-Proxy that will take effect cluster
-wide. To change feature gates, each component takes a list of stings that
-will be applied to their corresponding command line flags or configuration
+Kubelet, Scheduler, Controller Manager and Kube-Proxy and will take effect
+cluster wide. Feature gates can also be set globally to all components however,
+note that any matching component feature gate set will override the global
+value on that component. To change feature gates, each component takes a list
+that will be applied to their corresponding command line flags or configuration
 file under the Kubernetes code block like following:
 
 .. code-block:: yaml
 
-  kubernetes:
-    apiServer:
-      featureGates:
-        - "AllAlpha=true"
-        - "APIResponseCompression=false"
-    kubelet:
-      featureGates:
-        - "CustomPodDNS=true"
-    kubeProxy:
-      featureGates:
-        - "CSIPersistentVolume=false"
-    controllerManager:
-      featureGates:
-        - "AllAlpha=true"
-    scheduler:
-      featureGates:
-        - "AllAlpha=true"
+   kubernetes:
+     globalfeatureGates:
+       AllAlpha: true
+     apiServer:
+       featureGates:
+         APIResponseCompression: false
+     kubelet:
+       featureGates:
+         CustomPodDNS: true
+         CPUManager: false
+     kubeProxy:
+       featureGates:
+         CSIPersistentVolume: false
+         DebugContainers: true
+     controllerManager:
+       featureGates:
+         AttachVolumeLimit: true
+     scheduler:
+       featureGates:
+         CPUManager: false
 
 Cluster Services
 ----------------

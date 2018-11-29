@@ -21,7 +21,7 @@ class kubernetes::proxy(
 
   if $feature_gates == {} {
     $_feature_gates = $::kubernetes::_enable_pod_priority ? {
-      true    => 'PodPriority=true',
+      true    =>  {'PodPriority' => true},
       default => undef,
     }
   } else {
