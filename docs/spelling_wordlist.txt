@@ -25,6 +25,7 @@ ctrl
 doesn
 EBS
 ec
+ecdsa
 Elasticsearch
 env
 etcd
@@ -62,6 +63,7 @@ nameservers
 namespace
 namespaces
 namespacing
+nistp
 offline
 oneshot
 ons
@@ -80,6 +82,7 @@ ReplicaSet
 rolename
 runtime
 setup
+sha
 stateful
 stdin
 subcommand
