@@ -1,7 +1,7 @@
 {{/* vim: set ft=tf: */ -}}
 
 data "template_file" "vault" {
-  template = "${file("${path.module}/templates/puppet_agent_vault_user_data.yaml")}"
+  template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
   count    = "${var.vault_min_instance_count}"
 
   vars {
@@ -27,7 +27,7 @@ data "template_file" "vault" {
     vault_tls_key_path  = "s3://${var.secrets_bucket}/${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
     vault_tls_ca_path   = "s3://${var.secrets_bucket}/${aws_s3_bucket_object.ca-cert.key}"
 
-    vault_unsealer_kms_key_id     = "${var.secrets_kms_arn}"
+    vault_unsealer_kms_key_id     = "${var.vault_kms_key_id}"
     vault_unsealer_ssm_key_prefix = "${local.vault_unseal_key_name}"
 
     backup_bucket_prefix = "${var.backups_bucket}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
@@ -123,7 +123,7 @@ resource "aws_ebs_volume" "vault" {
 resource "tarmak_vault_cluster" "vault" {
   internal_fqdns        = ["${aws_route53_record.per-instance.*.fqdn}"]
   vault_ca              = "${element(concat(tls_self_signed_cert.ca.*.cert_pem, list("")), 0)}"
-  vault_kms_key_id      = "${var.secrets_kms_arn}"
+  vault_kms_key_id      = "${var.vault_kms_key_id}"
   vault_unseal_key_name = "${local.vault_unseal_key_name}"
 
   depends_on = ["aws_instance.vault"]

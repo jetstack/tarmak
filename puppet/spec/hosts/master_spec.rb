@@ -4,7 +4,7 @@ describe 'role: master' do
   let(:facts) do
     {
       :tarmak_role          => 'master',
-      :tarmak_type_instance => 'kube',
+      :tarmak_type_instance => 'tarmak',
     }
   end
 

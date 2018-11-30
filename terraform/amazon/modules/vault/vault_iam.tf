@@ -60,7 +60,7 @@ data "template_file" "iam_vault_tarmak_bucket_read" {
     puppet_tar_gz_bucket_path    = "${var.secrets_bucket}/${aws_s3_bucket_object.latest-puppet-hash.key}"
     puppet_tar_gz_bucket_postfix = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests/*-puppet.tar.gz"
     wing_binary_path             = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/wing-*"
-    vault_unsealer_kms_key_id    = "${var.secrets_kms_arn}"
+    vault_unsealer_kms_key_id    = "${var.vault_kms_key_id}"
   }
 }
 

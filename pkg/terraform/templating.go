@@ -127,13 +127,14 @@ func (t *terraformTemplate) Generate() error {
 	if err := t.generateRemoteStateConfig(); err != nil {
 		result = multierror.Append(result, err)
 	}
+
 	for _, module := range []string{"state", "bastion", "network", "network-existing-vpc", "jenkins", "vault", "kubernetes"} {
 		if err := t.generateModuleInstanceTemplates(module); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
 
-	if t.cluster.Type() != clusterv1alpha1.ClusterTypeHub {
+	for _, module := range []string{"vault", "kubernetes"} {
 		for _, tmpl := range []struct {
 			name, target string
 		}{
@@ -141,25 +142,21 @@ func (t *terraformTemplate) Generate() error {
 			{"inputs", "inputs"},
 			{"outputs", "outputs"},
 			{"providers", "providers"},
-			{"wing_s3", "modules/kubernetes/wing_s3"},
-			{"wing_s3", "modules/vault/wing_s3"},
 		} {
-			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "kubernetes"); err != nil {
+			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", module); err != nil {
 				result = multierror.Append(result, err)
 			}
 		}
-	}
 
-	if t.cluster.Type() == clusterv1alpha1.ClusterTypeHub {
 		for _, tmpl := range []struct {
-			name, target string
+			name, target, fType string
 		}{
-			{"modules", "modules"},
-			{"inputs", "inputs"},
-			{"outputs", "outputs"},
-			{"providers", "providers"},
+			{"wing_s3", "modules/%s/wing_s3", "tf"},
+			{"puppet_s3", "modules/%s/puppet_s3", "tf"},
+			{"puppet_agent_user_data", "modules/%s/templates/puppet_agent_user_data", "yaml"},
 		} {
-			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "vault"); err != nil {
+
+			if err := t.generateTemplate(tmpl.name, fmt.Sprintf(tmpl.target, module), tmpl.fType, module); err != nil {
 				result = multierror.Append(result, err)
 			}
 		}
@@ -171,7 +168,6 @@ func (t *terraformTemplate) Generate() error {
 		}{
 			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
 			{"vault_instances", "modules/vault/vault_instances"},
-			{"wing_s3", "modules/vault/wing_s3"},
 		} {
 			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "vault"); err != nil {
 				result = multierror.Append(result, err)
@@ -179,12 +175,6 @@ func (t *terraformTemplate) Generate() error {
 		}
 	}
 
-	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml", "kubernetes"); err != nil {
-		result = multierror.Append(result, err)
-	}
-	if err := t.generateTemplate("puppet_agent_vault_user_data", "modules/vault/templates/puppet_agent_vault_user_data", "yaml", "vault"); err != nil {
-		result = multierror.Append(result, err)
-	}
 	if err := t.generateTerraformVariables(); err != nil {
 		result = multierror.Append(result, err)
 	}

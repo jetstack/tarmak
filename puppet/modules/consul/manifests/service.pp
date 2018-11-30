@@ -8,6 +8,7 @@ class consul::service(
   Array[String] $_systemd_wants = $consul::systemd_wants,
   Array[String] $_systemd_requires = $consul::systemd_requires,
   Array[String] $_systemd_before = $consul::systemd_before,
+  Integer $consul_bootstrap_expect = $consul::_consul_bootstrap_expect
 )
 {
 
@@ -23,7 +24,6 @@ class consul::service(
 
   $consul_encrypt = $consul::_consul_encrypt
   $consul_master_token = $consul::_consul_master_token
-  $consul_bootstrap_expect = 0 + $consul::_consul_bootstrap_expect
 
   $user = $consul::user
   $group = $consul::group

@@ -38,11 +38,12 @@ write_files:
 {{- end }}
     ExecStart=/bin/sh -c '\
       set -e ;\
-      exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${legacy_puppet_manifest}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
+      exec /opt/wing-$${WING_VERSION}/wing agent --manifest-url "s3://${puppet_tar_gz_bucket_dir}" --cluster-name "${tarmak_cluster}" --instance-name "$$(curl --silent --retry 5 http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")" --server-url "https://bastion.${tarmak_environment}.${tarmak_dns_root}:9443"'
 
     [Install]
     WantedBy=multi-user.target
 
+{{ if not (eq .Module "vault") -}}
 - path: /etc/vault/ca.pem
   permissions: '0644'
   encoding: b64
@@ -59,7 +60,7 @@ write_files:
     TARMAK_DESIRED_COUNT=${tarmak_desired_count}
     TARMAK_VOLUME_ID=${tarmak_volume_id}
     TARMAK_INSTANCE_POOL=${tarmak_instance_pool}
-    TARMAK_TYPE_INSTANCE=kube
+    TARMAK_TYPE_INSTANCE=tarmak
     ETCD_BACKUP_BUCKET_PREFIX=${etcd_backup_bucket_prefix}
 
 - path: /etc/profile.d/tarmak.sh
@@ -101,6 +102,51 @@ write_files:
     %wheel  ALL=(ALL)       NOPASSWD:ALL
 
     #includedir /etc/sudoers.d
+{{- else }}
+
+- path: /etc/sysconfig/vault
+  permissions: '0644'
+  content: |
+    TARMAK_ROLE=vault
+    TARMAK_CLUSTER=${tarmak_cluster}
+    TARMAK_DNS_ROOT=${tarmak_dns_root}
+    TARMAK_HOSTNAME=${tarmak_hostname}
+    TARMAK_ENVIRONMENT=${tarmak_environment}
+    TARMAK_DESIRED_COUNT=${instance_count}
+    TARMAK_INSTANCE_POOL=${tarmak_instance_pool}
+    TARMAK_TYPE_INSTANCE=vault
+    VAULT_REGION=${region}
+    VAULT_ENVIRONMENT=${tarmak_environment}
+    VAULT_PRIVATE_IP=${private_ip}
+    VAULT_TLS_CERT_PATH=${vault_tls_cert_path}
+    VAULT_TLS_KEY_PATH=${vault_tls_key_path}
+    VAULT_TLS_CA_PATH=${vault_tls_ca_path}
+    VAULT_VOLUME_ID=${volume_id}
+    VAULT_UNSEALER_KMS_KEY_ID=${vault_unsealer_kms_key_id}
+    VAULT_UNSEALER_SSM_KEY_PREFIX=${vault_unsealer_ssm_key_prefix}
+
+- path: /etc/sysconfig/consul
+  permissions: '0644'
+  content: |
+    CONSUL_MASTER_TOKEN=${consul_master_token}
+    CONSUL_ENCRYPT=${consul_encrypt}
+    CONSUL_BOOTSTRAP_EXPECT=${instance_count}
+    CONSUL_BACKUP_BUCKET_PREFIX=${backup_bucket_prefix}
+    CONSUL_BACKUP_SCHEDULE=${backup_schedule}
+
+- path: /etc/facter/facts.d/vault
+  permissions: '0700'
+  content: |
+    #!/bin/bash
+    cat /etc/sysconfig/vault
+
+- path: /etc/facter/facts.d/consul
+  permissions: '0700'
+  content: |
+    #!/bin/bash
+    cat /etc/sysconfig/consul
+
+{{- end }}
 
 runcmd:
 - systemctl enable wing

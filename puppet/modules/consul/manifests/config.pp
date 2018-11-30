@@ -52,7 +52,7 @@ class consul::config (
       true    => $consul::_consul_encrypt,
       default =>  undef,
     },
-    bootstrap_expect    => 0 + $consul::_consul_bootstrap_expect,
+    bootstrap_expect    => $consul::_consul_bootstrap_expect,
     server              => $consul::server,
     leave_on_terminate  => true,
     disable_remote_exec => true,

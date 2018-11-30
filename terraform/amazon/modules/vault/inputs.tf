@@ -45,8 +45,8 @@ variable "private_zone_id" {}
 # data.terraform_remote_state.state.secrets_bucket.0
 variable "secrets_bucket" {}
 
-# data.terraform_remote_state.state.secrets_kms_arn.0
-variable "secrets_kms_arn" {}
+# data.terraform_remote_state.state.vault_kms_key_id.0
+variable "vault_kms_key_id" {}
 
 # data.terraform_remote_state.state.backups_bucket.0
 variable "backups_bucket" {}

@@ -344,7 +344,7 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 	}
 	// write cluster config
 	err = p.writeLines(
-		filepath.Join(hieraPath, "kube_common_build.yaml"),
+		filepath.Join(hieraPath, "tarmak.yaml"),
 		clusterConfig,
 	)
 	if err != nil {

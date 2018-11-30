@@ -7,7 +7,7 @@ output "vault_url" {
 }
 
 output "vault_kms_key_id" {
-  value = "${var.secrets_kms_arn}"
+  value = "${var.vault_kms_key_id}"
 }
 
 output "vault_unseal_key_name" {

@@ -18,7 +18,7 @@
 class consul(
   Optional[String] $consul_master_token = undef,
   Optional[String] $consul_encrypt = undef,
-  Optional[String] $consul_bootstrap_expect = undef,
+  String $consul_bootstrap_expect = '1',
   Enum['aws', ''] $cloud_provider = '',
   String $fqdn = '',
   String $private_ip = '127.0.0.1',
@@ -92,7 +92,7 @@ class consul(
       true    =>  $::consul_bootstrap_expect.scanf('%i')[0],
       default =>  1,
     },
-    default => $consul_bootstrap_expect,
+    default => $consul_bootstrap_expect.scanf('%i')[0],
   }
 
   $_consul_encrypt = $consul_encrypt ? {

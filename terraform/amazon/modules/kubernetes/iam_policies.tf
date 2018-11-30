@@ -2,7 +2,9 @@ data "template_file" "iam_tarmak_bucket_read" {
   template = "${file("${path.module}/templates/iam_tarmak_bucket_read.json")}"
 
   vars {
-    puppet_tar_gz_bucket_path        = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests/*"
+    puppet_tar_gz_bucket_path    = "${var.secrets_bucket}/${aws_s3_bucket_object.latest-puppet-hash.key}"
+    puppet_tar_gz_bucket_postfix = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests/*-puppet.tar.gz"
+
     legacy_puppet_tar_gz_bucket_path = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet.tar.gz"
 
     wing_binary_path = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/wing-*"

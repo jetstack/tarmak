@@ -6,6 +6,6 @@ RSpec.configure do |config|
     :disks => {},
     :consul_master_token => '',
     :consul_encrypt => '',
-    :consul_bootstrap_expect => '1',
+    :consul_bootstrap_expect => 1,
   }
 end
