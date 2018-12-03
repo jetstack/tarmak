@@ -6,3 +6,5 @@ fixtures:
     concat:
       repo: "https://github.com/puppetlabs/puppetlabs-concat.git"
       ref: "2.2.1"
+  symlinks:
+    site_module: "#{source_dir}/../site_module"

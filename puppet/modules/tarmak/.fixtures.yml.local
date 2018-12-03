@@ -11,3 +11,4 @@ fixtures:
     vault_client: "#{source_dir}/../vault_client"
     vault_server: "#{source_dir}/../vault_server"
     airworthy: "#{source_dir}/../airworthy"
+    site_module: "#{source_dir}/../site_module"
