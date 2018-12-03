@@ -4,7 +4,6 @@ describe 'role: vault' do
   let(:facts) do
     {
       :tarmak_role          => 'vault',
-      :tarmak_type_instance => 'vault',
     }
   end
 

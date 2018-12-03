@@ -1,4 +1,5 @@
 classes:
+- site_module::docker
 - vault_client
 - tarmak::master
 - tarmak::worker

@@ -60,7 +60,6 @@ write_files:
     TARMAK_DESIRED_COUNT=${tarmak_desired_count}
     TARMAK_VOLUME_ID=${tarmak_volume_id}
     TARMAK_INSTANCE_POOL=${tarmak_instance_pool}
-    TARMAK_TYPE_INSTANCE=tarmak
     ETCD_BACKUP_BUCKET_PREFIX=${etcd_backup_bucket_prefix}
 
 - path: /etc/profile.d/tarmak.sh
@@ -114,7 +113,6 @@ write_files:
     TARMAK_ENVIRONMENT=${tarmak_environment}
     TARMAK_DESIRED_COUNT=${instance_count}
     TARMAK_INSTANCE_POOL=${tarmak_instance_pool}
-    TARMAK_TYPE_INSTANCE=vault
     VAULT_REGION=${region}
     VAULT_ENVIRONMENT=${tarmak_environment}
     VAULT_PRIVATE_IP=${private_ip}
