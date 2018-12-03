@@ -1,7 +1,7 @@
 ---
 classes:
-- vault_client
 - site_module::docker
 - site_module::docker_storage
+- vault_client
 - tarmak::worker
 - tarmak::overlay_calico

@@ -55,6 +55,7 @@ class kubernetes::kubelet(
   Array[String] $systemd_before = [],
   String $config_file = "${::kubernetes::params::config_dir}/kubelet-config.yaml",
 ) inherits kubernetes::params{
+  require ::site_module::docker
   require ::kubernetes
 
   $tls_min_version = $::kubernetes::tls_min_version
