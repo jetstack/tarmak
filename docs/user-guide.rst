@@ -873,7 +873,7 @@ file under the Kubernetes code block like following:
 .. code-block:: yaml
 
    kubernetes:
-     globalfeatureGates:
+     globalFeatureGates:
        AllAlpha: true
      apiServer:
        featureGates:

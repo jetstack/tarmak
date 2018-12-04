@@ -171,37 +171,44 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		globalGates = conf.GlobalFeatureGates
 	}
 
+	compGates := make(map[string]bool)
 	if a := conf.APIServer; a != nil {
-		// pod prio
-		if gates := featureGatesString(globalGates, a.FeatureGates, true, conf.ClusterAutoscaler); gates != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::feature_gates:%s`, gates))
-		}
+		compGates = a.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, true, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::feature_gates:%s`, gates))
 	}
 
+	compGates = make(map[string]bool)
 	if k := conf.Kubelet; k != nil {
-		// pod prio
-		if gates := featureGatesString(globalGates, k.FeatureGates, true, conf.ClusterAutoscaler); gates != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::kubelet::feature_gates:%s`, gates))
-		}
+		compGates = k.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, true, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::kubelet::feature_gates:%s`, gates))
 	}
 
+	compGates = make(map[string]bool)
 	if s := conf.Scheduler; s != nil {
-		// pod prio
-		if gates := featureGatesString(globalGates, s.FeatureGates, true, conf.ClusterAutoscaler); gates != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::scheduler::feature_gates:%s`, gates))
-		}
+		compGates = s.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, true, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::scheduler::feature_gates:%s`, gates))
 	}
 
+	compGates = make(map[string]bool)
 	if p := conf.Proxy; p != nil {
-		if gates := featureGatesString(globalGates, p.FeatureGates, false, conf.ClusterAutoscaler); gates != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::proxy::feature_gates:%s`, gates))
-		}
+		compGates = p.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, false, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::proxy::feature_gates:%s`, gates))
 	}
 
+	compGates = make(map[string]bool)
 	if c := conf.ControllerManager; c != nil {
-		if gates := featureGatesString(globalGates, c.FeatureGates, false, conf.ClusterAutoscaler); gates != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::controller_manager::feature_gates:%s`, gates))
-		}
+		compGates = c.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, false, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::controller_manager::feature_gates:%s`, gates))
 	}
 
 	return
