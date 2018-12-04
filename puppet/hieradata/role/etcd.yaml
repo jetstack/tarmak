@@ -1,6 +1,5 @@
 ---
 classes:
-- site_module::docker
 - vault_client
 - tarmak::etcd
 - airworthy

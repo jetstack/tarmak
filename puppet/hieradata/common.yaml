@@ -1,4 +1,6 @@
 ---
+classes:
+- site_module::docker
 
 prometheus::role: "%{::tarmak_role}"
 tarmak::role: "%{::tarmak_role}"
