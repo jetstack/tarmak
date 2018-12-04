@@ -43,6 +43,7 @@
         "yum update -y",
         "yum install -y epel-release",
         "yum install -y git puppet-agent vim tmux socat python-pip at jq unzip awscli",
+        "aws help 2> /dev/null > /dev/null ||  { yum remove -y awscli && pip install awscli==1.16.68; }",
         "rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org",
         "rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm",
         "yum --enablerepo=elrepo-kernel install -y kernel-ml",
