@@ -54,32 +54,150 @@ Firstly, we must restrict the OpenSSH command line tool from editing the
 file management.
 
 In order to create a source of truth for each host's public key, each instance
-will have it's public key attached as a tag, shortly after boot time like the
+will have it's public key's attached as a tags, shortly after boot time like the
 following:
 
-+------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| public_key | ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPF+xkIGMUNVI0gElRaTLjfA4QMN/XGJhHswDyv59DNSOtG3KwZvDF3YkAb0PkTQAYo8N5fxoKqimGugOAaefPc= |
-+------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------+---------------------------------------------------------------------------+
+| PublicKey_ssh-ed25519_0 | AAAAC3NzaC1lZDI1NTE5AAAAIE90XYYm6GSDlNGejM+aY5dZEe5vK4XyU++89WdGJcDc==EOF |
++-------------------------+---------------------------------------------------------------------------+
 
-The population of this tag will occur during a Terraform apply in which the
-instance was created. A new custom Terraform resource should be created -
-``tarmak_ssh_public_key_tag`` - that is dependant on the AWS instance Terraform
-resource. This new resource will be handled by the current Tarmak Terraform
-provider which is to be extended to consume it. Once called for creation, it
-shall attempt to create the initial SSH connection to this host which will
-provide Tarmak with it's public key. Once acquired, it will attach this public
-key to the AWS instance and add it to the ``ssh_known_hosts`` file.
+The population of these tags will happen at boot time for all instances,
+regardless of whether they have been created from a direct Terraform apply or
+via an Amazon Auto Scaling Group. At execution time, Wing - present on every
+instance - will invoke an Amazon Lambda function for Instance Tagging. Passed to
+this function will be a collection of the instances public keys, it's Amazon
+identity document and matching PKCS7 document.
 
-All other SSH connections will rely on the contents of the ``ssh_known_hosts``
+Upon receiving this request, the lambda function will verify the authenticity
+of the request and identity document by verifying the instance identity and
+PKCS7 document against the public AWS certificate. Further details on this can
+be found `here
+<https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html>`_.
+Once verified, the function will split the public keys to maximum sized chunks
+of 256 - the maximum size length of EC2 tags.
+
+Finally, the function will test for the existence of these tags and do one of
+three actions:
+
+ - if tags exist and match, exit success
+ - if tags exist and miss-match, exit failure
+ - if tags do not exist, create tags and exit success
+
+Once an instance has requested for the creation of it's tags, all subsequent
+requests should succeed with no action.
+
+All SSH connections will rely on the contents of the ``ssh_known_hosts``
 file however, in the case the host is not present in the file, will attempt to
-use the AWS instance's ``public_key`` tag to populate it's entry.
+use the AWS instance's ``publicKey..`` tag to populate it's entry.
 
 Notable items
 -------------
 
-Care should be taken when waiting for the instance to become ready to create the
-initial SSH connection for each host. It is important not to make this a
-bottleneck during the Terraform apply.
+A start has been made on the code for the Lambda function:
+
+.. code-block:: go
+
+  package main
+
+  import (
+  	"context"
+  	"fmt"
+  	"time"
+
+  	"github.com/aws/aws-lambda-go/lambda"
+  )
+
+  const (
+  	AWSCert = "global aws public cert"
+  	tagSize = 256
+  )
+
+  type EC2InstanceIdentityDocument struct {
+  	DevpayProductCodes []string  `json:"devpayProductCodes"`
+  	AvailabilityZone   string    `json:"availabilityZone"`
+  	PrivateIP          string    `json:"privateIp"`
+  	Version            string    `json:"version"`
+  	Region             string    `json:"region"`
+  	InstanceID         string    `json:"instanceId"`
+  	BillingProducts    []string  `json:"billingProducts"`
+  	InstanceType       string    `json:"instanceType"`
+  	AccountID          string    `json:"accountId"`
+  	PendingTime        time.Time `json:"pendingTime"`
+  	ImageID            string    `json:"imageId"`
+  	KernelID           string    `json:"kernelId"`
+  	RamdiskID          string    `json:"ramdiskId"`
+  	Architecture       string    `json:"architecture"`
+  }
+
+  type TagInstanceRequest struct {
+  	PublicKeys       map[string][]byte           `json:"publicKeys"`
+  	InstanceDocument EC2InstanceIdentityDocument `json:"instanceID"`
+  	PKCS7CMS         string                      `json:"pkcs7CMS"`
+  }
+
+  func HandleRequest(ctx context.Context, t TagInstanceRequest) error {
+  	if err := t.verify(); err != nil {
+  		return err
+  	}
+
+  	tags := t.createTags()
+
+  	exists, err := t.checkTagsAgainstInstance(tags)
+  	if err != nil || exists {
+  		return err
+  	}
+
+  	// attach tags to ec2 instance using real call
+  	//err := ec2.Tag{
+  	//	InstanceID: t.InstanceDocument.InstanceID,
+  	//	Tags: ....
+  	//}
+  	// if err != nil {
+  	//	return err
+  	//}
+
+  	return nil
+  }
+
+  // verify the pkcs7 doc against the instance identity content and AWS global
+  // cert
+  func (t TagInstanceRequest) verify() error {
+  	return nil
+  }
+
+  // check generated tags against the ec2 instance
+  // if existing and match exit gracefully
+  // if miss match, exit failure
+  // if not exist, we need to create
+  func (t TagInstanceRequest) checkTagsAgainstInstance(tags map[string][]byte) (tagsExist bool, err error) {
+  	return false, nil
+  }
+
+  // split up public keys into correct sizes for AWS tags
+  func (t TagInstanceRequest) createTags() map[string][]byte {
+  	tags := make(map[string][]byte)
+
+  	for keyName, data := range t.PublicKeys {
+  		data = append(data, []byte("==EOF")...)
+
+  		for i := 0; i < len(data); i += tagSize {
+  			end := i + tagSize
+
+  			if end > len(data) {
+  				end = len(data)
+  			}
+
+  			tagName := fmt.Sprintf("PublicKey_%s_%s", keyName, i/tagSize)
+  			tags[tagName] = data[i:end]
+  		}
+  	}
+
+  	return tags
+  }
+
+  func main() {
+  	lambda.Start(HandleRequest)
+  }
 
 Out of scope
 ------------
