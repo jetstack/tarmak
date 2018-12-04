@@ -25,9 +25,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault Helper|                    | `0.9.13` |
 | Etcd        |                    | `3.2.25` |
 
-## [0.5.1]: 0.5.0 - 2018-12-04
+## [0.5.1]: 0.5.1 - 2018-12-04
 
-Release to update default Kubernetes version to 1.11.4: CVE-2018-1002105: proxy
+Release to update default Kubernetes version to 1.11.5: CVE-2018-1002105: proxy
 request handling in kube-apiserver can leave vulnerable TCP connections
 ([details](https://github.com/kubernetes/kubernetes/issues/71411)).
 
