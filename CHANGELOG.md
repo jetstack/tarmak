@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Terraform   |                    | `0.11.8` |
 | Consul      |                    | `1.2.3`  |
 | Vault       |                    | `0.9.5`  |
-| Kubernetes  | `>= 1.9 && < 1.13` | `1.11.4` |
+| Kubernetes  | `>= 1.9 && < 1.13` | `1.11.5` |
 | Calico      |                    | `3.1.4`  |
 | Vault Helper|                    | `0.9.13` |
 | Etcd        |                    | `3.2.25` |
