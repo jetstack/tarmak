@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/docker/docker/pkg/archive"
@@ -165,7 +166,77 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		hieraData.classes = append(hieraData.classes, `prometheus`)
 	}
 
+	globalGates := make(map[string]bool)
+	if conf.GlobalFeatureGates != nil {
+		globalGates = conf.GlobalFeatureGates
+	}
+
+	compGates := make(map[string]bool)
+	if a := conf.APIServer; a != nil {
+		compGates = a.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, true, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::feature_gates:%s`, gates))
+	}
+
+	compGates = make(map[string]bool)
+	if k := conf.Kubelet; k != nil {
+		compGates = k.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, true, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::kubelet::feature_gates:%s`, gates))
+	}
+
+	compGates = make(map[string]bool)
+	if s := conf.Scheduler; s != nil {
+		compGates = s.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, true, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::scheduler::feature_gates:%s`, gates))
+	}
+
+	compGates = make(map[string]bool)
+	if p := conf.Proxy; p != nil {
+		compGates = p.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, false, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::proxy::feature_gates:%s`, gates))
+	}
+
+	compGates = make(map[string]bool)
+	if c := conf.ControllerManager; c != nil {
+		compGates = c.FeatureGates
+	}
+	if gates := featureGatesString(globalGates, compGates, false, conf.ClusterAutoscaler); gates != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::controller_manager::feature_gates:%s`, gates))
+	}
+
 	return
+}
+
+func featureGatesString(globalGates, componentGates map[string]bool, usePodPriority bool, conf *clusterv1alpha1.ClusterKubernetesClusterAutoscaler) string {
+	gates := utils.DuplicateMapBool(globalGates)
+	if usePodPriority {
+		if conf != nil && conf.Overprovisioning != nil && conf.Overprovisioning.Enabled {
+			gates["PodPriority"] = true
+		}
+	}
+
+	if componentGates != nil {
+		gates = utils.MergeMapsBool(gates, componentGates)
+	}
+
+	if len(gates) == 0 {
+		return ""
+	}
+
+	var args []string
+	for gate, value := range gates {
+		args = append(args, fmt.Sprintf("  %s: %t", gate, value))
+	}
+	sort.Strings(args)
+
+	return fmt.Sprintf("\n%s", strings.Join(args, "\n"))
 }
 
 func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, roleName string, hieraData *hieraData) {

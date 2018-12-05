@@ -8,6 +8,7 @@ class kubernetes::controller_manager(
   $systemd_after = [],
   $systemd_before = [],
   Boolean $allocate_node_cidrs = false,
+  Hash[String,Boolean] $feature_gates = {},
 )  {
   require ::kubernetes
 
@@ -27,6 +28,8 @@ class kubernetes::controller_manager(
   } else {
     $version_before_1_6 = true
   }
+
+  $_feature_gates = $feature_gates
 
   kubernetes::symlink{'controller-manager':}
   -> file{$kubeconfig_path:

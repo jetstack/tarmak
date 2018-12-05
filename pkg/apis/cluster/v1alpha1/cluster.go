@@ -51,16 +51,17 @@ const (
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	CloudId           string              `json:"cloudId,omitempty"`
-	InstancePools     []InstancePool      `json:"instancePools,omitempty"`
-	Cloud             string              `json:"cloud,omitempty"`
-	Location          string              `json:"location,omitempty"`
-	Network           *Network            `json:"network,omitempty"`
-	LoggingSinks      []*LoggingSink      `json:"loggingSinks,omitempty"`
-	Values            *Values             `json:"values,omitempty"`
-	KubernetesAPI     *KubernetesAPI      `json:"kubernetesAPI,omitempty"`
-	GroupIdentifier   string              `json:"groupIdentifier,omitempty"`
-	VaultHelper       *ClusterVaultHelper `json:"vaultHelper,omitempty"`
+
+	CloudId         string              `json:"cloudId,omitempty"`
+	InstancePools   []InstancePool      `json:"instancePools,omitempty"`
+	Cloud           string              `json:"cloud,omitempty"`
+	Location        string              `json:"location,omitempty"`
+	Network         *Network            `json:"network,omitempty"`
+	LoggingSinks    []*LoggingSink      `json:"loggingSinks,omitempty"`
+	Values          *Values             `json:"values,omitempty"`
+	KubernetesAPI   *KubernetesAPI      `json:"kubernetesAPI,omitempty"`
+	GroupIdentifier string              `json:"groupIdentifier,omitempty"`
+	VaultHelper     *ClusterVaultHelper `json:"vaultHelper,omitempty"`
 
 	Environment string             `json:"environment,omitempty"`
 	Kubernetes  *ClusterKubernetes `json:"kubernetes,omitempty"`
@@ -88,9 +89,16 @@ type ClusterKubernetes struct {
 	ClusterAutoscaler *ClusterKubernetesClusterAutoscaler `json:"clusterAutoscaler,omitempty"`
 	Tiller            *ClusterKubernetesTiller            `json:"tiller,omitempty"`
 	Dashboard         *ClusterKubernetesDashboard         `json:"dashboard,omitempty"`
-	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
 	PodSecurityPolicy *ClusterPodSecurityPolicy           `json:"podSecurityPolicy,omitempty"`
 	Prometheus        *ClusterKubernetesPrometheus        `json:"prometheus,omitempty"`
+
+	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
+	Kubelet           *ClusterKubernetesKubelet           `json:"kubelet,omitempty"`
+	Scheduler         *ClusterKubernetesScheduler         `json:"scheduler,omitempty"`
+	Proxy             *ClusterKubernetesProxy             `json:"proxy,omitempty"`
+	ControllerManager *ClusterKubernetesControllerManager `json:"controllerManager,omitempty"`
+
+	GlobalFeatureGates map[string]bool `json:"globalFeatureGates,omitempty"`
 }
 
 type ClusterKubernetesClusterAutoscaler struct {
@@ -137,6 +145,8 @@ type ClusterKubernetesAPIServer struct {
 
 	// AWS specifc options
 	Amazon *ClusterKubernetesAPIServerAmazon `json:"amazon,omitempty"`
+
+	FeatureGates map[string]bool `json:"featureGates,omitempty"`
 }
 
 type ClusterKubernetesAPIServerOIDC struct {
@@ -200,6 +210,22 @@ type ClusterKubernetesPrometheus struct {
 
 type ClusterVaultHelper struct {
 	URL string `json:"url,omitempty"`
+}
+
+type ClusterKubernetesScheduler struct {
+	FeatureGates map[string]bool `json:"featureGates,omitempty"`
+}
+
+type ClusterKubernetesKubelet struct {
+	FeatureGates map[string]bool `json:"featureGates,omitempty"`
+}
+
+type ClusterKubernetesProxy struct {
+	FeatureGates map[string]bool `json:"featureGates,omitempty"`
+}
+
+type ClusterKubernetesControllerManager struct {
+	FeatureGates map[string]bool `json:"featureGates,omitempty"`
 }
 
 // +k8s:openapi-gen=true

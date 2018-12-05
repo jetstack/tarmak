@@ -183,6 +183,7 @@ module "kubernetes" {
   public_zone_id            = "${module.state.public_zone_id}"
   vault_security_group_id   = "${module.vault.vault_security_group_id}"
   bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
+  backups_bucket            = "${module.state.backups_bucket[0]}"
 
   elb_access_logs_public_enabled           = "${var.elb_access_logs_public_enabled}"
   elb_access_logs_public_bucket            = "${var.elb_access_logs_public_bucket}"
@@ -192,8 +193,6 @@ module "kubernetes" {
   elb_access_logs_internal_bucket          = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
-
-  backups_bucket = "${module.state.backups_bucket[0]}"
 }
 {{- end -}}
 
@@ -250,6 +249,7 @@ module "kubernetes" {
   vault_ca                  = "${data.terraform_remote_state.hub_state.vault_vault_ca}"
   vault_url                 = "${data.terraform_remote_state.hub_state.vault_vault_url}"
   vault_security_group_id   = "${data.terraform_remote_state.hub_state.vault_vault_security_group_id}"
+  backups_bucket            = "${data.terraform_remote_state.hub_state.state_backups_bucket[0]}"
 
   elb_access_logs_public_enabled           = "${var.elb_access_logs_public_enabled}"
   elb_access_logs_public_bucket            = "${var.elb_access_logs_public_bucket}"
@@ -259,7 +259,5 @@ module "kubernetes" {
   elb_access_logs_internal_bucket          = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
-
-  backups_bucket = "${data.terraform_remote_state.hub_state.state_backups_bucket[0]}"
 }
 {{- end }}

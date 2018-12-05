@@ -6,3 +6,7 @@ resourceContainer: podruntime.slice
 clientConnection:
     kubeconfig: <%= @kubeconfig_path %>
 <% end -%>
+<% if @_feature_gates && @_feature_gates.length > 0 -%>
+featureGates:
+  <% g = @_feature_gates.to_a.collect{|k| k.join(': ')}.join("\n  ") -%><%= g %>
+<% end -%>
