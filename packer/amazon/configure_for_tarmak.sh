@@ -5,6 +5,36 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+centos_release=7.5.1804
+
+# hardcode centos release
+cat > /etc/yum.repos.d/CentOS-Base.repo <<EOF
+# CentOS-Base.repo
+
+[base]
+name=CentOS-${centos_release} - Base
+baseurl=http://mirror.centos.org/centos/${centos_release}/os/\$basearch/
+        http://vault.centos.org/centos/${centos_release}/os/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#released updates
+[updates]
+name=CentOS-${centos_release} - Updates
+baseurl=http://mirror.centos.org/centos/${centos_release}/updates/\$basearch/
+        http://vault.centos.org/centos/${centos_release}/updates/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#additional packages that may be useful
+[extras]
+name=CentOS-${centos_release} - Extras
+baseurl=http://mirror.centos.org/centos/${centos_release}/extras/\$basearch/
+        http://vault.centos.org/centos/${centos_release}/extras/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+EOF
+
 # install puppet repositories
 rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
 
