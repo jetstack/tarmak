@@ -16,6 +16,7 @@ define aws_ebs::mount(
   String $volume_id,
   String $dest_path,
   String $device,
+  Boolean $is_not_attached,
   Enum['xfs'] $filesystem = 'xfs',
 ){
   require ::aws_ebs
@@ -32,16 +33,18 @@ define aws_ebs::mount(
   $mount_name = regsubst(regsubst($dest_path, '/', '-', 'G'), '^.(.*)$', '\1')
   $mount_service_name = "${mount_name}.mount"
 
-  file { "${::aws_ebs::systemd_dir}/${attach_service_name}":
-    ensure  => file,
-    mode    => '0644',
-    content => template('aws_ebs/attach-volume.service.erb'),
-    notify  => Exec[$systemd_reload],
-  } ~> service { $attach_service_name:
-    ensure  => running,
-    enable  => true,
-    before  => Service[$format_service_name],
-    require => Exec[$systemd_reload],
+  if $is_not_attached {
+    file { "${::aws_ebs::systemd_dir}/${attach_service_name}":
+      ensure  => file,
+      mode    => '0644',
+      content => template('aws_ebs/attach-volume.service.erb'),
+      notify  => Exec[$systemd_reload],
+    } ~> service { $attach_service_name:
+      ensure  => running,
+      enable  => true,
+      before  => Service[$format_service_name],
+      require => Exec[$systemd_reload],
+    }
   }
 
   file { "${::aws_ebs::systemd_dir}/${format_service_name}":
