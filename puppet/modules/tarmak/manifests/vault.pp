@@ -15,9 +15,9 @@ class tarmak::vault (
   if $_cloud_provider == 'aws' {
     $disks = aws_ebs::disks()
     case $disks.length {
-      0: {$ebs_device = ''}
-      1: {$ebs_device = $disks[0]}
-      default: {$ebs_device = $disks[1]}
+      0: {$ebs_device = ''; $is_not_attached = true}
+      1: {$ebs_device = 'xvdd'; $is_not_attached = true}
+      default: {$ebs_device = $disks[1]; $is_not_attached = false}
     }
 
     class{'::aws_ebs':
@@ -25,9 +25,10 @@ class tarmak::vault (
       systemd_dir => $systemd_dir,
     }
     aws_ebs::mount{'vault':
-      volume_id => $volume_id,
-      device    => $ebs_device,
-      dest_path => $data_dir,
+      volume_id       => $volume_id,
+      device          => "/dev/${ebs_device}",
+      dest_path       => $data_dir,
+      is_not_attached => $is_not_attached,
     }
   }
 }
