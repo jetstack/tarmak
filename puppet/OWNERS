@@ -1,0 +1,9 @@
+approvers:
+- simonswine
+- JoshVanL
+reviewers:
+- dippynark
+- simonswine
+- JoshVanL
+labels:
+- area/puppet

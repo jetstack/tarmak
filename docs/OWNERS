@@ -1,0 +1,11 @@
+approvers:
+- simonswine
+- JoshVanL
+reviewers:
+- dippynark
+- simonswine
+- JoshVanL
+- zee-ahmed
+- alljames
+labels:
+- kind/documentation
