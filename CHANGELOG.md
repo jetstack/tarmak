@@ -25,7 +25,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault Helper|                    | `0.9.13` |
 | Etcd        |                    | `3.2.25` |
 
-## [0.5.1]: 0.5.0 - 2018-12-04
+## [0.5.2]: 0.5.2 - 2018-12-07
+
+Bugfix release to fix regression that come up in the 0.5 release branch.
+Notably now hard coding the Centos release to 7.5. To avoid instability from a
+new Centos minor version.
+
+### Changed
+
+* Hardcode centos image release to 7.5.1804 (#649, [@simonswine](https://github.com/simonswine))
+
+### Fixed
+
+* Override local kubeconfig if errors (#652, [@JoshVanL](https://github.com/JoshVanL))
+* Correctly mount nvme drives on etcd instances (#538, [@JoshVanL](https://github.com/JoshVanL))
+* Fix centos 7.6 aws cli, download it through pip if it's not working (#646, [@simonswine](https://github.com/simonswine))
+
+### Versions
+
+| Application | Supported versions | Default  |
+|-------------|-------------------:|---------:|
+| Packer      |                    | `1.0.2`  |
+| Terraform   |                    | `0.11.8` |
+| Consul      |                    | `1.2.3`  |
+| Vault       |                    | `0.9.5`  |
+| Kubernetes  | `>= 1.9 && < 1.13` | `1.11.5` |
+| Calico      |                    | `3.1.4`  |
+| Vault Helper|                    | `0.9.13` |
+| Etcd        |                    | `3.2.25` |
+
+## [0.5.1]: 0.5.1 - 2018-12-04
 
 Release to update default Kubernetes version to 1.11.4: CVE-2018-1002105: proxy
 request handling in kube-apiserver can leave vulnerable TCP connections
@@ -312,6 +341,7 @@ This detailed changes have happend since the last minor version of Tarmak:
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
+[0.5.1]: https://github.com/jetstack/tarmak/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/jetstack/tarmak/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/jetstack/tarmak/compare/0.4.1...0.5.0
 [0.4.1]: https://github.com/jetstack/tarmak/compare/0.4.0...0.4.1
