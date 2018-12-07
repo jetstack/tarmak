@@ -5,7 +5,8 @@
     "region": "{{env `AWS_DEFAULT_REGION`}}",
     "tarmak_environment": "{{env `TARMAK_ENVIRONMENT`}}",
     "tarmak_base_image_name": "{{env `TARMAK_BASE_IMAGE_NAME`}}",
-    "ebs_volume_encrypted": "{{env `EBS_VOLUME_ENCRYPTED`}}"
+    "ebs_volume_encrypted": "{{env `EBS_VOLUME_ENCRYPTED`}}",
+    "scripts": "{{template_dir}}"
   },
   "builders": [
     {
@@ -38,22 +39,10 @@
     {
       "type": "shell",
       "execute_command": "sudo -E -S sh '{{ .Path }}'",
-      "inline": [
-        "rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm",
-        "yum update -y",
-        "yum install -y epel-release",
-        "yum install -y git puppet-agent vim tmux socat python-pip at jq unzip awscli",
-        "aws help 2> /dev/null > /dev/null ||  { yum remove -y awscli && pip install awscli==1.16.68; }",
-        "rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org",
-        "rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm",
-        "yum --enablerepo=elrepo-kernel install -y kernel-ml",
-        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=0 console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/sysconfig/grub",
-        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=0 console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/default/grub",
-        "grub2-set-default 0",
-        "grub2-mkconfig -o /boot/grub2/grub.cfg",
-        "rm -f /etc/sysconfig/network-scripts/ifcfg-ens*",
-        "systemctl disable kdump.service",
-        "rm -f /etc/ssh/ssh_host_*"
+      "scripts": [
+          "{{user `scripts`}}/configure_for_tarmak.sh",
+          "{{user `scripts`}}/configure_latest_kernel.sh",
+          "{{user `scripts`}}/cleanup.sh"
       ]
     }
   ]
