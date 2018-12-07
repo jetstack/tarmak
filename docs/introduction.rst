@@ -54,8 +54,8 @@ Non-goals
 Architecture overview
 ---------------------
 
-.. todo::
-   A high-level architecture diagram is coming soon!
+.. figure:: images/diagrams/tarmak-hlo.png
+   :alt: Tarmak High Level Overview
 
 Tarmak configuration resources
 ******************************
