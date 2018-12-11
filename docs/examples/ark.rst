@@ -31,10 +31,6 @@ The following steps, outlined in detail in the Ark documentation, are required:
    a Trust Policy. This process is defined in Ark's 
    `step-by-step AWS guide <https://heptio.github.io/ark/v0.10.0/aws-config>`_ .
 
-Configure AWS permissions
-+++++++++++++++++++++++++
-
-
 Install Ark on remote cluster
 +++++++++++++++++++++++++++++
 
@@ -48,7 +44,7 @@ The ``00-prereqs.yaml`` file creates a `heptio-ark` namespace, an `ark` service 
 RBAC rules to grant permissions to that service account, as well as CustomResourceDefinitions
 for the resources used by `ark`.
 
-The minio YAMLs install `Minio <https://github.com/minio/minio>`_, an object storage server 
+The ``minio`` YAMLs install `Minio <https://github.com/minio/minio>`_, an object storage server 
 compatible with AWS S3 (and other object storage services).
 
 Operation
@@ -57,17 +53,18 @@ Operation
 Using Ark on a Tarmak cluster
 +++++++++++++++++++++++++++++
 
-In order to run Ark operations against the cluster (i.e. `ark backup/restore/schedule`), 
-run the following tarmak command to ensure that an SSH tunnel is open, and that the current 
-cluster's kubeconfig file has been saved locally and set as an environment variable:
+In order to run Ark operations against the cluster (i.e. ``ark backup`` / 
+``ark restore`` / ``ark schedule``), run the following tarmak command to ensure that an SSH tunnel
+is open, and that the current  cluster's kubeconfig file has been saved locally and set as the 
+``KUBECONFIG`` environment variable:
 
 ::
 
-  $ export KUBECONFIG=$(tarmak cluster kubeconfig)
+  $ export $(tarmak cluster kubeconfig)
 
 Ark will now we able to interact with the Tarmak cluster. If you have deployed ark in a 
-non-default namespace (heptio-ark) on your cluster, you'll need to specify this with a 
---namespace flag.
+non-default namespace (default is `heptio-ark`) on your cluster, you'll need to specify this 
+with a ``--namespace`` flag.
 
 Recovery and migration
 ++++++++++++++++++++++
