@@ -11,3 +11,7 @@ rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
 
 # enable repo and install latest kernel
 yum --enablerepo=elrepo-kernel install -y kernel-ml
+
+# update grub to use latest kernel
+grub2-set-default 0
+grub2-mkconfig -o /boot/grub2/grub.cfg
