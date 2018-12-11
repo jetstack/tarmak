@@ -4,10 +4,10 @@
 
 package internalversion
 
-// InstanceListerExpansion allows custom methods to be added to
-// InstanceLister.
-type InstanceListerExpansion interface{}
+// MachineListerExpansion allows custom methods to be added to
+// MachineLister.
+type MachineListerExpansion interface{}
 
-// InstanceNamespaceListerExpansion allows custom methods to be added to
-// InstanceNamespaceLister.
-type InstanceNamespaceListerExpansion interface{}
+// MachineNamespaceListerExpansion allows custom methods to be added to
+// MachineNamespaceLister.
+type MachineNamespaceListerExpansion interface{}

@@ -18,7 +18,7 @@ func TestWantsInternalWingInformerFactory(t *testing.T) {
 	sf := informers.NewSharedInformerFactory(cs, time.Duration(1)*time.Second)
 	target, err := winginitializer.New(sf)
 	if err != nil {
-		t.Fatalf("expected to create an instance of initializer but got an error = %s", err.Error())
+		t.Fatalf("expected to create an machine of initializer but got an error = %s", err.Error())
 	}
 	wantWingInformerFactory := &wantInternalWingInformerFactory{}
 	target.Initialize(wantWingInformerFactory)

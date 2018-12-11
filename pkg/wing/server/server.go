@@ -13,7 +13,7 @@ import (
 	genericoptions "k8s.io/apiserver/pkg/server/options"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
-	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/instanceinittime"
+	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machineinittime"
 	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
 	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion"

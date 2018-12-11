@@ -1,10 +1,10 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
 package v1alpha1
 
-type InstanceManifestState string
+type MachineManifestState string
 
 const (
-	InstanceManifestStateConverging = InstanceManifestState("converging")
-	InstanceManifestStateConverged  = InstanceManifestState("converged")
-	InstanceManifestStateError      = InstanceManifestState("error")
+	MachineManifestStateConverging = MachineManifestState("converging")
+	MachineManifestStateConverged  = MachineManifestState("converged")
+	MachineManifestStateError      = MachineManifestState("error")
 )

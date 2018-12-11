@@ -15,7 +15,7 @@ import (
 	wingclientv1alpha1 "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned/typed/wing/v1alpha1"
 )
 
-func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, error) {
+func (c *Cluster) wingMachineClient() (wingclientv1alpha1.MachineInterface, error) {
 	var err error
 
 	if c.wingClientset == nil {
@@ -42,75 +42,75 @@ func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, er
 
 	}
 
-	return c.wingClientset.WingV1alpha1().Instances(c.ClusterName()), nil
+	return c.wingClientset.WingV1alpha1().Machines(c.ClusterName()), nil
 }
 
-func (c *Cluster) listInstances() (instances []*wingv1alpha1.Instance, err error) {
+func (c *Cluster) listMachines() (machines []*wingv1alpha1.Machine, err error) {
 	// connect to wing
-	client, err := c.wingInstanceClient()
+	client, err := c.wingMachineClient()
 	if err != nil {
-		return instances, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+		return machines, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
 	}
 
-	// list all instances in Provider
-	providerInstances, err := c.ListHosts()
+	// list all machines in Provider
+	providerMachines, err := c.ListHosts()
 	providerInstaceMap := make(map[string]interfaces.Host)
 	if err != nil {
-		return instances, fmt.Errorf("failed to list provider's instances: %s", err)
+		return machines, fmt.Errorf("failed to list provider's machines: %s", err)
 	}
 
-	for pos, _ := range providerInstances {
-		providerInstaceMap[providerInstances[pos].ID()] = providerInstances[pos]
+	for pos, _ := range providerMachines {
+		providerInstaceMap[providerMachines[pos].ID()] = providerMachines[pos]
 	}
 
-	// list all instances in wing
-	wingInstances, err := client.List(metav1.ListOptions{})
+	// list all machines in wing
+	wingMachines, err := client.List(metav1.ListOptions{})
 	if err != nil {
-		return instances, err
+		return machines, err
 	}
 
-	// loop through instances
-	for pos, _ := range wingInstances.Items {
-		instance := &wingInstances.Items[pos]
+	// loop through machines
+	for pos, _ := range wingMachines.Items {
+		machine := &wingMachines.Items[pos]
 
-		// removes instances not in AWS
-		if _, ok := providerInstaceMap[instance.Name]; !ok {
-			c.log.Debugf("deleting unused instance %s in wing API", instance.Name)
-			if err := client.Delete(instance.Name, &metav1.DeleteOptions{}); err != nil {
-				c.log.Warnf("error deleting instance %s in wing API: %s", instance.Name, err)
+		// removes machines not in AWS
+		if _, ok := providerInstaceMap[machine.Name]; !ok {
+			c.log.Debugf("deleting unused machine %s in wing API", machine.Name)
+			if err := client.Delete(machine.Name, &metav1.DeleteOptions{}); err != nil {
+				c.log.Warnf("error deleting machine %s in wing API: %s", machine.Name, err)
 			}
 			continue
 		}
-		instances = append(instances, instance)
+		machines = append(machines, machine)
 	}
 
-	return instances, nil
+	return machines, nil
 
 }
 
-func (c *Cluster) checkAllInstancesConverged(byState map[wingv1alpha1.InstanceManifestState][]*wingv1alpha1.Instance) error {
-	instancesNotConverged := []*wingv1alpha1.Instance{}
-	for key, instances := range byState {
-		if len(instances) == 0 {
+func (c *Cluster) checkAllMachinesConverged(byState map[wingv1alpha1.MachineManifestState][]*wingv1alpha1.Machine) error {
+	machinesNotConverged := []*wingv1alpha1.Machine{}
+	for key, machines := range byState {
+		if len(machines) == 0 {
 			continue
 		}
-		if key != wingv1alpha1.InstanceManifestStateConverged {
-			instancesNotConverged = append(instancesNotConverged, instances...)
+		if key != wingv1alpha1.MachineManifestStateConverged {
+			machinesNotConverged = append(machinesNotConverged, machines...)
 		}
-		c.Log().Debugf("%d instances in state %s: %s", len(instances), key, outputInstances(instances))
+		c.Log().Debugf("%d machines in state %s: %s", len(machines), key, outputMachines(machines))
 	}
 
-	if len(instancesNotConverged) > 0 {
-		return fmt.Errorf("not all instances have converged yet %s", outputInstances(instancesNotConverged))
+	if len(machinesNotConverged) > 0 {
+		return fmt.Errorf("not all machines have converged yet %s", outputMachines(machinesNotConverged))
 	}
 
 	return nil
 }
 
-func outputInstances(instances []*wingv1alpha1.Instance) string {
+func outputMachines(machines []*wingv1alpha1.Machine) string {
 	var output []string
-	for _, instance := range instances {
-		output = append(output, instance.Name)
+	for _, machine := range machines {
+		output = append(output, machine.Name)
 	}
 	return strings.Join(output, ", ")
 }

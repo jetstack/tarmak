@@ -11,8 +11,8 @@ type FakeWing struct {
 	*testing.Fake
 }
 
-func (c *FakeWing) Instances(namespace string) internalversion.InstanceInterface {
-	return &FakeInstances{c, namespace}
+func (c *FakeWing) Machines(namespace string) internalversion.MachineInterface {
+	return &FakeMachines{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

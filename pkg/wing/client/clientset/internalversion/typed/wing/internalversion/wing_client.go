@@ -8,7 +8,7 @@ import (
 
 type WingInterface interface {
 	RESTClient() rest.Interface
-	InstancesGetter
+	MachinesGetter
 }
 
 // WingClient is used to interact with features provided by the wing.tarmak.io group.
@@ -16,8 +16,8 @@ type WingClient struct {
 	restClient rest.Interface
 }
 
-func (c *WingClient) Instances(namespace string) InstanceInterface {
-	return newInstances(c, namespace)
+func (c *WingClient) Machines(namespace string) MachineInterface {
+	return newMachines(c, namespace)
 }
 
 // NewForConfig creates a new WingClient for the given config.

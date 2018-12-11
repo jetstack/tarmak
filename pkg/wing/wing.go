@@ -124,8 +124,8 @@ func (w *Wing) Must(err error) *Wing {
 
 func (w *Wing) watchForNotifications() {
 
-	// create the instance watcher
-	instanceListWatcher := cache.NewListWatchFromClient(w.clientset.WingV1alpha1().RESTClient(), "instances", w.flags.ClusterName, fields.ParseSelectorOrDie(fmt.Sprintf("metadata.name=%s", w.flags.InstanceName)))
+	// create the machine watcher
+	machineListWatcher := cache.NewListWatchFromClient(w.clientset.WingV1alpha1().RESTClient(), "machines", w.flags.ClusterName, fields.ParseSelectorOrDie(fmt.Sprintf("metadata.name=%s", w.flags.InstanceName)))
 
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -134,7 +134,7 @@ func (w *Wing) watchForNotifications() {
 	// whenever the cache is updated, the pod key is added to the workqueue.
 	// Note that when we finally process the item from the workqueue, we might see a newer version
 	// of the Pod than the version which was responsible for triggering the update.
-	indexer, informer := cache.NewIndexerInformer(instanceListWatcher, &v1alpha1.Instance{}, 0, cache.ResourceEventHandlerFuncs{
+	indexer, informer := cache.NewIndexerInformer(machineListWatcher, &v1alpha1.Machine{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {

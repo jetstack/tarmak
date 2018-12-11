@@ -30,12 +30,12 @@ type sharedInformerFactory struct {
 	startedInformers map[reflect.Type]bool
 }
 
-// NewSharedInformerFactory constructs a new instance of sharedInformerFactory
+// NewSharedInformerFactory constructs a new machine of sharedInformerFactory
 func NewSharedInformerFactory(client versioned.Interface, defaultResync time.Duration) SharedInformerFactory {
 	return NewFilteredSharedInformerFactory(client, defaultResync, v1.NamespaceAll, nil)
 }
 
-// NewFilteredSharedInformerFactory constructs a new instance of sharedInformerFactory.
+// NewFilteredSharedInformerFactory constructs a new machine of sharedInformerFactory.
 // Listers obtained via this SharedInformerFactory will be subject to the same filters
 // as specified here.
 func NewFilteredSharedInformerFactory(client versioned.Interface, defaultResync time.Duration, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) SharedInformerFactory {

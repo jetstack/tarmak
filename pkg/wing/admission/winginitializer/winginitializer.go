@@ -13,7 +13,7 @@ type pluginInitializer struct {
 
 var _ admission.PluginInitializer = pluginInitializer{}
 
-// New creates an instance of wing admission plugins initializer.
+// New creates an machine of wing admission plugins initializer.
 func New(informers informers.SharedInformerFactory) (pluginInitializer, error) {
 	return pluginInitializer{
 		informers: informers,

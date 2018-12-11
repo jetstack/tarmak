@@ -17,7 +17,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/apis/wing/install"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	wingregistry "github.com/jetstack/tarmak/pkg/wing/registry"
-	instancestorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/instance"
+	machinestorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/machine"
 )
 
 var (
@@ -77,7 +77,7 @@ func (cfg *Config) Complete() CompletedConfig {
 	return CompletedConfig{&c}
 }
 
-// New returns a new instance of WingServer from the given config.
+// New returns a new machine of WingServer from the given config.
 func (c completedConfig) New() (*WingServer, error) {
 	genericServer, err := c.GenericConfig.New("wing", genericapiserver.EmptyDelegate)
 	if err != nil {
@@ -91,7 +91,7 @@ func (c completedConfig) New() (*WingServer, error) {
 	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(wing.GroupName, registry, Scheme, metav1.ParameterCodec, Codecs)
 	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
 	v1alpha1storage := map[string]rest.Storage{}
-	v1alpha1storage["instances"] = wingregistry.RESTInPeace(instancestorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
+	v1alpha1storage["machines"] = wingregistry.RESTInPeace(machinestorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
 	apiGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1storage
 
 	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {

@@ -1,5 +1,5 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-package instance
+package machine
 
 import (
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,10 +15,10 @@ func NewREST(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (*reg
 	strategy := NewStrategy(scheme)
 
 	store := &genericregistry.Store{
-		NewFunc:                  func() runtime.Object { return &wing.Instance{} },
-		NewListFunc:              func() runtime.Object { return &wing.InstanceList{} },
-		PredicateFunc:            MatchInstance,
-		DefaultQualifiedResource: wing.Resource("instances"),
+		NewFunc:                  func() runtime.Object { return &wing.Machine{} },
+		NewListFunc:              func() runtime.Object { return &wing.MachineList{} },
+		PredicateFunc:            MatchMachine,
+		DefaultQualifiedResource: wing.Resource("machines"),
 
 		CreateStrategy: strategy,
 		UpdateStrategy: strategy,

@@ -8,50 +8,50 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Instance struct {
+type Machine struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	InstanceID   string `json:"instanceID,omitempty"`
-	InstancePool string `json:"instancePool,omitempty"`
+	MachineID   string `json:"machineID,omitempty"`
+	MachinePool string `json:"machinePool,omitempty"`
 
-	Spec   *InstanceSpec   `json:"spec,omitempty"`
-	Status *InstanceStatus `json:"status,omitempty"`
+	Spec   *MachineSpec   `json:"spec,omitempty"`
+	Status *MachineStatus `json:"status,omitempty"`
 }
 
-// InstanceSpec defines the desired state of Instance
-type InstanceSpec struct {
-	Converge *InstanceSpecManifest `json:"converge,omitempty"`
-	DryRun   *InstanceSpecManifest `json:"dryRun,omitempty"`
+// MachineSpec defines the desired state of Machine
+type MachineSpec struct {
+	Converge *MachineSpecManifest `json:"converge,omitempty"`
+	DryRun   *MachineSpecManifest `json:"dryRun,omitempty"`
 }
 
 //  InstaceSpecManifest defines location and hash for a specific manifest
-type InstanceSpecManifest struct {
+type MachineSpecManifest struct {
 	Path             string      `json:"path,omitempty"`             // PATH to manifests (tar.gz)
 	Hash             string      `json:"hash,omitempty"`             // hash of manifests, prefixed with type (eg: sha256:xyz)
 	RequestTimestamp metav1.Time `json:"requestTimestamp,omitempty"` // timestamp when a converge was requested
 }
 
-// InstanceStatus defines the observed state of Instance
-type InstanceStatus struct {
-	Converge *InstanceStatusManifest `json:"converge,omitempty"`
-	DryRun   *InstanceStatusManifest `json:"dryRun,omitempty"`
+// MachineStatus defines the observed state of Machine
+type MachineStatus struct {
+	Converge *MachineStatusManifest `json:"converge,omitempty"`
+	DryRun   *MachineStatusManifest `json:"dryRun,omitempty"`
 }
 
 //  InstaceSpecManifest defines the state and hash of a run manifest
-type InstanceStatusManifest struct {
-	State               InstanceManifestState `json:"state,omitempty"`
-	Hash                string                `json:"hash,omitempty"`                // hash of manifests, prefixed with type (eg: sha256:xyz)
-	LastUpdateTimestamp metav1.Time           `json:"lastUpdateTimestamp,omitempty"` // timestamp when a converge was requested
-	Messages            []string              `json:"messages,omitempty"`            // contains output of the retries
-	ExitCodes           []int                 `json:"exitCodes,omitempty"`           // return code of the retries
+type MachineStatusManifest struct {
+	State               MachineManifestState `json:"state,omitempty"`
+	Hash                string               `json:"hash,omitempty"`                // hash of manifests, prefixed with type (eg: sha256:xyz)
+	LastUpdateTimestamp metav1.Time          `json:"lastUpdateTimestamp,omitempty"` // timestamp when a converge was requested
+	Messages            []string             `json:"messages,omitempty"`            // contains output of the retries
+	ExitCodes           []int                `json:"exitCodes,omitempty"`           // return code of the retries
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type InstanceList struct {
+type MachineList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []Instance `json:"items"`
+	Items []Machine `json:"items"`
 }

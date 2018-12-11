@@ -8,40 +8,40 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Instance struct {
+type Machine struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
 
-	InstanceID   string
-	InstancePool string
+	MachineID   string
+	MachinePool string
 
-	Spec   *InstanceSpec
-	Status *InstanceStatus
+	Spec   *MachineSpec
+	Status *MachineStatus
 }
 
-// InstanceSpec defines the desired state of Instance
-type InstanceSpec struct {
-	Converge *InstanceSpecManifest
-	DryRun   *InstanceSpecManifest
+// MachineSpec defines the desired state of Machine
+type MachineSpec struct {
+	Converge *MachineSpecManifest
+	DryRun   *MachineSpecManifest
 }
 
 //  InstaceSpecManifest defines location and hash for a specific manifest
-type InstanceSpecManifest struct {
+type MachineSpecManifest struct {
 	Path             string
 	Hash             string
 	RequestTimestamp metav1.Time
 }
 
-// InstanceStatus defines the observed state of Instance
-type InstanceStatus struct {
-	Converge *InstanceStatusManifest
-	DryRun   *InstanceStatusManifest
+// MachineStatus defines the observed state of Machine
+type MachineStatus struct {
+	Converge *MachineStatusManifest
+	DryRun   *MachineStatusManifest
 }
 
 //  InstaceSpecManifest defines the state and hash of a run manifest
-type InstanceManifestState string
-type InstanceStatusManifest struct {
-	State               InstanceManifestState
+type MachineManifestState string
+type MachineStatusManifest struct {
+	State               MachineManifestState
 	Hash                string
 	LastUpdateTimestamp metav1.Time
 	Messages            []string
@@ -50,10 +50,10 @@ type InstanceStatusManifest struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type InstanceList struct {
+type MachineList struct {
 	metav1.TypeMeta
 	// +optional
 	metav1.ListMeta
 
-	Items []Instance
+	Items []Machine
 }

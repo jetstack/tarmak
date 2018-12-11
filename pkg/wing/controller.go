@@ -40,7 +40,7 @@ func (c *Controller) processNextItem() bool {
 		return false
 	}
 	// Tell the queue that we are done with processing this key. This unblocks the key for other workers
-	// This allows safe parallel processing because two instances with the same key are never processed in
+	// This allows safe parallel processing because two machines with the same key are never processed in
 	// parallel.
 	defer c.queue.Done(key)
 
@@ -52,7 +52,7 @@ func (c *Controller) processNextItem() bool {
 }
 
 // syncToStdout is the business logic of the controller. In this controller it simply prints
-// information about the instance to stdout. In case an error happened, it has to simply return the error.
+// information about the machine to stdout. In case an error happened, it has to simply return the error.
 // The retry logic should not be part of the business logic.
 func (c *Controller) syncToStdout(key string) error {
 
@@ -66,32 +66,32 @@ func (c *Controller) syncToStdout(key string) error {
 	}
 
 	if !exists {
-		// Below we will warm up our cache with a Instance, so that we will see a delete for one instance
-		fmt.Printf("Instance %s does not exist anymore\n", key)
-		instanceAPI := c.wing.clientset.WingV1alpha1().Instances(c.wing.flags.ClusterName)
-		instance := &v1alpha1.Instance{
+		// Below we will warm up our cache with a Machine, so that we will see a delete for one machine
+		fmt.Printf("Machine %s does not exist anymore\n", key)
+		machineAPI := c.wing.clientset.WingV1alpha1().Machines(c.wing.flags.ClusterName)
+		machine := &v1alpha1.Machine{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: c.wing.flags.InstanceName,
 			},
-			Status: &v1alpha1.InstanceStatus{
-				Converge: &v1alpha1.InstanceStatusManifest{
-					State: v1alpha1.InstanceManifestStateConverging,
+			Status: &v1alpha1.MachineStatus{
+				Converge: &v1alpha1.MachineStatusManifest{
+					State: v1alpha1.MachineManifestStateConverging,
 				},
 			},
 		}
-		_, err := instanceAPI.Create(instance)
+		_, err := machineAPI.Create(machine)
 		if err != nil {
-			return fmt.Errorf("error creating instance: %s", err)
+			return fmt.Errorf("error creating machine: %s", err)
 		}
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
-		// is dependent on the actual instance, to detect that a Instance was recreated with the same name
-		instance := obj.(*v1alpha1.Instance)
+		// is dependent on the actual machine, to detect that a Machine was recreated with the same name
+		machine := obj.(*v1alpha1.Machine)
 
 		// trigger converge if status time is older or not existing
-		if instance.Spec != nil && instance.Spec.Converge != nil && !instance.Spec.Converge.RequestTimestamp.Time.IsZero() {
-			if instance.Status != nil && instance.Status.Converge != nil && !instance.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
-				if instance.Status.Converge.LastUpdateTimestamp.Time.After(instance.Spec.Converge.RequestTimestamp.Time) {
+		if machine.Spec != nil && machine.Spec.Converge != nil && !machine.Spec.Converge.RequestTimestamp.Time.IsZero() {
+			if machine.Status != nil && machine.Status.Converge != nil && !machine.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
+				if machine.Status.Converge.LastUpdateTimestamp.Time.After(machine.Spec.Converge.RequestTimestamp.Time) {
 					c.log.Debug("no converge neccessary, last update was after request")
 					return nil
 				}
@@ -122,7 +122,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		c.log.Infof("Error syncing instance %v: %v", key, err)
+		c.log.Infof("Error syncing machine %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -133,7 +133,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	c.log.Infof("Dropping instance %q out of the queue: %v", key, err)
+	c.log.Infof("Dropping machine %q out of the queue: %v", key, err)
 }
 
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
@@ -141,7 +141,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 
 	// Let the workers stop when we are done
 	defer c.queue.ShutDown()
-	c.log.Info("Starting Instance controller")
+	c.log.Info("Starting Machine controller")
 
 	go c.informer.Run(stopCh)
 
@@ -156,7 +156,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 	}
 
 	<-stopCh
-	c.log.Info("Stopping Instance controller")
+	c.log.Info("Stopping Machine controller")
 }
 
 func (c *Controller) runWorker() {
