@@ -2,3 +2,7 @@
 package v1alpha1
 
 type MachineExpansion interface{}
+
+type MachineDeploymentExpansion interface{}
+
+type MachineSetExpansion interface{}

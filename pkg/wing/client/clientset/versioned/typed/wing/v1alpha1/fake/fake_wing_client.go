@@ -15,6 +15,14 @@ func (c *FakeWingV1alpha1) Machines(namespace string) v1alpha1.MachineInterface 
 	return &FakeMachines{c, namespace}
 }
 
+func (c *FakeWingV1alpha1) MachineDeployments(namespace string) v1alpha1.MachineDeploymentInterface {
+	return &FakeMachineDeployments{c, namespace}
+}
+
+func (c *FakeWingV1alpha1) MachineSets(namespace string) v1alpha1.MachineSetInterface {
+	return &FakeMachineSets{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeWingV1alpha1) RESTClient() rest.Interface {

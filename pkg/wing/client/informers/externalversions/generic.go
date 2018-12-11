@@ -6,6 +6,7 @@ package externalversions
 
 import (
 	"fmt"
+	wing "github.com/jetstack/tarmak/pkg/apis/wing"
 	v1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -37,9 +38,21 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=wing.tarmak.io, Version=v1alpha1
+	// Group=wing.tarmak.io, Version=wing
+	case wing.SchemeGroupVersion.WithResource("machines"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().Wing().Machines().Informer()}, nil
+	case wing.SchemeGroupVersion.WithResource("machinedeployments"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().Wing().MachineDeployments().Informer()}, nil
+	case wing.SchemeGroupVersion.WithResource("machinesets"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().Wing().MachineSets().Informer()}, nil
+
+		// Group=wing.tarmak.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("machines"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().V1alpha1().Machines().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("machinedeployments"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().V1alpha1().MachineDeployments().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("machinesets"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Wing().V1alpha1().MachineSets().Informer()}, nil
 
 	}
 

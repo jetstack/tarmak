@@ -2,3 +2,7 @@
 package internalversion
 
 type MachineExpansion interface{}
+
+type MachineDeploymentExpansion interface{}
+
+type MachineSetExpansion interface{}

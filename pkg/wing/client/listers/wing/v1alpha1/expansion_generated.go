@@ -11,3 +11,19 @@ type MachineListerExpansion interface{}
 // MachineNamespaceListerExpansion allows custom methods to be added to
 // MachineNamespaceLister.
 type MachineNamespaceListerExpansion interface{}
+
+// MachineDeploymentListerExpansion allows custom methods to be added to
+// MachineDeploymentLister.
+type MachineDeploymentListerExpansion interface{}
+
+// MachineDeploymentNamespaceListerExpansion allows custom methods to be added to
+// MachineDeploymentNamespaceLister.
+type MachineDeploymentNamespaceListerExpansion interface{}
+
+// MachineSetListerExpansion allows custom methods to be added to
+// MachineSetLister.
+type MachineSetListerExpansion interface{}
+
+// MachineSetNamespaceListerExpansion allows custom methods to be added to
+// MachineSetNamespaceLister.
+type MachineSetNamespaceListerExpansion interface{}

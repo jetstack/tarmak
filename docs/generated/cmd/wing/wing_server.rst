@@ -20,7 +20,7 @@ Options
 
 ::
 
-      --admission-control strings                        Admission is divided into two phases. In the first phase, only mutating admission plugins run. In the second phase, only validating admission plugins run. The names in the below list may represent a validating plugin, a mutating plugin, or both. Within each phase, the plugins will run in the order in which they are passed to this flag. Comma-delimited list of: Initializers, InstanceInitTime, MutatingAdmissionWebhook, NamespaceLifecycle, ValidatingAdmissionWebhook. (default [InstanceInitTime])
+      --admission-control strings                        Admission is divided into two phases. In the first phase, only mutating admission plugins run. In the second phase, only validating admission plugins run. The names in the below list may represent a validating plugin, a mutating plugin, or both. Within each phase, the plugins will run in the order in which they are passed to this flag. Comma-delimited list of: Initializers, MachineInitTime, MutatingAdmissionWebhook, NamespaceLifecycle, ValidatingAdmissionWebhook. (default [MachineInitTime])
       --admission-control-config-file string             File with admission control configuration.
       --bind-address ip                                  The IP address on which to listen for the --secure-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank, all interfaces will be used (0.0.0.0). (default 0.0.0.0)
       --cert-dir string                                  The directory where the TLS certs are located. If --tls-cert-file and --tls-private-key-file are provided, this flag will be ignored. (default "apiserver.local.config/certificates")

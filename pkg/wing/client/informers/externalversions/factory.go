@@ -6,6 +6,7 @@ package externalversions
 
 import (
 	versioned "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
+	apis "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions/apis"
 	internalinterfaces "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions/internalinterfaces"
 	wing "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions/wing"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,12 +31,12 @@ type sharedInformerFactory struct {
 	startedInformers map[reflect.Type]bool
 }
 
-// NewSharedInformerFactory constructs a new machine of sharedInformerFactory
+// NewSharedInformerFactory constructs a new instance of sharedInformerFactory
 func NewSharedInformerFactory(client versioned.Interface, defaultResync time.Duration) SharedInformerFactory {
 	return NewFilteredSharedInformerFactory(client, defaultResync, v1.NamespaceAll, nil)
 }
 
-// NewFilteredSharedInformerFactory constructs a new machine of sharedInformerFactory.
+// NewFilteredSharedInformerFactory constructs a new instance of sharedInformerFactory.
 // Listers obtained via this SharedInformerFactory will be subject to the same filters
 // as specified here.
 func NewFilteredSharedInformerFactory(client versioned.Interface, defaultResync time.Duration, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) SharedInformerFactory {
@@ -108,7 +109,12 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
+	Wing() apis.Interface
 	Wing() wing.Interface
+}
+
+func (f *sharedInformerFactory) Wing() apis.Interface {
+	return apis.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Wing() wing.Interface {
