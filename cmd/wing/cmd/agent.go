@@ -4,10 +4,11 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	"github.com/jetstack/tarmak/pkg/wing"
 )
 
-var agentFlags = &wing.Flags{}
+var agentFlags = &common.Flags{}
 
 var agentCmd = &cobra.Command{
 	Use: "agent",

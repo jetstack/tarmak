@@ -1,5 +1,5 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-package wing
+package machine
 
 import (
 	"errors"
@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/wing/interfaces"
 )
 
 type Controller struct {
@@ -21,15 +22,15 @@ type Controller struct {
 	queue    workqueue.RateLimitingInterface
 	informer cache.Controller
 	log      *logrus.Entry
-	wing     *Wing
+	wing     interfaces.Wing
 }
 
-func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller, wing *Wing) *Controller {
+func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller, wing interfaces.Wing) *Controller {
 	return &Controller{
 		informer: informer,
 		indexer:  indexer,
 		queue:    queue,
-		log:      wing.log.WithField("tier", "controller"),
+		log:      wing.Log().WithField("tier", "controller"),
 		wing:     wing,
 	}
 }
@@ -58,7 +59,7 @@ func (c *Controller) processNextItem() bool {
 func (c *Controller) syncToStdout(key string) error {
 
 	// ensure only one converge at a time
-	c.wing.convergeWG.Wait()
+	c.wing.ConvergeWGWait()
 
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
@@ -69,10 +70,14 @@ func (c *Controller) syncToStdout(key string) error {
 	if !exists {
 		// Below we will warm up our cache with a Machine, so that we will see a delete for one machine
 		fmt.Printf("Machine %s does not exist anymore\n", key)
-		machineAPI := c.wing.clientset.WingV1alpha1().Machines(c.wing.flags.ClusterName)
+		machineAPI := c.wing.Clientset().WingV1alpha1().Machines(c.wing.Flags().ClusterName)
 		machine := &v1alpha1.Machine{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: c.wing.flags.MachineName,
+				Name: c.wing.Flags().MachineName,
+				Labels: map[string]string{
+					"role":    c.wing.Flags().Role,
+					"cluster": c.wing.Flags().ClusterName,
+				},
 			},
 			Status: &v1alpha1.MachineStatus{
 				Converge: &v1alpha1.MachineStatusManifest{
@@ -109,7 +114,7 @@ func (c *Controller) syncToStdout(key string) error {
 		}
 
 		c.log.Infof("running converge")
-		c.wing.converge()
+		c.wing.Converge()
 	}
 	return nil
 }

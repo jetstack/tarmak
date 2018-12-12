@@ -152,7 +152,7 @@ func (w *Wing) runPuppet() (*v1alpha1.MachineStatus, error) {
 	return status, nil
 }
 
-func (w *Wing) converge() {
+func (w *Wing) Converge() {
 	w.convergeWG.Add(1)
 	defer w.convergeWG.Done()
 
@@ -303,7 +303,8 @@ func (w *Wing) reportStatus(status *v1alpha1.MachineStatus) error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: w.flags.MachineName,
 					Labels: map[string]string{
-						"role": w.flags.Role,
+						"role":    w.flags.Role,
+						"cluster": w.flags.ClusterName,
 					},
 				},
 				Status: status.DeepCopy(),

@@ -1,5 +1,4 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-
 package server
 
 import (
@@ -26,9 +25,13 @@ const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
 type WingServerOptions struct {
 	RecommendedOptions *genericoptions.RecommendedOptions
 	Admission          *genericoptions.AdmissionOptions
+	informerFactory    informers.SharedInformerFactory
 
 	StdOut io.Writer
 	StdErr io.Writer
+
+	stopCh <-chan struct{}
+	client *clientset.Clientset
 }
 
 var defaultAdmissionControllers = []string{machineinittime.PluginName, machinesetinittime.PluginName}
@@ -106,13 +109,22 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	client.Wing()
+	o.client = client
+
 	informerFactory := informers.NewSharedInformerFactory(client, serverConfig.LoopbackClientConfig.Timeout)
+	o.informerFactory = informerFactory
 	admissionInitializer, err := winginitializer.New(informerFactory)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := o.Admission.ApplyTo(&serverConfig.Config, serverConfig.SharedInformerFactory, serverConfig.LoopbackClientConfig, apiserver.Scheme, admissionInitializer); err != nil {
+		return nil, err
+	}
+
+	err = o.StartMachineControllers()
+	if err != nil {
 		return nil, err
 	}
 

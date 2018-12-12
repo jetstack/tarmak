@@ -16,8 +16,10 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	client "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
+	"github.com/jetstack/tarmak/pkg/wing/controller/machine"
 )
 
 const (
@@ -26,7 +28,7 @@ const (
 
 type Wing struct {
 	log       *logrus.Entry
-	flags     *Flags
+	flags     *common.Flags
 	clientset *client.Clientset
 
 	// stop channel, signals termination to all goroutines
@@ -36,21 +38,13 @@ type Wing struct {
 	convergeWG     sync.WaitGroup // wait group for converge runs
 
 	// controller loop
-	controller *Controller
+	controller *machine.Controller
 
 	// allows overriding puppet command for testing
 	puppetCommandOverride Command
 }
 
-type Flags struct {
-	ManifestURL string
-	ServerURL   string
-	ClusterName string
-	MachineName string
-	Role        string
-}
-
-func New(flags *Flags) *Wing {
+func New(flags *common.Flags) *Wing {
 	logger := logrus.New()
 	logger.Level = logrus.DebugLevel
 
@@ -104,7 +98,7 @@ func (w *Wing) Run(args []string) error {
 	w.signalHandler(signalCh)
 
 	// run converge loop after first start
-	go w.converge()
+	go w.Converge()
 
 	// start watching for API server events that trigger applies
 	w.watchForNotifications()
@@ -158,7 +152,7 @@ func (w *Wing) watchForNotifications() {
 		},
 	}, cache.Indexers{})
 
-	w.controller = NewController(queue, indexer, informer, w)
+	w.controller = machine.NewController(queue, indexer, informer, w)
 
 	// Now let's start the controller
 	go w.controller.Run(1, w.stopCh)
@@ -182,7 +176,7 @@ func (w *Wing) signalHandler(ch chan os.Signal) {
 
 				// create new converge stop channel and run converge
 				w.convergeStopCh = make(chan struct{})
-				w.converge()
+				w.Converge()
 
 			case syscall.SIGINT:
 				w.log.Infof("wing received SIGINT")
@@ -196,4 +190,23 @@ func (w *Wing) signalHandler(ch chan os.Signal) {
 			}
 		}
 	}()
+}
+
+func (w *Wing) Log() *logrus.Entry {
+	return w.log
+}
+
+func (w *Wing) ConvergeWGWait() {
+	w.convergeWG.Wait()
+}
+
+func (w *Wing) Clientset() *client.Clientset {
+	return w.clientset
+}
+
+func (w *Wing) Flags() common.Flags {
+	if w.flags != nil {
+		return *w.flags
+	}
+	return common.Flags{}
 }
