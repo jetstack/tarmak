@@ -12,6 +12,8 @@ import (
 type Interface interface {
 	// Machines returns a MachineInformer.
 	Machines() MachineInformer
+	// MachineDeployments returns a MachineDeploymentInformer.
+	MachineDeployments() MachineDeploymentInformer
 	// MachineSets returns a MachineSetInformer.
 	MachineSets() MachineSetInformer
 }
@@ -30,6 +32,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Machines returns a MachineInformer.
 func (v *version) Machines() MachineInformer {
 	return &machineInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// MachineDeployments returns a MachineDeploymentInformer.
+func (v *version) MachineDeployments() MachineDeploymentInformer {
+	return &machineDeploymentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // MachineSets returns a MachineSetInformer.

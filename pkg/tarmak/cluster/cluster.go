@@ -31,6 +31,7 @@ const (
 // returns a server
 type Cluster struct {
 	conf *clusterv1alpha1.Cluster
+	ctx  interfaces.CancellationContext
 
 	environment interfaces.Environment
 	networkCIDR *net.IPNet
@@ -53,6 +54,7 @@ var _ interfaces.Cluster = &Cluster{}
 func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Cluster) (*Cluster, error) {
 	cluster := &Cluster{
 		conf:        conf,
+		ctx:         environment.Tarmak().CancellationContext(),
 		environment: environment,
 		log:         environment.Log().WithField("cluster", conf.Name),
 	}

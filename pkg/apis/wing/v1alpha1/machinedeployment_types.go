@@ -12,7 +12,8 @@ import (
 type MachineDeploymentSpec struct {
 	// Number of desired machines. Defaults to 1.
 	// This is a pointer to distinguish between explicit zero and not specified.
-	Replicas *int32 `json:"replicas,omitempty"`
+	MinReplicas *int32 `json:"minReplicas,omitempty"`
+	MaxReplicas *int32 `json:"minReplicas,omitempty"`
 
 	// Label selector for machines. Existing MachineSets whose machines are
 	// selected by this will be the ones affected by this deployment.

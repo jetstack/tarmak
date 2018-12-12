@@ -13,7 +13,8 @@ type MachineSetSpec struct {
 	// This is a pointer to distinguish between explicit zero and unspecified.
 	// Defaults to 1.
 	// +optional
-	Replicas *int32 `json:"replicas,omitempty"`
+	MinReplicas *int32 `json:"minReplicas,omitempty"`
+	MaxReplicas *int32 `json:"minReplicas,omitempty"`
 
 	// MinReadySeconds is the minimum number of seconds for which a newly created machine should be ready.
 	// Defaults to 0 (machine will be considered available as soon as it is ready)

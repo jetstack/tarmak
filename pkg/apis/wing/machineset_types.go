@@ -9,11 +9,12 @@ import (
 
 // MachineSetSpec defines the desired state of MachineSet
 type MachineSetSpec struct {
-	// Replicas is the number of desired replicas.
+	// Replicas is the number of desired minimum and maximum replicas.
 	// This is a pointer to distinguish between explicit zero and unspecified.
 	// Defaults to 1.
 	// +optional
-	Replicas *int32
+	MinReplicas *int32
+	MaxReplicas *int32
 
 	// MinReadySeconds is the minimum number of seconds for which a newly created machine should be ready.
 	// Defaults to 0 (machine will be considered available as soon as it is ready)

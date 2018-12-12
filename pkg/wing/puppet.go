@@ -120,8 +120,8 @@ func (w *Wing) runPuppet() (*v1alpha1.MachineStatus, error) {
 	}
 
 	expBackoff := backoff.NewExponentialBackOff()
-	expBackoff.InitialInterval = time.Second * 30
-	expBackoff.MaxElapsedTime = time.Minute * 30
+	expBackoff.InitialInterval = time.Second * 10
+	expBackoff.MaxElapsedTime = time.Minute * 20
 
 	// add context to backoff
 	ctx, cancelRetries := context.WithCancel(context.Background())
@@ -294,14 +294,17 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 func (w *Wing) reportStatus(status *v1alpha1.MachineStatus) error {
 	machineAPI := w.clientset.WingV1alpha1().Machines(w.flags.ClusterName)
 	machine, err := machineAPI.Get(
-		w.flags.InstanceName,
+		w.flags.MachineName,
 		metav1.GetOptions{},
 	)
 	if err != nil {
 		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
 			machine = &v1alpha1.Machine{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: w.flags.InstanceName,
+					Name: w.flags.MachineName,
+					Labels: map[string]string{
+						"role": w.flags.Role,
+					},
 				},
 				Status: status.DeepCopy(),
 			}

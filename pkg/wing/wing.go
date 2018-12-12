@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	DefaultInstanceName = "$(hostname)"
+	DefaultMachineName = "$(hostname)"
 )
 
 type Wing struct {
@@ -43,10 +43,11 @@ type Wing struct {
 }
 
 type Flags struct {
-	ManifestURL  string
-	ServerURL    string
-	ClusterName  string
-	InstanceName string
+	ManifestURL string
+	ServerURL   string
+	ClusterName string
+	MachineName string
+	Role        string
 }
 
 func New(flags *Flags) *Wing {
@@ -65,17 +66,17 @@ func New(flags *Flags) *Wing {
 func (w *Wing) Run(args []string) error {
 	var errors []error
 
-	if w.flags.InstanceName == DefaultInstanceName {
-		instanceName, err := os.Hostname()
+	if w.flags.MachineName == DefaultMachineName {
+		machineName, err := os.Hostname()
 		if err != nil {
 			return err
 		}
 
-		w.flags.InstanceName = instanceName
+		w.flags.MachineName = machineName
 	}
 
-	if w.flags.InstanceName == "" {
-		errors = append(errors, fmt.Errorf("--instance-name flag cannot be empty"))
+	if w.flags.MachineName == "" {
+		errors = append(errors, fmt.Errorf("--machine-name flag cannot be empty"))
 	}
 	if w.flags.ManifestURL == "" {
 		errors = append(errors, fmt.Errorf("--manifest-url flag cannot be empty"))
@@ -125,7 +126,7 @@ func (w *Wing) Must(err error) *Wing {
 func (w *Wing) watchForNotifications() {
 
 	// create the machine watcher
-	machineListWatcher := cache.NewListWatchFromClient(w.clientset.WingV1alpha1().RESTClient(), "machines", w.flags.ClusterName, fields.ParseSelectorOrDie(fmt.Sprintf("metadata.name=%s", w.flags.InstanceName)))
+	machineListWatcher := cache.NewListWatchFromClient(w.clientset.WingV1alpha1().RESTClient(), "machines", w.flags.ClusterName, fields.ParseSelectorOrDie(fmt.Sprintf("metadata.name=%s", w.flags.MachineName)))
 
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())

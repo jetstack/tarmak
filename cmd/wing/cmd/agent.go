@@ -21,7 +21,8 @@ func init() {
 	agentCmd.Flags().StringVar(&agentFlags.ClusterName, "cluster-name", "myenv-mycluster", "this specifies the cluster name [environment]-[cluster]")
 	agentCmd.Flags().StringVar(&agentFlags.ServerURL, "server-url", "https://localhost:9443", "this specifies the URL to the wing server")
 	agentCmd.Flags().StringVar(&agentFlags.ManifestURL, "manifest-url", "", "this specifies the URL where the puppet.tar.gz can be found")
-	agentCmd.Flags().StringVar(&agentFlags.InstanceName, "instance-name", wing.DefaultInstanceName, "this specifies the instance's name")
+	agentCmd.Flags().StringVar(&agentFlags.MachineName, "instance-name", wing.DefaultMachineName, "this specifies the instance's name")
+	agentCmd.Flags().StringVar(&agentFlags.Role, "role", "", "this specifies the machines role, used as a label selector for machinesets")
 
 	RootCmd.AddCommand(agentCmd)
 }

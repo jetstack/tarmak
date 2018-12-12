@@ -38,9 +38,9 @@ func (c *Cluster) UploadConfiguration() error {
 	)
 }
 
-// This enforces a reapply of the puppet.tar.gz on every instance in the cluster
+// This enforces a reapply of the puppet.tar.gz on every machine in the cluster
 func (c *Cluster) ReapplyConfiguration() error {
-	c.log.Infof("making sure all instances apply the latest manifest")
+	c.log.Infof("making sure all machines apply the latest manifest")
 
 	// connect to wing
 	client, err := c.wingMachineClient()
@@ -48,21 +48,21 @@ func (c *Cluster) ReapplyConfiguration() error {
 		return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
 	}
 
-	// list instances
-	instances, err := c.listMachines()
+	// list machines
+	machines, err := c.listMachines()
 	if err != nil {
-		return fmt.Errorf("failed to list instances: %s", err)
+		return fmt.Errorf("failed to list machines: %s", err)
 	}
 
-	for pos, _ := range instances {
-		instance := instances[pos]
-		if instance.Spec == nil {
-			instance.Spec = &wingv1alpha1.MachineSpec{}
+	for pos, _ := range machines {
+		machine := machines[pos]
+		if machine.Spec == nil {
+			machine.Spec = &wingv1alpha1.MachineSpec{}
 		}
-		instance.Spec.Converge = &wingv1alpha1.MachineSpecManifest{}
+		machine.Spec.Converge = &wingv1alpha1.MachineSpecManifest{}
 
-		if _, err := client.Update(instance); err != nil {
-			c.log.Warnf("error updating instance %s in wing API: %s", instance.Name, err)
+		if _, err := client.Update(machine); err != nil {
+			c.log.Warnf("error updating machine %s in wing API: %s", machine.Name, err)
 		}
 	}
 
@@ -72,44 +72,50 @@ func (c *Cluster) ReapplyConfiguration() error {
 	return nil
 }
 
-// This waits until all instances have congverged successfully
+// This waits until all machines have congverged successfully
 func (c *Cluster) WaitForConvergance() error {
-	c.log.Debugf("making sure all instances have converged using puppet")
+	c.log.Debugf("making sure all machine have converged using puppet")
 
 	retries := retries
 	for {
-		instances, err := c.listMachines()
+		machines, err := c.listMachines()
 		if err != nil {
-			return fmt.Errorf("failed to list instances: %s", err)
+			return fmt.Errorf("failed to list machines: %s", err)
 		}
 
-		instanceByState := make(map[wingv1alpha1.MachineManifestState][]*wingv1alpha1.Machine)
+		machineByState := make(map[wingv1alpha1.MachineManifestState][]*wingv1alpha1.Machine)
 
-		for pos, _ := range instances {
-			instance := instances[pos]
+		for pos, _ := range machines {
+			machine := machines[pos]
 
-			// index by instance convergance state
-			if instance.Status == nil || instance.Status.Converge == nil || instance.Status.Converge.State == "" {
+			// index by machine convergance state
+			if machine.Status == nil || machine.Status.Converge == nil || machine.Status.Converge.State == "" {
 				continue
 			}
 
-			state := instance.Status.Converge.State
-			if _, ok := instanceByState[state]; !ok {
-				instanceByState[state] = []*wingv1alpha1.Machine{}
+			state := machine.Status.Converge.State
+			if _, ok := machineByState[state]; !ok {
+				machineByState[state] = []*wingv1alpha1.Machine{}
 			}
 
-			instanceByState[state] = append(
-				instanceByState[state],
-				instance,
+			machineByState[state] = append(
+				machineByState[state],
+				machine,
 			)
 		}
 
-		err = c.checkAllMachinesConverged(instanceByState)
+		err = c.checkAllMachinesConverged(machineByState)
 		if err == nil {
-			c.log.Info("all instances converged")
+			c.log.Info("all machines converged")
 			return nil
 		} else {
 			c.log.Debug(err)
+		}
+
+		select {
+		case <-c.ctx.Done():
+			return c.ctx.Err()
+		default:
 		}
 
 		retries--
@@ -120,5 +126,5 @@ func (c *Cluster) WaitForConvergance() error {
 
 	}
 
-	return fmt.Errorf("instances failed to converge in time")
+	return fmt.Errorf("machines failed to converge in time")
 }

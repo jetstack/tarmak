@@ -14,6 +14,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machineinittime"
+	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machinesetinittime"
 	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
 	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion"
@@ -30,7 +31,7 @@ type WingServerOptions struct {
 	StdErr io.Writer
 }
 
-var defaultAdmissionControllers = []string{instaceinittime.PluginName}
+var defaultAdmissionControllers = []string{machineinittime.PluginName, machinesetinittime.PluginName}
 
 func NewWingServerOptions(out, errOut io.Writer) *WingServerOptions {
 	o := &WingServerOptions{
@@ -47,7 +48,8 @@ func NewWingServerOptions(out, errOut io.Writer) *WingServerOptions {
 // NewCommandStartMaster provides a CLI handler for 'start master' command
 func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *cobra.Command {
 	o := NewWingServerOptions(out, errOut)
-	instaceinittime.Register(o.Admission.Plugins)
+	machineinittime.Register(o.Admission.Plugins)
+	machinesetinittime.Register(o.Admission.Plugins)
 	o.Admission.PluginNames = defaultAdmissionControllers
 
 	cmd := &cobra.Command{

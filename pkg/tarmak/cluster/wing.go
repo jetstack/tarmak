@@ -85,7 +85,6 @@ func (c *Cluster) listMachines() (machines []*wingv1alpha1.Machine, err error) {
 	}
 
 	return machines, nil
-
 }
 
 func (c *Cluster) checkAllMachinesConverged(byState map[wingv1alpha1.MachineManifestState][]*wingv1alpha1.Machine) error {

@@ -2,6 +2,7 @@
 package wing
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -71,7 +72,7 @@ func (c *Controller) syncToStdout(key string) error {
 		machineAPI := c.wing.clientset.WingV1alpha1().Machines(c.wing.flags.ClusterName)
 		machine := &v1alpha1.Machine{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: c.wing.flags.InstanceName,
+				Name: c.wing.flags.MachineName,
 			},
 			Status: &v1alpha1.MachineStatus{
 				Converge: &v1alpha1.MachineStatusManifest{
@@ -86,7 +87,10 @@ func (c *Controller) syncToStdout(key string) error {
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual machine, to detect that a Machine was recreated with the same name
-		machine := obj.(*v1alpha1.Machine)
+		machine, ok := obj.(*v1alpha1.Machine)
+		if !ok {
+			return errors.New("failed to process next item, not a machine")
+		}
 
 		// trigger converge if status time is older or not existing
 		if machine.Spec != nil && machine.Spec.Converge != nil && !machine.Spec.Converge.RequestTimestamp.Time.IsZero() {

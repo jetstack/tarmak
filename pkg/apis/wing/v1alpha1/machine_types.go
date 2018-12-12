@@ -12,9 +12,6 @@ type Machine struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	MachineID   string `json:"machineID,omitempty"`
-	MachinePool string `json:"machinePool,omitempty"`
-
 	Spec   *MachineSpec   `json:"spec,omitempty"`
 	Status *MachineStatus `json:"status,omitempty"`
 }

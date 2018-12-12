@@ -62,8 +62,6 @@ func RegisterConversions(scheme *runtime.Scheme) error {
 
 func autoConvert_v1alpha1_Machine_To_wing_Machine(in *Machine, out *wing.Machine, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	out.MachineID = in.MachineID
-	out.MachinePool = in.MachinePool
 	out.Spec = (*wing.MachineSpec)(unsafe.Pointer(in.Spec))
 	out.Status = (*wing.MachineStatus)(unsafe.Pointer(in.Status))
 	return nil
@@ -76,8 +74,6 @@ func Convert_v1alpha1_Machine_To_wing_Machine(in *Machine, out *wing.Machine, s 
 
 func autoConvert_wing_Machine_To_v1alpha1_Machine(in *wing.Machine, out *Machine, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	out.MachineID = in.MachineID
-	out.MachinePool = in.MachinePool
 	out.Spec = (*MachineSpec)(unsafe.Pointer(in.Spec))
 	out.Status = (*MachineStatus)(unsafe.Pointer(in.Status))
 	return nil
@@ -135,7 +131,8 @@ func Convert_wing_MachineDeploymentList_To_v1alpha1_MachineDeploymentList(in *wi
 }
 
 func autoConvert_v1alpha1_MachineDeploymentSpec_To_wing_MachineDeploymentSpec(in *MachineDeploymentSpec, out *wing.MachineDeploymentSpec, s conversion.Scope) error {
-	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	out.MinReplicas = (*int32)(unsafe.Pointer(in.MinReplicas))
+	out.MaxReplicas = (*int32)(unsafe.Pointer(in.MaxReplicas))
 	out.Selector = in.Selector
 	if err := Convert_v1alpha1_MachineTemplateSpec_To_wing_MachineTemplateSpec(&in.Template, &out.Template, s); err != nil {
 		return err
@@ -154,7 +151,8 @@ func Convert_v1alpha1_MachineDeploymentSpec_To_wing_MachineDeploymentSpec(in *Ma
 }
 
 func autoConvert_wing_MachineDeploymentSpec_To_v1alpha1_MachineDeploymentSpec(in *wing.MachineDeploymentSpec, out *MachineDeploymentSpec, s conversion.Scope) error {
-	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	out.MinReplicas = (*int32)(unsafe.Pointer(in.MinReplicas))
+	out.MaxReplicas = (*int32)(unsafe.Pointer(in.MaxReplicas))
 	out.Selector = in.Selector
 	if err := Convert_wing_MachineTemplateSpec_To_v1alpha1_MachineTemplateSpec(&in.Template, &out.Template, s); err != nil {
 		return err
@@ -315,7 +313,8 @@ func Convert_wing_MachineSetList_To_v1alpha1_MachineSetList(in *wing.MachineSetL
 }
 
 func autoConvert_v1alpha1_MachineSetSpec_To_wing_MachineSetSpec(in *MachineSetSpec, out *wing.MachineSetSpec, s conversion.Scope) error {
-	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	out.MinReplicas = (*int32)(unsafe.Pointer(in.MinReplicas))
+	out.MaxReplicas = (*int32)(unsafe.Pointer(in.MaxReplicas))
 	out.MinReadySeconds = in.MinReadySeconds
 	out.Selector = in.Selector
 	if err := Convert_v1alpha1_MachineTemplateSpec_To_wing_MachineTemplateSpec(&in.Template, &out.Template, s); err != nil {
@@ -330,7 +329,8 @@ func Convert_v1alpha1_MachineSetSpec_To_wing_MachineSetSpec(in *MachineSetSpec, 
 }
 
 func autoConvert_wing_MachineSetSpec_To_v1alpha1_MachineSetSpec(in *wing.MachineSetSpec, out *MachineSetSpec, s conversion.Scope) error {
-	out.Replicas = (*int32)(unsafe.Pointer(in.Replicas))
+	out.MinReplicas = (*int32)(unsafe.Pointer(in.MinReplicas))
+	out.MaxReplicas = (*int32)(unsafe.Pointer(in.MaxReplicas))
 	out.MinReadySeconds = in.MinReadySeconds
 	out.Selector = in.Selector
 	if err := Convert_wing_MachineTemplateSpec_To_v1alpha1_MachineTemplateSpec(&in.Template, &out.Template, s); err != nil {

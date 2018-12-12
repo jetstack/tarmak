@@ -12,9 +12,6 @@ type Machine struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
 
-	MachineID   string
-	MachinePool string
-
 	Spec   *MachineSpec
 	Status *MachineStatus
 }
