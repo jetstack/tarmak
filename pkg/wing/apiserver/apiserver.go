@@ -19,7 +19,7 @@ import (
 	wingregistry "github.com/jetstack/tarmak/pkg/wing/registry"
 	machinestorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/machine"
 	machinedeploymentstorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/machinedeployment"
-	machinesetsstorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/machineset"
+	machinesetstorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/machineset"
 )
 
 var (
@@ -94,7 +94,7 @@ func (c completedConfig) New() (*WingServer, error) {
 	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
 	v1alpha1storage := map[string]rest.Storage{}
 	v1alpha1storage["machines"] = wingregistry.RESTInPeace(machinestorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
-	v1alpha1storage["machinesets"] = wingregistry.RESTInPeace(machinesetsstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
+	v1alpha1storage["machinesets"] = wingregistry.RESTInPeace(machinesetstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
 	v1alpha1storage["machinedeployments"] = wingregistry.RESTInPeace(machinedeploymentstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
 	apiGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1storage
 

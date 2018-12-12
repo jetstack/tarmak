@@ -3,7 +3,6 @@ package machinesetinittime
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
 	"k8s.io/apiserver/pkg/admission"
@@ -33,20 +32,9 @@ func (d *machinesetInitTime) Admit(a admission.Attributes) error {
 		return nil
 	}
 
-	machineset, ok := a.GetObject().(*wing.MachineSet)
+	_, ok := a.GetObject().(*wing.MachineSet)
 	if !ok {
-		return errors.New("unexpected object time")
-	}
-
-	if machineset.Spec == nil {
-		return fmt.Errorf("expected machineset replicas to be set, got=%v", machineset.Spec)
-	}
-
-	if machineset.Spec.MinReplicas == nil {
-		return fmt.Errorf("expected machineset min replicas to be set, got=%v", machineset.Spec.MinReplicas)
-	}
-	if machineset.Spec.MaxReplicas == nil {
-		return fmt.Errorf("expected machineset max replicas to be set, got=%v", machineset.Spec.MaxReplicas)
+		return errors.New("unexpected object type")
 	}
 
 	return nil

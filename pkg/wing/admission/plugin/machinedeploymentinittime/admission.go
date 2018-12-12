@@ -3,7 +3,6 @@ package machinedeploymentinittime
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
 	"k8s.io/apiserver/pkg/admission"
@@ -28,25 +27,14 @@ type machinedeploymentInitTime struct {
 // In addition checks that the Name is not on the banned list.
 // The list is stored in Fischers API objects.
 func (d *machinedeploymentInitTime) Admit(a admission.Attributes) error {
-	// we are only interested in machinedeploymentss
+	// we are only interested in machinedeployments
 	if a.GetKind().GroupKind() != wing.Kind("MachineDeployment") {
 		return nil
 	}
 
-	machinedeployment, ok := a.GetObject().(*wing.MachineDeployment)
+	_, ok := a.GetObject().(*wing.MachineDeployment)
 	if !ok {
 		return errors.New("unexpected object time")
-	}
-
-	if machinedeployment.Spec == nil {
-		return fmt.Errorf("expected machinedeployment replicas to be set, got=%v", machinedeployment.Spec)
-	}
-
-	if machinedeployment.Spec.MinReplicas == nil {
-		return fmt.Errorf("expected machinedeployment min replicas to be set, got=%v", machinedeployment.Spec.MinReplicas)
-	}
-	if machinedeployment.Spec.MaxReplicas == nil {
-		return fmt.Errorf("expected machinedeployment max replicas to be set, got=%v", machinedeployment.Spec.MaxReplicas)
 	}
 
 	return nil

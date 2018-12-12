@@ -4,6 +4,7 @@ package machinedeployment
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -13,9 +14,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/jetstack/tarmak/pkg/apis/wing"
+	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
-	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion"
+	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
 type Controller struct {
@@ -66,21 +67,26 @@ func (c *Controller) syncToStdout(key string) error {
 	}
 
 	if !exists {
-		fmt.Printf("Machine %s does not exist anymore\n", key)
+		fmt.Printf("MachineDeployment %s does not exist anymore\n", key)
 		return nil
 	}
 
 	// Note that you also have to check the uid if you have a local controlled resource, which
 	// is dependent on the actual machine, to detect that a Machine was recreated with the same name
-	machinedeployment, ok := obj.(*wing.MachineDeployment)
+	machinedeployment, ok := obj.(*v1alpha1.MachineDeployment)
 	if !ok {
 		return errors.New("failed to process next item, not a machinedeployment")
 	}
 	machinedeployment = machinedeployment.DeepCopy()
 
-	machinesetAPI := c.client.Wing().MachineSets(machinedeployment.Namespace)
+	var selectors []string
+	for k, v := range machinedeployment.Spec.Selector.MatchLabels {
+		selectors = append(selectors, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	machinesetAPI := c.client.WingV1alpha1().MachineSets(machinedeployment.Namespace)
 	machinesetList, err := machinesetAPI.List(metav1.ListOptions{
-		FieldSelector: machinedeployment.Spec.Selector.String(),
+		LabelSelector: strings.Join(selectors, ","),
 	})
 	if err != nil {
 		return err
@@ -94,12 +100,12 @@ func (c *Controller) syncToStdout(key string) error {
 	// we need to create the machine set for this deployment
 	if len(machinesetList.Items) == 0 {
 		fmt.Printf("Creating MachineSet for MachineDeployment %s\n", key)
-		machineset := &wing.MachineSet{
+		machineset := &v1alpha1.MachineSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   machinedeployment.Name,
 				Labels: utils.DuplicateMapString(machinedeployment.Labels),
 			},
-			Spec: &wing.MachineSetSpec{
+			Spec: &v1alpha1.MachineSetSpec{
 				MaxReplicas:     machinedeployment.Spec.MaxReplicas,
 				MinReadySeconds: *machinedeployment.Spec.MinReadySeconds,
 				MinReplicas:     machinedeployment.Spec.MinReplicas,
@@ -116,7 +122,7 @@ func (c *Controller) syncToStdout(key string) error {
 	}
 
 	machineset := machinesetList.Items[0]
-	status := &wing.MachineDeploymentStatus{
+	status := &v1alpha1.MachineDeploymentStatus{
 		Replicas:           machineset.Status.Replicas,
 		ObservedGeneration: machinedeployment.Status.ObservedGeneration + 1,
 		ReadyReplicas:      machineset.Status.ReadyReplicas,
@@ -125,7 +131,7 @@ func (c *Controller) syncToStdout(key string) error {
 		UnavailableReplicas: machineset.Status.Replicas - machineset.Status.ReadyReplicas,
 	}
 
-	machineDeploymentAPI := c.client.Wing().MachineDeployments(machinedeployment.Namespace)
+	machineDeploymentAPI := c.client.WingV1alpha1().MachineDeployments(machinedeployment.Namespace)
 	machinedeployment.Status = status.DeepCopy()
 	_, err = machineDeploymentAPI.Update(machinedeployment)
 	if err != nil {
@@ -147,7 +153,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		c.log.Infof("Error syncing machine %v: %v", key, err)
+		c.log.Errorf("Error syncing machine deployment %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -158,7 +164,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	c.log.Infof("Dropping machine %q out of the queue: %v", key, err)
+	c.log.Errorf("Dropping machine deployment %q out of the queue: %v", key, err)
 }
 
 func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
@@ -181,37 +187,10 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	}
 
 	<-stopCh
-	c.log.Info("Stopping Machine controller")
+	c.log.Info("Stopping MachineDeployment controller")
 }
 
 func (c *Controller) runWorker() {
 	for c.processNextItem() {
 	}
-}
-
-func (c *Controller) machineConverged(machine wing.Machine) bool {
-	if machine.Spec != nil && machine.Spec.Converge != nil && !machine.Spec.Converge.RequestTimestamp.Time.IsZero() {
-		if machine.Status != nil && machine.Status.Converge != nil && !machine.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
-			if machine.Status.Converge.LastUpdateTimestamp.Time.After(machine.Spec.Converge.RequestTimestamp.Time) {
-				return true
-			}
-		} else {
-			return true
-		}
-	} else {
-		return true
-	}
-
-	return false
-}
-
-func (c *Controller) fullyLabeledMachine(set *wing.MachineSet, machine wing.Machine) bool {
-	for k, v := range set.Spec.Selector.MatchLabels {
-		a, ok := machine.Labels[k]
-		if !ok || a != v {
-			return false
-		}
-	}
-
-	return true
 }

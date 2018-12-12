@@ -12,12 +12,13 @@ import (
 	genericoptions "k8s.io/apiserver/pkg/server/options"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machinedeploymentinittime"
 	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machineinittime"
 	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machinesetinittime"
 	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
-	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion"
-	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
+	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
 )
 
 const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
@@ -34,7 +35,7 @@ type WingServerOptions struct {
 	client *clientset.Clientset
 }
 
-var defaultAdmissionControllers = []string{machineinittime.PluginName, machinesetinittime.PluginName}
+var defaultAdmissionControllers = []string{machineinittime.PluginName, machinesetinittime.PluginName, machinedeploymentinittime.PluginName}
 
 func NewWingServerOptions(out, errOut io.Writer) *WingServerOptions {
 	o := &WingServerOptions{
@@ -53,6 +54,7 @@ func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *c
 	o := NewWingServerOptions(out, errOut)
 	machineinittime.Register(o.Admission.Plugins)
 	machinesetinittime.Register(o.Admission.Plugins)
+	machinedeploymentinittime.Register(o.Admission.Plugins)
 	o.Admission.PluginNames = defaultAdmissionControllers
 
 	cmd := &cobra.Command{
@@ -109,7 +111,6 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	client.Wing()
 	o.client = client
 
 	informerFactory := informers.NewSharedInformerFactory(client, serverConfig.LoopbackClientConfig.Timeout)

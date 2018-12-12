@@ -43,28 +43,38 @@ func (c *Cluster) ReapplyConfiguration() error {
 	c.log.Infof("making sure all machines apply the latest manifest")
 
 	// connect to wing
-	client, err := c.wingMachineClient()
-	if err != nil {
-		return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	//client, err := c.wingMachineDeploymentClient()
+	//if err != nil {
+	//	return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	//}
+
+	//if err := c.deleteUnusedMachines(); err != nil {
+	//	return err
+	//}
+
+	if err := c.updateMachineDeployments(); err != nil {
+		return err
 	}
 
-	// list machines
-	machines, err := c.listMachines()
-	if err != nil {
-		return fmt.Errorf("failed to list machines: %s", err)
-	}
+	//// list machine deployments
+	//deployments, err := c.listMachineDeployments()
+	//if err != nil {
+	//	return fmt.Errorf("failed to list machines: %s", err)
+	//}
 
-	for pos, _ := range machines {
-		machine := machines[pos]
-		if machine.Spec == nil {
-			machine.Spec = &wingv1alpha1.MachineSpec{}
-		}
-		machine.Spec.Converge = &wingv1alpha1.MachineSpecManifest{}
+	//for pos, _ := range deployments {
+	//	deployment := deployments[pos]
+	//	if deployment.Spec == nil {
+	//		//machine.Spec = &wingv1alpha1.MachineSpec{}
+	//	}
+	//	//machine.Spec.Converge = &wingv1alpha1.MachineSpecManifest{}
 
-		if _, err := client.Update(machine); err != nil {
-			c.log.Warnf("error updating machine %s in wing API: %s", machine.Name, err)
-		}
-	}
+	//	if _, err := client.Update(deployment); err != nil {
+	//		c.log.Warnf("error updating machine deployment %s in wing API: %s", deployment.Name, err)
+	//	}
+	//}
+
+	//fmt.Printf("%+#v\n", deployments)
 
 	// TODO: solve this on the API server side
 	time.Sleep(time.Second * 5)
@@ -78,39 +88,59 @@ func (c *Cluster) WaitForConvergance() error {
 
 	retries := retries
 	for {
-		machines, err := c.listMachines()
+		deployments, err := c.listMachineDeployments()
 		if err != nil {
 			return fmt.Errorf("failed to list machines: %s", err)
 		}
 
-		machineByState := make(map[wingv1alpha1.MachineManifestState][]*wingv1alpha1.Machine)
+		//machineByState := make(map[wingv1alpha1.MachineManifestState][]*wingv1alpha1.Machine)
 
-		for pos, _ := range machines {
-			machine := machines[pos]
-
-			// index by machine convergance state
-			if machine.Status == nil || machine.Status.Converge == nil || machine.Status.Converge.State == "" {
+		var converged []*wingv1alpha1.MachineDeployment
+		var converging []*wingv1alpha1.MachineDeployment
+		for pos, _ := range deployments {
+			deployment := deployments[pos]
+			if deployment.Status == nil || deployment.Spec == nil || deployment.Spec.MinReplicas == nil {
+				converging = append(converging, deployment)
 				continue
 			}
 
-			state := machine.Status.Converge.State
-			if _, ok := machineByState[state]; !ok {
-				machineByState[state] = []*wingv1alpha1.Machine{}
+			if deployment.Status.ReadyReplicas >= deployment.Status.Replicas &&
+				deployment.Status.Replicas >= *deployment.Spec.MinReplicas {
+				converged = append(converged, deployment)
+				continue
 			}
 
-			machineByState[state] = append(
-				machineByState[state],
-				machine,
-			)
+			converging = append(converging, deployment)
 		}
 
-		err = c.checkAllMachinesConverged(machineByState)
-		if err == nil {
-			c.log.Info("all machines converged")
+		if len(converging) == 0 {
+			c.log.Info("all deployments converged")
 			return nil
-		} else {
-			c.log.Debug(err)
 		}
+
+		var convergingStr string
+		var convergedStr string
+		for _, c := range converging {
+			convergingStr = fmt.Sprintf("%s %s", convergingStr, c.Name)
+		}
+		for _, c := range converged {
+			convergedStr = fmt.Sprintf("%s %s", convergedStr, c.Name)
+		}
+
+		if convergedStr != "" {
+			c.log.Debugf("converged deployments [%s]", convergedStr)
+		}
+		c.log.Debugf("converging deployments [%s]", convergingStr)
+
+		//c.log.
+
+		//err = c.checkAllMachinesConverged(machineByState)
+		//if err == nil {
+		//	c.log.Info("all machines converged")
+		//	return nil
+		//} else {
+		//	c.log.Debug(err)
+		//}
 
 		select {
 		case <-c.ctx.Done():

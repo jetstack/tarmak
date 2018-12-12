@@ -15,7 +15,7 @@ import (
 )
 
 func (o WingServerOptions) StartMachineControllers() error {
-	machinesetListWatcher := cache.NewListWatchFromClient(o.client.Wing().RESTClient(), "machinesets", metav1.NamespaceAll, fields.Everything())
+	machinesetListWatcher := cache.NewListWatchFromClient(o.client.WingV1alpha1().RESTClient(), "machinesets", metav1.NamespaceAll, fields.Everything())
 	queueSet := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	indexerSet, informerSet := cache.NewIndexerInformer(machinesetListWatcher, &v1alpha1.MachineSet{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {

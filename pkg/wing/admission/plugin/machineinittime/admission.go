@@ -35,8 +35,9 @@ func (d *machineInitTime) Admit(a admission.Attributes) error {
 
 	machine, ok := a.GetObject().(*wing.Machine)
 	if !ok {
-		return errors.New("unexpected object time")
+		return errors.New("unexpected object type")
 	}
+	machine = machine.DeepCopy()
 
 	if machine.Status != nil {
 		if machine.Status.Converge != nil && machine.Status.Converge.LastUpdateTimestamp.IsZero() {

@@ -4,6 +4,7 @@ package machineset
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -13,8 +14,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/jetstack/tarmak/pkg/apis/wing"
-	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion"
+	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
+	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
 type Controller struct {
@@ -71,20 +72,32 @@ func (c *Controller) syncToStdout(key string) error {
 
 	// Note that you also have to check the uid if you have a local controlled resource, which
 	// is dependent on the actual machine, to detect that a Machine was recreated with the same name
-	machineset, ok := obj.(*wing.MachineSet)
+	machineset, ok := obj.(*v1alpha1.MachineSet)
 	if !ok {
 		return errors.New("failed to process next item, not a machineset")
 	}
-	machineset = machineset.DeepCopy()
 
-	machineAPI := c.client.Wing().Machines(machineset.Namespace)
+	if machineset.Spec == nil {
+		return fmt.Errorf("machineset spec is nil: %v", machineset.Spec)
+	}
+
+	if machineset.Spec.MaxReplicas == nil || machineset.Spec.MinReplicas == nil {
+		return fmt.Errorf("expected machineset min and max replicas to not be nil: min=%v max=%v",
+			machineset.Spec.MaxReplicas, machineset.Spec.MinReplicas)
+	}
+
+	var selectors []string
+	for k, v := range machineset.Spec.Selector.MatchLabels {
+		selectors = append(selectors, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	machineAPI := c.client.WingV1alpha1().Machines(machineset.Namespace)
 	machineList, err := machineAPI.List(metav1.ListOptions{
-		FieldSelector: machineset.Spec.Selector.String(),
+		LabelSelector: strings.Join(selectors, ","),
 	})
 	if err != nil {
 		return err
 	}
-	machineList = machineList.DeepCopy()
 
 	if int32(len(machineList.Items)) > *machineset.Spec.MaxReplicas {
 		c.log.Warnf("more machines exist then the maximum, max=%v curr=%v", *machineset.Spec.MaxReplicas, len(machineList.Items))
@@ -106,7 +119,7 @@ func (c *Controller) syncToStdout(key string) error {
 		}
 	}
 
-	status := &wing.MachineSetStatus{
+	status := &v1alpha1.MachineSetStatus{
 		Replicas:             int32(len(machineList.Items)),
 		ObservedGeneration:   machineset.Status.ObservedGeneration + 1,
 		ReadyReplicas:        readyMachines,
@@ -115,7 +128,7 @@ func (c *Controller) syncToStdout(key string) error {
 		AvailableReplicas: readyMachines,
 	}
 
-	machineSetAPI := c.client.Wing().MachineSets(machineset.Namespace)
+	machineSetAPI := c.client.WingV1alpha1().MachineSets(machineset.Namespace)
 	machineset.Status = status.DeepCopy()
 	_, err = machineSetAPI.Update(machineset)
 	if err != nil {
@@ -137,7 +150,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		c.log.Infof("Error syncing machine %v: %v", key, err)
+		c.log.Errorf("Error syncing machineset %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -148,7 +161,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	c.log.Infof("Dropping machine %q out of the queue: %v", key, err)
+	c.log.Errorf("Dropping machineset %q out of the queue: %v", key, err)
 }
 
 func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
@@ -171,7 +184,7 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	}
 
 	<-stopCh
-	c.log.Info("Stopping Machine controller")
+	c.log.Info("Stopping MachineSet controller")
 }
 
 func (c *Controller) runWorker() {
@@ -179,7 +192,7 @@ func (c *Controller) runWorker() {
 	}
 }
 
-func (c *Controller) machineConverged(machine wing.Machine) bool {
+func (c *Controller) machineConverged(machine v1alpha1.Machine) bool {
 	if machine.Spec != nil && machine.Spec.Converge != nil && !machine.Spec.Converge.RequestTimestamp.Time.IsZero() {
 		if machine.Status != nil && machine.Status.Converge != nil && !machine.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
 			if machine.Status.Converge.LastUpdateTimestamp.Time.After(machine.Spec.Converge.RequestTimestamp.Time) {
@@ -195,7 +208,7 @@ func (c *Controller) machineConverged(machine wing.Machine) bool {
 	return false
 }
 
-func (c *Controller) fullyLabeledMachine(set *wing.MachineSet, machine wing.Machine) bool {
+func (c *Controller) fullyLabeledMachine(set *v1alpha1.MachineSet, machine v1alpha1.Machine) bool {
 	for k, v := range set.Spec.Selector.MatchLabels {
 		a, ok := machine.Labels[k]
 		if !ok || a != v {

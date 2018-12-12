@@ -131,7 +131,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		c.log.Infof("Error syncing machine %v: %v", key, err)
+		c.log.Errorf("Error syncing machine %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -142,7 +142,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	c.log.Infof("Dropping machine %q out of the queue: %v", key, err)
+	c.log.Errorf("Dropping machine %q out of the queue: %v", key, err)
 }
 
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {

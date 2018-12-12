@@ -21,9 +21,9 @@ func NewStrategy(typer runtime.ObjectTyper) machinedeploymentStrategy {
 }
 
 func GetAttrs(obj runtime.Object) (labels.Set, fields.Set, bool, error) {
-	apiserver, ok := obj.(*wing.Machine)
+	apiserver, ok := obj.(*wing.MachineDeployment)
 	if !ok {
-		return nil, nil, false, fmt.Errorf("given object is not a Machine.")
+		return nil, nil, false, fmt.Errorf("given object is not a MachineDeployment.")
 	}
 	return labels.Set(apiserver.ObjectMeta.Labels), MachineToSelectableFields(apiserver), apiserver.Initializers != nil, nil
 }
@@ -39,7 +39,7 @@ func MatchMachineDeployment(label labels.Selector, field fields.Selector) storag
 }
 
 // MachineToSelectableFields returns a field set that represents the object.
-func MachineToSelectableFields(obj *wing.Machine) fields.Set {
+func MachineToSelectableFields(obj *wing.MachineDeployment) fields.Set {
 	return generic.ObjectMetaFieldsSet(&obj.ObjectMeta, true)
 }
 

@@ -18,7 +18,7 @@ func NewREST(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (*reg
 		NewFunc:                  func() runtime.Object { return &wing.MachineDeployment{} },
 		NewListFunc:              func() runtime.Object { return &wing.MachineDeploymentList{} },
 		PredicateFunc:            MatchMachineDeployment,
-		DefaultQualifiedResource: wing.Resource("machinedeploymentss"),
+		DefaultQualifiedResource: wing.Resource("machinedeployments"),
 
 		CreateStrategy: strategy,
 		UpdateStrategy: strategy,
