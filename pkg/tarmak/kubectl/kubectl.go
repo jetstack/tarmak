@@ -344,9 +344,8 @@ func (k *Kubectl) setupConfig(c *api.Config, publicAPIEndpoint bool) (*api.Confi
 	}
 
 	// check if certificates are set
-	if !publicAPIEndpoint &&
-		(len(authInfo.ClientCertificateData) == 0 || len(authInfo.ClientKeyData) == 0 ||
-			len(cluster.CertificateAuthorityData) == 0) {
+	if len(authInfo.ClientCertificateData) == 0 || len(authInfo.ClientKeyData) == 0 ||
+		len(cluster.CertificateAuthorityData) == 0 {
 
 		if err := k.tarmak.Terraform().Prepare(k.tarmak.Environment().Hub()); err != nil {
 			return nil, nil, fmt.Errorf("failed to prepare terraform: %s", err)
