@@ -305,14 +305,13 @@ func (e *Environment) WingTunnel() interfaces.Tunnel {
 
 func (e *Environment) WingClientset() (*wingclient.Clientset, interfaces.Tunnel, error) {
 	tunnel := e.WingTunnel()
-	//if err := tunnel.Start(); err != nil {
-	//	return nil, nil, err
-	//}
+	if err := tunnel.Start(); err != nil {
+		return nil, nil, err
+	}
 
 	// TODO: Do proper TLS here
 	restConfig := &rest.Config{
-		//Host: fmt.Sprintf("https://127.0.0.1:%d", tunnel.Port()),
-		Host: fmt.Sprintf("https://127.0.0.1:%d", 9443),
+		Host: fmt.Sprintf("https://127.0.0.1:%d", tunnel.Port()),
 		TLSClientConfig: rest.TLSClientConfig{
 			Insecure: true,
 		},

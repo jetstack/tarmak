@@ -110,6 +110,10 @@ func (c *Controller) syncToStdout(key string) error {
 	var readyMachines int32
 	var fullyLabeledMachines int32
 	for _, i := range machineList.Items {
+		//c.log.Infof("status: %+v", i.Status)
+		//if i.Status.Converge != nil {
+		//	c.log.Infof("status: %+v", i.Status.Converge.State)
+		//}
 		if c.machineConverged(i) {
 			readyMachines++
 		}
@@ -119,9 +123,14 @@ func (c *Controller) syncToStdout(key string) error {
 		}
 	}
 
+	var observedGeneration int64 = 0
+	if machineset.Status != nil {
+		observedGeneration = machineset.Status.ObservedGeneration
+	}
+
 	status := &v1alpha1.MachineSetStatus{
 		Replicas:             int32(len(machineList.Items)),
-		ObservedGeneration:   machineset.Status.ObservedGeneration + 1,
+		ObservedGeneration:   observedGeneration + 1,
 		ReadyReplicas:        readyMachines,
 		FullyLabeledReplicas: fullyLabeledMachines,
 		// we may want to do something with available replicas
@@ -130,6 +139,7 @@ func (c *Controller) syncToStdout(key string) error {
 
 	machineSetAPI := c.client.WingV1alpha1().MachineSets(machineset.Namespace)
 	machineset.Status = status.DeepCopy()
+	c.log.Infof("set status: %+v\n", machineset.Status)
 	_, err = machineSetAPI.Update(machineset)
 	if err != nil {
 		return fmt.Errorf("failed to update machineset: %s", err)
@@ -193,15 +203,7 @@ func (c *Controller) runWorker() {
 }
 
 func (c *Controller) machineConverged(machine v1alpha1.Machine) bool {
-	if machine.Spec != nil && machine.Spec.Converge != nil && !machine.Spec.Converge.RequestTimestamp.Time.IsZero() {
-		if machine.Status != nil && machine.Status.Converge != nil && !machine.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
-			if machine.Status.Converge.LastUpdateTimestamp.Time.After(machine.Spec.Converge.RequestTimestamp.Time) {
-				return true
-			}
-		} else {
-			return true
-		}
-	} else {
+	if machine.Status != nil && machine.Status.Converge != nil && machine.Status.Converge.State == v1alpha1.MachineManifestStateConverged {
 		return true
 	}
 

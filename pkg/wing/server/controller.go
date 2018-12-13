@@ -16,7 +16,10 @@ import (
 
 func (o WingServerOptions) StartMachineControllers() error {
 	machinesetListWatcher := cache.NewListWatchFromClient(o.client.WingV1alpha1().RESTClient(), "machinesets", metav1.NamespaceAll, fields.Everything())
+	machinedeploymentListWatcher := cache.NewListWatchFromClient(o.client.WingV1alpha1().RESTClient(), "machinedeployments", metav1.NamespaceAll, fields.Everything())
 	queueSet := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+	queueDeployment := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+
 	indexerSet, informerSet := cache.NewIndexerInformer(machinesetListWatcher, &v1alpha1.MachineSet{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
@@ -28,6 +31,7 @@ func (o WingServerOptions) StartMachineControllers() error {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
 				queueSet.AddAfter(key, 2*time.Second)
+				queueDeployment.AddAfter(key, 2*time.Second)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -41,8 +45,6 @@ func (o WingServerOptions) StartMachineControllers() error {
 	}, cache.Indexers{})
 	machinesetController := machineset.NewController(queueSet, indexerSet, informerSet, o.client)
 
-	machinedeploymentListWatcher := cache.NewListWatchFromClient(o.client.Wing().RESTClient(), "machinedeployments", metav1.NamespaceAll, fields.Everything())
-	queueDeployment := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	indexerDeployment, informerDeployment := cache.NewIndexerInformer(machinedeploymentListWatcher, &v1alpha1.MachineDeployment{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)

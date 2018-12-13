@@ -10,9 +10,13 @@ import (
 
 // MachineDeploymentSpec defines the desired state of MachineDeployment
 type MachineDeploymentSpec struct {
+
 	// Number of desired machines. Defaults to 1.
 	// This is a pointer to distinguish between explicit zero and not specified.
+	// +optional
 	MinReplicas *int32
+
+	// +optional
 	MaxReplicas *int32
 
 	// Label selector for machines. Existing MachineSets whose machines are

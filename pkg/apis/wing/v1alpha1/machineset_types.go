@@ -14,7 +14,7 @@ type MachineSetSpec struct {
 	// Defaults to 1.
 	// +optional
 	MinReplicas *int32 `json:"minReplicas,omitempty"`
-	MaxReplicas *int32 `json:"minReplicas,omitempty"`
+	MaxReplicas *int32 `json:"maxReplicas,omitempty"`
 
 	// MinReadySeconds is the minimum number of seconds for which a newly created machine should be ready.
 	// Defaults to 0 (machine will be considered available as soon as it is ready)

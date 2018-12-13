@@ -30,7 +30,7 @@ func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer,
 		informer: informer,
 		indexer:  indexer,
 		queue:    queue,
-		log:      wing.Log().WithField("tier", "controller"),
+		log:      wing.Log().WithField("tier", "Machine-controller"),
 		wing:     wing,
 	}
 }
@@ -69,7 +69,7 @@ func (c *Controller) syncToStdout(key string) error {
 
 	if !exists {
 		// Below we will warm up our cache with a Machine, so that we will see a delete for one machine
-		fmt.Printf("Machine %s does not exist anymore\n", key)
+		c.log.Infof("Machine %s does not exist anymore\n", key)
 		machineAPI := c.wing.Clientset().WingV1alpha1().Machines(c.wing.Flags().ClusterName)
 		machine := &v1alpha1.Machine{
 			ObjectMeta: metav1.ObjectMeta{
@@ -89,6 +89,8 @@ func (c *Controller) syncToStdout(key string) error {
 		if err != nil {
 			return fmt.Errorf("error creating machine: %s", err)
 		}
+
+		c.log.Infof("Machine created %v", key)
 	} else {
 		// Note that you also have to check the uid if you have a local controlled resource, which
 		// is dependent on the actual machine, to detect that a Machine was recreated with the same name

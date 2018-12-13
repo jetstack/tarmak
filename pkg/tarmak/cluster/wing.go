@@ -30,8 +30,8 @@ func (c *Cluster) listMachineDeployments() ([]*wingv1alpha1.MachineDeployment, e
 	}
 
 	var deployments []*wingv1alpha1.MachineDeployment
-	for _, d := range machineDeploymentsList.DeepCopy().Items {
-		deployments = append(deployments, &d)
+	for i := range machineDeploymentsList.Items {
+		deployments = append(deployments, &machineDeploymentsList.Items[i])
 	}
 
 	return deployments, nil
@@ -54,16 +54,15 @@ func (c *Cluster) updateMachineDeployments() error {
 		return fmt.Errorf("failed to list provider's machines: %s", err)
 	}
 
-	for _, d := range deployments.DeepCopy().Items {
-		deploymentsMap[d.Name] = &d
+	for i := range deployments.Items {
+		deploymentsMap[deployments.Items[i].Name] = &deployments.Items[i]
 	}
 
 	for _, i := range c.InstancePools() {
-		if i.Role().Name() == "bastion" {
+		if i.Role().Name() == "bastion" || i.Role().Name() == "vault" {
 			continue
 		}
 
-		spec := c.deploymentSpec(i)
 		d, ok := deploymentsMap[i.Role().Name()]
 		if !ok {
 
@@ -78,20 +77,21 @@ func (c *Cluster) updateMachineDeployments() error {
 				},
 				Spec: c.deploymentSpec(i),
 			}
+
 			_, err := client.Create(dep)
 			if err != nil {
 				return fmt.Errorf("failed to create new deployment %s: %s", i.Role().Name(), err)
 			}
 
-			c.log.Infof("created new machine deployment %s", i.Role().Name())
+			c.log.Debugf("created new machine deployment %s", i.Role().Name())
 
 			continue
 		}
 
 		d = d.DeepCopy()
-		d.Spec = spec
+		d.Spec = c.deploymentSpec(i)
 
-		_, err := client.Update(d)
+		_, err = client.Update(d)
 		if err != nil {
 			return fmt.Errorf("failed to update deployment sepc %s: %s", i.Role().Name(), err)
 		}
@@ -101,15 +101,13 @@ func (c *Cluster) updateMachineDeployments() error {
 }
 
 func (c *Cluster) deploymentSpec(instancePool interfaces.InstancePool) *wingv1alpha1.MachineDeploymentSpec {
-	a := int32(instancePool.Config().MaxCount)
-	b := int32(instancePool.Config().MinCount)
 	return &wingv1alpha1.MachineDeploymentSpec{
-		//MaxReplicas:     utils.PointerInt32(instancePool.Config().MaxCount),
-		//MinReplicas:     utils.PointerInt32(instancePool.Config().MinCount),
-		MaxReplicas:     &a,
-		MinReplicas:     &b,
-		MinReadySeconds: utils.PointerInt32(1000),
-		Paused:          false,
+		MaxReplicas:             utils.PointerInt32(instancePool.Config().MaxCount),
+		MinReplicas:             utils.PointerInt32(instancePool.Config().MinCount),
+		ProgressDeadlineSeconds: new(int32),
+		RevisionHistoryLimit:    new(int32),
+		Strategy:                &wingv1alpha1.MachineDeploymentStrategy{},
+		Paused:                  false,
 		Selector: metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"role":    instancePool.Role().Name(),
@@ -146,7 +144,6 @@ func (c *Cluster) deleteUnusedMachines() error {
 	// loop through machines
 	for pos, _ := range wingMachines.Items {
 		machine := &wingMachines.Items[pos]
-		fmt.Printf("%+#v\n", machine)
 
 		// removes machines not in AWS
 		if _, ok := providerInstaceMap[machine.Name]; !ok {

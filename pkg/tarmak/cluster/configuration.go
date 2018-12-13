@@ -48,19 +48,19 @@ func (c *Cluster) ReapplyConfiguration() error {
 	//	return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
 	//}
 
-	//if err := c.deleteUnusedMachines(); err != nil {
-	//	return err
-	//}
+	if err := c.deleteUnusedMachines(); err != nil {
+		return err
+	}
 
 	if err := c.updateMachineDeployments(); err != nil {
 		return err
 	}
 
 	//// list machine deployments
-	//deployments, err := c.listMachineDeployments()
-	//if err != nil {
-	//	return fmt.Errorf("failed to list machines: %s", err)
-	//}
+	_, err := c.listMachineDeployments()
+	if err != nil {
+		return fmt.Errorf("failed to list machines: %s", err)
+	}
 
 	//for pos, _ := range deployments {
 	//	deployment := deployments[pos]
@@ -93,13 +93,12 @@ func (c *Cluster) WaitForConvergance() error {
 			return fmt.Errorf("failed to list machines: %s", err)
 		}
 
-		//machineByState := make(map[wingv1alpha1.MachineManifestState][]*wingv1alpha1.Machine)
-
 		var converged []*wingv1alpha1.MachineDeployment
 		var converging []*wingv1alpha1.MachineDeployment
 		for pos, _ := range deployments {
 			deployment := deployments[pos]
-			if deployment.Status == nil || deployment.Spec == nil || deployment.Spec.MinReplicas == nil {
+
+			if deployment.Status == nil {
 				converging = append(converging, deployment)
 				continue
 			}
@@ -118,42 +117,35 @@ func (c *Cluster) WaitForConvergance() error {
 			return nil
 		}
 
-		var convergingStr string
+		c.log.Debug("--------")
 		var convergedStr string
-		for _, c := range converging {
-			convergingStr = fmt.Sprintf("%s %s", convergingStr, c.Name)
+		for _, d := range converged {
+			convergedStr = fmt.Sprintf("%s %s", convergedStr, d.Name)
 		}
-		for _, c := range converged {
-			convergedStr = fmt.Sprintf("%s %s", convergedStr, c.Name)
-		}
-
 		if convergedStr != "" {
 			c.log.Debugf("converged deployments [%s]", convergedStr)
 		}
-		c.log.Debugf("converging deployments [%s]", convergingStr)
 
-		//c.log.
-
-		//err = c.checkAllMachinesConverged(machineByState)
-		//if err == nil {
-		//	c.log.Info("all machines converged")
-		//	return nil
-		//} else {
-		//	c.log.Debug(err)
-		//}
-
-		select {
-		case <-c.ctx.Done():
-			return c.ctx.Err()
-		default:
+		for _, d := range converging {
+			var readyReplicas int32
+			if d.Status != nil {
+				readyReplicas = d.Status.Replicas
+			}
+			c.log.Debugf("converging %s [%v/%v]", d.Name, readyReplicas, *d.Spec.MinReplicas)
 		}
 
 		retries--
 		if retries == 0 {
 			break
 		}
-		time.Sleep(time.Second * 5)
 
+		tok := time.Tick(time.Second * 5)
+
+		select {
+		case <-c.ctx.Done():
+			return c.ctx.Err()
+		case <-tok:
+		}
 	}
 
 	return fmt.Errorf("machines failed to converge in time")

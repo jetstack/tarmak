@@ -13,6 +13,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing"
+	//"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 )
 

@@ -4,10 +4,10 @@ package machinedeployment
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -32,7 +32,7 @@ func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer,
 		informer: informer,
 		indexer:  indexer,
 		queue:    queue,
-		log:      logrus.NewEntry(logrus.New()).WithField("tier", "controller"),
+		log:      logrus.NewEntry(logrus.New()).WithField("tier", "MachineDeployment-controller"),
 		client:   client,
 	}
 }
@@ -49,16 +49,13 @@ func (c *Controller) processNextItem() bool {
 	defer c.queue.Done(key)
 
 	// Invoke the method containing the business logic
-	err := c.syncToStdout(key.(string))
+	err := c.sync(key.(string))
 	// Handle the error if something went wrong during the execution of the business logic
 	c.handleErr(err, key)
 	return true
 }
 
-// syncToStdout is the business logic of the controller. In this controller it simply prints
-// information about the machine to stdout. In case an error happened, it has to simply return the error.
-// The retry logic should not be part of the business logic.
-func (c *Controller) syncToStdout(key string) error {
+func (c *Controller) sync(key string) error {
 
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
@@ -67,7 +64,7 @@ func (c *Controller) syncToStdout(key string) error {
 	}
 
 	if !exists {
-		fmt.Printf("MachineDeployment %s does not exist anymore\n", key)
+		c.log.Infof("object %s does not exist anymore\n", key)
 		return nil
 	}
 
@@ -75,65 +72,93 @@ func (c *Controller) syncToStdout(key string) error {
 	// is dependent on the actual machine, to detect that a Machine was recreated with the same name
 	machinedeployment, ok := obj.(*v1alpha1.MachineDeployment)
 	if !ok {
-		return errors.New("failed to process next item, not a machinedeployment")
+		machineset, ok := obj.(*v1alpha1.MachineSet)
+		if !ok {
+			return errors.New("failed to process next item, not a machinedeployment or machineset")
+		}
+		md, err := c.getMachineDeployment(machineset)
+		if err != nil {
+			return err
+		}
+
+		return c.syncFromMachineSet(md, machineset)
 	}
-	machinedeployment = machinedeployment.DeepCopy()
 
 	var selectors []string
 	for k, v := range machinedeployment.Spec.Selector.MatchLabels {
 		selectors = append(selectors, fmt.Sprintf("%s=%s", k, v))
 	}
 
+	var minReplicas int32 = 1
+	var maxReplicas int32 = 1
+	if machinedeployment.Spec.MinReplicas != nil {
+		minReplicas = *machinedeployment.Spec.MinReplicas
+	}
+	if machinedeployment.Spec.MaxReplicas != nil {
+		maxReplicas = *machinedeployment.Spec.MaxReplicas
+	}
+
 	machinesetAPI := c.client.WingV1alpha1().MachineSets(machinedeployment.Namespace)
-	machinesetList, err := machinesetAPI.List(metav1.ListOptions{
-		LabelSelector: strings.Join(selectors, ","),
-	})
+	machineset, err := machinesetAPI.Get(machinedeployment.Name, metav1.GetOptions{})
+	if err != nil {
+		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
+			c.log.Infof("Creating MachineSet for MachineDeployment %s\n", key)
+			machineset := &v1alpha1.MachineSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:   machinedeployment.Name,
+					Labels: utils.DuplicateMapString(machinedeployment.Labels),
+				},
+				Spec: &v1alpha1.MachineSetSpec{
+					MaxReplicas: &minReplicas,
+					MinReplicas: &maxReplicas,
+					Selector:    machinedeployment.Spec.Selector,
+				},
+				Status: &v1alpha1.MachineSetStatus{},
+			}
+
+			machineset, err = machinesetAPI.Create(machineset)
+			if err != nil {
+				return fmt.Errorf("error creating machineset: %s", err)
+			}
+
+		} else {
+			return fmt.Errorf("error get existing machineset: %s", err)
+		}
+	}
+
+	err = c.syncFromMachineSet(machinedeployment, machineset)
 	if err != nil {
 		return err
 	}
-	machinesetList = machinesetList.DeepCopy()
 
-	if len(machinesetList.Items) > 1 {
-		return fmt.Errorf("there can only be a maximum of one MachineSet per MachineDeployment, got=%d", len(machinesetList.Items))
+	return nil
+}
+
+func (c *Controller) getMachineDeployment(machineset *v1alpha1.MachineSet) (*v1alpha1.MachineDeployment, error) {
+	machinedeploymentAPI := c.client.WingV1alpha1().MachineDeployments(machineset.Namespace)
+	machinedeployment, err := machinedeploymentAPI.Get(machineset.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
 	}
 
-	// we need to create the machine set for this deployment
-	if len(machinesetList.Items) == 0 {
-		fmt.Printf("Creating MachineSet for MachineDeployment %s\n", key)
-		machineset := &v1alpha1.MachineSet{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:   machinedeployment.Name,
-				Labels: utils.DuplicateMapString(machinedeployment.Labels),
-			},
-			Spec: &v1alpha1.MachineSetSpec{
-				MaxReplicas:     machinedeployment.Spec.MaxReplicas,
-				MinReadySeconds: *machinedeployment.Spec.MinReadySeconds,
-				MinReplicas:     machinedeployment.Spec.MinReplicas,
-				Selector:        machinedeployment.Spec.Selector,
-			},
-		}
+	return machinedeployment, nil
+}
 
-		_, err := machinesetAPI.Create(machineset)
-		if err != nil {
-			return fmt.Errorf("error creating machine: %s", err)
-		}
-
-		return nil
-	}
-
-	machineset := machinesetList.Items[0]
-	status := &v1alpha1.MachineDeploymentStatus{
-		Replicas:           machineset.Status.Replicas,
-		ObservedGeneration: machinedeployment.Status.ObservedGeneration + 1,
-		ReadyReplicas:      machineset.Status.ReadyReplicas,
-		// we may want to do something with available replicas
-		AvailableReplicas:   machineset.Status.ReadyReplicas,
-		UnavailableReplicas: machineset.Status.Replicas - machineset.Status.ReadyReplicas,
+func (c *Controller) syncFromMachineSet(machinedeployment *v1alpha1.MachineDeployment, machineset *v1alpha1.MachineSet) error {
+	c.log.Infof("deployment set status: %+v", machinedeployment.Status)
+	status := &v1alpha1.MachineDeploymentStatus{}
+	if machineset.Status != nil {
+		status.Replicas = machineset.Status.Replicas
+		status.ObservedGeneration = machineset.Status.ObservedGeneration + 1
+		status.ReadyReplicas = machineset.Status.ReadyReplicas
+		// TODO: we may want to do something with available replicas
+		status.AvailableReplicas = machineset.Status.ReadyReplicas
+		status.UnavailableReplicas = machineset.Status.Replicas - machineset.Status.ReadyReplicas
 	}
 
 	machineDeploymentAPI := c.client.WingV1alpha1().MachineDeployments(machinedeployment.Namespace)
-	machinedeployment.Status = status.DeepCopy()
-	_, err = machineDeploymentAPI.Update(machinedeployment)
+	machinedeployment.Status = status
+	_, err := machineDeploymentAPI.Update(machinedeployment)
 	if err != nil {
 		return fmt.Errorf("failed to update machinedeployment: %s", err)
 	}
