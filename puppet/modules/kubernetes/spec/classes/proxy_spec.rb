@@ -69,7 +69,7 @@ describe 'kubernetes::proxy' do
         end
       end
     end
-  end
+
   context 'defaults' do
     it do
       is_expected.to compile
