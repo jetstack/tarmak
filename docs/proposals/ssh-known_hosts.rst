@@ -54,21 +54,21 @@ Firstly, we must restrict the OpenSSH command line tool from editing the
 file management.
 
 In order to create a source of truth for each host's public key, each instance
-will have it's public key's attached as a tags, shortly after boot time like the
+will have it's public key's attached as tags, shortly after boot time like the
 following:
 
-+-------------------------+---------------------------------------------------------------------------+
-| PublicKey_ssh-ed25519_0 | AAAAC3NzaC1lZDI1NTE5AAAAIE90XYYm6GSDlNGejM+aY5dZEe5vK4XyU++89WdGJcDc==EOF |
-+-------------------------+---------------------------------------------------------------------------+
++-----------------------------------+---------------------------------------------------------------------------+
+| tarmak.io/ssh-host-ed25519-host-0 | AAAAC3NzaC1lZDI1NTE5AAAAIE90XYYm6GSDlNGejM+aY5dZEe5vK4XyU++89WdGJcDc==EOF |
++-----------------------------------+---------------------------------------------------------------------------+
 
 The population of these tags will happen at boot time for all instances,
 regardless of whether they have been created from a direct Terraform apply or
 via an Amazon Auto Scaling Group. At execution time, Wing - present on every
 instance - will invoke an Amazon Lambda function for Instance Tagging. Passed to
-this function will be a collection of the instances public keys, it's Amazon
+this function will be a collection of the instance's public keys, it's Amazon
 identity document and matching PKCS7 document.
 
-Upon receiving this request, the lambda function will verify the authenticity
+Upon receiving this request, the Lambda function will verify the authenticity
 of the request and identity document by verifying the instance identity and
 PKCS7 document against the public AWS certificate. Further details on this can
 be found `here
@@ -86,12 +86,20 @@ three actions:
 Once an instance has requested for the creation of it's tags, all subsequent
 requests should succeed with no action.
 
+The Lambda function will have access to only resources within the Tarmak VPC.
+This provides the Lambda function with assurances that not only the request comes from an
+Amazon instance with permissions to access it, but also that the instance must
+reside in the Tarmak VPC as the Lambda function only has permissions to add tags
+to instances in it.
+
 All SSH connections will rely on the contents of the ``ssh_known_hosts``
 file however, in the case the host is not present in the file, will attempt to
-use the AWS instance's ``publicKey..`` tag to populate it's entry.
+use the AWS instance's public key tag to populate it's entry.
 
 Notable items
 -------------
+
+Public DSA keys will not be tagged.
 
 A start has been made on the code for the Lambda function:
 
