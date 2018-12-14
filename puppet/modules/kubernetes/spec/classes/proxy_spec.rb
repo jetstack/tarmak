@@ -68,7 +68,6 @@ describe 'kubernetes::proxy' do
           end
         end
       end
-    end
 
   context 'defaults' do
     it do
