@@ -3,7 +3,6 @@ package cluster
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff"
@@ -37,6 +36,26 @@ func (c *Cluster) listMachineDeployments() ([]*wingv1alpha1.MachineDeployment, e
 	return deployments, nil
 }
 
+func (c *Cluster) listMachines() ([]*wingv1alpha1.Machine, error) {
+
+	client, err := c.wingMachineClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	}
+
+	mList, err := client.List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var machines []*wingv1alpha1.Machine
+	for i := range mList.Items {
+		machines = append(machines, &mList.Items[i])
+	}
+
+	return machines, nil
+}
+
 func (c *Cluster) updateMachineDeployments() error {
 	client, err := c.wingMachineDeploymentClient()
 	if err != nil {
@@ -63,27 +82,27 @@ func (c *Cluster) updateMachineDeployments() error {
 			continue
 		}
 
-		d, ok := deploymentsMap[i.Role().Name()]
+		d, ok := deploymentsMap[i.Name()]
 		if !ok {
 
-			dep := &wingv1alpha1.MachineDeployment{
+			md := &wingv1alpha1.MachineDeployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      i.Role().Name(),
 					Namespace: i.Config().ClusterName,
 					Labels: map[string]string{
-						"role":    i.Role().Name(),
+						"pool":    i.Name(),
 						"cluster": c.ClusterName(),
 					},
 				},
 				Spec: c.deploymentSpec(i),
 			}
 
-			_, err := client.Create(dep)
+			_, err := client.Create(md)
 			if err != nil {
-				return fmt.Errorf("failed to create new deployment %s: %s", i.Role().Name(), err)
+				return fmt.Errorf("failed to create new deployment %s: %s", i.Name(), err)
 			}
 
-			c.log.Debugf("created new machine deployment %s", i.Role().Name())
+			c.log.Debugf("created new machine deployment %s", i.Name())
 
 			continue
 		}
@@ -93,7 +112,7 @@ func (c *Cluster) updateMachineDeployments() error {
 
 		_, err = client.Update(d)
 		if err != nil {
-			return fmt.Errorf("failed to update deployment sepc %s: %s", i.Role().Name(), err)
+			return fmt.Errorf("failed to update deployment sepc %s: %s", i.Name(), err)
 		}
 	}
 
@@ -110,7 +129,7 @@ func (c *Cluster) deploymentSpec(instancePool interfaces.InstancePool) *wingv1al
 		Paused:                  false,
 		Selector: metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				"role":    instancePool.Role().Name(),
+				"pool":    instancePool.Name(),
 				"cluster": c.ClusterName(),
 			},
 		},
@@ -143,46 +162,19 @@ func (c *Cluster) deleteUnusedMachines() error {
 
 	// loop through machines
 	for pos, _ := range wingMachines.Items {
-		machine := &wingMachines.Items[pos]
+		m := &wingMachines.Items[pos]
 
 		// removes machines not in AWS
-		if _, ok := providerInstaceMap[machine.Name]; !ok {
-			c.log.Debugf("deleting unused machine %s in wing API", machine.Name)
-			if err := client.Delete(machine.Name, &metav1.DeleteOptions{}); err != nil {
-				c.log.Warnf("error deleting machine %s in wing API: %s", machine.Name, err)
+		if _, ok := providerInstaceMap[m.Name]; !ok {
+			c.log.Debugf("deleting unused machine %s in wing API", m.Name)
+			if err := client.Delete(m.Name, &metav1.DeleteOptions{}); err != nil {
+				c.log.Warnf("error deleting machine %s in wing API: %s", m.Name, err)
 			}
 			continue
 		}
 	}
 
 	return nil
-}
-
-func (c *Cluster) checkAllMachinesConverged(byState map[wingv1alpha1.MachineManifestState][]*wingv1alpha1.Machine) error {
-	machinesNotConverged := []*wingv1alpha1.Machine{}
-	for key, machines := range byState {
-		if len(machines) == 0 {
-			continue
-		}
-		if key != wingv1alpha1.MachineManifestStateConverged {
-			machinesNotConverged = append(machinesNotConverged, machines...)
-		}
-		c.Log().Debugf("%d machines in state %s: %s", len(machines), key, outputMachines(machines))
-	}
-
-	if len(machinesNotConverged) > 0 {
-		return fmt.Errorf("not all machines have converged yet %s", outputMachines(machinesNotConverged))
-	}
-
-	return nil
-}
-
-func outputMachines(machines []*wingv1alpha1.Machine) string {
-	var output []string
-	for _, machine := range machines {
-		output = append(output, machine.Name)
-	}
-	return strings.Join(output, ", ")
 }
 
 func (c *Cluster) wingClient() (*wingclient.Clientset, error) {

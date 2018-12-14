@@ -20,20 +20,25 @@ import (
 )
 
 type Controller struct {
-	indexer  cache.Indexer
-	queue    workqueue.RateLimitingInterface
-	informer cache.Controller
-	log      *logrus.Entry
-	client   *clientset.Clientset
+	queue       workqueue.RateLimitingInterface
+	depInformer cache.Controller
+	setInformer cache.Controller
+	depIndexer  cache.Indexer
+	setIndexer  cache.Indexer
+	log         *logrus.Entry
+	client      *clientset.Clientset
 }
 
-func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller, client *clientset.Clientset) *Controller {
+func NewController(queue workqueue.RateLimitingInterface, depIndexer cache.Indexer,
+	setIndexer cache.Indexer, depInformer cache.Controller, setInformer cache.Controller, client *clientset.Clientset) *Controller {
 	return &Controller{
-		informer: informer,
-		indexer:  indexer,
-		queue:    queue,
-		log:      logrus.NewEntry(logrus.New()).WithField("tier", "MachineDeployment-controller"),
-		client:   client,
+		depInformer: depInformer,
+		setInformer: setInformer,
+		depIndexer:  depIndexer,
+		setIndexer:  setIndexer,
+		queue:       queue,
+		log:         logrus.NewEntry(logrus.New()).WithField("tier", "MachineDeployment-controller"),
+		client:      client,
 	}
 }
 
@@ -57,76 +62,58 @@ func (c *Controller) processNextItem() bool {
 
 func (c *Controller) sync(key string) error {
 
-	obj, exists, err := c.indexer.GetByKey(key)
-	if err != nil {
-		c.log.Errorf("Fetching object with key %s from store failed with %v", key, err)
-		return err
-	}
+	// see whether we have a deployment or set
+	obj, exist, err := c.depIndexer.GetByKey(key)
+	if err != nil || !exist {
+		// we should have a set
+		obj, exists, err := c.setIndexer.GetByKey(key)
+		if err != nil {
+			c.log.Errorf("Fetching object with key %s from store failed with %v", key, err)
+			return err
+		}
+		if !exists {
+			return nil
+		}
 
-	if !exists {
-		c.log.Infof("object %s does not exist anymore\n", key)
-		return nil
-	}
-
-	// Note that you also have to check the uid if you have a local controlled resource, which
-	// is dependent on the actual machine, to detect that a Machine was recreated with the same name
-	machinedeployment, ok := obj.(*v1alpha1.MachineDeployment)
-	if !ok {
-		machineset, ok := obj.(*v1alpha1.MachineSet)
+		ms, ok := obj.(*v1alpha1.MachineSet)
 		if !ok {
 			return errors.New("failed to process next item, not a machinedeployment or machineset")
 		}
-		md, err := c.getMachineDeployment(machineset)
+
+		// get our deployment controlling this set
+		md, err := c.getMachineDeployment(ms)
 		if err != nil {
 			return err
 		}
 
-		return c.syncFromMachineSet(md, machineset)
+		// sync deployment from the set
+		return c.syncFromMachineSet(md, ms)
+	}
+
+	md, ok := obj.(*v1alpha1.MachineDeployment)
+	if !ok {
+		return errors.New("failed to process next item, not a machinedeployment")
 	}
 
 	var selectors []string
-	for k, v := range machinedeployment.Spec.Selector.MatchLabels {
+	for k, v := range md.Spec.Selector.MatchLabels {
 		selectors = append(selectors, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	var minReplicas int32 = 1
-	var maxReplicas int32 = 1
-	if machinedeployment.Spec.MinReplicas != nil {
-		minReplicas = *machinedeployment.Spec.MinReplicas
-	}
-	if machinedeployment.Spec.MaxReplicas != nil {
-		maxReplicas = *machinedeployment.Spec.MaxReplicas
-	}
-
-	machinesetAPI := c.client.WingV1alpha1().MachineSets(machinedeployment.Namespace)
-	machineset, err := machinesetAPI.Get(machinedeployment.Name, metav1.GetOptions{})
+	// get controlled set from our deployment
+	msAPI := c.client.WingV1alpha1().MachineSets(md.Namespace)
+	ms, err := msAPI.Get(md.Name, metav1.GetOptions{})
 	if err != nil {
+		// the set doesn't exist so we need to create it
 		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
-			c.log.Infof("Creating MachineSet for MachineDeployment %s\n", key)
-			machineset := &v1alpha1.MachineSet{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:   machinedeployment.Name,
-					Labels: utils.DuplicateMapString(machinedeployment.Labels),
-				},
-				Spec: &v1alpha1.MachineSetSpec{
-					MaxReplicas: &minReplicas,
-					MinReplicas: &maxReplicas,
-					Selector:    machinedeployment.Spec.Selector,
-				},
-				Status: &v1alpha1.MachineSetStatus{},
-			}
-
-			machineset, err = machinesetAPI.Create(machineset)
-			if err != nil {
-				return fmt.Errorf("error creating machineset: %s", err)
-			}
-
+			return c.createControlledMachineSet(md)
 		} else {
 			return fmt.Errorf("error get existing machineset: %s", err)
 		}
 	}
 
-	err = c.syncFromMachineSet(machinedeployment, machineset)
+	// sync deployment from the set
+	err = c.syncFromMachineSet(md, ms)
 	if err != nil {
 		return err
 	}
@@ -134,31 +121,63 @@ func (c *Controller) sync(key string) error {
 	return nil
 }
 
-func (c *Controller) getMachineDeployment(machineset *v1alpha1.MachineSet) (*v1alpha1.MachineDeployment, error) {
-	machinedeploymentAPI := c.client.WingV1alpha1().MachineDeployments(machineset.Namespace)
-	machinedeployment, err := machinedeploymentAPI.Get(machineset.Name, metav1.GetOptions{})
+func (c *Controller) createControlledMachineSet(md *v1alpha1.MachineDeployment) error {
+	var minReplicas int32 = 1
+	var maxReplicas int32 = 1
+	if md.Spec.MinReplicas != nil {
+		minReplicas = *md.Spec.MinReplicas
+	}
+	if md.Spec.MaxReplicas != nil {
+		maxReplicas = *md.Spec.MaxReplicas
+	}
+
+	c.log.Infof("Creating MachineSet for MachineDeployment %s\n", md.Name)
+	ms := &v1alpha1.MachineSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   md.Name,
+			Labels: utils.DuplicateMapString(md.Labels),
+		},
+		Spec: &v1alpha1.MachineSetSpec{
+			MaxReplicas: &minReplicas,
+			MinReplicas: &maxReplicas,
+			Selector:    md.Spec.Selector,
+		},
+		Status: &v1alpha1.MachineSetStatus{},
+	}
+
+	msAPI := c.client.WingV1alpha1().MachineSets(md.Namespace)
+	_, err := msAPI.Create(ms)
+	if err != nil {
+		return fmt.Errorf("error creating machineset: %s", err)
+	}
+
+	return nil
+}
+
+func (c *Controller) getMachineDeployment(ms *v1alpha1.MachineSet) (*v1alpha1.MachineDeployment, error) {
+	mdAPI := c.client.WingV1alpha1().MachineDeployments(ms.Namespace)
+	md, err := mdAPI.Get(ms.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	return machinedeployment, nil
+	return md, nil
 }
 
-func (c *Controller) syncFromMachineSet(machinedeployment *v1alpha1.MachineDeployment, machineset *v1alpha1.MachineSet) error {
-	c.log.Infof("deployment set status: %+v", machinedeployment.Status)
+func (c *Controller) syncFromMachineSet(md *v1alpha1.MachineDeployment, ms *v1alpha1.MachineSet) error {
 	status := &v1alpha1.MachineDeploymentStatus{}
-	if machineset.Status != nil {
-		status.Replicas = machineset.Status.Replicas
-		status.ObservedGeneration = machineset.Status.ObservedGeneration + 1
-		status.ReadyReplicas = machineset.Status.ReadyReplicas
+	if ms.Status != nil {
+		status.Replicas = ms.Status.Replicas
+		status.ObservedGeneration = ms.Status.ObservedGeneration + 1
+		status.ReadyReplicas = ms.Status.ReadyReplicas
 		// TODO: we may want to do something with available replicas
-		status.AvailableReplicas = machineset.Status.ReadyReplicas
-		status.UnavailableReplicas = machineset.Status.Replicas - machineset.Status.ReadyReplicas
+		status.AvailableReplicas = ms.Status.ReadyReplicas
+		status.UnavailableReplicas = ms.Status.Replicas - ms.Status.ReadyReplicas
 	}
 
-	machineDeploymentAPI := c.client.WingV1alpha1().MachineDeployments(machinedeployment.Namespace)
-	machinedeployment.Status = status
-	_, err := machineDeploymentAPI.Update(machinedeployment)
+	mdAPI := c.client.WingV1alpha1().MachineDeployments(md.Namespace)
+	md.Status = status
+	_, err := mdAPI.Update(md)
 	if err != nil {
 		return fmt.Errorf("failed to update machinedeployment: %s", err)
 	}
@@ -199,10 +218,11 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	defer c.queue.ShutDown()
 	c.log.Info("Starting MachineDeployment controller")
 
-	go c.informer.Run(stopCh)
+	go c.depInformer.Run(stopCh)
+	go c.setInformer.Run(stopCh)
 
 	// Wait for all involved caches to be synced, before processing items from the queue is started
-	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) {
+	if !cache.WaitForCacheSync(stopCh, c.depInformer.HasSynced) || !cache.WaitForCacheSync(stopCh, c.setInformer.HasSynced) {
 		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
 		return
 	}

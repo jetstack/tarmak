@@ -42,12 +42,6 @@ func (c *Cluster) UploadConfiguration() error {
 func (c *Cluster) ReapplyConfiguration() error {
 	c.log.Infof("making sure all machines apply the latest manifest")
 
-	// connect to wing
-	//client, err := c.wingMachineDeploymentClient()
-	//if err != nil {
-	//	return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
-	//}
-
 	if err := c.deleteUnusedMachines(); err != nil {
 		return err
 	}
@@ -56,25 +50,28 @@ func (c *Cluster) ReapplyConfiguration() error {
 		return err
 	}
 
-	//// list machine deployments
-	_, err := c.listMachineDeployments()
+	client, err := c.wingMachineClient()
+	if err != nil {
+		return err
+	}
+
+	// here we need to start the mechanism to trigger a re-converge
+	machines, err := c.listMachines()
 	if err != nil {
 		return fmt.Errorf("failed to list machines: %s", err)
 	}
 
-	//for pos, _ := range deployments {
-	//	deployment := deployments[pos]
-	//	if deployment.Spec == nil {
-	//		//machine.Spec = &wingv1alpha1.MachineSpec{}
-	//	}
-	//	//machine.Spec.Converge = &wingv1alpha1.MachineSpecManifest{}
+	for pos, _ := range machines {
+		machine := machines[pos]
+		if machine.Spec == nil {
+			machine.Spec = &wingv1alpha1.MachineSpec{}
+		}
+		machine.Spec.Converge = &wingv1alpha1.MachineSpecManifest{}
 
-	//	if _, err := client.Update(deployment); err != nil {
-	//		c.log.Warnf("error updating machine deployment %s in wing API: %s", deployment.Name, err)
-	//	}
-	//}
-
-	//fmt.Printf("%+#v\n", deployments)
+		if _, err := client.Update(machine); err != nil {
+			c.log.Warnf("error updating machine %s in wing API: %s", machine.Name, err)
+		}
+	}
 
 	// TODO: solve this on the API server side
 	time.Sleep(time.Second * 5)
@@ -104,7 +101,7 @@ func (c *Cluster) WaitForConvergance() error {
 			}
 
 			if deployment.Status.ReadyReplicas >= deployment.Status.Replicas &&
-				deployment.Status.Replicas >= *deployment.Spec.MinReplicas {
+				deployment.Status.ReadyReplicas >= *deployment.Spec.MinReplicas {
 				converged = append(converged, deployment)
 				continue
 			}
@@ -112,18 +109,21 @@ func (c *Cluster) WaitForConvergance() error {
 			converging = append(converging, deployment)
 		}
 
-		if len(converging) == 0 {
-			c.log.Info("all deployments converged")
-			return nil
-		}
-
-		c.log.Debug("--------")
 		var convergedStr string
 		for _, d := range converged {
 			convergedStr = fmt.Sprintf("%s %s", convergedStr, d.Name)
 		}
-		if convergedStr != "" {
-			c.log.Debugf("converged deployments [%s]", convergedStr)
+		convergedStr = fmt.Sprintf("converged deployments [%s]", convergedStr)
+
+		if len(converging) == 0 {
+			c.log.Info("all deployments converged")
+			c.log.Info(convergedStr)
+			return nil
+		}
+
+		c.log.Debug("--------")
+		if len(converged) > 0 {
+			c.log.Debug(convergedStr)
 		}
 
 		for _, d := range converging {
@@ -131,7 +131,7 @@ func (c *Cluster) WaitForConvergance() error {
 			if d.Status != nil {
 				readyReplicas = d.Status.Replicas
 			}
-			c.log.Debugf("converging %s [%v/%v]", d.Name, readyReplicas, *d.Spec.MinReplicas)
+			c.log.Debugf("converging %s [%v/%v]", d.Name, readyReplicas, d.Status.Replicas)
 		}
 
 		retries--

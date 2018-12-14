@@ -20,5 +20,5 @@ type Flags struct {
 	ServerURL   string
 	ClusterName string
 	MachineName string
-	Role        string
+	Pool        string
 }

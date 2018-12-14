@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -54,11 +55,7 @@ func (c *Controller) processNextItem() bool {
 	return true
 }
 
-// syncToStdout is the business logic of the controller. In this controller it simply prints
-// information about the machine to stdout. In case an error happened, it has to simply return the error.
-// The retry logic should not be part of the business logic.
 func (c *Controller) syncToStdout(key string) error {
-
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
 		c.log.Errorf("Fetching object with key %s from store failed with %v", key, err)
@@ -66,70 +63,76 @@ func (c *Controller) syncToStdout(key string) error {
 	}
 
 	if !exists {
-		c.log.Infof("MachineSet %s does not exist anymore\n", key)
+		c.log.Infof("Machine %s does not exist anymore\n", key)
 		return nil
 	}
 
-	// Note that you also have to check the uid if you have a local controlled resource, which
-	// is dependent on the actual machine, to detect that a Machine was recreated with the same name
-	machineset, ok := obj.(*v1alpha1.MachineSet)
+	m, ok := obj.(*v1alpha1.Machine)
 	if !ok {
 		return errors.New("failed to process next item, not a machineset")
 	}
 
-	if machineset.Spec == nil {
-		return fmt.Errorf("machineset spec is nil: %v", machineset.Spec)
+	ms, found, err := c.getMachineSet(m)
+	if err != nil {
+		return err
 	}
 
-	if machineset.Spec.MaxReplicas == nil || machineset.Spec.MinReplicas == nil {
+	// machineset doesn't exist for this machine
+	if !found {
+		c.log.Warnf("did not find machineset for machine %s", m.Name)
+		return nil
+	}
+
+	if ms.Spec == nil {
+		return fmt.Errorf("machineset spec is nil: %v", ms.Spec)
+	}
+
+	if ms.Spec.MaxReplicas == nil || ms.Spec.MinReplicas == nil {
 		return fmt.Errorf("expected machineset min and max replicas to not be nil: min=%v max=%v",
-			machineset.Spec.MaxReplicas, machineset.Spec.MinReplicas)
+			ms.Spec.MaxReplicas, ms.Spec.MinReplicas)
 	}
 
 	var selectors []string
-	for k, v := range machineset.Spec.Selector.MatchLabels {
+	for k, v := range ms.Spec.Selector.MatchLabels {
 		selectors = append(selectors, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	machineAPI := c.client.WingV1alpha1().Machines(machineset.Namespace)
-	machineList, err := machineAPI.List(metav1.ListOptions{
+	// find all the machines coverged by this machien set and update status accordingly
+	mAPI := c.client.WingV1alpha1().Machines(ms.Namespace)
+	mList, err := mAPI.List(metav1.ListOptions{
 		LabelSelector: strings.Join(selectors, ","),
 	})
 	if err != nil {
 		return err
 	}
 
-	if int32(len(machineList.Items)) > *machineset.Spec.MaxReplicas {
-		c.log.Warnf("more machines exist then the maximum, max=%v curr=%v", *machineset.Spec.MaxReplicas, len(machineList.Items))
+	if int32(len(mList.Items)) > *ms.Spec.MaxReplicas {
+		c.log.Warnf("more machines exist then the maximum, max=%v curr=%v", *ms.Spec.MaxReplicas, len(mList.Items))
 	}
 
-	//if int32(len(machineList.Items)) < *machineset.Spec.MinReplicas {
-	//	c.log.Warnf("less machines exist then the minimum, min=%v curr=%v", *machineset.Spec.MinReplicas, len(machineList.Items))
+	//if int32(len(mList.Items)) < *ms.Spec.MinReplicas {
+	//	c.log.Warnf("less machines exist then the minimum, min=%v curr=%v", *ms.Spec.MinReplicas, len(m.Items))
 	//}
 
 	var readyMachines int32
 	var fullyLabeledMachines int32
-	for _, i := range machineList.Items {
-		//c.log.Infof("status: %+v", i.Status)
-		//if i.Status.Converge != nil {
-		//	c.log.Infof("status: %+v", i.Status.Converge.State)
-		//}
+	for _, i := range mList.Items {
 		if c.machineConverged(i) {
 			readyMachines++
 		}
 
-		if c.fullyLabeledMachine(machineset, i) {
+		if c.fullyLabeledMachine(ms, i) {
 			fullyLabeledMachines++
 		}
 	}
 
 	var observedGeneration int64 = 0
-	if machineset.Status != nil {
-		observedGeneration = machineset.Status.ObservedGeneration
+	if ms.Status != nil {
+		observedGeneration = ms.Status.ObservedGeneration
 	}
 
 	status := &v1alpha1.MachineSetStatus{
-		Replicas:             int32(len(machineList.Items)),
+		Replicas:             int32(len(mList.Items)),
 		ObservedGeneration:   observedGeneration + 1,
 		ReadyReplicas:        readyMachines,
 		FullyLabeledReplicas: fullyLabeledMachines,
@@ -137,15 +140,38 @@ func (c *Controller) syncToStdout(key string) error {
 		AvailableReplicas: readyMachines,
 	}
 
-	machineSetAPI := c.client.WingV1alpha1().MachineSets(machineset.Namespace)
-	machineset.Status = status.DeepCopy()
-	c.log.Infof("set status: %+v\n", machineset.Status)
-	_, err = machineSetAPI.Update(machineset)
+	msAPI := c.client.WingV1alpha1().MachineSets(ms.Namespace)
+	ms.Status = status.DeepCopy()
+	_, err = msAPI.Update(ms)
 	if err != nil {
 		return fmt.Errorf("failed to update machineset: %s", err)
 	}
 
 	return nil
+}
+
+func (c *Controller) getMachineSet(m *v1alpha1.Machine) (*v1alpha1.MachineSet, bool, error) {
+	pool, ok := m.Labels["pool"]
+	if !ok {
+		return nil, false, fmt.Errorf("found machine without a pool label: %s", m.Name)
+	}
+
+	cluster, ok := m.Labels["cluster"]
+	if !ok {
+		return nil, false, fmt.Errorf("found machine without a cluster label: %s", m.Name)
+	}
+
+	msAPI := c.client.WingV1alpha1().MachineSets(cluster)
+	ms, err := msAPI.Get(pool, metav1.GetOptions{})
+	if err != nil {
+		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
+			return nil, false, nil
+		} else {
+			return nil, false, err
+		}
+	}
+
+	return ms, true, nil
 }
 
 // handleErr checks if an error happened and makes sure we will retry later.

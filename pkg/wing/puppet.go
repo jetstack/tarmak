@@ -303,7 +303,7 @@ func (w *Wing) reportStatus(status *v1alpha1.MachineStatus) error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: w.flags.MachineName,
 					Labels: map[string]string{
-						"role":    w.flags.Role,
+						"pool":    w.flags.Pool,
 						"cluster": w.flags.ClusterName,
 					},
 				},

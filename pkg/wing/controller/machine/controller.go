@@ -75,7 +75,7 @@ func (c *Controller) syncToStdout(key string) error {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: c.wing.Flags().MachineName,
 				Labels: map[string]string{
-					"role":    c.wing.Flags().Role,
+					"pool":    c.wing.Flags().Pool,
 					"cluster": c.wing.Flags().ClusterName,
 				},
 			},
