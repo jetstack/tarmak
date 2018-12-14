@@ -101,6 +101,9 @@ Notable items
 
 Public DSA keys will not be tagged.
 
+Care must be taken to ensure that Terraform does not override tags set by the
+Lambda function.
+
 A start has been made on the code for the Lambda function:
 
 .. code-block:: go
@@ -206,6 +209,17 @@ A start has been made on the code for the Lambda function:
   func main() {
   	lambda.Start(HandleRequest)
   }
+
+
+Limitations
+-----------
+Whilst we can restrict permissions of access for both the Lambda function and
+EC2 instances, we do not have a cryptographic signature of the public keys
+coming from the EC2 instance.
+
+Whilst using Hashicorp's Vault to set up an SSH CA for the environment would be
+advantageous, bootstrapping this process requires SSH connections from the client
+to EC2 instances. This rules out this as an option.
 
 Out of scope
 ------------

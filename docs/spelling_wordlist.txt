@@ -21,6 +21,7 @@ CIDR
 config
 Config
 configmap
+cryptographic
 ctrl
 doesn
 EBS
@@ -36,6 +37,7 @@ golang
 Golang
 Grafana
 gz
+Hashicorp
 hostname
 iam
 init
