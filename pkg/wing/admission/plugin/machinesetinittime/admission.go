@@ -43,7 +43,7 @@ func (d *machinesetInitTime) Admit(a admission.Attributes) error {
 	}
 
 	if machineset.Spec.MinReplicas == nil || machineset.Spec.MaxReplicas == nil {
-		return fmt.Errorf("machineset min or max replicas cannot be nil:  nil: min=%v max=%v",
+		return fmt.Errorf("machineset min or max replicas cannot be nil: min=%v max=%v",
 			machineset.Spec.MinReplicas, machineset.Spec.MaxReplicas)
 	}
 
