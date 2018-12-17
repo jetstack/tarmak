@@ -33,12 +33,12 @@ OUTPUT_DIR="${CMD_ROOT}"
 BINDIR=$REPO_ROOT/bin
 HACKDIR=$REPO_ROOT/hack
 
+echo "+++ Building cmd-gen"
+go build -o ${BINDIR}/cmd-gen ./hack/cmd-gen
+
 echo "+++ Removing old output"
 rm -Rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
-
-echo "+++ Building cmd-gen"
-go build -o ${BINDIR}/cmd-gen ./hack/cmd-gen
 
 echo "+++ Running cmd-gen"
 ${BINDIR}/cmd-gen ${OUTPUT_DIR}

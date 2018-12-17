@@ -46,13 +46,13 @@ func NewFilteredMachineDeploymentInformer(client versioned.Interface, namespace 
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.WingWing().MachineDeployments(namespace).List(options)
+				return client.Wing().MachineDeployments(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.WingWing().MachineDeployments(namespace).Watch(options)
+				return client.Wing().MachineDeployments(namespace).Watch(options)
 			},
 		},
 		&apis_wing.MachineDeployment{},

@@ -20,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	client "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 	"github.com/jetstack/tarmak/pkg/wing/mocks"
 )
@@ -61,11 +62,11 @@ func newFakeWing(t *testing.T) *fakeWing {
 		ctrl: gomock.NewController(t),
 		Wing: &Wing{
 			clientset: &client.Clientset{},
-			flags: &Flags{
-				ManifestURL:  manifestURLgz,
-				ServerURL:    "fakeServerURL",
-				ClusterName:  "fakeClusterName",
-				InstanceName: "fakeInstanceName",
+			flags: &common.Flags{
+				ManifestURL: manifestURLgz,
+				ServerURL:   "fakeServerURL",
+				ClusterName: "fakeClusterName",
+				MachineName: "fakeMachineName",
 			},
 			log:            logrus.NewEntry(logger),
 			stopCh:         make(chan struct{}),
@@ -141,7 +142,7 @@ func TestWing_SIGTERM_handler_first_execute(t *testing.T) {
 	w.fakeCommand.EXPECT().Process().AnyTimes().Return(process.Process)
 
 	// run a converge
-	w.converge()
+	w.Converge()
 
 	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
@@ -191,7 +192,7 @@ func TestWing_SIGTERM_handler_backoff(t *testing.T) {
 	}()
 
 	// run a converge
-	w.converge()
+	w.Converge()
 
 	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
@@ -257,7 +258,7 @@ func TestWing_SIGHUP_handler_first_excute(t *testing.T) {
 	w.fakeCommand.EXPECT().Process().AnyTimes().Return(process.Process)
 
 	// run a converge
-	w.converge()
+	w.Converge()
 
 	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
@@ -325,7 +326,7 @@ func TestWing_SIGHUP_handler_backoff(t *testing.T) {
 	}()
 
 	// run a converge
-	w.converge()
+	w.Converge()
 
 	//Ensure close from signal handlers
 	if _, ok := (<-w.convergeStopCh); ok {
@@ -368,7 +369,7 @@ func TestWing_SIGTERM_puppet_converged(t *testing.T) {
 	})
 
 	// run a converge
-	w.converge()
+	w.Converge()
 
 	w.convergeWG.Wait()
 	if _, ok := (<-puppetFinished); ok {
@@ -420,7 +421,7 @@ func TestWing_SIGHUP_puppet_converged(t *testing.T) {
 	})
 
 	// run a converge
-	w.converge()
+	w.Converge()
 
 	w.convergeWG.Wait()
 	if _, ok := (<-puppetFinished); ok {

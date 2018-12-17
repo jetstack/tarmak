@@ -46,13 +46,13 @@ func NewFilteredMachineInformer(client versioned.Interface, namespace string, re
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.WingWing().Machines(namespace).List(options)
+				return client.Wing().Machines(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.WingWing().Machines(namespace).Watch(options)
+				return client.Wing().Machines(namespace).Watch(options)
 			},
 		},
 		&apis_wing.Machine{},

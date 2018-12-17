@@ -17,7 +17,7 @@ type MachineDeploymentSpec struct {
 	MinReplicas *int32 `json:"minReplicas,omitempty"`
 
 	// +optional
-	MaxReplicas *int32 `json:"manReplicas,omitempty"`
+	MaxReplicas *int32 `json:"maxReplicas,omitempty"`
 
 	// Label selector for machines. Existing MachineSets whose machines are
 	// selected by this will be the ones affected by this deployment.
@@ -139,6 +139,8 @@ type MachineDeploymentStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
+// +resource:path=wing
 
 // MachineDeployment is the Schema for the machinedeployments API
 // +k8s:openapi-gen=true

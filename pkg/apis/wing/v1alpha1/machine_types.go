@@ -8,6 +8,8 @@ import (
 )
 
 // +genclient
+// +k8s:openapi-gen=true
+// +resource:path=wing
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type Machine struct {

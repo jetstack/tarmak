@@ -93,6 +93,8 @@ type MachineSetStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
+// +resource:path=wing
 
 // MachineSet is the Schema for the machinesets API
 // +k8s:openapi-gen=true
