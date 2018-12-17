@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
@@ -96,6 +97,7 @@ func (c *Cluster) WaitForConvergance() error {
 			deployment := deployments[pos]
 
 			if deployment.Status == nil {
+				deployment.Status = &wingv1alpha1.MachineDeploymentStatus{}
 				converging = append(converging, deployment)
 				continue
 			}
@@ -109,11 +111,11 @@ func (c *Cluster) WaitForConvergance() error {
 			converging = append(converging, deployment)
 		}
 
-		var convergedStr string
+		var convergedSlice []string
 		for _, d := range converged {
-			convergedStr = fmt.Sprintf("%s %s", convergedStr, d.Name)
+			convergedSlice = append(convergedSlice, d.Name)
 		}
-		convergedStr = fmt.Sprintf("converged deployments [%s]", convergedStr)
+		convergedStr := fmt.Sprintf("converged deployments [%s]", strings.Join(convergedSlice, " "))
 
 		if len(converging) == 0 {
 			c.log.Info("all deployments converged")
@@ -127,11 +129,12 @@ func (c *Cluster) WaitForConvergance() error {
 		}
 
 		for _, d := range converging {
-			var readyReplicas int32
-			if d.Status != nil {
-				readyReplicas = d.Status.Replicas
+			reps := d.Status.Replicas
+			if d.Spec != nil && d.Spec.MinReplicas != nil && reps < *d.Spec.MinReplicas {
+				reps = *d.Spec.MinReplicas
 			}
-			c.log.Debugf("converging %s [%v/%v]", d.Name, readyReplicas, d.Status.Replicas)
+
+			c.log.Debugf("converging %s [%v/%v]", d.Name, d.Status.ReadyReplicas, reps)
 		}
 
 		retries--

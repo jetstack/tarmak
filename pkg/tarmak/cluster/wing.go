@@ -7,6 +7,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"golang.org/x/net/context"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
@@ -43,14 +44,37 @@ func (c *Cluster) listMachines() ([]*wingv1alpha1.Machine, error) {
 		return nil, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
 	}
 
-	mList, err := client.List(metav1.ListOptions{})
+	hosts, err := c.ListHosts()
 	if err != nil {
 		return nil, err
 	}
 
 	var machines []*wingv1alpha1.Machine
-	for i := range mList.Items {
-		machines = append(machines, &mList.Items[i])
+	for _, h := range hosts {
+		m, err := client.Get(h.ID(), metav1.GetOptions{})
+		if err != nil {
+			if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
+				machine := &wingv1alpha1.Machine{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: h.ID(),
+					},
+					Status: &wingv1alpha1.MachineStatus{
+						Converge: &wingv1alpha1.MachineStatusManifest{
+							State: wingv1alpha1.MachineManifestStateConverging,
+						},
+					},
+				}
+
+				m, err = client.Create(machine)
+				if err != nil {
+					return nil, fmt.Errorf("error creating machine: %s", err)
+				}
+			} else {
+				return nil, fmt.Errorf("failed to get machine resource %s: %s", h.ID(), err)
+			}
+		}
+
+		machines = append(machines, m)
 	}
 
 	return machines, nil

@@ -292,6 +292,11 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 
 // report status to the API server
 func (w *Wing) reportStatus(status *v1alpha1.MachineStatus) error {
+	labels := map[string]string{
+		"pool":    w.flags.Pool,
+		"cluster": w.flags.ClusterName,
+	}
+
 	machineAPI := w.clientset.WingV1alpha1().Machines(w.flags.ClusterName)
 	machine, err := machineAPI.Get(
 		w.flags.MachineName,
@@ -301,11 +306,8 @@ func (w *Wing) reportStatus(status *v1alpha1.MachineStatus) error {
 		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
 			machine = &v1alpha1.Machine{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: w.flags.MachineName,
-					Labels: map[string]string{
-						"pool":    w.flags.Pool,
-						"cluster": w.flags.ClusterName,
-					},
+					Name:   w.flags.MachineName,
+					Labels: labels,
 				},
 				Status: status.DeepCopy(),
 			}
@@ -313,11 +315,14 @@ func (w *Wing) reportStatus(status *v1alpha1.MachineStatus) error {
 			if err != nil {
 				return fmt.Errorf("error creating machine: %s", err)
 			}
+
 			return nil
 		}
+
 		return fmt.Errorf("error get existing machine: %s", err)
 	}
 
+	machine.ObjectMeta.Labels = labels
 	machine.Status = status.DeepCopy()
 	_, err = machineAPI.Update(machine)
 	if err != nil {

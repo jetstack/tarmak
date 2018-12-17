@@ -69,8 +69,10 @@ func (c *Controller) syncToStdout(key string) error {
 
 	m, ok := obj.(*v1alpha1.Machine)
 	if !ok {
-		return errors.New("failed to process next item, not a machineset")
+		return errors.New("failed to process next item, not a machine")
 	}
+
+	c.log.Debugf("machineset controller got a mahcine: %s", m.Name)
 
 	ms, found, err := c.getMachineSet(m)
 	if err != nil {
@@ -82,6 +84,8 @@ func (c *Controller) syncToStdout(key string) error {
 		c.log.Warnf("did not find machineset for machine %s", m.Name)
 		return nil
 	}
+
+	c.log.Debugf("machineset controller got matching machineset: %s", ms.Name)
 
 	if ms.Spec == nil {
 		return fmt.Errorf("machineset spec is nil: %v", ms.Spec)
@@ -140,6 +144,8 @@ func (c *Controller) syncToStdout(key string) error {
 		AvailableReplicas: readyMachines,
 	}
 
+	c.log.Debugf("updating machine set status: %+v", status)
+
 	msAPI := c.client.WingV1alpha1().MachineSets(ms.Namespace)
 	ms.Status = status.DeepCopy()
 	_, err = msAPI.Update(ms)
@@ -153,12 +159,12 @@ func (c *Controller) syncToStdout(key string) error {
 func (c *Controller) getMachineSet(m *v1alpha1.Machine) (*v1alpha1.MachineSet, bool, error) {
 	pool, ok := m.Labels["pool"]
 	if !ok {
-		return nil, false, fmt.Errorf("found machine without a pool label: %s", m.Name)
+		return nil, false, nil
 	}
 
 	cluster, ok := m.Labels["cluster"]
 	if !ok {
-		return nil, false, fmt.Errorf("found machine without a cluster label: %s", m.Name)
+		return nil, false, nil
 	}
 
 	msAPI := c.client.WingV1alpha1().MachineSets(cluster)

@@ -71,6 +71,9 @@ func (c *Controller) sync(key string) error {
 			c.log.Errorf("Fetching object with key %s from store failed with %v", key, err)
 			return err
 		}
+
+		c.log.Debugf("machine deployment controller did not get deployment or set")
+
 		if !exists {
 			return nil
 		}
@@ -80,11 +83,15 @@ func (c *Controller) sync(key string) error {
 			return errors.New("failed to process next item, not a machinedeployment or machineset")
 		}
 
+		c.log.Debugf("machine deployment controller got machineset: %s", ms.Name)
+
 		// get our deployment controlling this set
 		md, err := c.getMachineDeployment(ms)
 		if err != nil {
 			return err
 		}
+
+		c.log.Debugf("machine deployment controller got matching matchine deployment: %s", md.Name)
 
 		// sync deployment from the set
 		return c.syncFromMachineSet(md, ms)
