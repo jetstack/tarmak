@@ -3,6 +3,8 @@ package wing
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 )
 
 // +genclient
@@ -36,9 +38,8 @@ type MachineStatus struct {
 }
 
 //  InstaceSpecManifest defines the state and hash of a run manifest
-type MachineManifestState string
 type MachineStatusManifest struct {
-	State               MachineManifestState
+	State               common.MachineManifestState
 	Hash                string
 	LastUpdateTimestamp metav1.Time
 	Messages            []string

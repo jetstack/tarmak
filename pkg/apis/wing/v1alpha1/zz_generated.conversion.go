@@ -445,7 +445,7 @@ func Convert_wing_MachineStatus_To_v1alpha1_MachineStatus(in *wing.MachineStatus
 }
 
 func autoConvert_v1alpha1_MachineStatusManifest_To_wing_MachineStatusManifest(in *MachineStatusManifest, out *wing.MachineStatusManifest, s conversion.Scope) error {
-	out.State = wing.MachineManifestState(in.State)
+	out.State = common.MachineManifestState(in.State)
 	out.Hash = in.Hash
 	out.LastUpdateTimestamp = in.LastUpdateTimestamp
 	out.Messages = *(*[]string)(unsafe.Pointer(&in.Messages))
@@ -459,7 +459,7 @@ func Convert_v1alpha1_MachineStatusManifest_To_wing_MachineStatusManifest(in *Ma
 }
 
 func autoConvert_wing_MachineStatusManifest_To_v1alpha1_MachineStatusManifest(in *wing.MachineStatusManifest, out *MachineStatusManifest, s conversion.Scope) error {
-	out.State = MachineManifestState(in.State)
+	out.State = common.MachineManifestState(in.State)
 	out.Hash = in.Hash
 	out.LastUpdateTimestamp = in.LastUpdateTimestamp
 	out.Messages = *(*[]string)(unsafe.Pointer(&in.Messages))

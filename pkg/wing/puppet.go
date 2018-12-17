@@ -22,6 +22,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/wing/provider"
 )
@@ -31,7 +32,7 @@ func (w *Wing) runPuppet() (*v1alpha1.MachineStatus, error) {
 	// start converging mainfest
 	status := &v1alpha1.MachineStatus{
 		Converge: &v1alpha1.MachineStatusManifest{
-			State: v1alpha1.MachineManifestStateConverging,
+			State: common.MachineManifestStateConverging,
 		},
 	}
 
@@ -105,7 +106,7 @@ func (w *Wing) runPuppet() (*v1alpha1.MachineStatus, error) {
 		// start converging mainfest
 		status = &v1alpha1.MachineStatus{
 			Converge: &v1alpha1.MachineStatusManifest{
-				State:     v1alpha1.MachineManifestStateConverging,
+				State:     common.MachineManifestStateConverging,
 				Messages:  puppetMessages,
 				ExitCodes: puppetRetCodes,
 				Hash:      hashString,
@@ -159,11 +160,11 @@ func (w *Wing) Converge() {
 	// run puppet
 	status, err := w.runPuppet()
 	if err != nil {
-		status.Converge.State = v1alpha1.MachineManifestStateError
+		status.Converge.State = common.MachineManifestStateError
 		status.Converge.Messages = append(status.Converge.Messages, err.Error())
 		w.log.Error(err)
 	} else {
-		status.Converge.State = v1alpha1.MachineManifestStateConverged
+		status.Converge.State = common.MachineManifestStateConverged
 	}
 
 	// feedback puppet status to apiserver

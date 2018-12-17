@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
@@ -72,8 +73,6 @@ func (c *Controller) syncToStdout(key string) error {
 		return errors.New("failed to process next item, not a machine")
 	}
 
-	c.log.Debugf("machineset controller got a mahcine: %s", m.Name)
-
 	ms, found, err := c.getMachineSet(m)
 	if err != nil {
 		return err
@@ -84,8 +83,6 @@ func (c *Controller) syncToStdout(key string) error {
 		c.log.Warnf("did not find machineset for machine %s", m.Name)
 		return nil
 	}
-
-	c.log.Debugf("machineset controller got matching machineset: %s", ms.Name)
 
 	if ms.Spec == nil {
 		return fmt.Errorf("machineset spec is nil: %v", ms.Spec)
@@ -235,7 +232,7 @@ func (c *Controller) runWorker() {
 }
 
 func (c *Controller) machineConverged(machine v1alpha1.Machine) bool {
-	if machine.Status != nil && machine.Status.Converge != nil && machine.Status.Converge.State == v1alpha1.MachineManifestStateConverged {
+	if machine.Status != nil && machine.Status.Converge != nil && machine.Status.Converge.State == common.MachineManifestStateConverged {
 		return true
 	}
 

@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/wing/interfaces"
 )
@@ -81,7 +82,7 @@ func (c *Controller) syncToStdout(key string) error {
 			},
 			Status: &v1alpha1.MachineStatus{
 				Converge: &v1alpha1.MachineStatusManifest{
-					State: v1alpha1.MachineManifestStateConverging,
+					State: common.MachineManifestStateConverging,
 				},
 			},
 		}
@@ -91,33 +92,36 @@ func (c *Controller) syncToStdout(key string) error {
 		}
 
 		c.log.Infof("Machine created %v", key)
-	} else {
-		// Note that you also have to check the uid if you have a local controlled resource, which
-		// is dependent on the actual machine, to detect that a Machine was recreated with the same name
-		machine, ok := obj.(*v1alpha1.Machine)
-		if !ok {
-			return errors.New("failed to process next item, not a machine")
-		}
+		return nil
+	}
 
-		// trigger converge if status time is older or not existing
-		if machine.Spec != nil && machine.Spec.Converge != nil && !machine.Spec.Converge.RequestTimestamp.Time.IsZero() {
-			if machine.Status != nil && machine.Status.Converge != nil && !machine.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
-				if machine.Status.Converge.LastUpdateTimestamp.Time.After(machine.Spec.Converge.RequestTimestamp.Time) {
-					c.log.Debug("no converge neccessary, last update was after request")
-					return nil
-				}
-			} else {
-				c.log.Debug("no converge neccessary, no status section found or update timestamp zero")
+	// Note that you also have to check the uid if you have a local controlled resource, which
+	// is dependent on the actual machine, to detect that a Machine was recreated with the same name
+	machine, ok := obj.(*v1alpha1.Machine)
+	if !ok {
+		return errors.New("failed to process next item, not a machine")
+	}
+
+	// trigger converge if status time is older or not existing
+	if machine.Spec != nil && machine.Spec.Converge != nil && !machine.Spec.Converge.RequestTimestamp.Time.IsZero() {
+		if machine.Status != nil && machine.Status.Converge != nil && !machine.Status.Converge.LastUpdateTimestamp.Time.IsZero() {
+			if machine.Status.Converge.LastUpdateTimestamp.Time.After(machine.Spec.Converge.RequestTimestamp.Time) {
+				c.log.Debug("no converge neccessary, last update was after request")
 				return nil
 			}
 		} else {
-			c.log.Debug("no converge neccessary, no spec section found or request timestamp zero")
+			c.log.Debug("no converge neccessary, no status section found or update timestamp zero")
 			return nil
 		}
+	}
 
+	if machine.Status != nil && machine.Status.Converge != nil &&
+		machine.Status.Converge.State != common.MachineManifestStateConverging &&
+		machine.Status.Converge.State != common.MachineManifestStateConverged {
 		c.log.Infof("running converge")
 		c.wing.Converge()
 	}
+
 	return nil
 }
 

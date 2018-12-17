@@ -133,13 +133,13 @@ func (w *Wing) watchForNotifications() {
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.AddAfter(key, 2*time.Second)
+				queue.AddAfter(key, 1*time.Second)
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
-				queue.AddAfter(key, 2*time.Second)
+				queue.AddAfter(key, 1*time.Second)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -147,7 +147,7 @@ func (w *Wing) watchForNotifications() {
 			// key function.
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.AddAfter(key, 2*time.Second)
+				queue.AddAfter(key, 1*time.Second)
 			}
 		},
 	}, cache.Indexers{})

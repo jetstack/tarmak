@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 )
 
@@ -64,10 +66,8 @@ func (c *Cluster) ReapplyConfiguration() error {
 
 	for pos, _ := range machines {
 		machine := machines[pos]
-		if machine.Spec == nil {
-			machine.Spec = &wingv1alpha1.MachineSpec{}
-		}
-		machine.Spec.Converge = &wingv1alpha1.MachineSpecManifest{}
+		machine.Status = &wingv1alpha1.MachineStatus{}
+		machine.Status.Converge = &wingv1alpha1.MachineStatusManifest{}
 
 		if _, err := client.Update(machine); err != nil {
 			c.log.Warnf("error updating machine %s in wing API: %s", machine.Name, err)
@@ -128,13 +128,33 @@ func (c *Cluster) WaitForConvergance() error {
 			c.log.Debug(convergedStr)
 		}
 
+		client, err := c.wingMachineClient()
+		if err != nil {
+			return err
+		}
+
 		for _, d := range converging {
+
+			mList, err := client.List(metav1.ListOptions{
+				LabelSelector: fmt.Sprintf("pool=%s,cluster=%s",
+					d.Labels["pool"], d.Labels["cluster"]),
+			})
+			if err != nil {
+				return err
+			}
+
+			var convergingMachines []string
+			for _, m := range mList.Items {
+				convergingMachines = append(convergingMachines, m.Name)
+			}
+
 			reps := d.Status.Replicas
 			if d.Spec != nil && d.Spec.MinReplicas != nil && reps < *d.Spec.MinReplicas {
 				reps = *d.Spec.MinReplicas
 			}
 
-			c.log.Debugf("converging %s [%v/%v]", d.Name, d.Status.ReadyReplicas, reps)
+			c.log.Debugf("converging %s [%v/%v] (%s)",
+				d.Name, d.Status.ReadyReplicas, reps, strings.Join(convergingMachines, ", "))
 		}
 
 		retries--

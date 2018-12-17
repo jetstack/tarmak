@@ -10,6 +10,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
@@ -60,7 +61,7 @@ func (c *Cluster) listMachines() ([]*wingv1alpha1.Machine, error) {
 					},
 					Status: &wingv1alpha1.MachineStatus{
 						Converge: &wingv1alpha1.MachineStatusManifest{
-							State: wingv1alpha1.MachineManifestStateConverging,
+							State: common.MachineManifestStateConverging,
 						},
 					},
 				}
@@ -131,9 +132,7 @@ func (c *Cluster) updateMachineDeployments() error {
 			continue
 		}
 
-		d = d.DeepCopy()
 		d.Spec = c.deploymentSpec(i)
-
 		_, err = client.Update(d)
 		if err != nil {
 			return fmt.Errorf("failed to update deployment sepc %s: %s", i.Name(), err)
