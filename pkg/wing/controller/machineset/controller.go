@@ -33,7 +33,7 @@ func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer,
 		informer: informer,
 		indexer:  indexer,
 		queue:    queue,
-		log:      logrus.NewEntry(logrus.New()).WithField("tier", "controller"),
+		log:      logrus.NewEntry(logrus.New()).WithField("tier", "MachineSet-controller"),
 		client:   client,
 	}
 }
@@ -80,7 +80,6 @@ func (c *Controller) syncToStdout(key string) error {
 
 	// machineset doesn't exist for this machine
 	if !found {
-		c.log.Warnf("did not find machineset for machine %s", m.Name)
 		return nil
 	}
 

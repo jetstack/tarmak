@@ -132,7 +132,7 @@ func (c *Controller) createControlledMachineSet(md *v1alpha1.MachineDeployment) 
 		maxReplicas = *md.Spec.MaxReplicas
 	}
 
-	c.log.Infof("Creating MachineSet for MachineDeployment %s\n", md.Name)
+	c.log.Infof("Creating MachineSet from MachineDeployment %s\n", md.Name)
 	ms := &v1alpha1.MachineSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   md.Name,

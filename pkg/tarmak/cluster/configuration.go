@@ -11,6 +11,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 )
 
@@ -145,7 +146,10 @@ func (c *Cluster) WaitForConvergance() error {
 
 			var convergingMachines []string
 			for _, m := range mList.Items {
-				convergingMachines = append(convergingMachines, m.Name)
+				if m.Status == nil || m.Status.Converge == nil ||
+					m.Status.Converge.State != common.MachineManifestStateConverged {
+					convergingMachines = append(convergingMachines, m.Name)
+				}
 			}
 
 			reps := d.Status.Replicas
