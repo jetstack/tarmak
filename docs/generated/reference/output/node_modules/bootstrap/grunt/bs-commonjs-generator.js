@@ -1,7 +1,7 @@
 /*!
  * Bootstrap Grunt task for the CommonJS module generation
- * https://getbootstrap.com/
- * Copyright 2014-2018 Twitter, Inc.
+ * http://getbootstrap.com
+ * Copyright 2014-2015 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 
@@ -16,7 +16,7 @@ module.exports = function generateCommonJSModule(grunt, srcFiles, destFilepath) 
   var destDir = path.dirname(destFilepath);
 
   function srcPathToDestRequire(srcFilepath) {
-    var requirePath = path.posix.relative(destDir, srcFilepath);
+    var requirePath = path.relative(destDir, srcFilepath).replace(/\\/g, '/');
     return 'require(\'' + requirePath + '\')';
   }
 
