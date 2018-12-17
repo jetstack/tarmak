@@ -42,7 +42,8 @@
       "execute_command": "sudo -E -S sh '{{ .Path }}'",
       "scripts": [
           "{{user `scripts`}}/configure_for_tarmak.sh",
-          "{{user `scripts`}}/cleanup.sh"
+          "{{user `scripts`}}/cleanup.sh",
+          "{{user `scripts`}}/prepare-puppet.sh"
       ]
     },
     {
@@ -64,14 +65,7 @@
         "production"
       ],
       "puppet_bin_dir": "/opt/puppetlabs/bin",
-      "facter": { "TARMAK_ROLE" : "worker", "TARMAK_HOSTNAME": "worker" }
-    },
-    {
-      "type": "shell",
-      "execute_command": "sudo -E -S sh '{{ .Path }}'",
-      "scripts": [
-        "{{user `scripts`}}/vault_token_removal.sh"
-      ]
+      "facter": { "TARMAK_ROLE" : "worker", "TARMAK_HOSTNAME": "worker", "VAULT_TOKEN" : "packer-bootstrap" }
     }
   ]
 } 
