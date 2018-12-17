@@ -67,9 +67,9 @@ func (p *Packer) Build(imageNames []string) error {
 		}
 
 		go func() {
+			resultLock.Lock()
 			amiID, err := image.Build()
 
-			resultLock.Lock()
 			defer wg.Done()
 			defer resultLock.Unlock()
 
