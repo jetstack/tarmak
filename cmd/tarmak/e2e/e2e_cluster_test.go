@@ -29,7 +29,7 @@ func TestAWSSingleCluster(t *testing.T) {
 
 	defer func() {
 		t.Log("run environment destroy command")
-		c = ti.Command("environment", "destroy", "--name", ti.environmentName, "--auto-approve")
+		c = ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
 		// write error out to my stdout
 		c.Stderr = os.Stderr
 		if err := c.Run(); err != nil {
@@ -76,7 +76,7 @@ func TestAWSMultiCluster(t *testing.T) {
 
 	defer func() {
 		t.Log("run environment destroy command")
-		c = ti.Command("environment", "destroy", "--name", ti.environmentName, "--auto-approve")
+		c = ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
 		// write error out to my stdout
 		c.Stderr = os.Stderr
 		if err := c.Run(); err != nil {
