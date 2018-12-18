@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"reflect"
 	"testing"
 
 	"golang.org/x/crypto/ssh"
@@ -76,7 +77,7 @@ kgvlk+ZfM3ikpQ1YfiRKAAAAAAECAwQF
 	ED25519PublicKey = []byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFp0VVTGgPvN573n7fN3DVtNkgvlk+ZfM3ikpQ1YfiRK`)
 )
 
-func TestVerify(t *testing.T) {
+func Test_verify(t *testing.T) {
 	tt := &TagInstanceRequest{
 		RSASigniture:        RSASigniture,
 		InstanceDocumentRaw: []byte("bad signature"),
@@ -129,5 +130,47 @@ func TestVerify(t *testing.T) {
 		}
 
 		DocumentRaw = []byte("bad signature")
+	}
+}
+
+func Test_createTags(t *testing.T) {
+	tt := &TagInstanceRequest{
+		PublicKeys: make(map[string][]byte),
+	}
+
+	tags := tt.createTags()
+	checkTags(t, make(map[string][]byte), tags)
+
+	tt.PublicKeys = map[string][]byte{
+		"key-1": []byte("public key 1"),
+		"key-2": []byte("public key 2"),
+	}
+	tags = tt.createTags()
+	checkTags(t, map[string][]byte{
+		"tarmak.io/key-1-0": []byte("public key 1==EOF"),
+		"tarmak.io/key-2-0": []byte("public key 2==EOF"),
+	}, tags)
+
+	longKey := make([]byte, 256)
+	for i := range longKey {
+		longKey[i] = 'a'
+	}
+
+	tt.PublicKeys = map[string][]byte{
+		"key-1": append(longKey, []byte("bcd")...),
+		"key-2": append(longKey, []byte("bcd")...),
+	}
+	tags = tt.createTags()
+	checkTags(t, map[string][]byte{
+		"tarmak.io/key-1-0": longKey,
+		"tarmak.io/key-1-1": []byte("bcd==EOF"),
+		"tarmak.io/key-2-0": longKey,
+		"tarmak.io/key-2-1": []byte("bcd==EOF"),
+	}, tags)
+}
+
+func checkTags(t *testing.T, exp, got map[string][]byte) {
+	if !reflect.DeepEqual(exp, got) {
+		t.Fatalf("got mismatch of tags\nexp=%s\ngot=%s", exp, got)
 	}
 }

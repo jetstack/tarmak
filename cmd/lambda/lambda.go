@@ -148,17 +148,22 @@ func (t *TagInstanceRequest) checkTagsAgainstInstance(tags map[string][]byte) (t
 // split up public keys into correct sizes for AWS tags
 func (t *TagInstanceRequest) createTags() map[string][]byte {
 	tags := make(map[string][]byte)
+
 	for keyName, data := range t.PublicKeys {
 		data = append(data, []byte("==EOF")...)
+
 		for i := 0; i < len(data); i += tagSize {
 			end := i + tagSize
+
 			if end > len(data) {
 				end = len(data)
 			}
-			tagName := fmt.Sprintf("PublicKey_%s_%d", keyName, i/tagSize)
+
+			tagName := fmt.Sprintf("tarmak.io/%s-%d", keyName, i/tagSize)
 			tags[tagName] = data[i:end]
 		}
 	}
+
 	return tags
 }
 func main() {
