@@ -2,22 +2,15 @@ package main
 
 import (
 	"context"
-	//"crypto"
-	//"crypto/ecdsa"
-	//"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
-	"math/big"
-	//"encoding/json"
 	"encoding/pem"
-	//"errors"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"golang.org/x/crypto/ssh"
-	//"golang.org/x/crypto/ed25519"
-	//"github.com/fullsailor/pkcs7"
 )
 
 const (
@@ -117,17 +110,27 @@ func (t *TagInstanceRequest) verify() error {
 
 	err = awsCaCert.CheckSignature(x509.SHA256WithRSA, t.InstanceDocumentRaw, rsaSignature)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to verify identity document signature against AWS: %s", err)
 	}
 
-	for _, v := range t.PublicKeys {
-		_, _, _, rest, err := ssh.ParseAuthorizedKey(v)
+	for k, v := range t.PublicKeys {
+		pk, _, _, rest, err := ssh.ParseAuthorizedKey(v)
 		if err != nil {
 			return fmt.Errorf("failed to parse public key: %s", err)
 		}
 
 		if len(rest) != 0 {
 			return fmt.Errorf("got rest parsing public key: %s", rest)
+		}
+
+		sig, ok := t.KeySignatures[k]
+		if !ok {
+			return fmt.Errorf("did not receive signature for public key %s", k)
+		}
+
+		err = pk.Verify(t.InstanceDocumentRaw, sig)
+		if err != nil {
+			return fmt.Errorf("could not verify public key %s: %s", k, err)
 		}
 	}
 

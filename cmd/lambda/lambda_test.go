@@ -1,14 +1,7 @@
 package main
 
 import (
-	//"crypto"
 	"crypto/rand"
-	//"crypto/rsa"
-	//"crypto/sha256"
-	//"crypto/x509"
-	//"encoding/base64"
-	//"encoding/pem"
-	//"fmt"
 	"testing"
 
 	"golang.org/x/crypto/ssh"
@@ -86,34 +79,55 @@ kgvlk+ZfM3ikpQ1YfiRKAAAAAAECAwQF
 func TestVerify(t *testing.T) {
 	tt := &TagInstanceRequest{
 		RSASigniture:        RSASigniture,
-		InstanceDocumentRaw: DocumentRaw,
+		InstanceDocumentRaw: []byte("bad signature"),
 		PublicKeys:          make(map[string][]byte),
 		KeySignatures:       make(map[string]*ssh.Signature),
 	}
 
-	for _, k := range []struct {
-		name   string
-		sk, pk []byte
-	}{
-		{"rsa", RSAPrivateKey, RSAPublicKey},
-		{"ecdsa", ECDSAPrivateKey, ECDSAPublicKey},
-		{"ed25519", ED25519PrivateKey, ED25519PublicKey},
-	} {
-		signer, err := ssh.ParsePrivateKey(k.sk)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		sig, err := signer.Sign(rand.Reader, tt.InstanceDocumentRaw)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		tt.PublicKeys[k.name] = k.pk
-		tt.KeySignatures[k.name] = sig
+	if err := tt.verify(); err == nil {
+		t.Fatalf("expected error, got=%s", err)
 	}
 
+	tt.InstanceDocumentRaw = DocumentRaw
 	if err := tt.verify(); err != nil {
-		t.Fatalf("unexpected error: %s", err)
+		t.Fatal(err)
+	}
+
+	for i := 0; i < 2; i++ {
+		for _, k := range []struct {
+			name   string
+			sk, pk []byte
+		}{
+			{"rsa", RSAPrivateKey, RSAPublicKey},
+			{"ecdsa", ECDSAPrivateKey, ECDSAPublicKey},
+			{"ed25519", ED25519PrivateKey, ED25519PublicKey},
+		} {
+
+			signer, err := ssh.ParsePrivateKey(k.sk)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			sig, err := signer.Sign(rand.Reader, DocumentRaw)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			tt.PublicKeys[k.name] = k.pk
+			tt.KeySignatures[k.name] = sig
+		}
+
+		err := tt.verify()
+		if i%2 == 0 {
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+		} else {
+			if err == nil {
+				t.Fatalf("expecred error, got=%s", err)
+			}
+		}
+
+		DocumentRaw = []byte("bad signature")
 	}
 }
