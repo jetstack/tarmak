@@ -50,6 +50,19 @@ module "network" {
   private_zone_id     = "${var.private_zone_id}"
 }
 
+module "tagging_control" {
+  source = "modules/tagging_control"
+
+  name              = "${var.name}"
+  project           = "${var.project}"
+  stack_name_prefix = "${var.stack_name_prefix}"
+  vpc_id            = "${module.network.vpc_id}"
+  project           = "${var.project}"
+  contact           = "${var.contact}"
+  environment       = "${var.environment}"
+  public_subnet_ids = ["${module.network.public_subnet_ids}"]
+}
+
 module "bastion" {
   source = "modules/bastion"
 

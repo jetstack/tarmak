@@ -76,6 +76,23 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 		}
 	}
 
+	sourceTaggingControlBinary, err := os.Open(filepath.Join(rootPath, "tagging_control.zip"))
+	if err != nil {
+		return err
+	}
+	defer sourceTaggingControlBinary.Close()
+
+	destTaggingControlBinary, err := os.Create(filepath.Join(terraformCodePath, "tagging_control.zip"))
+	if err != nil {
+		return err
+	}
+	defer destTaggingControlBinary.Close()
+
+	_, err = io.Copy(destTaggingControlBinary, sourceTaggingControlBinary)
+	if err != nil {
+		return err
+	}
+
 	// create puppet.tar.gz
 	puppetTarGzFilename := filepath.Clean(
 		filepath.Join(
@@ -128,7 +145,7 @@ func (t *terraformTemplate) Generate() error {
 		result = multierror.Append(result, err)
 	}
 
-	for _, module := range []string{"state", "bastion", "network", "network-existing-vpc", "jenkins", "vault", "kubernetes"} {
+	for _, module := range []string{"state", "bastion", "tagging_control", "network", "network-existing-vpc", "jenkins", "vault", "kubernetes"} {
 		if err := t.generateModuleInstanceTemplates(module); err != nil {
 			result = multierror.Append(result, err)
 		}
