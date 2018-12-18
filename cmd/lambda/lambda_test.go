@@ -78,19 +78,21 @@ kgvlk+ZfM3ikpQ1YfiRKAAAAAAECAwQF
 )
 
 func Test_verify(t *testing.T) {
-	tt := &TagInstanceRequest{
-		RSASigniture:        RSASigniture,
-		InstanceDocumentRaw: []byte("bad signature"),
-		PublicKeys:          make(map[string][]byte),
-		KeySignatures:       make(map[string]*ssh.Signature),
+	h := &Handler{
+		request: &TagInstanceRequest{
+			RSASigniture:        RSASigniture,
+			InstanceDocumentRaw: []byte("bad signature"),
+			PublicKeys:          make(map[string][]byte),
+			KeySignatures:       make(map[string]*ssh.Signature),
+		},
 	}
 
-	if err := tt.verify(); err == nil {
+	if err := h.verify(); err == nil {
 		t.Fatalf("expected error, got=%s", err)
 	}
 
-	tt.InstanceDocumentRaw = DocumentRaw
-	if err := tt.verify(); err != nil {
+	h.request.InstanceDocumentRaw = DocumentRaw
+	if err := h.verify(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -114,11 +116,11 @@ func Test_verify(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			tt.PublicKeys[k.name] = k.pk
-			tt.KeySignatures[k.name] = sig
+			h.request.PublicKeys[k.name] = k.pk
+			h.request.KeySignatures[k.name] = sig
 		}
 
-		err := tt.verify()
+		err := h.verify()
 		if i%2 == 0 {
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
@@ -134,21 +136,23 @@ func Test_verify(t *testing.T) {
 }
 
 func Test_createTags(t *testing.T) {
-	tt := &TagInstanceRequest{
-		PublicKeys: make(map[string][]byte),
+	h := &Handler{
+		request: &TagInstanceRequest{
+			PublicKeys: make(map[string][]byte),
+		},
 	}
 
-	tags := tt.createTags()
-	checkTags(t, make(map[string][]byte), tags)
+	tags := h.createTags()
+	checkTags(t, make(map[string]string), tags)
 
-	tt.PublicKeys = map[string][]byte{
+	h.request.PublicKeys = map[string][]byte{
 		"key-1": []byte("public key 1"),
 		"key-2": []byte("public key 2"),
 	}
-	tags = tt.createTags()
-	checkTags(t, map[string][]byte{
-		"tarmak.io/key-1-0": []byte("public key 1==EOF"),
-		"tarmak.io/key-2-0": []byte("public key 2==EOF"),
+	tags = h.createTags()
+	checkTags(t, map[string]string{
+		"tarmak.io/key-1-0": "public key 1==EOF",
+		"tarmak.io/key-2-0": "public key 2==EOF",
 	}, tags)
 
 	longKey := make([]byte, 256)
@@ -156,20 +160,20 @@ func Test_createTags(t *testing.T) {
 		longKey[i] = 'a'
 	}
 
-	tt.PublicKeys = map[string][]byte{
+	h.request.PublicKeys = map[string][]byte{
 		"key-1": append(longKey, []byte("bcd")...),
 		"key-2": append(longKey, []byte("bcd")...),
 	}
-	tags = tt.createTags()
-	checkTags(t, map[string][]byte{
-		"tarmak.io/key-1-0": longKey,
-		"tarmak.io/key-1-1": []byte("bcd==EOF"),
-		"tarmak.io/key-2-0": longKey,
-		"tarmak.io/key-2-1": []byte("bcd==EOF"),
+	tags = h.createTags()
+	checkTags(t, map[string]string{
+		"tarmak.io/key-1-0": string(longKey),
+		"tarmak.io/key-1-1": "bcd==EOF",
+		"tarmak.io/key-2-0": string(longKey),
+		"tarmak.io/key-2-1": "bcd==EOF",
 	}, tags)
 }
 
-func checkTags(t *testing.T, exp, got map[string][]byte) {
+func checkTags(t *testing.T, exp, got map[string]string) {
 	if !reflect.DeepEqual(exp, got) {
 		t.Fatalf("got mismatch of tags\nexp=%s\ngot=%s", exp, got)
 	}

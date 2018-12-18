@@ -4,21 +4,25 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
-	"math/big"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"golang.org/x/crypto/ssh"
 )
 
 const (
-	tagSize = 256
-)
+	tagSize   = 256
+	tagPrefix = "tarmak.io"
 
-var (
-	AWSCert = []byte(`-----BEGIN CERTIFICATE-----
+	AWSCACert = `-----BEGIN CERTIFICATE-----
 MIIDIjCCAougAwIBAgIJAKnL4UEDMN/FMA0GCSqGSIb3DQEBBQUAMGoxCzAJBgNV
 BAYTAlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9uMRAwDgYDVQQHEwdTZWF0dGxlMRgw
 FgYDVQQKEw9BbWF6b24uY29tIEluYy4xGjAYBgNVBAMTEWVjMi5hbWF6b25hd3Mu
@@ -36,7 +40,7 @@ em9uYXdzLmNvbYIJAKnL4UEDMN/FMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEF
 BQADgYEAFYcz1OgEhQBXIwIdsgCOS8vEtiJYF+j9uO6jz7VOmJqO+pRlAbRlvY8T
 C1haGgSI/A1uZUKs/Zfnph0oEI0/hu1IIJ/SKBDtN5lvmZ/IzbOPIJWirlsllQIQ
 7zvWbGd9c9+Rm3p04oTvhup99la7kZqevJK0QRdD/6NpCKsqP/0=
------END CERTIFICATE-----`)
+-----END CERTIFICATE-----`
 )
 
 type EC2InstanceIdentityDocument struct {
@@ -63,37 +67,69 @@ type TagInstanceRequest struct {
 	RSASigniture        []byte                    `json:"rsaSigniture"`
 }
 
-type ECDSASignature struct {
-	R *big.Int `json:"R"`
-	S *big.Int `json:"S"`
+type Handler struct {
+	request  *TagInstanceRequest
+	ec2      *ec2.EC2
+	document *EC2InstanceIdentityDocument
 }
 
-func HandleRequest(ctx context.Context, t *TagInstanceRequest) error {
-	if err := t.verify(); err != nil {
+func main() {
+	lambda.Start(HandleRequest)
+}
+
+func HandleRequest(ctx context.Context, request *TagInstanceRequest) error {
+	h := &Handler{
+		request: request,
+	}
+
+	if err := h.verify(); err != nil {
 		return err
 	}
 
-	tags := t.createTags()
-	exists, err := t.checkTagsAgainstInstance(tags)
+	document := new(EC2InstanceIdentityDocument)
+	err := json.Unmarshal(h.request.InstanceDocumentRaw, document)
+	if err != nil {
+		return err
+	}
+	h.document = document
+
+	tags := h.createTags()
+	exists, err := h.checkTagsAgainstInstance(tags)
 	if err != nil || exists {
 		return err
 	}
 
-	// attach tags to ec2 instance using real call
-	//err := ec2.Tag{
-	//	InstanceID: t.InstanceDocument.InstanceID,
-	//	Tags: ....
-	//}
-	// if err != nil {
-	//	return err
-	//}
+	// tags do not exist on instance so create
+	svc, err := h.EC2()
+	if err != nil {
+		return err
+	}
+
+	var ec2Tags []*ec2.Tag
+	for k, v := range tags {
+		ec2Tags = append(ec2Tags, &ec2.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
+	_, err = svc.CreateTags(&ec2.CreateTagsInput{
+		Tags: ec2Tags,
+		Resources: []*string{
+			aws.String(h.document.InstanceID),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create tags for instance %s: %s", h.document.InstanceID, err)
+	}
+
 	return nil
 }
 
 // verify the rsa signature against the instance identity content and AWS global
 // cert
-func (t *TagInstanceRequest) verify() error {
-	block, rest := pem.Decode([]byte(AWSCert))
+func (h *Handler) verify() error {
+	block, rest := pem.Decode([]byte(AWSCACert))
 	if len(rest) != 0 {
 		return fmt.Errorf("expected to fully parse AWS certificate but had remainder: %s", rest)
 	}
@@ -103,17 +139,18 @@ func (t *TagInstanceRequest) verify() error {
 		return err
 	}
 
-	rsaSignature, err := base64.StdEncoding.DecodeString(string(t.RSASigniture))
+	rsaSignature, err := base64.StdEncoding.DecodeString(string(h.request.RSASigniture))
 	if err != nil {
 		return err
 	}
 
-	err = awsCaCert.CheckSignature(x509.SHA256WithRSA, t.InstanceDocumentRaw, rsaSignature)
+	err = awsCaCert.CheckSignature(x509.SHA256WithRSA, h.request.InstanceDocumentRaw, rsaSignature)
 	if err != nil {
 		return fmt.Errorf("failed to verify identity document signature against AWS: %s", err)
 	}
 
-	for k, v := range t.PublicKeys {
+	// verify ssh keys
+	for k, v := range h.request.PublicKeys {
 		pk, _, _, rest, err := ssh.ParseAuthorizedKey(v)
 		if err != nil {
 			return fmt.Errorf("failed to parse public key: %s", err)
@@ -123,12 +160,12 @@ func (t *TagInstanceRequest) verify() error {
 			return fmt.Errorf("got rest parsing public key: %s", rest)
 		}
 
-		sig, ok := t.KeySignatures[k]
+		sig, ok := h.request.KeySignatures[k]
 		if !ok {
 			return fmt.Errorf("did not receive signature for public key %s", k)
 		}
 
-		err = pk.Verify(t.InstanceDocumentRaw, sig)
+		err = pk.Verify(h.request.InstanceDocumentRaw, sig)
 		if err != nil {
 			return fmt.Errorf("could not verify public key %s: %s", k, err)
 		}
@@ -141,15 +178,58 @@ func (t *TagInstanceRequest) verify() error {
 // if existing and match exit gracefully
 // if miss match, exit failure
 // if not exist, we need to create
-func (t *TagInstanceRequest) checkTagsAgainstInstance(tags map[string][]byte) (tagsExist bool, err error) {
-	return false, nil
+func (h *Handler) checkTagsAgainstInstance(tags map[string]string) (tagsExist bool, err error) {
+	svc, err := h.EC2()
+	if err != nil {
+		return false, err
+	}
+
+	out, err := svc.DescribeTags(&ec2.DescribeTagsInput{
+		Filters: []*ec2.Filter{
+			&ec2.Filter{
+				Name:   aws.String("resource-id"),
+				Values: []*string{aws.String(h.document.InstanceID)},
+			},
+			&ec2.Filter{
+				Name:   aws.String("resource-type"),
+				Values: []*string{aws.String("instance")},
+			},
+		},
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to list tags of instance %s: %s", h.document.InstanceID, err)
+	}
+
+	for _, existingTag := range out.Tags {
+
+		// check for public key tag prefix
+		if strings.HasPrefix(*existingTag.Key, tagPrefix) {
+
+			// tags exist on the instance with the matching prefix
+			tagsExist = true
+
+			value, ok := tags[*existingTag.Key]
+
+			// given tags do not include an existing tag
+			if !ok {
+				return true, errors.New("mismatch tags, rejected")
+			}
+
+			// existing and given tag mismatch values
+			if *existingTag.Value != value {
+				return true, errors.New("mismatch tags, rejected")
+			}
+		}
+	}
+
+	return tagsExist, nil
 }
 
 // split up public keys into correct sizes for AWS tags
-func (t *TagInstanceRequest) createTags() map[string][]byte {
-	tags := make(map[string][]byte)
+func (h *Handler) createTags() map[string]string {
+	tags := make(map[string]string)
 
-	for keyName, data := range t.PublicKeys {
+	for keyName, data := range h.request.PublicKeys {
 		data = append(data, []byte("==EOF")...)
 
 		for i := 0; i < len(data); i += tagSize {
@@ -159,13 +239,24 @@ func (t *TagInstanceRequest) createTags() map[string][]byte {
 				end = len(data)
 			}
 
-			tagName := fmt.Sprintf("tarmak.io/%s-%d", keyName, i/tagSize)
-			tags[tagName] = data[i:end]
+			tagName := fmt.Sprintf("%s/%s-%d", tagPrefix, keyName, i/tagSize)
+			tags[tagName] = string(data[i:end])
 		}
 	}
 
 	return tags
 }
-func main() {
-	lambda.Start(HandleRequest)
+
+func (h *Handler) EC2() (*ec2.EC2, error) {
+	if h.ec2 != nil {
+		return h.ec2, nil
+	}
+
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(h.document.Region),
+	}))
+
+	h.ec2 = ec2.New(sess)
+
+	return h.ec2, nil
 }
