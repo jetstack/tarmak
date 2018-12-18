@@ -252,3 +252,6 @@ docker_%:
 
 local_build: go_generate
 	go build -o tarmak_local_build ./cmd/tarmak
+
+e2e-test: build
+	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e
