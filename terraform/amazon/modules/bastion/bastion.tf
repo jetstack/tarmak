@@ -41,6 +41,10 @@ resource "aws_instance" "bastion" {
     volume_size = "${var.bastion_root_size}"
   }
 
+  lifecycle {
+    ignore_changes = ["tags"]
+  }
+
   tags {
     Name        = "${data.template_file.stack_name.rendered}-bastion"
     Environment = "${var.environment}"
