@@ -180,10 +180,6 @@ resource "aws_instance" "{{.TFName}}" {
     volume_size = "${var.{{.TFName}}_root_volume_size}"
   }
 
-  lifecycle {
-    ignore_changes = ["tags"]
-  }
-
   tags {
     Name        = "${data.template_file.stack_name.rendered}-{{.DNSName}}-${count.index+1}"
     Environment = "${var.environment}"

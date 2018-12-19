@@ -38,3 +38,5 @@ variable "bastion_iam_additional_policy_arns" {
 }
 
 variable "secrets_bucket" {}
+
+variable "tagging_control_arn" {}
