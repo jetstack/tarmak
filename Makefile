@@ -2,6 +2,7 @@
 PACKAGE_NAME ?= github.com/jetstack/tarmak
 CONTAINER_DIR := /go/src/$(PACKAGE_NAME)
 GO_VERSION := 1.10.4
+TARMAK_VERSION ?= 0.5.2
 
 BINDIR ?= $(CURDIR)/bin
 PATH   := $(BINDIR):$(PATH)
@@ -253,5 +254,9 @@ docker_%:
 local_build: go_generate
 	go build -o tarmak_local_build ./cmd/tarmak
 
-e2e-test: build
+e2e-test: download build
 	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e
+
+download:
+	wget https://github.com/jetstack/tarmak/releases/download/$(TARMAK_VERSION)/tarmak_$(TARMAK_VERSION)_$(UNAME_S)_amd64
+	chmod +x tarmak_$(TARMAK_VERSION)_$(UNAME_S)_amd64
