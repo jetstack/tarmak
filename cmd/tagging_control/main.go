@@ -3,6 +3,7 @@ package main
 
 import (
 	"github.com/aws/aws-lambda-go/lambda"
+
 	"github.com/jetstack/tarmak/cmd/tagging_control/cmd"
 )
 

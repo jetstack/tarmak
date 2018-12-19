@@ -1,5 +1,4 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-
 package server
 
 import (
@@ -22,6 +21,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
 	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
+	"github.com/jetstack/tarmak/pkg/wing/tags"
 )
 
 const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
@@ -58,6 +58,15 @@ func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *c
 		Short: "Launch a wing API server",
 		Long:  "Launch a wing API server",
 		RunE: func(c *cobra.Command, args []string) error {
+			t, err := tags.New("aws")
+			if err != nil {
+				return err
+			}
+
+			if err := t.EnsureMachineTags(); err != nil {
+				return err
+			}
+
 			if err := o.Complete(); err != nil {
 				return err
 			}

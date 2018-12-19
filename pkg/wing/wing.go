@@ -18,6 +18,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	client "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
+	"github.com/jetstack/tarmak/pkg/wing/tags"
 )
 
 const (
@@ -64,6 +65,15 @@ func New(flags *Flags) *Wing {
 
 func (w *Wing) Run(args []string) error {
 	var errors []error
+
+	t, err := tags.New("aws")
+	if err != nil {
+		return err
+	}
+
+	if err := t.EnsureMachineTags(); err != nil {
+		return err
+	}
 
 	if w.flags.InstanceName == DefaultInstanceName {
 		instanceName, err := os.Hostname()

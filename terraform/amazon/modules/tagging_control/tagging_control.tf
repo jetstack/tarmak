@@ -4,11 +4,6 @@ resource "aws_iam_role" "tagging_control" {
   assume_role_policy = "${file("${path.module}/templates/role.json")}"
 }
 
-resource "aws_iam_instance_profile" "tagging_control" {
-  name  = "${data.template_file.stack_name.rendered}-tagging_control"
-  role  = "${aws_iam_role.tagging_control.name}"
-}
-
 resource "aws_iam_role_policy" "tagging_control" {
   name   = "${data.template_file.stack_name.rendered}-tagging_control"
   role   = "${aws_iam_role.tagging_control.name}"
@@ -29,7 +24,7 @@ resource "aws_lambda_function" "tagging_control" {
 
   vpc_config {
     subnet_ids = ["${var.public_subnet_ids[0]}"]
-    security_group_ids = []
+    security_group_ids = ["${var.bastion_security_group_id}"]
   }
 
   tags {
@@ -38,4 +33,6 @@ resource "aws_lambda_function" "tagging_control" {
     Project     = "${var.project}"
     Contact     = "${var.contact}"
   }
+
+  depends_on = ["aws_iam_role_policy.tagging_control"]
 }

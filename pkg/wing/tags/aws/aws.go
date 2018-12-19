@@ -1,18 +1,22 @@
+// Copyright Jetstack Ltd. See LICENSE for details.
 package aws
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/jetstack/tarmak/cmd/tagging_control/cmd"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/jetstack/tarmak/cmd/tagging_control/cmd"
 )
 
 const (
@@ -20,18 +24,24 @@ const (
 	keyDir           = "/etc/ssh"
 )
 
-func EnsureMachineTags() error {
-	document, err := requestData("document")
+type AWSTags struct{}
+
+func New() *AWSTags {
+	return new(AWSTags)
+}
+
+func (a *AWSTags) EnsureMachineTags() error {
+	document, err := a.requestData("document")
 	if err != nil {
 		return err
 	}
 
-	rsaSig, err := requestData("signature")
+	rsaSig, err := a.requestData("signature")
 	if err != nil {
 		return err
 	}
 
-	pks, sigs, err := fetchLocalKeys(document)
+	pks, sigs, err := a.fetchLocalKeys(document)
 	if err != nil {
 		return err
 	}
@@ -43,18 +53,33 @@ func EnsureMachineTags() error {
 		RSASigniture:        rsaSig,
 	}
 
-	if err := callLambdaFunction(request); err != nil {
+	if err := a.callLambdaFunction(request); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func callLambdaFunction(request *cmd.TagInstanceRequest) error {
+func (a *AWSTags) callLambdaFunction(request *cmd.TagInstanceRequest) error {
+	b, err := json.Marshal(request)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request: %s", err)
+	}
+
+	svc := lambda.New(session.New(aws.NewConfig()))
+	_, err = svc.Invoke(&lambda.InvokeInput{
+		FunctionName: aws.String("tagging_control"),
+		Payload:      b,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to invoke lambda function: %s", err)
+	}
+
 	return nil
 }
 
-func fetchLocalKeys(document []byte) (map[string][]byte, map[string]*ssh.Signature, error) {
+func (a *AWSTags) fetchLocalKeys(document []byte) (map[string][]byte, map[string]*ssh.Signature, error) {
 	fs, err := ioutil.ReadDir(keyDir)
 	if err != nil {
 		return nil, nil, err
@@ -74,8 +99,20 @@ func fetchLocalKeys(document []byte) (map[string][]byte, map[string]*ssh.Signatu
 			return nil, nil, err
 		}
 
+		block, rest := pem.Decode(fileData)
+		if len(rest) != 0 {
+			return nil, nil, fmt.Errorf("expected to fully parse local key file but had remainder %s: %s",
+				f.Name(), rest)
+		}
+
 		// public key file
 		if strings.HasSuffix(f.Name(), ".pub") {
+			// ensure we do have a public key, not private
+			_, err := ssh.ParsePublicKey(block.Bytes)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to parse local public key %s: %s", f.Name(), err)
+			}
+
 			name := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
 			publicKeys[name] = fileData
 
@@ -83,12 +120,6 @@ func fetchLocalKeys(document []byte) (map[string][]byte, map[string]*ssh.Signatu
 		}
 
 		// private key
-		block, rest := pem.Decode(fileData)
-		if len(rest) != 0 {
-			return nil, nil, fmt.Errorf("expected to fully parse local private key but had remainder %s: %s",
-				f.Name(), rest)
-		}
-
 		signer, err := ssh.ParsePrivateKey(block.Bytes)
 		if err != nil {
 			return nil, nil, err
@@ -105,14 +136,8 @@ func fetchLocalKeys(document []byte) (map[string][]byte, map[string]*ssh.Signatu
 	return publicKeys, sigs, nil
 }
 
-func requestData(file string) ([]byte, error) {
-	u, err := url.Parse(identityEndpoint)
-	if err != nil {
-		return nil, err
-	}
-	u.Path = path.Join(u.Path, file)
-
-	res, err := http.Get(u.Path)
+func (a *AWSTags) requestData(file string) ([]byte, error) {
+	res, err := http.Get(fmt.Sprintf("%s/%s", identityEndpoint, file))
 	if err != nil {
 		return nil, err
 	}

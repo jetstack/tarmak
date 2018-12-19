@@ -61,6 +61,8 @@ module "tagging_control" {
   contact           = "${var.contact}"
   environment       = "${var.environment}"
   public_subnet_ids = ["${module.network.public_subnet_ids}"]
+
+  bastion_security_group_id = "${module.bastion.bastion_security_group_id}"
 }
 
 module "bastion" {
