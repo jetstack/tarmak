@@ -206,6 +206,18 @@
   version = "v9"
 
 [[projects]]
+  digest = "1:4105793d064c026895f82f9fb76520146c012fc10980a6496d8663491c179faf"
+  name = "github.com/aws/aws-lambda-go"
+  packages = [
+    "lambda",
+    "lambda/messages",
+    "lambdacontext",
+  ]
+  pruneopts = "NUT"
+  revision = "9e3676ee8ca83aee500682f382e10b9d03660093"
+  version = "v1.8.0"
+
+[[projects]]
   digest = "1:5101789b805ee6cad9dc0b32f9a506e9cfd8198944b0bca739d1e842ad27df0d"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -2628,6 +2640,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/sprig",
+    "github.com/aws/aws-lambda-go/lambda",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/awserr",
     "github.com/aws/aws-sdk-go/aws/credentials",
