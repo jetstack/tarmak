@@ -153,6 +153,7 @@ func (c *CmdTarmak) DestroyEnvironment() error {
 				if err = c.DestroyClusterMetadata(); err != nil {
 					return err
 				}
+				c.terraform.ResetTerraformWrapper()
 			}
 		}
 
