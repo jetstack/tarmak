@@ -119,7 +119,6 @@ func TestAWSUpgradeTarmak(t *testing.T) {
 	ti.singleCluster = true
 	ti.singleZone = true
 
-
 	t.Log("initialise config for single cluster")
 	if err := ti.Init(); err != nil {
 		t.Errorf("unexpected error: %+v", err)
