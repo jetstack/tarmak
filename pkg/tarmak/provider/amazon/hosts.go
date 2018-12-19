@@ -21,6 +21,7 @@ type host struct {
 	aliases        []string
 	roles          []string
 	user           string
+	tags           []*ec2.Tag
 
 	cluster interfaces.Cluster
 }
@@ -59,6 +60,53 @@ func (h *host) Parameters() map[string]string {
 	}
 }
 
+func (h *host) SSHKnownHostConfig() (string, error) {
+	var entry string
+	var key string
+
+	for _, t := range h.tags {
+		if strings.HasPrefix(*t.Key, "tarmak.io/") &&
+			strings.HasSuffix(*t.Key, "key-0") {
+			key = *t.Key
+			entry = *t.Value
+			break
+		}
+	}
+
+	if key == "" {
+		return "", fmt.Errorf("failed to find public key tags for host %s", h.Aliases())
+	}
+
+	findTag := func(name string, tags []*ec2.Tag) ([]*ec2.Tag, string) {
+		for i, t := range tags {
+			if *t.Key == name {
+				return append(tags[:i], tags[i+1:]...), *t.Value
+			}
+		}
+
+		return tags, ""
+	}
+
+	tags := h.tags
+	var n int
+	var value string
+	for !strings.HasSuffix(entry, "==EOF") {
+		n++
+		key = fmt.Sprintf("%s%d", key[:len(key)-1], n)
+
+		tags, value = findTag(key, tags)
+		if value == "" {
+			return "", fmt.Errorf("failed to contruct public key from host tags %s", h.Aliases())
+		}
+
+		entry = fmt.Sprintf("%s%s", entry, value)
+	}
+
+	entry = fmt.Sprintf("%s %s\n", h.Hostname(), entry[:len(entry)-6])
+
+	return entry, nil
+}
+
 // TODO: this is not too provider specific and should live somewhere else
 func (h *host) SSHConfig() string {
 	config := fmt.Sprintf(`host %s
@@ -67,7 +115,7 @@ func (h *host) SSHConfig() string {
 
     # use custom host key file per cluster
     UserKnownHostsFile %s
-    StrictHostKeyChecking no
+    StrictHostKeyChecking yes
 
     # enable connection multiplexing
     ControlPath %s/ssh-control-%%r@%%h:%%p
@@ -133,6 +181,7 @@ func (a *Amazon) ListHosts(c interfaces.Cluster) ([]interfaces.Host, error) {
 				hostnamePublic: false,
 				user:           "centos",
 				cluster:        a.tarmak.Cluster(),
+				tags:           instance.Tags,
 			}
 			if instance.PublicIpAddress != nil {
 				host.hostname = *instance.PublicIpAddress

@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/hashicorp/go-multierror"
@@ -44,6 +45,21 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 		return err
 	}
 
+	localKnownHosts, err := s.parseKnownHosts()
+	if err != nil {
+		return err
+	}
+
+	knownHosts, err := os.OpenFile(s.tarmak.Cluster().SSHHostKeysPath(),
+		os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+
+	}
+	defer knownHosts.Close()
+
 	var sshConfig bytes.Buffer
 	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
 
@@ -51,6 +67,18 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 		_, err = sshConfig.WriteString(host.SSHConfig())
 		if err != nil {
 			return err
+		}
+
+		// need to add host public key entry to known hosts file
+		if _, ok := localKnownHosts[host.Hostname()]; !ok {
+			entry, err := host.SSHKnownHostConfig()
+			if err != nil {
+				return err
+			}
+
+			if _, err := knownHosts.WriteString(entry); err != nil {
+				return err
+			}
 		}
 
 		s.controlPaths = append(s.controlPaths, host.SSHControlPath())
@@ -67,6 +95,24 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	}
 
 	return nil
+}
+
+func (s *SSH) parseKnownHosts() (map[string]string, error) {
+	b, err := ioutil.ReadFile(s.tarmak.Cluster().SSHHostKeysPath())
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
+
+	entries := make(map[string]string)
+	for _, entry := range strings.Split(string(b), "\n") {
+		line := strings.SplitN(entry, " ", 2)
+
+		if len(line) == 2 {
+			entries[line[0]] = line[1]
+		}
+	}
+
+	return entries, nil
 }
 
 func (s *SSH) args() []string {

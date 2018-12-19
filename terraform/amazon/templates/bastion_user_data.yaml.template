@@ -70,7 +70,6 @@ write_files:
     Environment=WING_VERSION=0.5.3
     ExecStartPre=/bin/sh -c '\
       set -e ;\
-      usermod -a -G ssh_keys wing ;\
       test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
       if [ ! -x /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy ]; then \
         mkdir -p /opt/airworthy-$${AIRWORTHY_VERSION} ;\
@@ -82,6 +81,7 @@ write_files:
  {{- end }}
     ExecStartPre=/bin/sh -c '\
       set -e ;\
+      usermod -a -G ssh_keys wing ;\
       test -d $${WING_DATA_DIR} && exit 0 ;\
       mkdir -p $${WING_DATA_DIR} ;\
       chown wing:wing $${WING_DATA_DIR} ;\

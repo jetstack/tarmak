@@ -235,6 +235,7 @@ type Host interface {
 	SSHConfig() string
 	Parameters() map[string]string
 	SSHControlPath() string
+	SSHKnownHostConfig() (string, error)
 }
 
 type Puppet interface {
