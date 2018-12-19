@@ -66,7 +66,7 @@ func New(flags *Flags) *Wing {
 func (w *Wing) Run(args []string) error {
 	var errors []error
 
-	t, err := tags.New("aws")
+	t, err := tags.New(w.log)
 	if err != nil {
 		return err
 	}

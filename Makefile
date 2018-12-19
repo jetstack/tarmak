@@ -88,7 +88,7 @@ go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/clientset/internalversion/fake | grep -v pkg/wing/client/clientset/versioned/fake)
 
 go_build_tagging_control:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o tagging_control_linux_amd64	./cmd/tagging_control/. && zip -m tagging_control.zip tagging_control_linux_amd64
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o tagging_control_linux_amd64	./cmd/tagging_control/. && rm -f tagging_control.zip && zip -m tagging_control.zip tagging_control_linux_amd64
 
 go_build:
 	# Build a wing binary

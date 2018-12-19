@@ -4,7 +4,6 @@ package aws
 import (
 	"crypto/rand"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,8 +11,10 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/jetstack/tarmak/cmd/tagging_control/cmd"
@@ -24,10 +25,14 @@ const (
 	keyDir           = "/etc/ssh"
 )
 
-type AWSTags struct{}
+type AWSTags struct {
+	log *logrus.Entry
+}
 
-func New() *AWSTags {
-	return new(AWSTags)
+func New(log *logrus.Entry) *AWSTags {
+	return &AWSTags{
+		log: log,
+	}
 }
 
 func (a *AWSTags) EnsureMachineTags() error {
@@ -57,6 +62,8 @@ func (a *AWSTags) EnsureMachineTags() error {
 		return err
 	}
 
+	a.log.Infof("successfully ensured instance tags")
+
 	return nil
 }
 
@@ -66,14 +73,30 @@ func (a *AWSTags) callLambdaFunction(request *cmd.TagInstanceRequest) error {
 		return fmt.Errorf("failed to marshal request: %s", err)
 	}
 
-	svc := lambda.New(session.New(aws.NewConfig()))
-	_, err = svc.Invoke(&lambda.InvokeInput{
-		FunctionName: aws.String("tagging_control"),
+	document := new(ec2metadata.EC2InstanceIdentityDocument)
+	err = json.Unmarshal(request.InstanceDocumentRaw, document)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal identity document: %s", err)
+	}
+
+	svc := lambda.New(session.New(&aws.Config{
+		Region: aws.String(document.Region),
+	}))
+
+	resp, err := svc.Invoke(&lambda.InvokeInput{
+		FunctionName: aws.String("tarmak_tagging_control"),
 		Payload:      b,
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to invoke lambda function: %s", err)
+	}
+
+	if resp.LogResult != nil {
+		a.log.Debug(*resp.LogResult)
+	}
+
+	if resp.FunctionError != nil {
+		return fmt.Errorf("tagging control function failed: %s: %s", *resp.FunctionError, resp.Payload)
 	}
 
 	return nil
@@ -94,35 +117,39 @@ func (a *AWSTags) fetchLocalKeys(document []byte) (map[string][]byte, map[string
 			continue
 		}
 
-		fileData, err := ioutil.ReadFile(f.Name())
+		path := filepath.Join(keyDir, f.Name())
+
+		fileData, err := ioutil.ReadFile(path)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		block, rest := pem.Decode(fileData)
-		if len(rest) != 0 {
-			return nil, nil, fmt.Errorf("expected to fully parse local key file but had remainder %s: %s",
-				f.Name(), rest)
-		}
-
 		// public key file
 		if strings.HasSuffix(f.Name(), ".pub") {
+
 			// ensure we do have a public key, not private
-			_, err := ssh.ParsePublicKey(block.Bytes)
+			// exit failure if not public, we have bad naming scheme so reject
+			_, _, _, rest, err := ssh.ParseAuthorizedKey(fileData)
 			if err != nil {
-				return nil, nil, fmt.Errorf("failed to parse local public key %s: %s", f.Name(), err)
+				return nil, nil, fmt.Errorf("failed to parse local public key %s: %s", path, err)
+			}
+
+			if len(rest) != 0 {
+				return nil, nil, fmt.Errorf("got rest parsing public key: %s", rest)
 			}
 
 			name := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+
+			a.log.Debugf("using public key %s", path)
 			publicKeys[name] = fileData
 
 			continue
 		}
 
 		// private key
-		signer, err := ssh.ParsePrivateKey(block.Bytes)
+		signer, err := ssh.ParsePrivateKey(fileData)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("failed to parse local private key %s: %s", path, err)
 		}
 
 		sig, err := signer.Sign(rand.Reader, document)
@@ -130,6 +157,7 @@ func (a *AWSTags) fetchLocalKeys(document []byte) (map[string][]byte, map[string
 			return nil, nil, err
 		}
 
+		a.log.Debugf("using signature from private key %s", path)
 		sigs[f.Name()] = sig
 	}
 

@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,7 +20,7 @@ import (
 )
 
 const (
-	tagSize   = 256
+	tagSize   = 255
 	tagPrefix = "tarmak.io"
 
 	AWSCACert = `-----BEGIN CERTIFICATE-----
@@ -57,13 +58,15 @@ type Handler struct {
 	document *ec2metadata.EC2InstanceIdentityDocument
 }
 
-func HandleRequest(ctx context.Context, request *TagInstanceRequest) error {
+func HandleRequest(ctx context.Context, request TagInstanceRequest) error {
 	h := &Handler{
-		request: request,
+		request: &request,
 	}
 
 	if err := h.verify(); err != nil {
-		return err
+		// until we verify the instance, we won't reply any meaningful error message
+		fmt.Printf("failed to verify instance: %s", err)
+		return errors.New("rejected")
 	}
 
 	document := new(ec2metadata.EC2InstanceIdentityDocument)
@@ -232,11 +235,15 @@ func (h *Handler) EC2() (*ec2.EC2, error) {
 		return h.ec2, nil
 	}
 
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(h.document.Region),
-	}))
+	region := os.Getenv("AWS_REGION")
+	session, err := session.NewSession(&aws.Config{
+		Region: &region,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	h.ec2 = ec2.New(sess)
+	h.ec2 = ec2.New(session)
 
 	return h.ec2, nil
 }

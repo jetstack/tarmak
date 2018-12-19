@@ -156,7 +156,7 @@ func Test_createTags(t *testing.T) {
 		"tarmak.io/key-2-0": "public key 2==EOF",
 	}, tags)
 
-	longKey := make([]byte, 256)
+	longKey := make([]byte, 255)
 	for i := range longKey {
 		longKey[i] = 'a'
 	}

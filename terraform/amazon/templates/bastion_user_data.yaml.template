@@ -60,6 +60,7 @@ write_files:
     Restart=on-failure
     RestartSec=10
     Environment=WING_DATA_DIR=/var/lib/wing
+    Environment=WING_CLOUD_PROVIDER=amazon
 {{- if .WingDevMode }}
     Environment=WING_VERSION="${wing_version}"
     ExecStartPre=/bin/sh -c 'aws s3 cp "s3://${wing_binary_path}" /opt/wing-$${WING_VERSION}/wing; chmod 0755 /opt/wing-$${WING_VERSION}/wing'
@@ -69,6 +70,7 @@ write_files:
     Environment=WING_VERSION=0.5.3
     ExecStartPre=/bin/sh -c '\
       set -e ;\
+      usermod -a -G ssh_keys wing ;\
       test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
       if [ ! -x /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy ]; then \
         mkdir -p /opt/airworthy-$${AIRWORTHY_VERSION} ;\
