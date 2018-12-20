@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -206,7 +207,7 @@ func (ti *TarmakInstance) initProvider(e *expect.GExpect) error {
 		&expect.BExp{R: tarmakInitPrompt},                              //
 		&expect.BSnd{S: "develop.tarmak.org\n"},                        // public route 53
 		&expect.BExp{R: tarmakInitYesNo},                               //
-		&expect.BSnd{S: "Y\n"},                                         // save provider
+		&expect.BSnd{S: 	"Y\n"},                                         // save provider
 	}, 30*time.Second)
 	if err != nil {
 		return fmt.Errorf("unexpected expect flow for init provider res=%+v error: %+v", res, err)
@@ -288,6 +289,22 @@ func (ti *TarmakInstance) initCluster(e *expect.GExpect) error {
 	)
 	if err != nil {
 		return fmt.Errorf("unexpected expect flow for init cluster res=%+v error: %+v", res, err)
+	}
+	return nil
+}
+
+func (ti *TarmakInstance) UpdateKubernetesVersion() error {
+
+	config, err := ioutil.ReadFile(fmt.Sprintf("%v/tarmak.yaml", ti.configPath))
+	if err != nil {
+		fmt.Errorf("Error reading config file: %+v", err)
+	}
+	output := strings.Replace(string(config), "version: 1.11.5", "version: 1.12.4", 1)
+
+	d1 := []byte(output)
+	err = ioutil.WriteFile(fmt.Sprintf("%v/tarmak.yaml", ti.configPath), d1, 0644)
+	if err != nil {
+		fmt.Errorf("Error writing config file: %+v", err)
 	}
 	return nil
 }
