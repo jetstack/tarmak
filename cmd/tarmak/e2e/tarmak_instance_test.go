@@ -207,7 +207,7 @@ func (ti *TarmakInstance) initProvider(e *expect.GExpect) error {
 		&expect.BExp{R: tarmakInitPrompt},                              //
 		&expect.BSnd{S: "develop.tarmak.org\n"},                        // public route 53
 		&expect.BExp{R: tarmakInitYesNo},                               //
-		&expect.BSnd{S: 	"Y\n"},                                         // save provider
+		&expect.BSnd{S: "Y\n"},                                         // save provider
 	}, 30*time.Second)
 	if err != nil {
 		return fmt.Errorf("unexpected expect flow for init provider res=%+v error: %+v", res, err)
