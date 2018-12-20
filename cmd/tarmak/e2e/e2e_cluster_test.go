@@ -37,21 +37,9 @@ func TestAWSSingleCluster(t *testing.T) {
 			t.Errorf("unexpected error: %+v", err)
 		}
 	}()
-	t.Log("run cluster apply command")
-	c = ti.Command("cluster", "apply")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
-	}
 
-	t.Log("get component status")
-	c = ti.Command("cluster", "kubectl", "get", "cs", "-o", "yaml")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	c.Stdout = os.Stdout
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
+	if err := ti.RunAndVerify(); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -92,23 +80,9 @@ func TestAWSMultiCluster(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	t.Log("run cluster apply command")
-	c = ti.Command("cluster", "apply")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
+	if err := ti.RunAndVerify(); err != nil {
+		t.Fatal(err)
 	}
-
-	t.Log("get component status")
-	c = ti.Command("cluster", "kubectl", "get", "cs", "-o", "yaml")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	c.Stdout = os.Stdout
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
-	}
-
 }
 
 func TestAWSUpgradeTarmak(t *testing.T) {
@@ -142,40 +116,15 @@ func TestAWSUpgradeTarmak(t *testing.T) {
 			t.Errorf("unexpected error: %+v", err)
 		}
 	}()
-	t.Log("run cluster apply command")
-	c = ti.Command("cluster", "apply")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
-	}
 
-	t.Log("get component status")
-	c = ti.Command("cluster", "kubectl", "get", "cs", "-o", "yaml")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	c.Stdout = os.Stdout
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
+	if err := ti.RunAndVerify(); err != nil {
+		t.Fatal(err)
 	}
 
 	ti.binPath = fmt.Sprintf("../../../tarmak_%s_%s", runtime.GOOS, runtime.GOARCH)
 
-	t.Log("run cluster apply command for Tarmak upgrade")
-	c = ti.Command("cluster", "apply")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
-	}
-
-	t.Log("get component status for Tarmak upgrade")
-	c = ti.Command("cluster", "kubectl", "get", "cs", "-o", "yaml")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	c.Stdout = os.Stdout
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
+	if err := ti.RunAndVerify(); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -208,39 +157,14 @@ func TestAWSUpgradeKubernetes(t *testing.T) {
 			t.Errorf("unexpected error: %+v", err)
 		}
 	}()
-	t.Log("run cluster apply command")
-	c = ti.Command("cluster", "apply")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
-	}
 
-	t.Log("get component status")
-	c = ti.Command("cluster", "kubectl", "get", "cs", "-o", "yaml")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	c.Stdout = os.Stdout
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
+	if err := ti.RunAndVerify(); err != nil {
+		t.Fatal(err)
 	}
 
 	ti.UpdateKubernetesVersion()
 
-	t.Log("run cluster apply command for Kubernetes upgrade")
-	c = ti.Command("cluster", "apply")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
-	}
-
-	t.Log("get component status for Kubernetes upgrade")
-	c = ti.Command("cluster", "kubectl", "get", "cs", "-o", "yaml")
-	// write error out to my stdout
-	c.Stderr = os.Stderr
-	c.Stdout = os.Stdout
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
+	if err := ti.RunAndVerify(); err != nil {
+		t.Fatal(err)
 	}
 }

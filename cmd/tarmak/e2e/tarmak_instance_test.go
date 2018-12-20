@@ -308,3 +308,23 @@ func (ti *TarmakInstance) UpdateKubernetesVersion() error {
 	}
 	return nil
 }
+
+func (ti *TarmakInstance) RunAndVerify() error {
+	ti.t.Log("run cluster apply command")
+	c := ti.Command("cluster", "apply")
+	// write error out to my stdout
+	c.Stderr = os.Stderr
+	if err := c.Run(); err != nil {
+		return fmt.Errorf("unexpected error: %+v", err)
+	}
+
+	ti.t.Log("get component status")
+	c = ti.Command("cluster", "kubectl", "get", "cs", "-o", "yaml")
+	// write error out to my stdout
+	c.Stderr = os.Stderr
+	c.Stdout = os.Stdout
+	if err := c.Run(); err != nil {
+		return fmt.Errorf("unexpected error: %+v", err)
+	}
+	return nil
+}
