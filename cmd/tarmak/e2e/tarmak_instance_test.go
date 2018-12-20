@@ -297,14 +297,14 @@ func (ti *TarmakInstance) UpdateKubernetesVersion() error {
 
 	config, err := ioutil.ReadFile(fmt.Sprintf("%v/tarmak.yaml", ti.configPath))
 	if err != nil {
-		fmt.Errorf("Error reading config file: %+v", err)
+		return fmt.Errorf("Error reading config file: %+v", err)
 	}
 	output := strings.Replace(string(config), "version: 1.11.5", "version: 1.12.4", 1)
 
 	d1 := []byte(output)
 	err = ioutil.WriteFile(fmt.Sprintf("%v/tarmak.yaml", ti.configPath), d1, 0644)
 	if err != nil {
-		fmt.Errorf("Error writing config file: %+v", err)
+		return fmt.Errorf("Error writing config file: %+v", err)
 	}
 	return nil
 }
