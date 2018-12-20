@@ -258,5 +258,5 @@ e2e-test: download build
 	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e
 
 download:
-	wget https://github.com/jetstack/tarmak/releases/download/$(TARMAK_VERSION)/tarmak_$(TARMAK_VERSION)_$(UNAME_S)_amd64
+	curl -sL -o tarmak_$(TARMAK_VERSION)_$(UNAME_S)_amd64 https://github.com/jetstack/tarmak/releases/download/$(TARMAK_VERSION)/tarmak_$(TARMAK_VERSION)_$(UNAME_S)_amd64
 	chmod +x tarmak_$(TARMAK_VERSION)_$(UNAME_S)_amd64
