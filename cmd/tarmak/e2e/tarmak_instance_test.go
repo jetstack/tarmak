@@ -328,3 +328,18 @@ func (ti *TarmakInstance) RunAndVerify() error {
 	}
 	return nil
 }
+
+func (ti *TarmakInstance) GenerateAndBuild() error {
+	ti.t.Log("initialise config for cluster")
+	if err := ti.Init(); err != nil {
+		return fmt.Errorf("unexpected error: %+v", err)
+	}
+
+	ti.t.Log("build tarmak image")
+	c := ti.Command("cluster", "image", "build")
+	c.Stderr = os.Stderr
+	if err := c.Run(); err != nil {
+		return fmt.Errorf("unexpected error: %+v", err)
+	}
+	return nil
+}

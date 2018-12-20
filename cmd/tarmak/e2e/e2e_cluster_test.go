@@ -16,21 +16,13 @@ func TestAWSSingleCluster(t *testing.T) {
 	ti.singleCluster = true
 	ti.singleZone = true
 
-	t.Log("initialise config for single cluster")
-	if err := ti.Init(); err != nil {
-		t.Errorf("unexpected error: %+v", err)
-	}
-
-	t.Log("build tarmak image")
-	c := ti.Command("cluster", "image", "build")
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Errorf("unexpected error: %+v", err)
+	if err := ti.GenerateAndBuild(); err != nil {
+		t.Fatal(err)
 	}
 
 	defer func() {
 		t.Log("run environment destroy command")
-		c = ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
+		c := ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
 		// write error out to my stdout
 		c.Stderr = os.Stderr
 		if err := c.Run(); err != nil {
@@ -51,21 +43,13 @@ func TestAWSMultiCluster(t *testing.T) {
 	ti.singleCluster = false
 	ti.singleZone = false
 
-	t.Log("initialise config for single cluster")
-	if err := ti.Init(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
-	}
-
-	t.Log("build tarmak image")
-	c := ti.Command("cluster", "image", "build")
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Fatalf("unexpected error: %+v", err)
+	if err := ti.GenerateAndBuild(); err != nil {
+		t.Fatal(err)
 	}
 
 	defer func() {
 		t.Log("run environment destroy command")
-		c = ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
+		c := ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
 		// write error out to my stdout
 		c.Stderr = os.Stderr
 		if err := c.Run(); err != nil {
@@ -73,7 +57,7 @@ func TestAWSMultiCluster(t *testing.T) {
 		}
 	}()
 	t.Log("run hub apply command")
-	c = ti.Command("--current-cluster", fmt.Sprintf("%s-hub", ti.environmentName), "cluster", "apply")
+	c := ti.Command("--current-cluster", fmt.Sprintf("%s-hub", ti.environmentName), "cluster", "apply")
 	// write error out to my stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
@@ -93,23 +77,15 @@ func TestAWSUpgradeTarmak(t *testing.T) {
 	ti.singleCluster = true
 	ti.singleZone = true
 
-	t.Log("initialise config for single cluster")
-	if err := ti.Init(); err != nil {
-		t.Errorf("unexpected error: %+v", err)
-	}
-
 	ti.binPath = fmt.Sprintf("../../../tarmak_0.5.2_%s_%s", runtime.GOOS, runtime.GOARCH)
 
-	t.Log("build tarmak image")
-	c := ti.Command("cluster", "image", "build")
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Errorf("unexpected error: %+v", err)
+	if err := ti.GenerateAndBuild(); err != nil {
+		t.Fatal(err)
 	}
 
 	defer func() {
 		t.Log("run environment destroy command")
-		c = ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
+		c := ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
 		// write error out to my stdout
 		c.Stderr = os.Stderr
 		if err := c.Run(); err != nil {
@@ -136,21 +112,13 @@ func TestAWSUpgradeKubernetes(t *testing.T) {
 	ti.singleCluster = true
 	ti.singleZone = true
 
-	t.Log("initialise config for single cluster")
-	if err := ti.Init(); err != nil {
-		t.Errorf("unexpected error: %+v", err)
-	}
-
-	t.Log("build tarmak image")
-	c := ti.Command("cluster", "image", "build")
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		t.Errorf("unexpected error: %+v", err)
+	if err := ti.GenerateAndBuild(); err != nil {
+		t.Fatal(err)
 	}
 
 	defer func() {
 		t.Log("run environment destroy command")
-		c = ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
+		c := ti.Command("environment", "destroy", ti.environmentName, "--auto-approve")
 		// write error out to my stdout
 		c.Stderr = os.Stderr
 		if err := c.Run(); err != nil {
