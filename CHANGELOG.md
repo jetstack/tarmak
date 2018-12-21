@@ -25,6 +25,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault Helper|                    | `0.9.13` |
 | Etcd        |                    | `3.2.25` |
 
+## [0.5.3]: 0.5.3 - 2018-12-21
+
+More bugfixes...
+
+### Fixed
+
+* Fix bug with kubectl/kubeconfig and public apiserver (#660, [@MattiasGees](https://github.com/MattiasGees))
+* Make sure centos-puppet-agent-latest-kernel is booting into the right kernel (#658, [@simonswine](https://github.com/simonswine))
+
+### Versions
+
+| Application | Supported versions | Default  |
+|-------------|-------------------:|---------:|
+| Packer      |                    | `1.0.2`  |
+| Terraform   |                    | `0.11.8` |
+| Consul      |                    | `1.2.3`  |
+| Vault       |                    | `0.9.5`  |
+| Kubernetes  | `>= 1.9 && < 1.13` | `1.11.5` |
+| Calico      |                    | `3.1.4`  |
+| Vault Helper|                    | `0.9.13` |
+| Etcd        |                    | `3.2.25` |
+
 ## [0.5.2]: 0.5.2 - 2018-12-07
 
 Bugfix release to fix regression that come up in the 0.5 release branch.
@@ -341,7 +363,8 @@ This detailed changes have happend since the last minor version of Tarmak:
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
-[0.5.1]: https://github.com/jetstack/tarmak/compare/0.5.1...0.5.2
+[0.5.3]: https://github.com/jetstack/tarmak/compare/0.5.2...0.5.3
+[0.5.2]: https://github.com/jetstack/tarmak/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/jetstack/tarmak/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/jetstack/tarmak/compare/0.4.1...0.5.0
 [0.4.1]: https://github.com/jetstack/tarmak/compare/0.4.0...0.4.1
@@ -349,4 +372,4 @@ This detailed changes have happend since the last minor version of Tarmak:
 [0.3.0]: https://github.com/jetstack/tarmak/compare/0.2.0...0.3.0
 [0.2.1]: https://github.com/jetstack/tarmak/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/jetstack/tarmak/compare/0.1.2...0.2.0
-[Unreleased]: https://github.com/jetstack/tarmak/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/jetstack/tarmak/compare/0.5.0...HEAD
