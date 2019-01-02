@@ -116,6 +116,7 @@ module "jenkins" {
   secrets_bucket            = "${module.state.secrets_bucket[0]}"
 
   wing_binary_read_policy_arn = "${module.bastion.wing_binary_read_policy_arn}"
+  tagging_control_policy_arn  = "${module.tagging_control.tagging_control_policy_arn}"
 }
 
 {{ end -}}

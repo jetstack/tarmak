@@ -2,7 +2,6 @@
 package tags
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -22,12 +21,10 @@ func New(log *logrus.Entry) (Tags, error) {
 
 	provider := os.Getenv("WING_CLOUD_PROVIDER")
 
+	// default to amazon if provider not specified
 	switch provider {
-	case "amazon", "aws":
+	case "amazon", "aws", "":
 		return aws.New(log), nil
-
-	case "":
-		return nil, errors.New("no cloud provider specified, set environment variable WING_CLOUD_PROVIDER")
 
 	default:
 		return nil, fmt.Errorf("target provider for tags not supported %s", provider)

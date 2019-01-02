@@ -109,8 +109,7 @@ write_files:
   content: |
     [Unit]
     Description=Tag Jenkins instance with public keys
-    After=network.target etcd.service
-    Requires=etcd.service
+    After=network.target
 
     [Service]
     PermissionsStartOnly=true

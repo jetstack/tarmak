@@ -200,6 +200,10 @@ func (t *terraformTemplate) Generate() error {
 		"modules/bastion/templates/bastion_user_data", "yaml", "bastion"); err != nil {
 		result = multierror.Append(result, err)
 	}
+	if err := t.generateTemplate("jenkins_user_data",
+		"modules/jenkins/templates/jenkins_user_data", "yaml", "jenkins"); err != nil {
+		result = multierror.Append(result, err)
+	}
 
 	if err := t.generateTerraformVariables(); err != nil {
 		result = multierror.Append(result, err)
