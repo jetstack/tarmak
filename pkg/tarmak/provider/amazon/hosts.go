@@ -61,8 +61,7 @@ func (h *host) Parameters() map[string]string {
 }
 
 func (h *host) SSHKnownHostConfig() (string, error) {
-	var entry string
-	var key string
+	var entry, key string
 
 	for _, t := range h.tags {
 		if strings.HasPrefix(*t.Key, "tarmak.io/") &&
