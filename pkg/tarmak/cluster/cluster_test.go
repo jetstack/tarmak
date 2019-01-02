@@ -11,6 +11,7 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/mocks"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type fakeCluster struct {
@@ -40,6 +41,7 @@ func newFakeCluster(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeCluster
 	c.fakeConfig = mocks.NewMockConfig(c.ctrl)
 	c.fakeEnvironment = mocks.NewMockEnvironment(c.ctrl)
 	c.environment = c.fakeEnvironment
+	c.ctx = utils.NewCancellationContext(c.fakeTarmak)
 
 	// setup custom logger
 	logger := logrus.New()
@@ -60,6 +62,7 @@ func newFakeCluster(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeCluster
 	c.fakeProvider.EXPECT().Name().Return("provider-name").AnyTimes()
 
 	c.fakeTarmak.EXPECT().Config().AnyTimes().Return(c.fakeConfig)
+	c.fakeTarmak.EXPECT().CancellationContext().Return(c.ctx).AnyTimes()
 
 	return c
 }

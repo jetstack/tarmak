@@ -3,114 +3,246 @@ package cluster
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff"
 	"golang.org/x/net/context"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	wingclient "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 	wingclientv1alpha1 "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned/typed/wing/v1alpha1"
 )
 
-func (c *Cluster) wingInstanceClient() (wingclientv1alpha1.InstanceInterface, error) {
-	var err error
+func (c *Cluster) listMachineDeployments() ([]*wingv1alpha1.MachineDeployment, error) {
 
-	if c.wingClientset == nil {
-		// connect to wing
+	client, err := c.wingMachineDeploymentClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	}
 
-		wingClientsetTry := func() error {
-			c.wingClientset, c.wingTunnel, err = c.Environment().WingClientset()
+	machineDeploymentsList, err := client.List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var deployments []*wingv1alpha1.MachineDeployment
+	for i := range machineDeploymentsList.Items {
+		deployments = append(deployments, &machineDeploymentsList.Items[i])
+	}
+
+	return deployments, nil
+}
+
+func (c *Cluster) listMachines() ([]*wingv1alpha1.Machine, error) {
+
+	client, err := c.wingMachineClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	}
+
+	hosts, err := c.ListHosts()
+	if err != nil {
+		return nil, err
+	}
+
+	var machines []*wingv1alpha1.Machine
+	for _, h := range hosts {
+		m, err := client.Get(h.ID(), metav1.GetOptions{})
+		if err != nil {
+			if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
+				machine := &wingv1alpha1.Machine{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: h.ID(),
+					},
+					Status: &wingv1alpha1.MachineStatus{
+						Converge: &wingv1alpha1.MachineStatusManifest{
+							State: common.MachineManifestStateConverging,
+						},
+					},
+				}
+
+				m, err = client.Create(machine)
+				if err != nil {
+					return nil, fmt.Errorf("error creating machine: %s", err)
+				}
+			} else {
+				return nil, fmt.Errorf("failed to get machine resource %s: %s", h.ID(), err)
+			}
+		}
+
+		machines = append(machines, m)
+	}
+
+	return machines, nil
+}
+
+func (c *Cluster) updateMachineDeployments() error {
+	client, err := c.wingMachineDeploymentClient()
+	if err != nil {
+		return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	}
+
+	// list all deployments in wing
+	deployments, err := client.List(metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	deploymentsMap := make(map[string]*wingv1alpha1.MachineDeployment)
+	if err != nil {
+		return fmt.Errorf("failed to list provider's machines: %s", err)
+	}
+
+	for i := range deployments.Items {
+		deploymentsMap[deployments.Items[i].Name] = &deployments.Items[i]
+	}
+
+	for _, i := range c.InstancePools() {
+		if i.Role().Name() == "bastion" || i.Role().Name() == "vault" {
+			continue
+		}
+
+		d, ok := deploymentsMap[i.Name()]
+		if !ok {
+
+			md := &wingv1alpha1.MachineDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      i.Role().Name(),
+					Namespace: i.Config().ClusterName,
+					Labels: map[string]string{
+						"pool":    i.Name(),
+						"cluster": c.ClusterName(),
+					},
+				},
+				Spec: c.deploymentSpec(i),
+			}
+
+			_, err := client.Create(md)
 			if err != nil {
-				return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+				return fmt.Errorf("failed to create new deployment %s: %s", i.Name(), err)
 			}
 
-			return nil
-		}
+			c.log.Debugf("created new machine deployment %s", i.Name())
 
-		expBackoff := backoff.NewExponentialBackOff()
-		expBackoff.InitialInterval = time.Second
-		expBackoff.MaxElapsedTime = time.Minute * 2
-
-		b := backoff.WithContext(expBackoff, context.Background())
-
-		if err := backoff.Retry(wingClientsetTry, b); err != nil {
-			return nil, err
-		}
-
-	}
-
-	return c.wingClientset.WingV1alpha1().Instances(c.ClusterName()), nil
-}
-
-func (c *Cluster) listInstances() (instances []*wingv1alpha1.Instance, err error) {
-	// connect to wing
-	client, err := c.wingInstanceClient()
-	if err != nil {
-		return instances, fmt.Errorf("failed to connect to wing API on bastion: %s", err)
-	}
-
-	// list all instances in Provider
-	providerInstances, err := c.ListHosts()
-	providerInstaceMap := make(map[string]interfaces.Host)
-	if err != nil {
-		return instances, fmt.Errorf("failed to list provider's instances: %s", err)
-	}
-
-	for pos, _ := range providerInstances {
-		providerInstaceMap[providerInstances[pos].ID()] = providerInstances[pos]
-	}
-
-	// list all instances in wing
-	wingInstances, err := client.List(metav1.ListOptions{})
-	if err != nil {
-		return instances, err
-	}
-
-	// loop through instances
-	for pos, _ := range wingInstances.Items {
-		instance := &wingInstances.Items[pos]
-
-		// removes instances not in AWS
-		if _, ok := providerInstaceMap[instance.Name]; !ok {
-			c.log.Debugf("deleting unused instance %s in wing API", instance.Name)
-			if err := client.Delete(instance.Name, &metav1.DeleteOptions{}); err != nil {
-				c.log.Warnf("error deleting instance %s in wing API: %s", instance.Name, err)
-			}
 			continue
 		}
-		instances = append(instances, instance)
-	}
 
-	return instances, nil
-
-}
-
-func (c *Cluster) checkAllInstancesConverged(byState map[wingv1alpha1.InstanceManifestState][]*wingv1alpha1.Instance) error {
-	instancesNotConverged := []*wingv1alpha1.Instance{}
-	for key, instances := range byState {
-		if len(instances) == 0 {
-			continue
+		d.Spec = c.deploymentSpec(i)
+		_, err = client.Update(d)
+		if err != nil {
+			return fmt.Errorf("failed to update deployment sepc %s: %s", i.Name(), err)
 		}
-		if key != wingv1alpha1.InstanceManifestStateConverged {
-			instancesNotConverged = append(instancesNotConverged, instances...)
-		}
-		c.Log().Debugf("%d instances in state %s: %s", len(instances), key, outputInstances(instances))
-	}
-
-	if len(instancesNotConverged) > 0 {
-		return fmt.Errorf("not all instances have converged yet %s", outputInstances(instancesNotConverged))
 	}
 
 	return nil
 }
 
-func outputInstances(instances []*wingv1alpha1.Instance) string {
-	var output []string
-	for _, instance := range instances {
-		output = append(output, instance.Name)
+func (c *Cluster) deploymentSpec(instancePool interfaces.InstancePool) *wingv1alpha1.MachineDeploymentSpec {
+	return &wingv1alpha1.MachineDeploymentSpec{
+		MaxReplicas:             utils.PointerInt32(instancePool.Config().MaxCount),
+		MinReplicas:             utils.PointerInt32(instancePool.Config().MinCount),
+		ProgressDeadlineSeconds: new(int32),
+		RevisionHistoryLimit:    new(int32),
+		Strategy:                &wingv1alpha1.MachineDeploymentStrategy{},
+		Paused:                  false,
+		Selector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"pool":    instancePool.Name(),
+				"cluster": c.ClusterName(),
+			},
+		},
 	}
-	return strings.Join(output, ", ")
+}
+
+func (c *Cluster) deleteUnusedMachines() error {
+	// connect to wing
+	client, err := c.wingMachineClient()
+	if err != nil {
+		return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	}
+
+	// list all machines in Provider
+	providerMachines, err := c.ListHosts()
+	providerInstaceMap := make(map[string]interfaces.Host)
+	if err != nil {
+		return fmt.Errorf("failed to list provider's machines: %s", err)
+	}
+
+	for pos, _ := range providerMachines {
+		providerInstaceMap[providerMachines[pos].ID()] = providerMachines[pos]
+	}
+
+	// list all machines in wing
+	wingMachines, err := client.List(metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	// loop through machines
+	for pos, _ := range wingMachines.Items {
+		m := &wingMachines.Items[pos]
+
+		// removes machines not in AWS
+		if _, ok := providerInstaceMap[m.Name]; !ok {
+			c.log.Debugf("deleting unused machine %s in wing API", m.Name)
+			if err := client.Delete(m.Name, &metav1.DeleteOptions{}); err != nil {
+				c.log.Warnf("error deleting machine %s in wing API: %s", m.Name, err)
+			}
+			continue
+		}
+	}
+
+	return nil
+}
+
+func (c *Cluster) wingClient() (*wingclient.Clientset, error) {
+	if c.wingClientset != nil {
+		return c.wingClientset, nil
+	}
+
+	// connect to wing
+	var err error
+	wingClientsetTry := func() error {
+		c.wingClientset, c.wingTunnel, err = c.Environment().WingClientset()
+		if err != nil {
+			return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+		}
+
+		return nil
+	}
+
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.InitialInterval = time.Second
+	expBackoff.MaxElapsedTime = time.Minute * 2
+
+	b := backoff.WithContext(expBackoff, context.Background())
+
+	if err := backoff.Retry(wingClientsetTry, b); err != nil {
+		return nil, err
+	}
+
+	return c.wingClientset, nil
+}
+
+func (c *Cluster) wingMachineClient() (wingclientv1alpha1.MachineInterface, error) {
+	client, err := c.wingClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.WingV1alpha1().Machines(c.ClusterName()), nil
+}
+
+func (c *Cluster) wingMachineDeploymentClient() (wingclientv1alpha1.MachineDeploymentInterface, error) {
+	client, err := c.wingClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.WingV1alpha1().MachineDeployments(c.ClusterName()), nil
 }

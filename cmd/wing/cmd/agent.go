@@ -4,10 +4,11 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	"github.com/jetstack/tarmak/pkg/wing"
 )
 
-var agentFlags = &wing.Flags{}
+var agentFlags = &common.Flags{}
 
 var agentCmd = &cobra.Command{
 	Use: "agent",
@@ -21,7 +22,8 @@ func init() {
 	agentCmd.Flags().StringVar(&agentFlags.ClusterName, "cluster-name", "myenv-mycluster", "this specifies the cluster name [environment]-[cluster]")
 	agentCmd.Flags().StringVar(&agentFlags.ServerURL, "server-url", "https://localhost:9443", "this specifies the URL to the wing server")
 	agentCmd.Flags().StringVar(&agentFlags.ManifestURL, "manifest-url", "", "this specifies the URL where the puppet.tar.gz can be found")
-	agentCmd.Flags().StringVar(&agentFlags.InstanceName, "instance-name", wing.DefaultInstanceName, "this specifies the instance's name")
+	agentCmd.Flags().StringVar(&agentFlags.MachineName, "instance-name", wing.DefaultMachineName, "this specifies the instance's name")
+	agentCmd.Flags().StringVar(&agentFlags.Pool, "pool", "", "this specifies the instance pool the machine resides in, used as a label selector")
 
 	RootCmd.AddCommand(agentCmd)
 }

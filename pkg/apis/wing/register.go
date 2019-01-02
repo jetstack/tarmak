@@ -29,8 +29,12 @@ var (
 // Adds the list of known types to api.Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Instance{},
-		&InstanceList{},
+		&Machine{},
+		&MachineList{},
+		&MachineSet{},
+		&MachineSetList{},
+		&MachineDeployment{},
+		&MachineDeploymentList{},
 	)
 	return nil
 }

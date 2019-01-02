@@ -36,3 +36,5 @@ variable "private_zone_id" {}
 variable "bastion_iam_additional_policy_arns" {
   type = "list"
 }
+
+variable "secrets_bucket" {}

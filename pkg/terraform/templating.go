@@ -141,6 +141,7 @@ func (t *terraformTemplate) Generate() error {
 		{"outputs", "outputs"},
 		{"providers", "providers"},
 		{"jenkins_elb", "modules/jenkins/jenkins_elb"},
+		{"wing_s3", "modules/bastion/wing_s3"},
 		{"wing_s3", "modules/kubernetes/wing_s3"},
 		{"vault_instances", "modules/vault/vault_instances"},
 	} {
@@ -150,6 +151,9 @@ func (t *terraformTemplate) Generate() error {
 	}
 
 	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml"); err != nil {
+		result = multierror.Append(result, err)
+	}
+	if err := t.generateTemplate("bastion_user_data", "modules/bastion/templates/bastion_user_data", "yaml"); err != nil {
 		result = multierror.Append(result, err)
 	}
 	if err := t.generateTerraformVariables(); err != nil {

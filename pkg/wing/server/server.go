@@ -1,5 +1,4 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-
 package server
 
 import (
@@ -13,11 +12,13 @@ import (
 	genericoptions "k8s.io/apiserver/pkg/server/options"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
-	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/instanceinittime"
+	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machinedeploymentinittime"
+	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machineinittime"
+	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/machinesetinittime"
 	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
-	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion"
-	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
+	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
 )
 
 const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
@@ -25,12 +26,16 @@ const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
 type WingServerOptions struct {
 	RecommendedOptions *genericoptions.RecommendedOptions
 	Admission          *genericoptions.AdmissionOptions
+	informerFactory    informers.SharedInformerFactory
 
 	StdOut io.Writer
 	StdErr io.Writer
+
+	stopCh <-chan struct{}
+	client *clientset.Clientset
 }
 
-var defaultAdmissionControllers = []string{instaceinittime.PluginName}
+var defaultAdmissionControllers = []string{machineinittime.PluginName, machinesetinittime.PluginName, machinedeploymentinittime.PluginName}
 
 func NewWingServerOptions(out, errOut io.Writer) *WingServerOptions {
 	o := &WingServerOptions{
@@ -47,7 +52,9 @@ func NewWingServerOptions(out, errOut io.Writer) *WingServerOptions {
 // NewCommandStartMaster provides a CLI handler for 'start master' command
 func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *cobra.Command {
 	o := NewWingServerOptions(out, errOut)
-	instaceinittime.Register(o.Admission.Plugins)
+	machineinittime.Register(o.Admission.Plugins)
+	machinesetinittime.Register(o.Admission.Plugins)
+	machinedeploymentinittime.Register(o.Admission.Plugins)
 	o.Admission.PluginNames = defaultAdmissionControllers
 
 	cmd := &cobra.Command{
@@ -104,13 +111,21 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	o.client = client
+
 	informerFactory := informers.NewSharedInformerFactory(client, serverConfig.LoopbackClientConfig.Timeout)
+	o.informerFactory = informerFactory
 	admissionInitializer, err := winginitializer.New(informerFactory)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := o.Admission.ApplyTo(&serverConfig.Config, serverConfig.SharedInformerFactory, serverConfig.LoopbackClientConfig, apiserver.Scheme, admissionInitializer); err != nil {
+		return nil, err
+	}
+
+	err = o.StartMachineControllers()
+	if err != nil {
 		return nil, err
 	}
 

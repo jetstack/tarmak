@@ -26,3 +26,11 @@ func DuplicateMapBool(base map[string]bool) map[string]bool {
 	}
 	return newMap
 }
+
+func DuplicateMapString(base map[string]string) map[string]string {
+	newMap := make(map[string]string)
+	for key, value := range base {
+		newMap[key] = value
+	}
+	return newMap
+}

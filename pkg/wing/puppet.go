@@ -22,16 +22,17 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/wing/provider"
 )
 
 // This make sure puppet is converged when neccessary
-func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
+func (w *Wing) runPuppet() (*v1alpha1.MachineStatus, error) {
 	// start converging mainfest
-	status := &v1alpha1.InstanceStatus{
-		Converge: &v1alpha1.InstanceStatusManifest{
-			State: v1alpha1.InstanceManifestStateConverging,
+	status := &v1alpha1.MachineStatus{
+		Converge: &v1alpha1.MachineStatusManifest{
+			State: common.MachineManifestStateConverging,
 		},
 	}
 
@@ -103,9 +104,9 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 		puppetRetCodes = append(puppetRetCodes, retCode)
 
 		// start converging mainfest
-		status = &v1alpha1.InstanceStatus{
-			Converge: &v1alpha1.InstanceStatusManifest{
-				State:     v1alpha1.InstanceManifestStateConverging,
+		status = &v1alpha1.MachineStatus{
+			Converge: &v1alpha1.MachineStatusManifest{
+				State:     common.MachineManifestStateConverging,
 				Messages:  puppetMessages,
 				ExitCodes: puppetRetCodes,
 				Hash:      hashString,
@@ -120,8 +121,8 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 	}
 
 	expBackoff := backoff.NewExponentialBackOff()
-	expBackoff.InitialInterval = time.Second * 30
-	expBackoff.MaxElapsedTime = time.Minute * 30
+	expBackoff.InitialInterval = time.Second * 10
+	expBackoff.MaxElapsedTime = time.Minute * 20
 
 	// add context to backoff
 	ctx, cancelRetries := context.WithCancel(context.Background())
@@ -152,18 +153,18 @@ func (w *Wing) runPuppet() (*v1alpha1.InstanceStatus, error) {
 	return status, nil
 }
 
-func (w *Wing) converge() {
+func (w *Wing) Converge() {
 	w.convergeWG.Add(1)
 	defer w.convergeWG.Done()
 
 	// run puppet
 	status, err := w.runPuppet()
 	if err != nil {
-		status.Converge.State = v1alpha1.InstanceManifestStateError
+		status.Converge.State = common.MachineManifestStateError
 		status.Converge.Messages = append(status.Converge.Messages, err.Error())
 		w.log.Error(err)
 	} else {
-		status.Converge.State = v1alpha1.InstanceManifestStateConverged
+		status.Converge.State = common.MachineManifestStateConverged
 	}
 
 	// feedback puppet status to apiserver
@@ -291,33 +292,42 @@ func (w *Wing) puppetApply(dir string) (output string, retCode int, err error) {
 }
 
 // report status to the API server
-func (w *Wing) reportStatus(status *v1alpha1.InstanceStatus) error {
-	instanceAPI := w.clientset.WingV1alpha1().Instances(w.flags.ClusterName)
-	instance, err := instanceAPI.Get(
-		w.flags.InstanceName,
+func (w *Wing) reportStatus(status *v1alpha1.MachineStatus) error {
+	labels := map[string]string{
+		"pool":    w.flags.Pool,
+		"cluster": w.flags.ClusterName,
+	}
+
+	machineAPI := w.clientset.WingV1alpha1().Machines(w.flags.ClusterName)
+	machine, err := machineAPI.Get(
+		w.flags.MachineName,
 		metav1.GetOptions{},
 	)
 	if err != nil {
 		if kerr, ok := err.(*apierrors.StatusError); ok && kerr.ErrStatus.Reason == metav1.StatusReasonNotFound {
-			instance = &v1alpha1.Instance{
+			machine = &v1alpha1.Machine{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: w.flags.InstanceName,
+					Name:   w.flags.MachineName,
+					Labels: labels,
 				},
 				Status: status.DeepCopy(),
 			}
-			_, err := instanceAPI.Create(instance)
+			_, err := machineAPI.Create(machine)
 			if err != nil {
-				return fmt.Errorf("error creating instance: %s", err)
+				return fmt.Errorf("error creating machine: %s", err)
 			}
+
 			return nil
 		}
-		return fmt.Errorf("error get existing instance: %s", err)
+
+		return fmt.Errorf("error get existing machine: %s", err)
 	}
 
-	instance.Status = status.DeepCopy()
-	_, err = instanceAPI.Update(instance)
+	machine.ObjectMeta.Labels = labels
+	machine.Status = status.DeepCopy()
+	_, err = machineAPI.Update(machine)
 	if err != nil {
-		return fmt.Errorf("error updating existing instance: %s", err)
+		return fmt.Errorf("error updating existing machine: %s", err)
 		// TODO: handle race for update
 	}
 

@@ -4,10 +4,26 @@
 
 package v1alpha1
 
-// InstanceListerExpansion allows custom methods to be added to
-// InstanceLister.
-type InstanceListerExpansion interface{}
+// MachineListerExpansion allows custom methods to be added to
+// MachineLister.
+type MachineListerExpansion interface{}
 
-// InstanceNamespaceListerExpansion allows custom methods to be added to
-// InstanceNamespaceLister.
-type InstanceNamespaceListerExpansion interface{}
+// MachineNamespaceListerExpansion allows custom methods to be added to
+// MachineNamespaceLister.
+type MachineNamespaceListerExpansion interface{}
+
+// MachineDeploymentListerExpansion allows custom methods to be added to
+// MachineDeploymentLister.
+type MachineDeploymentListerExpansion interface{}
+
+// MachineDeploymentNamespaceListerExpansion allows custom methods to be added to
+// MachineDeploymentNamespaceLister.
+type MachineDeploymentNamespaceListerExpansion interface{}
+
+// MachineSetListerExpansion allows custom methods to be added to
+// MachineSetLister.
+type MachineSetListerExpansion interface{}
+
+// MachineSetNamespaceListerExpansion allows custom methods to be added to
+// MachineSetNamespaceLister.
+type MachineSetNamespaceListerExpansion interface{}

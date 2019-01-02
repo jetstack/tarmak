@@ -24,6 +24,7 @@ Options
   -h, --help                   help for agent
       --instance-name string   this specifies the instance's name (default "$(hostname)")
       --manifest-url string    this specifies the URL where the puppet.tar.gz can be found
+      --pool string            this specifies the instance pool the machine resides in, used as a label selector
       --server-url string      this specifies the URL to the wing server (default "https://localhost:9443")
 
 Options inherited from parent commands

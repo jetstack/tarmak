@@ -6,8 +6,12 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/jetstack/tarmak/pkg/apis/wing/common"
 	wingv1alpha1 "github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 )
 
@@ -38,31 +42,36 @@ func (c *Cluster) UploadConfiguration() error {
 	)
 }
 
-// This enforces a reapply of the puppet.tar.gz on every instance in the cluster
+// This enforces a reapply of the puppet.tar.gz on every machine in the cluster
 func (c *Cluster) ReapplyConfiguration() error {
-	c.log.Infof("making sure all instances apply the latest manifest")
+	c.log.Infof("making sure all machines apply the latest manifest")
 
-	// connect to wing
-	client, err := c.wingInstanceClient()
-	if err != nil {
-		return fmt.Errorf("failed to connect to wing API on bastion: %s", err)
+	if err := c.deleteUnusedMachines(); err != nil {
+		return err
 	}
 
-	// list instances
-	instances, err := c.listInstances()
-	if err != nil {
-		return fmt.Errorf("failed to list instances: %s", err)
+	if err := c.updateMachineDeployments(); err != nil {
+		return err
 	}
 
-	for pos, _ := range instances {
-		instance := instances[pos]
-		if instance.Spec == nil {
-			instance.Spec = &wingv1alpha1.InstanceSpec{}
-		}
-		instance.Spec.Converge = &wingv1alpha1.InstanceSpecManifest{}
+	client, err := c.wingMachineClient()
+	if err != nil {
+		return err
+	}
 
-		if _, err := client.Update(instance); err != nil {
-			c.log.Warnf("error updating instance %s in wing API: %s", instance.Name, err)
+	// here we need to start the mechanism to trigger a re-converge
+	machines, err := c.listMachines()
+	if err != nil {
+		return fmt.Errorf("failed to list machines: %s", err)
+	}
+
+	for pos, _ := range machines {
+		machine := machines[pos]
+		machine.Status = &wingv1alpha1.MachineStatus{}
+		machine.Status.Converge = &wingv1alpha1.MachineStatusManifest{}
+
+		if _, err := client.Update(machine); err != nil {
+			c.log.Warnf("error updating machine %s in wing API: %s", machine.Name, err)
 		}
 	}
 
@@ -72,53 +81,99 @@ func (c *Cluster) ReapplyConfiguration() error {
 	return nil
 }
 
-// This waits until all instances have congverged successfully
+// This waits until all machines have congverged successfully
 func (c *Cluster) WaitForConvergance() error {
-	c.log.Debugf("making sure all instances have converged using puppet")
+	c.log.Debugf("making sure all machine have converged using puppet")
 
 	retries := retries
 	for {
-		instances, err := c.listInstances()
+		deployments, err := c.listMachineDeployments()
 		if err != nil {
-			return fmt.Errorf("failed to list instances: %s", err)
+			return fmt.Errorf("failed to list machines: %s", err)
 		}
 
-		instanceByState := make(map[wingv1alpha1.InstanceManifestState][]*wingv1alpha1.Instance)
+		var converged []*wingv1alpha1.MachineDeployment
+		var converging []*wingv1alpha1.MachineDeployment
+		for pos, _ := range deployments {
+			deployment := deployments[pos]
 
-		for pos, _ := range instances {
-			instance := instances[pos]
-
-			// index by instance convergance state
-			if instance.Status == nil || instance.Status.Converge == nil || instance.Status.Converge.State == "" {
+			if deployment.Status == nil {
+				deployment.Status = &wingv1alpha1.MachineDeploymentStatus{}
+				converging = append(converging, deployment)
 				continue
 			}
 
-			state := instance.Status.Converge.State
-			if _, ok := instanceByState[state]; !ok {
-				instanceByState[state] = []*wingv1alpha1.Instance{}
+			if deployment.Status.ReadyReplicas >= deployment.Status.Replicas &&
+				deployment.Status.ReadyReplicas >= *deployment.Spec.MinReplicas {
+				converged = append(converged, deployment)
+				continue
 			}
 
-			instanceByState[state] = append(
-				instanceByState[state],
-				instance,
-			)
+			converging = append(converging, deployment)
 		}
 
-		err = c.checkAllInstancesConverged(instanceByState)
-		if err == nil {
-			c.log.Info("all instances converged")
+		var convergedSlice []string
+		for _, d := range converged {
+			convergedSlice = append(convergedSlice, d.Name)
+		}
+		convergedStr := fmt.Sprintf("converged deployments [%s]", strings.Join(convergedSlice, " "))
+
+		if len(converging) == 0 {
+			c.log.Info("all deployments converged")
+			c.log.Info(convergedStr)
 			return nil
-		} else {
-			c.log.Debug(err)
+		}
+
+		c.log.Debug("--------")
+		if len(converged) > 0 {
+			c.log.Debug(convergedStr)
+		}
+
+		client, err := c.wingMachineClient()
+		if err != nil {
+			return err
+		}
+
+		for _, d := range converging {
+
+			mList, err := client.List(metav1.ListOptions{
+				LabelSelector: fmt.Sprintf("pool=%s,cluster=%s",
+					d.Labels["pool"], d.Labels["cluster"]),
+			})
+			if err != nil {
+				return err
+			}
+
+			var convergingMachines []string
+			for _, m := range mList.Items {
+				if m.Status == nil || m.Status.Converge == nil ||
+					m.Status.Converge.State != common.MachineManifestStateConverged {
+					convergingMachines = append(convergingMachines, m.Name)
+				}
+			}
+
+			reps := d.Status.Replicas
+			if d.Spec != nil && d.Spec.MinReplicas != nil && reps < *d.Spec.MinReplicas {
+				reps = *d.Spec.MinReplicas
+			}
+
+			c.log.Debugf("converging %s [%v/%v] (%s)",
+				d.Name, d.Status.ReadyReplicas, reps, strings.Join(convergingMachines, ", "))
 		}
 
 		retries--
 		if retries == 0 {
 			break
 		}
-		time.Sleep(time.Second * 5)
 
+		tok := time.Tick(time.Second * 5)
+
+		select {
+		case <-c.ctx.Done():
+			return c.ctx.Err()
+		case <-tok:
+		}
 	}
 
-	return fmt.Errorf("instances failed to converge in time")
+	return fmt.Errorf("machines failed to converge in time")
 }
