@@ -54,6 +54,8 @@ resource "aws_instance" "bastion" {
   }
 
   user_data = "${data.template_file.bastion_user_data.rendered}"
+
+  depends_on = ["aws_iam_role_policy_attachment.bastion_tagging_control_lambda_invoke"]
 }
 
 resource "aws_eip" "bastion" {

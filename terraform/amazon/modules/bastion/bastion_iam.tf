@@ -37,22 +37,7 @@ resource "aws_iam_role_policy_attachment" "bastion_wing_binary_read" {
   policy_arn = "${aws_iam_policy.wing_binary_read.arn}"
 }
 
-resource "aws_iam_policy" "tagging_control_invoke" {
-  name   = "bastion.${data.template_file.stack_name.rendered}.tagging_control_invoke"
-  path   = "/"
-  policy = "${data.template_file.tagging_control_invoke.rendered}"
-}
-
-resource "aws_iam_policy_attachment" "tagging_control_invoke" {
-  name       = "${data.template_file.stack_name.rendered}-tagging_control_invoke"
-  roles      = ["${aws_iam_role.bastion.name}"]
-  policy_arn = "${aws_iam_policy.tagging_control_invoke.arn}"
-}
-
-data "template_file" "tagging_control_invoke" {
-  template = "${file("${path.module}/templates/tagging_control_invoke.json")}"
-
-   vars {
-    tagging_control_arn = "${var.tagging_control_arn}"
-  }
+resource "aws_iam_role_policy_attachment" "bastion_tagging_control_lambda_invoke" {
+  role       = "${aws_iam_role.bastion.name}"
+  policy_arn = "${var.tagging_control_policy_arn}"
 }

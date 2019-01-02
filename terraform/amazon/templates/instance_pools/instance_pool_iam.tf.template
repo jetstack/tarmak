@@ -145,3 +145,8 @@ resource "aws_iam_role_policy_attachment" "{{.TFName}}_additional_policy" {
 }
 
 {{ end -}}
+
+resource "aws_iam_role_policy_attachment" "{{.TFName}}_tagging_control_lambda_invoke" {
+  role       = "${aws_iam_role.{{.TFName}}.name}"
+  policy_arn = "${var.tagging_control_policy_arn}"
+}

@@ -52,17 +52,3 @@ resource "aws_iam_policy" "cluster_autoscaler" {
   path   = "/"
   policy = "${file("${path.module}/templates/iam_cluster_autoscaler.json")}"
 }
-
-data "template_file" "tagging_control" {
-  template = "${file("${path.module}/templates/iam_tagging_control.json")}"
-
-   vars {
-    tagging_control_arn = "${var.tagging_control_arn}"
-  }
-}
-
-resource "aws_iam_policy" "tagging_control" {
-  name   = "kubernetes.${data.template_file.stack_name.rendered}.tagging_control"
-  path   = "/"
-  policy = "${data.template_file.tagging_control.rendered}"
-}

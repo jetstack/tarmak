@@ -74,7 +74,8 @@ func (h *host) SSHKnownHostConfig() (string, error) {
 	}
 
 	if key == "" {
-		return "", fmt.Errorf("failed to find public key tags for host %s", h.Aliases())
+		h.cluster.Log().Warnf("failed to find public key tags for host %s", h.Aliases())
+		return "", nil
 	}
 
 	findTag := func(name string, tags []*ec2.Tag) ([]*ec2.Tag, string) {
