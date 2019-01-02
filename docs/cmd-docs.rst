@@ -177,5 +177,10 @@ Command line documentation for both tarmak and wing commands
 .. toctree::
    :maxdepth: 1
 
+   generated/cmd/wing/wing_tag
+
+.. toctree::
+   :maxdepth: 1
+
    generated/cmd/wing/wing_version
 

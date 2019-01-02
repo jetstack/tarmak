@@ -8,7 +8,7 @@ resource "aws_lambda_function" "tagging_control" {
   timeout          = "10"
 
   vpc_config {
-    subnet_ids = ["${var.private_subnet_ids}"]
+    subnet_ids         = ["${var.private_subnet_ids}"]
     security_group_ids = ["${aws_security_group.tagging_control.id}"]
   }
 

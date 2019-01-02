@@ -20,7 +20,7 @@
 # Instance for {{.TFName}}
 {{ template "instance_pool_instance.tf.template" . }}
 # IAM role for {{.TFName}}
-{{ template "instance_pool_iam.tf.template" . }}
+{{ template "instance_pool_iam.tf.template" . -}}
 {{- end }}
 {{- end }}
 {{- end -}}
@@ -32,10 +32,10 @@
 {{ if eq .Name "jenkins" -}}
 {{ template "role_elb.tf.template" dict "Role" . "JenkinsCertificateARN" $.JenkinsCertificateARN }}
 {{ template "role_variables.tf.template" . -}}
-{{ end -}}
+{{- end }}
 {{- end -}}
 
-{{- range .InstancePools -}}
+{{ range .InstancePools -}}
 {{ if eq .Role.Name "jenkins" -}}
 ## {{.TFName}}
 # Variables for {{.TFName}}
