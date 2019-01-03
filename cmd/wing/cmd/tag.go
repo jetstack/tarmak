@@ -15,7 +15,12 @@ var tagCmd = &cobra.Command{
 		log := logrus.New()
 		log.SetLevel(logrus.DebugLevel)
 
-		t, err := tags.New(logrus.NewEntry(log))
+		env, err := cmd.Flags().GetString("environment")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		t, err := tags.New(logrus.NewEntry(log), env)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -27,5 +32,6 @@ var tagCmd = &cobra.Command{
 }
 
 func init() {
+	tagCmd.Flags().String("environment", "", "this specifies the environment name")
 	RootCmd.AddCommand(tagCmd)
 }

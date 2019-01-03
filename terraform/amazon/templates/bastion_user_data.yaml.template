@@ -86,7 +86,7 @@ write_files:
       mkdir -p $${WING_DATA_DIR} ;\
       chown wing:wing $${WING_DATA_DIR} ;\
       chmod 750 $${WING_DATA_DIR}'
-    ExecStart=/bin/sh -c 'cd $${WING_DATA_DIR} && exec /opt/wing-$${WING_VERSION}/wing server --secure-port 9443 --etcd-servers http://127.0.0.1:2379'
+    ExecStart=/bin/sh -c 'cd $${WING_DATA_DIR} && exec /opt/wing-$${WING_VERSION}/wing server --secure-port 9443 --etcd-servers http://127.0.0.1:2379 --environment "${tarmak_environment}"'
     Type=notify
     User=wing
     Group=wing

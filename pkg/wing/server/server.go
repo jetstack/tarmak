@@ -58,7 +58,12 @@ func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *c
 		Short: "Launch a wing API server",
 		Long:  "Launch a wing API server",
 		RunE: func(c *cobra.Command, args []string) error {
-			t, err := tags.New(nil)
+			env, err := c.Flags().GetString("environment")
+			if err != nil {
+				return err
+			}
+
+			t, err := tags.New(nil, env)
 			if err != nil {
 				return err
 			}

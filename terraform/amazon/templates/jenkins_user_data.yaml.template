@@ -134,7 +134,7 @@ write_files:
       fi ;\
       /opt/airworthy-$${AIRWORTHY_VERSION}/airworthy download --output /opt/wing-$${WING_VERSION}/wing --sha256sums https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt  --signature-armored https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/tarmak_$${WING_VERSION}_checksums.txt.asc https://github.com/jetstack/tarmak/releases/download/$${WING_VERSION}/wing_$${WING_VERSION}_linux_amd64'
  {{- end }}
-    ExecStart=/bin/sh -c 'exec /opt/wing-$${WING_VERSION}/wing tag'
+    ExecStart=/bin/sh -c 'exec /opt/wing-$${WING_VERSION}/wing tag --environment "${tarmak_environment}"'
     Type=notify
 
     [Install]

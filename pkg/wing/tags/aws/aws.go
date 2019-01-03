@@ -26,12 +26,14 @@ const (
 )
 
 type AWSTags struct {
-	log *logrus.Entry
+	log         *logrus.Entry
+	environment string
 }
 
-func New(log *logrus.Entry) *AWSTags {
+func New(log *logrus.Entry, e string) *AWSTags {
 	return &AWSTags{
-		log: log,
+		log:         log,
+		environment: e,
 	}
 }
 
@@ -84,7 +86,7 @@ func (a *AWSTags) callLambdaFunction(request *cmd.TagInstanceRequest) error {
 	}))
 
 	resp, err := svc.Invoke(&lambda.InvokeInput{
-		FunctionName: aws.String("tarmak_tagging_control"),
+		FunctionName: aws.String(fmt.Sprintf("%s_tarmak_tagging_control", a.environment)),
 		Payload:      b,
 	})
 	if err != nil {

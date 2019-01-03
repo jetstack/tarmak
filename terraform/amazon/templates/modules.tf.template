@@ -276,7 +276,7 @@ module "kubernetes" {
   vault_security_group_id   = "${data.terraform_remote_state.hub_state.vault_vault_security_group_id}"
   backups_bucket            = "${data.terraform_remote_state.hub_state.state_backups_bucket[0]}"
 
-  tagging_control_policy_arn = "${data.terrraform_remote_state.hub_state.tagging_control_tagging_control_policy_arn}"
+  tagging_control_policy_arn = "${data.terraform_remote_state.hub_state.tagging_control_tagging_control_policy_arn}"
 
   elb_access_logs_public_enabled           = "${var.elb_access_logs_public_enabled}"
   elb_access_logs_public_bucket            = "${var.elb_access_logs_public_bucket}"

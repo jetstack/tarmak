@@ -21,6 +21,7 @@ func init() {
 
 	stopCh := genericapiserver.SetupSignalHandler()
 	serverCmd := server.NewCommandStartWingServer(os.Stdout, os.Stderr, stopCh)
+	serverCmd.Flags().String("environment", "", "this specifies the environment name")
 	serverCmd.Use = "server"
 	RootCmd.AddCommand(serverCmd)
 }

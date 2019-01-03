@@ -2,7 +2,8 @@ data "template_file" "bastion_user_data" {
   template = "${file("${path.module}/templates/bastion_user_data.yaml")}"
 
   vars {
-    fqdn = "bastion.${var.public_zone}"
+    fqdn               = "bastion.${var.public_zone}"
+    tarmak_environment = "${var.environment}"
 
     wing_binary_path = "${var.secrets_bucket}/${var.wing_binary_path}"
     wing_version     = "${var.wing_version}"

@@ -13,7 +13,7 @@ type Tags interface {
 	EnsureMachineTags() error
 }
 
-func New(log *logrus.Entry) (Tags, error) {
+func New(log *logrus.Entry, environment string) (Tags, error) {
 	if log == nil {
 		log = logrus.NewEntry(logrus.New())
 		log.Level = logrus.DebugLevel
@@ -24,7 +24,7 @@ func New(log *logrus.Entry) (Tags, error) {
 	// default to amazon if provider not specified
 	switch provider {
 	case "amazon", "aws", "":
-		return aws.New(log), nil
+		return aws.New(log, environment), nil
 
 	default:
 		return nil, fmt.Errorf("target provider for tags not supported %s", provider)

@@ -27,7 +27,7 @@ data "template_file" "wing_binary_read" {
 }
 
 resource "aws_iam_policy" "wing_binary_read" {
-  name   = "bastion.${data.template_file.stack_name.rendered}.wing_binary_read"
+  name   = "${data.template_file.stack_name.rendered}.wing_binary_read"
   path   = "/"
   policy = "${data.template_file.wing_binary_read.rendered}"
 }

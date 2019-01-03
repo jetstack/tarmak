@@ -1,6 +1,6 @@
 resource "aws_lambda_function" "tagging_control" {
   filename         = "tagging_control.zip"
-  function_name    = "tarmak_tagging_control"
+  function_name    = "${var.environment}_tarmak_tagging_control"
   role             = "${aws_iam_role.tagging_control.arn}"
   handler          = "tagging_control_linux_amd64"
   source_code_hash = "${base64sha256(file("tagging_control.zip"))}"

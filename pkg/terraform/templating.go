@@ -179,8 +179,6 @@ func (t *terraformTemplate) Generate() error {
 		{"inputs", "inputs"},
 		{"outputs", "outputs"},
 		{"providers", "providers"},
-		{"jenkins_elb", "modules/jenkins/jenkins_elb"},
-		{"vault_instances", "modules/vault/vault_instances"},
 	} {
 		if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "kubernetes"); err != nil {
 			result = multierror.Append(result, err)
@@ -194,6 +192,16 @@ func (t *terraformTemplate) Generate() error {
 	if err := t.generateTemplate("bastion_user_data",
 		"modules/bastion/templates/bastion_user_data", "yaml", "bastion"); err != nil {
 		result = multierror.Append(result, err)
+	}
+
+	if t.cluster.Type() != clusterv1alpha1.ClusterTypeClusterMulti {
+		if err := t.generateTemplate("jenkins_elb", "modules/jenkins/jenkins_elb", "tf", "vault"); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := t.generateTemplate("vault_instances", "modules/vault/vault_instances", "tf", "vault"); err != nil {
+			result = multierror.Append(result, err)
+		}
 	}
 
 	if err := t.generateTemplate("bastion_user_data",

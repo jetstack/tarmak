@@ -13,6 +13,8 @@ data "template_file" "{{.TFName}}_user_data" {
     fqdn      = "jenkins.${var.private_zone}"
     volume_id = "${element(aws_ebs_volume.jenkins_data.*.id, 0)}"
 
+    tarmak_environment = "${var.environment}"
+
     # These are only used in the template when running in Wing dev mode
     wing_binary_path = "${var.secrets_bucket}/${var.wing_binary_path}"
     wing_version     = "${var.wing_version}"

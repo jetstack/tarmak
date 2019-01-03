@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -66,7 +67,13 @@ func New(flags *Flags) *Wing {
 func (w *Wing) Run(args []string) error {
 	var errors []error
 
-	t, err := tags.New(w.log)
+	var env string
+	ec := strings.Split(w.flags.ClusterName, "-")
+	if len(ec) > 0 {
+		env = ec[0]
+	}
+
+	t, err := tags.New(w.log, env)
 	if err != nil {
 		return err
 	}
