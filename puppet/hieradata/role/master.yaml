@@ -1,4 +1,5 @@
 classes:
+- vault_client
 - tarmak::master
 - tarmak::worker
 - tarmak::overlay_calico

@@ -38,16 +38,6 @@
       ]
     },
     {
-      "Effect": "Allow",
-      "Action": [
-        "kms:Encrypt",
-        "kms:Decrypt"
-      ],
-      "Resource": [
-          "${vault_unsealer_kms_key_id}"
-      ]
-    },
-    {
       "Action": [
         "s3:PutObject",
         "s3:PutObjectAcl"

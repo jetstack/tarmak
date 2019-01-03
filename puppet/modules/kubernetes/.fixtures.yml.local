@@ -3,3 +3,4 @@ fixtures:
     kubernetes: "#{source_dir}"
     concat: "#{source_dir}/../concat"
     stdlib: "#{source_dir}/../stdlib"
+    site_module: "#{source_dir}/../site_module"

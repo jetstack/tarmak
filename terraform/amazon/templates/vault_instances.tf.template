@@ -1,34 +1,48 @@
+{{/* vim: set ft=tf: */ -}}
+
 data "template_file" "vault" {
-  template = "${file("${path.module}/templates/vault_user_data.yaml")}"
+  template = "${file("${path.module}/templates/puppet_agent_user_data.yaml")}"
   count    = "${var.vault_min_instance_count}"
 
   vars {
     fqdn           = "vault-${count.index + 1}.${var.private_zone}"
-    environment    = "${var.environment}"
     region         = "${var.region}"
     instance_count = "${var.vault_min_instance_count}"
     volume_id      = "${element(aws_ebs_volume.vault.*.id, count.index)}"
     private_ip     = "${cidrhost(element(var.private_subnets, count.index % length(var.availability_zones)),(10 + (count.index/length(var.availability_zones))))}"
 
-    consul_version      = "${var.consul_version}"
-    consul_master_token = "${random_id.consul_master_token.hex}"
+    tarmak_dns_root      = "${var.private_zone}"
+    tarmak_hostname      = "vault-${count.index+1}"
+    tarmak_cluster       = "${data.template_file.stack_name.rendered}"
+    tarmak_environment   = "${var.environment}"
+    tarmak_instance_pool = "{{.VaultInstancePool.Name}}"
 
     # We need to convert to the default base64 alphabet
-    consul_encrypt = "${replace(replace(random_id.consul_encrypt.b64,"-","+"),"_","/")}=="
+    consul_encrypt      = "${replace(replace(random_id.consul_encrypt.b64,"-","+"),"_","/")}=="
+    consul_version      = "${var.consul_version}"
+    consul_master_token = "${random_id.consul_master_token.hex}"
 
     vault_version       = "${var.vault_version}"
     vault_tls_cert_path = "s3://${var.secrets_bucket}/${element(aws_s3_bucket_object.node-certs.*.key, count.index)}"
     vault_tls_key_path  = "s3://${var.secrets_bucket}/${element(aws_s3_bucket_object.node-keys.*.key, count.index)}"
     vault_tls_ca_path   = "s3://${var.secrets_bucket}/${aws_s3_bucket_object.ca-cert.key}"
 
-    vault_unsealer_kms_key_id     = "${var.secrets_kms_arn}"
+    vault_unsealer_kms_key_id     = "${var.vault_kms_key_id}"
     vault_unsealer_ssm_key_prefix = "${local.vault_unseal_key_name}"
 
     backup_bucket_prefix = "${var.backups_bucket}/${data.template_file.stack_name.rendered}-vault-${count.index+1}"
 
     # run backup once per instance spread throughout the day
     backup_schedule = "*-*-* ${format("%02d",count.index * (24/var.vault_min_instance_count))}:00:00"
+
+    puppet_tar_gz_bucket_dir = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests"
+
+    # These are only used in the template when running in Wing dev mode
+    wing_binary_path = "${var.secrets_bucket}/${var.wing_binary_path}"
+    wing_version     = "${var.wing_version}"
   }
+
+  depends_on = ["data.tarmak_bastion_instance.bastion", "aws_iam_policy_attachment.vault_tarmak_bucket_read"]
 }
 
 resource "aws_cloudwatch_metric_alarm" "vault-autorecover" {
@@ -86,8 +100,6 @@ resource "aws_instance" "vault" {
   lifecycle {
     ignore_changes = ["volume_tags"]
   }
-
-  depends_on = ["data.tarmak_bastion_instance.bastion"]
 }
 
 resource "aws_ebs_volume" "vault" {
@@ -111,9 +123,9 @@ resource "aws_ebs_volume" "vault" {
 resource "tarmak_vault_cluster" "vault" {
   internal_fqdns        = ["${aws_route53_record.per-instance.*.fqdn}"]
   vault_ca              = "${element(concat(tls_self_signed_cert.ca.*.cert_pem, list("")), 0)}"
-  vault_kms_key_id      = "${var.secrets_kms_arn}"
+  vault_kms_key_id      = "${var.vault_kms_key_id}"
   vault_unseal_key_name = "${local.vault_unseal_key_name}"
 
-  depends_on = ["aws_instance.vault", "tls_locally_signed_cert.vault", "aws_route53_record.per-instance", "tls_self_signed_cert.ca"]
+  depends_on = ["aws_instance.vault"]
 }
 {{ end -}}

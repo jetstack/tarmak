@@ -24,7 +24,7 @@ class tarmak (
   String $bin_dir = '/opt/bin',
   String $cluster_name = $tarmak::params::cluster_name,
   String $systemctl_path = $tarmak::params::systemctl_path,
-  Enum['etcd','master','worker', nil] $role = nil,
+  Enum['etcd','master','worker', 'vault', nil] $role = nil,
   String $kubernetes_version = $tarmak::params::kubernetes_version,
   String $kubernetes_user = 'kubernetes',
   String $kubernetes_group = 'kubernetes',

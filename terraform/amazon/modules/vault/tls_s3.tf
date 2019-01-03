@@ -4,7 +4,7 @@ resource "aws_s3_bucket_object" "node-certs" {
   bucket       = "${var.secrets_bucket}"
   content      = "${element(tls_locally_signed_cert.vault.*.cert_pem, count.index)}"
   content_type = "text/plain"
-  kms_key_id   = "${var.secrets_kms_arn}"
+  kms_key_id   = "${var.vault_kms_key_id}"
 }
 
 resource "aws_s3_bucket_object" "node-keys" {
@@ -13,13 +13,13 @@ resource "aws_s3_bucket_object" "node-keys" {
   bucket       = "${var.secrets_bucket}"
   content      = "${element(tls_private_key.vault.*.private_key_pem, count.index)}"
   content_type = "text/plain"
-  kms_key_id   = "${var.secrets_kms_arn}"
+  kms_key_id   = "${var.vault_kms_key_id}"
 }
 
 resource "aws_s3_bucket_object" "ca-cert" {
   key          = "vault/ca.pem-${md5(tls_self_signed_cert.ca.0.cert_pem)}"
   bucket       = "${var.secrets_bucket}"
-  kms_key_id   = "${var.secrets_kms_arn}"
+  kms_key_id   = "${var.vault_kms_key_id}"
   content      = "${tls_self_signed_cert.ca.0.cert_pem}"
   content_type = "text/plain"
 }

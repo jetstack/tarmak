@@ -2,14 +2,13 @@ class consul::service(
   String $fqdn = $consul::fqdn,
   String $private_ip = $consul::private_ip,
   String $region = $consul::region,
-  String $instance_count = $consul::instance_count,
   String $environment = $consul::environment,
   String $backup_bucket_prefix = $consul::backup_bucket_prefix,
   String $backup_schedule = $consul::backup_schedule,
-  String $volume_id = $consul::volume_id,
   Array[String] $_systemd_wants = $consul::systemd_wants,
   Array[String] $_systemd_requires = $consul::systemd_requires,
   Array[String] $_systemd_before = $consul::systemd_before,
+  Integer $consul_bootstrap_expect = $consul::_consul_bootstrap_expect
 )
 {
 
@@ -25,7 +24,6 @@ class consul::service(
 
   $consul_encrypt = $consul::_consul_encrypt
   $consul_master_token = $consul::_consul_master_token
-  $consul_bootstrap_expect = $consul::_consul_bootstrap_expect
 
   $user = $consul::user
   $group = $consul::group

@@ -1,7 +1,6 @@
 class consul::config (
   String $private_ip = $consul::private_ip,
   String $region = $consul::region,
-  String $instance_count = $consul::instance_count,
   String $environment = $consul::environment,
 )
 {

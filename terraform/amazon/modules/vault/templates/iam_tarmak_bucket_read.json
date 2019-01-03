@@ -15,10 +15,11 @@
     {
       "Effect": "Allow",
       "Action": [
+        "kms:Encrypt",
         "kms:Decrypt"
       ],
       "Resource": [
-          "${vault_kms_key_id}"
+          "${vault_unsealer_kms_key_id}"
       ]
     }
   ],

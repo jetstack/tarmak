@@ -3,7 +3,7 @@ require 'spec_helper'
 describe 'role: master' do
   let(:facts) do
     {
-      :tarmak_role        => 'master',
+      :tarmak_role          => 'master',
     }
   end
 

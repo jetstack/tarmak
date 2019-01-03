@@ -127,31 +127,54 @@ func (t *terraformTemplate) Generate() error {
 	if err := t.generateRemoteStateConfig(); err != nil {
 		result = multierror.Append(result, err)
 	}
+
 	for _, module := range []string{"state", "bastion", "network", "network-existing-vpc", "jenkins", "vault", "kubernetes"} {
 		if err := t.generateModuleInstanceTemplates(module); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
 
-	for _, tmpl := range []struct {
-		name, target string
-	}{
-		{"modules", "modules"},
-		{"inputs", "inputs"},
-		{"outputs", "outputs"},
-		{"providers", "providers"},
-		{"jenkins_elb", "modules/jenkins/jenkins_elb"},
-		{"wing_s3", "modules/kubernetes/wing_s3"},
-		{"vault_instances", "modules/vault/vault_instances"},
-	} {
-		if err := t.generateTemplate(tmpl.name, tmpl.target, "tf"); err != nil {
-			result = multierror.Append(result, err)
+	for _, module := range []string{"vault", "kubernetes"} {
+		for _, tmpl := range []struct {
+			name, target string
+		}{
+			{"modules", "modules"},
+			{"inputs", "inputs"},
+			{"outputs", "outputs"},
+			{"providers", "providers"},
+		} {
+			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", module); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
+
+		for _, tmpl := range []struct {
+			name, target, fType string
+		}{
+			{"wing_s3", "modules/%s/wing_s3", "tf"},
+			{"puppet_s3", "modules/%s/puppet_s3", "tf"},
+			{"puppet_agent_user_data", "modules/%s/templates/puppet_agent_user_data", "yaml"},
+		} {
+
+			if err := t.generateTemplate(tmpl.name, fmt.Sprintf(tmpl.target, module), tmpl.fType, module); err != nil {
+				result = multierror.Append(result, err)
+			}
 		}
 	}
 
-	if err := t.generateTemplate("puppet_agent_user_data", "modules/kubernetes/templates/puppet_agent_user_data", "yaml"); err != nil {
-		result = multierror.Append(result, err)
+	if t.cluster.Type() != clusterv1alpha1.ClusterTypeClusterMulti {
+		for _, tmpl := range []struct {
+			name, target string
+		}{
+			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
+			{"vault_instances", "modules/vault/vault_instances"},
+		} {
+			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "vault"); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
 	}
+
 	if err := t.generateTerraformVariables(); err != nil {
 		result = multierror.Append(result, err)
 	}
@@ -216,7 +239,7 @@ func (t *terraformTemplate) funcs() template.FuncMap {
 }
 
 // generate single file templates
-func (t *terraformTemplate) generateTemplate(name string, target string, fileType string) error {
+func (t *terraformTemplate) generateTemplate(name, target, fileType, module string) error {
 	templateFile := filepath.Clean(
 		filepath.Join(
 			t.rootPath,
@@ -248,8 +271,7 @@ func (t *terraformTemplate) generateTemplate(name string, target string, fileTyp
 
 	if err := mainTemplate.Execute(
 		file,
-		// TODO: change behaviour of data function to not have to use module kubernetes below
-		t.data("kubernetes"),
+		t.data(module),
 	); err != nil {
 		return fmt.Errorf("failed to execute template '%s' (%s) ", name, err)
 	}
@@ -314,7 +336,7 @@ func (t *terraformTemplate) generateAWSSecurityGroup() (rules map[string][]*amaz
 	rules = make(map[string][]*amazon.AWSSGRule)
 	for _, role := range t.cluster.Roles() {
 
-		if role.Name() == "vault" || role.Name() == "bastion" {
+		if role.Name() == "bastion" || role.Name() == "vault" {
 			continue
 		}
 
