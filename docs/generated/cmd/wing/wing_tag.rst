@@ -20,14 +20,8 @@ Options
 
 ::
 
-  -h, --help   help for tag
-
-Options inherited from parent commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-::
-
-      --log-flush-frequency duration   Maximum number of seconds between log flushes (default 5s)
+      --environment string   this specifies the environment name
+  -h, --help                 help for tag
 
 SEE ALSO
 ~~~~~~~~

@@ -88,7 +88,7 @@ go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/clientset/internalversion/fake | grep -v pkg/wing/client/clientset/versioned/fake)
 
 go_build_tagging_control:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o tagging_control_linux_amd64	./cmd/tagging_control/.
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o tagging_control_linux_amd64	./cmd/tagging_control/.
 
 go_build:
 	# Build a wing binary

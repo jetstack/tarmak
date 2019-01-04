@@ -1,5 +1,5 @@
 // Copyright Jetstack Ltd. See LICENSE for details.
-package cmd
+package tagging_control
 
 import (
 	"crypto/rand"

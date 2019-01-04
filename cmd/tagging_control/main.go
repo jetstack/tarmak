@@ -2,25 +2,18 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/aws/aws-lambda-go/lambda"
-
 	"github.com/jetstack/tarmak/cmd/tagging_control/cmd"
 )
 
+var (
+	version string = "dev"
+	commit  string = "unknown"
+	date    string = ""
+)
+
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "zip" {
-
-		err := cmd.Zip(os.Args[2:])
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			os.Exit(1)
-		}
-
-		os.Exit(0)
-	}
-
-	lambda.Start(cmd.HandleRequest)
+	cmd.Version.Version = version
+	cmd.Version.Commit = commit
+	cmd.Version.BuildDate = date
+	cmd.Execute()
 }

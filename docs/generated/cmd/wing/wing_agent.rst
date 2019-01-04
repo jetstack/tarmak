@@ -26,13 +26,6 @@ Options
       --manifest-url string    this specifies the URL where the puppet.tar.gz can be found
       --server-url string      this specifies the URL to the wing server (default "https://localhost:9443")
 
-Options inherited from parent commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-::
-
-      --log-flush-frequency duration   Maximum number of seconds between log flushes (default 5s)
-
 SEE ALSO
 ~~~~~~~~
 

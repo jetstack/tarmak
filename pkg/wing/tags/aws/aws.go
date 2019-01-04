@@ -17,7 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/jetstack/tarmak/cmd/tagging_control/cmd"
+	tagControl "github.com/jetstack/tarmak/pkg/tagging_control"
 )
 
 const (
@@ -53,7 +53,7 @@ func (a *AWSTags) EnsureMachineTags() error {
 		return err
 	}
 
-	request := &cmd.TagInstanceRequest{
+	request := &tagControl.TagInstanceRequest{
 		KeySignatures:       sigs,
 		PublicKeys:          pks,
 		InstanceDocumentRaw: document,
@@ -69,7 +69,7 @@ func (a *AWSTags) EnsureMachineTags() error {
 	return nil
 }
 
-func (a *AWSTags) callLambdaFunction(request *cmd.TagInstanceRequest) error {
+func (a *AWSTags) callLambdaFunction(request *tagControl.TagInstanceRequest) error {
 	b, err := json.Marshal(request)
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %s", err)

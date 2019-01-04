@@ -10,7 +10,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+	"github.com/spf13/pflag"
 
+	taggingControlCmd "github.com/jetstack/tarmak/cmd/tagging_control/cmd"
 	tarmakCmd "github.com/jetstack/tarmak/cmd/tarmak/cmd"
 	wingCmd "github.com/jetstack/tarmak/cmd/wing/cmd"
 )
@@ -20,6 +22,9 @@ func main() {
 	if len(args) != 2 {
 		log.Fatal("expecting single output directory argument")
 	}
+
+	// remove all global flags that are imported in
+	pflag.CommandLine = nil
 
 	root, err := homedir.Expand(args[1])
 	must(err)
@@ -33,6 +38,7 @@ func main() {
 
 	for _, c := range []*cobra.Command{
 		tarmakCmd.RootCmd,
+		taggingControlCmd.RootCmd,
 		wingCmd.RootCmd,
 	} {
 		dir := filepath.Join(root, c.Use)

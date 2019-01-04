@@ -16,8 +16,7 @@ Options
 
 ::
 
-  -h, --help                           help for wing
-      --log-flush-frequency duration   Maximum number of seconds between log flushes (default 5s)
+  -h, --help   help for wing
 
 SEE ALSO
 ~~~~~~~~

@@ -26,6 +26,7 @@ Options
       --delete-collection-workers int            Number of workers spawned for DeleteCollection call. These are used to speed up namespace cleanup. (default 1)
       --enable-garbage-collector                 Enables the generic garbage collector. MUST be synced with the corresponding flag of the kube-controller-manager. (default true)
       --encryption-provider-config string        The file containing configuration for encryption providers to be used for storing secrets in etcd
+      --environment string                       this specifies the environment name
       --etcd-cafile string                       SSL Certificate Authority file used to secure etcd communication.
       --etcd-certfile string                     SSL certification file used to secure etcd communication.
       --etcd-compaction-interval duration        The interval of compaction requests. If 0, the compaction request from apiserver is disabled. (default 5m0s)
@@ -46,13 +47,6 @@ Options
       --tls-sni-cert-key namedCertKey            A pair of x509 certificate and private key file paths, optionally suffixed with a list of domain patterns which are fully qualified domain names, possibly with prefixed wildcard segments. If no domain patterns are provided, the names of the certificate are extracted. Non-wildcard matches trump over wildcard matches, explicit domain patterns trump over extracted names. For multiple key/certificate pairs, use the --tls-sni-cert-key multiple times. Examples: "example.crt,example.key" or "foo.crt,foo.key:*.foo.com,foo.com". (default [])
       --watch-cache                              Enable watch caching in the apiserver (default true)
       --watch-cache-sizes strings                List of watch cache sizes for every resource (pods, nodes, etc.), comma separated. The individual override format: resource[.group]#size, where resource is lowercase plural (no version), group is optional, and size is a number. It takes effect when watch-cache is enabled. Some resources (replicationcontrollers, endpoints, nodes, pods, services, apiservices.apiregistration.k8s.io) have system defaults set by heuristics, others default to default-watch-cache-size
-
-Options inherited from parent commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-::
-
-      --log-flush-frequency duration   Maximum number of seconds between log flushes (default 5s)
 
 SEE ALSO
 ~~~~~~~~
