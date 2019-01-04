@@ -26,22 +26,12 @@ resource "aws_security_group" "tagging_control" {
   }
 }
 
-resource "aws_security_group_rule" "tagging_control_out_allow_all" {
+resource "aws_security_group_rule" "tagging_control_allow_all_out" {
   type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.tagging_control.id}"
-}
-
-resource "aws_security_group_rule" "tagging_control_in_allow_all" {
-  type        = "ingress"
-  from_port   = 0
-  to_port     = 0
-  protocol    = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
-
   security_group_id = "${aws_security_group.tagging_control.id}"
 }
 
