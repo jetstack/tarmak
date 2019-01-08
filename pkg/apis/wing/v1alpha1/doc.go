@@ -6,3 +6,5 @@
 
 // +groupName=wing.tarmak.io
 package v1alpha1
+
+// /////0ofuiosejfosjdj+k8s:conversion-gen=github.com/jetstack/tarmak/pkg/apis/wing

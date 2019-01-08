@@ -3,8 +3,6 @@
 package apiserver
 
 import (
-	"k8s.io/apimachinery/pkg/apimachinery/announced"
-	"k8s.io/apimachinery/pkg/apimachinery/registered"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -15,20 +13,17 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/apis/wing"
 	"github.com/jetstack/tarmak/pkg/apis/wing/install"
-	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	wingregistry "github.com/jetstack/tarmak/pkg/wing/registry"
 	instancestorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/instance"
 )
 
 var (
-	groupFactoryRegistry = make(announced.APIGroupFactoryRegistry)
-	registry             = registered.NewOrDie("")
-	Scheme               = runtime.NewScheme()
-	Codecs               = serializer.NewCodecFactory(Scheme)
+	Scheme = runtime.NewScheme()
+	Codecs = serializer.NewCodecFactory(Scheme)
 )
 
 func init() {
-	install.Install(groupFactoryRegistry, registry, Scheme)
+	install.Install(Scheme)
 
 	// we need to add the options to empty v1
 	// TODO fix the server code to avoid this
@@ -79,7 +74,7 @@ func (cfg *Config) Complete() CompletedConfig {
 
 // New returns a new instance of WingServer from the given config.
 func (c completedConfig) New() (*WingServer, error) {
-	genericServer, err := c.GenericConfig.New("wing", genericapiserver.EmptyDelegate)
+	genericServer, err := c.GenericConfig.New("wing", genericapiserver.NewEmptyDelegate())
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +83,8 @@ func (c completedConfig) New() (*WingServer, error) {
 		GenericAPIServer: genericServer,
 	}
 
-	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(wing.GroupName, registry, Scheme, metav1.ParameterCodec, Codecs)
-	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
+	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(wing.GroupName, Scheme, metav1.ParameterCodec, Codecs)
+
 	v1alpha1storage := map[string]rest.Storage{}
 	v1alpha1storage["instances"] = wingregistry.RESTInPeace(instancestorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
 	apiGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1storage

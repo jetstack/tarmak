@@ -58,23 +58,19 @@ required = [
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.9.3"
+  version = "kubernetes-1.13.1"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.9.3"
+  version = "kubernetes-1.13.1"
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.9.3"
+  version = "kubernetes-1.13.1"
 
 [[constraint]]
   name = "k8s.io/apiserver"
-  version = "kubernetes-1.9.3"
-
-[[constraint]]
-  name = "k8s.io/code-generator"
-  version = "kubernetes-1.9.3"
+  version = "kubernetes-1.13.1"
 
 [[constraint]]
   name = "github.com/kubernetes-incubator/reference-docs"
@@ -152,7 +148,7 @@ required = [
   name = "github.com/chzyer/readline"
   revision = "c914be64f07d9998f52bf0d598ec26d457168c0f"
 
-[[override]]
+[[constraint]]
   name = "github.com/hashicorp/packer"
   version = "1.2.5"
 
@@ -164,13 +160,17 @@ required = [
   name = "github.com/golang/mock"
   revision = "v1.1.1"
 
-[[override]]
-  name = "k8s.io/gengo"
-  revision = "b58fc7edb82e0c6ffc9b8aef61813c7261b785d4"
-
 [[constraint]]
   name = "github.com/docker/docker"
   revision = "bc7424b4434443b036604277bfcdee3fa34a268a"
+
+[[constraint]]
+  name = "k8s.io/klog"
+  revision = "8139d8cb77af419532b33dfa7dd09fbc5f1d344f"
+
+[[constraint]]
+  name = "k8s.io/kube-openapi"
+  revision = "c59034cc13d587f5ef4e85ca0ade0c1866ae8e1d"
 
 [prune]
   non-go = true
