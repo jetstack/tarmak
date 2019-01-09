@@ -98,11 +98,15 @@ required = [
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"
-  version = "0.11.8"
+  version = "0.11.11"
 
 [[override]]
   name = "github.com/hashicorp/go-tfe"
-  version = "=v0.1.2"
+  revision = "11c62815d5735b1eb5227b4d683cc354fe411a3f"
+
+[[override]]
+  name = "github.com/hashicorp/go-slug"
+  revision = "98c6f0ec89d1cf8f4e487810d666ce3c0b6d4b44"
 
 [[constraint]]
   name = "github.com/terraform-providers/terraform-provider-aws"
@@ -158,7 +162,7 @@ required = [
 
 [[override]]
   name = "github.com/hashicorp/go-retryablehttp"
-  revision = "6e85be8fee1dcaa02c0eaaac2df5a8fbecf94145"
+  revision = "dfbae6744eb4c188d26ef53f1d39444c0c68b60c"
 
 [[override]]
   name = "github.com/golang/mock"

@@ -14,16 +14,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Versions
 
-| Application | Supported versions | Default  |
-|-------------|-------------------:|---------:|
-| Packer      |                    | `1.0.2`  |
-| Terraform   |                    | `0.11.8` |
-| Consul      |                    | `1.2.4`  |
-| Vault       |                    | `0.9.6`  |
-| Kubernetes  | `>= 1.9 && < 1.13` | `1.11.5` |
-| Calico      |                    | `3.1.4`  |
-| Vault Helper|                    | `0.9.13` |
-| Etcd        |                    | `3.2.25` |
+| Application | Supported versions | Default   |
+|-------------|-------------------:|----------:|
+| Packer      |                    | `1.0.2`   |
+| Terraform   |                    | `0.11.11` |
+| Consul      |                    | `1.2.4`   |
+| Vault       |                    | `0.9.6`   |
+| Kubernetes  | `>= 1.9 && < 1.13` | `1.11.5`  |
+| Calico      |                    | `3.1.4`   |
+| Vault Helper|                    | `0.9.13`  |
+| Etcd        |                    | `3.2.25`  |
 
 ## [0.5.3]: 0.5.3 - 2018-12-21
 
