@@ -91,3 +91,4 @@ variable "backups_bucket" {}
 
 variable "wing_binary_read_policy_arn" {}
 variable "tagging_control_policy_arn" {}
+variable "wing_binary_read_policy_arn" {}

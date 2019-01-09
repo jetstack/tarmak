@@ -38,7 +38,7 @@ data "template_file" "vault" {
     puppet_tar_gz_bucket_dir = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/puppet-manifests"
 
     # These are only used in the template when running in Wing dev mode
-    wing_binary_path = "${var.secrets_bucket}/${data.template_file.stack_name.rendered}/${var.wing_binary_path}"
+    wing_binary_path = "${var.secrets_bucket}/${var.wing_binary_path}"
     wing_version     = "${var.wing_version}"
   }
 

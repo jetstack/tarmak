@@ -360,6 +360,7 @@ func (c *Cluster) verifyHubState() error {
 		"vault_vault_security_group_id",
 		"vault_vault_unseal_key_name",
 		"vault_vault_url",
+		"tagging_control_tagging_control_policy_arn",
 		"bastion_bastion_wing_binary_read_policy_arn",
 	}
 	var result *multierror.Error

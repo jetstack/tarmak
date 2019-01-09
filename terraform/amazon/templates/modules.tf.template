@@ -155,6 +155,7 @@ module "vault" {
   bastion_instance_id       = "${module.bastion.bastion_instance_id}"
   vault_cluster_name        = "${var.vault_cluster_name}"
 
+  wing_binary_read_policy_arn      = "${module.bastion.wing_binary_read_policy_arn}"
   tagging_control_policy_arn       = "${module.tagging_control.tagging_control_policy_arn}"
   vault_iam_additional_policy_arns = ["${var.vault_iam_additional_policy_arns}"]
   wing_binary_read_policy_arn      = "${module.bastion.wing_binary_read_policy_arn}"
@@ -216,8 +217,13 @@ module "kubernetes" {
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
 
+<<<<<<< HEAD
   wing_binary_read_policy_arn = "${module.bastion.wing_binary_read_policy_arn}"
   tagging_control_policy_arn  = "${module.tagging_control.tagging_control_policy_arn}"
+=======
+  tagging_control_policy_arn  = "${module.tagging_control.tagging_control_policy_arn}"
+  wing_binary_read_policy_arn = "${module.bastion.wing_binary_read_policy_arn}"
+>>>>>>> Share wing binary read policy across roles in terraform
 }
 {{- end -}}
 
@@ -276,7 +282,8 @@ module "kubernetes" {
   vault_security_group_id   = "${data.terraform_remote_state.hub_state.vault_vault_security_group_id}"
   backups_bucket            = "${data.terraform_remote_state.hub_state.state_backups_bucket[0]}"
 
-  tagging_control_policy_arn = "${data.terraform_remote_state.hub_state.tagging_control_tagging_control_policy_arn}"
+  tagging_control_policy_arn  = "${data.terraform_remote_state.hub_state.tagging_control_tagging_control_policy_arn}"
+  wing_binary_read_policy_arn = "${data.terraform_remote_state.hub_state.bastion_bastion_wing_binary_read_policy_arn}"
 
   elb_access_logs_public_enabled           = "${var.elb_access_logs_public_enabled}"
   elb_access_logs_public_bucket            = "${var.elb_access_logs_public_bucket}"
