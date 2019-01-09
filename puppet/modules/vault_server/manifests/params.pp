@@ -5,7 +5,7 @@
 #
 class vault_server::params {
   $app_name = 'vault'
-  $version = '0.9.5'
+  $version = '0.9.6'
   $unsealer_version = '0.3.0'
   $bin_dir = '/opt/bin'
   $dest_dir = '/opt'

@@ -86,7 +86,7 @@ required = [
 
 [[override]]
   name = "github.com/hashicorp/vault"
-  version = "0.9.5"
+  version = "0.9.6"
 
 [[override]]
   name = "github.com/opencontainers/runc"
