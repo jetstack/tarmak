@@ -3,6 +3,9 @@ data "template_file" "bastion_user_data" {
 
   vars {
     fqdn = "bastion.${var.public_zone}"
+
+    wing_binary_path = "${var.secrets_bucket}/${var.wing_binary_path}"
+    wing_version     = "${var.wing_version}"
   }
 }
 

@@ -98,6 +98,10 @@ output "vault_vault_security_group_id" {
   value = "${module.vault.vault_security_group_id}"
 }
 
+output "bastion_bastion_wing_binary_read_policy_arn" {
+  value = "${module.bastion.wing_binary_read_policy_arn}"
+}
+
 output "instance_fqdns" {
   value = ["${module.vault.instance_fqdns}"]
 }
