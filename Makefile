@@ -42,9 +42,12 @@ ifeq ($(UNAME_S),Darwin)
 	NODE_HASH := ca131b84dfcf2b6f653a6521d31f7a108ad7d83f4d7e781945b2eca8172064aa
 endif
 
+# from https://suva.sh/posts/well-documented-makefiles/
+.PHONY: help
+help:  ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
-help:
-	# all       - runs verify, build targets
+help1:
 	# test      - runs go_test target
 	# build     - runs generate, and then go_build targets
 	# generate  - generates mocks and assets files
@@ -52,15 +55,17 @@ help:
 
 .PHONY: all test verify
 
-test: go_test
+all: verify test build  ## runs verify, test and build targets
 
-verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_gen_docs
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs $(BINDIR)/node ## download all dependencies necessary for build
 
-all: verify test build
+verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_gen_docs ## verifies generated files & scripts
 
-build: generate go_build
+test: go_test ## runs all defined tests, no puppet tests
 
-generate: go_generate
+generate: go_generate ## generates mocks and assets files
+
+build: generate go_build ## runs generate, and then go_build targets
 
 go_verify: go_fmt go_vet
 
@@ -172,7 +177,6 @@ $(BINDIR)/gen-apidocs:
 	mkdir -p $(BINDIR)
 	go build -o $@ ./vendor/github.com/kubernetes-incubator/reference-docs/gen-apidocs
 
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs $(BINDIR)/node
 
 go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)
