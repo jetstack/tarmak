@@ -7,14 +7,14 @@ variable "wing_binary_path" {
 }
 
 resource "aws_iam_policy_attachment" "wing_binary_read" {
-  name       = "${data.template_file.stack_name.rendered}-wing-binary"
-{{- if eq .Module "kubernetes" }}
-  roles      = [
+  name = "${data.template_file.stack_name.rendered}-wing-binary"
+{{ if eq .Module "kubernetes" }}
+  roles = [
     "${aws_iam_role.kubernetes_etcd.name}",
     "${aws_iam_role.kubernetes_worker.name}",
     "${aws_iam_role.kubernetes_master.name}",
   ]
-{{- else }}
+{{ else }}
   roles      = ["${aws_iam_role.{{.Module}}.*.name}"]
 {{- end }}
 {{- if eq .Module "bastion" }}
@@ -24,7 +24,7 @@ resource "aws_iam_policy_attachment" "wing_binary_read" {
 {{- end }}
 }
 
-{{ if .WingDevMode -}}
+{{- if .WingDevMode }}
 resource "aws_s3_bucket_object" "wing-binary" {
   source = "wing_linux_amd64"
   bucket = "${var.secrets_bucket}"
