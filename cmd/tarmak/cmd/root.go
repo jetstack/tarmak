@@ -110,6 +110,13 @@ func init() {
 		"override the current cluster set in the config",
 	)
 
+	RootCmd.PersistentFlags().BoolVar(
+		&globalFlags.IgnoreMissingPublicKeyTags,
+		"ignore-missing-public-key-tags",
+		true,
+		"ignore missing public key tags on instances, by falling back to populating `ssh_known_hosts` with the first connection",
+	)
+
 	if version == "dev" {
 		RootCmd.PersistentFlags().BoolVar(
 			&globalFlags.WingDevMode,

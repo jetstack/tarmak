@@ -102,20 +102,21 @@ func (h *host) SSHKnownHostConfig() (string, error) {
 		entry = fmt.Sprintf("%s%s", entry, value)
 	}
 
-	entry = fmt.Sprintf("%s %s\n", h.Hostname(), entry[:len(entry)-6])
+	entry = strings.TrimRight(entry[:len(entry)-6], " ")
+	entry = fmt.Sprintf("%s %s\n", h.Hostname(), entry)
 
 	return entry, nil
 }
 
 // TODO: this is not too provider specific and should live somewhere else
-func (h *host) SSHConfig() string {
+func (h *host) SSHConfig(strictChecking string) string {
 	config := fmt.Sprintf(`host %s
     User %s
     Hostname %s
 
     # use custom host key file per cluster
     UserKnownHostsFile %s
-    StrictHostKeyChecking yes
+    StrictHostKeyChecking %s
 
     # enable connection multiplexing
     ControlPath %s/ssh-control-%%r@%%h:%%p
@@ -131,6 +132,7 @@ func (h *host) SSHConfig() string {
 		h.User(),
 		h.Hostname(),
 		h.cluster.SSHHostKeysPath(),
+		strictChecking,
 		os.TempDir(),
 		h.cluster.Environment().SSHPrivateKeyPath(),
 	)

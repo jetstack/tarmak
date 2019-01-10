@@ -193,6 +193,7 @@ type Config interface {
 	Project() string
 	WingDevMode() bool
 	SetCurrentCluster(string) error
+	IgnoreMissingPublicKeyTags() bool
 }
 
 type Packer interface {
@@ -232,7 +233,7 @@ type Host interface {
 	Hostname() string
 	User() string
 	Roles() []string
-	SSHConfig() string
+	SSHConfig(strictChecking string) string
 	Parameters() map[string]string
 	SSHControlPath() string
 	SSHKnownHostConfig() (string, error)

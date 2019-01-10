@@ -53,32 +53,38 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	knownHosts, err := os.OpenFile(s.tarmak.Cluster().SSHHostKeysPath(),
 		os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-
+		return err
 	}
 	defer knownHosts.Close()
 
 	var sshConfig bytes.Buffer
 	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
 
+	strictChecking := "yes"
 	for _, host := range hosts {
-		_, err = sshConfig.WriteString(host.SSHConfig())
-		if err != nil {
-			return err
-		}
-
-		// need to add host public key entry to known hosts file
 		if _, ok := localKnownHosts[host.Hostname()]; !ok {
+			// local host key is missing, so append
 			entry, err := host.SSHKnownHostConfig()
 			if err != nil {
 				return err
 			}
 
+			if entry == "" && s.tarmak.Config().IgnoreMissingPublicKeyTags() {
+				// We need to change strict 'yes' to 'no' since entry doesn't exist and we
+				// have ignore missing instances tags set to true.  This should be
+				// changed later to 'ask' when in interactive mode and accepting first
+				// key during programmatic mode.
+				strictChecking = "no"
+			}
+
 			if _, err := knownHosts.WriteString(entry); err != nil {
 				return err
 			}
+		}
+
+		_, err = sshConfig.WriteString(host.SSHConfig(strictChecking))
+		if err != nil {
+			return err
 		}
 
 		s.controlPaths = append(s.controlPaths, host.SSHControlPath())
@@ -128,7 +134,7 @@ func (s *SSH) PassThrough(argsAdditional []string) {
 	args := append(s.args(), argsAdditional...)
 
 	cmd := exec.Command(args[0], args[1:len(args)]...)
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = os.Stdout
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 
