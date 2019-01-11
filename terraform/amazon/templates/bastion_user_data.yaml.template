@@ -61,6 +61,7 @@ write_files:
     RestartSec=10
     Environment=WING_DATA_DIR=/var/lib/wing
     Environment=WING_CLOUD_PROVIDER=amazon
+    Environment=WING_ENVIRONMENT="${tarmak_environment}"
 {{- if .WingDevMode }}
     Environment=WING_VERSION="${wing_version}"
     ExecStartPre=/bin/sh -c 'aws s3 cp "s3://${wing_binary_path}" /opt/wing-$${WING_VERSION}/wing; chmod 0755 /opt/wing-$${WING_VERSION}/wing'
@@ -86,7 +87,7 @@ write_files:
       mkdir -p $${WING_DATA_DIR} ;\
       chown wing:wing $${WING_DATA_DIR} ;\
       chmod 750 $${WING_DATA_DIR}'
-    ExecStart=/bin/sh -c 'cd $${WING_DATA_DIR} && exec /opt/wing-$${WING_VERSION}/wing server --secure-port 9443 --etcd-servers http://127.0.0.1:2379 --environment "${tarmak_environment}"'
+    ExecStart=/bin/sh -c 'cd $${WING_DATA_DIR} && exec /opt/wing-$${WING_VERSION}/wing server --secure-port 9443 --etcd-servers http://127.0.0.1:2379'
     Type=notify
     User=wing
     Group=wing

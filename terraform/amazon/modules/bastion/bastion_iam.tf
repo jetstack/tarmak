@@ -41,3 +41,8 @@ resource "aws_iam_role_policy_attachment" "bastion_tagging_control_lambda_invoke
   role       = "${aws_iam_role.bastion.name}"
   policy_arn = "${var.tagging_control_policy_arn}"
 }
+
+resource "aws_iam_role_policy_attachment" "bastion_wing_binary_read" {
+  role       = "${aws_iam_role.bastion.name}"
+  policy_arn = "${aws_iam_policy.wing_binary_read.arn}"
+}
