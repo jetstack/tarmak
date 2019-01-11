@@ -9,9 +9,10 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "tagging_control",
-	Short: "lambda function used to tag AWS instances with their ssh public keys",
-	Run:   handleCmd.Run,
+	Use:               "tagging_control",
+	Short:             "lambda function used to tag AWS instances with their ssh public keys",
+	Run:               handleCmd.Run,
+	DisableAutoGenTag: true,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
