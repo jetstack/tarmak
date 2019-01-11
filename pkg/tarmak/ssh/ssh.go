@@ -38,7 +38,7 @@ func New(tarmak interfaces.Tarmak) *SSH {
 	return s
 }
 
-func (s *SSH) WriteConfig(c interfaces.Cluster) error {
+func (s *SSH) WriteConfig(c interfaces.Cluster, interactive bool) error {
 
 	hosts, err := c.ListHosts()
 	if err != nil {
@@ -60,8 +60,9 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	var sshConfig bytes.Buffer
 	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
 
-	strictChecking := "yes"
 	for _, host := range hosts {
+		strictChecking := "yes"
+
 		if _, ok := localKnownHosts[host.Hostname()]; !ok {
 			// local host key is missing, so append
 			entry, err := host.SSHKnownHostConfig()
@@ -70,11 +71,16 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 			}
 
 			if entry == "" && s.tarmak.Config().IgnoreMissingPublicKeyTags() {
-				// We need to change strict 'yes' to 'no' since entry doesn't exist and we
-				// have ignore missing instances tags set to true.  This should be
-				// changed later to 'ask' when in interactive mode and accepting first
-				// key during programmatic mode.
-				strictChecking = "no"
+				// We need to change strict 'yes' to 'no' or 'ask' since entry doesn't
+				// exist and we have 'ignore missing instances tags' set to true.  Set
+				// to no for programmatic uses of ssh which will be changed when the in
+				// package solution is used.
+
+				if interactive {
+					strictChecking = "ask"
+				} else {
+					strictChecking = "no"
+				}
 			}
 
 			if _, err := knownHosts.WriteString(entry); err != nil {

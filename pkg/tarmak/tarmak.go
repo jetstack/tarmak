@@ -169,7 +169,7 @@ func (t *Tarmak) initializeConfig() error {
 }
 
 func (t *Tarmak) writeSSHConfigForClusterHosts() error {
-	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
+	if err := t.ssh.WriteConfig(t.Cluster(), false); err != nil {
 		clusterName, errCluster := t.config.CurrentClusterName()
 		if errCluster != nil {
 			return fmt.Errorf("failed to retrieve current cluster name: %s", errCluster)

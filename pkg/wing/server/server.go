@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -61,6 +62,10 @@ func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *c
 			env, err := c.Flags().GetString("environment")
 			if err != nil {
 				return err
+			}
+
+			if env == "" {
+				env = os.Getenv("WING_ENVIRONMENT")
 			}
 
 			t, err := tags.New(nil, env)
