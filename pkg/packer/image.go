@@ -43,7 +43,7 @@ func (i *image) userVariables() map[string]string {
 	return map[string]string{
 		tarmakv1alpha1.ImageTagEnvironment:   i.environment,
 		tarmakv1alpha1.ImageTagBaseImageName: i.imageName,
-		"region": i.tarmak.Provider().Region(),
+		"region":                             i.tarmak.Provider().Region(),
 	}
 }
 
