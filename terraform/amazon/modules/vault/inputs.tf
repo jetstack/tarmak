@@ -87,3 +87,5 @@ variable "vault_iam_additional_policy_arns" {
 locals {
   vault_unseal_key_name = "vault-${var.environment}-"
 }
+
+variable "wing_binary_read_policy_arn" {}

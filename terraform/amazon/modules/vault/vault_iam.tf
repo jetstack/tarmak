@@ -70,3 +70,9 @@ resource "aws_iam_policy_attachment" "vault_additional_policies" {
   count      = "${length(var.vault_iam_additional_policy_arns)}"
   policy_arn = "${element(var.vault_iam_additional_policy_arns, count.index)}"
 }
+
+resource "aws_iam_role_policy_attachment" "vault_wing_binary_read" {
+  role       = "${element(aws_iam_role.vault.*.name, count.index)}"
+  policy_arn = "${var.wing_binary_read_policy_arn}"
+  count      = "${var.vault_min_instance_count}"
+}

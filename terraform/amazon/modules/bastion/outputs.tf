@@ -21,3 +21,7 @@ output "bastion_security_group_id" {
 output "remote_admin_security_group_id" {
   value = "${aws_security_group.remote_admin.id}"
 }
+
+output "wing_binary_read_policy_arn" {
+  value = "${aws_iam_policy.wing_binary_read.arn}"
+}

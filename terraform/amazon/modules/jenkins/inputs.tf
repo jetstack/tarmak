@@ -14,6 +14,8 @@ variable "private_zone" {}
 
 variable "private_zone_id" {}
 
+variable "secrets_bucket" {}
+
 variable "public_subnet_ids" {
   type = "list"
 }
@@ -43,3 +45,5 @@ variable "availability_zones" {
 variable "jenkins_admin_cidrs" {
   type = "list"
 }
+
+variable "wing_binary_read_policy_arn" {}

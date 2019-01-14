@@ -134,24 +134,16 @@ func (t *terraformTemplate) Generate() error {
 		}
 	}
 
-	for _, module := range []string{"vault", "kubernetes"} {
-		for _, tmpl := range []struct {
-			name, target string
-		}{
-			{"modules", "modules"},
-			{"inputs", "inputs"},
-			{"outputs", "outputs"},
-			{"providers", "providers"},
-		} {
-			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", module); err != nil {
-				result = multierror.Append(result, err)
-			}
+	for _, module := range []string{"bastion", "vault", "jenkins", "kubernetes"} {
+		if err := t.generateTemplate("wing_s3", fmt.Sprintf("modules/%s/wing_s3", module), "tf", module); err != nil {
+			result = multierror.Append(result, err)
 		}
+	}
 
+	for _, module := range []string{"vault", "kubernetes"} {
 		for _, tmpl := range []struct {
 			name, target, fType string
 		}{
-			{"wing_s3", "modules/%s/wing_s3", "tf"},
 			{"puppet_s3", "modules/%s/puppet_s3", "tf"},
 			{"puppet_agent_user_data", "modules/%s/templates/puppet_agent_user_data", "yaml"},
 		} {
@@ -162,17 +154,32 @@ func (t *terraformTemplate) Generate() error {
 		}
 	}
 
-	if t.cluster.Type() != clusterv1alpha1.ClusterTypeClusterMulti {
-		for _, tmpl := range []struct {
-			name, target string
-		}{
-			{"jenkins_elb", "modules/jenkins/jenkins_elb"},
-			{"vault_instances", "modules/vault/vault_instances"},
-		} {
-			if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "vault"); err != nil {
-				result = multierror.Append(result, err)
-			}
+	for _, tmpl := range []struct {
+		name, target string
+	}{
+		{"modules", "modules"},
+		{"inputs", "inputs"},
+		{"outputs", "outputs"},
+		{"providers", "providers"},
+	} {
+		if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "kubernetes"); err != nil {
+			result = multierror.Append(result, err)
 		}
+	}
+
+	if t.cluster.Type() != clusterv1alpha1.ClusterTypeClusterMulti {
+		if err := t.generateTemplate("jenkins_elb", "modules/jenkins/jenkins_elb", "tf", "vault"); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := t.generateTemplate("vault_instances", "modules/vault/vault_instances", "tf", "vault"); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	if err := t.generateTemplate("bastion_user_data",
+		"modules/bastion/templates/bastion_user_data", "yaml", "bastion"); err != nil {
+		result = multierror.Append(result, err)
 	}
 
 	if err := t.generateTerraformVariables(); err != nil {
