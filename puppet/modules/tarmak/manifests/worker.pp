@@ -2,7 +2,7 @@ class tarmak::worker {
   include ::tarmak
   require ::vault_client
 
-  $run_exec = $::tarmak::service_ensure ? { stopped => false, default => true,}
+  $run_exec = $::tarmak::service_ensure ? { stopped => false, default => true}
 
   $proxy_base_path = "${::tarmak::kubernetes_ssl_dir}/kube-proxy"
   vault_client::cert_service { 'kube-proxy':

@@ -43,7 +43,7 @@
       "scripts": [
           "{{user `scripts`}}/configure_for_tarmak.sh",
           "{{user `scripts`}}/cleanup.sh",
-          "{{user `scripts`}}/prepare-puppet.sh"
+          "{{user `scripts`}}/prepare_puppet.sh"
       ]
     },
     {
