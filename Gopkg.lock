@@ -884,11 +884,11 @@
   revision = "e8d22c780116115ae5624720c9af0c97afe4f551"
 
 [[projects]]
-  digest = "1:478ffbf24cda825e849769ce8eb3fc2a627fe9f548d5b973743eddc6785fbc8c"
+  digest = "1:3bf68bcede4d9dcc73086958d033d5bb607d366c7932b4f87ac31de930fce868"
   name = "github.com/hashicorp/go-retryablehttp"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "6e85be8fee1dcaa02c0eaaac2df5a8fbecf94145"
+  revision = "dfbae6744eb4c188d26ef53f1d39444c0c68b60c"
 
 [[projects]]
   branch = "master"
@@ -907,20 +907,18 @@
   revision = "b1a1dbde6fdc11e3ae79efd9039009e22d4ae240"
 
 [[projects]]
-  digest = "1:f2f065a89823904b6220a905a8171c2f93ec518b2fa288de361655071a98263f"
+  digest = "1:e0a40d15c22d6088885045287a817e81e3df688be302b839e008c5112b39bd1e"
   name = "github.com/hashicorp/go-slug"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "cc9d70694ef317c2e6443e20b7927363d69c8b1e"
-  version = "v0.1.0"
+  revision = "98c6f0ec89d1cf8f4e487810d666ce3c0b6d4b44"
 
 [[projects]]
-  digest = "1:c5e31a62502492b0512a5b9497cae67c529f315e9b4fb0d396db8d8bd821a5ae"
+  digest = "1:9fecc8f4ae909c4eb6e9b59228cb10b9225bf7e31316d735a146d4b2f3cbbb2b"
   name = "github.com/hashicorp/go-tfe"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "dffc938c010479f92b9ff565f78534861fa8bb76"
-  version = "v0.1.2"
+  revision = "11c62815d5735b1eb5227b4d683cc354fe411a3f"
 
 [[projects]]
   branch = "master"
@@ -1041,7 +1039,7 @@
   version = "v0.8.1"
 
 [[projects]]
-  digest = "1:c66ea71a5c53c860ae0133e2d7c4e42aa62490e25823479817c793b7d3992df1"
+  digest = "1:29a94303ac8cfc8ae0addfc045287af6282bbfb1d15a3d3643821b0dc7b107ea"
   name = "github.com/hashicorp/terraform"
   packages = [
     "backend",
@@ -1114,8 +1112,8 @@
     "version",
   ]
   pruneopts = "NUT"
-  revision = "6dfc4d748de9cda23835bc5704307ed45e839622"
-  version = "v0.11.8"
+  revision = "ac4fff416318bf0915a0ab80e062a99ef3724334"
+  version = "v0.11.11"
 
 [[projects]]
   digest = "1:88a0935f8819740dd6f50f25c5eea6d98fb79186d4b6b773a7f2ff46dfb6b644"
@@ -1981,6 +1979,14 @@
   pruneopts = "NUT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9fdc2b55e8e0fafe4b41884091e51e77344f7dc511c5acedcfd98200003bff90"
+  name = "golang.org/x/time"
+  packages = ["rate"]
+  pruneopts = "NUT"
+  revision = "85acf8d2951cb2a3bde7632f9ff273ef0379bcbd"
 
 [[projects]]
   branch = "master"
