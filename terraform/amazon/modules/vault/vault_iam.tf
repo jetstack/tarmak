@@ -77,16 +77,8 @@ resource "aws_iam_role_policy_attachment" "vault_wing_binary_read" {
   count      = "${var.vault_min_instance_count}"
 }
 
-resource "aws_iam_policy_attachment" "vault_tagging_control_lambda_invoke" {
-  name       = "${data.template_file.stack_name.rendered}-tagging-control-lambda-invoke"
-  roles      = ["${aws_iam_role.vault.*.name}"]
+resource "aws_iam_role_policy_attachment" "vault_tagging_control_lambda_invoke" {
+  role       = "${element(aws_iam_role.vault.*.name, count.index)}"
   policy_arn = "${var.tagging_control_policy_arn}"
-  count      = "${length(var.vault_iam_additional_policy_arns)}"
-}
-
-resource "aws_iam_policy_attachment" "vault_wing_binary_read" {
-  name       = "${data.template_file.stack_name.rendered}-wing-binary-read"
-  roles      = ["${aws_iam_role.vault.*.name}"]
-  policy_arn = "${var.wing_binary_read_policy_arn}"
-  count      = "${length(var.vault_iam_additional_policy_arns)}"
+  count      = "${var.vault_min_instance_count}"
 }

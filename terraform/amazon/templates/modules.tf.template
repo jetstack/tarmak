@@ -217,13 +217,8 @@ module "kubernetes" {
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
 
-<<<<<<< HEAD
   wing_binary_read_policy_arn = "${module.bastion.wing_binary_read_policy_arn}"
   tagging_control_policy_arn  = "${module.tagging_control.tagging_control_policy_arn}"
-=======
-  tagging_control_policy_arn  = "${module.tagging_control.tagging_control_policy_arn}"
-  wing_binary_read_policy_arn = "${module.bastion.wing_binary_read_policy_arn}"
->>>>>>> Share wing binary read policy across roles in terraform
 }
 {{- end -}}
 
@@ -293,7 +288,5 @@ module "kubernetes" {
   elb_access_logs_internal_bucket          = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
-
-  wing_binary_read_policy_arn = "${data.terraform_remote_state.hub_state.bastion_bastion_wing_binary_read_policy_arn}"
 }
 {{- end }}
