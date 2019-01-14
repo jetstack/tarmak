@@ -15,23 +15,23 @@ describe 'vault_server::install' do
     it { should contain_class('vault_server::install') }
 
     it 'should download and install the vault server' do
-      should contain_file('/opt/vault-0.9.5').with(
+      should contain_file('/opt/vault-0.9.6').with(
         :ensure => 'directory',
       )
-      should contain_file('/opt/vault-0.9.5/vault')
+      should contain_file('/opt/vault-0.9.6/vault')
       should contain_file('/opt/bin/vault').with(
         :ensure => 'link',
-        :target => '/opt/vault-0.9.5/vault',
+        :target => '/opt/vault-0.9.6/vault',
       )
     end
 
     it 'should attempt to download vault unsealer' do
-      should contain_file('/opt/vault-0.9.5/vault-unsealer').with(
+      should contain_file('/opt/vault-0.9.6/vault-unsealer').with(
         :mode => '0755',
       )
       should contain_file('/opt/bin/vault-unsealer').with(
         :ensure => 'link',
-        :target => '/opt/vault-0.9.5/vault-unsealer',
+        :target => '/opt/vault-0.9.6/vault-unsealer',
       )
     end
 

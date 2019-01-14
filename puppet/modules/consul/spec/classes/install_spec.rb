@@ -8,7 +8,7 @@ describe 'consul::install' do
   end
 
   let :version do
-    '1.2.3'
+    '1.2.4'
   end
 
   context 'with default values for all parameters' do
