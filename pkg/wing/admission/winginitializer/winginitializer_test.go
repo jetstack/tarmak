@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
-	"github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion/fake"
-	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
 	"k8s.io/apiserver/pkg/admission"
+
+	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
+	"github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned/fake"
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
 )
 
 // TestWantsInternalWingInformerFactory ensures that the informer factory is injected
@@ -16,10 +17,8 @@ import (
 func TestWantsInternalWingInformerFactory(t *testing.T) {
 	cs := &fake.Clientset{}
 	sf := informers.NewSharedInformerFactory(cs, time.Duration(1)*time.Second)
-	target, err := winginitializer.New(sf)
-	if err != nil {
-		t.Fatalf("expected to create an instance of initializer but got an error = %s", err.Error())
-	}
+	target := winginitializer.New(sf)
+
 	wantWingInformerFactory := &wantInternalWingInformerFactory{}
 	target.Initialize(wantWingInformerFactory)
 	if wantWingInformerFactory.sf != sf {

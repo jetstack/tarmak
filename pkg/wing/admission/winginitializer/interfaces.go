@@ -3,8 +3,9 @@
 package winginitializer
 
 import (
-	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
 	"k8s.io/apiserver/pkg/admission"
+
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
 )
 
 // WantsInternalWingInformerFactory defines a function which sets InformerFactory for admission plugins that need it

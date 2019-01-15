@@ -91,7 +91,7 @@ func newFakeWing(t *testing.T) *fakeWing {
 		},
 	}
 
-	request := rest.NewRequest(w.fakeHTTPClient, "verb", nil, "versionedAPIPath", contentConfig, rest.Serializers{}, nil, nil)
+	request := rest.NewRequest(w.fakeHTTPClient, "verb", nil, "versionedAPIPath", contentConfig, rest.Serializers{}, nil, nil, time.Second)
 	w.fakeRest.EXPECT().Get().AnyTimes().Return(request)
 
 	return w

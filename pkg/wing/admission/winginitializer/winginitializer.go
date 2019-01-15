@@ -3,8 +3,9 @@
 package winginitializer
 
 import (
-	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
 	"k8s.io/apiserver/pkg/admission"
+
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
 )
 
 type pluginInitializer struct {
@@ -14,10 +15,10 @@ type pluginInitializer struct {
 var _ admission.PluginInitializer = pluginInitializer{}
 
 // New creates an instance of wing admission plugins initializer.
-func New(informers informers.SharedInformerFactory) (pluginInitializer, error) {
+func New(informers informers.SharedInformerFactory) pluginInitializer {
 	return pluginInitializer{
 		informers: informers,
-	}, nil
+	}
 }
 
 // Initialize checks the initialization interfaces implemented by a plugin

@@ -35,7 +35,7 @@ func (d *instanceInitTime) Admit(a admission.Attributes) error {
 
 	instance, ok := a.GetObject().(*wing.Instance)
 	if !ok {
-		return errors.New("unexpected object time")
+		return errors.New("unexpected object type")
 	}
 
 	if instance.Status != nil {
