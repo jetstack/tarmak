@@ -27,6 +27,9 @@ func resourceAwsLambdaFunction() *schema.Resource {
 		Read:   resourceAwsLambdaFunctionRead,
 		Update: resourceAwsLambdaFunctionUpdate,
 		Delete: resourceAwsLambdaFunctionDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -382,17 +385,21 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "InvalidParameterValueException", "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
 	if err != nil {
-		if !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+		if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
 			return fmt.Errorf("Error creating Lambda function: %s", err)
 		}
-		// Allow 9 more minutes for EC2 throttling
-		err := resource.Retry(9*time.Minute, func() *resource.RetryError {
+		// Allow additional time for slower uploads or EC2 throttling
+		err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 			if err != nil {
 				log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
@@ -501,7 +508,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	config := flattenLambdaVpcConfigResponse(function.VpcConfig)
 	log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), config)
 	if err := d.Set("vpc_config", config); err != nil {
-		return fmt.Errorf("[ERR] Error setting vpc_config for Lambda Function (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error setting vpc_config for Lambda Function (%s): %s", d.Id(), err)
 	}
 
 	environment := flattenLambdaEnvironment(function.Environment)
@@ -741,6 +748,11 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 					return resource.RetryableError(err)
 				}
+				if isAWSErr(err, "InvalidParameterValueException", "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+					log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+					return resource.RetryableError(err)
+				}
+
 				return resource.NonRetryableError(err)
 			}
 			return nil

@@ -183,10 +183,6 @@ func (t *terraformTemplate) Generate() error {
 		if err := t.generateTemplate(tmpl.name, tmpl.target, "tf", "kubernetes"); err != nil {
 			result = multierror.Append(result, err)
 		}
-
-		if err := t.generateTemplate("vault_instances", "modules/vault/vault_instances", "tf", "vault"); err != nil {
-			result = multierror.Append(result, err)
-		}
 	}
 
 	if err := t.generateTemplate("bastion_user_data",

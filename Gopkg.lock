@@ -218,7 +218,7 @@
   version = "v1.8.0"
 
 [[projects]]
-  digest = "1:5101789b805ee6cad9dc0b32f9a506e9cfd8198944b0bca739d1e842ad27df0d"
+  digest = "1:08c87e7deb3cc01a1bb6787804f59ccaef0553c7c59735bab79f3154be62b83d"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -231,7 +231,9 @@
     "aws/credentials",
     "aws/credentials/ec2rolecreds",
     "aws/credentials/endpointcreds",
+    "aws/credentials/processcreds",
     "aws/credentials/stscreds",
+    "aws/crr",
     "aws/csm",
     "aws/defaults",
     "aws/ec2metadata",
@@ -239,6 +241,8 @@
     "aws/request",
     "aws/session",
     "aws/signer/v4",
+    "internal/ini",
+    "internal/s3err",
     "internal/sdkio",
     "internal/sdkrand",
     "internal/sdkuri",
@@ -268,6 +272,7 @@
     "service/cloud9",
     "service/cloudformation",
     "service/cloudfront",
+    "service/cloudhsmv2",
     "service/cloudtrail",
     "service/cloudwatch",
     "service/cloudwatchevents",
@@ -284,6 +289,7 @@
     "service/devicefarm",
     "service/directconnect",
     "service/directoryservice",
+    "service/dlm",
     "service/dynamodb",
     "service/ec2",
     "service/ecr",
@@ -307,6 +313,7 @@
     "service/inspector",
     "service/iot",
     "service/kinesis",
+    "service/kinesisanalytics",
     "service/kms",
     "service/lambda",
     "service/lexmodelbuildingservice",
@@ -317,6 +324,7 @@
     "service/neptune",
     "service/opsworks",
     "service/organizations",
+    "service/pinpoint",
     "service/pricing",
     "service/rds",
     "service/redshift",
@@ -336,10 +344,11 @@
     "service/swf",
     "service/waf",
     "service/wafregional",
+    "service/workspaces",
   ]
   pruneopts = "NUT"
-  revision = "1186f7e6f000ce13edff71ed5ecc8b0e27ba38d7"
-  version = "v1.15.33"
+  revision = "d2d8f8c33f49af99cdd889f6897ffd525c520407"
+  version = "v1.16.19"
 
 [[projects]]
   digest = "1:f4298c81d8a94ab68d9e387eaf6e653387df5da17702f06c6d8718a7a8e549d0"
@@ -451,12 +460,12 @@
   version = "v1.0.8"
 
 [[projects]]
-  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "NUT"
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:7a6852b35eb5bbc184561443762d225116ae630c26a7c4d90546619f1e7d2ad2"
@@ -558,14 +567,6 @@
   pruneopts = "NUT"
   revision = "a720dfa8df582c51dee1b36feabb906bde1588bd"
   version = "v1.0"
-
-[[projects]]
-  digest = "1:f59266de09e138237bf9df9deb57b9ebbdb1e33b8399bb739c3745e7d3d2787b"
-  name = "github.com/go-ini/ini"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "358ee7663966325963d4e8b2e1fbd570c5195153"
-  version = "v1.38.1"
 
 [[projects]]
   digest = "1:da40b9e5973892e2bd37a72c36464b8252a4034522925d920983edaabda03693"
@@ -1225,11 +1226,11 @@
   version = "0.2.1"
 
 [[projects]]
-  digest = "1:ac6d01547ec4f7f673311b4663909269bfb8249952de3279799289467837c3cc"
+  digest = "1:1f2aebae7e7c856562355ec0198d8ca2fa222fb05e5b1b66632a1fce39631885"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "0b12d6b5"
+  revision = "c2b33e84"
 
 [[projects]]
   digest = "1:3e27f2d5d0734852c4b402aadc7467c2f108503598768ddd7c6f3653984dedc8"
@@ -1751,12 +1752,12 @@
   version = "1.0.0"
 
 [[projects]]
-  digest = "1:cfb72b79a2e36c9d3be0b65feb81a73f8af00f494c53d2d0e64a0e2e666f9950"
+  digest = "1:33a4ac0f38b497c9ae43a3215e425c2b7863372d0ef827f88094d4bf5aa80219"
   name = "github.com/terraform-providers/terraform-provider-aws"
   packages = ["aws"]
   pruneopts = "NUT"
-  revision = "7a246a13e15a1ab9a63b311129279972ef7dc273"
-  version = "v1.35.0"
+  revision = "1c33e2787b963aff9d570d4050ec3c4f6afce77e"
+  version = "v1.47.0"
 
 [[projects]]
   digest = "1:e9233f43efbc563025a92aa3b26266d4670ca579b2f5a14e37c8c50badd79d98"
