@@ -113,8 +113,6 @@ write_files:
 
     [Service]
     PermissionsStartOnly=true
-    Restart=on-failure
-    RestartSec=10
     Environment=WING_CLOUD_PROVIDER=amazon
 {{- if .WingDevMode }}
     Environment=WING_VERSION="${wing_version}"
