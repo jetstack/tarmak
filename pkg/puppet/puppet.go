@@ -228,6 +228,13 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::controller_manager::feature_gates:%s`, gates))
 	}
 
+	if conf.Calico != nil {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf("calico::backend: %s", conf.Calico.Backend))
+		if conf.Calico.Backend == "kubernetes" {
+			hieraData.variables = append(hieraData.variables, "kubernetes::controller_manager::allocate_node_cidrs: true")
+		}
+	}
+
 	return
 }
 

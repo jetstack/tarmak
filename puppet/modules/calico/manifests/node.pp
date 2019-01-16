@@ -18,8 +18,6 @@ class calico::node (
   $namespace = $::calico::namespace
   $mtu = $::calico::mtu
   $ipv4_pool_cidr = $::calico::pod_network
-  $etcd_cert_path = $::calico::etcd_cert_path
-  $etcd_proto = $::calico::etcd_proto
 
   $authorization_mode = $::kubernetes::_authorization_mode
   if member($authorization_mode, 'RBAC'){
@@ -34,9 +32,23 @@ class calico::node (
     $version_before_1_6 = true
   }
 
+  if $::calico::backend == 'etcd' {
+    $etcd_cert_path = $::calico::etcd_cert_path
+    $etcd_proto = $::calico::etcd_proto
+
+
+    $manifests = template('calico/node-daemonset_etcd.yaml.erb')
+
+  } else {
+    $manifests = [
+        template('calico/node-daemonset_kubernetes.yaml.erb'),
+        template('calico/configure_calico_kubernetes_job.yaml.erb'),
+      ]
+  }
+
   kubernetes::apply{'calico-node':
     manifests => [
-      template('calico/node-daemonset.yaml.erb'),
+      $manifests,
       template('calico/node-rbac.yaml.erb'),
     ],
   }

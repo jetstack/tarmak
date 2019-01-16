@@ -8,6 +8,8 @@ class calico(
   String $etcd_key_file = '',
   String $cloud_provider = $::calico::params::cloud_provider,
   String $namespace = 'kube-system',
+  Hash[String,Boolean] $feature_gates = {},
+  Boolean $enable_typha = false,
   Optional[String] $pod_network = undef,
   Integer[1000,65535] $mtu = 1480,
 ) inherits ::calico::params
@@ -30,7 +32,6 @@ class calico(
     }
     $etcd_endpoints = $etcd_cluster.map |$node| { "${etcd_proto}://${node}:${etcd_overlay_port}" }.join(',')
   } elsif $backend == 'kubernetes' {
-    fail('Backend storage kubernetes is not yet supported')
   }
 
   if $cloud_provider == 'aws' {

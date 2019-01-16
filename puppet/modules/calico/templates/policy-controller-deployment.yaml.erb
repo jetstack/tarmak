@@ -49,6 +49,7 @@ spec:
         - name: calico-policy-controller
           image: <%= @image %>:v<%= @version %>
           env:
+<% if @backend == 'etcd' -%>
             # The location of the Calico etcd cluster.
             - name: ETCD_ENDPOINTS
               valueFrom:
@@ -78,6 +79,7 @@ spec:
                   name: calico-config
                   key: etcd_cert
 <% end -%>
+<% end -%>
             # The location of the Kubernetes API.  Use the default Kubernetes
             # service for API access.
             - name: K8S_API
@@ -87,7 +89,7 @@ spec:
             # kubernetes.default to the correct service clusterIP.
             - name: CONFIGURE_ETC_HOSTS
               value: "true"
-<% if @tls -%>
+<% if @tls and @backend == 'etcd' -%>
           volumeMounts:
             # Mount in the etcd TLS secrets.
             - mountPath: <%= @etcd_tls_dir %>

@@ -444,6 +444,13 @@ func (c *Cluster) Validate() error {
 				result = multierror.Append(result, err)
 			}
 		}
+
+		//validate calico
+		if c.Config().Kubernetes.Calico != nil {
+			if err := c.validateCalico(); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
 	}
 
 	return result.ErrorOrNil()
@@ -592,6 +599,31 @@ func (c *Cluster) validatePrometheusMode() error {
 	}
 
 	return result
+}
+
+func (c *Cluster) validateCalico() error {
+	var result *multierror.Error
+	backends := []string{"etcd", "kubernetes"}
+
+	calico := c.Config().Kubernetes.Calico
+	if !utils.SliceContains(backends, calico.Backend) {
+		result = multierror.Append(result, fmt.Errorf(
+			"calico's backend may only be set to %s, got=%s", backends, calico.Backend))
+	}
+
+	if calico.Backend != "kubernetes" {
+		if calico.EnableTypha {
+			result = multierror.Append(result, fmt.Errorf(
+				"typha enabled but backend is not 'kubernetes', got=%s", calico.Backend))
+		}
+
+		if len(calico.FeatureGates) > 0 {
+			result = multierror.Append(result, fmt.Errorf(
+				"received feature gates for calico but backend is not 'kubernetes', got=%s", calico.Backend))
+		}
+	}
+
+	return result.ErrorOrNil()
 }
 
 // Determine if this Cluster is a cluster or hub, single or multi environment

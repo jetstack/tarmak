@@ -97,6 +97,7 @@ type ClusterKubernetes struct {
 	Scheduler         *ClusterKubernetesScheduler         `json:"scheduler,omitempty"`
 	Proxy             *ClusterKubernetesProxy             `json:"proxy,omitempty"`
 	ControllerManager *ClusterKubernetesControllerManager `json:"controllerManager,omitempty"`
+	Calico            *ClusterKubernetesCalico            `json:"calico,omitempty"`
 
 	GlobalFeatureGates map[string]bool `json:"globalFeatureGates,omitempty"`
 }
@@ -225,6 +226,12 @@ type ClusterKubernetesProxy struct {
 }
 
 type ClusterKubernetesControllerManager struct {
+	FeatureGates map[string]bool `json:"featureGates,omitempty"`
+}
+
+type ClusterKubernetesCalico struct {
+	Backend      string          `json:"backend"`
+	EnableTypha  bool            `json:"enableTypha"`
 	FeatureGates map[string]bool `json:"featureGates,omitempty"`
 }
 
