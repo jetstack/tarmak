@@ -1,0 +1,42 @@
+## This manifest deploys a Job which performs one time
+# configuration of Calico
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: configure-calico
+  namespace: kube-system
+  labels:
+    k8s-app: calico
+spec:
+  template:
+    metadata:
+      name: configure-calico
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/tolerations: |
+          [{"key": "dedicated", "value": "master", "effect": "NoSchedule" },
+           {"key":"CriticalAddonsOnly", "operator":"Exists"}]
+    spec:
+      hostNetwork: true
+      restartPolicy: OnFailure
+      containers:
+        # Writes basic configuration to datastore.
+        - name: configure-calico
+          image: quay.io/calico/ctl:v<%= @node_version %>
+          args:
+            - apply
+            - -f
+            - /etc/config/calico/ippool.yaml
+          env:
+            - name: DATASTORE_TYPE
+              value: "kubernetes"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: calico-config
+            items:
+            - key: ippool.yaml
+              path: calico/ippool.yaml

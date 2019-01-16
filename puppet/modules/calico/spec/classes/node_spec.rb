@@ -97,4 +97,14 @@ describe 'calico::node' do
       end
     end
   end
+
+  context 'with backend kubernetes' do
+    let(:backend) do
+      'backend => \'kubernetes\','
+    end
+
+    it do
+      is_expected.to compile
+    end
+  end
 end
