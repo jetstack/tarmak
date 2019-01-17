@@ -27,7 +27,7 @@ class calico::config{
 
     kubernetes::apply{'calico-config':
       manifests => [
-        template('calico/configmap_etcd.yaml.erb'),
+        template('calico/configmap_kubernetes.yaml.erb'),
       ],
     }
   }
