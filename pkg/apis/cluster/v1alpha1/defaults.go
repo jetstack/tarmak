@@ -73,9 +73,8 @@ func SetDefaults_Cluster(obj *Cluster) {
 
 	if obj.Kubernetes.Calico == nil {
 		obj.Kubernetes.Calico = &ClusterKubernetesCalico{
-			Backend:      "etcd",
-			EnableTypha:  false,
-			FeatureGates: make(map[string]bool),
+			Backend:     "etcd",
+			EnableTypha: false,
 		}
 	}
 
