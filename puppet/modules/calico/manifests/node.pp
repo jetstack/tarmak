@@ -41,13 +41,24 @@ class calico::node (
     $manifests = template('calico/node-daemonset_etcd.yaml.erb')
 
   } else {
+    $typha_enabled  = $::calico::typha_enabled
+    $typha_replicas = $::calico::typha_replicas
+
     $node_image = 'calico/node'
     $cni_image = 'calico/cni'
 
-    $manifests = [
-        template('calico/node-daemonset_kubernetes.yaml.erb'),
-        template('calico/node-crd.yaml.erb'),
-      ]
+    if $typha_enabled {
+      $manifests = [
+          template('calico/node-daemonset_kubernetes.yaml.erb'),
+          template('calico/node-crd.yaml.erb'),
+          template('calico/node-typha.yaml.erb'),
+        ]
+    } else {
+      $manifests = [
+          template('calico/node-daemonset_kubernetes.yaml.erb'),
+          template('calico/node-crd.yaml.erb'),
+        ]
+    }
   }
 
   kubernetes::apply{'calico-node':

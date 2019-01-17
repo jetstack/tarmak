@@ -230,8 +230,9 @@ type ClusterKubernetesControllerManager struct {
 }
 
 type ClusterKubernetesCalico struct {
-	Backend     string `json:"backend"`
-	EnableTypha bool   `json:"enableTypha"`
+	Backend       string `json:"backend"`
+	EnableTypha   bool   `json:"enableTypha"`
+	TyphaReplicas *int   `json:"typhaReplicas"`
 }
 
 // +k8s:openapi-gen=true

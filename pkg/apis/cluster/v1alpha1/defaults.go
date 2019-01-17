@@ -82,6 +82,11 @@ func SetDefaults_Cluster(obj *Cluster) {
 		obj.Kubernetes.Calico.Backend = "etcd"
 	}
 
+	if obj.Kubernetes.Calico.EnableTypha &&
+		obj.Kubernetes.Calico.TyphaReplicas == nil {
+		obj.Kubernetes.Calico.TyphaReplicas = intPointer(1)
+	}
+
 	// EBS encryption off if Amazon interface used
 	// but EBSEncrypted not specified
 	if obj.Amazon == nil {
@@ -140,6 +145,10 @@ func boolPointer(x bool) *bool {
 }
 
 func floatPointer(x float64) *float64 {
+	return &x
+}
+
+func intPointer(x int) *int {
 	return &x
 }
 

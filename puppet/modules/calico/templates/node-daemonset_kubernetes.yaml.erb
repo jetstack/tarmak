@@ -86,12 +86,14 @@ spec:
             # Enable IP-in-IP within Felix.
             - name: FELIX_IPINIPENABLED
               value: "true"
+<%- if @typha_enabled -%>
             # Typha support: controlled by the ConfigMap.
-            #- name: FELIX_TYPHAK8SSERVICENAME
-            #  valueFrom:
-            #    configMapKeyRef:
-            #      name: calico-config
-            #      key: typha_service_name
+            - name: FELIX_TYPHAK8SSERVICENAME
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: typha_service_name
+<%- end -%>
             # Set based on the k8s node name.
             - name: NODENAME
               valueFrom:

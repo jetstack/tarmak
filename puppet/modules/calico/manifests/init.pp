@@ -8,8 +8,8 @@ class calico(
   String $etcd_key_file = '',
   String $cloud_provider = $::calico::params::cloud_provider,
   String $namespace = 'kube-system',
-  Hash[String,Boolean] $feature_gates = {},
-  Boolean $enable_typha = false,
+  Boolean $typha_enabled = false,
+  Optional[Integer] $typha_replicas = undef,
   Optional[String] $pod_network = undef,
   Integer[1000,65535] $mtu = 1480,
 ) inherits ::calico::params
