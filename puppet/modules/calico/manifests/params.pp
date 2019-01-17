@@ -10,8 +10,6 @@ class calico::params {
     $etcd_cluster = $::tarmak::_etcd_cluster
     $etcd_overlay_port = $::tarmak::etcd_overlay_client_port
 
-    $enable_typha = $::tarmak::enable_typha
-
   } else {
     $etcd_cluster = []
     $etcd_overlay_port = 2359
