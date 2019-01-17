@@ -616,6 +616,17 @@ func (c *Cluster) validateCalico() error {
 			"typha enabled but backend is not 'kubernetes', got=%s", calico.Backend))
 	}
 
+	if calico.EnableTypha &&
+		(calico.TyphaReplicas == nil || *calico.TyphaReplicas <= 0) {
+		got := "nil"
+		if calico.TyphaReplicas != nil {
+			got = strconv.Itoa(*calico.TyphaReplicas)
+		}
+
+		result = multierror.Append(result, fmt.Errorf(
+			"typha enabled so expecting a non-zero positive replica count, got=%s", got))
+	}
+
 	return result.ErrorOrNil()
 }
 
