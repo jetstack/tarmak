@@ -230,9 +230,8 @@ type ClusterKubernetesControllerManager struct {
 }
 
 type ClusterKubernetesCalico struct {
-	Backend      string          `json:"backend"`
-	EnableTypha  bool            `json:"enableTypha"`
-	FeatureGates map[string]bool `json:"featureGates,omitempty"`
+	Backend     string `json:"backend"`
+	EnableTypha bool   `json:"enableTypha"`
 }
 
 // +k8s:openapi-gen=true

@@ -7,7 +7,7 @@ metadata:
   namespace: <%= @namespace %>
   labels:
     k8s-app: calico-policy
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   # The policy controller can only have a single active instance.
   replicas: 1

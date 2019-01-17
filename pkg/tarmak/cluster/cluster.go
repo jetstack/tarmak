@@ -611,16 +611,9 @@ func (c *Cluster) validateCalico() error {
 			"calico's backend may only be set to %s, got=%s", backends, calico.Backend))
 	}
 
-	if calico.Backend != "kubernetes" {
-		if calico.EnableTypha {
-			result = multierror.Append(result, fmt.Errorf(
-				"typha enabled but backend is not 'kubernetes', got=%s", calico.Backend))
-		}
-
-		if len(calico.FeatureGates) > 0 {
-			result = multierror.Append(result, fmt.Errorf(
-				"received feature gates for calico but backend is not 'kubernetes', got=%s", calico.Backend))
-		}
+	if calico.Backend != "kubernetes" && calico.EnableTypha {
+		result = multierror.Append(result, fmt.Errorf(
+			"typha enabled but backend is not 'kubernetes', got=%s", calico.Backend))
 	}
 
 	return result.ErrorOrNil()
