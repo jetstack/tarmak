@@ -928,6 +928,35 @@ file under the Kubernetes code block like following:
        featureGates:
          CPUManager: false
 
+Calico Backend
+~~~~~~~~~~~~~~
+
+By default Tarmak will deploy Calico into your Kubernetes cluster, configured to
+use etcd as the backend. Calico also supports using the Kubernetes API server
+instead, which can be configured by changing the Calico option in the Tarmak
+config like the following:
+
+.. code-block:: yaml
+
+   kubernetes:
+    calico:
+      backend: kubernetes
+      enableTypha: true
+      typhaReplicas: 1
+
+This change will take effect cluster wide.
+
+Calico also supports using Typha, a purpose built, fan-out daemon to reduce load
+on the targeted data store. More information can be found on it's `project page
+<https://github.com/projectcalico/typha>`_.
+
+.. note::
+   Typha should only typically be enabled when your Kubernetes node count
+   exceeds 50.
+
+Enabling Typha, along with setting the number of replicas is shown above.
+
+
 Cluster Services
 ----------------
 
