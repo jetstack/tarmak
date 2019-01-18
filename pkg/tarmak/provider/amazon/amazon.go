@@ -590,7 +590,7 @@ func (a *Amazon) verifyInstanceTypes() error {
 			return err
 		}
 
-		if err := a.verifyInstanceType(instanceType, instance.Zones(), svc); err != nil {
+		if err := a.verifyInstanceType(instanceType, svc); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
@@ -598,7 +598,7 @@ func (a *Amazon) verifyInstanceTypes() error {
 	return result
 }
 
-func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2) error {
+func (a *Amazon) verifyInstanceType(instanceType string, svc EC2) error {
 	var result error
 
 	//Request offering, filter by given instance type
@@ -642,6 +642,8 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 	if err != nil {
 		return fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err)
 	}
+
+	fmt.Printf("Response: %v \n", response)
 
 	if len(response.ReservedInstancesOfferings) < 1 {
 		result = multierror.Append(result, fmt.Errorf("type %s is not available in the %s region", instanceType, a.Region()))
