@@ -18,6 +18,10 @@ class calico::node (
   $ipv4_pool_cidr = $::calico::pod_network
   $backend = $::calico::backend
 
+  $typha_enabled  = $::calico::typha_enabled
+  $typha_replicas = $::calico::typha_replicas
+
+
   $authorization_mode = $::kubernetes::_authorization_mode
   if member($authorization_mode, 'RBAC'){
     $rbac_enabled = true
@@ -31,19 +35,16 @@ class calico::node (
     $version_before_1_6 = true
   }
 
-  if $::calico::backend == 'etcd' {
+  if $backend == 'etcd' {
     $etcd_cert_path = $::calico::etcd_cert_path
     $etcd_proto = $::calico::etcd_proto
     $node_image = 'quay.io/calico/node'
     $cni_image = 'quay.io/calico/cni'
 
 
-    $manifests = template('calico/node-daemonset_etcd.yaml.erb')
+    $manifests = [template('calico/node-daemonset_etcd.yaml.erb')]
 
   } else {
-    $typha_enabled  = $::calico::typha_enabled
-    $typha_replicas = $::calico::typha_replicas
-
     $node_image = 'calico/node'
     $cni_image = 'calico/cni'
 

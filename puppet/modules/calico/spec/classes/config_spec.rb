@@ -104,6 +104,11 @@ describe 'calico::config' do
       'backend => \'kubernetes\','
     end
 
+    it 'sets up ipam' do
+      expect(calico_config).to match(%r{"type": "host-local",})
+      expect(calico_config).to match(%r{"subnet": "usePodCidr"})
+    end
+
     it do
       is_expected.to compile
     end
