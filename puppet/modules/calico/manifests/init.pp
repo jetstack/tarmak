@@ -31,7 +31,6 @@ class calico(
       $etcd_proto = 'http'
     }
     $etcd_endpoints = $etcd_cluster.map |$node| { "${etcd_proto}://${node}:${etcd_overlay_port}" }.join(',')
-  } elsif $backend == 'kubernetes' {
   }
 
   if $cloud_provider == 'aws' {

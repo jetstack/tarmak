@@ -23,7 +23,7 @@ data:
           "log_level": "info",
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
-          "mtu": 1500,
+          "mtu": <%= @mtu %>,
           "ipam": {
             "type": "host-local",
             "subnet": "usePodCidr"
