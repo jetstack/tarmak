@@ -45,9 +45,10 @@ type image struct {
 
 func (i *image) userVariables() map[string]string {
 	return map[string]string{
-		tarmakv1alpha1.ImageTagEnvironment:   i.environment,
-		tarmakv1alpha1.ImageTagBaseImageName: i.imageName,
-		"region":                             i.tarmak.Provider().Region(),
+		tarmakv1alpha1.ImageTagEnvironment:       i.environment,
+		tarmakv1alpha1.ImageTagBaseImageName:     i.imageName,
+		tarmakv1alpha1.ImageTagKubernetesVersion: i.tarmak.Cluster().Config().Kubernetes.Version,
+		"region":                                 i.tarmak.Provider().Region(),
 	}
 }
 

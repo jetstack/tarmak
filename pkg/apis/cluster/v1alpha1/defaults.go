@@ -174,7 +174,7 @@ func SetDefaults_InstancePool(obj *InstancePool) {
 	// set image to default image
 	if obj.Image == "" {
 		if obj.Type == InstancePoolTypeWorker {
-			obj.Image = "centos-k8s-worker"
+			obj.Image = "centos-puppet-agent-k8s-worker"
 		} else {
 			obj.Image = "centos-puppet-agent"
 		}

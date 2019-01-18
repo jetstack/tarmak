@@ -7,7 +7,8 @@
     "tarmak_base_image_name": "{{env `TARMAK_BASE_IMAGE_NAME`}}",
     "puppet_path": "{{env `PUPPET_PATH`}}",
     "ebs_volume_encrypted": "{{env `EBS_VOLUME_ENCRYPTED`}}",
-    "scripts": "{{template_dir}}"
+    "scripts": "{{template_dir}}",
+    "kubernetes_version": "{{env `KUBERNETES_VERSION`}}"
   },
   "builders": [
     {
@@ -31,7 +32,8 @@
       "tags": {
         "Name": "tarmak_{{user `tarmak_environment`}}_{{user `tarmak_base_image_name`}}",
         "tarmak_environment": "{{user `tarmak_environment`}}",
-        "tarmak_base_image_name": "{{user `tarmak_base_image_name`}}"
+        "tarmak_base_image_name": "{{user `tarmak_base_image_name`}}",
+        "kubernetes_version": "{{user `kubernetes_version`}}"
       },
       "associate_public_ip_address": true
     }
