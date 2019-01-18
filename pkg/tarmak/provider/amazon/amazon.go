@@ -600,7 +600,6 @@ func (a *Amazon) verifyInstanceTypes() error {
 
 func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2) error {
 	var result error
-	var available bool
 
 	//Request offering, filter by given instance type
 	request := &ec2.DescribeReservedInstancesOfferingsInput{
@@ -644,22 +643,8 @@ func (a *Amazon) verifyInstanceType(instanceType string, zones []string, svc EC2
 		return fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err)
 	}
 
-	//Loop through the given zones
-	for _, zone := range zones {
-		available = false
-
-		//Loop through every offer given. Check the zone against the current looped zone.
-		for _, offer := range response.ReservedInstancesOfferings {
-			if offer.AvailabilityZone != nil && *offer.AvailabilityZone == zone {
-				available = true
-				break
-			}
-		}
-
-		//Collect non matched zones
-		if !available {
-			result = multierror.Append(result, fmt.Errorf("availabilty zone %s not offered for type %s", zone, instanceType))
-		}
+	if len(response.ReservedInstancesOfferings) < 1 {
+		result = multierror.Append(result, fmt.Errorf("type %s is not available in the %s region", instanceType, a.Region()))
 	}
 
 	return result
