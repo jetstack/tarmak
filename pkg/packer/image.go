@@ -2,7 +2,9 @@
 package packer
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -120,6 +122,20 @@ func (i *image) Build() (amiID string, err error) {
 	path := filepath.Join(rootPath, "puppet")
 
 	envVars = append(envVars, fmt.Sprintf("PUPPET_PATH=%s", path))
+
+	hash := sha256.New()
+	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		io.WriteString(hash, path)
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	envVars = append(envVars, fmt.Sprintf("PUPPET_HASH=%x", hash.Sum(nil)))
 
 	var result *multierror.Error
 	for _, e := range envVars {
