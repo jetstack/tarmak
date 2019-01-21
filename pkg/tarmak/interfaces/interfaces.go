@@ -235,7 +235,6 @@ type Host interface {
 	Roles() []string
 	SSHConfig(strictChecking string) string
 	Parameters() map[string]string
-	SSHControlPath() string
 	SSHKnownHostConfig() (string, error)
 	Aliases() []string
 }

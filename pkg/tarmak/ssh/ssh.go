@@ -26,6 +26,10 @@ import (
 
 var _ interfaces.SSH = &SSH{}
 
+var (
+	hostKeyCallbackError = errors.New("host key callback rejected")
+)
+
 type SSH struct {
 	tarmak interfaces.Tarmak
 	log    *logrus.Entry
@@ -347,8 +351,45 @@ func (s *SSH) config() (*ssh.ClientConfig, error) {
 		Timeout:         time.Minute * 10,
 		User:            bastion.User(),
 		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: s.hostKeyCallback,
 	}, nil
+}
+
+func (s *SSH) hostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) error {
+	localHosts, err := s.parseKnownHosts()
+	if err != nil {
+		s.log.Warnf("host key callback failed: %s", err)
+		return hostKeyCallbackError
+	}
+
+	// remove port from hostname
+	if s := strings.Split(hostname, ":"); len(s) > 0 {
+		hostname = s[0]
+	}
+
+	localKey, ok := localHosts[hostname]
+	if !ok {
+		if s.tarmak.Config().IgnoreMissingPublicKeyTags() {
+			s.log.Warnf("ignoring missing local host key for hostname %s", hostname)
+			return nil
+		}
+
+		s.log.Warnf("missing local host key for hostname %s", hostname)
+		return hostKeyCallbackError
+	}
+
+	lk, _, _, rest, err := ssh.ParseAuthorizedKey([]byte(localKey))
+	if err != nil || rest != nil {
+		s.log.Errorf("failed to parse local host key %s: rest=%s err=%s", hostname, rest, err)
+		return hostKeyCallbackError
+	}
+
+	if !bytes.Equal(key.Marshal(), lk.Marshal()) {
+		s.log.Errorf("local hostname key mismatch callback for %s", hostname)
+		return hostKeyCallbackError
+	}
+
+	return nil
 }
 
 func (s *SSH) host(name string) (interfaces.Host, error) {
