@@ -642,7 +642,6 @@ func (a *Amazon) verifyInstanceType(instanceType string, svc EC2) error {
 	if err != nil {
 		return fmt.Errorf("error reaching aws to verify instance type %s: %v", instanceType, err)
 	}
-	
 	if len(response.ReservedInstancesOfferings) < 1 {
 		result = multierror.Append(result, fmt.Errorf("type %s is not available in the %s region", instanceType, a.Region()))
 	}
