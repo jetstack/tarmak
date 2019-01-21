@@ -9,4 +9,8 @@ const (
 
 	DefaultKubeconfigPath = "${TARMAK_CONFIG}/${CURRENT_CLUSTER}/kubeconfig"
 	KubeconfigFlagName    = "public-api-endpoint"
+
+	RestoreK8sMainFlagName   = "k8s-main"
+	RestoreK8sEventsFlagName = "k8s-events"
+	RestoreOverlayFlagName   = "overlay"
 )

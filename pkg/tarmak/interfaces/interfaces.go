@@ -294,3 +294,10 @@ type CancellationContext interface {
 	WaitOrCancel(f func() error)
 	WaitOrCancelReturnCode(f func() (int, error))
 }
+
+type Snapshot interface {
+	Save() error
+	Restore() error
+	Log() *logrus.Entry
+	SSH() SSH
+}

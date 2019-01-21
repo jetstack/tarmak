@@ -149,6 +149,7 @@ type ClusterFlags struct {
 	Images     ClusterImagesFlags     `json:"images,omitempty"`     // flags for handling images
 	Plan       ClusterPlanFlags       `json:"plan,omitempty"`       // flags for planning clusters
 	Kubeconfig ClusterKubeconfigFlags `json:"kubeconfig,omitempty"` // flags for kubeconfig of clusters
+	Snapshot   ClusterSnapshotFlags   `json:"snapshot,omitempty"`   // flags for snapshots of clusters
 }
 
 // Contains the cluster plan flags
@@ -189,4 +190,21 @@ type ClusterImagesBuildFlags struct {
 // Contains the cluster kubeconfig flags
 type ClusterKubeconfigFlags struct {
 	Path string `json:"path,omitempty"` // Path to save kubeconfig to
+}
+
+// Contains the cluster snapshot flags
+type ClusterSnapshotFlags struct {
+	Etcd ClusterSnapshotEtcdFlags `json:"etcd,omitempty"` // flags for handling etcd snapshots
+}
+
+// Contains the cluster snapshot etcd flags
+type ClusterSnapshotEtcdFlags struct {
+	Restore ClusterSnapshotEtcdRestoreFlags `json:"restore,omitempty"` // flags for handling etcd snapshot restore
+}
+
+// Contains the cluster snapshot etcd restore flags
+type ClusterSnapshotEtcdRestoreFlags struct {
+	K8sMain   string `json:"k8sMain,omitempty"`   // Path to k8s-main snapshot backup
+	K8sEvents string `json:"k8sEvents,omitempty"` // Path to k8s-events snapshot backup
+	Overlay   string `json:"overlay,omitempty"`   // Path to overlay snapshot backup
 }
