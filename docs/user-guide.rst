@@ -200,7 +200,7 @@ Namespaces
 By default the restricted Pod Security Policy is applied to all namespaces
 except ``kube-system`` and ``monitoring`` namespace.
 
-It is possible to allow other namespaces to use the priviliged Pod Security
+It is possible to allow other namespaces to use the privileged Pod Security
 Policy. This can be done by deploying an extra RoleBinding:
 
 .. code-block:: yaml
