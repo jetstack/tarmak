@@ -174,7 +174,7 @@ Pod Security Policy
 ~~~~~~~~~~~~~~~~~~~
 
 **Note:** For cluster versions greater than 1.8.0 this is applied by default.
-For cluster versions before 1.6.0 is it not applied.
+For cluster versions before 1.6.0 it is not applied.
 
 To enable Pod Security Policy for an environment, include the following in the
 configuration file under the Kubernetes field of that environment:
@@ -193,6 +193,31 @@ The PodSecurityPolicy manifests - also listed below - can be found in the
 
 - `PodSecurityPolicy RBAC <https://github.com/jetstack/tarmak/blob/master/puppet/modules/kubernetes/templates/pod-security-policy-rbac.yaml.erb>`_
 - `PodSecurityPolicy <https://github.com/jetstack/tarmak/blob/master/puppet/modules/kubernetes/templates/pod-security-policy.yaml.erb>`_
+
+Namespaces
+++++++++++
+
+By default the restricted Pod Security Policy is applied to all namespaces
+except ``kube-system`` and ``monitoring`` namespace.
+
+It is possible to allow other namespaces to use the priviliged Pod Security
+Policy. This can be done by deploying an extra RoleBinding:
+
+.. code-block:: yaml
+
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: default:privileged
+    namespace: example
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: psp:privileged
+  subjects:
+  - kind: Group
+    name: system:serviceaccounts:example
+    apiGroup: rbac.authorization.k8s.io
 
 Cluster Autoscaler
 ~~~~~~~~~~~~~~~~~~
