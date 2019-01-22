@@ -10,6 +10,9 @@ describe 'kubernetes::proxy' do
       '/etc/kubernetes/kube-proxy-config.yaml'
   end
 
+  let :service_name do
+    'kube-proxy.service'
+  end
 
   context 'proxy config' do
     context 'on kubernetes 1.10' do
@@ -63,6 +66,23 @@ describe 'kubernetes::proxy' do
           end
         end
       end
+    end
+  end
+
+  context 'defaults' do
+    it do
+      is_expected.to compile
+      should contain_service(service_name).with_ensure('running')
+    end
+  end
+
+  context 'with service_ensure => stopped' do
+    let(:params) { { 
+      "service_ensure" => 'stopped',
+    }}
+
+    it do
+      should contain_service(service_name).with_ensure('stopped')
     end
   end
 end

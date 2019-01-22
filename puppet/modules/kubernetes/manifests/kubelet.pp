@@ -10,6 +10,7 @@ class kubernetes::kubelet(
   String $role = 'worker',
   String $container_runtime = 'docker',
   String $kubelet_dir = '/var/lib/kubelet',
+  String $service_ensure = 'running',
   Optional[String] $eviction_hard_memory_available_threshold = '5%',
   Optional[String] $eviction_hard_nodefs_available_threshold = '10%',
   Optional[String] $eviction_hard_nodefs_inodes_free_threshold = '5%',
@@ -298,7 +299,7 @@ class kubernetes::kubelet(
     refreshonly => true,
   }
   -> service{ "${service_name}.service":
-    ensure => running,
+    ensure => $service_ensure,
     enable => true,
   }
 

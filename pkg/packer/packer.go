@@ -47,6 +47,11 @@ func (p *Packer) Build(imageNames []string) error {
 	var wg sync.WaitGroup
 	var result *multierror.Error
 
+	// Save puppet config
+	err := p.tarmak.Puppet().Initialize(true)
+	if err != nil {
+		return err
+	}
 	wg.Add(len(imageNames))
 	for _, name := range imageNames {
 		image := &image{
@@ -62,9 +67,9 @@ func (p *Packer) Build(imageNames []string) error {
 		}
 
 		go func() {
+			resultLock.Lock()
 			amiID, err := image.Build()
 
-			resultLock.Lock()
 			defer wg.Done()
 			defer resultLock.Unlock()
 

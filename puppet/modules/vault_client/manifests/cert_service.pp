@@ -11,12 +11,12 @@ define vault_client::cert_service (
   Integer $key_bits = 2048,
   Integer $frequency = 86400,
   Array $exec_post = [],
+  Boolean $run_exec = true,
 )
 {
   require vault_client
 
   $service_name = "${name}-cert"
-
   exec { "${service_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
@@ -39,8 +39,11 @@ define vault_client::cert_service (
     require => Exec["${service_name}-systemctl-daemon-reload"],
   }
 
-  $trigger_cmd = "systemctl start ${service_name}.service"
-
+  if $run_exec {
+    $trigger_cmd = "systemctl start ${service_name}.service"
+  } else {
+    $trigger_cmd = '/bin/true'
+  }
   exec { "${service_name}-trigger":
     path        => $::vault_client::path,
     command     => $trigger_cmd,

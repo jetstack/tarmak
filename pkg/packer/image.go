@@ -2,7 +2,9 @@
 package packer
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +13,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 	amazonebsbuilder "github.com/hashicorp/packer/builder/amazon/ebs"
 	"github.com/hashicorp/packer/packer"
+	fileprovisioner "github.com/hashicorp/packer/provisioner/file"
+	puppetmasterlessprovisioner "github.com/hashicorp/packer/provisioner/puppet-masterless"
 	shellprovisioner "github.com/hashicorp/packer/provisioner/shell"
 	"github.com/hashicorp/packer/template"
 	"github.com/hashicorp/packer/version"
@@ -25,7 +29,9 @@ var Builders = map[string]packer.Builder{
 }
 
 var Provisioners = map[string]packer.Provisioner{
-	"shell": new(shellprovisioner.Provisioner),
+	"shell":             new(shellprovisioner.Provisioner),
+	"file":              new(fileprovisioner.Provisioner),
+	"puppet-masterless": new(puppetmasterlessprovisioner.Provisioner),
 }
 
 type image struct {
@@ -41,9 +47,10 @@ type image struct {
 
 func (i *image) userVariables() map[string]string {
 	return map[string]string{
-		tarmakv1alpha1.ImageTagEnvironment:   i.environment,
-		tarmakv1alpha1.ImageTagBaseImageName: i.imageName,
-		"region":                             i.tarmak.Provider().Region(),
+		tarmakv1alpha1.ImageTagEnvironment:       i.environment,
+		tarmakv1alpha1.ImageTagBaseImageName:     i.imageName,
+		tarmakv1alpha1.ImageTagKubernetesVersion: i.tarmak.Cluster().Config().Kubernetes.Version,
+		"region":                                 i.tarmak.Provider().Region(),
 	}
 }
 
@@ -108,6 +115,27 @@ func (i *image) Build() (amiID string, err error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get provider credentials: %v", err)
 	}
+	rootPath, err = i.tarmak.RootPath()
+	if err != nil {
+		return "", fmt.Errorf("error getting rootPath: %s", err)
+	}
+	path := filepath.Join(rootPath, "puppet")
+
+	envVars = append(envVars, fmt.Sprintf("PUPPET_PATH=%s", path))
+
+	hash := sha256.New()
+	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		io.WriteString(hash, path)
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	envVars = append(envVars, fmt.Sprintf("PUPPET_HASH=%x", hash.Sum(nil)))
 
 	var result *multierror.Error
 	for _, e := range envVars {

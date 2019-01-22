@@ -3,7 +3,7 @@
 # This class is called from vault_client for service config.
 #
 class vault_client::config {
-  if $::vault_client::init_token != undef {
+  if $::vault_client::init_token != undef and $::vault_client::init_token != 'packer-bootstrap' {
     $init_token_enabled = true
   } else {
     $init_token_enabled = false
@@ -21,7 +21,7 @@ class vault_client::config {
   }
 
   ## if init token provided, get a unique token for node
-  if $::vault_client::init_token != undef {
+  if $::vault_client::init_token !=  undef and $::vault_client::init_token != 'packer-bootstrap' {
     file {$::vault_client::init_token_path:
       ensure  => 'present',
       replace => 'no',

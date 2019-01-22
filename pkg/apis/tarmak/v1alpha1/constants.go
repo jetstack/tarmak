@@ -15,8 +15,9 @@ const (
 )
 
 const (
-	ImageTagEnvironment   = "tarmak_environment"
-	ImageTagBaseImageName = "tarmak_base_image_name"
+	ImageTagEnvironment       = "tarmak_environment"
+	ImageTagBaseImageName     = "tarmak_base_image_name"
+	ImageTagKubernetesVersion = "kubernetes_version"
 )
 
 const (

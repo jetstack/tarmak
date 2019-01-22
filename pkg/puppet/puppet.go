@@ -23,8 +23,9 @@ import (
 )
 
 type Puppet struct {
-	log    *logrus.Entry
-	tarmak interfaces.Tarmak
+	log         *logrus.Entry
+	tarmak      interfaces.Tarmak
+	packerBuild bool
 }
 
 type hieraData struct {
@@ -42,7 +43,35 @@ func New(tarmak interfaces.Tarmak) *Puppet {
 }
 
 func (p *Puppet) TarGz(writer io.Writer) error {
+	rootPath, err := p.tarmak.RootPath()
+	if err != nil {
+		return fmt.Errorf("error getting rootPath: %s", err)
+	}
 
+	path := filepath.Join(rootPath, "puppet")
+
+	err = p.Initialize(false)
+	if err != nil {
+		return err
+	}
+
+	reader, err := archive.Tar(
+		path,
+		archive.Gzip,
+	)
+	if err != nil {
+		return fmt.Errorf("error creating tar from path '%s': %s", path, err)
+	}
+
+	if _, err := io.Copy(writer, reader); err != nil {
+		return fmt.Errorf("error writing tar: %s", err)
+	}
+
+	return nil
+}
+
+func (p *Puppet) Initialize(packerBuild bool) error {
+	p.packerBuild = packerBuild
 	rootPath, err := p.tarmak.RootPath()
 	if err != nil {
 		return fmt.Errorf("error getting rootPath: %s", err)
@@ -61,18 +90,6 @@ func (p *Puppet) TarGz(writer io.Writer) error {
 	})
 	if err != nil {
 		return err
-	}
-
-	reader, err := archive.Tar(
-		path,
-		archive.Gzip,
-	)
-	if err != nil {
-		return fmt.Errorf("error creating tar from path '%s': %s", path, err)
-	}
-
-	if _, err := io.Copy(writer, reader); err != nil {
-		return fmt.Errorf("error writing tar: %s", err)
 	}
 
 	return nil
@@ -315,7 +332,7 @@ func kubernetesInstancePoolConfig(conf *clusterv1alpha1.InstancePoolKubernetes, 
 	return
 }
 
-func contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
+func (p *Puppet) contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
 
 	hieraData := &hieraData{}
 	if publicAPIHostname := cluster.PublicAPIHostname(); publicAPIHostname != "" {
@@ -341,6 +358,11 @@ func contentClusterConfig(cluster interfaces.Cluster) ([]string, error) {
 		if v.URL != "" {
 			hieraData.variables = append(hieraData.variables, fmt.Sprintf("vault_client::_download_url: %s", v.URL))
 		}
+	}
+
+	if p.packerBuild {
+		hieraData.variables = append(hieraData.variables, `vault_client::run_exec: false`)
+		hieraData.variables = append(hieraData.variables, `tarmak::service_ensure: "stopped"`)
 	}
 
 	classes, variables := serialiseHieraData(hieraData)
@@ -409,7 +431,7 @@ func (p *Puppet) writeHieraData(puppetPath string, cluster interfaces.Cluster) e
 		"hieradata",
 	)
 
-	clusterConfig, err := contentClusterConfig(cluster)
+	clusterConfig, err := p.contentClusterConfig(cluster)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve cluster config: %s", err)
 	}

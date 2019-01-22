@@ -1017,7 +1017,7 @@
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
 
 [[projects]]
-  digest = "1:9cab82db93e4e8de5cf1d7162dcddced1ffe8fe8a2adad5c101b61b52dbc578b"
+  digest = "1:df0b2ac11f5963f001e9e09f7d80ad33b3477b5542c2aadc4bb8fc1e6a8d1e6d"
   name = "github.com/hashicorp/packer"
   packages = [
     "builder/amazon/common",
@@ -1034,6 +1034,9 @@
     "helper/multistep",
     "helper/useragent",
     "packer",
+    "provisioner",
+    "provisioner/file",
+    "provisioner/puppet-masterless",
     "provisioner/shell",
     "template",
     "template/interpolate",
@@ -2719,6 +2722,8 @@
     "github.com/hashicorp/go-version",
     "github.com/hashicorp/packer/builder/amazon/ebs",
     "github.com/hashicorp/packer/packer",
+    "github.com/hashicorp/packer/provisioner/file",
+    "github.com/hashicorp/packer/provisioner/puppet-masterless",
     "github.com/hashicorp/packer/provisioner/shell",
     "github.com/hashicorp/packer/template",
     "github.com/hashicorp/packer/version",

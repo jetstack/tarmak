@@ -9,6 +9,14 @@ describe 'kubernetes::kubelet' do
   let :kubelet_config do
       '/etc/kubernetes/kubelet-config.yaml'
   end
+  
+  let :service_name do
+    'kubelet.service'
+  end
+
+  let :kubeconfig_file do
+      '/etc/kubernetes/kubeconfig-kubelet'
+  end
 
   context 'defaults' do
     it do
@@ -26,6 +34,7 @@ describe 'kubernetes::kubelet' do
       should contain_file(service_file).with_content(%r{--eviction-soft-grace-period=memory.available=0m,nodefs.available=0m,nodefs.inodesFree=0m})
       should contain_file(service_file).with_content(%r{--eviction-max-pod-grace-period=-1})
       should contain_file(service_file).with_content(%r{--eviction-pressure-transition-period=2m})
+      should contain_service(service_name).with_ensure('running')
     end
   end
 
@@ -666,6 +675,16 @@ describe 'kubernetes::kubelet' do
       it 'should have custom feature gates' do
         should contain_file(service_file).with_content(/#{Regexp.escape('--feature-gates=foo=true,bar=true')}/)
       end
+    end
+  end
+
+  context 'with service_ensure => stopped' do
+    let(:params) { { 
+      "service_ensure" => 'stopped',
+    }}
+
+    it do
+      should contain_service(service_name).with_ensure('stopped')
     end
   end
 end
