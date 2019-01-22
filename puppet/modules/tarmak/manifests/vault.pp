@@ -1,18 +1,12 @@
 class tarmak::vault (
-  String $volume_id = '',
   String $data_dir = '/var/lib/consul',
   String $dest_dir = '/opt/bin',
   String $systemd_dir = '/etc/systemd/system',
-  Enum['aws', ''] $cloud_provider = '',
 ){
 
-  if $cloud_provider == '' and defined('$::cloud_provider') {
-    $_cloud_provider = $::cloud_provider
-  } else {
-    $_cloud_provider = $cloud_provider
-  }
+  include ::vault_server
 
-  if $_cloud_provider == 'aws' {
+  if $vault_server::cloud_provider == 'aws' {
     $disks = aws_ebs::disks()
     case $disks.length {
       0: {$ebs_device = ''; $is_not_attached = true}
@@ -25,7 +19,7 @@ class tarmak::vault (
       systemd_dir => $systemd_dir,
     }
     aws_ebs::mount{'vault':
-      volume_id       => $volume_id,
+      volume_id       => $::vault_server::volume_id,
       device          => "/dev/${ebs_device}",
       dest_path       => $data_dir,
       is_not_attached => $is_not_attached,

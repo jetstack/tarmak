@@ -1,5 +1,6 @@
 ---
 classes:
 - airworthy
+- tarmak::vault
 - consul
 - vault_server

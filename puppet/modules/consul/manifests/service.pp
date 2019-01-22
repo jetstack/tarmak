@@ -6,13 +6,13 @@ class consul::service(
   String $backup_bucket_prefix = $consul::backup_bucket_prefix,
   String $backup_schedule = $consul::backup_schedule,
   Array[String] $_systemd_wants = $consul::systemd_wants,
-  Array[String] $_systemd_requires = $consul::systemd_requires,
   Array[String] $_systemd_before = $consul::systemd_before,
   Integer $consul_bootstrap_expect = $consul::_consul_bootstrap_expect
 )
 {
 
-  $_systemd_after = ['network.target'] + $consul::systemd_after
+  $_systemd_after = ['network.target', 'var-lib-consul.mount'] + $consul::systemd_after
+  $_systemd_requires = ['var-lib-consul.mount'] + $consul::systemd_requires
 
   $service_name = 'consul'
   $backup_service_name = 'consul-backup'

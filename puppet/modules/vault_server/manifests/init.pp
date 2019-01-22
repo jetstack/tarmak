@@ -17,6 +17,7 @@ class vault_server (
   String $lib_dir = $vault_server::params::lib_dir,
   String $download_dir = $vault_server::params::download_dir,
   String $systemd_dir = $vault_server::params::systemd_dir,
+  String $volume_id = '',
 ) inherits ::vault_server::params {
 
   # paths
