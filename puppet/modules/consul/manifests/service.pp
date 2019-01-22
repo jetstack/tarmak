@@ -11,8 +11,13 @@ class consul::service(
 )
 {
 
-  $_systemd_after = ['network.target', 'var-lib-consul.mount'] + $consul::systemd_after
-  $_systemd_requires = ['var-lib-consul.mount'] + $consul::systemd_requires
+  if $consul::cloud_provider == 'aws' {
+    $_systemd_after = ['network.target', 'var-lib-consul.mount'] + $consul::systemd_after
+    $_systemd_requires = ['var-lib-consul.mount'] + $consul::systemd_requires
+  } else {
+    $_systemd_after = ['network.target'] + $consul::systemd_after
+    $_systemd_requires = $consul::systemd_requires
+  }
 
   $service_name = 'consul'
   $backup_service_name = 'consul-backup'

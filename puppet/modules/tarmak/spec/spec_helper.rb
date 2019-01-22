@@ -5,6 +5,7 @@ RSpec.configure do |config|
     :path => '/bin:/sbin:/usr/bin:/usr/sbin:/opt/bin',
     :ipaddress => '10.10.10.10',
     :osfamily => 'RedHat',
+    :consul_master_token => '',
     :disks => {
       'xvda' => {
         'size' => '16.00 GiB',
