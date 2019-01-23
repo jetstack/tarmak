@@ -6,7 +6,7 @@ class tarmak::vault (
 
   include ::vault_server
 
-  if $vault_server::cloud_provider == 'aws' {
+  if $vault_server::cloud_provider == 'aws' and $::vault_server::volume_id {
     $disks = aws_ebs::disks()
     case $disks.length {
       0: {$ebs_device = ''; $is_not_attached = true}

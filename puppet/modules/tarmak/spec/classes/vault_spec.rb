@@ -4,7 +4,7 @@ describe 'tarmak::vault' do
   context 'without params' do
     let(:pre_condition) {[
       """
-        class{'vault_server': cloud_provider => 'aws'}
+        class{'vault_server': cloud_provider => 'aws', volume_id => 'vol-1'}
       """
     ]}
 
