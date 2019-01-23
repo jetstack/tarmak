@@ -57,7 +57,7 @@ func (a *AWSTags) EnsureMachineTags() error {
 		KeySignatures:       sigs,
 		PublicKeys:          pks,
 		InstanceDocumentRaw: document,
-		RSASigniture:        rsaSig,
+		RSASignature:        rsaSig,
 	}
 
 	if err := a.callLambdaFunction(request); err != nil {

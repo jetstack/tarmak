@@ -49,7 +49,7 @@ type TagInstanceRequest struct {
 	KeySignatures map[string]*ssh.Signature `json:"keySignatures"`
 
 	InstanceDocumentRaw []byte `json:"document"`
-	RSASigniture        []byte `json:"rsaSigniture"`
+	RSASignature        []byte `json:"rsaSignature"`
 }
 
 type Handler struct {
@@ -122,7 +122,7 @@ func (h *Handler) verify() error {
 		return err
 	}
 
-	rsaSignature, err := base64.StdEncoding.DecodeString(string(h.request.RSASigniture))
+	rsaSignature, err := base64.StdEncoding.DecodeString(string(h.request.RSASignature))
 	if err != nil {
 		return err
 	}
