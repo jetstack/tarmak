@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "backend.go",
+        "client.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/backend/remote-state/inmem",
+    importpath = "github.com/hashicorp/terraform/backend/remote-state/inmem",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/terraform/backend:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/state:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/state/remote:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+    ],
+)

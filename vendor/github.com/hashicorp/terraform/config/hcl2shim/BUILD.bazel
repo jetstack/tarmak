@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "single_attr_body.go",
+        "values.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/config/hcl2shim",
+    importpath = "github.com/hashicorp/terraform/config/hcl2shim",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/hcl2/hcl:go_default_library",
+        "//vendor/github.com/hashicorp/hil/ast:go_default_library",
+        "//vendor/github.com/zclconf/go-cty/cty:go_default_library",
+    ],
+)

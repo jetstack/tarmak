@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "bash.go",
+        "fish.go",
+        "install.go",
+        "utils.go",
+        "zsh.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/posener/complete/cmd/install",
+    importpath = "github.com/posener/complete/cmd/install",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/hashicorp/go-multierror:go_default_library"],
+)

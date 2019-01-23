@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["validation.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/helper/validation",
+    importpath = "github.com/hashicorp/terraform/helper/validation",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/structure:go_default_library",
+    ],
+)

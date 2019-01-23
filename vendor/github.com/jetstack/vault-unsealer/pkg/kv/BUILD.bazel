@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["storage.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/jetstack/vault-unsealer/pkg/kv",
+    importpath = "github.com/jetstack/vault-unsealer/pkg/kv",
+    visibility = ["//visibility:public"],
+)

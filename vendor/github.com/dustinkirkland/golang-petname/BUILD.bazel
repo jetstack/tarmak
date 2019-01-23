@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["petname.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/dustinkirkland/golang-petname",
+    importpath = "github.com/dustinkirkland/golang-petname",
+    visibility = ["//visibility:public"],
+)

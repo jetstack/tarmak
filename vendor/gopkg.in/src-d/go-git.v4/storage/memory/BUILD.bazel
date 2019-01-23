@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["storage.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/gopkg.in/src-d/go-git.v4/storage/memory",
+    importpath = "gopkg.in/src-d/go-git.v4/storage/memory",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/gopkg.in/src-d/go-git.v4/config:go_default_library",
+        "//vendor/gopkg.in/src-d/go-git.v4/plumbing:go_default_library",
+        "//vendor/gopkg.in/src-d/go-git.v4/plumbing/format/index:go_default_library",
+        "//vendor/gopkg.in/src-d/go-git.v4/plumbing/storer:go_default_library",
+        "//vendor/gopkg.in/src-d/go-git.v4/storage:go_default_library",
+    ],
+)

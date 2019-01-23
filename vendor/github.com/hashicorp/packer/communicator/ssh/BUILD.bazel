@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "communicator.go",
+        "connect.go",
+        "connection.go",
+        "password.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/packer/communicator/ssh",
+    importpath = "github.com/hashicorp/packer/communicator/ssh",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/packer/packer:go_default_library",
+        "//vendor/github.com/pkg/sftp:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh/agent:go_default_library",
+        "//vendor/golang.org/x/net/proxy:go_default_library",
+    ],
+)

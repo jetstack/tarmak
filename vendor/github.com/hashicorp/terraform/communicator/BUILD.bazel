@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "communicator.go",
+        "communicator_mock.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/communicator",
+    importpath = "github.com/hashicorp/terraform/communicator",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/terraform/communicator/remote:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/communicator/ssh:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/communicator/winrm:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+    ],
+)

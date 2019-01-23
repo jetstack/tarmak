@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "goxpath.go",
+        "marshal.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/ChrisTrenkamp/goxpath",
+    importpath = "github.com/ChrisTrenkamp/goxpath",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/execxp:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/parser:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/tree:go_default_library",
+    ],
+)

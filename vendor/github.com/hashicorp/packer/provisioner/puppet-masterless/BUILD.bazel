@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["provisioner.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/packer/provisioner/puppet-masterless",
+    importpath = "github.com/hashicorp/packer/provisioner/puppet-masterless",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/packer/common:go_default_library",
+        "//vendor/github.com/hashicorp/packer/helper/config:go_default_library",
+        "//vendor/github.com/hashicorp/packer/packer:go_default_library",
+        "//vendor/github.com/hashicorp/packer/provisioner:go_default_library",
+        "//vendor/github.com/hashicorp/packer/template/interpolate:go_default_library",
+    ],
+)

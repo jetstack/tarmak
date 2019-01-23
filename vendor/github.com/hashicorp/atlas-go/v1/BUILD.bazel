@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "application.go",
+        "artifact.go",
+        "authentication.go",
+        "build_config.go",
+        "client.go",
+        "terraform.go",
+        "util.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/atlas-go/v1",
+    importpath = "github.com/hashicorp/atlas-go/v1",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/go-cleanhttp:go_default_library",
+        "//vendor/github.com/hashicorp/go-rootcerts:go_default_library",
+    ],
+)

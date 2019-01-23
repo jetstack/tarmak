@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "basic_runner.go",
+        "debug_runner.go",
+        "doc.go",
+        "multistep.go",
+        "statebag.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/packer/helper/multistep",
+    importpath = "github.com/hashicorp/packer/helper/multistep",
+    visibility = ["//visibility:public"],
+)

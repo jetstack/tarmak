@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "document.go",
+        "element.go",
+        "namespace.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/masterzen/simplexml/dom",
+    importpath = "github.com/masterzen/simplexml/dom",
+    visibility = ["//visibility:public"],
+)

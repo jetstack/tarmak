@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "lexer.go",
+        "paths.go",
+        "xmlchars.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/ChrisTrenkamp/goxpath/internal/lexer",
+    importpath = "github.com/ChrisTrenkamp/goxpath/internal/lexer",
+    visibility = ["//vendor/github.com/ChrisTrenkamp/goxpath:__subpackages__"],
+    deps = ["//vendor/github.com/ChrisTrenkamp/goxpath/internal/xconst:go_default_library"],
+)

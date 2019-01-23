@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["resource_provisioner.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/builtin/provisioners/remote-exec",
+    importpath = "github.com/hashicorp/terraform/builtin/provisioners/remote-exec",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/terraform/communicator:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/communicator/remote:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+        "//vendor/github.com/mitchellh/go-linereader:go_default_library",
+    ],
+)

@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "capability.go",
+        "list.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/gopkg.in/src-d/go-git.v4/plumbing/protocol/packp/capability",
+    importpath = "gopkg.in/src-d/go-git.v4/plumbing/protocol/packp/capability",
+    visibility = ["//visibility:public"],
+)

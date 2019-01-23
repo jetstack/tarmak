@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "url.go",
+        "url_unix.go",
+        "url_windows.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/go-getter/helper/url",
+    importpath = "github.com/hashicorp/go-getter/helper/url",
+    visibility = ["//visibility:public"],
+)

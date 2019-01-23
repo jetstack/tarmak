@@ -1,0 +1,10 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["useragent.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/packer/helper/useragent",
+    importpath = "github.com/hashicorp/packer/helper/useragent",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/hashicorp/packer/version:go_default_library"],
+)

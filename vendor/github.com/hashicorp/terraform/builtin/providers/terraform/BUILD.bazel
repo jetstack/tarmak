@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "data_source_state.go",
+        "flatten.go",
+        "provider.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/builtin/providers/terraform",
+    importpath = "github.com/hashicorp/terraform/builtin/providers/terraform",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/init:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/config:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+    ],
+)

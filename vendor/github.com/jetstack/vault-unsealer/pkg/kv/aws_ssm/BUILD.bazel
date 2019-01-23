@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["aws_ssm.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/jetstack/vault-unsealer/pkg/kv/aws_ssm",
+    importpath = "github.com/jetstack/vault-unsealer/pkg/kv/aws_ssm",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/aws/aws-sdk-go/aws:go_default_library",
+        "//vendor/github.com/aws/aws-sdk-go/aws/session:go_default_library",
+        "//vendor/github.com/aws/aws-sdk-go/service/ssm:go_default_library",
+        "//vendor/github.com/jetstack/vault-unsealer/pkg/kv:go_default_library",
+    ],
+)

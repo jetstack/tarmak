@@ -1,0 +1,10 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["ecdh.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/keybase/go-crypto/openpgp/ecdh",
+    importpath = "github.com/keybase/go-crypto/openpgp/ecdh",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/keybase/go-crypto/curve25519:go_default_library"],
+)

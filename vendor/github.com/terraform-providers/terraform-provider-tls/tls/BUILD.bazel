@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "data_source_public_key.go",
+        "provider.go",
+        "resource_cert_request.go",
+        "resource_certificate.go",
+        "resource_locally_signed_cert.go",
+        "resource_private_key.go",
+        "resource_self_signed_cert.go",
+        "util.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/terraform-providers/terraform-provider-tls/tls",
+    importpath = "github.com/terraform-providers/terraform-provider-tls/tls",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh:go_default_library",
+    ],
+)

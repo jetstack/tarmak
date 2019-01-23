@@ -1,0 +1,28 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "autocomplete.go",
+        "cli.go",
+        "command.go",
+        "command_mock.go",
+        "help.go",
+        "ui.go",
+        "ui_colored.go",
+        "ui_concurrent.go",
+        "ui_mock.go",
+        "ui_writer.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/mitchellh/cli",
+    importpath = "github.com/mitchellh/cli",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/armon/go-radix:go_default_library",
+        "//vendor/github.com/bgentry/speakeasy:go_default_library",
+        "//vendor/github.com/fatih/color:go_default_library",
+        "//vendor/github.com/mattn/go-isatty:go_default_library",
+        "//vendor/github.com/posener/complete:go_default_library",
+        "//vendor/github.com/posener/complete/cmd/install:go_default_library",
+    ],
+)

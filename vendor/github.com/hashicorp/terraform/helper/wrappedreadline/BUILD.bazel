@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "wrappedreadline.go",
+        "wrappedreadline_unix.go",
+        "wrappedreadline_windows.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/helper/wrappedreadline",
+    importpath = "github.com/hashicorp/terraform/helper/wrappedreadline",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/chzyer/readline:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/wrappedstreams:go_default_library",
+    ],
+)

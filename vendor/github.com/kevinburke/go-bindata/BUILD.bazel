@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "asset.go",
+        "bits.go",
+        "bytewriter.go",
+        "config.go",
+        "convert.go",
+        "debug.go",
+        "doc.go",
+        "release.go",
+        "restore.go",
+        "safefile.go",
+        "stringwriter.go",
+        "toc.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/kevinburke/go-bindata",
+    importpath = "github.com/kevinburke/go-bindata",
+    visibility = ["//visibility:public"],
+)

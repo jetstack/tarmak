@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "agent_key_identifier.go",
+        "dummy.go",
+        "ecdsa_signature.go",
+        "private_key_signer.go",
+        "rsa_signature.go",
+        "signature.go",
+        "signer.go",
+        "ssh_agent_signer.go",
+        "test_signer.go",
+        "util.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/joyent/triton-go/authentication",
+    importpath = "github.com/joyent/triton-go/authentication",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/pkg/errors:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh/agent:go_default_library",
+    ],
+)

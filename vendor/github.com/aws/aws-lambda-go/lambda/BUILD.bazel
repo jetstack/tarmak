@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "entry.go",
+        "function.go",
+        "handler.go",
+        "panic.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/aws/aws-lambda-go/lambda",
+    importpath = "github.com/aws/aws-lambda-go/lambda",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/aws/aws-lambda-go/lambda/messages:go_default_library",
+        "//vendor/github.com/aws/aws-lambda-go/lambdacontext:go_default_library",
+    ],
+)

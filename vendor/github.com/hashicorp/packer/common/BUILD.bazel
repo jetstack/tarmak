@@ -1,0 +1,32 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "config.go",
+        "download.go",
+        "floppy_config.go",
+        "http_config.go",
+        "iso_config.go",
+        "multistep_debug.go",
+        "multistep_runner.go",
+        "packer_config.go",
+        "retry.go",
+        "step_create_floppy.go",
+        "step_download.go",
+        "step_http_server.go",
+        "step_provision.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/packer/common",
+    importpath = "github.com/hashicorp/packer/common",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/packer/helper/common:go_default_library",
+        "//vendor/github.com/hashicorp/packer/helper/multistep:go_default_library",
+        "//vendor/github.com/hashicorp/packer/helper/useragent:go_default_library",
+        "//vendor/github.com/hashicorp/packer/packer:go_default_library",
+        "//vendor/github.com/hashicorp/packer/template/interpolate:go_default_library",
+        "//vendor/github.com/mitchellh/go-fs:go_default_library",
+        "//vendor/github.com/mitchellh/go-fs/fat:go_default_library",
+    ],
+)

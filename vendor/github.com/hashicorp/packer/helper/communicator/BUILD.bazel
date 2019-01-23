@@ -1,0 +1,30 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "config.go",
+        "ssh.go",
+        "step_connect.go",
+        "step_connect_ssh.go",
+        "step_connect_winrm.go",
+        "testing.go",
+        "winrm.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/packer/helper/communicator",
+    importpath = "github.com/hashicorp/packer/helper/communicator",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/packer/common/ssh:go_default_library",
+        "//vendor/github.com/hashicorp/packer/communicator/none:go_default_library",
+        "//vendor/github.com/hashicorp/packer/communicator/ssh:go_default_library",
+        "//vendor/github.com/hashicorp/packer/communicator/winrm:go_default_library",
+        "//vendor/github.com/hashicorp/packer/helper/multistep:go_default_library",
+        "//vendor/github.com/hashicorp/packer/packer:go_default_library",
+        "//vendor/github.com/hashicorp/packer/template/interpolate:go_default_library",
+        "//vendor/github.com/masterzen/winrm:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh/agent:go_default_library",
+        "//vendor/golang.org/x/net/proxy:go_default_library",
+    ],
+)

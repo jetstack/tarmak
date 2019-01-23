@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["aws_policy_equivalence.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/jen20/awspolicyequivalence",
+    importpath = "github.com/jen20/awspolicyequivalence",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/aws/aws-sdk-go/aws/arn:go_default_library",
+        "//vendor/github.com/hashicorp/errwrap:go_default_library",
+        "//vendor/github.com/mitchellh/mapstructure:go_default_library",
+    ],
+)

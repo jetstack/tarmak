@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "execxp.go",
+        "operators.go",
+        "paths.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/ChrisTrenkamp/goxpath/internal/execxp",
+    importpath = "github.com/ChrisTrenkamp/goxpath/internal/execxp",
+    visibility = ["//vendor/github.com/ChrisTrenkamp/goxpath:__subpackages__"],
+    deps = [
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/lexer:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/parser:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/parser/findutil:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/parser/intfns:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/parser/pathexpr:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/xconst:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/internal/xsort:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/tree:go_default_library",
+    ],
+)

@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["encryption.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/helper/encryption",
+    importpath = "github.com/hashicorp/terraform/helper/encryption",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/errwrap:go_default_library",
+        "//vendor/github.com/hashicorp/vault/helper/pgpkeys:go_default_library",
+    ],
+)

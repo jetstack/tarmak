@@ -1,0 +1,34 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "backend.go",
+        "backend_apply.go",
+        "backend_common.go",
+        "backend_mock.go",
+        "backend_plan.go",
+        "backend_state.go",
+        "cli.go",
+        "colorize.go",
+        "testing.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/backend/remote",
+    importpath = "github.com/hashicorp/terraform/backend/remote",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/go-tfe:go_default_library",
+        "//vendor/github.com/hashicorp/go-version:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/state:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/state/remote:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/svchost:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/svchost/auth:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/svchost/disco:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/version:go_default_library",
+        "//vendor/github.com/mitchellh/cli:go_default_library",
+        "//vendor/github.com/mitchellh/colorstring:go_default_library",
+    ],
+)

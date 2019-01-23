@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "boolfns.go",
+        "intfns.go",
+        "nodesetfns.go",
+        "numfns.go",
+        "stringfns.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/ChrisTrenkamp/goxpath/internal/parser/intfns",
+    importpath = "github.com/ChrisTrenkamp/goxpath/internal/parser/intfns",
+    visibility = ["//vendor/github.com/ChrisTrenkamp/goxpath:__subpackages__"],
+    deps = [
+        "//vendor/github.com/ChrisTrenkamp/goxpath/tree:go_default_library",
+        "//vendor/golang.org/x/text/language:go_default_library",
+    ],
+)

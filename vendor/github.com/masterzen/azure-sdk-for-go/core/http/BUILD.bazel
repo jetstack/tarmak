@@ -1,0 +1,28 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "chunked.go",
+        "client.go",
+        "cookie.go",
+        "doc.go",
+        "filetransport.go",
+        "fs.go",
+        "header.go",
+        "jar.go",
+        "lex.go",
+        "race.go",
+        "request.go",
+        "response.go",
+        "server.go",
+        "sniff.go",
+        "status.go",
+        "transfer.go",
+        "transport.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/masterzen/azure-sdk-for-go/core/http",
+    importpath = "github.com/masterzen/azure-sdk-for-go/core/http",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/masterzen/azure-sdk-for-go/core/tls:go_default_library"],
+)
