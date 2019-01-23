@@ -1,26 +1,26 @@
-.. _tarmak_clusters_ssh:
+.. _tarmak_clusters_snapshot_consul_save:
 
-tarmak clusters ssh
--------------------
+tarmak clusters snapshot consul save
+------------------------------------
 
-Log into an instance with SSH
+save consul cluster snapshot to target path
 
 Synopsis
 ~~~~~~~~
 
 
-Log into an instance with SSH
+save consul cluster snapshot to target path
 
 ::
 
-  tarmak clusters ssh [instance alias] [optional ssh arguments]
+  tarmak clusters snapshot consul save [target path] [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for ssh
+  -h, --help   help for save
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,5 +38,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak clusters snapshot consul <tarmak_clusters_snapshot_consul.html>`_ 	 - Manage snapshots on remote consul clusters
 

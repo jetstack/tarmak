@@ -169,7 +169,7 @@ func (t *Tarmak) initializeConfig() error {
 }
 
 func (t *Tarmak) writeSSHConfigForClusterHosts() error {
-	if err := t.ssh.WriteConfig(t.Cluster(), false); err != nil {
+	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
 		clusterName, errCluster := t.config.CurrentClusterName()
 		if errCluster != nil {
 			return fmt.Errorf("failed to retrieve current cluster name: %s", errCluster)
@@ -361,13 +361,11 @@ func (t *Tarmak) Cleanup() {
 		t.rootPath = nil
 	}
 
-	if err := t.SSH().Cleanup(); err != nil {
-		t.log.Warnf("error cleaning up ssh run time assets: %s", err)
-	}
-
 	if err := t.terraform.Cleanup(); err != nil {
 		t.log.Warnf("error cleaning up terraform run time assets: %s", err)
 	}
+
+	t.ssh.Cleanup()
 }
 
 func (t *Tarmak) Variables() map[string]interface{} {

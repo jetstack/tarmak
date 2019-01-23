@@ -1,26 +1,26 @@
-.. _tarmak_clusters_ssh:
+.. _tarmak_clusters_snapshot_etcd_save:
 
-tarmak clusters ssh
--------------------
+tarmak clusters snapshot etcd save
+----------------------------------
 
-Log into an instance with SSH
+save etcd snapshot to target path prefix, i.e 'backup-'
 
 Synopsis
 ~~~~~~~~
 
 
-Log into an instance with SSH
+save etcd snapshot to target path prefix, i.e 'backup-'
 
 ::
 
-  tarmak clusters ssh [instance alias] [optional ssh arguments]
+  tarmak clusters snapshot etcd save [target path prefix] [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for ssh
+  -h, --help   help for save
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,5 +38,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak clusters snapshot etcd <tarmak_clusters_snapshot_etcd.html>`_ 	 - Manage snapshots on remote etcd clusters
 

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
@@ -297,9 +298,10 @@ func (e *Environment) Verify() error {
 
 func (e *Environment) WingTunnel() interfaces.Tunnel {
 	return e.Tarmak().SSH().Tunnel(
-		"bastion",
 		"localhost",
-		9443,
+		"9443",
+		strconv.Itoa(utils.UnusedPort()),
+		false,
 	)
 }
 
@@ -311,7 +313,7 @@ func (e *Environment) WingClientset() (*wingclient.Clientset, interfaces.Tunnel,
 
 	// TODO: Do proper TLS here
 	restConfig := &rest.Config{
-		Host: fmt.Sprintf("https://127.0.0.1:%d", tunnel.Port()),
+		Host: fmt.Sprintf("https://127.0.0.1:%s", tunnel.Port()),
 		TLSClientConfig: rest.TLSClientConfig{
 			Insecure: true,
 		},

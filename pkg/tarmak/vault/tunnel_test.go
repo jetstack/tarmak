@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strconv"
 	"testing"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -16,10 +15,10 @@ import (
 
 type FakeTunnel struct {
 	bindAddress string
-	port        int
+	port        string
 }
 
-func (ft *FakeTunnel) Port() int {
+func (ft *FakeTunnel) Port() string {
 	return ft.port
 }
 
@@ -31,8 +30,8 @@ func (ft *FakeTunnel) Start() error {
 	return nil
 }
 
-func (ft *FakeTunnel) Stop() error {
-	return nil
+func (ft *FakeTunnel) Stop() {
+	return
 }
 
 var _ interfaces.Tunnel = &FakeTunnel{}
@@ -60,13 +59,9 @@ func TestVaultTunnel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	port, err := strconv.Atoi(u.Port())
-	if err != nil {
-		t.Fatal(err)
-	}
 	tunnel := &FakeTunnel{
 		bindAddress: u.Hostname(),
-		port:        port,
+		port:        u.Port(),
 	}
 	fqdn := "host1.example.com"
 	vaultCA := x509.NewCertPool()

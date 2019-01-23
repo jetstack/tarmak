@@ -1,26 +1,29 @@
-.. _tarmak_clusters_ssh:
+.. _tarmak_clusters_snapshot_etcd_restore:
 
-tarmak clusters ssh
--------------------
+tarmak clusters snapshot etcd restore
+-------------------------------------
 
-Log into an instance with SSH
+restore etcd cluster with source snapshots
 
 Synopsis
 ~~~~~~~~
 
 
-Log into an instance with SSH
+restore etcd cluster with source snapshots
 
 ::
 
-  tarmak clusters ssh [instance alias] [optional ssh arguments]
+  tarmak clusters snapshot etcd restore [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for ssh
+  -h, --help                help for restore
+      --k8s-events string   location of k8s-events snapshot backup
+      --k8s-main string     location of k8s-main snapshot backup
+      --overlay string      location of overlay snapshot backup
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,5 +41,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak clusters snapshot etcd <tarmak_clusters_snapshot_etcd.html>`_ 	 - Manage snapshots on remote etcd clusters
 

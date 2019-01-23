@@ -180,7 +180,7 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 
 	retries := 5
 	for {
-		k.log.Debugf("trying to connect to %+v", cluster.Server)
+		k.log.Debugf("trying to connect to %s", cluster.Server)
 
 		var version string
 		version, err = k.verifyAPIVersion(*c)
@@ -367,7 +367,7 @@ func (k *Kubectl) setupConfig(c *api.Config, publicAPIEndpoint bool) (*api.Confi
 			return nil, nil, fmt.Errorf("failed to get tunnel information at it is nil: %v", k.tunnel)
 		}
 
-		cluster.Server = fmt.Sprintf("https://%s:%d",
+		cluster.Server = fmt.Sprintf("https://%s:%s",
 			k.tunnel.BindAddress(), k.tunnel.Port())
 		k.log.Warnf("ssh tunnel connecting to Kubernetes API server will close after 10 minutes: %s",
 			cluster.Server)

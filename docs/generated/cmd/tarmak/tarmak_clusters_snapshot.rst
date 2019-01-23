@@ -1,26 +1,22 @@
-.. _tarmak_clusters_instances_ssh:
+.. _tarmak_clusters_snapshot:
 
-tarmak clusters instances ssh
------------------------------
+tarmak clusters snapshot
+------------------------
 
-Log into an instance with SSH
+Manage snapshots of remote consul and etcd clusters
 
 Synopsis
 ~~~~~~~~
 
 
-Log into an instance with SSH
-
-::
-
-  tarmak clusters instances ssh [instance alias] [optional ssh command]
+Manage snapshots of remote consul and etcd clusters
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for ssh
+  -h, --help   help for snapshot
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,5 +34,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters instances <tarmak_clusters_instances.html>`_ 	 - Operations on instances
+* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak clusters snapshot consul <tarmak_clusters_snapshot_consul.html>`_ 	 - Manage snapshots on remote consul clusters
+* `tarmak clusters snapshot etcd <tarmak_clusters_snapshot_etcd.html>`_ 	 - Manage snapshots on remote etcd clusters
 

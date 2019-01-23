@@ -1,26 +1,26 @@
-.. _tarmak_clusters_ssh:
+.. _tarmak_clusters_snapshot_consul_restore:
 
-tarmak clusters ssh
--------------------
+tarmak clusters snapshot consul restore
+---------------------------------------
 
-Log into an instance with SSH
+restore consul cluster with source snapshot
 
 Synopsis
 ~~~~~~~~
 
 
-Log into an instance with SSH
+restore consul cluster with source snapshot
 
 ::
 
-  tarmak clusters ssh [instance alias] [optional ssh arguments]
+  tarmak clusters snapshot consul restore [source path] [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for ssh
+  -h, --help   help for restore
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,5 +38,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak clusters <tarmak_clusters.html>`_ 	 - Operations on clusters
+* `tarmak clusters snapshot consul <tarmak_clusters_snapshot_consul.html>`_ 	 - Manage snapshots on remote consul clusters
 

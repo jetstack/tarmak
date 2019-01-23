@@ -82,11 +82,6 @@ Command line documentation for tarmak, wing and tagging_control commands
 .. toctree::
    :maxdepth: 1
 
-   generated/cmd/tarmak/tarmak_clusters_instances_ssh
-
-.. toctree::
-   :maxdepth: 1
-
    generated/cmd/tarmak/tarmak_clusters_list
 
 .. toctree::
@@ -98,6 +93,41 @@ Command line documentation for tarmak, wing and tagging_control commands
    :maxdepth: 1
 
    generated/cmd/tarmak/tarmak_clusters_set-current
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tarmak/tarmak_clusters_snapshot
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tarmak/tarmak_clusters_snapshot_consul
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tarmak/tarmak_clusters_snapshot_consul_restore
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tarmak/tarmak_clusters_snapshot_consul_save
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tarmak/tarmak_clusters_snapshot_etcd
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tarmak/tarmak_clusters_snapshot_etcd_restore
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tarmak/tarmak_clusters_snapshot_etcd_save
 
 .. toctree::
    :maxdepth: 1

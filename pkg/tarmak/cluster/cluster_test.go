@@ -21,6 +21,7 @@ type fakeCluster struct {
 	fakeProvider    *mocks.MockProvider
 	fakeTarmak      *mocks.MockTarmak
 	fakeConfig      *mocks.MockConfig
+	fakeCtx         *mocks.MockCancellationContext
 }
 
 func (f *fakeCluster) Finish() {
@@ -40,6 +41,7 @@ func newFakeCluster(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeCluster
 	c.fakeConfig = mocks.NewMockConfig(c.ctrl)
 	c.fakeEnvironment = mocks.NewMockEnvironment(c.ctrl)
 	c.environment = c.fakeEnvironment
+	c.fakeCtx = mocks.NewMockCancellationContext(c.ctrl)
 
 	// setup custom logger
 	logger := logrus.New()
@@ -60,6 +62,7 @@ func newFakeCluster(t *testing.T, cluster *clusterv1alpha1.Cluster) *fakeCluster
 	c.fakeProvider.EXPECT().Name().Return("provider-name").AnyTimes()
 
 	c.fakeTarmak.EXPECT().Config().AnyTimes().Return(c.fakeConfig)
+	c.fakeTarmak.EXPECT().CancellationContext().AnyTimes().Return(c.fakeCtx)
 
 	return c
 }

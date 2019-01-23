@@ -112,6 +112,12 @@ func (c *Cluster) WaitForConvergance() error {
 			c.log.Debug(err)
 		}
 
+		select {
+		case <-c.ctx.Done():
+			return c.ctx.Err()
+		default:
+		}
+
 		retries--
 		if retries == 0 {
 			break

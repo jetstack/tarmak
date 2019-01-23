@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"strconv"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/go-version"
@@ -16,6 +17,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/instance_pool"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	wingclient "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 )
 
@@ -35,6 +37,7 @@ type Cluster struct {
 	environment interfaces.Environment
 	networkCIDR *net.IPNet
 	log         *logrus.Entry
+	ctx         interfaces.CancellationContext
 
 	wingClientset *wingclient.Clientset
 	wingTunnel    interfaces.Tunnel
@@ -55,6 +58,7 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 		conf:        conf,
 		environment: environment,
 		log:         environment.Log().WithField("cluster", conf.Name),
+		ctx:         environment.Tarmak().CancellationContext(),
 	}
 
 	if err := cluster.Validate(); err != nil {
@@ -662,9 +666,10 @@ func (c *Cluster) NetworkCIDR() *net.IPNet {
 
 func (c *Cluster) APITunnel() interfaces.Tunnel {
 	return c.Environment().Tarmak().SSH().Tunnel(
-		"bastion",
 		fmt.Sprintf("api.%s.%s", c.ClusterName(), c.Environment().Config().PrivateZone),
-		6443,
+		"6443",
+		strconv.Itoa(utils.UnusedPort()),
+		true,
 	)
 }
 
