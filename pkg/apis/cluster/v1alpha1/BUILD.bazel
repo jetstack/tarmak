@@ -1,0 +1,43 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "api.go",
+        "auth.go",
+        "cluster.go",
+        "constants.go",
+        "defaults.go",
+        "doc.go",
+        "firewall.go",
+        "instancepool.go",
+        "internetgw.go",
+        "label.go",
+        "logging.go",
+        "network.go",
+        "register.go",
+        "subnet.go",
+        "taint.go",
+        "values.go",
+        "volume.go",
+        "zz_generated.deepcopy.go",
+        "zz_generated.defaults.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/runtime/schema:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "cluster_test.go",
+        "defaults_test.go",
+    ],
+    embed = [":go_default_library"],
+)

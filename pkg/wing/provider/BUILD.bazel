@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["provider.go"],
+    importpath = "github.com/jetstack/tarmak/pkg/wing/provider",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/wing/provider/file:go_default_library",
+        "//pkg/wing/provider/hash:go_default_library",
+        "//pkg/wing/provider/s3:go_default_library",
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

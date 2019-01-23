@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "instance.go",
+        "interface.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion/wing/internalversion",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/wing:go_default_library",
+        "//pkg/wing/client/clientset/internalversion:go_default_library",
+        "//pkg/wing/client/informers/internalversion/internalinterfaces:go_default_library",
+        "//pkg/wing/client/listers/wing/internalversion:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/watch:go_default_library",
+        "//vendor/k8s.io/client-go/tools/cache:go_default_library",
+    ],
+)

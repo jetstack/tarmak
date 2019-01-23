@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["admission.go"],
+    importpath = "github.com/jetstack/tarmak/pkg/wing/admission/plugin/instanceinittime",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/wing:go_default_library",
+        "//vendor/k8s.io/apiserver/pkg/admission:go_default_library",
+    ],
+)

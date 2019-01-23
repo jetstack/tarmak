@@ -1,0 +1,2 @@
+vendor/github.com/jteeuwen/go-bindata/testdata/symlinkRecursiveParent/symlinkTarget
+vendor/github.com/coreos/etcd/cmd/etcd

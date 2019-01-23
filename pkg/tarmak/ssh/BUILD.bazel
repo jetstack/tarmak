@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "ssh.go",
+        "tunnel.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/ssh",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/utils:go_default_library",
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

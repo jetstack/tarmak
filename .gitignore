@@ -13,3 +13,5 @@
 /.kube/
 .bundle
 .kube
+/bazel-*
+/apiserver.local.config

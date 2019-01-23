@@ -1,0 +1,37 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "cluster.go",
+        "config.go",
+        "environments.go",
+        "providers.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/config",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/apis/tarmak/v1alpha1:go_default_library",
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/utils:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/runtime/serializer:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/runtime/serializer/json:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["config_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/apis/tarmak/v1alpha1:go_default_library",
+        "//pkg/tarmak/mocks:go_default_library",
+        "//vendor/github.com/golang/mock/gomock:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

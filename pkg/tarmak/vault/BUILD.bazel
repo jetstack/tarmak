@@ -1,0 +1,28 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "tunnel.go",
+        "vault.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/vault",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/utils:go_default_library",
+        "//vendor/github.com/cenkalti/backoff:go_default_library",
+        "//vendor/github.com/google/uuid:go_default_library",
+        "//vendor/github.com/hashicorp/go-cleanhttp:go_default_library",
+        "//vendor/github.com/hashicorp/vault/api:go_default_library",
+        "//vendor/github.com/jetstack/vault-unsealer/pkg/vault:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["tunnel_test.go"],
+    embed = [":go_default_library"],
+    deps = ["//pkg/tarmak/interfaces:go_default_library"],
+)

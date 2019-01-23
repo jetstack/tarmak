@@ -1,0 +1,10 @@
+filegroup(
+    name = "terraform",
+    srcs = glob([
+        "**/*.tf",
+        "**/*.json",
+        "**/*.yaml",
+        "**/*.template",
+    ]),
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,24 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/jetstack/tarmak/hack/cmd-gen",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//cmd/tagging_control/cmd:go_default_library",
+        "//cmd/tarmak/cmd:go_default_library",
+        "//cmd/wing/cmd:go_default_library",
+        "//vendor/github.com/mitchellh/go-homedir:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/github.com/spf13/cobra:go_default_library",
+        "//vendor/github.com/spf13/cobra/doc:go_default_library",
+        "//vendor/github.com/spf13/pflag:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "cmd-gen",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)

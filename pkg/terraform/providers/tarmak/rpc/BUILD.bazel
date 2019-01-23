@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "bastion_instance_status.go",
+        "ping.go",
+        "rpc.go",
+        "vault_cluster_status.go",
+        "vault_instance_role.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//vendor/github.com/jetstack/vault-helper/pkg/kubernetes:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

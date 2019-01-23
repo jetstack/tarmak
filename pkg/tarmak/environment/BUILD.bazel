@@ -1,0 +1,33 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "bastion.go",
+        "environment.go",
+        "init.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/environment",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/apis/tarmak/v1alpha1:go_default_library",
+        "//pkg/tarmak/cluster:go_default_library",
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/utils:go_default_library",
+        "//pkg/tarmak/utils/input:go_default_library",
+        "//pkg/tarmak/vault:go_default_library",
+        "//pkg/wing/client/clientset/versioned:go_default_library",
+        "//vendor/github.com/cenkalti/backoff:go_default_library",
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh:go_default_library",
+        "//vendor/k8s.io/client-go/rest:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["environment_test.go"],
+    embed = [":go_default_library"],
+)

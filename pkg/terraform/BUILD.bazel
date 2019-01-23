@@ -1,0 +1,46 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "container.go",
+        "output.go",
+        "passthrough.go",
+        "templating.go",
+        "terraform.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/terraform",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/tarmak/cluster:go_default_library",
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/provider/amazon:go_default_library",
+        "//pkg/tarmak/utils:go_default_library",
+        "//pkg/tarmak/utils/consts:go_default_library",
+        "//pkg/tarmak/utils/input:go_default_library",
+        "//pkg/terraform/plan:go_default_library",
+        "//pkg/terraform/providers/awstag:go_default_library",
+        "//pkg/terraform/providers/tarmak:go_default_library",
+        "//pkg/terraform/providers/tarmak/rpc:go_default_library",
+        "//vendor/github.com/Masterminds/sprig:go_default_library",
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/hashicorp/go-plugin:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/init:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/command:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/plugin:go_default_library",
+        "//vendor/github.com/kardianos/osext:go_default_library",
+        "//vendor/github.com/mitchellh/cli:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/github.com/terraform-providers/terraform-provider-aws/aws:go_default_library",
+        "//vendor/github.com/terraform-providers/terraform-provider-random/random:go_default_library",
+        "//vendor/github.com/terraform-providers/terraform-provider-template/template:go_default_library",
+        "//vendor/github.com/terraform-providers/terraform-provider-tls/tls:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["container_test.go"],
+    embed = [":go_default_library"],
+)

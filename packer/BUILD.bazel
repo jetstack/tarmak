@@ -1,0 +1,10 @@
+filegroup(
+    name = "packer",
+    srcs = glob(
+        [
+            "**/*.json",
+            "**/*.sh",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+)

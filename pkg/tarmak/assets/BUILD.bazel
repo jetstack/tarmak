@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("//hack/bazel:bindata.bzl", "bindata")
+
+bindata(
+    name = "assets_bindata",
+    package = "assets",
+    srcs = [
+        "//puppet:puppet",
+        "//packer:packer",
+        "//terraform:terraform",
+    ],
+    metadata = True,
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "assets.go",
+        ":assets_bindata",  # keep
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/assets",
+    visibility = ["//visibility:public"],
+)

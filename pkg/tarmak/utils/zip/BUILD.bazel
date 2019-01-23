@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["zip.go"],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/utils/zip",
+    visibility = ["//visibility:public"],
+    deps = ["//pkg/tarmak/utils:go_default_library"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["zip_test.go"],
+    embed = [":go_default_library"],
+)
