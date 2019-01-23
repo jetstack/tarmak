@@ -112,7 +112,7 @@ $(BINDIR)/mockgen:
 
 $(BINDIR)/go-bindata:
 	mkdir -p $(BINDIR)
-	go build -o $(BINDIR)/go-bindata ./vendor/github.com/jteeuwen/go-bindata/go-bindata
+	go build -o $(BINDIR)/go-bindata ./vendor/github.com/kevinburke/go-bindata/go-bindata
 
 $(BINDIR)/defaulter-gen:
 	mkdir -p $(BINDIR)
