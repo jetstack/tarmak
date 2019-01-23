@@ -8,4 +8,5 @@
 
 package assets
 
-//go:generate go-bindata -prefix ../../../ -pkg $GOPACKAGE -o assets_bindata.go ../../../terraform/amazon/modules/... ../../../terraform/amazon/templates/... ../../../puppet/... ../../../packer/...
+//go:generate go run ../../../cmd/tagging_control/main.go zip ../../../tagging_control.zip ../../../tagging_control_linux_amd64
+//go:generate go-bindata -prefix ../../../ -pkg $GOPACKAGE -o assets_bindata.go ../../../tagging_control.zip ../../../terraform/amazon/modules/... ../../../terraform/amazon/templates/... ../../../puppet/... ../../../packer/...

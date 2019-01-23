@@ -110,11 +110,11 @@ required = [
 
 [[constraint]]
   name = "github.com/terraform-providers/terraform-provider-aws"
-  version = "1.35.0"
+  version = "1.43.2"
 
 [[override]]
   name = "github.com/aws/aws-sdk-go"
-  version = "v1.15.31"
+  version = "v1.15.72"
 
 [[constraint]]
   name = "github.com/terraform-providers/terraform-provider-random"

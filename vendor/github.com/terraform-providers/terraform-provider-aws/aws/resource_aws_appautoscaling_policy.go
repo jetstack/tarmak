@@ -28,7 +28,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -80,14 +80,12 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_interval_lower_bound": {
-										Type:     schema.TypeFloat,
+										Type:     schema.TypeString,
 										Optional: true,
-										Default:  -1,
 									},
 									"metric_interval_upper_bound": {
-										Type:     schema.TypeFloat,
+										Type:     schema.TypeString,
 										Optional: true,
-										Default:  -1,
 									},
 									"scaling_adjustment": {
 										Type:     schema.TypeInt,
@@ -217,7 +215,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 									"resource_label": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateMaxLength(1023),
+										ValidateFunc: validation.StringLenBetween(0, 1023),
 									},
 								},
 							},
@@ -402,10 +400,6 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 		if data["metric_interval_lower_bound"] != "" {
 			bound := data["metric_interval_lower_bound"]
 			switch bound := bound.(type) {
-			case float64:
-				if bound >= 0 {
-					a.MetricIntervalLowerBound = aws.Float64(bound)
-				}
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
@@ -421,10 +415,6 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 		if data["metric_interval_upper_bound"] != "" {
 			bound := data["metric_interval_upper_bound"]
 			switch bound := bound.(type) {
-			case float64:
-				if bound >= 0 {
-					a.MetricIntervalUpperBound = aws.Float64(bound)
-				}
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {

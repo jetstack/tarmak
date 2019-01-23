@@ -2,7 +2,8 @@ data "template_file" "bastion_user_data" {
   template = "${file("${path.module}/templates/bastion_user_data.yaml")}"
 
   vars {
-    fqdn = "bastion.${var.public_zone}"
+    fqdn               = "bastion.${var.public_zone}"
+    tarmak_environment = "${var.environment}"
 
     wing_binary_path = "${var.secrets_bucket}/${var.wing_binary_path}"
     wing_version     = "${var.wing_version}"
@@ -41,15 +42,31 @@ resource "aws_instance" "bastion" {
     volume_size = "${var.bastion_root_size}"
   }
 
+  lifecycle {
+    ignore_changes = ["tags"]
+  }
+
   tags {
-    Name        = "${data.template_file.stack_name.rendered}-bastion"
     Environment = "${var.environment}"
     Project     = "${var.project}"
     Contact     = "${var.contact}"
-    tarmak_role = "bastion"
   }
 
   user_data = "${data.template_file.bastion_user_data.rendered}"
+
+  depends_on = ["aws_iam_role_policy_attachment.bastion_tagging_control_lambda_invoke"]
+}
+
+resource "awstag_ec2_tag" "Name" {
+  ec2_id = "${aws_instance.bastion.0.id}"
+  key    = "Name"
+  value  = "${data.template_file.stack_name.rendered}-bastion"
+}
+
+resource "awstag_ec2_tag" "tarmak_role" {
+  ec2_id = "${aws_instance.bastion.0.id}"
+  key    = "tarmak_role"
+  value  = "bastion"
 }
 
 resource "aws_eip" "bastion" {

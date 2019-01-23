@@ -193,6 +193,7 @@ type Config interface {
 	Project() string
 	WingDevMode() bool
 	SetCurrentCluster(string) error
+	IgnoreMissingPublicKeyTags() bool
 }
 
 type Packer interface {
@@ -207,7 +208,7 @@ type Terraform interface {
 }
 
 type SSH interface {
-	WriteConfig(Cluster) error
+	WriteConfig(cluster Cluster, interactive bool) error
 	PassThrough([]string)
 	Tunnel(hostname string, destination string, destinationPort int) Tunnel
 	Execute(host string, cmd string, args []string) (returnCode int, err error)
@@ -232,9 +233,10 @@ type Host interface {
 	Hostname() string
 	User() string
 	Roles() []string
-	SSHConfig() string
+	SSHConfig(strictChecking string) string
 	Parameters() map[string]string
 	SSHControlPath() string
+	SSHKnownHostConfig() (string, error)
 }
 
 type Puppet interface {

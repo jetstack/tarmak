@@ -2,7 +2,7 @@
 Command Line Documentation
 ==========================
 
-Command line documentation for both tarmak and wing commands
+Command line documentation for tarmak, wing and tagging_control commands
 
 .. toctree::
    :maxdepth: 1
@@ -177,5 +177,30 @@ Command line documentation for both tarmak and wing commands
 .. toctree::
    :maxdepth: 1
 
+   generated/cmd/wing/wing_tag
+
+.. toctree::
+   :maxdepth: 1
+
    generated/cmd/wing/wing_version
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tagging_control/tagging_control
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tagging_control/tagging_control_handle
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tagging_control/tagging_control_version
+
+.. toctree::
+   :maxdepth: 1
+
+   generated/cmd/tagging_control/tagging_control_zip
 

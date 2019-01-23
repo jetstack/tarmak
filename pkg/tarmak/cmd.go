@@ -111,6 +111,10 @@ func (c *CmdTarmak) Destroy() error {
 		return err
 	}
 
+	if err := os.RemoveAll(c.cluster.SSHHostKeysPath()); err != nil {
+		return fmt.Errorf("failed to delete cluster known hosts file: %s", err)
+	}
+
 	return nil
 }
 

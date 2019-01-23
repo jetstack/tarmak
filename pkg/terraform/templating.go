@@ -76,6 +76,23 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 		}
 	}
 
+	sourceTaggingControlBinary, err := os.Open(filepath.Join(rootPath, "tagging_control.zip"))
+	if err != nil {
+		return err
+	}
+	defer sourceTaggingControlBinary.Close()
+
+	destTaggingControlBinary, err := os.Create(filepath.Join(terraformCodePath, "tagging_control.zip"))
+	if err != nil {
+		return err
+	}
+	defer destTaggingControlBinary.Close()
+
+	_, err = io.Copy(destTaggingControlBinary, sourceTaggingControlBinary)
+	if err != nil {
+		return err
+	}
+
 	// create puppet.tar.gz
 	puppetTarGzFilename := filepath.Clean(
 		filepath.Join(
@@ -128,7 +145,8 @@ func (t *terraformTemplate) Generate() error {
 		result = multierror.Append(result, err)
 	}
 
-	for _, module := range []string{"state", "bastion", "network", "network-existing-vpc", "jenkins", "vault", "kubernetes"} {
+	for _, module := range []string{"state", "bastion", "tagging_control", "network",
+		"network-existing-vpc", "jenkins", "vault", "kubernetes"} {
 		if err := t.generateModuleInstanceTemplates(module); err != nil {
 			result = multierror.Append(result, err)
 		}
@@ -167,6 +185,11 @@ func (t *terraformTemplate) Generate() error {
 		}
 	}
 
+	if err := t.generateTemplate("bastion_user_data",
+		"modules/bastion/templates/bastion_user_data", "yaml", "bastion"); err != nil {
+		result = multierror.Append(result, err)
+	}
+
 	if t.cluster.Type() != clusterv1alpha1.ClusterTypeClusterMulti {
 		if err := t.generateTemplate("jenkins_elb", "modules/jenkins/jenkins_elb", "tf", "vault"); err != nil {
 			result = multierror.Append(result, err)
@@ -179,6 +202,10 @@ func (t *terraformTemplate) Generate() error {
 
 	if err := t.generateTemplate("bastion_user_data",
 		"modules/bastion/templates/bastion_user_data", "yaml", "bastion"); err != nil {
+		result = multierror.Append(result, err)
+	}
+	if err := t.generateTemplate("jenkins_user_data",
+		"modules/jenkins/templates/jenkins_user_data", "yaml", "jenkins"); err != nil {
 		result = multierror.Append(result, err)
 	}
 

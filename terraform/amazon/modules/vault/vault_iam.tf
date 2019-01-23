@@ -76,3 +76,9 @@ resource "aws_iam_role_policy_attachment" "vault_wing_binary_read" {
   policy_arn = "${var.wing_binary_read_policy_arn}"
   count      = "${var.vault_min_instance_count}"
 }
+
+resource "aws_iam_role_policy_attachment" "vault_tagging_control_lambda_invoke" {
+  role       = "${element(aws_iam_role.vault.*.name, count.index)}"
+  policy_arn = "${var.tagging_control_policy_arn}"
+  count      = "${var.vault_min_instance_count}"
+}

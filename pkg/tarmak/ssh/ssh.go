@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/hashicorp/go-multierror"
@@ -37,18 +38,57 @@ func New(tarmak interfaces.Tarmak) *SSH {
 	return s
 }
 
-func (s *SSH) WriteConfig(c interfaces.Cluster) error {
+func (s *SSH) WriteConfig(c interfaces.Cluster, interactive bool) error {
 
 	hosts, err := c.ListHosts()
 	if err != nil {
 		return err
 	}
 
+	localKnownHosts, err := s.parseKnownHosts()
+	if err != nil {
+		return err
+	}
+
+	knownHosts, err := os.OpenFile(s.tarmak.Cluster().SSHHostKeysPath(),
+		os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	defer knownHosts.Close()
+
 	var sshConfig bytes.Buffer
 	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
 
 	for _, host := range hosts {
-		_, err = sshConfig.WriteString(host.SSHConfig())
+		strictChecking := "yes"
+
+		if _, ok := localKnownHosts[host.Hostname()]; !ok {
+			// local host key is missing, so append
+			entry, err := host.SSHKnownHostConfig()
+			if err != nil {
+				return err
+			}
+
+			if entry == "" && s.tarmak.Config().IgnoreMissingPublicKeyTags() {
+				// We need to change strict 'yes' to 'no' or 'ask' since entry doesn't
+				// exist and we have 'ignore missing instances tags' set to true.  Set
+				// to no for programmatic uses of ssh which will be changed when the in
+				// package solution is used.
+
+				if interactive {
+					strictChecking = "ask"
+				} else {
+					strictChecking = "no"
+				}
+			}
+
+			if _, err := knownHosts.WriteString(entry); err != nil {
+				return err
+			}
+		}
+
+		_, err = sshConfig.WriteString(host.SSHConfig(strictChecking))
 		if err != nil {
 			return err
 		}
@@ -69,6 +109,24 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	return nil
 }
 
+func (s *SSH) parseKnownHosts() (map[string]string, error) {
+	b, err := ioutil.ReadFile(s.tarmak.Cluster().SSHHostKeysPath())
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
+
+	entries := make(map[string]string)
+	for _, entry := range strings.Split(string(b), "\n") {
+		line := strings.SplitN(entry, " ", 2)
+
+		if len(line) == 2 {
+			entries[line[0]] = line[1]
+		}
+	}
+
+	return entries, nil
+}
+
 func (s *SSH) args() []string {
 	return []string{
 		"ssh",
@@ -82,7 +140,7 @@ func (s *SSH) PassThrough(argsAdditional []string) {
 	args := append(s.args(), argsAdditional...)
 
 	cmd := exec.Command(args[0], args[1:len(args)]...)
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = os.Stdout
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 

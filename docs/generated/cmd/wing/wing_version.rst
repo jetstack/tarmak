@@ -22,13 +22,6 @@ Options
 
   -h, --help   help for version
 
-Options inherited from parent commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-::
-
-      --log-flush-frequency duration   Maximum number of seconds between log flushes (default 5s)
-
 SEE ALSO
 ~~~~~~~~
 

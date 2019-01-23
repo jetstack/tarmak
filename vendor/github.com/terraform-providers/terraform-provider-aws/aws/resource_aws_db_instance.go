@@ -57,6 +57,11 @@ func resourceAwsDbInstance() *schema.Resource {
 				Sensitive: true,
 			},
 
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"engine": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -407,6 +412,16 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 			},
 
+			"domain": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"domain_iam_role_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -456,6 +471,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		opts := rds.CreateDBInstanceReadReplicaInput{
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:       aws.String(identifier),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
@@ -583,6 +599,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBName:                  aws.String(d.Get("name").(string)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get("engine_version").(string)),
 			S3BucketName:            aws.String(s3_bucket["bucket_name"].(string)),
@@ -739,6 +756,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
 			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
+			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                    tags,
 		}
@@ -763,7 +781,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("backup_retention_period"); ok {
+		if attr, ok := d.GetOkExists("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
 		}
@@ -775,6 +793,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("domain"); ok {
+			opts.Domain = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("domain_iam_role_name"); ok {
+			opts.DomainIAMRoleName = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
@@ -832,9 +858,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("parameter_group_name"); ok {
-			modifyDbInstanceInput.DBParameterGroupName = aws.String(attr.(string))
-			requiresModifyDbInstance = true
-			requiresRebootDbInstance = true
+			opts.DBParameterGroupName = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("password"); ok {
@@ -903,6 +927,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBName:                  aws.String(d.Get("name").(string)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			MasterUserPassword:      aws.String(d.Get("password").(string)),
 			Engine:                  aws.String(d.Get("engine").(string)),
@@ -1003,6 +1028,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
+		if attr, ok := d.GetOk("domain"); ok {
+			opts.Domain = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("domain_iam_role_name"); ok {
+			opts.DomainIAMRoleName = aws.String(attr.(string))
+		}
+
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
 		var err error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -1093,6 +1126,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("identifier", v.DBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
 	d.Set("username", v.MasterUsername)
+	d.Set("deletion_protection", v.DeletionProtection)
 	d.Set("engine", v.Engine)
 	d.Set("engine_version", v.EngineVersion)
 	d.Set("allocated_storage", v.AllocatedStorage)
@@ -1153,6 +1187,13 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
 	}
 
+	d.Set("domain", "")
+	d.Set("domain_iam_role_name", "")
+	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
+		d.Set("domain", v.DomainMemberships[0].Domain)
+		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
+	}
+
 	// list tags for resource
 	// set tags
 	conn := meta.(*AWSClient).rdsconn
@@ -1197,7 +1238,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		replicas = append(replicas, *v)
 	}
 	if err := d.Set("replicas", replicas); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting replicas attribute: %#v, error: %#v", replicas, err)
+		return fmt.Errorf("Error setting replicas attribute: %#v, error: %#v", replicas, err)
 	}
 
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
@@ -1300,6 +1341,11 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("copy_tags_to_snapshot") {
 		d.SetPartial("copy_tags_to_snapshot")
 		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		requestUpdate = true
+	}
+	if d.HasChange("deletion_protection") {
+		d.SetPartial("deletion_protection")
+		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		requestUpdate = true
 	}
 	if d.HasChange("instance_class") {
@@ -1409,6 +1455,14 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("domain") || d.HasChange("domain_iam_role_name") {
+		d.SetPartial("domain")
+		d.SetPartial("domain_iam_role_name")
+		req.Domain = aws.String(d.Get("domain").(string))
+		req.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		requestUpdate = true
 	}
 

@@ -50,6 +50,20 @@ module "network" {
   private_zone_id     = "${var.private_zone_id}"
 }
 
+module "tagging_control" {
+  source = "modules/tagging_control"
+
+  name              = "${var.name}"
+  project           = "${var.project}"
+  stack_name_prefix = "${var.stack_name_prefix}"
+  vpc_id            = "${module.network.vpc_id}"
+  project           = "${var.project}"
+  contact           = "${var.contact}"
+  environment       = "${var.environment}"
+
+  private_subnet_ids = ["${module.network.private_subnet_ids}"]
+}
+
 module "bastion" {
   source = "modules/bastion"
 
@@ -70,6 +84,7 @@ module "bastion" {
   private_zone_id       = "${module.network.private_zone_id[0]}"
   secrets_bucket        = "${module.state.secrets_bucket[0]}"
 
+  tagging_control_policy_arn         = "${module.tagging_control.tagging_control_policy_arn}"
   bastion_min_instance_count         = "${var.bastion_min_instance_count}"
   bastion_iam_additional_policy_arns = ["${var.bastion_iam_additional_policy_arns}"]
 }
@@ -101,6 +116,7 @@ module "jenkins" {
   secrets_bucket            = "${module.state.secrets_bucket[0]}"
 
   wing_binary_read_policy_arn = "${module.bastion.wing_binary_read_policy_arn}"
+  tagging_control_policy_arn  = "${module.tagging_control.tagging_control_policy_arn}"
 }
 
 {{ end -}}
@@ -139,6 +155,8 @@ module "vault" {
   bastion_instance_id       = "${module.bastion.bastion_instance_id}"
   vault_cluster_name        = "${var.vault_cluster_name}"
 
+  wing_binary_read_policy_arn      = "${module.bastion.wing_binary_read_policy_arn}"
+  tagging_control_policy_arn       = "${module.tagging_control.tagging_control_policy_arn}"
   vault_iam_additional_policy_arns = ["${var.vault_iam_additional_policy_arns}"]
   wing_binary_read_policy_arn      = "${module.bastion.wing_binary_read_policy_arn}"
 }
@@ -200,6 +218,7 @@ module "kubernetes" {
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
 
   wing_binary_read_policy_arn = "${module.bastion.wing_binary_read_policy_arn}"
+  tagging_control_policy_arn  = "${module.tagging_control.tagging_control_policy_arn}"
 }
 {{- end -}}
 
@@ -258,6 +277,9 @@ module "kubernetes" {
   vault_security_group_id   = "${data.terraform_remote_state.hub_state.vault_vault_security_group_id}"
   backups_bucket            = "${data.terraform_remote_state.hub_state.state_backups_bucket[0]}"
 
+  tagging_control_policy_arn  = "${data.terraform_remote_state.hub_state.tagging_control_tagging_control_policy_arn}"
+  wing_binary_read_policy_arn = "${data.terraform_remote_state.hub_state.bastion_bastion_wing_binary_read_policy_arn}"
+
   elb_access_logs_public_enabled           = "${var.elb_access_logs_public_enabled}"
   elb_access_logs_public_bucket            = "${var.elb_access_logs_public_bucket}"
   elb_access_logs_public_bucket_prefix     = "${var.elb_access_logs_public_bucket_prefix}"
@@ -266,7 +288,5 @@ module "kubernetes" {
   elb_access_logs_internal_bucket          = "${var.elb_access_logs_internal_bucket}"
   elb_access_logs_internal_bucket_prefix   = "${var.elb_access_logs_internal_bucket_prefix}"
   elb_access_logs_internal_bucket_interval = "${var.elb_access_logs_internal_bucket_interval}"
-
-  wing_binary_read_policy_arn = "${data.terraform_remote_state.hub_state.bastion_bastion_wing_binary_read_policy_arn}"
 }
 {{- end }}

@@ -42,8 +42,9 @@ output "private_zone_id" {
   value = "${concat(aws_route53_zone.private.*.id, list(""))}"
 }
 
+# remove trailing dots from the name
 output "private_zone" {
-  value = "${concat(aws_route53_zone.private.*.name, list(""))}"
+  value = "${list(replace(aws_route53_zone.private.0.name, "/\\.$/", ""), "")}"
 }
 
 output "environment" {

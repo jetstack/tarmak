@@ -46,4 +46,5 @@ variable "jenkins_admin_cidrs" {
   type = "list"
 }
 
+variable "tagging_control_policy_arn" {}
 variable "wing_binary_read_policy_arn" {}

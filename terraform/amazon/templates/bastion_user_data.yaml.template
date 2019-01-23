@@ -60,6 +60,8 @@ write_files:
     Restart=on-failure
     RestartSec=10
     Environment=WING_DATA_DIR=/var/lib/wing
+    Environment=WING_CLOUD_PROVIDER=amazon
+    Environment=WING_ENVIRONMENT=${tarmak_environment}
 {{- if .WingDevMode }}
     Environment=WING_VERSION="${wing_version}"
     ExecStartPre=/bin/sh -c 'aws s3 cp "s3://${wing_binary_path}" /opt/wing-$${WING_VERSION}/wing; chmod 0755 /opt/wing-$${WING_VERSION}/wing'
@@ -80,6 +82,7 @@ write_files:
  {{- end }}
     ExecStartPre=/bin/sh -c '\
       set -e ;\
+      usermod -a -G ssh_keys wing ;\
       test -d $${WING_DATA_DIR} && exit 0 ;\
       mkdir -p $${WING_DATA_DIR} ;\
       chown wing:wing $${WING_DATA_DIR} ;\

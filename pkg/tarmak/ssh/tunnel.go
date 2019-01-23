@@ -15,6 +15,7 @@ import (
 )
 
 type Tunnel struct {
+	ssh       *SSH
 	localPort int
 	log       *logrus.Entry
 	stdin     io.WriteCloser
@@ -36,6 +37,7 @@ func (s *SSH) Tunnel(hostname string, destination string, destinationPort int) i
 		retryCount: 30,
 		retryWait:  500 * time.Millisecond,
 		sshCommand: s.args(),
+		ssh:        s,
 	}
 	t.forwardSpec = fmt.Sprintf("-L%s:%d:%s:%d", t.BindAddress(), t.localPort, destination, destinationPort)
 

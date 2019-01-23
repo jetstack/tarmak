@@ -21,6 +21,7 @@ type host struct {
 	aliases        []string
 	roles          []string
 	user           string
+	tags           []*ec2.Tag
 
 	cluster interfaces.Cluster
 }
@@ -59,15 +60,63 @@ func (h *host) Parameters() map[string]string {
 	}
 }
 
+func (h *host) SSHKnownHostConfig() (string, error) {
+	var entry, key string
+
+	for _, t := range h.tags {
+		if strings.HasPrefix(*t.Key, "tarmak.io/") &&
+			strings.HasSuffix(*t.Key, "key-0") {
+			key = *t.Key
+			entry = *t.Value
+			break
+		}
+	}
+
+	if key == "" {
+		h.cluster.Log().Warnf("failed to find public key tags for host %s", h.Aliases())
+		return "", nil
+	}
+
+	findTag := func(name string, tags []*ec2.Tag) ([]*ec2.Tag, string) {
+		for i, t := range tags {
+			if *t.Key == name {
+				return append(tags[:i], tags[i+1:]...), *t.Value
+			}
+		}
+
+		return tags, ""
+	}
+
+	tags := h.tags
+	var n int
+	var value string
+	for !strings.HasSuffix(entry, "==EOF") {
+		n++
+		key = fmt.Sprintf("%s%d", key[:len(key)-1], n)
+
+		tags, value = findTag(key, tags)
+		if value == "" {
+			return "", fmt.Errorf("failed to contruct public key from host tags %s", h.Aliases())
+		}
+
+		entry = fmt.Sprintf("%s%s", entry, value)
+	}
+
+	entry = strings.TrimRight(entry[:len(entry)-6], " ")
+	entry = fmt.Sprintf("%s %s\n", h.Hostname(), entry)
+
+	return entry, nil
+}
+
 // TODO: this is not too provider specific and should live somewhere else
-func (h *host) SSHConfig() string {
+func (h *host) SSHConfig(strictChecking string) string {
 	config := fmt.Sprintf(`host %s
     User %s
     Hostname %s
 
     # use custom host key file per cluster
     UserKnownHostsFile %s
-    StrictHostKeyChecking no
+    StrictHostKeyChecking %s
 
     # enable connection multiplexing
     ControlPath %s/ssh-control-%%r@%%h:%%p
@@ -83,6 +132,7 @@ func (h *host) SSHConfig() string {
 		h.User(),
 		h.Hostname(),
 		h.cluster.SSHHostKeysPath(),
+		strictChecking,
 		os.TempDir(),
 		h.cluster.Environment().SSHPrivateKeyPath(),
 	)
@@ -133,6 +183,7 @@ func (a *Amazon) ListHosts(c interfaces.Cluster) ([]interfaces.Host, error) {
 				hostnamePublic: false,
 				user:           "centos",
 				cluster:        a.tarmak.Cluster(),
+				tags:           instance.Tags,
 			}
 			if instance.PublicIpAddress != nil {
 				host.hostname = *instance.PublicIpAddress

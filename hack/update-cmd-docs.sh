@@ -49,11 +49,11 @@ cat > "${REPO_ROOT}/docs/cmd-docs.rst" << EOF
 Command Line Documentation
 ==========================
 
-Command line documentation for both tarmak and wing commands
+Command line documentation for tarmak, wing and tagging_control commands
 
 EOF
 
-for cmd in "tarmak" "wing"; do
+for cmd in "tarmak" "wing" "tagging_control" ; do
     farray=$(basename -s .rst -a ${OUTPUT_DIR}/${cmd}/* | sort)
     for f in ${farray}; do
         cat >> "${REPO_ROOT}/docs/cmd-docs.rst" << EOF

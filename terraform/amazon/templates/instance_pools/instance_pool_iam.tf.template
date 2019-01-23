@@ -16,6 +16,11 @@ resource "aws_iam_role_policy_attachment" "{{.TFName}}_wing_binary_read" {
   role       = "${aws_iam_role.{{.TFName}}.name}"
   policy_arn = "${var.wing_binary_read_policy_arn}"
 }
+
+resource "aws_iam_role_policy_attachment" "{{.TFName}}_tagging_control_lambda_invoke" {
+  role       = "${aws_iam_role.{{.TFName}}.name}"
+  policy_arn = "${var.tagging_control_policy_arn}"
+}
 {{- if .Role.AWS.IAMEC2Controller }}
 
 resource "aws_iam_role_policy_attachment" "{{.TFName}}_ec2_controller" {

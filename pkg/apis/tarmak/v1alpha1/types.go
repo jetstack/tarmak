@@ -137,6 +137,9 @@ type Flags struct {
 	WingDevMode bool `json:"wingDevMode,omitempty"` // use a bundled wing version rather than a tagged release from GitHub
 
 	PublicAPIEndpoint bool `json:"publicAPIEndpoint,omitempty"` // Use public endpoint to point kubeconfig to
+
+	// Do not error when instances are missing their public key tags. Instead use first connection as fallback
+	IgnoreMissingPublicKeyTags bool `json:"ignoreMissingPublicKeyTags"`
 }
 
 // This contains the cluster specifc operation flags

@@ -5,6 +5,8 @@
 /tarmak_local_build
 /wing_linux_amd64
 /wing_linux_amd64_unversioned
+/tagging_control_linux_amd64
+/tagging_control.zip
 /dist/
 /bin/
 .DS_Store

@@ -89,17 +89,30 @@ resource "aws_instance" "vault" {
   }
 
   tags {
-    Name         = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
     Environment  = "${var.environment}"
     Project      = "${var.project}"
     Contact      = "${var.contact}"
     VaultCluster = "${var.environment}"
-    tarmak_role  = "vault-${count.index+1}"
   }
 
   lifecycle {
     ignore_changes = ["volume_tags"]
+    ignore_changes = ["tags"]
   }
+}
+
+resource "awstag_ec2_tag" "Name" {
+  ec2_id = "${element(aws_instance.vault.*.id, count.index)}"
+  key    = "Name"
+  value  = "${data.template_file.stack_name.rendered}-vault-${count.index+1}"
+  count  = "${var.vault_min_instance_count}"
+}
+
+resource "awstag_ec2_tag" "tarmak_role" {
+  ec2_id = "${element(aws_instance.vault.*.id, count.index)}"
+  key    = "tarmak_role"
+  value  = "vault-${count.index+1}"
+  count  = "${var.vault_min_instance_count}"
 }
 
 resource "aws_ebs_volume" "vault" {

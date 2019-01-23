@@ -10,7 +10,8 @@ import (
 var agentFlags = &wing.Flags{}
 
 var agentCmd = &cobra.Command{
-	Use: "agent",
+	Use:   "agent",
+	Short: "Launch Wing agent",
 	Run: func(cmd *cobra.Command, args []string) {
 		w := wing.New(agentFlags)
 		w.Must(w.Run(args))

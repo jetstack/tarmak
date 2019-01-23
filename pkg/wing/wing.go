@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	client "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
+	"github.com/jetstack/tarmak/pkg/wing/tags"
 )
 
 const (
@@ -64,6 +66,21 @@ func New(flags *Flags) *Wing {
 
 func (w *Wing) Run(args []string) error {
 	var errors []error
+
+	var env string
+	ec := strings.Split(w.flags.ClusterName, "-")
+	if len(ec) > 0 {
+		env = ec[0]
+	}
+
+	t, err := tags.New(w.log, env)
+	if err != nil {
+		return err
+	}
+
+	if err := t.EnsureMachineTags(); err != nil {
+		return err
+	}
 
 	if w.flags.InstanceName == DefaultInstanceName {
 		instanceName, err := os.Hostname()
