@@ -13,11 +13,12 @@ class kubernetes::addon_manager(
   }
 
   $service_apiserver = 'kube-apiserver.service'
+  $service_controller_manager = 'kube-controller-manager.service'
 
   # TOOD: add kubeconfig/kubectl service
   $_systemd_wants = $systemd_wants
-  $_systemd_requires = [$service_apiserver] + $systemd_requires
-  $_systemd_after = ['network.target', $service_apiserver] + $systemd_after
+  $_systemd_requires = [$service_apiserver, $service_controller_manager] + $systemd_requires
+  $_systemd_after = ['network.target', $service_apiserver, $service_controller_manager] + $systemd_after
   $_systemd_before = $systemd_before
 
   $service_name = 'kube-addon-manager'
