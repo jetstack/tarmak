@@ -1,15 +1,13 @@
 require 'spec_helper'
 
 describe 'tarmak::vault' do
-  let(:pre_condition) do
-    """
-      class{'tarmak::vault':
-        cloud_provider => 'aws',
-      }
-    """
-  end
-
   context 'without params' do
+    let(:pre_condition) {[
+      """
+        class{'vault_server': cloud_provider => 'aws', volume_id => 'vol-1'}
+      """
+    ]}
+
     it do
       is_expected.to compile
       is_expected.to contain_file('/etc/systemd/system/attach-ebs-volume-vault.service').with(
