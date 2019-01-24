@@ -9,7 +9,7 @@ required = [
   "k8s.io/kube-openapi/cmd/openapi-gen",
   "github.com/kubernetes-incubator/reference-docs/gen-apidocs",
   "github.com/golang/mock/mockgen",
-  "github.com/jteeuwen/go-bindata/go-bindata",
+  "github.com/kevinburke/go-bindata/go-bindata",
 ]
 
 [[constraint]]
