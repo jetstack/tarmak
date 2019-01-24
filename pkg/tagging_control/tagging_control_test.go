@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	RSASigniture = []byte(`L0iuTgj5IfN6XP+VMvuYzuTDRnryuCvKAMcifsECAD5SrauLsB9YF2WUGsmJjBQwVSpVDrCsamLN
+	RSASignature = []byte(`L0iuTgj5IfN6XP+VMvuYzuTDRnryuCvKAMcifsECAD5SrauLsB9YF2WUGsmJjBQwVSpVDrCsamLN
 TD6ztBNN676pphn3TqeEKzba1EOGo0uQD/ipbKPXjlYYyBe8BLiue3FiDgdnrxLCdwr/vlEXom20
 DoiPHfC8YsSPIJXv/ZE=`)
 
@@ -81,7 +81,7 @@ kgvlk+ZfM3ikpQ1YfiRKAAAAAAECAwQF
 func Test_verify(t *testing.T) {
 	h := &Handler{
 		request: &TagInstanceRequest{
-			RSASigniture:        RSASigniture,
+			RSASignature:        RSASignature,
 			InstanceDocumentRaw: []byte("bad signature"),
 			PublicKeys:          make(map[string][]byte),
 			KeySignatures:       make(map[string]*ssh.Signature),
