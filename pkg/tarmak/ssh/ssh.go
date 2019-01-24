@@ -39,6 +39,10 @@ func New(tarmak interfaces.Tarmak) *SSH {
 }
 
 func (s *SSH) WriteConfig(c interfaces.Cluster, interactive bool) error {
+	err := utils.EnsureDirectory(filepath.Dir(c.SSHConfigPath()), 0700)
+	if err != nil {
+		return err
+	}
 
 	hosts, err := c.ListHosts()
 	if err != nil {
@@ -94,11 +98,6 @@ func (s *SSH) WriteConfig(c interfaces.Cluster, interactive bool) error {
 		}
 
 		s.controlPaths = append(s.controlPaths, host.SSHControlPath())
-	}
-
-	err = utils.EnsureDirectory(filepath.Dir(c.SSHConfigPath()), 0700)
-	if err != nil {
-		return err
 	}
 
 	err = ioutil.WriteFile(c.SSHConfigPath(), sshConfig.Bytes(), 0600)
