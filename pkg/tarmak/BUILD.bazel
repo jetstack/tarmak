@@ -17,7 +17,6 @@ go_library(
         "//pkg/packer:go_default_library",
         "//pkg/puppet:go_default_library",
         "//pkg/tarmak/assets:go_default_library",
-        "//pkg/tarmak/binaries:go_default_library",
         "//pkg/tarmak/config:go_default_library",
         "//pkg/tarmak/environment:go_default_library",
         "//pkg/tarmak/initialize:go_default_library",

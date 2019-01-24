@@ -5,7 +5,6 @@ go_library(
     srcs = ["zip.go"],
     importpath = "github.com/jetstack/tarmak/pkg/tarmak/utils/zip",
     visibility = ["//visibility:public"],
-    deps = ["//pkg/tarmak/utils:go_default_library"],
 )
 
 go_test(

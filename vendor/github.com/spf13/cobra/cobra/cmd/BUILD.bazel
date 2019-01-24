@@ -24,6 +24,6 @@ go_library(
     deps = [
         "//vendor/github.com/mitchellh/go-homedir:go_default_library",
         "//vendor/github.com/spf13/cobra:go_default_library",
-        "@com_github_spf13_viper//:go_default_library",
+        "//vendor/github.com/spf13/viper:go_default_library",
     ],
 )

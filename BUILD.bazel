@@ -1,21 +1,10 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 load("@bazel_gazelle//:def.bzl", "gazelle")
 
 # gazelle:prefix github.com/jetstack/tarmak
 # gazelle:proto disable_global
 # gazelle:exclude pkg/tarmak/assets
 # gazelle:exclude pkg/tarmak/binaries
-gazelle(name = "gazelle")
-
-go_library(
-    name = "go_default_library",
-    srcs = ["bindata.go"],
-    importpath = "github.com/jetstack/tarmak",
-    visibility = ["//visibility:private"],
-)
-
-go_binary(
-    name = "tarmak",
-    embed = [":go_default_library"],
-    visibility = ["//visibility:public"],
+gazelle(
+    name = "gazelle",
+    external = "vendored",
 )

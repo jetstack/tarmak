@@ -10,7 +10,7 @@ go_library(
         "//vendor/github.com/gogo/protobuf/gogoproto:go_default_library",
         "//vendor/github.com/gogo/protobuf/proto:go_default_library",
         "//vendor/github.com/gogo/protobuf/sortkeys:go_default_library",
-        "@com_github_gogo_protobuf//vanity/command:go_default_library",
+        "//vendor/github.com/gogo/protobuf/vanity/command:go_default_library",
     ],
 )
 

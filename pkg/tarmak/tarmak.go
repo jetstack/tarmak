@@ -19,7 +19,6 @@ import (
 	"github.com/jetstack/tarmak/pkg/packer"
 	"github.com/jetstack/tarmak/pkg/puppet"
 	"github.com/jetstack/tarmak/pkg/tarmak/assets"
-	"github.com/jetstack/tarmak/pkg/tarmak/binaries"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/initialize"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -293,13 +292,6 @@ func (t *Tarmak) RootPath() (string, error) {
 	}
 
 	t.log.Debugf("restored assets into directory: %s", dir)
-
-	err = binaries.RestoreAssets(dir, "")
-	if err != nil {
-		return "", err
-	}
-
-	t.log.Debugf("restored binaries into directory: %s", dir)
 
 	t.rootPath = &dir
 	return *t.rootPath, nil
