@@ -7,12 +7,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/apiserver/pkg/registry/rest"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing"
 	"github.com/jetstack/tarmak/pkg/apis/wing/install"
+	pkgversion "github.com/jetstack/tarmak/pkg/version"
 	wingregistry "github.com/jetstack/tarmak/pkg/wing/registry"
 	instancestorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/instance"
 )
@@ -69,10 +69,8 @@ func (cfg *Config) Complete() CompletedConfig {
 		cfg.GenericConfig.Complete(),
 	}
 
-	c.GenericConfig.Version = &version.Info{
-		Major: "1",
-		Minor: "0",
-	}
+	version := pkgversion.Get()
+	c.GenericConfig.Version = &version
 
 	return CompletedConfig{&c}
 }

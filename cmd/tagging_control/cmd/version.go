@@ -3,10 +3,10 @@ package cmd
 
 import (
 	"fmt"
-	"reflect"
-	"strings"
 
 	"github.com/spf13/cobra"
+
+	pkgversion "github.com/jetstack/tarmak/pkg/version"
 )
 
 var Version struct {
@@ -15,7 +15,7 @@ var Version struct {
 	Commit    string
 }
 
-var AppName string = "tarmak"
+var AppName string = "tagging-control"
 
 func init() {
 	RootCmd.AddCommand(versionCmd)
@@ -25,18 +25,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: fmt.Sprint("Print the version number of ", AppName),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%s", AppName)
-
-		v := reflect.ValueOf(Version)
-
-		for i := 0; i < v.NumField(); i++ {
-			fmt.Printf(
-				" %s: %s",
-				strings.ToLower(v.Type().Field(i).Name),
-				v.Field(i).Interface(),
-			)
-		}
-
-		fmt.Println("")
+		fmt.Printf("%s version: %#v\n", AppName, pkgversion.Get())
 	},
 }

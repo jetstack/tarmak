@@ -88,11 +88,11 @@ go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/clientset/internalversion/fake | grep -v pkg/wing/client/clientset/versioned/fake)
 
 go_build_tagging_control:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o tagging_control_linux_amd64	./cmd/tagging_control/.
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh)' -o tagging_control_linux_amd64 ./cmd/tagging_control
 
 go_build:
 	# Build a wing binary
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' -o wing_linux_amd64 ./cmd/wing
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh)' -o wing_linux_amd64 ./cmd/wing
 ifeq ($(CI_COMMIT_TAG),dev)
 	# Building in Dev mode
 	# Build a hashable version of the wing binary without build variables
@@ -103,8 +103,8 @@ ifeq ($(CI_COMMIT_TAG),dev)
 	go generate -tags devmode $$(go list ./pkg/... ./cmd/...)
 endif
 	# Make sure you add all binaries to the .goreleaser.yml as well
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH) -X github.com/jetstack/tarmak/cmd/tarmak/cmd.version=$(CI_COMMIT_TAG)' -o tarmak_linux_amd64 ./cmd/tarmak
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -ldflags '-w -X main.version=$(CI_COMMIT_TAG) -X main.commit=$(CI_COMMIT_SHA) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH) -X github.com/jetstack/tarmak/cmd/tarmak/cmd.version=$(CI_COMMIT_TAG)' -o tarmak_darwin_amd64 ./cmd/tarmak
+	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH)' -o tarmak_linux_amd64 ./cmd/tarmak
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH)' -o tarmak_darwin_amd64 ./cmd/tarmak
 
 $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
