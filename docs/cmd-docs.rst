@@ -199,8 +199,3 @@ Command line documentation for tarmak, wing and tagging_control commands
 
    generated/cmd/tagging_control/tagging_control_version
 
-.. toctree::
-   :maxdepth: 1
-
-   generated/cmd/tagging_control/tagging_control_zip
-

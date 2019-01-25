@@ -27,5 +27,4 @@ SEE ALSO
 
 * `tagging_control handle <tagging_control_handle.html>`_ 	 - Launch lambda request handler
 * `tagging_control version <tagging_control_version.html>`_ 	 - Print the version number of tagging-control
-* `tagging_control zip <tagging_control_zip.html>`_ 	 - zip utility
 
