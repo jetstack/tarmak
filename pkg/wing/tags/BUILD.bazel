@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["tags.go"],
+    importpath = "github.com/jetstack/tarmak/pkg/wing/tags",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/wing/tags/aws:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)
