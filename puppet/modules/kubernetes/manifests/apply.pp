@@ -18,6 +18,7 @@ define kubernetes::apply(
   }
 
   $service_apiserver = 'kube-apiserver.service'
+  $service_kube_addon_manager = 'kube-addon-manager.service'
   $manifests_content = $manifests.join("\n---\n")
   $apply_file = "${::kubernetes::apply_dir}/${name}.${format}"
 
@@ -47,6 +48,16 @@ define kubernetes::apply(
     }
   }
 
+  if $kubernetes::_apiserver_insecure_port == 0 {
+    $server_port = $kubernetes::apiserver_secure_port
+    $protocol = 'https'
+  } else {
+    $server_port = $kubernetes::_apiserver_insecure_port
+    $protocol = 'http'
+  }
+
+  $command = "/bin/bash -c \"while true; do if [[ \$(curl -k -w '%{http_code}' -s -o /dev/null ${protocol}://localhost:${server_port}/healthz) == 200 ]]; then break; fi; done; kubectl apply -f '${apply_file}' || rm -f '${apply_file})'\""
+
   # validate file first
   exec{"validate_${name}":
       path        => [
@@ -58,7 +69,8 @@ define kubernetes::apply(
         "KUBECONFIG=${::kubernetes::kubectl::kubeconfig_path}",
       ],
       refreshonly => true,
-      command     => "kubectl apply -f '${apply_file}' || rm -f '${apply_file}'",
-      require     => Service[$service_apiserver],
+      command     => $command,
+      require     => [ Service[$service_apiserver], Service[$service_kube_addon_manager] ],
+      logoutput   => true,
   }
 }

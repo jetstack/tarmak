@@ -171,7 +171,7 @@ class tarmak::master(
   Vault_Client::Cert_Service['kube-admin'] -> Service['kube-apiserver.service']
   Vault_Client::Secret_Service['kube-service-account-key'] -> Service['kube-controller-manager.service']
   Vault_Client::Secret_Service['kube-service-account-key'] -> Service['kube-apiserver.service']
-  Service['kube-admin-cert.service'] -> Kubernetes::Apply <||>
+  Service['kube-admin-cert.service'] -> Service['kube-addon-manager.service'] -> Kubernetes::Apply <||>
 
   class { 'kubernetes::master':
     disable_kubelet => $disable_kubelet,

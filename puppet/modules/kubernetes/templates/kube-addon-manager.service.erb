@@ -7,7 +7,11 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
 Environment=KUBECONFIG=<%= @kubeconfig_path %>
-# Apply template
+<%- if scope['kubernetes::_apiserver_insecure_port'] == 0 %>
+ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -k -w '%{http_code}' https://localhost:<%= scope['kubernetes::apiserver_secure_port'] %>/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
+<%- else -%>
+ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:<%= scope['kubernetes::_apiserver_insecure_port'] %>/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
+<%- end -%>
 ExecStart=<%= @kube_addon_manager_path %>
 Restart=on-failure
 LimitNOFILE=65536

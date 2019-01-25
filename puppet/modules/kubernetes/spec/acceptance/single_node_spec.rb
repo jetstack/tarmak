@@ -149,7 +149,9 @@ kubernetes::apply { 'hello-invalid-namespace':
 
       it 'should error when it applies a manifest with a syntax error' do
         hosts_as('k8s-master').each do |host|
-          apply_manifest_on(host, invalid_manifest_apply_pp, :expect_failures => true)
+          expect(
+            apply_manifest_on(host, invalid_manifest_apply_pp, :catch_failures => true).exit_code
+          ).to_not be_zero
         end
       end
     end
