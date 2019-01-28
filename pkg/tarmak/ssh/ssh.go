@@ -18,6 +18,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/knownhosts"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -62,40 +63,60 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 		return err
 	}
 
-	localKnownHosts, err := s.parseKnownHosts()
-	if err != nil {
-		return err
-	}
+	knownHostsPath := s.tarmak.Cluster().SSHHostKeysPath()
 
-	knownHosts, err := os.OpenFile(s.tarmak.Cluster().SSHHostKeysPath(),
-		os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	knownHostsFile, err := os.OpenFile(
+		knownHostsPath,
+		os.O_APPEND|os.O_WRONLY|os.O_CREATE,
+		0600,
+	)
 	if err != nil {
 		return err
 	}
-	defer knownHosts.Close()
+	defer knownHostsFile.Close()
+
+	// create known hosts validator
+	knownHostsValidator, err := knownhosts.New(knownHostsPath)
+	if err != nil {
+		return err
+	}
 
 	var sshConfig bytes.Buffer
 	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
 
 	s.hosts = make(map[string]interfaces.Host)
+
+	// loop over hosts
 	for _, host := range hosts {
+		// TODO: do the strict checking settings
 		strictChecking := "yes"
 
-		if _, ok := localKnownHosts[host.Hostname()]; !ok {
-			// local host key is missing, so append
-			entry, err := host.SSHKnownHostConfig()
-			if err != nil {
-				return err
-			}
+		// loop over host keys
+		hostKeys, err := host.SSHHostPublicKeys()
+		if err != nil {
+			return err
+		}
+		for _, hostKey := range hostKeys {
+			address := &net.TCPAddr{IP: net.ParseIP(host.Hostname()), Port: 22}
 
-			if entry == "" && s.tarmak.Config().IgnoreMissingPublicKeyTags() {
-				// We need to change strict 'yes' to 'ask' since entry doesn't exist
-				// and we have 'ignore missing instances tags' set to true
-				strictChecking = "ask"
-			}
-
-			if _, err := knownHosts.WriteString(entry); err != nil {
-				return err
+			result := knownHostsValidator(
+				address.String(), // empty host key
+				address,          // ip address
+				hostKey,
+			)
+			if result != nil {
+				if _, ok := result.(*knownhosts.KeyError); ok {
+					// add public key to known hosts file
+					if _, err := knownHostsFile.WriteString(
+						fmt.Sprintf("%s\n", knownhosts.Line([]string{
+							knownhosts.Normalize(address.String()),
+						}, hostKey)),
+					); err != nil {
+						return err
+					}
+				} else {
+					s.log.Warnf("ssh verification for %s failed: %v", result)
+				}
 			}
 		}
 
@@ -117,24 +138,6 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	}
 
 	return nil
-}
-
-func (s *SSH) parseKnownHosts() (map[string]string, error) {
-	b, err := ioutil.ReadFile(s.tarmak.Cluster().SSHHostKeysPath())
-	if err != nil && !os.IsNotExist(err) {
-		return nil, err
-	}
-
-	entries := make(map[string]string)
-	for _, entry := range strings.Split(string(b), "\n") {
-		line := strings.SplitN(entry, " ", 2)
-
-		if len(line) == 2 {
-			entries[line[0]] = line[1]
-		}
-	}
-
-	return entries, nil
 }
 
 // Pass through a local CLI session
@@ -356,40 +359,15 @@ func (s *SSH) config() (*ssh.ClientConfig, error) {
 }
 
 func (s *SSH) hostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) error {
-	localHosts, err := s.parseKnownHosts()
+	knownHostsPath := s.tarmak.Cluster().SSHHostKeysPath()
+
+	// create known hosts validator
+	knownHostsValidator, err := knownhosts.New(knownHostsPath)
 	if err != nil {
-		s.log.Warnf("host key callback failed: %s", err)
-		return hostKeyCallbackError
+		return err
 	}
 
-	// remove port from hostname
-	if s := strings.Split(hostname, ":"); len(s) > 0 {
-		hostname = s[0]
-	}
-
-	localKey, ok := localHosts[hostname]
-	if !ok {
-		if s.tarmak.Config().IgnoreMissingPublicKeyTags() {
-			s.log.Warnf("ignoring missing local host key for hostname %s", hostname)
-			return nil
-		}
-
-		s.log.Warnf("missing local host key for hostname %s", hostname)
-		return hostKeyCallbackError
-	}
-
-	lk, _, _, rest, err := ssh.ParseAuthorizedKey([]byte(localKey))
-	if err != nil || rest != nil {
-		s.log.Errorf("failed to parse local host key %s: rest=%s err=%s", hostname, rest, err)
-		return hostKeyCallbackError
-	}
-
-	if !bytes.Equal(key.Marshal(), lk.Marshal()) {
-		s.log.Errorf("local hostname key mismatch callback for %s", hostname)
-		return hostKeyCallbackError
-	}
-
-	return nil
+	return knownHostsValidator(hostname, remote, key)
 }
 
 func (s *SSH) host(name string) (interfaces.Host, error) {
