@@ -3,13 +3,13 @@
 wing version
 ------------
 
-Print the version number of tarmak
+Print the version number of wing
 
 Synopsis
 ~~~~~~~~
 
 
-Print the version number of tarmak
+Print the version number of wing
 
 ::
 

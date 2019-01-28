@@ -20,6 +20,8 @@ set -o pipefail
 
 set -e
 
+unset TARMAK_CONFIG
+
 REPO_ROOT=${BUILD_WORKSPACE_DIRECTORY:-"$(cd "$(dirname "$0")" && pwd -P)"/..}
 cd ${REPO_ROOT}
 export PATH=$PATH:${REPO_ROOT}/bin/

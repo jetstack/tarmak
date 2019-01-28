@@ -3,13 +3,13 @@
 tagging_control version
 -----------------------
 
-Print the version number of tarmak
+Print the version number of tagging-control
 
 Synopsis
 ~~~~~~~~
 
 
-Print the version number of tarmak
+Print the version number of tagging-control
 
 ::
 
