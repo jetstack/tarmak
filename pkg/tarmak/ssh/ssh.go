@@ -43,7 +43,7 @@ type SSH struct {
 	log    *logrus.Entry
 
 	hosts   map[string]interfaces.Host
-	tunnels []interfaces.Tunnel
+	tunnels []*Tunnel
 
 	bastionClientLock sync.Mutex // ensure we set up connection to bastion one at a time to keep single connection
 	bastionClientConn *ssh.Client
@@ -311,7 +311,7 @@ func (s *SSH) Validate() error {
 
 func (s *SSH) Cleanup() {
 	for _, tunnel := range s.tunnels {
-		tunnel.Stop()
+		tunnel.cleanup()
 	}
 
 	if s.bastionClientConn != nil {

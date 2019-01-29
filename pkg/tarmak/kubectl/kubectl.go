@@ -291,6 +291,8 @@ func (k *Kubectl) Kubectl(args []string, publicEndpoint bool) error {
 
 	cmd.Wait()
 
+	k.stopTunnel()
+
 	return nil
 }
 

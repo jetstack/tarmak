@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"os/exec"
 	"sync"
 	"syscall"
@@ -31,6 +32,7 @@ type Tunnel struct {
 
 	bastionConn *ssh.Client
 	listener    net.Listener
+	daemon      *os.Process
 
 	closeConnsLock sync.Mutex // prevent closing the same connection multiple times at once
 	openedConns    []net.Conn
@@ -70,7 +72,7 @@ func (t *Tunnel) Start() error {
 		}
 
 		// allow for some warm up time
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 3)
 		return nil
 	}
 
@@ -131,7 +133,16 @@ func (t *Tunnel) handle() {
 	}
 }
 
+// prevent tarmak clean up from killing used daemons
 func (t *Tunnel) Stop() {
+	t.cleanup()
+
+	if t.daemon != nil {
+		t.daemon.Kill()
+	}
+}
+
+func (t *Tunnel) cleanup() {
 	// prevent closing the same connection multiple times at once
 	t.closeConnsLock.Lock()
 	defer t.closeConnsLock.Unlock()
@@ -197,6 +208,8 @@ func (t *Tunnel) startDaemon() error {
 	if err := cmd.Start(); err != nil {
 		return err
 	}
+
+	t.daemon = cmd.Process
 
 	return nil
 }

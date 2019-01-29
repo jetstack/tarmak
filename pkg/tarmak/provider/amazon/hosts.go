@@ -115,21 +115,7 @@ func (h *host) SSHHostPublicKeys() ([]ssh.PublicKey, error) {
 
 	// parse ssh public host keys
 	for pos, _ := range hostKeysBase64 {
-		/*hostKeyBytes, err := base64.StdEncoding.DecodeString(hostKeysBase64[pos])
-		if err != nil {
-			h.cluster.Log().Warnf(
-				"failed to base64 decode '%s' from tag '%s' of host '%s': %v",
-				hostKeysBase64[pos],
-				hostKeysTagKeys[pos],
-				h.Aliases(),
-				err,
-			)
-			continue
-		}
-		*/
-
 		hostKey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(hostKeysBase64[pos]))
-		//hostKey, err := ssh.ParsePublicKey(hostKeyBytes)
 		if err != nil {
 			h.cluster.Log().Warnf(
 				"failed to parse public keys from tag '%s' of host '%s': %v",
