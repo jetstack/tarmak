@@ -5,7 +5,7 @@ resource "aws_route53_zone" "private" {
   comment       = "Hosted zone for private kubernetes in ${var.environment}"
 
   vpc {
-    vpc_id = "${aws_vpc.main.0.id}"
+    vpc_id = "${var.vpc_id}"
   }
 
   tags {

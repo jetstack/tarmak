@@ -117,3 +117,8 @@ following annotations to your clusters network configuration (located in
 includes hub clusters.
 
 Now you can run ``tarmak cluster apply`` and continue as normal.
+
+.. warning::
+  Deploying Tarmak into an existing VPC will not automatically create VPC
+  endpoints for AWS services. It is strongly recommended that at least an S3 VPC
+  endpoint is present for your deployed cluster.
