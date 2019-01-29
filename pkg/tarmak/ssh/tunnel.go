@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/kardianos/osext"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -69,7 +70,7 @@ func (t *Tunnel) Start() error {
 		}
 
 		// allow for some warm up time
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second)
 		return nil
 	}
 
@@ -86,21 +87,25 @@ func (t *Tunnel) Start() error {
 
 func (t *Tunnel) handle() {
 	tries := 5
+	var result *multierror.Error
 	for {
 		remoteConn, err := t.bastionConn.Dial("tcp",
 			net.JoinHostPort(t.dest, t.destPort))
 		if err != nil {
-			t.log.Warnf("failed to create tunnel to remote connection: %s", err)
+			result = multierror.Append(result, fmt.Errorf(
+				"failed to create tunnel to remote connection: %s", err))
 
 			tries--
 			if tries == 0 {
-				t.log.Error("5 errors connecting to remote server through bastion")
+				t.log.Errorf("5 errors connecting to remote server through bastion: %s",
+					result.ErrorOrNil())
 				return
 			}
 
-			time.Sleep(time.Second * 3)
+			time.Sleep(time.Second * 5)
 			continue
 		}
+
 		t.openedConns = append(t.openedConns, remoteConn)
 
 		conn, err := t.listener.Accept()

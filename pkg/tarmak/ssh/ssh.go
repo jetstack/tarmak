@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
@@ -29,6 +30,12 @@ var _ interfaces.SSH = &SSH{}
 
 var (
 	hostKeyCallbackError = errors.New("host key callback rejected")
+)
+
+const (
+	// the known hosts package does not export these error strings so have to
+	// define them here ourselves
+	unknownKeyError = "knownhosts: key is unknown"
 )
 
 type SSH struct {
@@ -86,16 +93,20 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 
 	s.hosts = make(map[string]interfaces.Host)
 
+	strictChecking := "yes"
+	if s.tarmak.Config().IgnoreMissingPublicKeyTags() {
+		strictChecking = "ask"
+	}
+
 	// loop over hosts
 	for _, host := range hosts {
-		// TODO: do the strict checking settings
-		strictChecking := "yes"
-
-		// loop over host keys
 		hostKeys, err := host.SSHHostPublicKeys()
 		if err != nil {
 			return err
 		}
+
+		var errResult *multierror.Error
+		// loop over host keys
 		for _, hostKey := range hostKeys {
 			address := &net.TCPAddr{IP: net.ParseIP(host.Hostname()), Port: 22}
 
@@ -104,20 +115,36 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 				address,          // ip address
 				hostKey,
 			)
-			if result != nil {
-				if _, ok := result.(*knownhosts.KeyError); ok {
-					// add public key to known hosts file
-					if _, err := knownHostsFile.WriteString(
-						fmt.Sprintf("%s\n", knownhosts.Line([]string{
-							knownhosts.Normalize(address.String()),
-						}, hostKey)),
-					); err != nil {
-						return err
-					}
-				} else {
-					s.log.Warnf("ssh verification for %s failed: %v", result)
-				}
+
+			if result == nil {
+				continue
 			}
+
+			e, ok := result.(*knownhosts.KeyError)
+
+			// if we have unknown key add to hosts file
+			if ok && e.Error() == unknownKeyError {
+				// add public key to known hosts file
+				_, err := knownHostsFile.WriteString(
+					fmt.Sprintf("%s\n", knownhosts.Line([]string{
+						knownhosts.Normalize(address.String()),
+					}, hostKey)),
+				)
+
+				if err != nil {
+					errResult = multierror.Append(errResult,
+						fmt.Errorf("failed to add public key to known hosts file: %s", err))
+				}
+
+				continue
+			}
+
+			errResult = multierror.Append(errResult,
+				fmt.Errorf("ssh verification for %s failed: %v", host.Hostname(), result))
+		}
+
+		if errResult != nil {
+			return errResult
 		}
 
 		_, err = sshConfig.WriteString(host.SSHConfig(strictChecking))
@@ -141,12 +168,11 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 }
 
 // Pass through a local CLI session
-func (s *SSH) PassThrough(hostName string, argsAdditional []string) error {
+func (s *SSH) PassThrough(argsAdditional []string) error {
 	args := append(
 		[]string{
 			"ssh", "-F",
 			s.tarmak.Cluster().SSHConfigPath(),
-			hostName, "--",
 		},
 		argsAdditional...,
 	)
@@ -361,13 +387,49 @@ func (s *SSH) config() (*ssh.ClientConfig, error) {
 func (s *SSH) hostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) error {
 	knownHostsPath := s.tarmak.Cluster().SSHHostKeysPath()
 
-	// create known hosts validator
-	knownHostsValidator, err := knownhosts.New(knownHostsPath)
-	if err != nil {
-		return err
+	validate := func() error {
+
+		// create known hosts validator - refresh host file db
+		knownHostsValidator, err := knownhosts.New(knownHostsPath)
+		if err != nil {
+			return err
+		}
+
+		return knownHostsValidator(hostname, remote, key)
 	}
 
-	return knownHostsValidator(hostname, remote, key)
+	err := validate()
+	if err == nil {
+		return nil
+	}
+
+	e, ok := err.(*knownhosts.KeyError)
+	if ok {
+		// the key does not exist in the known hosts file and we are ignoring
+		// missing keys so append to file and retry validator
+		if e.Error() == unknownKeyError &&
+			s.tarmak.Config().IgnoreMissingPublicKeyTags() {
+
+			f, ferr := os.OpenFile(knownHostsPath, os.O_APPEND|os.O_WRONLY, 0600)
+			if ferr != nil {
+				return fmt.Errorf("failed to open file: %s, %s", ferr, err)
+			}
+
+			defer f.Close()
+
+			entry := fmt.Sprintf("%s\n", knownhosts.Line([]string{
+				knownhosts.Normalize(remote.String()),
+			}, key))
+
+			if _, ferr = f.WriteString(entry); ferr != nil {
+				return fmt.Errorf("failed to append file: %s, %s", ferr, err)
+			}
+
+			return validate()
+		}
+	}
+
+	return err
 }
 
 func (s *SSH) host(name string) (interfaces.Host, error) {

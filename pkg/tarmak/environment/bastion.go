@@ -68,12 +68,10 @@ func (e *Environment) VerifyBastionAvailable() error {
 		msg := "error while connecting to bastion host"
 		if err != nil {
 			err = fmt.Errorf("%s: %v", msg, err)
-			e.log.Warnf(err.Error())
 			return err
 		}
 		if retCode != 0 {
 			err = fmt.Errorf("%s unexpected return code: %d", msg, retCode)
-			e.log.Warn(err.Error())
 			return err
 		}
 

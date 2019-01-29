@@ -9,7 +9,7 @@ func (t *Tarmak) SSH() interfaces.SSH {
 	return t.ssh
 }
 
-func (t *Tarmak) SSHPassThrough(host string, argsAdditional []string) error {
+func (t *Tarmak) SSHPassThrough(argsAdditional []string) error {
 	if err := t.ssh.WriteConfig(t.Cluster()); err != nil {
 		return err
 	}
@@ -18,7 +18,7 @@ func (t *Tarmak) SSHPassThrough(host string, argsAdditional []string) error {
 		return err
 	}
 
-	if err := t.ssh.PassThrough(host, argsAdditional); err != nil {
+	if err := t.ssh.PassThrough(argsAdditional); err != nil {
 		return err
 	}
 

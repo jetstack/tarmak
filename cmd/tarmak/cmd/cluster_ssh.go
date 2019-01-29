@@ -20,7 +20,7 @@ var clusterSshCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(globalFlags)
-		t.Perform(t.SSHPassThrough(args[0], args[1:]))
+		t.Perform(t.SSHPassThrough(args))
 	},
 	DisableFlagsInUseLine: true,
 }
