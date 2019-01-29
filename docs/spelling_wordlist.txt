@@ -38,6 +38,7 @@ Golang
 Grafana
 gz
 Hashicorp
+heptio
 hostname
 iam
 init
@@ -61,6 +62,7 @@ loopback
 macOS
 masterless
 millicores
+minio
 multi
 nameservers
 namespace
