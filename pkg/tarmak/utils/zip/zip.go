@@ -6,114 +6,40 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"strings"
-
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"time"
 )
 
 var (
 	overrideErr = "trying to override source file but not deleting source: %s %s"
 )
 
-func Zip(src []string, dst string, deleteSrc bool) error {
-	var writer io.Writer
-	var tempFile *os.File
-
-	if !strings.HasSuffix(dst, ".zip") {
-		dst = fmt.Sprintf("%s.zip", dst)
-	}
-
-	if utils.SliceContains(src, dst) {
-		if !deleteSrc {
-			return fmt.Errorf(overrideErr, src, dst)
-		}
-
-		// source contains destination file so write zip to temp file
-		var err error
-		tempFile, err = os.Create(filepath.Join(os.TempDir(), filepath.Base(dst)))
-		if err != nil {
-			return err
-		}
-
-		defer os.RemoveAll(tempFile.Name())
-		writer = tempFile
-
-	} else {
-
-		// source files doesn't contain destination so write straight to
-		// destination file
-		f, err := os.Create(dst)
-		if err != nil {
-			return err
-		}
-
-		defer f.Close()
-		writer = f
-	}
-
+func ZipBytes(filenames []string, bytes [][]byte, modes []os.FileMode, writer io.Writer) error {
 	zipW := zip.NewWriter(writer)
 	defer zipW.Close()
 
-	for _, f := range src {
-		srcF, err := os.Open(f)
-		if err != nil {
-			return err
-		}
-		defer srcF.Close()
+	kubernetesEpoch := time.Unix(1437436800, 0)
 
-		info, err := srcF.Stat()
-		if err != nil {
-			return err
-		}
+	if lenFilenames, lenBytes, lenModes := len(filenames), len(bytes), len(modes); lenFilenames != lenBytes || lenBytes != lenModes {
+		return fmt.Errorf("count of filenames, modes and bytes slice in the input needs to match")
+	}
 
-		header, err := zip.FileInfoHeader(info)
-		if err != nil {
-			return err
+	for pos, _ := range filenames {
+		header := &zip.FileHeader{
+			Name:               filenames[pos],
+			Method:             zip.Deflate,
+			UncompressedSize64: uint64(len(bytes[pos])),
+			Modified:           time.Now(),
 		}
-
-		header.Name = f
-		header.Method = zip.Deflate
+		header.SetMode(modes[pos])
+		header.SetModTime(kubernetesEpoch)
 
 		fWriter, err := zipW.CreateHeader(header)
 		if err != nil {
 			return err
 		}
-
-		if _, err = io.Copy(fWriter, srcF); err != nil {
+		if _, err := fWriter.Write(bytes[pos]); err != nil {
 			return err
 		}
 	}
-
-	if deleteSrc {
-		for _, f := range src {
-			if err := os.RemoveAll(f); err != nil {
-				return fmt.Errorf("failed to delete all src files: %s", err)
-			}
-		}
-	}
-
-	zipW.Close()
-
-	// zip is in temp so copy to destination file
-	if tempFile != nil {
-		tempFile.Close()
-
-		tempFile, err := os.Open(tempFile.Name())
-		if err != nil {
-			return err
-		}
-
-		f, err := os.Create(dst)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		if _, err = io.Copy(f, tempFile); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }

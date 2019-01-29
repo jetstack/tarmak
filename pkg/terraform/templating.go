@@ -4,7 +4,6 @@ package terraform
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -14,10 +13,12 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/tarmak/binaries"
 	"github.com/jetstack/tarmak/pkg/tarmak/cluster"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
+	"github.com/jetstack/tarmak/pkg/tarmak/utils/zip"
 )
 
 func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
@@ -58,38 +59,52 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 
 	if t.tarmak.Config().WingDevMode() {
 		// move in wing binary for terraform bucket object
-		sourceWingBinary, err := os.Open(filepath.Join(rootPath, "wing_linux_amd64"))
+		srcWingBytes, err := binaries.Asset("wing_linux_amd64")
 		if err != nil {
 			return err
 		}
-		defer sourceWingBinary.Close()
 
-		destWingBinary, err := os.Create(filepath.Join(terraformCodePath, "wing_linux_amd64"))
+		destWingBinary, err := os.OpenFile(
+			filepath.Clean(
+				filepath.Join(terraformCodePath, "wing_linux_amd64"),
+			),
+			os.O_RDWR|os.O_CREATE|os.O_TRUNC,
+			0755,
+		)
 		if err != nil {
 			return err
 		}
 		defer destWingBinary.Close()
 
-		_, err = io.Copy(destWingBinary, sourceWingBinary)
-		if err != nil {
+		if _, err := destWingBinary.Write(srcWingBytes); err != nil {
 			return err
 		}
 	}
 
-	sourceTaggingControlBinary, err := os.Open(filepath.Join(rootPath, "tagging_control.zip"))
+	srcTaggingControlBytes, err := binaries.Asset("tagging_control_linux_amd64")
 	if err != nil {
 		return err
 	}
-	defer sourceTaggingControlBinary.Close()
 
-	destTaggingControlBinary, err := os.Create(filepath.Join(terraformCodePath, "tagging_control.zip"))
+	destTaggingControl, err := os.OpenFile(
+		filepath.Clean(
+			filepath.Join(terraformCodePath, "tagging_control.zip"),
+		),
+
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
+		0755,
+	)
 	if err != nil {
 		return err
 	}
-	defer destTaggingControlBinary.Close()
+	defer destTaggingControl.Close()
 
-	_, err = io.Copy(destTaggingControlBinary, sourceTaggingControlBinary)
-	if err != nil {
+	if err := zip.ZipBytes(
+		[]string{"tagging_control_linux_amd64"},
+		[][]byte{srcTaggingControlBytes},
+		[]os.FileMode{0755},
+		destTaggingControl,
+	); err != nil {
 		return err
 	}
 
