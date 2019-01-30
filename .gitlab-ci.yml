@@ -4,7 +4,7 @@ test::tarmak::golang:
   stage: test
   tags:
   - docker
-  image: golang:1.11.4
+  image: golang:1.11.5
   script:
   - rm -rf /go/src/github.com/jetstack
   - mkdir -p /go/src/github.com/jetstack
@@ -31,23 +31,11 @@ generate::docs:
     - docs/_build/html
     expire_in: 4 weeks
 
-release::tarmak::puppet_publish_modules:
-  stage: release
-  tags:
-  - docker
-  only:
-  - tags
-  script:
-  - cd ${CI_PROJECT_DIR}/puppet
-  - bundle install --path /cache
-  - echo "${PUPPETFORGE_DATA}" > ~/.puppetforge.yml && chmod 600 ~/.puppetforge.yml
-  - bundle exec rake publish_modules
-
 release::tarmak::golang:
   stage: release
   tags:
   - docker
-  image: golang:1.11.4
+  image: golang:1.11.5
   only:
   - tags
   script:
@@ -58,8 +46,7 @@ release::tarmak::golang:
   - mkdir -p /go/src/github.com/jetstack
   - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack
   - cd /go/src/github.com/jetstack/tarmak
-  - make all
-  - export PATH="/go/src/github.com/jetstack/tarmak/bin:${PATH}" && goreleaser
+  - make release
   - mv /go/src/github.com/jetstack/tarmak ${CI_PROJECT_DIR}
 
 stages:
