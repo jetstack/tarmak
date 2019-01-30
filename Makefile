@@ -68,7 +68,7 @@ verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verif
 
 test: go_test ## runs all defined tests, no puppet tests
 
-generate: go_build_tagging_control go_generate ## generates mocks and assets files
+generate: go_generate ## generates mocks and assets files
 
 build: generate go_build ## runs generate, and then go_build targets
 
@@ -181,7 +181,7 @@ $(BINDIR)/gen-apidocs:
 	go build -o $@ ./vendor/github.com/kubernetes-incubator/reference-docs/gen-apidocs
 
 
-go_generate: pkg/wing/mocks/http_client.go pkg/wing/mocks/command.go pkg/wing/mocks/client.go pkg/tarmak/binaries/binaries_bindata.go pkg/tarmak/assets/assets_bindata.go
+go_generate: pkg/wing/mocks/http_client.go pkg/wing/mocks/command.go pkg/wing/mocks/client.go pkg/tarmak/binaries/binaries_bindata.go pkg/tarmak/assets/assets_bindata.go pkg/tarmak/mocks/tarmak.go pkg/tarmak/mocks/amazon.go
 
 go_codegen: depend $(TYPES_FILES)
 	$(HACK_DIR)/update-codegen.sh
@@ -195,7 +195,7 @@ go_cmd_docs_gen: depend
 verify_boilerplate:
 	$(HACK_DIR)/verify-boilerplate.sh
 
-verify_codegen:
+verify_codegen: depend
 	$(HACK_DIR)/verify-codegen.sh
 
 verify_vendor: $(BINDIR)/dep
@@ -251,6 +251,13 @@ _output/tarmak_linux_amd64: $(TARMAK_GO_FILES)
 _output/tarmak_darwin_amd64: $(TARMAK_GO_FILES)
 	mkdir -p _output/
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tarmak
+
+
+pkg/tarmak/mocks/tarmak.go: pkg/tarmak/interfaces/interfaces.go $(BINDIR)/mockgen
+	mockgen -package=mocks -source=pkg/tarmak/interfaces/interfaces.go -destination $@
+
+pkg/tarmak/mocks/amazon.go: pkg/tarmak/provider/amazon/amazon.go $(BINDIR)/mockgen
+	mockgen -package=mocks -source=pkg/tarmak/provider/amazon/amazon.go -destination $@
 
 pkg/tarmak/binaries/binaries_bindata.go: _output/wing_linux_amd64 _output/tagging_control_linux_amd64 pkg/tarmak/binaries/binaries.go $(BINDIR)/go-bindata
 	go generate ./pkg/tarmak/binaries
