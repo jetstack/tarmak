@@ -5,4 +5,4 @@
 
 package binaries
 
-//go:generate go-bindata -prefix ../../../ -pkg $GOPACKAGE -o binaries_bindata.go ../../../cmd/tagging_control/tagging_control_linux_amd64 ../../../cmd/wing/wing_linux_amd64
+//go:generate go-bindata -prefix ../../../_output -pkg $GOPACKAGE -o binaries_bindata.go ../../../_output/tagging_control_linux_amd64 ../../../_output/wing_linux_amd64

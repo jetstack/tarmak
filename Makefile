@@ -1,7 +1,7 @@
 # Copyright Jetstack Ltd. See LICENSE for details.
 PACKAGE_NAME ?= github.com/jetstack/tarmak
 CONTAINER_DIR := /go/src/$(PACKAGE_NAME)
-GO_VERSION := 1.11.4
+GO_VERSION := 1.11.5
 
 BINDIR ?= $(CURDIR)/bin
 PATH   := $(BINDIR):$(PATH)
@@ -16,9 +16,6 @@ TYPES_FILES = $(shell find pkg/apis -name types.go)
 TARMAK_GO_FILES := pkg/tarmak/binaries/binaries_bindata.go pkg/tarmak/assets/assets_bindata.go $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/tarmak | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}')
 WING_GO_FILES := $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/wing | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}')
 TAGGING_CONTROL_GO_FILES := $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/tagging_control | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}')
-
-
-
 
 HACK_DIR     ?= hack
 
@@ -92,11 +89,8 @@ go_fmt:
 clean:
 	rm -rf \
 		$(BINDIR) \
-		cmd/tagging_control/tagging_control_linux_amd64 \
-		cmd/tarmak/tarmak \
-		cmd/tarmak/tarmak_linux_amd64 \
-		cmd/tarmak/tarmak_darwin_amd64 \
-		cmd/wing/wing_linux_amd64 \
+		_output/ \
+		_release/ \
 		pkg/tarmak/binaries/binaries_bindata.go \
 		pkg/tarmak/assets/assets_bindata.go \
 		pkg/wing/mocks/http_client.go \
@@ -106,7 +100,7 @@ clean:
 go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/clientset/internalversion/fake | grep -v pkg/wing/client/clientset/versioned/fake)
 
-go_build: cmd/tarmak/tarmak
+go_build: _output/tarmak _output/tagging_control_linux_amd64 _output/wing_linux_amd64
 
 $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
@@ -238,23 +232,27 @@ endif
 	git commit -m "Release $(VERSION)"
 	git tag $(VERSION)
 
-
-cmd/wing/wing_linux_amd64: $(WING_GO_FILES)
+_output/wing_linux_amd64: $(WING_GO_FILES)
+	mkdir -p _output/
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/wing
 
-cmd/tagging_control/tagging_control_linux_amd64: $(TAGGING_CONTROL_GO_FILES)
+_output/tagging_control_linux_amd64: $(TAGGING_CONTROL_GO_FILES)
+	mkdir -p _output/
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tagging_control
 
-cmd/tarmak/tarmak: $(TARMAK_GO_FILES)
+_output/tarmak: $(TARMAK_GO_FILES)
+	mkdir -p _output/
 	CGO_ENABLED=0 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tarmak
 
-cmd/tarmak/tarmak_linux_amd64: $(TARMAK_GO_FILES)
+_output/tarmak_linux_amd64: $(TARMAK_GO_FILES)
+	mkdir -p _output/
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tarmak
 
-cmd/tarmak/tarmak_darwin_amd64: $(TARMAK_GO_FILES)
+_output/tarmak_darwin_amd64: $(TARMAK_GO_FILES)
+	mkdir -p _output/
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tarmak
 
-pkg/tarmak/binaries/binaries_bindata.go: cmd/wing/wing_linux_amd64 cmd/tagging_control/tagging_control_linux_amd64 pkg/tarmak/binaries/binaries.go $(BINDIR)/go-bindata
+pkg/tarmak/binaries/binaries_bindata.go: _output/wing_linux_amd64 _output/tagging_control_linux_amd64 pkg/tarmak/binaries/binaries.go $(BINDIR)/go-bindata
 	go generate ./pkg/tarmak/binaries
 
 pkg/tarmak/assets/assets_bindata.go: $(shell find packer/ puppet/ terraform/ -type f) pkg/tarmak/assets/assets.go $(BINDIR)/go-bindata
@@ -272,13 +270,8 @@ pkg/wing/mocks/client.go: $(shell go list -f '{{ $$global := .}}{{ range .GoFile
 
 ## Release instructions
 .PHONY: release
-release: _release/cmd/tarmak/tarmak_linux_amd64 _release/cmd/wing/wing_linux_amd64 _release/cmd/tagging_control/tagging_control_linux_amd64 ## Build release binaries
-
-_release/%: % $(BINDIR)/upx
-	mkdir -p "_release/$$(dirname $*)"
-	rm -f $@
-	$(BINDIR)/upx -o$@ $*
-	touch $@
+release: _output/tarmak_linux_amd64 _output/tarmak_darwin_amd64 _output/wing_linux_amd64 _output/tagging_control_linux_amd64 $(BINDIR)/upx $(BINDIR)/ghr ## Build release binaries and publish them to github
+	hack/publish-release.sh
 
 docker_%:
 	# create a container
