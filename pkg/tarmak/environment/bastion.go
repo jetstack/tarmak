@@ -3,13 +3,8 @@ package environment
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 	"time"
 
 	"github.com/cenkalti/backoff"
@@ -23,27 +18,9 @@ func (e *Environment) VerifyBastionAvailable() error {
 		return err
 	}
 
-	//Ensure go routine exits before returning
-	finished := make(chan struct{})
-	var wg sync.WaitGroup
-	defer wg.Wait()
-
-	//Capture signals to cancel ssh retry
-	ctx, cancelRetries := context.WithCancel(context.Background())
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-
-	wg.Add(1)
-	go func() {
-		select {
-		case <-ch:
-			cancelRetries()
-		case <-finished:
-		}
-		signal.Stop(ch)
-		wg.Done()
-		return
-	}()
+	done := make(chan struct{})
+	defer close(done)
+	ctx := e.tarmak.CancellationContext().TryOrCancel(done)
 
 	expBackoff := backoff.NewExponentialBackOff()
 	expBackoff.InitialInterval = time.Second
@@ -79,7 +56,6 @@ func (e *Environment) VerifyBastionAvailable() error {
 	}
 
 	err := backoff.Retry(executeSSH, b)
-	close(finished)
 	if err != nil {
 		return fmt.Errorf("failed to connect to bastion host: %v", err)
 	}

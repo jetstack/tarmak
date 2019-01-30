@@ -2,6 +2,7 @@
 package interfaces
 
 import (
+	"context"
 	"io"
 	"net"
 	"os"
@@ -295,4 +296,5 @@ type CancellationContext interface {
 	Signal() os.Signal
 	WaitOrCancel(f func() error)
 	WaitOrCancelReturnCode(f func() (int, error))
+	TryOrCancel(done <-chan struct{}) context.Context
 }

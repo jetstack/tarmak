@@ -2,7 +2,6 @@
 package vault
 
 import (
-	"context"
 	"crypto/x509"
 	"errors"
 	"fmt"
@@ -198,7 +197,7 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 			}
 		}
 
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 2)
 
 		for _, t := range tunnels {
 			if t.Status() != VaultStateErr {
@@ -214,31 +213,18 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 		return errors.New("failed to find a vault tunnel ready")
 	}
 
-	ctx, cancelRetries := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	ctx := v.cluster.Environment().Tarmak().CancellationContext().TryOrCancel(done)
 	constBackoff := backoff.NewConstantBackOff(time.Second * 5)
 	b := backoff.WithContext(
 		backoff.WithMaxTries(constBackoff, Retries),
 		ctx)
 
-	done := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case <-v.cluster.Environment().Tarmak().CancellationContext().Done():
-				cancelRetries()
-				return
-			case <-done:
-				return
-			}
-		}
-	}()
-
 	err = backoff.Retry(readyTunnelFunc, b)
+	close(done)
 	if err != nil {
 		return fmt.Errorf("failed to obtain vault tunnel: %s", err)
 	}
-
-	close(done)
 
 	initVaultFunc := func() error {
 		health, err := cl.Sys().Health()
@@ -286,13 +272,15 @@ func (v *Vault) VerifyInitFromFQDNs(instances []string, vaultCA, vaultKMSKeyID, 
 		}
 	}
 
-	ctx, cancelRetries = context.WithCancel(context.Background())
+	done = make(chan struct{})
+	ctx = v.cluster.Environment().Tarmak().CancellationContext().TryOrCancel(done)
 	constBackoff = backoff.NewConstantBackOff(time.Second * 5)
 	b = backoff.WithContext(
 		backoff.WithMaxTries(constBackoff, Retries),
 		ctx)
 
 	err = backoff.Retry(initVaultFunc, b)
+	close(done)
 	if err != nil {
 		return fmt.Errorf("time out verifying that vault cluster is initialised and unsealed: %s", err)
 	}

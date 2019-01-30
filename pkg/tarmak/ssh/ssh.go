@@ -332,7 +332,7 @@ func (s *SSH) bastionClient() (*ssh.Client, error) {
 				return s.bastionClientConn, nil
 			}
 		}
-		s.log.Infof("current connection to bastion failed: %s", err)
+		s.log.Warnf("current connection to bastion failed: %s", err)
 	}
 
 	conf, err := s.config()
