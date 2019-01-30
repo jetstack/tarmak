@@ -12,7 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/kardianos/osext"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -58,6 +57,8 @@ func (s *SSH) Tunnel(dest, destPort, localPort string, daemonize bool) interface
 
 // Start tunnel and wait till a tcp socket is reachable
 func (t *Tunnel) Start() error {
+	t.stopCh = make(chan struct{})
+
 	// ensure there is connectivity to the bastion
 	bastionClient, err := t.ssh.bastionClient()
 	if err != nil {
@@ -88,23 +89,23 @@ func (t *Tunnel) Start() error {
 }
 
 func (t *Tunnel) handle() {
-	tries := 5
-	var result *multierror.Error
+	tries := 10
 	for {
 		remoteConn, err := t.bastionConn.Dial("tcp",
 			net.JoinHostPort(t.dest, t.destPort))
 		if err != nil {
-			result = multierror.Append(result, fmt.Errorf(
-				"failed to create tunnel to remote connection: %s", err))
-
 			tries--
 			if tries == 0 {
-				t.log.Errorf("5 errors connecting to remote server through bastion: %s",
-					result.ErrorOrNil())
 				return
 			}
 
-			time.Sleep(time.Second * 5)
+			select {
+			case <-t.stopCh:
+				return
+			default:
+			}
+
+			time.Sleep(time.Second * 3)
 			continue
 		}
 
