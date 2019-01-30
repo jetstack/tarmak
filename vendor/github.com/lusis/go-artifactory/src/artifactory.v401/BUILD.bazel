@@ -1,0 +1,31 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "api.go",
+        "archive.go",
+        "artifact.go",
+        "bintray.go",
+        "build.go",
+        "client.go",
+        "compliance.go",
+        "errors.go",
+        "groups.go",
+        "http.go",
+        "license.go",
+        "mimetypes.go",
+        "permissions_targets.go",
+        "repos.go",
+        "responses.go",
+        "search.go",
+        "security.go",
+        "storage.go",
+        "system.go",
+        "users.go",
+        "version.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/lusis/go-artifactory/src/artifactory.v401",
+    importpath = "github.com/lusis/go-artifactory/src/artifactory.v401",
+    visibility = ["//visibility:public"],
+)

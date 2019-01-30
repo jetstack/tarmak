@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "parser.go",
+        "scanner.go",
+        "token.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/gopkg.in/src-d/go-git.v4/internal/revision",
+    importpath = "gopkg.in/src-d/go-git.v4/internal/revision",
+    visibility = ["//vendor/gopkg.in/src-d/go-git.v4:__subpackages__"],
+)

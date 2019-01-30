@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "errors.go",
+        "scanner.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/src-d/gcfg/scanner",
+    importpath = "github.com/src-d/gcfg/scanner",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/src-d/gcfg/token:go_default_library"],
+)

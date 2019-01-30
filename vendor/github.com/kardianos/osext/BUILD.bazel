@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "osext.go",
+        "osext_go18.go",
+        "osext_plan9.go",
+        "osext_procfs.go",
+        "osext_sysctl.go",
+        "osext_windows.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/kardianos/osext",
+    importpath = "github.com/kardianos/osext",
+    visibility = ["//visibility:public"],
+)

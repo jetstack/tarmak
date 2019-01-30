@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "args.go",
+        "command.go",
+        "complete.go",
+        "log.go",
+        "predict.go",
+        "predict_files.go",
+        "predict_set.go",
+        "utils.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/posener/complete",
+    importpath = "github.com/posener/complete",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/posener/complete/cmd:go_default_library",
+        "//vendor/github.com/posener/complete/match:go_default_library",
+    ],
+)

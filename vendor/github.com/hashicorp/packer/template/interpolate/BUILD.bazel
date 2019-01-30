@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "funcs.go",
+        "i.go",
+        "parse.go",
+        "render.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/packer/template/interpolate",
+    importpath = "github.com/hashicorp/packer/template/interpolate",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/packer/common/uuid:go_default_library",
+        "//vendor/github.com/hashicorp/packer/version:go_default_library",
+        "//vendor/github.com/mitchellh/mapstructure:go_default_library",
+        "//vendor/github.com/mitchellh/reflectwalk:go_default_library",
+    ],
+)

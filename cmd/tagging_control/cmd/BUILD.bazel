@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "handle.go",
+        "root.go",
+        "version.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/cmd/tagging_control/cmd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/tagging_control:go_default_library",
+        "//pkg/version:go_default_library",
+        "//vendor/github.com/aws/aws-lambda-go/lambda:go_default_library",
+        "//vendor/github.com/spf13/cobra:go_default_library",
+    ],
+)

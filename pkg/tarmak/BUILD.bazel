@@ -1,0 +1,56 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "cmd.go",
+        "environments.go",
+        "providers.go",
+        "ssh.go",
+        "tarmak.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/apis/tarmak/v1alpha1:go_default_library",
+        "//pkg/packer:go_default_library",
+        "//pkg/puppet:go_default_library",
+        "//pkg/tarmak/assets:go_default_library",
+        "//pkg/tarmak/config:go_default_library",
+        "//pkg/tarmak/environment:go_default_library",
+        "//pkg/tarmak/initialize:go_default_library",
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/kubectl:go_default_library",
+        "//pkg/tarmak/provider:go_default_library",
+        "//pkg/tarmak/ssh:go_default_library",
+        "//pkg/tarmak/utils:go_default_library",
+        "//pkg/tarmak/utils/consts:go_default_library",
+        "//pkg/tarmak/utils/input:go_default_library",
+        "//pkg/terraform:go_default_library",
+        "//vendor/github.com/blang/semver:go_default_library",
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/hashicorp/go-plugin:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/version:go_default_library",
+        "//vendor/github.com/mitchellh/go-homedir:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/github.com/spf13/pflag:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["tarmak_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/apis/tarmak/v1alpha1:go_default_library",
+        "//pkg/tarmak/config:go_default_library",
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/mocks:go_default_library",
+        "//pkg/tarmak/utils:go_default_library",
+        "//pkg/terraform:go_default_library",
+        "//vendor/github.com/golang/mock/gomock:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

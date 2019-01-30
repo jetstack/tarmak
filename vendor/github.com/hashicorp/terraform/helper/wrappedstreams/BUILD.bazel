@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "streams.go",
+        "streams_other.go",
+        "streams_windows.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/helper/wrappedstreams",
+    importpath = "github.com/hashicorp/terraform/helper/wrappedstreams",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/mitchellh/panicwrap:go_default_library"],
+)

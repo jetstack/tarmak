@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "init.go",
+        "provider.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/provider",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/apis/tarmak/v1alpha1:go_default_library",
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/provider/amazon:go_default_library",
+        "//pkg/tarmak/utils/input:go_default_library",
+    ],
+)

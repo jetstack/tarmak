@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "change.go",
+        "difftree.go",
+        "doc.go",
+        "doubleiter.go",
+        "iter.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/gopkg.in/src-d/go-git.v4/utils/merkletrie",
+    importpath = "gopkg.in/src-d/go-git.v4/utils/merkletrie",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/gopkg.in/src-d/go-git.v4/utils/merkletrie/internal/frame:go_default_library",
+        "//vendor/gopkg.in/src-d/go-git.v4/utils/merkletrie/noder:go_default_library",
+    ],
+)

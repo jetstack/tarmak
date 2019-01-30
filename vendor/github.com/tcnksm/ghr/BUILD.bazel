@@ -1,0 +1,33 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "cli.go",
+        "ghr.go",
+        "github.go",
+        "local.go",
+        "main.go",
+        "version.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/tcnksm/ghr",
+    importpath = "github.com/tcnksm/ghr",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//vendor/github.com/Songmu/retry:go_default_library",
+        "//vendor/github.com/google/go-github/github:go_default_library",
+        "//vendor/github.com/mattn/go-colorable:go_default_library",
+        "//vendor/github.com/mitchellh/colorstring:go_default_library",
+        "//vendor/github.com/pkg/errors:go_default_library",
+        "//vendor/github.com/tcnksm/go-gitconfig:go_default_library",
+        "//vendor/github.com/tcnksm/go-latest:go_default_library",
+        "//vendor/golang.org/x/oauth2:go_default_library",
+        "//vendor/golang.org/x/sync/errgroup:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "ghr",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)

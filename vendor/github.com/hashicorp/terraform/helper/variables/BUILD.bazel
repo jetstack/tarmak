@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "flag.go",
+        "flag_any.go",
+        "flag_file.go",
+        "merge.go",
+        "parse.go",
+        "variables.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/helper/variables",
+    importpath = "github.com/hashicorp/terraform/helper/variables",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/hcl:go_default_library",
+        "//vendor/github.com/mitchellh/go-homedir:go_default_library",
+    ],
+)

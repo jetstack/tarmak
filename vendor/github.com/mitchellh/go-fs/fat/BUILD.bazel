@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "boot_sector.go",
+        "cluster_chain.go",
+        "directory.go",
+        "directory_cluster.go",
+        "fat.go",
+        "file.go",
+        "filesystem.go",
+        "short_name.go",
+        "super_floppy.go",
+        "type.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/mitchellh/go-fs/fat",
+    importpath = "github.com/mitchellh/go-fs/fat",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/mitchellh/go-fs:go_default_library"],
+)

@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "header.go",
+        "message.go",
+        "namespaces.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/masterzen/winrm/soap",
+    importpath = "github.com/masterzen/winrm/soap",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/ChrisTrenkamp/goxpath:go_default_library",
+        "//vendor/github.com/masterzen/simplexml/dom:go_default_library",
+    ],
+)

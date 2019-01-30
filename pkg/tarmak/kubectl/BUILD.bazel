@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["kubectl.go"],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/kubectl",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//pkg/tarmak/utils:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/k8s.io/client-go/kubernetes:go_default_library",
+        "//vendor/k8s.io/client-go/tools/clientcmd:go_default_library",
+        "//vendor/k8s.io/client-go/tools/clientcmd/api:go_default_library",
+    ],
+)

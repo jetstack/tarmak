@@ -57,7 +57,7 @@ help1:
 
 all: verify test build  ## runs verify, test and build targets
 
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs $(BINDIR)/node ## download all dependencies necessary for build
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs $(BINDIR)/node $(BINDIR)/ghr ## download all dependencies necessary for build
 
 verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_gen_docs ## verifies generated files & scripts
 
@@ -110,6 +110,10 @@ $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
 	go build -o $(BINDIR)/mockgen ./vendor/github.com/golang/mock/mockgen
 
+$(BINDIR)/ghr:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/github.com/tcnksm/ghr
+
 $(BINDIR)/go-bindata:
 	mkdir -p $(BINDIR)
 	go build -o $(BINDIR)/go-bindata ./vendor/github.com/kevinburke/go-bindata/go-bindata
@@ -156,10 +160,10 @@ $(BINDIR)/npm: $(BINDIR)/node
 # upx binary packer, only supported on Linux
 $(BINDIR)/upx:
 ifeq ($(UNAME_S),Linux)
-	curl -sL -o $@.tar.xz https://github.com/upx/upx/releases/download/v3.94/upx-3.94-amd64_linux.tar.xz
-	echo "e1fc0d55c88865ef758c7e4fabbc439e4b5693b9328d219e0b9b3604186abe20  $@.tar.xz" | $(SHASUM)
+	curl -sL -o $@.tar.xz https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz
+	echo "b5d6856b89dd696138ad8c7245a8f0dae4b76f41b5a31c7c43a21bc72c479c4e  $@.tar.xz" | $(SHASUM)
 	which xz || ( apt-get update && apt-get -y install xz-utils)
-	cd $(BINDIR) && tar xvf $(shell basename $@).tar.xz upx-3.94-amd64_linux/upx --strip-components=1
+	cd $(BINDIR) && tar xvf $(shell basename $@).tar.xz upx-3.95-amd64_linux/upx --strip-components=1
 	rm $@.tar.xz
 else
 	echo -e "#/bin/sh\nexit 0" > $@

@@ -1,0 +1,32 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "auth.go",
+        "client.go",
+        "command.go",
+        "endpoint.go",
+        "error.go",
+        "http.go",
+        "ntlm.go",
+        "parameters.go",
+        "powershell.go",
+        "request.go",
+        "response.go",
+        "shell.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/masterzen/winrm",
+    importpath = "github.com/masterzen/winrm",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/Azure/go-ntlmssp:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/tree:go_default_library",
+        "//vendor/github.com/ChrisTrenkamp/goxpath/tree/xmltree:go_default_library",
+        "//vendor/github.com/masterzen/azure-sdk-for-go/core/http:go_default_library",
+        "//vendor/github.com/masterzen/azure-sdk-for-go/core/tls:go_default_library",
+        "//vendor/github.com/masterzen/winrm/soap:go_default_library",
+        "//vendor/github.com/nu7hatch/gouuid:go_default_library",
+    ],
+)

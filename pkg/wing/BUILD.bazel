@@ -1,0 +1,48 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "command.go",
+        "controller.go",
+        "puppet.go",
+        "wing.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/wing",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/apis/wing/v1alpha1:go_default_library",
+        "//pkg/wing/client/clientset/versioned:go_default_library",
+        "//pkg/wing/provider:go_default_library",
+        "//pkg/wing/tags:go_default_library",
+        "//vendor/github.com/cenkalti/backoff:go_default_library",
+        "//vendor/github.com/docker/docker/pkg/archive:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/golang.org/x/net/context:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/api/errors:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/fields:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/util/errors:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/util/runtime:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/util/wait:go_default_library",
+        "//vendor/k8s.io/client-go/rest:go_default_library",
+        "//vendor/k8s.io/client-go/tools/cache:go_default_library",
+        "//vendor/k8s.io/client-go/util/workqueue:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["wing_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/wing/client/clientset/versioned:go_default_library",
+        "//pkg/wing/mocks:go_default_library",
+        "//vendor/github.com/docker/docker/pkg/archive:go_default_library",
+        "//vendor/github.com/golang/mock/gomock:go_default_library",
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/runtime/schema:go_default_library",
+        "//vendor/k8s.io/client-go/rest:go_default_library",
+    ],
+)

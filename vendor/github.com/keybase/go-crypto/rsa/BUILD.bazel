@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "pkcs1v15.go",
+        "pss.go",
+        "rsa.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/keybase/go-crypto/rsa",
+    importpath = "github.com/keybase/go-crypto/rsa",
+    visibility = ["//visibility:public"],
+)

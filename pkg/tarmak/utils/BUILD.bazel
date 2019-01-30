@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "context.go",
+        "copy.go",
+        "fake.go",
+        "files.go",
+        "list.go",
+        "maps.go",
+        "networks.go",
+        "random.go",
+        "slices.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/utils",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/tarmak/interfaces:go_default_library",
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/hashicorp/go-plugin:go_default_library",
+        "//vendor/github.com/mitchellh/go-homedir:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

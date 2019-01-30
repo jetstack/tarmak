@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "friendly_host.go",
+        "module.go",
+        "regsrc.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/registry/regsrc",
+    importpath = "github.com/hashicorp/terraform/registry/regsrc",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/hashicorp/terraform/svchost:go_default_library"],
+)

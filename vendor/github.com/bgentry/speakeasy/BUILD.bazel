@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "speakeasy.go",
+        "speakeasy_unix.go",
+        "speakeasy_windows.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/bgentry/speakeasy",
+    importpath = "github.com/bgentry/speakeasy",
+    visibility = ["//visibility:public"],
+)

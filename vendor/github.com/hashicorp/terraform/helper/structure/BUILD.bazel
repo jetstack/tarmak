@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "expand_json.go",
+        "flatten_json.go",
+        "normalize_json.go",
+        "suppress_json_diff.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/helper/structure",
+    importpath = "github.com/hashicorp/terraform/helper/structure",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library"],
+)

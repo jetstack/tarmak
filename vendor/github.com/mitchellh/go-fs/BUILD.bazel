@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "block_device.go",
+        "directory.go",
+        "file.go",
+        "file_disk.go",
+        "filesystem.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/mitchellh/go-fs",
+    importpath = "github.com/mitchellh/go-fs",
+    visibility = ["//visibility:public"],
+)

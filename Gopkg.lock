@@ -142,6 +142,14 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
+  branch = "master"
+  digest = "1:8b4c953d63dcdef21229f2024cb55052760d69c26d6e9bea7511337cbdd27fae"
+  name = "github.com/Songmu/retry"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "902aa877ec14b4d10b9db5c8caf81a111cf0680e"
+
+[[projects]]
   digest = "1:a1b2cc5ad53b08fbfb4dfe962a2e145325acb4b874ea44beb02d4b5b158c2079"
   name = "github.com/Unknwon/com"
   packages = ["."]
@@ -553,12 +561,12 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:ade392a843b2035effb4b4a2efa2c3bab3eb29b992e98bacf9c898b0ecb54e45"
+  digest = "1:b0d5e98ac0f0a509eb320f542e748582d637aae09e74538212e9712d1e71064b"
   name = "github.com/fatih/color"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
-  version = "v1.7.0"
+  revision = "570b54cabe6b8eb0bc2dfce68d964677d63b5260"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:52ec55889de2c93a772ceba253313c12f65444aac61a11182d4d119ef97479e8"
@@ -708,6 +716,14 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
+
+[[projects]]
+  branch = "master"
+  digest = "1:96d3cd22c634062c01d121e23a50c7d4955cf3199c4c3f71d69d1f5a8da75722"
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  pruneopts = "NUT"
+  revision = "2406bfd7f32dea4608923b39352fce69e647e1e1"
 
 [[projects]]
   branch = "master"
@@ -1367,12 +1383,12 @@
   revision = "7e40f93ae939004a1ef3bd5ff5c88c756ee762bb"
 
 [[projects]]
-  digest = "1:08c231ec84231a7e23d67e4b58f975e1423695a32467a362ee55a803f9de8061"
+  branch = "master"
+  digest = "1:9785a54031460a402fab4e4bbb3124c8dd9e9f7b1982109fef605cb91632d480"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
-  version = "v0.0.9"
+  revision = "efa589957cd060542a26d2dd7832fd6a6c6c3ade"
 
 [[projects]]
   digest = "1:bc4f7eec3b7be8c6cb1f0af6c1e3333d5bb71072951aaaae2f05067b0803f287"
@@ -1756,6 +1772,30 @@
   version = "1.0.0"
 
 [[projects]]
+  digest = "1:7d143db78507b4a94c71ac2fd160f9f581fa07287c1b4b9a4553698f17cedb97"
+  name = "github.com/tcnksm/ghr"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "abcc6073e691e5b5d725b2b80ca7b2b70a07244d"
+  version = "v0.12.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:106b7afc79b7ac4e425a84025b5794a9ca1ab3b7865fe99afab3353508a1d569"
+  name = "github.com/tcnksm/go-gitconfig"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "6411ba19847f20afe47f603328d97aaeca6def6f"
+
+[[projects]]
+  branch = "master"
+  digest = "1:0167df555e8e3ac497657031007d99540393aa2ec9a9ce6545070a6a08167a62"
+  name = "github.com/tcnksm/go-latest"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e3007ae9052ed85144087e7392e4c3fbc07962fa"
+
+[[projects]]
   digest = "1:33a4ac0f38b497c9ae43a3215e425c2b7863372d0ef827f88094d4bf5aa80219"
   name = "github.com/terraform-providers/terraform-provider-aws"
   packages = ["aws"]
@@ -1937,6 +1977,14 @@
   ]
   pruneopts = "NUT"
   revision = "3d292e4d0cdc3a0113e6d207bb137145ef1de42f"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b521f10a2d8fa85c04a8ef4e62f2d1e14d303599a55d64dabf9f5a02f84d35eb"
+  name = "golang.org/x/sync"
+  packages = ["errgroup"]
+  pruneopts = "NUT"
+  revision = "37e7f081c4d4c64e13b10787722085407fe5d15f"
 
 [[projects]]
   branch = "master"
@@ -2767,6 +2815,7 @@
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/doc",
     "github.com/spf13/pflag",
+    "github.com/tcnksm/ghr",
     "github.com/terraform-providers/terraform-provider-aws/aws",
     "github.com/terraform-providers/terraform-provider-random/random",
     "github.com/terraform-providers/terraform-provider-template/template",

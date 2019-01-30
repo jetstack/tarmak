@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "dir.go",
+        "doc.go",
+        "matcher.go",
+        "pattern.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/gopkg.in/src-d/go-git.v4/plumbing/format/gitignore",
+    importpath = "gopkg.in/src-d/go-git.v4/plumbing/format/gitignore",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/gopkg.in/src-d/go-billy.v3:go_default_library"],
+)

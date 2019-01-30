@@ -1,0 +1,40 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("//hack/bazel:bindata.bzl", "bindata")
+
+genrule(
+    name = "wing",
+    srcs = [
+        "//cmd/wing:wing_linux_amd64",
+    ],
+    outs = ["wing_linux_amd64"],
+    cmd = "cp $(locations //cmd/wing:wing_linux_amd64) $@",
+)
+
+genrule(
+    name = "tagging_control",
+    srcs = [
+        "//cmd/tagging_control:tagging_control_linux_amd64",
+    ],
+    outs = ["tagging_control_linux_amd64"],
+    cmd = "cp $(locations //cmd/tagging_control:tagging_control_linux_amd64) $@",
+)
+
+bindata(
+    name = "binaries_bindata",
+    package = "binaries",
+    strip_file_srcs = [
+        ":wing",
+        ":tagging_control",
+    ],
+    metadata = True,
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "binaries.go",
+        ":binaries_bindata", # keep
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/tarmak/binaries",
+    visibility = ["//visibility:public"],
+)

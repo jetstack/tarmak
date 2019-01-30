@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "cp.go",
+        "endpoint.go",
+        "ls.go",
+        "path.go",
+        "psobject.go",
+        "winrmcp.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/packer-community/winrmcp/winrmcp",
+    importpath = "github.com/packer-community/winrmcp/winrmcp",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/dylanmei/iso8601:go_default_library",
+        "//vendor/github.com/masterzen/winrm:go_default_library",
+        "//vendor/github.com/nu7hatch/gouuid:go_default_library",
+    ],
+)

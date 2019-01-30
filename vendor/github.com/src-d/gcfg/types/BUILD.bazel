@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "bool.go",
+        "doc.go",
+        "enum.go",
+        "int.go",
+        "scan.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/src-d/gcfg/types",
+    importpath = "github.com/src-d/gcfg/types",
+    visibility = ["//visibility:public"],
+)

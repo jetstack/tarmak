@@ -1,0 +1,12 @@
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/jetstack/tarmak
+# gazelle:proto disable_global
+# gazelle:exclude pkg/tarmak/assets
+# gazelle:exclude pkg/tarmak/binaries
+# gazelle:exclude vendor/github.com/hashicorp/go-rootcerts
+gazelle(
+    name = "gazelle",
+    external = "vendored",
+    command = "fix",
+)

@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "communicator.go",
+        "password.go",
+        "provisioner.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/communicator/ssh",
+    importpath = "github.com/hashicorp/terraform/communicator/ssh",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/terraform/communicator/remote:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/communicator/shared:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+        "//vendor/github.com/mitchellh/mapstructure:go_default_library",
+        "//vendor/github.com/xanzy/ssh-agent:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh/agent:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh/knownhosts:go_default_library",
+    ],
+)

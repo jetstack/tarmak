@@ -1,0 +1,10 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["panicwrap.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/mitchellh/panicwrap",
+    importpath = "github.com/mitchellh/panicwrap",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/kardianos/osext:go_default_library"],
+)

@@ -1,0 +1,38 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "client.go",
+        "data_source_bastion_instance.go",
+        "provider.go",
+        "resource_vault_cluster.go",
+        "resource_vault_instance_role.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/terraform/providers/tarmak",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/terraform/providers/tarmak/rpc:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "data_source_bastion_instance_test.go",
+        "provider_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/apis/cluster/v1alpha1:go_default_library",
+        "//pkg/tarmak/mocks:go_default_library",
+        "//pkg/terraform/providers/tarmak/rpc:go_default_library",
+        "//vendor/github.com/golang/mock/gomock:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/resource:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/helper/schema:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

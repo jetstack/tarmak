@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "canonical_text.go",
+        "keys.go",
+        "read.go",
+        "write.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/keybase/go-crypto/openpgp",
+    importpath = "github.com/keybase/go-crypto/openpgp",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/keybase/go-crypto/openpgp/armor:go_default_library",
+        "//vendor/github.com/keybase/go-crypto/openpgp/errors:go_default_library",
+        "//vendor/github.com/keybase/go-crypto/openpgp/packet:go_default_library",
+        "//vendor/github.com/keybase/go-crypto/openpgp/s2k:go_default_library",
+        "//vendor/github.com/keybase/go-crypto/rsa:go_default_library",
+    ],
+)

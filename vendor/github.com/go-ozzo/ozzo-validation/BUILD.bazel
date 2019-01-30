@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "date.go",
+        "error.go",
+        "in.go",
+        "length.go",
+        "match.go",
+        "minmax.go",
+        "not_in.go",
+        "not_nil.go",
+        "required.go",
+        "string.go",
+        "struct.go",
+        "util.go",
+        "validation.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/go-ozzo/ozzo-validation",
+    importpath = "github.com/go-ozzo/ozzo-validation",
+    visibility = ["//visibility:public"],
+)

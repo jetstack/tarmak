@@ -1,0 +1,30 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("//pkg/version:def.bzl", "version_x_defs")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/jetstack/tarmak/cmd/tarmak",
+    visibility = ["//visibility:private"],
+    deps = ["//cmd/tarmak/cmd:go_default_library"],
+)
+
+go_binary(
+    name = "tarmak_linux_amd64",
+    embed = [":go_default_library"],
+    pure = "on",
+    goos = "linux",
+    goarch = "amd64",
+    visibility = ["//visibility:public"],
+    x_defs = version_x_defs(),
+)
+
+go_binary(
+    name = "tarmak_darwin_amd64",
+    embed = [":go_default_library"],
+    pure = "on",
+    goos = "darwin",
+    goarch = "amd64",
+    visibility = ["//visibility:public"],
+    x_defs = version_x_defs(),
+)

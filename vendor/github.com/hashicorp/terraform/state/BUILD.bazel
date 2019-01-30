@@ -1,0 +1,24 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "backup.go",
+        "inmem.go",
+        "local.go",
+        "local_lock_unix.go",
+        "local_lock_windows.go",
+        "lock.go",
+        "state.go",
+        "testing.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/state",
+    importpath = "github.com/hashicorp/terraform/state",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/hashicorp/go-uuid:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/version:go_default_library",
+    ],
+)

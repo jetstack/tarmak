@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "interfaces.go",
+        "winginitializer.go",
+    ],
+    importpath = "github.com/jetstack/tarmak/pkg/wing/admission/winginitializer",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/wing/client/informers/externalversions:go_default_library",
+        "//vendor/k8s.io/apiserver/pkg/admission:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["winginitializer_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/wing/client/clientset/versioned/fake:go_default_library",
+        "//pkg/wing/client/informers/externalversions:go_default_library",
+        "//vendor/k8s.io/apiserver/pkg/admission:go_default_library",
+    ],
+)

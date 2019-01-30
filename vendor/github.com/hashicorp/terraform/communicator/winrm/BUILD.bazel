@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "communicator.go",
+        "provisioner.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/communicator/winrm",
+    importpath = "github.com/hashicorp/terraform/communicator/winrm",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/terraform/communicator/remote:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/communicator/shared:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+        "//vendor/github.com/masterzen/winrm:go_default_library",
+        "//vendor/github.com/mitchellh/mapstructure:go_default_library",
+        "//vendor/github.com/packer-community/winrmcp/winrmcp:go_default_library",
+    ],
+)

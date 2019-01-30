@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "backend.go",
+        "cli.go",
+        "nil.go",
+        "operation_type.go",
+        "operationtype_string.go",
+        "testing.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/backend",
+    importpath = "github.com/hashicorp/terraform/backend",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/go-uuid:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/command/clistate:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/config:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/config/module:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/state:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+        "//vendor/github.com/mitchellh/cli:go_default_library",
+        "//vendor/github.com/mitchellh/colorstring:go_default_library",
+    ],
+)

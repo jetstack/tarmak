@@ -1,0 +1,16 @@
+filegroup(
+    name = "puppet",
+    srcs = glob([
+        "modules/*/manifests/**",
+        "modules/*/templates/**",
+        "modules/*/files/**",
+        "modules/*/functions/**",
+        "modules/*/lib/**",
+        "modules/*/locales/**",
+        "modules/*/types/**",
+        "hieradata/**/*.yaml",
+        "manifests/site.pp",
+        "hiera.yaml",
+    ]),
+    visibility = ["//visibility:public"],
+)

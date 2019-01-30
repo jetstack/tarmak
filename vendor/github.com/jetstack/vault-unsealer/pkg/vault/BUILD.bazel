@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["vault.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/jetstack/vault-unsealer/pkg/vault",
+    importpath = "github.com/jetstack/vault-unsealer/pkg/vault",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/vault/api:go_default_library",
+        "//vendor/github.com/jetstack/vault-unsealer/pkg/kv:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

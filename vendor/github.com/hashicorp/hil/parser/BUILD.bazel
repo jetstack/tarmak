@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "binary_op.go",
+        "error.go",
+        "parser.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/hil/parser",
+    importpath = "github.com/hashicorp/hil/parser",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/hil/ast:go_default_library",
+        "//vendor/github.com/hashicorp/hil/scanner:go_default_library",
+    ],
+)

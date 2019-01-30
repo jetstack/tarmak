@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "generic_vault_backend.go",
+        "init_token.go",
+        "kubernetes.go",
+        "kubernetes_pki_roles.go",
+        "kubernetes_policies.go",
+        "pki_vault_backend.go",
+        "policy.go",
+    ],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/jetstack/vault-helper/pkg/kubernetes",
+    importpath = "github.com/jetstack/vault-helper/pkg/kubernetes",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/go-multierror:go_default_library",
+        "//vendor/github.com/hashicorp/vault/api:go_default_library",
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+    ],
+)

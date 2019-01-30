@@ -13,6 +13,7 @@ var Version struct {
 	Version   string
 	BuildDate string
 	Commit    string
+	WingHash  string
 }
 
 var AppName string = "wing"

@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["client.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/joyent/triton-go/client",
+    importpath = "github.com/joyent/triton-go/client",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/joyent/triton-go:go_default_library",
+        "//vendor/github.com/joyent/triton-go/authentication:go_default_library",
+        "//vendor/github.com/joyent/triton-go/errors:go_default_library",
+        "//vendor/github.com/pkg/errors:go_default_library",
+    ],
+)

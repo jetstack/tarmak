@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["init.go"],
+    importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/terraform/backend/init",
+    importpath = "github.com/hashicorp/terraform/backend/init",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/hashicorp/terraform/backend:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/atlas:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/legacy:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/local:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote-state/azure:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote-state/consul:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote-state/etcdv3:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote-state/gcs:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote-state/inmem:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote-state/manta:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote-state/s3:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/backend/remote-state/swift:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/svchost/disco:go_default_library",
+        "//vendor/github.com/hashicorp/terraform/terraform:go_default_library",
+    ],
+)
