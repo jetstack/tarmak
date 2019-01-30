@@ -27,7 +27,7 @@ write_files:
     RemainAfterExit=yes
     ExecStart=/bin/bash -c ' \
       test -e /dev/xvdd && exit 0; \
-      aws ec2 attach-volume --region ${region} --volume-id ${volume_id} --instance-id $(curl -sL http://169.254.169.254/latest/meta-data/instance-id) --device /dev/xvdd && until !!; do sleep 5; done \
+      until aws ec2 attach-volume --region ${region} --volume-id ${volume_id} --instance-id $(curl -sL http://169.254.169.254/latest/meta-data/instance-id) --device /dev/xvdd; do sleep 5; done \
     '
     ExecStart=/bin/bash -c ' \
       until test -e /dev/xvdd; do \
