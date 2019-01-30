@@ -10,7 +10,12 @@ required = [
   "github.com/kubernetes-incubator/reference-docs/gen-apidocs",
   "github.com/golang/mock/mockgen",
   "github.com/kevinburke/go-bindata/go-bindata",
+  "github.com/tcnksm/ghr"
 ]
+
+[[constraint]]
+  name = "github.com/tcnksm/ghr"
+  version = "0.12.0"
 
 [[constraint]]
   name = "github.com/fsouza/go-dockerclient"
