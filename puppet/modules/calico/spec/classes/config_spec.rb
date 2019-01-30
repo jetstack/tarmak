@@ -8,8 +8,10 @@ describe 'calico::config' do
     "
       class kubernetes{}
       define kubernetes::apply(
-        $manifests,
-      ){}
+      $manifests,
+      ){
+        kubernetes::addon_manager_labels($manifests[0])
+      }
       class{'calico':
         #{cloud_provider}
         #{mtu}

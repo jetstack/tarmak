@@ -31,8 +31,10 @@ describe 'kubernetes_addons::cluster_autoscaler' do
         $cluster_name = 'cluster1'
       }
       define kubernetes::apply(
-        $manifests,
-      ){}
+      $manifests,
+      ){
+        kubernetes::addon_manager_labels($manifests[0])
+      }
     "
   end
 

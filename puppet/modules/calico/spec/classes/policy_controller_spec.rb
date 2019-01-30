@@ -16,8 +16,10 @@ describe 'calico::policy_controller' do
         $version = '#{kubernetes_version}'
       }
       define kubernetes::apply(
-        $manifests,
-      ){}
+      $manifests,
+      ){
+        kubernetes::addon_manager_labels($manifests[0])
+      }
       class{'calico':
         #{mtu}
         #{backend}

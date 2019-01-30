@@ -55,6 +55,8 @@ kind: ServiceAccount
 metadata:
   name: tiller
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 <% if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -66,6 +68,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: tiller
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

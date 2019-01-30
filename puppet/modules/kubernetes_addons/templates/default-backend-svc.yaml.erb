@@ -3,6 +3,7 @@ apiVersion: v1
 metadata:
   labels:
     app: default-http-backend
+    addonmanager.kubernetes.io/mode: Reconcile
   name: default-http-backend
   namespace: <%= @namespace %>
 spec:

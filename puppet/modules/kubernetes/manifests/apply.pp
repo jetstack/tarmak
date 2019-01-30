@@ -48,6 +48,8 @@ define kubernetes::apply(
     }
   }
 
+  kubernetes::addon_manager_labels($manifests_content)
+
   if $kubernetes::_apiserver_insecure_port == 0 {
     $server_port = $kubernetes::apiserver_secure_port
     $protocol = 'https'

@@ -43,6 +43,8 @@ kind: ServiceAccount
 metadata:
   name: calico-node
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 kind: ClusterRole
 <%- if @version_before_1_6 -%>

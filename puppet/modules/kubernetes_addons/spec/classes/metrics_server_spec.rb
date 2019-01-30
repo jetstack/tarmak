@@ -8,7 +8,9 @@ describe 'kubernetes_addons::metrics_server' do
       }
       define kubernetes::apply(
         $manifests,
-      ){}
+      ){
+        kubernetes::addon_manager_labels($manifests[0])
+      }
     "
   end
 

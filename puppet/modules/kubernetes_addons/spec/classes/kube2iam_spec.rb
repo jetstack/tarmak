@@ -8,7 +8,9 @@ describe 'kubernetes_addons::kube2iam' do
       }
       define kubernetes::apply(
         $manifests,
-      ){}
+      ){
+        kubernetes::addon_manager_labels($manifests[0])
+      }
     "
   end
 
