@@ -65,7 +65,7 @@ help1:
 
 all: verify test build  ## runs verify, test and build targets
 
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs $(BINDIR)/node ## download all dependencies necessary for build
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/goreleaser $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs $(BINDIR)/node $(BINDIR)/ghr ## download all dependencies necessary for build
 
 verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_gen_docs ## verifies generated files & scripts
 
@@ -111,6 +111,10 @@ go_build: cmd/tarmak/tarmak
 $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
 	go build -o $(BINDIR)/mockgen ./vendor/github.com/golang/mock/mockgen
+
+$(BINDIR)/ghr:
+	mkdir -p $(BINDIR)
+	go build -o $@ ./vendor/github.com/tcnksm/ghr
 
 $(BINDIR)/go-bindata:
 	mkdir -p $(BINDIR)
