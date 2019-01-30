@@ -11,10 +11,7 @@ go_library(
     importmap = "github.com/jetstack/tarmak/vendor/github.com/hashicorp/go-rootcerts",
     importpath = "github.com/hashicorp/go-rootcerts",
     visibility = ["//visibility:public"],
-    deps = select({
-        "@io_bazel_rules_go//go/platform:darwin": [
-            "//vendor/github.com/mitchellh/go-homedir:go_default_library",
-        ],
-        "//conditions:default": [],
-    }),
+    deps = [
+        "//vendor/github.com/mitchellh/go-homedir:go_default_library",
+    ],
 )

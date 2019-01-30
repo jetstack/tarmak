@@ -10,9 +10,21 @@ go_library(
 )
 
 go_binary(
-    name = "tarmak",
+    name = "tarmak_linux_amd64",
     embed = [":go_default_library"],
     pure = "on",
+    goos = "linux",
+    goarch = "amd64",
+    visibility = ["//visibility:public"],
+    x_defs = version_x_defs(),
+)
+
+go_binary(
+    name = "tarmak_darwin_amd64",
+    embed = [":go_default_library"],
+    pure = "on",
+    goos = "darwin",
+    goarch = "amd64",
     visibility = ["//visibility:public"],
     x_defs = version_x_defs(),
 )
