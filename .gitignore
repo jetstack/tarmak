@@ -15,3 +15,5 @@
 .kube
 /bazel-*
 /apiserver.local.config
+/_output/
+/_release/
