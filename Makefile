@@ -271,9 +271,8 @@ pkg/wing/mocks/http_client.go: vendor/k8s.io/client-go/rest/request.go $(BINDIR)
 pkg/wing/mocks/command.go: pkg/wing/command.go $(BINDIR)/mockgen
 	mockgen -package=mocks -source=pkg/wing/command.go -destination $@
 
-pkg/wing/mocks/client.go: $(shell go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}' k8s.io/client-go/rest) $(BINDIR)/mockgen
+pkg/wing/mocks/client.go: $(shell go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}' ./vendor/k8s.io/client-go/rest) $(BINDIR)/mockgen
 	mockgen -destination $@ -package=mocks k8s.io/client-go/rest Interface
-
 
 ## Release instructions
 .PHONY: release
