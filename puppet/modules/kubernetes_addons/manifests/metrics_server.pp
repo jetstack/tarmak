@@ -1,6 +1,6 @@
 class kubernetes_addons::metrics_server(
-  Optional[String] $version=undef,
-  String $image='gcr.io/google_containers/metrics-server-amd64',
+  Optional[String] $version='0.3.1-jetstack.1',
+  String $image='quay.io/jetstack/metrics-server-amd64',
   String $cpu='40m',
   String $mem='100Mi',
   String $extra_cpu='0.5m',
