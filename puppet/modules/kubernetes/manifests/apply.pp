@@ -58,7 +58,7 @@ define kubernetes::apply(
     $protocol = 'http'
   }
 
-  $command = "/bin/bash -c \"while true; do if [[ \$(curl -k -w '%{http_code}' -s -o /dev/null ${protocol}://localhost:${server_port}/healthz) == 200 ]]; then break; fi; done; kubectl apply -f '${apply_file}' || rm -f '${apply_file})'\""
+  $command = "/bin/bash -c \"while true; do if [[ \$(curl -k -w '%{http_code}' -s -o /dev/null ${protocol}://localhost:${server_port}/healthz) == 200 ]]; then break; else sleep 2; fi; done; kubectl apply -f '${apply_file}' || rm -f '${apply_file})'\""
 
   # validate file first
   exec{"validate_${name}":
