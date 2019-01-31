@@ -44,6 +44,11 @@ const (
 	PrometheusModeExternalScrapeTargetsOnly = "ExternalScrapeTargetsOnly"
 )
 
+const (
+	CalicoBackendEtcd       ClusterKubernetesCalicoBackend = "etcd"
+	CalicoBackendKubernetes ClusterKubernetesCalicoBackend = "kubernetes"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:openapi-gen=true
 // +resource:path=clusters
@@ -229,10 +234,12 @@ type ClusterKubernetesControllerManager struct {
 	FeatureGates map[string]bool `json:"featureGates,omitempty"`
 }
 
+type ClusterKubernetesCalicoBackend string
 type ClusterKubernetesCalico struct {
-	Backend       string `json:"backend"`
-	EnableTypha   bool   `json:"enableTypha"`
-	TyphaReplicas *int   `json:"typhaReplicas"`
+	Backend ClusterKubernetesCalicoBackend `json:"backend"`
+
+	EnableTypha   bool `json:"enableTypha"`
+	TyphaReplicas *int `json:"typhaReplicas"`
 }
 
 // +k8s:openapi-gen=true

@@ -41,8 +41,7 @@ class calico::node (
     $node_image = 'quay.io/calico/node'
     $cni_image = 'quay.io/calico/cni'
 
-
-    $manifests = [template('calico/node-daemonset_etcd.yaml.erb')]
+    $manifests = ''
 
   } else {
     $node_image = 'calico/node'
@@ -50,13 +49,11 @@ class calico::node (
 
     if $typha_enabled {
       $manifests = [
-          template('calico/node-daemonset_kubernetes.yaml.erb'),
           template('calico/node-crd.yaml.erb'),
           template('calico/node-typha.yaml.erb'),
         ]
     } else {
       $manifests = [
-          template('calico/node-daemonset_kubernetes.yaml.erb'),
           template('calico/node-crd.yaml.erb'),
         ]
     }
@@ -64,8 +61,9 @@ class calico::node (
 
   kubernetes::apply{'calico-node':
     manifests => [
-      $manifests,
       template('calico/node-rbac.yaml.erb'),
+      template('calico/node-daemonset.yaml.erb'),
+      $manifests,
     ],
   }
 

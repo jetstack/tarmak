@@ -59,6 +59,7 @@ spec:
         - name: calico-node
           image: <%= @node_image %>:v<%= @node_version %>
           env:
+<% if @backend == 'etcd' -%>
             # The location of the Calico etcd cluster.
             - name: ETCD_ENDPOINTS
               valueFrom:
@@ -71,31 +72,11 @@ spec:
                 configMapKeyRef:
                   name: calico-config
                   key: calico_backend
-            # Cluster type to identify the deployment type
-            - name: CLUSTER_TYPE
-              value: "k8s,bgp"
-            # Disable file logging so `kubectl logs` works.
-            - name: CALICO_DISABLE_FILE_LOGGING
-              value: "true"
             # Set noderef for node controller.
             - name: CALICO_K8S_NODE_REF
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            # Set Felix endpoint to host default action to ACCEPT.
-            - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
-              value: "ACCEPT"
-            # Configure the IP Pool from which Pod IPs will be chosen.
-            - name: CALICO_IPV4POOL_CIDR
-              value: "<%= @ipv4_pool_cidr %>"
-            - name: CALICO_IPV4POOL_IPIP
-              value: "<%= @ipv4_pool_ipip_mode %>"
-            # Disable IPv6 on Kubernetes.
-            - name: FELIX_IPV6SUPPORT
-              value: "false"
-            # Set Felix logging to "info"
-            - name: FELIX_LOGSEVERITYSCREEN
-              value: "info"
 <% if @etcd_proto == 'https' -%>
             # Location of the CA certificate for etcd.
             - name: ETCD_CA_CERT_FILE
@@ -116,14 +97,30 @@ spec:
                   name: calico-config
                   key: etcd_cert
 <% end -%>
-            # Auto-detect the BGP IP address.
-            - name: IP
-              value: ""
-            # Setup a custom MTU value
-            - name: FELIX_IPINIPMTU
-              value: "<%= @mtu %>"
-            - name: FELIX_HEALTHENABLED
+<%- else -%>
+            # Use Kubernetes API as the backing datastore.
+            - name: DATASTORE_TYPE
+              value: "kubernetes"
+            # Wait for the datastore.
+            - name: WAIT_FOR_DATASTORE
               value: "true"
+            # Enable IP-in-IP within Felix.
+            - name: FELIX_IPINIPENABLED
+              value: "true"
+            # Set based on the k8s node name.
+            - name: NODENAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+<%- if @typha_enabled -%>
+            # Typha support: controlled by the ConfigMap.
+            - name: FELIX_TYPHAK8SSERVICENAME
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: typha_service_name
+<%- end -%>
+<%- end -%>
 <%- if @metrics_port > 0 -%>
             # Enable metrics collection
             - name: FELIX_PROMETHEUSMETRICSENABLED
@@ -132,6 +129,34 @@ spec:
             - name: FELIX_PROMETHEUSMETRICSPORT
               value: "<%= @metrics_port %>"
 <%- end -%>
+            # Set Felix logging to "info"
+            - name: FELIX_LOGSEVERITYSCREEN
+              value: "info"
+            # Set Felix endpoint to host default action to ACCEPT.
+            - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
+              value: "ACCEPT"
+            # Disable file logging so `kubectl logs` works.
+            - name: CALICO_DISABLE_FILE_LOGGING
+              value: "true"
+            # Cluster type to identify the deployment type
+            - name: CLUSTER_TYPE
+              value: "k8s,bgp"
+            # Disable IPv6 on Kubernetes.
+            - name: FELIX_IPV6SUPPORT
+              value: "false"
+            # Configure the IP Pool from which Pod IPs will be chosen.
+            - name: CALICO_IPV4POOL_CIDR
+              value: "<%= @ipv4_pool_cidr %>"
+            - name: CALICO_IPV4POOL_IPIP
+              value: "<%= @ipv4_pool_ipip_mode %>"
+            # Auto-detect the BGP IP address.
+            - name: IP
+              value: ""
+            # Setup a custom MTU value
+            - name: FELIX_IPINIPMTU
+              value: "<%= @mtu %>"
+            - name: FELIX_HEALTHENABLED
+              value: "true"
           securityContext:
             privileged: true
           resources:
@@ -172,18 +197,26 @@ spec:
             # Name of the CNI config file to create.
             - name: CNI_CONF_NAME
               value: "10-calico.conflist"
-            # The location of the Calico etcd cluster.
-            - name: ETCD_ENDPOINTS
-              valueFrom:
-                configMapKeyRef:
-                  name: calico-config
-                  key: etcd_endpoints
             # The CNI network config to install on each node.
             - name: CNI_NETWORK_CONFIG
               valueFrom:
                 configMapKeyRef:
                   name: calico-config
                   key: cni_network_config
+<% if @backend == 'etcd' -%>
+            # The location of the Calico etcd cluster.
+            - name: ETCD_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: etcd_endpoints
+<% else -%>
+            # Set the hostname based on the k8s node name.
+            - name: KUBERNETES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+<% end -%>
           # This is required for SELinux, otherwise no access to the host directories allowed
           securityContext:
             privileged: true
@@ -192,7 +225,7 @@ spec:
               name: cni-bin-dir
             - mountPath: /host/etc/cni/net.d
               name: cni-net-dir
-<% if @etcd_proto == 'https' -%>
+<% if @backend == 'etcd' and @etcd_proto == 'https' -%>
             - mountPath: <%= @etcd_cert_path%>
               name: etcd-certs
 <% end -%>
@@ -214,7 +247,7 @@ spec:
         - name: cni-net-dir
           hostPath:
             path: /etc/cni/net.d
-<% if @etcd_proto == 'https' -%>
+<% if @backend == 'etcd' and @etcd_proto == 'https' -%>
         # Mount in the etcd TLS secrets.
         - name: etcd-certs
           hostPath:

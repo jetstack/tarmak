@@ -42,7 +42,7 @@ describe 'calico::node' do
   let(:typha_enabled) { '' }
 
   let(:calico_node) do
-    catalogue.resource('Kubernetes::Apply', 'calico-node').send(:parameters)[:manifests][0].join("\n")
+    catalogue.resource('Kubernetes::Apply', 'calico-node').send(:parameters)[:manifests].join("\n")
   end
 
   context 'with default parameters' do
