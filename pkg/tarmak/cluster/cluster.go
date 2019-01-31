@@ -603,15 +603,16 @@ func (c *Cluster) validatePrometheusMode() error {
 
 func (c *Cluster) validateCalico() error {
 	var result *multierror.Error
-	backends := []string{"etcd", "kubernetes"}
 
 	calico := c.Config().Kubernetes.Calico
-	if !utils.SliceContains(backends, calico.Backend) {
+	if calico.Backend != clusterv1alpha1.CalicoBackendEtcd &&
+		calico.Backend != clusterv1alpha1.CalicoBackendKubernetes {
 		result = multierror.Append(result, fmt.Errorf(
-			"calico's backend may only be set to %s, got=%s", backends, calico.Backend))
+			"calico's backend may only be set to [%s %s], got=%s",
+			clusterv1alpha1.CalicoBackendEtcd, clusterv1alpha1.CalicoBackendKubernetes, calico.Backend))
 	}
 
-	if calico.Backend != "kubernetes" && calico.EnableTypha {
+	if calico.Backend != clusterv1alpha1.CalicoBackendKubernetes && calico.EnableTypha {
 		result = multierror.Append(result, fmt.Errorf(
 			"typha enabled but backend is not 'kubernetes', got=%s", calico.Backend))
 	}
