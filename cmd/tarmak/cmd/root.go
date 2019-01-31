@@ -27,9 +27,6 @@ var RootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(args []string) {
-	// take build version and publish it to tarmak
-	globalFlags.Version = Version.Version
-
 	// become a terraform provider if required
 	prefix := "terraform-provider-"
 	basename := filepath.Base(os.Args[0])

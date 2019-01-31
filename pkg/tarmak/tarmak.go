@@ -26,6 +26,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 	"github.com/jetstack/tarmak/pkg/terraform"
+	pkgversion "github.com/jetstack/tarmak/pkg/version"
 )
 
 type Tarmak struct {
@@ -318,7 +319,7 @@ func (t *Tarmak) ConfigPath() string {
 }
 
 func (t *Tarmak) Version() string {
-	return t.flags.Version
+	return pkgversion.Get().GitVersion
 }
 
 func (t *Tarmak) Validate() error {
