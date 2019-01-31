@@ -34,9 +34,6 @@ const (
 	remoteStateError = "Error locking destination state: Error acquiring the state lock: ConditionalCheckFailedException: The conditional request failed"
 )
 
-// wingHash is set by a linker flag to the hash of the lastest wing binary
-var wingHash = ""
-
 type Terraform struct {
 	log    *logrus.Entry
 	tarmak interfaces.Tarmak
