@@ -9,12 +9,6 @@ import (
 	pkgversion "github.com/jetstack/tarmak/pkg/version"
 )
 
-var Version struct {
-	Version   string
-	BuildDate string
-	Commit    string
-}
-
 var AppName string = "tagging-control"
 
 func init() {

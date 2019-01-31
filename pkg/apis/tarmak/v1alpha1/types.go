@@ -132,8 +132,6 @@ type Flags struct {
 
 	Cluster ClusterFlags `json:"cluster,omitempty"` // cluster specific flags
 
-	Version string `json:"version,omitempty"` // expose tarmak's build time version
-
 	WingDevMode bool `json:"wingDevMode,omitempty"` // use a bundled wing version rather than a tagged release from GitHub
 
 	PublicAPIEndpoint bool `json:"publicAPIEndpoint,omitempty"` // Use public endpoint to point kubeconfig to

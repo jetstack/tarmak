@@ -2,6 +2,7 @@
 package terraform
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net"
@@ -57,12 +58,17 @@ func (t *Terraform) GenerateCode(c interfaces.Cluster) (err error) {
 		return err
 	}
 
+	wingHash := "unknown"
+
 	if t.tarmak.Config().WingDevMode() {
 		// move in wing binary for terraform bucket object
 		srcWingBytes, err := binaries.Asset("wing_linux_amd64")
 		if err != nil {
 			return err
 		}
+
+		sum := sha256.Sum256(srcWingBytes)
+		wingHash = fmt.Sprintf("%x", sum)
 
 		destWingBinary, err := os.OpenFile(
 			filepath.Clean(
