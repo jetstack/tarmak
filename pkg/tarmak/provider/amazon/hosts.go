@@ -4,14 +4,18 @@ package amazon
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"golang.org/x/crypto/ssh"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
+
+const EOF = "==EOF"
 
 type host struct {
 	id             string
@@ -60,52 +64,71 @@ func (h *host) Parameters() map[string]string {
 	}
 }
 
-func (h *host) SSHKnownHostConfig() (string, error) {
-	var entry, key string
+func (h *host) SSHHostPublicKeys() ([]ssh.PublicKey, error) {
+	var hostKeysBase64 []string
+	var hostKeysTagKeys []string
+	var hostKeys []ssh.PublicKey
 
-	for _, t := range h.tags {
-		if strings.HasPrefix(*t.Key, "tarmak.io/") &&
-			strings.HasSuffix(*t.Key, "key-0") {
-			key = *t.Key
-			entry = *t.Value
-			break
+	// sort tags by key
+	sort.Slice(h.tags, func(i, j int) bool { return *h.tags[i].Key < *h.tags[j].Key })
+
+	// loop through tags to complete keys
+	nextKey := ""
+	for pos, _ := range h.tags {
+		key := *h.tags[pos].Key
+		if !strings.HasPrefix(key, "tarmak.io/") {
+			continue
 		}
-	}
 
-	if key == "" {
-		h.cluster.Log().Warnf("failed to find public key tags for host %s", h.Aliases())
-		return "", nil
-	}
+		if strings.HasSuffix(key, "key-0") {
+			hostKeysBase64 = append(hostKeysBase64, "")
+			hostKeysTagKeys = append(hostKeysTagKeys, key)
+			nextKey = key
+		}
 
-	findTag := func(name string, tags []*ec2.Tag) ([]*ec2.Tag, string) {
-		for i, t := range tags {
-			if *t.Key == name {
-				return append(tags[:i], tags[i+1:]...), *t.Value
+		if nextKey != key {
+			continue
+		}
+
+		entry := *h.tags[pos].Value
+
+		// check if final piece of this key
+		if strings.HasSuffix(entry, EOF) {
+			entry = entry[0 : len(entry)-(len(EOF)+1)]
+			nextKey = ""
+		} else {
+			// generate next key number
+			currentKeyParts := strings.Split(key, "-")
+			posLastElem := len(currentKeyParts) - 1
+			posKey, err := strconv.ParseInt(currentKeyParts[posLastElem], 10, 64)
+			if err != nil {
+				nextKey = ""
+				h.cluster.Log().Warnf("failed to parse tag '%s' of host '%s': %v", key, h.Aliases(), err)
+				continue
 			}
+			currentKeyParts[posLastElem] = fmt.Sprintf("%d", posKey+1)
+			nextKey = strings.Join(currentKeyParts, "-")
 		}
 
-		return tags, ""
+		hostKeysBase64[len(hostKeysTagKeys)-1] += entry
 	}
 
-	tags := h.tags
-	var n int
-	var value string
-	for !strings.HasSuffix(entry, "==EOF") {
-		n++
-		key = fmt.Sprintf("%s%d", key[:len(key)-1], n)
-
-		tags, value = findTag(key, tags)
-		if value == "" {
-			return "", fmt.Errorf("failed to contruct public key from host tags %s", h.Aliases())
+	// parse ssh public host keys
+	for pos, _ := range hostKeysBase64 {
+		hostKey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(hostKeysBase64[pos]))
+		if err != nil {
+			h.cluster.Log().Warnf(
+				"failed to parse public keys from tag '%s' of host '%s': %v",
+				hostKeysTagKeys[pos],
+				h.Aliases(),
+				err,
+			)
+			continue
 		}
-
-		entry = fmt.Sprintf("%s%s", entry, value)
+		hostKeys = append(hostKeys, hostKey)
 	}
 
-	entry = strings.TrimRight(entry[:len(entry)-6], " ")
-	entry = fmt.Sprintf("%s %s\n", h.Hostname(), entry)
-
-	return entry, nil
+	return hostKeys, nil
 }
 
 // TODO: this is not too provider specific and should live somewhere else
@@ -244,9 +267,4 @@ func (a *Amazon) ListHosts(c interfaces.Cluster) ([]interfaces.Host, error) {
 	}
 
 	return hostsInterfaces, nil
-}
-
-func (h *host) SSHControlPath() string {
-	return filepath.Join(os.TempDir(), fmt.Sprintf(
-		"ssh-control-%s@%s:22", h.user, h.hostname))
 }

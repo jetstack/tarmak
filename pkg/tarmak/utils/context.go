@@ -155,3 +155,19 @@ func BasicSignalHandler(l *log.Entry) chan struct{} {
 
 	return stopCh
 }
+
+func (c *CancellationContext) TryOrCancel(done <-chan struct{}) context.Context {
+	ctx, cancelRetries := context.WithCancel(context.Background())
+
+	go func() {
+		select {
+		case <-c.Done():
+			cancelRetries()
+			return
+		case <-done:
+			return
+		}
+	}()
+
+	return ctx
+}
