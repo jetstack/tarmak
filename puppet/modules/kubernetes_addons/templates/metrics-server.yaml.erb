@@ -83,8 +83,10 @@ spec:
         - mountPath: /etc/config
           name: metrics-server-config-volume
       - name: metrics-server
-        image: <%= @image %>:v<%= @_version %> 
+        image: <%= @image %>:v<%= @_version %>
         imagePullPolicy: Always
+        args:
+        - --use-apiserver-proxy
         ports:
         - containerPort: 443
           name: https
