@@ -77,6 +77,7 @@ type SystemdEntry struct {
 	SystemdCGroup           string `json:"_SYSTEMD_CGROUP"`
 	SystemdSession          string `json:"_SYSTEMD_SESSION"`
 	SystemdOwnerUID         string `json:"_SYSTEMD_OWNER_UID"`
+	Unit                    string `json:"UNIT"`
 	SystemdUnit             string `json:"_SYSTEMD_UNIT"`
 	SourceRealtimeTimestamp string `json:"_SOURCE_REALTIME_TIMESTAMP"`
 	MachineID               string `json:"_MACHINE_ID"`
@@ -242,11 +243,17 @@ func (l *Logs) hostAliases() ([]string, error) {
 }
 
 func (l *Logs) writeToFile(host string, entry *SystemdEntry) error {
+	unit := entry.SystemdUnit
+	if unit == "" {
+		unit = entry.Unit
+	}
+	unit = strings.TrimSuffix(unit, ".service")
+
 	// temporary logs filename
 	// some units contain '/' which must be replaced by '-' to save to file
 	fname := filepath.Join(l.tmpDir, host,
 		fmt.Sprintf("%s.log",
-			strings.Replace(entry.SyslogIdentifier, "/", "-", -1),
+			strings.Replace(unit, "/", "-", -1),
 		),
 	)
 
