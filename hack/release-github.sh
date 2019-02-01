@@ -25,7 +25,6 @@ export KUBE_ROOT=$(dirname "${BASH_SOURCE}")/..
 source "${KUBE_ROOT}/hack/lib/version.sh"
 kube::version::get_version_vars
 
-
 # Make sure we are having the built binaries as first on the path with absolute
 # path
 export PATH=$(cd ${KUBE_ROOT}/bin; pwd):${PATH}

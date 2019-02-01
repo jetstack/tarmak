@@ -267,7 +267,7 @@ pkg/wing/mocks/client.go: $(shell go list -f '{{ $$global := .}}{{ range .GoFile
 ## Release instructions
 .PHONY: release
 release: _output/tarmak_linux_amd64 _output/tarmak_darwin_amd64 _output/wing_linux_amd64 _output/tagging_control_linux_amd64 $(BINDIR)/upx $(BINDIR)/ghr ## Build release binaries and publish them to github
-	hack/publish-release.sh
+	hack/release-github.sh
 
 docker_%:
 	# create a container

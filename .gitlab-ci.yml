@@ -1,5 +1,8 @@
+# protect vault token
+before_script:
+- unset VAULT_TOKEN VAULT_ADDR
+
 # run test on golang code
-#
 test::tarmak::golang:
   stage: test
   tags:
@@ -30,6 +33,31 @@ generate::docs:
     paths:
     - docs/_build/html
     expire_in: 4 weeks
+
+release::tarmak::aws_ami_image_centos:
+  stage: release
+  variables:
+    AWS_DEFAULT_REGION: eu-west-1
+  image: hashicorp/packer:1.3.3
+  before_script:
+  - apk --update add jq curl
+  # connect to vault and get a time limited token
+  - |
+    eval $(
+        curl \
+          --fail \
+          --header "X-Vault-Token: $VAULT_TOKEN" \
+          --request POST \
+          --data '{"ttl": "1h"}' \
+          "${VAULT_ADDR}/v1/jetstack/aws/jetstack/sts/tarmak-images-packer-build" \
+        | jq -r ' .data | "export AWS_ACCESS_KEY_ID=\(.access_key) && export AWS_SECRET_ACCESS_KEY=\(.secret_key) && export AWS_SESSION_TOKEN=\(.security_token)"')
+  - unset VAULT_TOKEN VAULT_ADDR
+  tags:
+  - docker
+  only:
+  - tags
+  script:
+  - hack/release-tarmak-packer-image.sh
 
 release::tarmak::golang:
   stage: release
