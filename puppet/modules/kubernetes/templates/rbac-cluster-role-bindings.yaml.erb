@@ -1,162 +1,166 @@
-apiVersion: v1
-items:
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRoleBinding
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-      addonmanager.kubernetes.io/mode: EnsureExists
-    name: cluster-admin
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: cluster-admin
-  subjects:
-  - apiVersion: rbac.authorization.k8s.io
-    kind: Group
-    name: system:masters
-  - apiVersion: rbac.authorization.k8s.io
-    kind: User
-    name: system:kube-controller-manager
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRoleBinding
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-      addonmanager.kubernetes.io/mode: EnsureExists
-    name: system:basic-user
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: system:basic-user
-  subjects:
-  - apiVersion: rbac.authorization.k8s.io
-    kind: Group
-    name: system:authenticated
-  - apiVersion: rbac.authorization.k8s.io
-    kind: Group
-    name: system:unauthenticated
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRoleBinding
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-      addonmanager.kubernetes.io/mode: EnsureExists
-    name: system:discovery
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: system:discovery
-  subjects:
-  - apiVersion: rbac.authorization.k8s.io
-    kind: Group
-    name: system:authenticated
-    labels:
-      addonmanager.kubernetes.io/mode: EnsureExists
-  - apiVersion: rbac.authorization.k8s.io
-    kind: Group
-    name: system:unauthenticated
-    labels:
-      addonmanager.kubernetes.io/mode: EnsureExists
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRoleBinding
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-    name: system:kube-controller-manager
-    labels:
-      addonmanager.kubernetes.io/mode: EnsureExists
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: system:kube-controller-manager
-  subjects:
-  - apiVersion: rbac.authorization.k8s.io
-    kind: User
-    name: system:kube-controller-manager
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRoleBinding
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-      addonmanager.kubernetes.io/mode: EnsureExists
-    name: system:kube-dns
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: system:kube-dns
-  subjects:
-  - kind: ServiceAccount
-    name: kube-dns
-    namespace: kube-system
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRoleBinding
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-      addonmanager.kubernetes.io/mode: EnsureExists
-    name: system:kube-scheduler
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: system:kube-scheduler
-  subjects:
-  - apiVersion: rbac.authorization.k8s.io
-    kind: User
-    name: system:kube-scheduler
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRoleBinding
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-      addonmanager.kubernetes.io/mode: EnsureExists
-    name: system:node
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: system:node
-  subjects:
-  - apiVersion: rbac.authorization.k8s.io
-    kind: Group
-    name: system:nodes
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRoleBinding
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-      addonmanager.kubernetes.io/mode: EnsureExists
-    name: system:node-proxier
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: system:node-proxier
-  subjects:
-  - apiVersion: rbac.authorization.k8s.io
-    kind: User
-    name: system:kube-proxy
-kind: List
-metadata: {}
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: cluster-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiVersion: rbac.authorization.k8s.io
+  kind: Group
+  name: system:masters
+- apiVersion: rbac.authorization.k8s.io
+  kind: User
+  name: system:kube-controller-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: system:basic-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:basic-user
+subjects:
+- apiVersion: rbac.authorization.k8s.io
+  kind: Group
+  name: system:authenticated
+- apiVersion: rbac.authorization.k8s.io
+  kind: Group
+  name: system:unauthenticated
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: system:discovery
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:discovery
+subjects:
+- apiVersion: rbac.authorization.k8s.io
+  kind: Group
+  name: system:authenticated
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+- apiVersion: rbac.authorization.k8s.io
+  kind: Group
+  name: system:unauthenticated
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: system:kube-controller-manager
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:kube-controller-manager
+subjects:
+- apiVersion: rbac.authorization.k8s.io
+  kind: User
+  name: system:kube-controller-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: system:kube-dns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:kube-dns
+subjects:
+- kind: ServiceAccount
+  name: kube-dns
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: system:kube-scheduler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:kube-scheduler
+subjects:
+- apiVersion: rbac.authorization.k8s.io
+  kind: User
+  name: system:kube-scheduler
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: system:node
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:node
+subjects:
+- apiVersion: rbac.authorization.k8s.io
+  kind: Group
+  name: system:nodes
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: system:node-proxier
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:node-proxier
+subjects:
+- apiVersion: rbac.authorization.k8s.io
+  kind: User
+  name: system:kube-proxy
