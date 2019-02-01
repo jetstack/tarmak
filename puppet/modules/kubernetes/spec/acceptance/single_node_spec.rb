@@ -142,7 +142,7 @@ kubernetes::apply { 'hello':
 
 kubernetes::apply { 'hello-invalid-namespace':
   type      => 'manifests',
-  manifests => ['kind; Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing\n    addonmanager.kubernetes.io/mode: EnsureExists']
+  manifests => ['kinder: Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing\n    addonmanager.kubernetes.io/mode: EnsureExists']
 }
 "
       end
