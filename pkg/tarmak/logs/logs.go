@@ -34,6 +34,7 @@ var (
 		"vault",
 		"etcd",
 		"worker",
+		"master",
 		"control-plane",
 	}
 )
@@ -139,8 +140,8 @@ func (l *Logs) Aggregate(group string, flags tarmakv1alpha1.ClusterLogsFlags) er
 		l.log.Infof("fetching journald logs from instance '%s'", host)
 		err := l.fetchCmdOutput(
 			host,
-			"journalctl",
-			[]string{"-o", "json", "--no-pager", "--since", l.since, "--until", l.until},
+			[]string{"journalctl", "-o", "json", "--no-pager",
+				"--since", l.since, "--until", l.until},
 			writer,
 		)
 		if err != nil {
@@ -304,11 +305,11 @@ func (l *Logs) bundleLogs() error {
 	return nil
 }
 
-func (l *Logs) fetchCmdOutput(host, command string, args []string, stdout io.Writer) error {
-	ret, err := l.ssh.ExecuteWithWriter(host, command, args, stdout)
+func (l *Logs) fetchCmdOutput(host string, cmd []string, stdout io.Writer) error {
+	ret, err := l.ssh.Execute(host, cmd, nil, stdout, nil)
 	if ret != 0 {
-		cmdStr := fmt.Sprintf("%s %s", command, strings.Join(args, " "))
-		return fmt.Errorf("command [%s] returned non-zero: %d", cmdStr, ret)
+		return fmt.Errorf("command [%s] returned non-zero: %d",
+			strings.Join(cmd, " "), ret)
 	}
 
 	return err

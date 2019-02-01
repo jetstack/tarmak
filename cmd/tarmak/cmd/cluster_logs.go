@@ -17,7 +17,8 @@ var clusterLogsCmd = &cobra.Command{
 		"Gather logs from a list of instances or target groups %s",
 		logs.TargetGroups,
 	),
-	Short: "Gather logs from a list of instances or target groups",
+	Aliases: []string{"log"},
+	Short:   "Gather logs from a list of instances or target groups",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return fmt.Errorf(

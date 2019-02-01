@@ -234,7 +234,8 @@ func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr
 
 	select {
 	case <-s.tarmak.CancellationContext().Done():
-		sess.Close()
+		client.Close()
+		s.Cleanup()
 		<-complete
 
 	case <-complete:
