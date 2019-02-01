@@ -7,6 +7,7 @@ class kubernetes::kubectl(
   require ::kubernetes
 
   $namespace = 'kube-system'
+  $service_apiserver = 'kube-apiserver.service'
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-kubectl"
   file{$kubeconfig_path:

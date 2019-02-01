@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: blackbox-exporter
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: <%= @replicas %>
   selector:

@@ -1,6 +1,6 @@
 .. _user_guide:
 
-User guide
+User Guide
 ==========
 
 Getting started with AWS
@@ -169,6 +169,15 @@ Configuration Options
 
 After generating your `tarmak.yaml` configuration file there are a number of
 options you can set that are not exposed via `tarmak init`.
+
+.. note::
+   Kubernetes resources created by Tarmak have their lifecycle managed by
+   ``Addon-manager`` and as such will be kept synchronised according to the
+   source manifests found in ``/etc/kubernetes/apply`` on all master instances.
+   The Addon-manager will watch for these resources with the
+   ``addonmanager.kubernetes.io/mode`` label. Information on how each mode on
+   the label behaves can be found in the `Kubernetes documentation
+   <https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/addon-manager>`_.
 
 Pod Security Policy
 ~~~~~~~~~~~~~~~~~~~

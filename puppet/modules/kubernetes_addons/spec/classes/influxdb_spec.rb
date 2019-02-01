@@ -5,7 +5,9 @@ describe 'kubernetes_addons::influxdb' do
       class kubernetes{}
       define kubernetes::apply(
         $manifests,
-      ){}
+      ){
+        kubernetes::addon_manager_labels($manifests[0])
+      }
     "
   end
 

@@ -5,6 +5,8 @@ metadata:
   name: fast
   annotations:
     storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+      addonmanager.kubernetes.io/mode: EnsureExists
 provisioner: kubernetes.io/aws-ebs
 parameters:
   type: gp2
@@ -13,6 +15,8 @@ apiVersion: storage.k8s.io/v1beta1
 kind: StorageClass
 metadata:
   name: slow
+  labels:
+      addonmanager.kubernetes.io/mode: EnsureExists
 provisioner: kubernetes.io/aws-ebs
 parameters:
   type: standard

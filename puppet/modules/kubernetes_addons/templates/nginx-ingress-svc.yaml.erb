@@ -3,6 +3,7 @@ kind: Service
 metadata:
   labels:
     name: <%= @deployment_name %>
+    addonmanager.kubernetes.io/mode: Reconcile
   name: <%= @deployment_name %>
   namespace: <%= @namespace %>
 spec:

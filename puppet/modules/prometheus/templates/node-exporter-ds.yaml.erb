@@ -5,6 +5,7 @@ metadata:
   namespace: monitoring
   labels:
     name: node-exporter
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   updateStrategy:
     type: RollingUpdate

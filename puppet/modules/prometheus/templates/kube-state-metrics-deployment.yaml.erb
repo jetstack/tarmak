@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: kube-state-metrics
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
@@ -62,6 +64,8 @@ kind: ServiceAccount
 metadata:
   name: kube-state-metrics
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 <%- if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -71,6 +75,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: kube-state-metrics
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 subjects:
   - kind: ServiceAccount
     name: kube-state-metrics
@@ -88,6 +94,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: kube-state-metrics
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
 - apiGroups: [""]
   resources:
@@ -132,6 +140,8 @@ kind: RoleBinding
 metadata:
   namespace: <%= @namespace %>
   name: kube-state-metrics
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -150,6 +160,8 @@ kind: Role
 metadata:
   namespace: <%= @namespace %>
   name: kube-state-metrics-resizer
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
 - apiGroups: [""]
   resources:

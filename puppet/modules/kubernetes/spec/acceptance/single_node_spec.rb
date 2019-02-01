@@ -112,7 +112,7 @@ class{'kubernetes::worker':
 
 kubernetes::apply { 'hello':
   type      => 'manifests',
-  manifests => ['kind: Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing']
+  manifests => ['kind: Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing\n    addonmanager.kubernetes.io/mode: Reconcile']
 }
 "
       end
@@ -142,14 +142,16 @@ kubernetes::apply { 'hello':
 
 kubernetes::apply { 'hello-invalid-namespace':
   type      => 'manifests',
-  manifests => ['kind; Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing']
+  manifests => ['kind; Namespace\napiVersion: v1\nmetadata:\n  name: testing\n  labels:\n    name: testing\n    addonmanager.kubernetes.io/mode: EnsureExists']
 }
 "
       end
 
       it 'should error when it applies a manifest with a syntax error' do
         hosts_as('k8s-master').each do |host|
-          apply_manifest_on(host, invalid_manifest_apply_pp, :expect_failures => true)
+          expect(
+            apply_manifest_on(host, invalid_manifest_apply_pp, :catch_failures => true).exit_code
+          ).to_not be_zero
         end
       end
     end
@@ -161,7 +163,7 @@ kubernetes::apply { 'hello-invalid-namespace':
 
 kubernetes::apply { 'configmap':
   type      => 'manifests',
-  manifests => ['kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: configmap-test\n  labels:\n    name: configmap-test\ndata:\n  example.hello: world']
+  manifests => ['kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: configmap-test\n  labels:\n    name: configmap-test\n    addonmanager.kubernetes.io/mode: Reconcile\ndata:\n  example.hello: world']
 }
 "
       end
@@ -226,6 +228,11 @@ kubernetes::apply_fragment { 'hello2-metadata-label':
 kubernetes::apply_fragment { 'hello2-metadata-labelname':
   content => '    name: testing2',
   order   => '05',
+  target  => 'hello2',
+}
+kubernetes::apply_fragment { 'hello2-metadata-labeladdonmanager':
+  content => '    addonmanager.kubernetes.io/mode: Reconcile',
+  order   => '06',
   target  => 'hello2',
 }
 "

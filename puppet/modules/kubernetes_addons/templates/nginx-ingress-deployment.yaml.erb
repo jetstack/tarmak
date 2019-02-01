@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: <%= @deployment_name %>
   namespace: <%= @namespace %>
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
 <% if @replicas -%>
   replicas: <%= @replicas %>

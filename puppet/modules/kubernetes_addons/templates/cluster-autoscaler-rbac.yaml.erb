@@ -6,6 +6,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 <%- if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -15,6 +16,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: system:cluster-autoscaler
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -32,6 +35,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: system:cluster-autoscaler
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
 - apiGroups:
     - ""
@@ -125,6 +130,8 @@ kind: Role
 metadata:
   name: system:cluster-autoscaler-status
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
 - apiGroups:
     - ""
@@ -152,6 +159,8 @@ kind: RoleBinding
 metadata:
   name: system:cluster-autoscaler-status
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

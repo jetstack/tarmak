@@ -1,23 +1,20 @@
 [Unit]
-Description=kubectl apply <%= @name %>
+Description=Reconcile kubernetes addons
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 <%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 
 [Service]
 User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
-Type=oneshot
-TimeoutStartSec=600
-Environment=KUBECONFIG=<%= scope['kubernetes::kubectl::kubeconfig_path'] %>
-RemainAfterExit=yes
-# Wait for API server to be healthy
+Environment=KUBECONFIG=<%= @kubeconfig_path %>
 <%- if scope['kubernetes::_apiserver_insecure_port'] == 0 %>
 ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -k -w '%{http_code}' https://localhost:<%= scope['kubernetes::apiserver_secure_port'] %>/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
 <%- else -%>
 ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:<%= scope['kubernetes::_apiserver_insecure_port'] %>/healthz); if [ $STATUS -eq 200 ]; then break; fi; done"
 <%- end -%>
-# Apply template
-ExecStart=<%= @kubectl_path %> apply -f <%= @apply_file %>
+ExecStart=<%= @kube_addon_manager_path %>
+Restart=on-failure
+LimitNOFILE=65536
 
 [Install]
 WantedBy=multi-user.target

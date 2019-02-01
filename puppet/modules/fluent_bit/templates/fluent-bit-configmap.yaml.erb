@@ -5,6 +5,7 @@ metadata:
   namespace: <%= @namespace %>
   labels:
     k8s-app: fluent-bit
+    addonmanager.kubernetes.io/mode: Reconcile
 data:
   # Configuration files: server, input, filters and output
   # ======================================================

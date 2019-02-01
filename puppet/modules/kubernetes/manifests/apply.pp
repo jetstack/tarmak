@@ -11,23 +11,16 @@ define kubernetes::apply(
 ){
   require ::kubernetes
   require ::kubernetes::kubectl
+  require ::kubernetes::addon_manager
 
   if ! defined(Class['kubernetes::apiserver']) {
     fail('This defined type can only be used on the kubernetes master')
   }
 
   $service_apiserver = 'kube-apiserver.service'
-
-  $_systemd_wants = $systemd_wants
-  $_systemd_requires = [$service_apiserver] + $systemd_requires
-  $_systemd_after = ['network.target', $service_apiserver] + $systemd_after
-  $_systemd_before = $systemd_before
-
-  $service_name = "kubectl-apply-${name}"
+  $service_kube_addon_manager = 'kube-addon-manager.service'
   $manifests_content = $manifests.join("\n---\n")
   $apply_file = "${::kubernetes::apply_dir}/${name}.${format}"
-  $kubectl_path = "${::kubernetes::bin_dir}/kubectl"
-  $curl_path = $::kubernetes::curl_path
 
   case $type {
     'manifests': {
@@ -37,7 +30,7 @@ define kubernetes::apply(
         owner   => 'root',
         group   => $kubernetes::group,
         content => $manifests_content,
-        notify  => Service["${service_name}.service"],
+        notify  => Exec["validate_${name}"],
       }
     }
     'concat': {
@@ -47,7 +40,7 @@ define kubernetes::apply(
         mode           => '0640',
         owner          => 'root',
         group          => $kubernetes::group,
-        notify         => Service["${service_name}.service"],
+        notify         => Exec["validate_${name}"],
       }
     }
     default: {
@@ -55,26 +48,31 @@ define kubernetes::apply(
     }
   }
 
-  file{"${::kubernetes::systemd_dir}/${service_name}.service":
-    ensure  => file,
-    mode    => '0644',
-    owner   => 'root',
-    group   => 'root',
-    content => template('kubernetes/kubectl-apply.service.erb'),
-    notify  => [
-      Service["${service_name}.service"],
-    ]
+  kubernetes::addon_manager_labels($manifests_content)
+
+  if $kubernetes::_apiserver_insecure_port == 0 {
+    $server_port = $kubernetes::apiserver_secure_port
+    $protocol = 'https'
+  } else {
+    $server_port = $kubernetes::_apiserver_insecure_port
+    $protocol = 'http'
   }
-  ~> exec { "${service_name}-daemon-reload":
-    command     => 'systemctl daemon-reload',
-    path        => $::kubernetes::path,
-    refreshonly => true,
-  }
-  -> service{ "${service_name}.service":
-    ensure  => 'running',
-    enable  => true,
-    require => [
-      Service[$service_apiserver],
-    ]
+
+  $command = "/bin/bash -c \"while true; do if [[ \$(curl -k -w '%{http_code}' -s -o /dev/null ${protocol}://localhost:${server_port}/healthz) == 200 ]]; then break; else sleep 2; fi; done; kubectl apply -f '${apply_file}' || rm -f '${apply_file})'\""
+
+  # validate file first
+  exec{"validate_${name}":
+      path        => [
+        $::kubernetes::_dest_dir,
+        '/usr/bin',
+        '/bin',
+      ],
+      environment => [
+        "KUBECONFIG=${::kubernetes::kubectl::kubeconfig_path}",
+      ],
+      refreshonly => true,
+      command     => $command,
+      require     => [ Service[$service_apiserver], Service[$service_kube_addon_manager] ],
+      logoutput   => true,
   }
 }

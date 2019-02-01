@@ -8,6 +8,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:controller:bootstrap-signer
     namespace: kube-public
   rules:
@@ -43,6 +44,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: extension-apiserver-authentication-reader
     namespace: kube-system
   rules:
@@ -62,6 +64,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:controller:bootstrap-signer
     namespace: kube-system
   rules:
@@ -81,6 +84,7 @@ items:
     creationTimestamp: null
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
+      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:controller:token-cleaner
     namespace: kube-system
   rules:

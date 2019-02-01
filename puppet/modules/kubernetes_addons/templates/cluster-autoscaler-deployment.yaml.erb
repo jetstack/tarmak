@@ -8,6 +8,7 @@ metadata:
     app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
     version: <%= @_version %>
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
   selector:

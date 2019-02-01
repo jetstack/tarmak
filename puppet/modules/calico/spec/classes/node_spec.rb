@@ -15,10 +15,16 @@ describe 'calico::node' do
       class kubernetes{
         $_authorization_mode = #{authorization_mode}
         $version = '#{kubernetes_version}'
+        $config_dir = '/etc/kubernetes'
+        $group = 'kubernetes'
+        $apply_dir = '/etc/kubernetes/apply'
+        $_apiserver_insecure_port = 1000
       }
       define kubernetes::apply(
-        $manifests,
-      ){}
+      $manifests,
+      ){
+        kubernetes::addon_manager_labels($manifests[0])
+      }
       class{'calico':
         #{mtu}
         #{backend}

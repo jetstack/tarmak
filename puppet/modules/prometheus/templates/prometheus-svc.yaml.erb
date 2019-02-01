@@ -3,6 +3,7 @@ kind: Service
 metadata:
   labels:
     app: prometheus
+    addonmanager.kubernetes.io/mode: Reconcile
   name: prometheus
   namespace: <%= @namespace %>
 spec:
