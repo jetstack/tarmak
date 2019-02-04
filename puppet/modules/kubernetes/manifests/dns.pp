@@ -46,6 +46,9 @@ class kubernetes::dns(
         template('kubernetes/dns-cluster-role-binding.yaml.erb'),
       ],
     }
+
+    kubernetes::delete{'kube-dns':}
+
   } else {
     $service = 'kube-dns'
     $label_name = 'KubeDNS'
@@ -61,5 +64,7 @@ class kubernetes::dns(
         template('kubernetes/dns-cluster-role-binding.yaml.erb'),
       ],
     }
+
+    kubernetes::delete{'core-dns':}
   }
 }
