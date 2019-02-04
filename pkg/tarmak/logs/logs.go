@@ -97,10 +97,12 @@ func New(tarmak interfaces.Tarmak) *Logs {
 	}
 }
 
-func (l *Logs) Aggregate(group string, flags tarmakv1alpha1.ClusterLogsFlags) error {
-	l.log.Infof("fetching logs from target '%s'", group)
+func (l *Logs) Aggregate(groups []string, flags tarmakv1alpha1.ClusterLogsFlags) error {
+	groups = utils.RemoveDuplicateStrings(groups)
 
-	if err := l.initialise(group, flags); err != nil {
+	l.log.Infof("fetching logs from targets %s", groups)
+
+	if err := l.initialise(groups, flags); err != nil {
 		return fmt.Errorf("failed to set tar gz log bundle path: %v", err)
 	}
 
@@ -115,7 +117,7 @@ func (l *Logs) Aggregate(group string, flags tarmakv1alpha1.ClusterLogsFlags) er
 	}
 
 	if len(aliases) == 0 {
-		return fmt.Errorf("no host aliases found in target '%s'", group)
+		return fmt.Errorf("no host aliases found in targets '%s'", groups)
 	}
 
 	select {
@@ -138,7 +140,7 @@ func (l *Logs) Aggregate(group string, flags tarmakv1alpha1.ClusterLogsFlags) er
 		reader, writer := io.Pipe()
 		go l.readStream(reader, host, result)
 
-		l.log.Infof("fetching journald logs from instance '%s'", host)
+		l.log.Infof("fetching from host %s", host)
 		err := l.fetchCmdOutput(
 			host,
 			[]string{"journalctl", "-o", "json", "--no-pager",
@@ -215,29 +217,41 @@ func (l *Logs) readStream(reader io.Reader, host string, result *multierror.Erro
 	}
 }
 
-// return all aliases of instances in the target group
+// return all aliases of instances in the target groups
 func (l *Logs) hostAliases() ([]string, error) {
 	var aliases []string
 	var result *multierror.Error
 
-	for _, host := range l.hosts {
-		for _, target := range l.targets {
-			if utils.SliceContainsPrefix(host.Roles(), target) {
-				if len(host.Aliases()) == 0 {
-					err := fmt.Errorf(
-						"host with correct role '%v' found without alias: %v",
-						host.Roles(),
-						host.ID(),
-					)
-					result = multierror.Append(result, err)
-					break
-				}
+	for _, target := range l.targets {
+		var found bool
 
-				aliases = append(aliases, host.Aliases()[0])
+		for _, host := range l.hosts {
+			if !utils.SliceContainsPrefix(host.Roles(), target) &&
+				!utils.SliceContains(host.Aliases(), target) {
+				continue
+			}
+
+			found = true
+			if len(host.Aliases()) == 0 {
+				err := fmt.Errorf(
+					"host with correct role '%v' found without alias: %v",
+					host.Roles(),
+					host.ID(),
+				)
+				result = multierror.Append(result, err)
 				break
 			}
+
+			aliases = append(aliases, host.Aliases()[0])
+		}
+
+		if !found {
+			result = multierror.Append(result,
+				fmt.Errorf("no hosts found for target: %s", target))
 		}
 	}
+
+	aliases = utils.RemoveDuplicateStrings(aliases)
 
 	return aliases, result.ErrorOrNil()
 }
@@ -322,14 +336,25 @@ func (l *Logs) fetchCmdOutput(host string, cmd []string, stdout io.Writer) error
 	return err
 }
 
-func (l *Logs) initialise(group string, flags tarmakv1alpha1.ClusterLogsFlags) error {
+func (l *Logs) initialise(groups []string, flags tarmakv1alpha1.ClusterLogsFlags) error {
+	for _, group := range groups {
+		switch group {
+		case "control-plane":
+			l.targets = append(l.targets, []string{"vault", "etcd", "master"}...)
+		default:
+			l.targets = append(l.targets, group)
+		}
+	}
+
+	l.targets = utils.RemoveDuplicateStrings(l.targets)
+
 	if flags.Path == utils.DefaultLogsPathPlaceholder {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
 
-		l.path = filepath.Join(wd, fmt.Sprintf("%s-logs.tar.gz", group))
+		l.path = filepath.Join(wd, fmt.Sprintf("%s-logs.tar.gz", strings.Join(groups, "-")))
 	} else {
 		p, err := homedir.Expand(flags.Path)
 		if err != nil {
@@ -366,13 +391,6 @@ func (l *Logs) initialise(group string, flags tarmakv1alpha1.ClusterLogsFlags) e
 		l.until = fmt.Sprintf("'%s'", now.Format(logTimeLayout))
 	} else {
 		l.until = fmt.Sprintf("'%s'", flags.Until)
-	}
-
-	switch group {
-	case "control-plane":
-		l.targets = []string{"vault", "etcd", "master"}
-	default:
-		l.targets = []string{group}
 	}
 
 	return nil
