@@ -32,39 +32,34 @@ class kubernetes::dns(
 
   if $post_1_10 {
     $service = 'core-dns'
+    $delete_service = 'kube-dns'
     $label_name = 'CoreDNS'
 
-    kubernetes::apply{'core-dns':
-      manifests => [
-        template('kubernetes/core-dns-config-map.yaml.erb'),
-        template('kubernetes/dns-service-account.yaml.erb'),
-        template('kubernetes/core-dns-deployment.yaml.erb'),
-        template('kubernetes/dns-svc.yaml.erb'),
-        template('kubernetes/dns-horizontal-autoscaler-deployment.yaml.erb'),
-        template('kubernetes/dns-horizontal-autoscaler-rbac.yaml.erb'),
-        template('kubernetes/dns-cluster-role.yaml.erb'),
-        template('kubernetes/dns-cluster-role-binding.yaml.erb'),
-      ],
-    }
-
-    kubernetes::delete{'kube-dns':}
+    $manifests = [
+      template('kubernetes/core-dns-config-map.yaml.erb'),
+      template('kubernetes/core-dns-deployment.yaml.erb'),
+    ]
 
   } else {
     $service = 'kube-dns'
+    $delete_service = 'core-dns'
     $label_name = 'KubeDNS'
 
-    kubernetes::apply{'kube-dns':
-      manifests => [
-        template('kubernetes/kube-dns-config-map.yaml.erb'),
-        template('kubernetes/kube-dns-deployment.yaml.erb'),
+    $manifests = [
+      template('kubernetes/kube-dns-config-map.yaml.erb'),
+      template('kubernetes/kube-dns-deployment.yaml.erb'),
+    ]
+  }
+
+    kubernetes::apply{$service:
+      manifests => concat(
+        $manifests,
+        template('kubernetes/dns-service-account.yaml.erb'),
         template('kubernetes/dns-svc.yaml.erb'),
         template('kubernetes/dns-horizontal-autoscaler-deployment.yaml.erb'),
         template('kubernetes/dns-horizontal-autoscaler-rbac.yaml.erb'),
         template('kubernetes/dns-cluster-role.yaml.erb'),
         template('kubernetes/dns-cluster-role-binding.yaml.erb'),
-      ],
-    }
-
-    kubernetes::delete{'core-dns':}
-  }
+      ),
+    } -> kubernetes::delete{$delete_service:}
 }

@@ -3,10 +3,6 @@ define kubernetes::apply(
   $manifests = [],
   $force = false,
   $format = 'yaml',
-  $systemd_wants = [],
-  $systemd_requires = [],
-  $systemd_after = [],
-  $systemd_before = [],
   Enum['manifests','concat'] $type = 'manifests',
 ){
   require ::kubernetes
@@ -73,6 +69,5 @@ define kubernetes::apply(
       refreshonly => true,
       command     => $command,
       require     => [ Service[$service_apiserver], Service[$service_kube_addon_manager] ],
-      logoutput   => true,
   }
 }

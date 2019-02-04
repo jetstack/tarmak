@@ -24,7 +24,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
-    k8s-app: kube-dns
+    k8s-app: <%= @service %>
   clusterIP: <%= @cluster_dns %>
   ports:
   - name: dns

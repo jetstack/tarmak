@@ -10,6 +10,7 @@ describe 'kubernetes::dns' do
         ){
           kubernetes::addon_manager_labels($manifests[0])
         }
+        define kubernetes::delete(){}
       "
     end
 
@@ -40,6 +41,7 @@ describe 'kubernetes::dns' do
         ){
           kubernetes::addon_manager_labels($manifests[0])
         }
+        define kubernetes::delete(){}
       "
     end
 

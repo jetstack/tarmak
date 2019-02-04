@@ -1,14 +1,13 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: coredns
+  name: core-dns
   namespace: kube-system
   labels:
     k8s-app: core-dns
     kubernetes.io/name: "CoreDNS"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -40,7 +39,7 @@ spec:
             - key: Corefile
               path: Corefile
       containers:
-      - name: coredns
+      - name: core-dns
         image: coredns/coredns:1.2.0
         imagePullPolicy: IfNotPresent
         resources:
