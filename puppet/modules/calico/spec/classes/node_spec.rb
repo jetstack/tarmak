@@ -105,6 +105,10 @@ describe 'calico::node' do
       'backend => \'kubernetes\','
     end
 
+    let(:calico_node) do
+      catalogue.resource('Kubernetes::Apply', 'calico-node').send(:parameters)[:manifests].join("\n")
+    end
+
     context 'with typha disabled' do
       let(:typha_enabled) do
           "typha_enabled => false,"
@@ -112,6 +116,7 @@ describe 'calico::node' do
 
       it 'has no typha' do
         expect(calico_node).not_to match(%r{name: FELIX_TYPHAK8SSERVICENAME})
+        expect(calico_node).to match(%r{CustomResourceDefinition})
       end
     end
 
