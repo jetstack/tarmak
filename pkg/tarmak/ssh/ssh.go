@@ -35,7 +35,8 @@ var (
 const (
 	// the known hosts package does not export these error strings so have to
 	// define them here ourselves
-	unknownKeyError = "knownhosts: key is unknown"
+	unknownKeyError  = "knownhosts: key is unknown"
+	mismatchKeyError = "knownhosts: key mismatch"
 )
 
 type SSH struct {
@@ -82,12 +83,6 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	}
 	defer knownHostsFile.Close()
 
-	// create known hosts validator
-	knownHostsValidator, err := knownhosts.New(knownHostsPath)
-	if err != nil {
-		return err
-	}
-
 	var sshConfig bytes.Buffer
 	sshConfig.WriteString(fmt.Sprintf("# ssh config for tarmak cluster %s\n", c.ClusterName()))
 
@@ -99,8 +94,15 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 	}
 
 	// loop over hosts
-	for _, host := range hosts {
-		hostKeys, err := host.SSHHostPublicKeys()
+HOSTLOOP:
+	for i := 0; i < len(hosts); i++ {
+		hostKeys, err := hosts[i].SSHHostPublicKeys()
+		if err != nil {
+			return err
+		}
+
+		// create known hosts validator
+		knownHostsValidator, err := knownhosts.New(knownHostsPath)
 		if err != nil {
 			return err
 		}
@@ -108,19 +110,50 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 		var errResult *multierror.Error
 		// loop over host keys
 		for _, hostKey := range hostKeys {
-			address := &net.TCPAddr{IP: net.ParseIP(host.Hostname()), Port: 22}
+			address := &net.TCPAddr{IP: net.ParseIP(hosts[i].Hostname()), Port: 22}
 
 			result := knownHostsValidator(
 				address.String(), // empty host key
 				address,          // ip address
 				hostKey,
 			)
-
 			if result == nil {
 				continue
 			}
 
 			e, ok := result.(*knownhosts.KeyError)
+
+			if ok && e.Error() == mismatchKeyError {
+				s.log.Warnf("removing mismatched keys for host %s, in favour of tags",
+					hosts[i].Hostname())
+
+				knownHostsFile.Close()
+
+				b, err := ioutil.ReadFile(knownHostsPath)
+				if err != nil {
+					return err
+				}
+
+				knownHostsFile, err = os.Create(knownHostsPath)
+				if err != nil {
+					return err
+				}
+
+				for _, entry := range bytes.Split(b, []byte{'\n'}) {
+					if len(entry) > 0 &&
+						!bytes.Contains(entry, []byte(hosts[i].Hostname())) {
+
+						_, err = knownHostsFile.Write(append(entry, '\n'))
+						if err != nil {
+							return err
+						}
+					}
+				}
+
+				// retry this host after removing it's keys
+				i--
+				continue HOSTLOOP
+			}
 
 			// if we have unknown key add to hosts file
 			if ok && e.Error() == unknownKeyError {
@@ -140,23 +173,23 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 			}
 
 			errResult = multierror.Append(errResult,
-				fmt.Errorf("ssh verification for %s failed: %v", host.Hostname(), result))
+				fmt.Errorf("ssh verification for %s failed: %v", hosts[i].Hostname(), result))
 		}
 
 		if errResult != nil {
 			return errResult
 		}
 
-		_, err = sshConfig.WriteString(host.SSHConfig(strictChecking))
+		_, err = sshConfig.WriteString(hosts[i].SSHConfig(strictChecking))
 		if err != nil {
 			return err
 		}
 
-		if len(host.Aliases()) == 0 {
-			return fmt.Errorf("found host with no aliases: %s", host.Hostname())
+		if len(hosts[i].Aliases()) == 0 {
+			return fmt.Errorf("found host with no aliases: %s", hosts[i].Hostname())
 		}
 
-		s.hosts[host.Aliases()[0]] = host
+		s.hosts[hosts[i].Aliases()[0]] = hosts[i]
 	}
 
 	err = ioutil.WriteFile(c.SSHConfigPath(), sshConfig.Bytes(), 0600)
@@ -422,29 +455,42 @@ func (s *SSH) hostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKe
 	}
 
 	e, ok := err.(*knownhosts.KeyError)
-	if ok {
-		// the key does not exist in the known hosts file and we are ignoring
-		// missing keys so append to file and retry validator
-		if e.Error() == unknownKeyError &&
-			s.tarmak.Config().IgnoreMissingPublicKeyTags() {
 
-			f, ferr := os.OpenFile(knownHostsPath, os.O_APPEND|os.O_WRONLY, 0600)
-			if ferr != nil {
-				return fmt.Errorf("failed to open file: %s, %s", ferr, err)
-			}
-
-			defer f.Close()
-
-			entry := fmt.Sprintf("%s\n", knownhosts.Line([]string{
-				knownhosts.Normalize(remote.String()),
-			}, key))
-
-			if _, ferr = f.WriteString(entry); ferr != nil {
-				return fmt.Errorf("failed to append file: %s, %s", ferr, err)
-			}
-
-			return validate()
+	if ok && e.Error() == mismatchKeyError {
+		// attempt to re-write the config if we mismatch to check tags
+		if err := s.WriteConfig(s.tarmak.Cluster()); err != nil {
+			return err
 		}
+
+		err = validate()
+		if err == nil {
+			return nil
+		}
+
+		e, ok = err.(*knownhosts.KeyError)
+	}
+
+	// the key does not exist in the known hosts file and we are ignoring
+	// missing keys so append to file and retry validator
+	if ok && e.Error() == unknownKeyError &&
+		s.tarmak.Config().IgnoreMissingPublicKeyTags() {
+
+		f, ferr := os.OpenFile(knownHostsPath, os.O_APPEND|os.O_WRONLY, 0600)
+		if ferr != nil {
+			return fmt.Errorf("failed to open file: %s, %s", ferr, err)
+		}
+
+		defer f.Close()
+
+		entry := fmt.Sprintf("%s\n", knownhosts.Line([]string{
+			knownhosts.Normalize(remote.String()),
+		}, key))
+
+		if _, ferr = f.WriteString(entry); ferr != nil {
+			return fmt.Errorf("failed to append file: %s, %s", ferr, err)
+		}
+
+		return validate()
 	}
 
 	return err
