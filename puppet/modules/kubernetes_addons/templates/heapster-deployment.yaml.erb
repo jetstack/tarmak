@@ -44,13 +44,6 @@ spec:
 <%- if @sink -%>
           - --sink=<%= @sink %>
 <%- end -%>
-        resources:
-          limits:
-            cpu: <%= @cpu %>
-            memory: <%= @mem %>
-          requests:
-            cpu: <%= @cpu %>
-            memory: <%= @mem %>
         livenessProbe:
           httpGet:
             path: /healthz
