@@ -45,6 +45,7 @@ SEE ALSO
 * `tarmak clusters kubeconfig <tarmak_clusters_kubeconfig.html>`_ 	 - Verify and print path to Kubeconfig
 * `tarmak clusters kubectl <tarmak_clusters_kubectl.html>`_ 	 - Run kubectl on the current cluster
 * `tarmak clusters list <tarmak_clusters_list.html>`_ 	 - Print a list of clusters
+* `tarmak clusters logs <tarmak_clusters_logs.html>`_ 	 - Gather logs from a list of instances or target groups
 * `tarmak clusters plan <tarmak_clusters_plan.html>`_ 	 - Plan changes on the currently configured cluster
 * `tarmak clusters set-current <tarmak_clusters_set-current.html>`_ 	 - Set current cluster in config
 * `tarmak clusters ssh <tarmak_clusters_ssh.html>`_ 	 - Log into an instance with SSH

@@ -147,6 +147,7 @@ type ClusterFlags struct {
 	Images     ClusterImagesFlags     `json:"images,omitempty"`     // flags for handling images
 	Plan       ClusterPlanFlags       `json:"plan,omitempty"`       // flags for planning clusters
 	Kubeconfig ClusterKubeconfigFlags `json:"kubeconfig,omitempty"` // flags for kubeconfig of clusters
+	Logs       ClusterLogsFlags       `json:"logs,omitempty"`       // flags for getting logs from clusters
 }
 
 // Contains the cluster plan flags
@@ -187,4 +188,11 @@ type ClusterImagesBuildFlags struct {
 // Contains the cluster kubeconfig flags
 type ClusterKubeconfigFlags struct {
 	Path string `json:"path,omitempty"` // Path to save kubeconfig to
+}
+
+// Contains the cluster logs flags
+type ClusterLogsFlags struct {
+	Path  string `json:"path,omitempty"`  // path to store logs bundle
+	Since string `json:"since,omitempty"` // fetch logs since date
+	Until string `json:"until,omitempty"` // fetch logs until date
 }

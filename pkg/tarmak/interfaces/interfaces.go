@@ -211,11 +211,15 @@ type Terraform interface {
 
 type SSH interface {
 	WriteConfig(Cluster) error
-	PassThrough(additionalArguments []string) error
+	PassThrough([]string) error
 	Tunnel(destination, destinationPort, localPort string, daemonize bool) Tunnel
 	Execute(host string, cmd []string, stdin io.Reader, stdout, stderr io.Writer) (returnCode int, err error)
 	Validate() error
 	Cleanup()
+}
+
+type Logs interface {
+	Aggregate(group string, flags tarmakv1alpha1.ClusterLogsFlags) error
 }
 
 type Tunnel interface {

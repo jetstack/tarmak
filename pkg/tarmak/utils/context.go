@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hashicorp/go-plugin"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -132,11 +131,6 @@ func (c *CancellationContext) WaitOrCancelReturnCode(f func() (int, error)) {
 		c.tarmak.Cleanup()
 		log.Exit(1)
 	}
-}
-
-func (c *CancellationContext) cleanup() {
-	plugin.CleanupClients()
-	c.tarmak.Cleanup()
 }
 
 func BasicSignalHandler(l *log.Entry) chan struct{} {
