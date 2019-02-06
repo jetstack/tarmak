@@ -15,16 +15,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: <%= @service %>
+  name: kube-dns
   namespace: kube-system
   labels:
-    k8s-app: <%= @service %>
+    k8s-app: <%= @app_name %>
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: "<%= @label_name %>"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
-    k8s-app: <%= @service %>
+    k8s-app: <%= @app_name %>
   clusterIP: <%= @cluster_dns %>
   ports:
   - name: dns

@@ -21,6 +21,8 @@ spec:
       labels:
         k8s-app: core-dns
       annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9153'
         scheduler.alpha.kubernetes.io/critical-pod: ''
 <%- if @version_before_1_6 -%>
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'

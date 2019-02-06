@@ -3,15 +3,15 @@ kind: ClusterRoleBinding
 metadata:
   annotations:
     rbac.authorization.kubernetes.io/autoupdate: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   labels:
     kubernetes.io/bootstrapping: rbac-defaults
-  name: system:<%= @service %>
+  name: system:<%= @app_name %>
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: system:<%= @service %>
+  name: system:<%= @app_name %>
 subjects:
 - kind: ServiceAccount
-  name: <%= @service %>
+  name: <%= @app_name %>
   namespace: kube-system

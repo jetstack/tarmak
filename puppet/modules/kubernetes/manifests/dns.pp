@@ -31,8 +31,8 @@ class kubernetes::dns(
   $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
 
   if $post_1_10 {
-    $service = 'core-dns'
-    $delete_service = 'kube-dns'
+    $app_name = 'core-dns'
+    $delete_app_name = 'kube-dns'
     $label_name = 'CoreDNS'
 
     $manifests = [
@@ -41,8 +41,8 @@ class kubernetes::dns(
     ]
 
   } else {
-    $service = 'kube-dns'
-    $delete_service = 'core-dns'
+    $app_name = 'kube-dns'
+    $delete_app_name = 'core-dns'
     $label_name = 'KubeDNS'
 
     $manifests = [
@@ -51,7 +51,7 @@ class kubernetes::dns(
     ]
   }
 
-    kubernetes::apply{$service:
+    kubernetes::apply{$app_name:
       manifests => concat(
         $manifests,
         template('kubernetes/dns-service-account.yaml.erb'),
@@ -61,5 +61,5 @@ class kubernetes::dns(
         template('kubernetes/dns-cluster-role.yaml.erb'),
         template('kubernetes/dns-cluster-role-binding.yaml.erb'),
       ),
-    } -> kubernetes::delete{$delete_service:}
+    } -> kubernetes::delete{$delete_app_name:}
 }
