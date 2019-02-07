@@ -261,6 +261,7 @@ type Vault interface {
 }
 
 type InstancePool interface {
+	AmazonAdditionalIAMPolicies() []string
 	Config() *clusterv1alpha1.InstancePool
 	TFName() string
 	Name() string
