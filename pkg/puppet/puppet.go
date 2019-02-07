@@ -229,7 +229,7 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	}
 
 	if conf.Calico != nil {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf("calico::backend: %s", conf.Calico.Backend))
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf("tarmak::calico_backend: %s", conf.Calico.Backend))
 
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf("calico::typha_enabled: %v", conf.Calico.EnableTypha))
 		if conf.Calico.TyphaReplicas != nil {

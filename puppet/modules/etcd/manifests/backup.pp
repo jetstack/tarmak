@@ -10,6 +10,9 @@ define etcd::backup (
   String $tls_ca_path = nil,
   Optional[Enum['aws:kms','']] $sse = undef,
   Optional[String] $bucket_prefix = undef,
+  Enum['file', 'absent'] $file_ensure = 'file',
+  Enum['running', 'stopped'] $service_ensure = 'running',
+  Boolean $service_enable = true,
 ){
   include ::etcd
 
@@ -64,20 +67,20 @@ define etcd::backup (
 
 
   file { "${etcd::systemd_dir}/${backup_service_name}.service":
-    ensure  => file,
+    ensure  => $file_ensure,
     content => template('etcd/etcd-backup.service.erb'),
     notify  => Exec["${name}-systemctl-daemon-reload"],
     mode    => '0644'
   }
 
   file { "${etcd::systemd_dir}/${backup_service_name}.timer":
-    ensure  => file,
+    ensure  => $file_ensure,
     content => template('etcd/etcd-backup.timer.erb'),
     notify  => Exec["${name}-systemctl-daemon-reload"],
   }
   ~> service { "${backup_service_name}.timer":
-    ensure  => 'running',
-    enable  => true,
+    ensure  => $service_ensure,
+    enable  => $service_enable,
     require => [
       Exec["${name}-systemctl-daemon-reload"],
       Package['awscli'],

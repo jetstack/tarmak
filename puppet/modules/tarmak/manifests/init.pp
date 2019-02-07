@@ -71,7 +71,8 @@ class tarmak (
   Enum['aws', ''] $cloud_provider = '',
   String $helper_path = $tarmak::params::helper_path,
   String $systemd_dir = '/etc/systemd/system',
-  Array[Hash] $fluent_bit_configs = $tarmak::params::fluent_bit_configs
+  Array[Hash] $fluent_bit_configs = $tarmak::params::fluent_bit_configs,
+  Enum['etcd', 'kubernetes'] $calico_backend = 'etcd',
 ) inherits ::tarmak::params {
   $ipaddress = $::ipaddress
 

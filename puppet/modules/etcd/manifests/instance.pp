@@ -17,6 +17,9 @@ define etcd::instance (
   Array $initial_cluster = [],
   Optional[Boolean] $backup_enabled = undef,
   Optional[Enum['aws:kms','']]$backup_sse = undef,
+  Enum['file', 'absent'] $file_ensure = 'file',
+  Enum['running', 'stopped'] $service_ensure = 'running',
+  Boolean $service_enable = true,
   Optional[String] $backup_bucket_prefix = undef
 ) {
   include ::etcd
@@ -85,7 +88,7 @@ define etcd::instance (
   }
 
   file { "${::etcd::systemd_dir}/${service_name}.service":
-    ensure  => file,
+    ensure  => $file_ensure,
     content => template('etcd/etcd.service.erb'),
     require => [
       Etcd::Install[$version],
@@ -94,8 +97,8 @@ define etcd::instance (
     notify  => Exec["${cluster_name}-systemctl-daemon-reload"]
   }
   ~> service { "${service_name}.service":
-    ensure  => running,
-    enable  => true,
+    ensure  => $service_ensure,
+    enable  => $service_enable,
     require => [
       File[$data_dir],
       Exec["${cluster_name}-systemctl-daemon-reload"],
@@ -105,15 +108,18 @@ define etcd::instance (
   # instantiate backup if enabled
   if $backup_enabled == true or ($backup_enabled == undef and $::etcd::backup_enabled == true) {
     etcd::backup { $name:
-      version       => $version,
-      client_port   => $client_port,
-      service_name  => $service_name,
-      tls           => $tls,
-      tls_cert_path => $tls_cert_path,
-      tls_key_path  => $tls_key_path,
-      tls_ca_path   => $tls_ca_path,
-      sse           => $backup_sse,
-      bucket_prefix => $backup_bucket_prefix,
+      version        => $version,
+      client_port    => $client_port,
+      service_name   => $service_name,
+      tls            => $tls,
+      tls_cert_path  => $tls_cert_path,
+      tls_key_path   => $tls_key_path,
+      tls_ca_path    => $tls_ca_path,
+      sse            => $backup_sse,
+      bucket_prefix  => $backup_bucket_prefix,
+      file_ensure    => $file_ensure,
+      service_ensure => $service_ensure,
+      service_enable => $service_enable,
     }
   }
 }
