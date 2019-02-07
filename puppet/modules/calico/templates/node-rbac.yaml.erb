@@ -8,16 +8,89 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 <%- end -%>
 metadata:
   name: calico-node
-  namespace: <%= @namespace %>
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  namespace: <%= @namespace %>
 rules:
+<%- if @backend == 'etcd' -%>
   - apiGroups: [""]
     resources:
       - pods
       - nodes
     verbs:
       - get
+<%- else -%>
+  - apiGroups: [""]
+    resources:
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [""]
+    resources:
+      - pods/status
+    verbs:
+      - update
+  - apiGroups: [""]
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+  - apiGroups: [""]
+    resources:
+      - services
+    verbs:
+      - get
+  - apiGroups: [""]
+    resources:
+      - endpoints
+    verbs:
+      - get
+  - apiGroups: [""]
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups: ["extensions"]
+    resources:
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - networkpolicies
+    verbs:
+      - watch
+      - list
+  - apiGroups: ["crd.projectcalico.org"]
+    resources:
+      - globalfelixconfigs
+      - felixconfigurations
+      - bgppeers
+      - globalbgpconfigs
+      - bgpconfigurations
+      - ippools
+      - globalnetworkpolicies
+      - globalnetworksets
+      - networkpolicies
+      - clusterinformations
+      - hostendpoints
+    verbs:
+      - create
+      - get
+      - list
+      - update
+      - watch
+<%- end -%>
 ---
 <%- if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -28,7 +101,7 @@ kind: ClusterRoleBinding
 metadata:
   name: calico-node
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -44,8 +117,9 @@ metadata:
   name: calico-node
   namespace: <%= @namespace %>
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
+<%- if @backend == 'etcd' -%>
 kind: ClusterRole
 <%- if @version_before_1_6 -%>
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -56,7 +130,7 @@ metadata:
   name: calico-policy-controller
   namespace: <%= @namespace %>
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
   - apiGroups:
     - ""
@@ -86,7 +160,7 @@ kind: ClusterRoleBinding
 metadata:
   name: calico-policy-controller
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -102,5 +176,6 @@ metadata:
   name: calico-policy-controller
   namespace: <%= @namespace %>
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: "Reconcile"
+<%- end -%>
 <%- end -%>

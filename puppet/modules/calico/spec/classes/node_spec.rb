@@ -30,6 +30,7 @@ describe 'calico::node' do
         #{backend}
         #{etcd_cluster}
         #{etcd_tls}
+        #{typha_enabled}
       }
     "
   end
@@ -38,9 +39,10 @@ describe 'calico::node' do
   let(:backend) { '' }
   let(:etcd_cluster) { '' }
   let(:etcd_tls) { '' }
+  let(:typha_enabled) { '' }
 
   let(:calico_node) do
-    catalogue.resource('Kubernetes::Apply', 'calico-node').send(:parameters)[:manifests][0]
+    catalogue.resource('Kubernetes::Apply', 'calico-node').send(:parameters)[:manifests].join("\n")
   end
 
   context 'with default parameters' do
@@ -96,5 +98,39 @@ describe 'calico::node' do
         end
       end
     end
+  end
+
+  context 'with backend kubernetes' do
+    let(:backend) do
+      'backend => \'kubernetes\','
+    end
+
+    let(:calico_node) do
+      catalogue.resource('Kubernetes::Apply', 'calico-node').send(:parameters)[:manifests].join("\n")
+    end
+
+    context 'with typha disabled' do
+      let(:typha_enabled) do
+          "typha_enabled => false,"
+      end
+
+      it 'has no typha' do
+        expect(calico_node).not_to match(%r{name: FELIX_TYPHAK8SSERVICENAME})
+        expect(calico_node).to match(%r{CustomResourceDefinition})
+      end
+    end
+
+    context 'with typha enabled' do
+      let(:typha_enabled) do
+          "typha_enabled => true,"
+      end
+
+      it 'has typha' do
+        expect(calico_node).to match(%r{name: FELIX_TYPHAK8SSERVICENAME})
+        expect(calico_node).to match(%r{name: TYPHA_CONNECTIONREBALANCINGMODE})
+        expect(calico_node).to match(%r{name: TYPHA_CONNECTIONREBALANCINGMODE})
+      end
+    end
+
   end
 end

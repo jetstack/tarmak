@@ -444,6 +444,13 @@ func (c *Cluster) Validate() error {
 				result = multierror.Append(result, err)
 			}
 		}
+
+		//validate calico
+		if c.Config().Kubernetes.Calico != nil {
+			if err := c.validateCalico(); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
 	}
 
 	return result.ErrorOrNil()
@@ -592,6 +599,36 @@ func (c *Cluster) validatePrometheusMode() error {
 	}
 
 	return result
+}
+
+func (c *Cluster) validateCalico() error {
+	var result *multierror.Error
+
+	calico := c.Config().Kubernetes.Calico
+	if calico.Backend != clusterv1alpha1.CalicoBackendEtcd &&
+		calico.Backend != clusterv1alpha1.CalicoBackendKubernetes {
+		result = multierror.Append(result, fmt.Errorf(
+			"calico's backend may only be set to [%s %s], got=%s",
+			clusterv1alpha1.CalicoBackendEtcd, clusterv1alpha1.CalicoBackendKubernetes, calico.Backend))
+	}
+
+	if calico.Backend != clusterv1alpha1.CalicoBackendKubernetes && calico.EnableTypha {
+		result = multierror.Append(result, fmt.Errorf(
+			"typha enabled but backend is not 'kubernetes', got=%s", calico.Backend))
+	}
+
+	if calico.EnableTypha &&
+		(calico.TyphaReplicas == nil || *calico.TyphaReplicas <= 0) {
+		got := "nil"
+		if calico.TyphaReplicas != nil {
+			got = strconv.Itoa(*calico.TyphaReplicas)
+		}
+
+		result = multierror.Append(result, fmt.Errorf(
+			"typha enabled so expecting a non-zero positive replica count, got=%s", got))
+	}
+
+	return result.ErrorOrNil()
 }
 
 // Determine if this Cluster is a cluster or hub, single or multi environment

@@ -71,6 +71,22 @@ func SetDefaults_Cluster(obj *Cluster) {
 		obj.Kubernetes.Dashboard = &ClusterKubernetesDashboard{}
 	}
 
+	if obj.Kubernetes.Calico == nil {
+		obj.Kubernetes.Calico = &ClusterKubernetesCalico{
+			Backend:     "etcd",
+			EnableTypha: false,
+		}
+	}
+
+	if obj.Kubernetes.Calico.Backend == "" {
+		obj.Kubernetes.Calico.Backend = "etcd"
+	}
+
+	if obj.Kubernetes.Calico.EnableTypha &&
+		obj.Kubernetes.Calico.TyphaReplicas == nil {
+		obj.Kubernetes.Calico.TyphaReplicas = intPointer(1)
+	}
+
 	// EBS encryption off if Amazon interface used
 	// but EBSEncrypted not specified
 	if obj.Amazon == nil {
@@ -121,6 +137,7 @@ func SetDefaults_Cluster(obj *Cluster) {
 	if obj.VaultHelper == nil {
 		obj.VaultHelper = new(ClusterVaultHelper)
 	}
+
 }
 
 func boolPointer(x bool) *bool {
@@ -128,6 +145,10 @@ func boolPointer(x bool) *bool {
 }
 
 func floatPointer(x float64) *float64 {
+	return &x
+}
+
+func intPointer(x int) *int {
 	return &x
 }
 

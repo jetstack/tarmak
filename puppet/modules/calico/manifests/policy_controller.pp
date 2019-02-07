@@ -6,6 +6,8 @@ class calico::policy_controller (
   include ::kubernetes
   include ::calico
 
+  $backend = $::calico::backend
+
   $authorization_mode = $::kubernetes::_authorization_mode
   if member($authorization_mode, 'RBAC'){
     $rbac_enabled = true
@@ -19,7 +21,7 @@ class calico::policy_controller (
     $version_before_1_6 = true
   }
 
-  if $::calico::backend == 'etcd' {
+  if $backend == 'etcd' {
     $namespace = $::calico::namespace
 
     if $::calico::etcd_proto == 'https' {
@@ -28,7 +30,6 @@ class calico::policy_controller (
     } else {
       $tls = false
     }
-
 
     kubernetes::apply{'calico-policy-controller':
       manifests => [
