@@ -257,10 +257,6 @@ func (t *Tarmak) Cluster() interfaces.Cluster {
 	return t.cluster
 }
 
-func (t *Tarmak) Clusters() (clusters []interfaces.Cluster) {
-	return clusters
-}
-
 func (t *Tarmak) Terraform() interfaces.Terraform {
 	return t.terraform
 }
@@ -328,7 +324,6 @@ func (t *Tarmak) Version() string {
 func (t *Tarmak) Validate() error {
 	var err error
 	var result error
-
 	err = t.Cluster().Validate()
 	if err != nil {
 		result = multierror.Append(result, err)
@@ -409,4 +404,18 @@ func (t *Tarmak) verifyImageExists() error {
 
 func (t *Tarmak) ClusterFlags() tarmakv1alpha1.ClusterFlags {
 	return t.flags.Cluster
+}
+
+func (t *Tarmak) DestroyClusterMetadata() error {
+	t.log.Infof("removing tarmak remote state data for %v", t.Cluster().Name())
+	if err := t.environment.Provider().Remove(); err != nil {
+		return err
+	}
+
+	t.log.Infof("removing tarmak folder of %v", t.Cluster().Name())
+	if err := os.RemoveAll(t.Cluster().ConfigPath()); err != nil {
+		return err
+	}
+
+	return nil
 }

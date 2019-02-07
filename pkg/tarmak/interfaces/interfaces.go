@@ -134,6 +134,8 @@ type Provider interface {
 	UploadConfiguration(Cluster, io.ReadSeeker, string) error
 	EnsureRemoteResources() error
 	LegacyPuppetTFName() string
+	// Remove provider
+	Remove() error
 }
 
 type Tarmak interface {
@@ -144,7 +146,6 @@ type Tarmak interface {
 	// get the absolute config path to tarmak's config folder
 	ConfigPath() string
 
-	Clusters() []Cluster
 	Cluster() Cluster
 	ClusterFlags() tarmakv1alpha1.ClusterFlags
 	Environments() []Environment
@@ -191,6 +192,8 @@ type Config interface {
 	CurrentClusterName() (string, error)
 	// currently selected env name
 	CurrentEnvironmentName() (string, error)
+	// remove environment
+	RemoveEnvironment(environment string) error
 	Contact() string
 	Project() string
 	WingDevMode() bool

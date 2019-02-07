@@ -112,6 +112,11 @@ Command line documentation for tarmak, wing and tagging_control commands
 .. toctree::
    :maxdepth: 1
 
+   generated/cmd/tarmak/tarmak_environments_destroy
+
+.. toctree::
+   :maxdepth: 1
+
    generated/cmd/tarmak/tarmak_environments_init
 
 .. toctree::

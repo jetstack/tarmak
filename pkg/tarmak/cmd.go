@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/blang/semver"
 	terraformVersion "github.com/hashicorp/terraform/version"
@@ -113,6 +114,115 @@ func (c *CmdTarmak) Destroy() error {
 
 	if err := os.RemoveAll(c.cluster.SSHHostKeysPath()); err != nil {
 		return fmt.Errorf("failed to delete cluster known hosts file: %s", err)
+	}
+
+	return nil
+}
+
+func (c *CmdTarmak) DestroyEnvironment() error {
+	inputDestroy := input.New(os.Stdin, os.Stdout)
+	var err error
+	response := true
+
+	// set environment to the name we gave as argument
+	c.Tarmak.environment, err = c.Tarmak.EnvironmentByName(c.args[0])
+	if err != nil {
+		return err
+	}
+
+	if !c.flags.Environment.Destroy.AutoApprove {
+		response, err = inputDestroy.AskYesNo(&input.AskYesNo{
+			Default: false,
+			Query:   fmt.Sprintf("Destroy all clusters of %v?", c.Environment().Name()),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if response {
+		c.log.Info("destroying clusters")
+		for _, cluster := range c.Environment().Clusters() {
+			// We first want to destroy the k8s clusters before the hub
+			if cluster.Name() != c.Environment().Hub().Name() {
+				c.cluster = cluster
+				c.log.Infof("destroying cluster %v", c.Cluster().Name())
+				if err := c.Destroy(); err != nil {
+					return err
+				}
+				if err = c.DestroyClusterMetadata(); err != nil {
+					return err
+				}
+				c.terraform.ResetTerraformWrapper()
+			}
+		}
+
+		// After destroying all other clusters, we can destroy the hub
+		c.cluster = c.Environment().Hub()
+		c.log.Infof("destroying cluster %v", c.Cluster().Name())
+		if err := c.Destroy(); err != nil {
+			return err
+		}
+		if err = c.DestroyClusterMetadata(); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("not proceeding with destroy of environment %v", c.Environment().Name())
+	}
+
+	if !c.flags.Environment.Destroy.AutoApprove {
+		response, err = inputDestroy.AskYesNo(&input.AskYesNo{
+			Default: false,
+			Query:   "Move environment folder (SSH key and vault_root_token) to .archive?",
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if response {
+		c.log.Info("moving environment folder to .archive")
+
+		archivePath := filepath.Join(c.ConfigPath(), ".archive")
+		environmentArchivePath := filepath.Join(archivePath, fmt.Sprintf("%v-%v", c.Environment().Name(), time.Now().Format(time.RFC3339)))
+
+		if _, err = os.Stat(archivePath); err != nil {
+			if !os.IsNotExist(err) {
+				return fmt.Errorf("failed to get status of path %v", archivePath)
+			}
+
+			if err = os.MkdirAll(archivePath, os.ModePerm); err != nil {
+				return err
+			}
+		}
+
+		if _, err = os.Stat(environmentArchivePath); err == nil {
+			return fmt.Errorf("already archived %v", c.Environment().Name())
+		}
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to get status of path %v", environmentArchivePath)
+		}
+		if err = os.Rename(c.Environment().ConfigPath(), environmentArchivePath); err != nil {
+			return err
+		}
+	}
+
+	if !c.flags.Environment.Destroy.AutoApprove {
+		response, err = inputDestroy.AskYesNo(&input.AskYesNo{
+			Default: false,
+			Query:   "Remove environment from tarmak.yaml?",
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if response {
+		c.log.Infof("removing environment %v from tarmak.yaml", c.Environment().Name())
+
+		if err = c.config.RemoveEnvironment(c.Environment().Name()); err != nil {
+			return err
+		}
 	}
 
 	return nil

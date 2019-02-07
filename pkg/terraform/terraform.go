@@ -178,6 +178,13 @@ this error is often caused due to the remote state being destroyed and can be fi
 	return nil
 }
 
+// this method resets the socket path and the prepare step
+// you need to call this method when you do multiple Terraform runs of different clusters
+func (t *Terraform) ResetTerraformWrapper() {
+	t.socketPath = ""
+	t.prepared = false
+}
+
 func (t *Terraform) terraformWrapper(cluster interfaces.Cluster, command string, args []string) error {
 	if t.socketPath == "" {
 		f, err := ioutil.TempFile(os.TempDir(), "tarmak.sock")

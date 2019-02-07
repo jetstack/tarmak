@@ -1,22 +1,27 @@
-.. _tarmak_environments:
+.. _tarmak_environments_destroy:
 
-tarmak environments
--------------------
+tarmak environments destroy
+---------------------------
 
-Operations on environments
+Destroy an environment
 
 Synopsis
 ~~~~~~~~
 
 
-Operations on environments
+Destroy an environment
+
+::
+
+  tarmak environments destroy [name] [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for environments
+      --auto-approve   auto-approve destroy of a complete environment
+  -h, --help           help for destroy
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,8 +39,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `tarmak <tarmak.html>`_ 	 - Tarmak is a toolkit for provisioning and managing Kubernetes clusters.
-* `tarmak environments destroy <tarmak_environments_destroy.html>`_ 	 - Destroy an environment
-* `tarmak environments init <tarmak_environments_init.html>`_ 	 - Initialize a environment
-* `tarmak environments list <tarmak_environments_list.html>`_ 	 - Print a list of environments
+* `tarmak environments <tarmak_environments.html>`_ 	 - Operations on environments
 
