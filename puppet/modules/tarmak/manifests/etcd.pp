@@ -58,17 +58,32 @@ class tarmak::etcd(
     ],
   }
 
+  if $::tarmak::calico_backend == 'kubernetes' {
+    $overlay_service_ensure = 'stopped'
+    $overlay_service_enable = false
+    $overlay_file_ensure = 'absent'
+    $overlay_backup_enabled = false
+  } else {
+    $overlay_service_ensure = 'running'
+    $overlay_service_enable = true
+    $overlay_file_ensure = 'file'
+    $overlay_backup_enabled = undef
+  }
+
   vault_client::cert_service { 'etcd-k8s-overlay':
-    base_path   => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_overlay_ca_name}",
-    common_name => 'etcd-server',
-    alt_names   => $alt_names,
-    ip_sans     => $ip_sans,
-    role        => "${tarmak::cluster_name}/pki/${::tarmak::etcd_overlay_ca_name}/sign/server",
-    uid         => $::tarmak::etcd_uid,
-    require     => [ User[$::tarmak::etcd_user], File[$::tarmak::etcd_ssl_dir] ],
-    exec_post   => [
+    base_path      => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_overlay_ca_name}",
+    common_name    => 'etcd-server',
+    alt_names      => $alt_names,
+    ip_sans        => $ip_sans,
+    role           => "${tarmak::cluster_name}/pki/${::tarmak::etcd_overlay_ca_name}/sign/server",
+    uid            => $::tarmak::etcd_uid,
+    require        => [ User[$::tarmak::etcd_user], File[$::tarmak::etcd_ssl_dir] ],
+    exec_post      => [
       "-${::tarmak::systemctl_path} --no-block try-restart etcd-overlay.service"
     ],
+    file_ensure    => $overlay_file_ensure,
+    service_ensure => $overlay_service_ensure,
+    service_enable => $overlay_service_enable,
   }
 
   Class['vault_client'] -> Class['tarmak::etcd']
@@ -123,5 +138,9 @@ class tarmak::etcd(
     tls_ca_path              => "${::tarmak::etcd_ssl_dir}/${::tarmak::etcd_overlay_ca_name}-ca.pem",
     systemd_after            => delete_undef_values([$::tarmak::etcd_mount_unit]),
     systemd_requires         => delete_undef_values([$::tarmak::etcd_mount_unit]),
+    backup_enabled           => $overlay_backup_enabled,
+    file_ensure              => $overlay_file_ensure,
+    service_ensure           => $overlay_service_ensure,
+    service_enable           => $overlay_service_enable,
   }
 }
