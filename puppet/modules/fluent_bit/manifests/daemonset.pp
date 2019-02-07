@@ -6,6 +6,8 @@ class fluent_bit::daemonset(
   require ::kubernetes
 
   $fluent_bit_version = $::fluent_bit::params::version
+  $fluent_bit_image_tag = $::fluent_bit::params::version
+  $busybox_image_tag = '1.30.0'
 
   $namespace = 'kube-system'
 

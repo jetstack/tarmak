@@ -24,19 +24,35 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+      - name: busybox-copy
+        image: "busybox:<%= @busybox_image_tag %>"
+        command:
+        - cp
+        - /bin/busybox
+        - /busybox/busybox
+        volumeMounts:
+        - name: busybox
+          mountPath: /busybox/
       containers:
       - name: fluent-bit
-        image: "<%= @fluent_bit_image %>:<%= @fluent_bit_version %>"
+        image: "<%= @fluent_bit_image %>:<%= @fluent_bit_image_tag %>"
         imagePullPolicy: Always
+        env:
+        - name: PATH
+          value: /busybox:/fluent-bit/bin
+        workingDir: /busybox
         command:
-        - /bin/sh
+        - /busybox/busybox
+        - sh
         - -c
         - |-
+            echo cp ls ln mkdir | busybox xargs -n 1 busybox ln -s busybox &&
             echo "<%= @kubernetes_service_ip %> kubernetes.default.svc.cluster.local" >> /etc/hosts &&
             mkdir -p /tmp/config &&
             cp /fluent-bit/etc/..data/* /tmp/config &&
             cp /fluent-bit/outputs/* /tmp/config &&
-            exec /fluent-bit/bin/fluent-bit -c /tmp/config/fluent-bit.conf
+            exec fluent-bit -c /tmp/config/fluent-bit.conf
         ports:
           - containerPort: 2021
         securityContext:
@@ -52,8 +68,12 @@ spec:
         - name: fluent-bit-outputs
           mountPath: /fluent-bit/outputs
           readOnly: true
+        - name: busybox
+          mountPath: /busybox/
       terminationGracePeriodSeconds: 10
       volumes:
+      - name: busybox
+        emptyDir: {}
       - name: varlog
         hostPath:
           path: /var/log
