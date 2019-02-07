@@ -3,8 +3,8 @@ kind: ClusterRoleBinding
 metadata:
   annotations:
     rbac.authorization.kubernetes.io/autoupdate: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
   labels:
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/bootstrapping: rbac-defaults
   name: system:<%= @app_name %>
 roleRef:

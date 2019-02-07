@@ -238,6 +238,7 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 
 		if conf.Calico.Backend == "kubernetes" {
 			hieraData.variables = append(hieraData.variables, "kubernetes::controller_manager::allocate_node_cidrs: true")
+			hieraData.variables = append(hieraData.variables, "calico::node::ipv4_pool_ipip_mode: cross-subnet")
 		}
 	}
 
