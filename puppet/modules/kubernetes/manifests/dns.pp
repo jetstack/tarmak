@@ -28,14 +28,38 @@ class kubernetes::dns(
     $version_before_1_6 = true
   }
 
-  kubernetes::apply{'kube-dns':
-    manifests => [
+  $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
+
+  if $post_1_10 {
+    $app_name = 'core-dns'
+    $delete_app_name = 'kube-dns'
+    $label_name = 'CoreDNS'
+
+    $manifests = [
+      template('kubernetes/core-dns-config-map.yaml.erb'),
+      template('kubernetes/core-dns-deployment.yaml.erb'),
+    ]
+
+  } else {
+    $app_name = 'kube-dns'
+    $delete_app_name = 'core-dns'
+    $label_name = 'KubeDNS'
+
+    $manifests = [
       template('kubernetes/kube-dns-config-map.yaml.erb'),
-      template('kubernetes/kube-dns-service-account.yaml.erb'),
       template('kubernetes/kube-dns-deployment.yaml.erb'),
-      template('kubernetes/kube-dns-svc.yaml.erb'),
-      template('kubernetes/kube-dns-horizontal-autoscaler-deployment.yaml.erb'),
-      template('kubernetes/kube-dns-horizontal-autoscaler-rbac.yaml.erb'),
-    ],
+    ]
   }
+
+    kubernetes::apply{$app_name:
+      manifests => concat(
+        $manifests,
+        template('kubernetes/dns-service-account.yaml.erb'),
+        template('kubernetes/dns-svc.yaml.erb'),
+        template('kubernetes/dns-horizontal-autoscaler-deployment.yaml.erb'),
+        template('kubernetes/dns-horizontal-autoscaler-rbac.yaml.erb'),
+        template('kubernetes/dns-cluster-role.yaml.erb'),
+        template('kubernetes/dns-cluster-role-binding.yaml.erb'),
+      ),
+    } -> kubernetes::delete{$delete_app_name:}
 }

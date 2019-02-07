@@ -15,17 +15,17 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: kube-dns-autoscaler
+  name: <%= @app_name %>-autoscaler
   namespace: kube-system
   labels:
-    k8s-app: kube-dns-autoscaler
+    k8s-app: <%= @app_name %>-autoscaler
     addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
 spec:
   template:
     metadata:
       labels:
-        k8s-app: kube-dns-autoscaler
+        k8s-app: <%= @app_name %>-autoscaler
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
 <%- if @version_before_1_6 -%>
@@ -42,9 +42,9 @@ spec:
         command:
           - /cluster-proportional-autoscaler
           - --namespace=kube-system
-          - --configmap=kube-dns-autoscaler
+          - --configmap=<%= @app_name %>-autoscaler
           # Should keep target in sync with cluster/addons/dns/kubedns-controller.yaml.base
-          - --target=Deployment/kube-dns
+          - --target=Deployment/<%= @app_name %>
           # When cluster is using large nodes(with more cores), "coresPerReplica" should dominate.
           # If using small nodes, "nodesPerReplica" should dominate.
           - --default-params={"linear":{"coresPerReplica":256,"nodesPerReplica":16,"min":<%= @min_replicas %>,"preventSinglePointFailure":true}}
@@ -56,5 +56,5 @@ spec:
         operator: "Exists"
 <%- end -%>
 <%- if @rbac_enabled -%>
-      serviceAccountName: kube-dns-autoscaler
+      serviceAccountName: <%= @app_name %>-autoscaler
 <%- end -%>

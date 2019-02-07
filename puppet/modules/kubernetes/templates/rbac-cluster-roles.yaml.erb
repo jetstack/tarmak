@@ -573,25 +573,6 @@ items:
     labels:
       kubernetes.io/bootstrapping: rbac-defaults
       addonmanager.kubernetes.io/mode: EnsureExists
-    name: system:kube-dns
-  rules:
-  - apiGroups:
-    - ""
-    resources:
-    - endpoints
-    - services
-    verbs:
-    - list
-    - watch
-- apiVersion: rbac.authorization.k8s.io/v1alpha1
-  kind: ClusterRole
-  metadata:
-    annotations:
-      rbac.authorization.kubernetes.io/autoupdate: "true"
-    creationTimestamp: null
-    labels:
-      kubernetes.io/bootstrapping: rbac-defaults
-      addonmanager.kubernetes.io/mode: EnsureExists
     name: system:kube-scheduler
   rules:
   - apiGroups:
