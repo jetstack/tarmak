@@ -80,6 +80,10 @@ func (v *vaultTunnel) VaultClient() *vault.Client {
 	return v.client
 }
 
+func (v *vaultTunnel) Done() <-chan struct{} {
+	return v.tunnel.Done()
+}
+
 func (v *vaultTunnel) Status() int {
 	if v.tunnelError != nil {
 		return VaultStateErr

@@ -271,8 +271,6 @@ func (k *Kubectl) Kubectl(args []string, publicEndpoint bool) error {
 
 	cmd.Wait()
 
-	k.stopTunnel()
-
 	return nil
 }
 
@@ -364,7 +362,8 @@ func (k *Kubectl) setupConfig(c *api.Config, publicAPIEndpoint bool) (*api.Confi
 				k.tunnel.BindAddress(), k.tunnel.Port())
 		}
 
-		k.log.Warnf("ssh tunnel connecting to Kubernetes API server will close after 10 minutes: %s",
+		k.log.Warnf(
+			"ssh tunnel connecting to Kubernetes API server will close after 10 minutes of inactivity: %s",
 			cluster.Server)
 	}
 
