@@ -1,0 +1,14 @@
+{
+  "index_patterns": [
+    "logstash-*"
+  ],
+  "settings": {
+    "number_of_shards": 10,
+    "number_of_replicas": 0,
+    "mapping": {
+      "total_fields": {
+        "limit": "10000"
+      }
+    }
+  }
+}
