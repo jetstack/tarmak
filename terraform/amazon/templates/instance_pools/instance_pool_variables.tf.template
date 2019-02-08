@@ -25,7 +25,7 @@ variable "{{.TFName}}_spot_price" {
 }
 
 variable "{{.TFName}}_iam_additional_policy_arns" {
-  default = {{.AmazonAdditionalIAMPolicies}}
+  default = {{.AmazonAdditionalIAMPoliciesString}}
 }
 
 {{ $instancePool := . -}}

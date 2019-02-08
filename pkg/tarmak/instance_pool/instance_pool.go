@@ -169,7 +169,7 @@ func (n *InstancePool) SpotPrice() string {
 	return n.conf.SpotPrice
 }
 
-func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
+func (n *InstancePool) AmazonAdditionalIAMPolicies() []string {
 	policies := []string{}
 
 	// add cluster wide policies
@@ -184,10 +184,14 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() string {
 
 	// TODO: check for duplicates here
 
+	return policies
+}
+
+func (n *InstancePool) AmazonAdditionalIAMPoliciesString() string {
+	policies := n.AmazonAdditionalIAMPolicies()
 	for pos, _ := range policies {
 		policies[pos] = fmt.Sprintf(`"%s"`, policies[pos])
 	}
-
 	return fmt.Sprintf("[%s]", strings.Join(policies, ","))
 }
 
