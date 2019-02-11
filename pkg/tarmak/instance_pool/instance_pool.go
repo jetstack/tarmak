@@ -182,7 +182,7 @@ func (n *InstancePool) AmazonAdditionalIAMPolicies() []string {
 		policies = append(policies, a.AdditionalIAMPolicies...)
 	}
 
-	// TODO: check for duplicates here
+	policies = utils.RemoveDuplicateStrings(policies)
 
 	return policies
 }
