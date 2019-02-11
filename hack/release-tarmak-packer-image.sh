@@ -29,7 +29,7 @@ TARMAK_VERSION=${TARMAK_VERSION:-${KUBE_GIT_VERSION}}
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE}")/..
 PACKER_ROOT=$(dirname "${BASH_SOURCE}")/../packer/amazon
 
-TMP_PACKER_CONFIG="${PACKER_ROOT}/.tmp_${TARMAK_BASE_IMAGE}.json"
+TMP_PACKER_CONFIG="${PACKER_ROOT}/.tmp_${TARMAK_BASE_IMAGE_NAME}.json"
 
 # build packer release config
 jq -s '
@@ -46,5 +46,5 @@ jq -s '
   | .[2]' "${PACKER_ROOT}/${TARMAK_BASE_IMAGE_NAME}.json" "${PACKER_ROOT}/releases.json" > "${TMP_PACKER_CONFIG}"
 
 # run packer
-export TARMAK_BASE_IMAGE TARMAK_VERSION
+export TARMAK_BASE_IMAGE_NAME TARMAK_VERSION
 exec packer build "${TMP_PACKER_CONFIG}"
