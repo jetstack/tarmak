@@ -31,6 +31,7 @@ ecdsa
 Elasticsearch
 env
 etcd
+fluentbit
 Gi
 gid
 github

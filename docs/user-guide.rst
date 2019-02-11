@@ -425,6 +425,22 @@ Both of those outputs can then be used in the tarmak configuration:
       additionalIAMPolicies:
       - ${elasticsearch_shipping_policy_arn}
 
+Configuring Index Templates
++++++++++++++++++++++++++++
+
+Fluentbit will publish into a new index everyday.  To optimise all of those
+indices for our logging purpose, it is beneficial to adapt some settings
+through index templates. We suggest at least considering raising the field
+limit from the default of 1000.  Also depending on the size of the
+Elasticsearch installation the number of shards and replicas should be adapted.
+This example here contains suggested settings for a single node setup:
+
+.. literalinclude:: user-guide/aws-elasticsearch/settings.json
+
+.. code-block:: yaml
+
+  curl -v -XPOST 'localhost:9200/_template/logstash' -H 'Content-Type: application/json' -d @settings.json
+
 EBS Encryption
 ~~~~~~~~~~~~~~
 
