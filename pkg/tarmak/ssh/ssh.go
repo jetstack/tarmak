@@ -247,11 +247,10 @@ func (s *SSH) Execute(host string, cmd []string, stdin io.Reader, stdout, stderr
 		sess.Stdout = stdout
 	}
 
-	if stdin == nil {
-		sess.Stdin = os.Stdin
-	} else {
-		sess.Stdin = stdin
-	}
+	// We don't want to default to os.Stdin here since it breaks Stdin in
+	// non-obvious ways elsewhere. If os.Stdin is required here, it should be
+	// passed in
+	sess.Stdin = stdin
 
 	err = sess.Start(strings.Join(cmd, " "))
 	if err != nil {
