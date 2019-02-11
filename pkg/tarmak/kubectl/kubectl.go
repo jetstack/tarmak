@@ -162,17 +162,6 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 		c = conf
 	}
 
-	// If we are using a public endpoint then we don't need to set up a tunnel
-	// but we need to keep a tunnel var around (in struct) so we can close it
-	// later on if it is being used. Use k.stopTunnel() to ensure no panics.
-	if !publicAPIEndpoint {
-		k.tunnel = k.tarmak.Cluster().APITunnel()
-		if err := k.tunnel.Start(); err != nil {
-			k.stopTunnel()
-			return err
-		}
-	}
-
 	c, cluster, err := k.setupConfig(c, publicAPIEndpoint)
 	if err != nil {
 		return err
@@ -205,15 +194,6 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 		if retries == 0 {
 			err = errors.New("unable to connect to kubernetes after 5 tries")
 			break
-		}
-
-		if !publicAPIEndpoint {
-			k.stopTunnel()
-			k.tunnel = k.tarmak.Cluster().APITunnel()
-			err = k.tunnel.Start()
-			if err != nil {
-				break
-			}
 		}
 
 		// force a new config
@@ -365,12 +345,25 @@ func (k *Kubectl) setupConfig(c *api.Config, publicAPIEndpoint bool) (*api.Confi
 			k.tarmak.Provider().PublicZone())
 
 	} else {
-		if k.tunnel == nil {
-			return nil, nil, fmt.Errorf("failed to get tunnel information at it is nil: %v", k.tunnel)
+
+		// the following code will attempt to use the current kubeconfig address if
+		// it exists. If it fails it will create a new tunnel and use this instead
+
+		// no server address so we need to create a new tunnel
+		if cluster.Server == "" {
+			k.stopTunnel()
+			k.tunnel = k.tarmak.Cluster().APITunnel()
+			if err := k.tunnel.Start(); err != nil {
+				return nil, nil, err
+			}
 		}
 
-		cluster.Server = fmt.Sprintf("https://%s:%s",
-			k.tunnel.BindAddress(), k.tunnel.Port())
+		// tunnel isn't nil so we can try it's address
+		if k.tunnel != nil {
+			cluster.Server = fmt.Sprintf("https://%s:%s",
+				k.tunnel.BindAddress(), k.tunnel.Port())
+		}
+
 		k.log.Warnf("ssh tunnel connecting to Kubernetes API server will close after 10 minutes: %s",
 			cluster.Server)
 	}
