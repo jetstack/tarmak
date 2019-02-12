@@ -96,6 +96,9 @@ type ClusterKubernetes struct {
 	Dashboard         *ClusterKubernetesDashboard         `json:"dashboard,omitempty"`
 	PodSecurityPolicy *ClusterPodSecurityPolicy           `json:"podSecurityPolicy,omitempty"`
 	Prometheus        *ClusterKubernetesPrometheus        `json:"prometheus,omitempty"`
+	Grafana           *ClusterKubernetesGrafana           `json:"grafana,omiempty"`
+	Heapster          *ClusterKubernetesHeapster          `json:"heapster,omiempty"`
+	InfluxDB          *ClusterKubernetesInfluxDB          `json:"influxDB,omiempty"`
 
 	APIServer         *ClusterKubernetesAPIServer         `json:"apiServer,omitempty"`
 	Kubelet           *ClusterKubernetesKubelet           `json:"kubelet,omitempty"`
@@ -212,6 +215,18 @@ type ClusterKubernetesPrometheus struct {
 	Enabled bool `json:"enabled,omitempty"`
 	// Mode defines which components are installed
 	Mode string `json:"mode,omitempty"`
+}
+
+type ClusterKubernetesGrafana struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type ClusterKubernetesHeapster struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type ClusterKubernetesInfluxDB struct {
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 type ClusterVaultHelper struct {

@@ -11,6 +11,7 @@ class kubernetes_addons::heapster(
   $nanny_request_mem=$::kubernetes_addons::params::heapster_nanny_request_mem,
   $nanny_limit_cpu=$::kubernetes_addons::params::heapster_nanny_limit_cpu,
   $nanny_limit_mem=$::kubernetes_addons::params::heapster_nanny_limit_mem,
+  $enabled = true,
   $sink=undef,
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
@@ -40,11 +41,15 @@ class kubernetes_addons::heapster(
     $version_before_1_9 = true
   }
 
-  kubernetes::apply{'heapster':
-    manifests => [
-      template('kubernetes_addons/heapster-svc.yaml.erb'),
-      template('kubernetes_addons/heapster-deployment.yaml.erb'),
-      template('kubernetes_addons/heapster-rbac.yaml.erb'),
-    ],
+  if $enabled {
+    kubernetes::apply{'heapster':
+      manifests => [
+        template('kubernetes_addons/heapster-svc.yaml.erb'),
+        template('kubernetes_addons/heapster-deployment.yaml.erb'),
+        template('kubernetes_addons/heapster-rbac.yaml.erb'),
+      ],
+    }
+  } else {
+    kubernetes::delete{'heapster':}
   }
 }
