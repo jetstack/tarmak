@@ -25,7 +25,7 @@ write_files:
 {{- else }}
     Environment=AIRWORTHY_VERSION=0.2.0
     Environment=AIRWORTHY_HASH=2d69cfe0b92f86481805c28d0b8ae47a8ffa6bb2373217e7c5215d61fc9efa1d
-    Environment=WING_VERSION=0.6.0-alpha2
+    Environment=WING_VERSION=0.6.0-rc1
     ExecStartPre=/bin/sh -c '\
       set -e ;\
       test -x /opt/wing-$${WING_VERSION}/wing && exit 0 ;\
