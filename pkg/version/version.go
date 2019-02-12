@@ -20,6 +20,7 @@ package version
 import (
 	"fmt"
 	"runtime"
+	"strings"
 
 	apimachineryversion "k8s.io/apimachinery/pkg/version"
 )
@@ -40,4 +41,32 @@ func Get() apimachineryversion.Info {
 		Compiler:     runtime.Compiler,
 		Platform:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 	}
+}
+
+func CleanVersion() string {
+	if !strings.HasSuffix(gitMinor, "+") {
+		return gitVersion
+	}
+
+	var out []string
+	split := strings.Split(gitVersion, "-")
+
+LOOP:
+	for _, s := range split {
+		for _, preRelease := range []string{"alpha", "beta"} {
+
+			if strings.Contains(s, preRelease) {
+				out = append(out, strings.Split(s, ".")[0])
+				break LOOP
+			}
+		}
+
+		if strings.HasPrefix(s, "dirty") {
+			break
+		}
+
+		out = append(out, s)
+	}
+
+	return strings.Join(out, "-")
 }

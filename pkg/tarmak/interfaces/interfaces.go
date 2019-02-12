@@ -122,7 +122,8 @@ type Provider interface {
 	PublicZone() string
 	Environment() ([]string, error)
 	Variables() map[string]interface{}
-	QueryImages(tags map[string]string) ([]tarmakv1alpha1.Image, error)
+	QueryImages(tags map[string]string) ([]*tarmakv1alpha1.Image, error)
+	DefaultImage(version string) (*tarmakv1alpha1.Image, error)
 	VaultKV() (kv.Service, error)
 	VaultKVWithParams(kmsKeyID, unsealKeyName string) (kv.Service, error)
 	ListHosts(Cluster) ([]Host, error)
@@ -203,7 +204,7 @@ type Config interface {
 
 type Packer interface {
 	IDs(encrypted bool) (map[string]string, error)
-	List() ([]tarmakv1alpha1.Image, error)
+	List() ([]*tarmakv1alpha1.Image, error)
 	Build(imageNames []string) error
 }
 
