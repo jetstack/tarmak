@@ -10,6 +10,7 @@ import (
 
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/version"
 )
 
 type Packer struct {
@@ -33,7 +34,7 @@ func New(tarmak interfaces.Tarmak) *Packer {
 }
 
 // List existing images
-func (p *Packer) List() ([]tarmakv1alpha1.Image, error) {
+func (p *Packer) List() ([]*tarmakv1alpha1.Image, error) {
 	return p.tarmak.Cluster().Environment().Provider().QueryImages(
 		map[string]string{tarmakv1alpha1.ImageTagEnvironment: p.tarmak.Environment().Name()},
 	)
@@ -114,6 +115,22 @@ func (p *Packer) IDs(encrypted bool) (map[string]string, error) {
 			imagesChangeTime[image.BaseImage] = image.CreationTimestamp.Time
 			imageIDByName[image.BaseImage] = image.Name
 		}
+	}
+
+	if len(imageIDByName) == 0 && !encrypted {
+		version := version.CleanVersion()
+		p.log.Warn("no built images found")
+
+		image, err := p.tarmak.Cluster().Environment().Provider().DefaultImage(version)
+		if err != nil {
+			return nil, err
+		}
+
+		imagesChangeTime[image.BaseImage] = image.CreationTimestamp.Time
+		imageIDByName[image.BaseImage] = image.Name
+
+		p.log.Warnf("EBS is unencrypted so using Jetstack's pre-built default image from version %s",
+			version)
 	}
 
 	return imageIDByName, nil

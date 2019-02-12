@@ -49,7 +49,7 @@ func (tt *testTarmak) finish() {
 }
 
 func (tt *testTarmak) fakeAWSProvider(name string) {
-	baseImage := tarmakv1alpha1.Image{}
+	baseImage := &tarmakv1alpha1.Image{}
 	baseImage.Name = "ami-6e28b517"
 
 	tt.fakeProvider.EXPECT().Name().AnyTimes().Return(name)
@@ -59,7 +59,7 @@ func (tt *testTarmak) fakeAWSProvider(name string) {
 	tt.fakeProvider.EXPECT().Validate().AnyTimes().Return(nil)
 	tt.fakeProvider.EXPECT().RemoteState(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return("\n")
 	tt.fakeProvider.EXPECT().RemoteStateBucketName().AnyTimes().Return("my-remote-bucket")
-	tt.fakeProvider.EXPECT().QueryImages(gomock.Any()).AnyTimes().Return([]tarmakv1alpha1.Image{baseImage}, nil)
+	tt.fakeProvider.EXPECT().QueryImages(gomock.Any()).AnyTimes().Return([]*tarmakv1alpha1.Image{baseImage}, nil)
 	tt.fakeProvider.EXPECT().Variables().AnyTimes().Return(map[string]interface{}{
 		"test": "ffs",
 	})
