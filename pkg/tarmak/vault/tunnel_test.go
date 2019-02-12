@@ -34,6 +34,10 @@ func (ft *FakeTunnel) Stop() {
 	return
 }
 
+func (ft *FakeTunnel) Done() <-chan struct{} {
+	return nil
+}
+
 var _ interfaces.Tunnel = &FakeTunnel{}
 
 func TestVaultTunnel(t *testing.T) {

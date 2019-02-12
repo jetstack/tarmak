@@ -230,6 +230,7 @@ type Tunnel interface {
 	Stop()
 	Port() string
 	BindAddress() string
+	Done() <-chan struct{}
 }
 
 type VaultTunnel interface {

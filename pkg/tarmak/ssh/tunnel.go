@@ -19,10 +19,13 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
+const (
+	timeout = time.Minute * 10
+)
+
 type Tunnel struct {
-	log    *logrus.Entry
-	ssh    *SSH
-	stopCh chan struct{}
+	ssh *SSH
+	log *logrus.Entry
 
 	dest      string
 	destPort  string
@@ -33,8 +36,14 @@ type Tunnel struct {
 	listener    net.Listener
 	daemon      *os.Process
 
-	closeConnsLock sync.Mutex // prevent closing the same connection multiple times at once
-	openedConns    []net.Conn
+	// have both a stopCh and doneCh so we have a chance to clean up connections
+	// properly before we exit the program during daemon mode
+	stopCh    chan struct{}
+	doneCh    chan struct{}
+	openConns []<-chan struct{}
+
+	connsLock   sync.Mutex // prevent closing the same connection multiple times at once
+	remoteConns []net.Conn
 }
 
 var _ interfaces.Tunnel = &Tunnel{}
@@ -48,7 +57,6 @@ func (s *SSH) Tunnel(dest, destPort, localPort string, daemonize bool) interface
 		destPort:  destPort,
 		daemonize: daemonize,
 		localPort: localPort,
-		stopCh:    make(chan struct{}),
 	}
 
 	s.tunnels = append(s.tunnels, tunnel)
@@ -58,6 +66,7 @@ func (s *SSH) Tunnel(dest, destPort, localPort string, daemonize bool) interface
 // Start tunnel and wait till a tcp socket is reachable
 func (t *Tunnel) Start() error {
 	t.stopCh = make(chan struct{})
+	t.doneCh = make(chan struct{})
 
 	// ensure there is connectivity to the bastion
 	bastionClient, err := t.ssh.bastionClient()
@@ -89,27 +98,29 @@ func (t *Tunnel) Start() error {
 }
 
 func (t *Tunnel) handle() {
-	tries := 10
+	go t.handleTimeout()
+	var errCount int
+
 	for {
 		remoteConn, err := t.bastionConn.Dial("tcp",
 			net.JoinHostPort(t.dest, t.destPort))
 		if err != nil {
-			tries--
-			if tries == 0 {
-				return
-			}
-
 			select {
 			case <-t.stopCh:
 				return
 			default:
 			}
 
+			errCount++
+			if errCount == 10 {
+				return
+			}
+
 			time.Sleep(time.Second * 3)
 			continue
 		}
 
-		t.openedConns = append(t.openedConns, remoteConn)
+		t.remoteConns = append(t.remoteConns, remoteConn)
 
 		conn, err := t.listener.Accept()
 		if err != nil {
@@ -122,14 +133,25 @@ func (t *Tunnel) handle() {
 			t.log.Warnf("error accepting ssh tunnel connection: %s", err)
 			continue
 		}
-		t.openedConns = append(t.openedConns, conn)
+		t.remoteConns = append(t.remoteConns, conn)
+
+		t.connsLock.Lock()
+		ch := make(chan struct{})
+		t.openConns = append(t.openConns, ch)
+		t.connsLock.Unlock()
 
 		go func() {
 			io.Copy(remoteConn, conn)
+			conn.Close()
+
+			// reset timer to another 10 mins since this connection is now closed
+			time.Sleep(timeout)
+			close(ch)
 		}()
 
 		go func() {
 			io.Copy(conn, remoteConn)
+			remoteConn.Close()
 		}()
 	}
 }
@@ -144,9 +166,10 @@ func (t *Tunnel) Stop() {
 }
 
 func (t *Tunnel) cleanup() {
-	// prevent closing the same connection multiple times at once
-	t.closeConnsLock.Lock()
-	defer t.closeConnsLock.Unlock()
+	// prevent closing the same connection multiple times at once as well as
+	// accepting any new ones
+	t.connsLock.Lock()
+	defer t.connsLock.Unlock()
 
 	select {
 	case <-t.stopCh:
@@ -154,9 +177,9 @@ func (t *Tunnel) cleanup() {
 		close(t.stopCh)
 	}
 
-	for _, o := range t.openedConns {
-		if o != nil {
-			o.Close()
+	for _, conn := range t.remoteConns {
+		if conn != nil {
+			conn.Close()
 		}
 	}
 
@@ -171,6 +194,30 @@ func (t *Tunnel) Port() string {
 
 func (t *Tunnel) BindAddress() string {
 	return "127.0.0.1"
+}
+
+func (t *Tunnel) handleTimeout() {
+	// initial timeout whilst waiting for first connection
+	time.Sleep(timeout)
+
+	// need to use C style for-loop so we catch new openConns channels in the
+	// slice to wait on
+	t.connsLock.Lock()
+	for i := 0; i < len(t.openConns); i++ {
+		t.connsLock.Unlock()
+
+		<-t.openConns[i]
+
+		t.connsLock.Lock()
+	}
+	t.connsLock.Unlock()
+
+	t.cleanup()
+	close(t.doneCh)
+}
+
+func (t *Tunnel) Done() <-chan struct{} {
+	return t.doneCh
 }
 
 func (t *Tunnel) startDaemon() error {

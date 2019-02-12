@@ -16,7 +16,7 @@ var tunnelCmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 3 {
 			return fmt.Errorf(
-				"expecting only a destination, destination and local port argument, got=%s", args)
+				"expecting only a destination, destination port and local port argument, got=%s", args)
 		}
 		return nil
 	},
@@ -43,8 +43,7 @@ var tunnelCmd = &cobra.Command{
 			time.Sleep(time.Second * 2)
 		}
 
-		time.Sleep(time.Minute * 10)
-		t.Cleanup()
+		<-tunnel.Done()
 		os.Exit(0)
 	},
 	Hidden:             true,
