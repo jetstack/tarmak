@@ -142,6 +142,7 @@ func (t *Tunnel) handle() {
 
 		go func() {
 			io.Copy(remoteConn, conn)
+			conn.Close()
 
 			// reset timer to another 10 mins since this connection is now closed
 			time.Sleep(timeout)
@@ -150,6 +151,7 @@ func (t *Tunnel) handle() {
 
 		go func() {
 			io.Copy(conn, remoteConn)
+			remoteConn.Close()
 		}()
 	}
 }
