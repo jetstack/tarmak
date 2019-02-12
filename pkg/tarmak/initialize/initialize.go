@@ -286,6 +286,22 @@ creationLoop:
 			return nil, err
 		}
 
+		if clusterConf.Kubernetes == nil {
+			clusterConf.Kubernetes = new(clusterv1alpha1.ClusterKubernetes)
+		}
+
+		clusterConf.Kubernetes.Heapster = &clusterv1alpha1.ClusterKubernetesHeapster{
+			Enabled: false,
+		}
+
+		clusterConf.Kubernetes.Grafana = &clusterv1alpha1.ClusterKubernetesGrafana{
+			Enabled: false,
+		}
+
+		clusterConf.Kubernetes.InfluxDB = &clusterv1alpha1.ClusterKubernetesInfluxDB{
+			Enabled: false,
+		}
+
 		clusterObj, err = i.newCluster(clusterConf)
 		if err != nil {
 			return nil, err

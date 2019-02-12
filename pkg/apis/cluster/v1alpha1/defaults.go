@@ -87,6 +87,24 @@ func SetDefaults_Cluster(obj *Cluster) {
 		obj.Kubernetes.Calico.TyphaReplicas = intPointer(1)
 	}
 
+	if obj.Kubernetes.Heapster == nil {
+		obj.Kubernetes.Heapster = &ClusterKubernetesHeapster{
+			Enabled: true,
+		}
+	}
+
+	if obj.Kubernetes.Grafana == nil {
+		obj.Kubernetes.Grafana = &ClusterKubernetesGrafana{
+			Enabled: true,
+		}
+	}
+
+	if obj.Kubernetes.InfluxDB == nil {
+		obj.Kubernetes.InfluxDB = &ClusterKubernetesInfluxDB{
+			Enabled: true,
+		}
+	}
+
 	// EBS encryption off if Amazon interface used
 	// but EBSEncrypted not specified
 	if obj.Amazon == nil {

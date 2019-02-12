@@ -976,6 +976,19 @@ Enabling Typha, along with setting the number of replicas is shown above.
 Cluster Services
 ----------------
 
+Deploying Grafana, InfluxDB and Heapster can be toggled in the Tarmak
+configuration like follows:
+
+.. code-block:: yaml
+
+   kubernetes:
+     grafana:
+       enabled: true
+     heapster:
+       enabled: false
+     influxDB:
+       enabled: true
+
 Grafana
 ~~~~~~~
 

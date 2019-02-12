@@ -333,6 +333,18 @@ func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, rol
 		}
 	}
 
+	if g := conf.Grafana; g != nil {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::grafana::enabled: %t`, conf.Grafana.Enabled))
+	}
+
+	if h := conf.Heapster; h != nil {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::heapster::enabled: %t`, conf.Heapster.Enabled))
+	}
+
+	if i := conf.Heapster; i != nil {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::influxdb::enabled: %t`, conf.InfluxDB.Enabled))
+	}
+
 	return
 }
 
