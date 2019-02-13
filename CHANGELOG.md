@@ -4,9 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.6.0]: 0.6.0 - TBD.
+## [0.6.0]: 0.6.0 - 2019-02-22
 
-TODO:
+The 0.6 release of Tarmak comes with many more features and improvements to
+internals. Notable new additions include pre-built AMI images that are used when
+one has not yet been built, making getting a cluster running for new users much
+faster. A new worker AMI image type that will pre-install and configure Kubernetes
+worker nodes so nodes become ready much faster during auto scaling. Finally, we
+have also included an option to deploy Calico using Kubernetes as a backend,
+rather than using Etcd directly.
+
+A large focus of this release has been on improving the use of SSH by now
+utilising the in package standard Go libraries. This has meant we now have
+better control of SSH connections whilst running. We have also developed a
+significant change to how SSH host keys are handled, whereby instances will now
+tag themselves with their public keys securely, via an Amazon Lambda function.
+These tags are then used to populate, verify and update our local host key file
+during SSH connections.
+
+We do not report any specific action required for upgrading to 0.6.0 from 0.5.3
+besides our normal upgrade method.
+
+More detailed and other changes not mentioned are as follows:
 
 ### Added
 
@@ -26,7 +45,11 @@ TODO:
 * Tarmak created Kubernetes resources have their life cycle managed by Kube-Addon-Manager (#688 [@joshvanl](github.com/JoshVanL))
 * Documentation on how to add Pod Security Policies to arbitrary Namespaces (#694 [@MattiasGees](github.com/MattiasGees))
 * Use Core-DNS DNS and Service Discovery project instead of Kube-DNS for clusters >= 0.10 (#715 [@joshvanl](github.com/JoshVanL))
+* programmatic end to end testing with Sonobuoy (#743 [@joshvanl](github.com/JoshVanL))
 * Disable Overlay ETCD servers when calico in Kubernetes backend mode (#724 [@joshvanl](github.com/JoshVanL))
+* More rigorous fluent-bit acceptance tests (#747 [@simonswine](github.com/simonswine))
+* Adds AddListener and RemoveListenerCertificates permissions to ELB nodes (#749 [@joshvanl](github.com/JoshVanL))
+* Adds de-register permissions to ELB nodes (#750 [@joshvanl](github.com/JoshVanL))
 
 ### Changed
 
@@ -53,6 +76,7 @@ TODO:
 * Heapster, InfluxDB and Grafana have toggles in the Tarmak configuration. They
   are enabled for current clusters but disable by default for all newly created
   clusters via init (#740 [@joshvanl](github.com/JoshVanL))
+* Upgrade default Kubernetes version to 1.12.5 (#753 [@simonswine](github.com/simonswine))
 
 ### Fixed
 
@@ -73,6 +97,7 @@ TODO:
 * Fix the attachment of additional policies to non Kubernetes instances (#727 [@simonswine](github.com/simonswine))
 * Input query during Terraform running fixed from a breaking change (#729 [@joshvanl](github.com/JoshVanL))
 * Tunnels to the Kubernetes API server are re-used is available (#736 [@joshvanl](github.com/JoshVanL))
+* Fix Kube-state-metrics RBAC (#754 [@MattiasGees](github.com/MattiasGees))
 
 ### Versions
 
