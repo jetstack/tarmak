@@ -5,7 +5,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-centos_release=7.5.1804
+centos_release=7.6.1810
 
 # hardcode centos release
 cat > /etc/yum.repos.d/CentOS-Base.repo <<EOF
