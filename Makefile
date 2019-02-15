@@ -292,5 +292,20 @@ docker_%:
 	# remove container
 	docker rm $(CONTAINER_ID)
 
-e2e-test: build
+e2e-test-all-conformance: build
+	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh) -X \'github.com/jetstack/tarmak/cmd/tarmak/e2e.mode=Conformance\''
+
+e2e-test-all: build
 	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)'
+
+e2e-test-single-cluster: build
+	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)' -run Single
+
+e2e-test-multi-cluster: build
+	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)' -run Multi
+
+e2e-test-upgrade-cluster: build
+	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)' -run UpgradeTarmak
+
+e2e-test-upgrade-kubernetes: build
+	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)' -run UpgradeKubernetes

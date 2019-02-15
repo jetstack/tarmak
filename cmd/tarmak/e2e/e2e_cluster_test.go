@@ -55,6 +55,10 @@ func TestAWSSingleCluster(t *testing.T) {
 	if err := ti.RunAndVerify(); err != nil {
 		t.Fatal(err)
 	}
+
+	if err := ti.sonobuoy.RunAndVerify(); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestAWSMultiCluster(t *testing.T) {
@@ -90,6 +94,10 @@ func TestAWSMultiCluster(t *testing.T) {
 
 	if err := ti.RunAndVerify(); err != nil {
 		t.Fatal(err)
+	}
+
+	if err := ti.sonobuoy.RunAndVerify(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -128,6 +136,10 @@ func TestAWSUpgradeTarmak(t *testing.T) {
 	if err := ti.RunAndVerify(); err != nil {
 		t.Fatal(err)
 	}
+
+	if err := ti.sonobuoy.RunAndVerify(); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestAWSUpgradeKubernetes(t *testing.T) {
@@ -162,5 +174,9 @@ func TestAWSUpgradeKubernetes(t *testing.T) {
 
 	if err := ti.RunAndVerify(); err != nil {
 		t.Fatal(err)
+	}
+
+	if err := ti.sonobuoy.RunAndVerify(); err != nil {
+		t.Error(err)
 	}
 }

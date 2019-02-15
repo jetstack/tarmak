@@ -60,6 +60,7 @@ func randStringRunes(n int) string {
 
 type TarmakInstance struct {
 	t                     *testing.T
+	sonobuoy              *SonobuoyInstance
 	configPath            string // config path
 	binPath               string // bin path to tarmak binary
 	region                string // region of the cluster
@@ -94,6 +95,9 @@ func NewTarmakInstance(t *testing.T) *TarmakInstance {
 		t.Logf("created temp config directory in %s", dir)
 		ti.configPath = dir
 	}
+
+	ti.sonobuoy = NewSonobuoyInstance(t, ti.environmentName,
+		fmt.Sprintf("%s/%s-cluster/kubeconfig", ti.configPath, ti.environmentName))
 
 	return ti
 }
@@ -340,5 +344,6 @@ func (ti *TarmakInstance) GenerateAndBuild() error {
 	if err := c.Run(); err != nil {
 		return fmt.Errorf("unexpected error: %+v", err)
 	}
+
 	return nil
 }
