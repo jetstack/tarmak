@@ -13,6 +13,8 @@ class ESMock < WEBrick::HTTPServlet::AbstractServlet
   def do_POST(request, response)
     if request.body.include? $magic_logline
       $magic_logline_appeared = true
+      puts response.body
+      puts response.status
     end
 
     if request.body.include? $magic_prefix
@@ -124,7 +126,7 @@ EOS
     hosts.each do |host|
       on host, "logger \"#{$magic_logline}\""
     end
-    sleep(5)
+    sleep(10)
 
     expect($magic_logline_appeared).to equal(true)
     expect($magic_prefix_appeared).to equal(false)
@@ -146,7 +148,7 @@ EOS
     hosts.each do |host|
       on host, "logger \"#{$magic_logline}\""
     end
-    sleep(5)
+    sleep(10)
 
     expect($magic_logline_appeared).to equal(true)
     expect($magic_prefix_appeared).to equal(true)
@@ -168,7 +170,7 @@ EOS
     hosts.each do |host|
       on host, "logger \"#{$magic_logline}\""
     end
-    sleep(5)
+    sleep(10)
 
     expect($magic_logline_appeared).to equal(false)
     expect($magic_prefix_appeared).to equal(false)
