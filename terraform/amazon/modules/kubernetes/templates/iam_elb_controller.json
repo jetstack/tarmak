@@ -43,6 +43,7 @@
         "elasticloadbalancing:RemoveListenerCertificates",
         "elasticloadbalancing:ModifyTargetGroup",
         "elasticloadbalancing:RegisterTargets",
+        "elasticloadbalancing:DeregisterTargets",
         "elasticloadbalancing:SetLoadBalancerPoliciesOfListener"
       ],
       "Resource": [
