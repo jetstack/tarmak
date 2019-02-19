@@ -1,33 +1,85 @@
 require 'spec_helper_acceptance'
 require 'webrick'
 
-$mock_es_port = 9200
-$mock_es = nil
+class ESMock
+  attr_reader :port, :magic_logline, :magic_prefix, :semaphore
+  attr_accessor :magic_logline_appeared, :magic_prefix_appeared
 
-$magic_logline = 'iamalinethatwouldneverappearinanormallog'
-$magic_prefix = 'iamaprefixthatwouldneverbeprefixedtonormallogs'
-$magic_logline_appeared = false
-$magic_prefix_appeared = false
+  def initialize
+    reset
+    @semaphore = Mutex.new
+    @port = 9200
+    @http_server = WEBrick::HTTPServer.new(Port: @port)
+    @http_server.mount '/', ESMockHandle, self
+  end
 
-class ESMock < WEBrick::HTTPServlet::AbstractServlet
+  def start
+    # listen to local ES port
+    trap('INT') { @http_server.shutdown }
+    @http_server_thread = Thread.start { @http_server.start }
+  end
+
+  def stop
+    @http_server.shutdown
+    @http_server_thread.join
+  end
+
+  def reset
+    @magic_logline = "magic-logline-#{SecureRandom.uuid}"
+    @magic_prefix = "magic-prefix-#{SecureRandom.uuid}"
+    @magic_logline_appeared = nil
+    @magic_prefix_appeared = nil
+  end
+end
+
+class ESMockHandle < WEBrick::HTTPServlet::AbstractServlet
+  @server = nil
+
+  def initialize(i, server)
+    super i
+    @server = server
+  end
+
   def do_POST(request, response)
-    if request.body.include? $magic_logline
-      $magic_logline_appeared = true
-      puts response.body
-      puts response.status
+    key_message = 'MESSAGE'
+    key_index = 'index'
+    key__index = '_index'
+
+    index = nil
+    count = 0
+    request.body.each_line do |line|
+      log_line = JSON.parse(line)
+
+      if log_line.key?(key_index) and log_line[key_index].key?(key__index)
+        index = log_line[key_index][key__index]
+        if index.include? @server.magic_prefix
+          $stderr.puts "magic prefix appeared: '#{log_line}'"
+          @server.semaphore.synchronize do
+            @server.magic_prefix_appeared = true
+          end
+        end
+        next
+      end
+
+      count += 1
+
+      if log_line.key?(key_message) and log_line[key_message].include?(@server.magic_logline)
+        $stderr.puts "magic logline appeared: '#{log_line}'"
+        @server.semaphore.synchronize do
+          @server.magic_logline_appeared = true
+        end
+      end
     end
 
-    if request.body.include? $magic_prefix
-      $magic_prefix_appeared = true
-    end
+    $stderr.puts "received #{count} log lines for index '#{index}'"
 
     response.status = 200
-    response.body = 'ok, mock'
+    response.body = '{"took":30,"errors":false,"items":[]}'
   end
 end
 
 describe '::fluent_bit' do
-  let(:pp) do
+  let(:pp_es_proxy) do
     pp = <<-EOS
 host { 'fake.eu-west-1.es.amazonaws.com':
   ensure => present,
@@ -37,7 +89,7 @@ host { 'fake.eu-west-1.es.amazonaws.com':
     config => {
         "elasticsearch" => {
             "host" => "fake.eu-west-1.es.amazonaws.com",
-            "port" => #{$mock_es_port},
+            "port" => #{@mock_es.port},
             "tls" => false,
             "amazonESProxy" => {
               "port" => 9201
@@ -50,8 +102,8 @@ EOS
     pp
   end
 
-   let(:pp2) do
-     pp2 = <<-EOS
+   let(:pp_es_proxy_prefix) do
+     pp = <<-EOS
  host { 'fake.eu-west-1.es.amazonaws.com':
    ensure => present,
    ip => $facts['networking']['dhcp'],
@@ -60,9 +112,9 @@ EOS
      config => {
          "elasticsearch" => {
              "host" => "fake.eu-west-1.es.amazonaws.com",
-             "port" => #{$mock_es_port},
+             "port" => #{@mock_es.port},
              "tls" => false,
-             "logstashPrefix" => "#{$magic_prefix}",
+             "logstashPrefix" => "#{@mock_es.magic_prefix}",
              "amazonESProxy" => {
                "port" => 9201
              },
@@ -71,11 +123,11 @@ EOS
      },
  }
  EOS
-     pp2
+     pp
    end
 
-   let(:pp3) do
-     pp3 = <<-EOS
+   let(:pp_no_es) do
+     pp = <<-EOS
  host { 'fake.eu-west-1.es.amazonaws.com':
    ensure => present,
    ip => $facts['networking']['dhcp'],
@@ -86,7 +138,7 @@ EOS
      },
  }
  EOS
-     pp3
+     pp
    end
 
   before(:all) do
@@ -96,83 +148,101 @@ EOS
 
       # make sure golang uses proper hosts file
       on host, 'echo "hosts: files dns" > /etc/nsswitch.conf'
+
+      # create some fake aws creds
+      on host, 'echo -e "AWS_ACCESS_KEY_ID=AKID1234567890\nAWS_SECRET_ACCESS_KEY=MY-SECRET-KEY" > /etc/sysconfig/aws-es-proxy-test'
     end
 
-    # listen to local ES port
-    $mock_es = WEBrick::HTTPServer.new(Port: $mock_es_port)
-    $mock_es.mount '/', ESMock
-    trap('INT') { $mock_es.shutdown }
-    $mock_es_thread = Thread.start { $mock_es.start }
+    @mock_es = ESMock.new
+    @mock_es.start
   end
+
 
   after(:all) do
-    $mock_es.shutdown
-    $mock_es_thread.join
+    @mock_es.stop
   end
 
-  it 'should setup fluent bit without errors based on the example' do
-    hosts.each do |host|
-      apply_manifest_on(host, pp, catch_failures: true)
-      expect(
-        apply_manifest_on(host, pp, catch_failures: true).exit_code
-      ).to be_zero
+  context 'fluentbit with aws-es proxy' do
+    before(:all) do
+      @mock_es.reset
+    end
+
+    it 'should setup fluent bit without errors in first apply' do
+      hosts.each do |host|
+        apply_manifest_on(host, pp_es_proxy, catch_failures: true)
+        expect(
+          apply_manifest_on(host, pp_es_proxy, catch_failures: true).exit_code
+        ).to be_zero
+      end
+    end
+
+    it 'should receive magic log line' do
+      hosts.each do |host|
+        on host, "logger \"#{@mock_es.magic_logline}\""
+      end
+
+      while true
+        break unless @mock_es.magic_logline_appeared.nil?
+        sleep(1)
+      end
+
+      expect(@mock_es.magic_logline_appeared).to equal(true)
+      expect(@mock_es.magic_prefix_appeared).to equal(nil)
     end
   end
 
-  it 'should receive magic log line' do
-    $magic_logline_appeared = false
-    $magic_prefix_appeared = false
-
-    hosts.each do |host|
-      on host, "logger \"#{$magic_logline}\""
+  context 'fluentbit with aws-es proxy using custom index' do
+    before(:all) do
+      @mock_es.reset
     end
-    sleep(10)
 
-    expect($magic_logline_appeared).to equal(true)
-    expect($magic_prefix_appeared).to equal(false)
-  end
-
-  it 'should update fluent bit without errors based on the example' do
-    hosts.each do |host|
-      apply_manifest_on(host, pp2, catch_failures: true)
-      expect(
-        apply_manifest_on(host, pp2, catch_failures: true).exit_code
-      ).to be_zero
+    it 'should setup fluent bit without errors in first apply' do
+      hosts.each do |host|
+        apply_manifest_on(host, pp_es_proxy_prefix, catch_failures: true)
+        expect(
+          apply_manifest_on(host, pp_es_proxy_prefix, catch_failures: true).exit_code
+        ).to be_zero
+      end
     end
-  end
 
-  it 'should receive magic log line and prefix' do
-    $magic_logline_appeared = false
-    $magic_prefix_appeared = false
+    it 'should receive magic log line and prefix' do
+      hosts.each do |host|
+        on host, "logger \"#{@mock_es.magic_logline}\""
+      end
 
-    hosts.each do |host|
-      on host, "logger \"#{$magic_logline}\""
-    end
-    sleep(10)
+      while true
+        break unless @mock_es.magic_logline_appeared.nil? or @mock_es.magic_logline_appeared.nil?
+        sleep(1)
+      end
 
-    expect($magic_logline_appeared).to equal(true)
-    expect($magic_prefix_appeared).to equal(true)
-  end
-
-  it 'should update fluent bit to no ES without errors based on the example' do
-    hosts.each do |host|
-      apply_manifest_on(host, pp3, catch_failures: true)
-      expect(
-        apply_manifest_on(host, pp3, catch_failures: true).exit_code
-      ).to be_zero
+      expect(@mock_es.magic_logline_appeared).to equal(true)
+      expect(@mock_es.magic_prefix_appeared).to equal(true)
     end
   end
 
-  it 'should not receive magic log line and prefix' do
-    $magic_logline_appeared = false
-    $magic_prefix_appeared = false
-
-    hosts.each do |host|
-      on host, "logger \"#{$magic_logline}\""
+  context 'fluentbit without any output' do
+    before(:all) do
+      @mock_es.reset
     end
-    sleep(10)
 
-    expect($magic_logline_appeared).to equal(false)
-    expect($magic_prefix_appeared).to equal(false)
+    it 'should setup fluent bit without errors in first apply' do
+      hosts.each do |host|
+        apply_manifest_on(host, pp_no_es, catch_failures: true)
+        expect(
+          apply_manifest_on(host, pp_no_es, catch_failures: true).exit_code
+        ).to be_zero
+      end
+    end
+
+    it 'should not receive magic log line and prefix' do
+      hosts.each do |host|
+        on host, "logger \"#{@mock_es.magic_logline}\""
+      end
+
+      sleep(10)
+
+      expect(@mock_es.magic_logline_appeared).to equal(nil)
+      expect(@mock_es.magic_prefix_appeared).to equal(nil)
+    end
   end
 end
