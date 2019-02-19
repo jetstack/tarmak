@@ -39,6 +39,8 @@
         "elasticloadbalancing:DescribeTargetGroups",
         "elasticloadbalancing:DescribeTargetHealth",
         "elasticloadbalancing:ModifyListener",
+        "elasticloadbalancing:AddListenrCertificates",
+        "elasticloadbalancing:RemoveListenerCertificates",
         "elasticloadbalancing:ModifyTargetGroup",
         "elasticloadbalancing:RegisterTargets",
         "elasticloadbalancing:SetLoadBalancerPoliciesOfListener"
