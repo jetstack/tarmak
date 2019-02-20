@@ -79,67 +79,8 @@ class ESMockHandle < WEBrick::HTTPServlet::AbstractServlet
 end
 
 describe '::fluent_bit' do
-  let(:pp_es_proxy) do
-    pp = <<-EOS
-host { 'fake.eu-west-1.es.amazonaws.com':
-  ensure => present,
-  ip => $facts['networking']['dhcp'],
-}
--> fluent_bit::output{"test":
-    config => {
-        "elasticsearch" => {
-            "host" => "fake.eu-west-1.es.amazonaws.com",
-            "port" => #{@mock_es.port},
-            "tls" => false,
-            "amazonESProxy" => {
-              "port" => 9201
-            },
-          },
-        "types" => ["all"],
-    },
-}
-EOS
-    pp
-  end
 
-   let(:pp_es_proxy_prefix) do
-     pp = <<-EOS
- host { 'fake.eu-west-1.es.amazonaws.com':
-   ensure => present,
-   ip => $facts['networking']['dhcp'],
- }
- -> fluent_bit::output{"test":
-     config => {
-         "elasticsearch" => {
-             "host" => "fake.eu-west-1.es.amazonaws.com",
-             "port" => #{@mock_es.port},
-             "tls" => false,
-             "logstashPrefix" => "#{@mock_es.magic_prefix}",
-             "amazonESProxy" => {
-               "port" => 9201
-             },
-           },
-         "types" => ["all"],
-     },
- }
- EOS
-     pp
-   end
 
-   let(:pp_no_es) do
-     pp = <<-EOS
- host { 'fake.eu-west-1.es.amazonaws.com':
-   ensure => present,
-   ip => $facts['networking']['dhcp'],
- }
- -> fluent_bit::output{"test":
-     config => {
-         "types" => ["all"],
-     },
- }
- EOS
-     pp
-   end
 
   before(:all) do
     hosts.each do |host|
@@ -163,15 +104,38 @@ EOS
   end
 
   context 'fluentbit with aws-es proxy' do
+    let(:pp) do
+      pp = <<-EOS
+host { 'fake.eu-west-1.es.amazonaws.com':
+  ensure => present,
+  ip => '127.0.0.1',
+}
+-> fluent_bit::output{"test":
+    config => {
+        "elasticsearch" => {
+            "host" => "fake.eu-west-1.es.amazonaws.com",
+            "port" => #{@mock_es.port},
+            "tls" => false,
+            "amazonESProxy" => {
+              "port" => 9201
+            },
+          },
+        "types" => ["all"],
+    },
+}
+      EOS
+      pp
+    end
+
     before(:all) do
       @mock_es.reset
     end
 
     it 'should setup fluent bit without errors in first apply' do
       hosts.each do |host|
-        apply_manifest_on(host, pp_es_proxy, catch_failures: true)
+        apply_manifest_on(host, pp, catch_failures: true)
         expect(
-          apply_manifest_on(host, pp_es_proxy, catch_failures: true).exit_code
+          apply_manifest_on(host, pp, catch_failures: true).exit_code
         ).to be_zero
       end
     end
@@ -192,15 +156,39 @@ EOS
   end
 
   context 'fluentbit with aws-es proxy using custom index' do
+    let(:pp) do
+      pp = <<-EOS
+ host { 'fake.eu-west-1.es.amazonaws.com':
+  ensure => present,
+  ip => '127.0.0.1',
+ }
+ -> fluent_bit::output{"test":
+     config => {
+         "elasticsearch" => {
+             "host" => "fake.eu-west-1.es.amazonaws.com",
+             "port" => #{@mock_es.port},
+             "tls" => false,
+             "logstashPrefix" => "#{@mock_es.magic_prefix}",
+             "amazonESProxy" => {
+               "port" => 9201
+             },
+           },
+         "types" => ["all"],
+     },
+ }
+      EOS
+      pp
+    end
+
     before(:all) do
       @mock_es.reset
     end
 
     it 'should setup fluent bit without errors in first apply' do
       hosts.each do |host|
-        apply_manifest_on(host, pp_es_proxy_prefix, catch_failures: true)
+        apply_manifest_on(host, pp, catch_failures: true)
         expect(
-          apply_manifest_on(host, pp_es_proxy_prefix, catch_failures: true).exit_code
+          apply_manifest_on(host, pp, catch_failures: true).exit_code
         ).to be_zero
       end
     end
@@ -221,15 +209,30 @@ EOS
   end
 
   context 'fluentbit without any output' do
+    let(:pp) do
+      pp = <<-EOS
+ host { 'fake.eu-west-1.es.amazonaws.com':
+  ensure => present,
+  ip => '127.0.0.1',
+ }
+ -> fluent_bit::output{"test":
+     config => {
+         "types" => ["all"],
+     },
+ }
+      EOS
+      pp
+    end
+
     before(:all) do
       @mock_es.reset
     end
 
     it 'should setup fluent bit without errors in first apply' do
       hosts.each do |host|
-        apply_manifest_on(host, pp_no_es, catch_failures: true)
+        apply_manifest_on(host, pp, catch_failures: true)
         expect(
-          apply_manifest_on(host, pp_no_es, catch_failures: true).exit_code
+          apply_manifest_on(host, pp, catch_failures: true).exit_code
         ).to be_zero
       end
     end
