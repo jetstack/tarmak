@@ -145,7 +145,10 @@ host { 'fake.eu-west-1.es.amazonaws.com':
         on host, "logger \"#{@mock_es.magic_logline}\""
       end
 
+      count = 0
       while true
+        count += 1
+        fail "no log line received after 1000 tries" if count > 1000
         break unless @mock_es.magic_logline_appeared.nil?
         sleep(1)
       end
@@ -198,7 +201,10 @@ host { 'fake.eu-west-1.es.amazonaws.com':
         on host, "logger \"#{@mock_es.magic_logline}\""
       end
 
+      count = 0
       while true
+        count += 1
+        fail "no log line received after 1000 tries" if count > 1000
         break unless @mock_es.magic_logline_appeared.nil? or @mock_es.magic_logline_appeared.nil?
         sleep(1)
       end
