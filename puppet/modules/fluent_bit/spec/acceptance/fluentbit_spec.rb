@@ -5,21 +5,32 @@ class ESMock
   attr_reader :port, :magic_logline, :magic_prefix, :semaphore
   attr_accessor :magic_logline_appeared, :magic_prefix_appeared
 
-  def initialize
+  def initialize(hosts)
     reset
     @semaphore = Mutex.new
     @port = 9200
     @http_server = WEBrick::HTTPServer.new(Port: @port)
     @http_server.mount '/', ESMockHandle, self
+    @hosts = hosts
   end
 
   def start
     # listen to local ES port
     trap('INT') { @http_server.shutdown }
     @http_server_thread = Thread.start { @http_server.start }
+    @ssh_connetions = []
+    hosts.each do |host|
+      # setup a remote tunnel to forward local es mock
+      conn = host.connection.connect
+      conn.forward.remote(@port, "127.0.0.1", @port) # port on host, host on host, remote port
+      @ssh_connections << conn
+    end
   end
 
   def stop
+    @ssh_connections.each do |conn|
+      conn.forward.cancel_remote(@port)
+    end
     @http_server.shutdown
     @http_server_thread.join
   end
@@ -94,7 +105,7 @@ describe '::fluent_bit' do
       on host, 'echo -e "AWS_ACCESS_KEY_ID=AKID1234567890\nAWS_SECRET_ACCESS_KEY=MY-SECRET-KEY" > /etc/sysconfig/aws-es-proxy-test'
     end
 
-    @mock_es = ESMock.new
+    @mock_es = ESMock.new hosts
     @mock_es.start
   end
 
