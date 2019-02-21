@@ -32,6 +32,8 @@ ifeq ($(UNAME_S),Linux)
 	NODE_NAME := node-v8.12.0-linux-x64
 	NODE_URL := https://nodejs.org/dist/v8.12.0/${NODE_NAME}.$(TAR_EXT)
 	NODE_HASH := 29a20479cd1e3a03396a4e74a1784ccdd1cf2f96928b56f6ffa4c8dae40c88f2
+	SONOBUOY_HASH := 0b10d412bfc3777267ffd83f161a8ce4a7fba321f28241574639dc9c2cad8150
+	SONOBUOY_URL := https://github.com/heptio/sonobuoy/releases/download/v0.13.0/sonobuoy_0.13.0_linux_amd64.tar.gz
 endif
 ifeq ($(UNAME_S),Darwin)
 	TAR_EXT := tar.gz
@@ -41,12 +43,14 @@ ifeq ($(UNAME_S),Darwin)
 	NODE_NAME := node-v8.12.0-darwin-x64
 	NODE_URL := https://nodejs.org/dist/v8.12.0/${NODE_NAME}.$(TAR_EXT)
 	NODE_HASH := ca131b84dfcf2b6f653a6521d31f7a108ad7d83f4d7e781945b2eca8172064aa
+	SONOBUOY_HASH := 2209ad3a736ebce59a70535d5915061e710e0094626bcc0c6ab744db0ad8f482
+	SONOBUOY_URL := https://github.com/heptio/sonobuoy/releases/download/v0.13.0/sonobuoy_0.13.0_darwin_amd64.tar.gz
 endif
 
 # from https://suva.sh/posts/well-documented-makefiles/
 .PHONY: help
 help:  ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 help1:
 	# test      - runs go_test target
@@ -58,7 +62,7 @@ help1:
 
 all: verify test build  ## runs verify, test and build targets
 
-depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs $(BINDIR)/node $(BINDIR)/ghr ## download all dependencies necessary for build
+depend: $(BINDIR)/go-bindata $(BINDIR)/mockgen $(BINDIR)/defaulter-gen $(BINDIR)/defaulter-gen $(BINDIR)/deepcopy-gen $(BINDIR)/conversion-gen $(BINDIR)/client-gen $(BINDIR)/lister-gen $(BINDIR)/informer-gen $(BINDIR)/dep $(BINDIR)/upx $(BINDIR)/openapi-gen $(BINDIR)/gen-apidocs $(BINDIR)/node $(BINDIR)/ghr $(BINDIR)/sonobuoy ## download all dependencies necessary for build
 
 verify: generate go_verify verify_boilerplate verify_codegen verify_vendor verify_gen_docs ## verifies generated files & scripts
 
@@ -146,6 +150,12 @@ $(BINDIR)/node:
 	rm $(BINDIR)/$(NODE_NAME).$(TAR_EXT)
 	ln -s $(BINDIR)/$(NODE_NAME)/bin/node $(BINDIR)/node
 	ln -s $(BINDIR)/$(NODE_NAME)/bin/npm $(BINDIR)/npm
+
+$(BINDIR)/sonobuoy:
+	curl -sL -o $(BINDIR)/sonobuoy.tar.gz $(SONOBUOY_URL)
+	echo "$(SONOBUOY_HASH)  $(BINDIR)/sonobuoy.tar.gz" | $(SHASUM)
+	cd $(BINDIR) && tar xf sonobuoy.tar.gz
+	rm $(BINDIR)/sonobuoy.tar.gz
 
 $(BINDIR)/npm: $(BINDIR)/node
 
@@ -292,20 +302,21 @@ docker_%:
 	# remove container
 	docker rm $(CONTAINER_ID)
 
-e2e-test-all-conformance: build
-	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh) -X \'github.com/jetstack/tarmak/cmd/tarmak/e2e.mode=Conformance\''
-
-e2e-test-all: build
+.PHONY: e2e-all e2e-all-conformance e2e-single-cluster e2e-multi-cluster e2e-upgrade-cluster e2e-upgrade-kubernetes
+e2e-all: build ## Run all quick end to end tests
 	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)'
 
-e2e-test-single-cluster: build
+e2e-all-conformance: build ## Run all slow end to end tests with conformance
+	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh) -X \'github.com/jetstack/tarmak/cmd/tarmak/e2e.mode=Conformance\''
+
+e2e-single-cluster: build
 	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)' -run Single
 
-e2e-test-multi-cluster: build
+e2e-multi-cluster: build
 	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)' -run Multi
 
-e2e-test-upgrade-cluster: build
+e2e-upgrade-cluster: build
 	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)' -run UpgradeTarmak
 
-e2e-test-upgrade-kubernetes: build
+e2e-upgrade-kubernetes: build
 	go test -v -timeout 1h github.com/jetstack/tarmak/cmd/tarmak/e2e -e2e -ldflags '-w $(shell hack/version-ldflags.sh)' -run UpgradeKubernetes

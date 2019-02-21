@@ -38,7 +38,7 @@ func NewSonobuoyInstance(t *testing.T, environment, kubeconfig string) *Sonobuoy
 	}
 
 	if _, err := os.Stat(si.binPath); os.IsNotExist(err) {
-		t.Fatal("sonobuoy binary not exissing: ", si.binPath)
+		t.Fatal("sonobuoy binary not existing: ", si.binPath)
 	} else if err != nil {
 		t.Fatal("error finding sonobuoy binary: ", si.binPath)
 	}
