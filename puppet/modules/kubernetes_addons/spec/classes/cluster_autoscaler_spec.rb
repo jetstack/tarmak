@@ -31,9 +31,12 @@ describe 'kubernetes_addons::cluster_autoscaler' do
         $cluster_name = 'cluster1'
       }
       define kubernetes::apply(
-      $manifests,
+        Enum['present', 'absent'] $ensure = 'present',
+        $manifests,
       ){
-        kubernetes::addon_manager_labels($manifests[0])
+        if $manifests and $ensure == 'present' {
+          kubernetes::addon_manager_labels($manifests[0])
+        }
       }
     "
   end

@@ -7,6 +7,7 @@ class kubernetes_addons::kube2iam(
   String $request_mem='64Mi',
   String $limit_cpu='',
   String $limit_mem='256Mi',
+  Enum['present', 'absent'] $ensure = 'present',
 ) {
   require ::kubernetes
 
@@ -24,6 +25,7 @@ class kubernetes_addons::kube2iam(
   }
 
   kubernetes::apply{'kube2iam':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/kube2iam-daemonset.yaml.erb'),
       template('kubernetes_addons/kube2iam-rbac.yaml.erb'),

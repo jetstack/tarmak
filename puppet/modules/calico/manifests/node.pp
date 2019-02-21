@@ -60,6 +60,7 @@ class calico::node (
   }
 
   kubernetes::apply{'calico-node':
+    ensure    => 'present',
     manifests => [
       template('calico/node-rbac.yaml.erb'),
       template('calico/node-daemonset.yaml.erb'),

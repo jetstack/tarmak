@@ -33,6 +33,7 @@ class prometheus::server (
     }
 
     kubernetes::apply{'prometheus-server':
+      ensure    => $::prometheus::ensure,
       manifests => [
         template('prometheus/prometheus-ns.yaml.erb'),
         template('prometheus/prometheus-deployment.yaml.erb'),
@@ -41,37 +42,43 @@ class prometheus::server (
     }
 
     kubernetes::apply{'prometheus-config':
-        type => 'concat',
+      ensure => $::prometheus::ensure,
+      type   => 'concat',
     }
 
     kubernetes::apply_fragment { 'prometheus-config-header':
-        content => template('prometheus/prometheus-config-header.yaml.erb'),
-        order   => 0,
-        target  => 'prometheus-config',
+      ensure  => $::prometheus::ensure,
+      content => template('prometheus/prometheus-config-header.yaml.erb'),
+      order   => 0,
+      target  => 'prometheus-config',
     }
 
     kubernetes::apply_fragment { 'prometheus-config-prometheus-file':
-        content => '  prometheus.yaml: |-',
-        order   => 100,
-        target  => 'prometheus-config',
+      ensure  => $::prometheus::ensure,
+      content => '  prometheus.yaml: |-',
+      order   => 100,
+      target  => 'prometheus-config',
     }
 
     kubernetes::apply_fragment { 'prometheus-config-prometheus-rules':
-        content => template('prometheus/prometheus-config-rules.yaml.erb'),
-        order   => 200,
-        target  => 'prometheus-config',
+      ensure  => $::prometheus::ensure,
+      content => template('prometheus/prometheus-config-rules.yaml.erb'),
+      order   => 200,
+      target  => 'prometheus-config',
     }
 
     kubernetes::apply_fragment { 'prometheus-config-global':
-        content => template('prometheus/prometheus-config-global.yaml.erb'),
-        order   => 300,
-        target  => 'prometheus-config',
+      ensure  => $::prometheus::ensure,
+      content => template('prometheus/prometheus-config-global.yaml.erb'),
+      order   => 300,
+      target  => 'prometheus-config',
     }
 
     kubernetes::apply_fragment { 'prometheus-config-global-pre-scrape-config':
-        content => '    scrape_configs:',
-        order   => 400,
-        target  => 'prometheus-config',
+      ensure  => $::prometheus::ensure,
+      content => '    scrape_configs:',
+      order   => 400,
+      target  => 'prometheus-config',
     }
 
     if $::prometheus::mode == 'Full' {
@@ -457,13 +464,15 @@ class prometheus::server (
     }
 
     kubernetes::apply{'prometheus-rules':
-        type => 'concat',
+      ensure => $::prometheus::ensure,
+      type   => 'concat',
     }
 
     kubernetes::apply_fragment { 'prometheus-rules-header':
-        content => template('prometheus/prometheus-rules-header.yaml.erb'),
-        order   => 0,
-        target  => 'prometheus-rules',
+      ensure  => $::prometheus::ensure,
+      content => template('prometheus/prometheus-rules-header.yaml.erb'),
+      order   => 0,
+      target  => 'prometheus-rules',
     }
 
 

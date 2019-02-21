@@ -19,6 +19,7 @@ define fluent_bit::output (
 
   if $elasticsearch and $elasticsearch['amazonESProxy'] {
     ::aws_es_proxy::instance{ $name:
+      ensure       => $::fluent_bit::ensure,
       tls          => $elasticsearch['tls'],
       dest_port    => $elasticsearch['port'],
       dest_address => $elasticsearch['host'],
@@ -26,14 +27,13 @@ define fluent_bit::output (
     }
   } else {
     ::aws_es_proxy::instance{ $name:
-      ensure_service => 'stopped',
-      enable_service => false,
-      dest_address   => '',
+      ensure       => 'absent',
+      dest_address => '',
     }
   }
 
   file { "/etc/td-agent-bit/td-agent-bit-output-${name}.conf":
-    ensure  => file,
+    ensure  => $::fluent_bit::ensure,
     mode    => '0640',
     owner   => 'root',
     group   => 'root',
@@ -42,11 +42,10 @@ define fluent_bit::output (
   }
 
   file { "/etc/td-agent-bit/daemonset/td-agent-bit-output-${name}.conf":
-    ensure  => file,
+    ensure  => $::fluent_bit::ensure,
     mode    => '0640',
     owner   => 'root',
     group   => 'root',
     content => template('fluent_bit/td-agent-bit-output.conf.erb'),
   }
-
 }

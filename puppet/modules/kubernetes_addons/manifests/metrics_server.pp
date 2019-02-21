@@ -44,11 +44,16 @@ class kubernetes_addons::metrics_server(
   }
 
   if versioncmp($::kubernetes::version, '1.7.0') >= 0 {
-    kubernetes::apply{'metrics-server':
-      manifests => [
-        template('kubernetes_addons/metrics-server.yaml.erb'),
-        template('kubernetes_addons/metrics-server-rbac.yaml.erb'),
-      ],
-    }
+    $ensure = 'present'
+  } else {
+    $ensure = 'absent'
+  }
+
+  kubernetes::apply{'metrics-server':
+    ensure    => $ensure,
+    manifests => [
+      template('kubernetes_addons/metrics-server.yaml.erb'),
+      template('kubernetes_addons/metrics-server-rbac.yaml.erb'),
+    ],
   }
 }

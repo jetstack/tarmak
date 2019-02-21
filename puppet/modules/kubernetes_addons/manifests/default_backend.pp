@@ -7,10 +7,12 @@ class kubernetes_addons::default_backend(
   $limit_mem=$::kubernetes_addons::params::default_backend_limit_mem,
   $namespace=$::kubernetes_addons::params::namespace,
   $replicas=undef,
+  $ensure = 'present',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
   kubernetes::apply{'default-backend':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/default-backend-svc.yaml.erb'),
       template('kubernetes_addons/default-backend-deployment.yaml.erb'),

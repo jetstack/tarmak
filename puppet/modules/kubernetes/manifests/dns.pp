@@ -52,6 +52,7 @@ class kubernetes::dns(
   }
 
     kubernetes::apply{$app_name:
+      ensure    => 'present',
       manifests => concat(
         $manifests,
         template('kubernetes/dns-service-account.yaml.erb'),
@@ -61,5 +62,8 @@ class kubernetes::dns(
         template('kubernetes/dns-cluster-role.yaml.erb'),
         template('kubernetes/dns-cluster-role-binding.yaml.erb'),
       ),
-    } -> kubernetes::delete{$delete_app_name:}
+    } -> kubernetes::apply{$delete_app_name:
+      ensure    => 'absent',
+      manifests => [],
+    }
 }

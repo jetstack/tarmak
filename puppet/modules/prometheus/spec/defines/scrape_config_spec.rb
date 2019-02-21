@@ -3,6 +3,7 @@ require 'spec_helper'
 describe 'prometheus::scrape_config', :type => :define do
   let(:pre_condition) {[
     'include kubernetes::apiserver',
+    'include prometheus',
   ]}
 
   context 'test scrape static_configs definition' do

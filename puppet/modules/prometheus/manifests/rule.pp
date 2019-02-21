@@ -6,6 +6,8 @@ define prometheus::rule (
   $labels = {'severity' => 'page'},
   Integer $order = 10,
 ) {
+  include ::prometheus
+
   if ! defined(Class['kubernetes::apiserver']) {
     fail('This defined type can only be used on the kubernetes master')
   }
@@ -28,8 +30,8 @@ define prometheus::rule (
     }]
   }
 
-
   kubernetes::apply_fragment { "prometheus-rules-${title}":
+    ensure  => $::prometheus::ensure,
     content => template('prometheus/prometheus-rule.yaml.erb'),
     order   => $order,
     target  => 'prometheus-rules',

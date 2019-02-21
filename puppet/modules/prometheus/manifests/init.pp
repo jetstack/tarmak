@@ -7,8 +7,16 @@ class prometheus(
   Optional[Integer[1025,65535]] $etcd_k8s_events_port = $::prometheus::params::etcd_k8s_events_port,
   Optional[Integer[1024,65535]] $etcd_overlay_port = $::prometheus::params::etcd_overlay_port,
   String $mode = 'Full',
+  Enum['present', 'absent'] $ensure = 'present',
 ) inherits ::prometheus::params
 {
+  if $ensure == 'present' {
+    $service_ensure = 'running'
+    $service_enable = true
+  } else {
+    $service_ensure = 'stopped'
+    $service_enable = false
+  }
 
   if $role == 'master' {
     if $mode == 'Full' {

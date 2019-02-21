@@ -6,10 +6,12 @@ class kubernetes_addons::fluentd_elasticsearch(
   String $request_mem='384Mi',
   String $limit_cpu='100m',
   String $limit_mem='256Mi',
+  Enum['present', 'absent'] $ensure = 'present',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
   kubernetes::apply{'fluentd-elasticsearch':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/fluentd-elasticsearch-daemonset.yaml.erb'),
     ],

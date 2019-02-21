@@ -2821,6 +2821,7 @@
     "github.com/terraform-providers/terraform-provider-template/template",
     "github.com/terraform-providers/terraform-provider-tls/tls",
     "golang.org/x/crypto/ssh",
+    "golang.org/x/crypto/ssh/knownhosts",
     "golang.org/x/net/context",
     "gopkg.in/src-d/go-git.v4",
     "gopkg.in/src-d/go-git.v4/config",

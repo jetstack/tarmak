@@ -23,6 +23,7 @@ class prometheus::kube_state_metrics (
   }
 
   kubernetes::apply{'kube-state-metrics':
+    ensure    => $::prometheus::ensure,
     manifests => [
       template('prometheus/prometheus-ns.yaml.erb'),
       template('prometheus/kube-state-metrics-deployment.yaml.erb'),

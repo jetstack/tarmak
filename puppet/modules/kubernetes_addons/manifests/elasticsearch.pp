@@ -11,11 +11,13 @@ class kubernetes_addons::elasticsearch(
   String $limit_mem='2048Mi',
   Integer[0,65535] $node_port=0,
   Integer $replicas=2,
+  Enum['present', 'absent'] $ensure = 'present',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
   # TODO: Support elasticsearch using StatefulSet pods
   kubernetes::apply{'elasticsearch':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/elasticsearch-svc.yaml.erb'),
       template('kubernetes_addons/elasticsearch-deployment.yaml.erb'),

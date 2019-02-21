@@ -2,6 +2,13 @@ require 'spec_helper'
 
 describe 'fluent_bit::output', :type => :define do
 
+  let(:pre_condition) do
+    """
+      class{'fluent_bit': ensure => 'present'}
+      class{'kubernetes::apiserver':}
+    """
+  end
+
   let(:config) {
     contain_file('/etc/td-agent-bit/td-agent-bit.conf')
   }

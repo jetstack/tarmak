@@ -4,6 +4,7 @@ define kubernetes::apply(
   $force = false,
   $format = 'yaml',
   Enum['manifests','concat'] $type = 'manifests',
+  Enum['present', 'absent'] $ensure = 'present',
 ){
   require ::kubernetes
   require ::kubernetes::kubectl
@@ -21,7 +22,7 @@ define kubernetes::apply(
   case $type {
     'manifests': {
       file{$apply_file:
-        ensure  => file,
+        ensure  => $ensure,
         mode    => '0640',
         owner   => 'root',
         group   => $kubernetes::group,
@@ -31,7 +32,7 @@ define kubernetes::apply(
     }
     'concat': {
       concat { $apply_file:
-        ensure         => present,
+        ensure         => $ensure,
         ensure_newline => true,
         mode           => '0640',
         owner          => 'root',
@@ -54,7 +55,11 @@ define kubernetes::apply(
     $protocol = 'http'
   }
 
-  $command = "/bin/bash -c \"while true; do if [[ \$(curl -k -w '%{http_code}' -s -o /dev/null ${protocol}://localhost:${server_port}/healthz) == 200 ]]; then break; else sleep 2; fi; done; kubectl apply -f '${apply_file}' || rm -f '${apply_file})'\""
+  if $ensure == 'present' {
+    $command = "/bin/bash -c \"while true; do if [[ \$(curl -k -w '%{http_code}' -s -o /dev/null ${protocol}://localhost:${server_port}/healthz) == 200 ]]; then break; else sleep 2; fi; done; kubectl apply -f '${apply_file}' || rm -f '${apply_file})'\""
+  } else {
+    $command = '/bin/true'
+  }
 
   # validate file first
   exec{"validate_${name}":

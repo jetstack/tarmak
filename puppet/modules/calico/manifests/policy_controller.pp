@@ -23,6 +23,7 @@ class calico::policy_controller (
 
   if $backend == 'etcd' {
     $namespace = $::calico::namespace
+    $ensure = 'present'
 
     if $::calico::etcd_proto == 'https' {
       $etcd_tls_dir = $::calico::etcd_tls_dir
@@ -30,11 +31,14 @@ class calico::policy_controller (
     } else {
       $tls = false
     }
+  } else {
+    $ensure = 'absent'
+  }
 
-    kubernetes::apply{'calico-policy-controller':
-      manifests => [
-        template('calico/policy-controller-deployment.yaml.erb'),
-      ],
-    }
+  kubernetes::apply{'calico-policy-controller':
+    ensure    => $ensure,
+    manifests => [
+      template('calico/policy-controller-deployment.yaml.erb'),
+    ],
   }
 }

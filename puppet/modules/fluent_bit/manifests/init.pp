@@ -1,6 +1,7 @@
 class fluent_bit (
   $package_name = $::fluent_bit::params::package_name,
   $service_name = $::fluent_bit::params::service_name,
+  Enum['present', 'absent'] $ensure = 'present',
 ) inherits ::fluent_bit::params {
 
   $path = defined('$::path') ? {

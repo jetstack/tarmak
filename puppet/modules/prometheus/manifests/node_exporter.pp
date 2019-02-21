@@ -73,38 +73,44 @@ class prometheus::node_exporter (
     }
 
     if $::prometheus::mode == 'Full' {
-      kubernetes::apply{'node-exporter':
-        manifests => [
-          template('prometheus/prometheus-ns.yaml.erb'),
-          template('prometheus/node-exporter-ds.yaml.erb'),
-        ],
-      }
+      $node_ensure = $::prometheus::ensure
+    } else {
+      $node_ensure = 'absent'
+    }
 
-      # scrape node exporter running on every kubernetes node (through api proxy)
-      prometheus::scrape_config { 'kubernetes-nodes-exporter':
-        order  =>  130,
-        config => {
-          'kubernetes_sd_configs' => [{
-            'role' => 'node',
+    kubernetes::apply{'node-exporter':
+      ensure    => $node_ensure,
+      manifests => [
+        template('prometheus/prometheus-ns.yaml.erb'),
+        template('prometheus/node-exporter-ds.yaml.erb'),
+      ],
+    }
+
+    # scrape node exporter running on every kubernetes node (through api proxy)
+    prometheus::scrape_config { 'kubernetes-nodes-exporter':
+      ensure => $node_ensure,
+      order  =>  130,
+      config => {
+        'kubernetes_sd_configs' => [{
+          'role' => 'node',
+        }],
+        'tls_config'            => {
+          'ca_file' => $kubernetes_ca_file,
+        },
+        'bearer_token_file'     => $kubernetes_token_file,
+        'scheme'                => 'https',
+        'relabel_configs'       => [{
+          'action' => 'labelmap',
+          'regex'  => '__meta_kubernetes_node_label_(.+)',
+          },{
+            'target_label' => '__address__',
+            'replacement'  => 'kubernetes.default.svc:443',
+            }, {
+              'source_labels' => ['__meta_kubernetes_node_name'],
+              'regex'         => '(.+)',
+              'target_label'  => '__metrics_path__',
+              'replacement'   => "/api/v1/nodes/\${1}:${port}/proxy/metrics",
           }],
-          'tls_config'            => {
-            'ca_file' => $kubernetes_ca_file,
-          },
-          'bearer_token_file'     => $kubernetes_token_file,
-          'scheme'                => 'https',
-          'relabel_configs'       => [{
-            'action' => 'labelmap',
-            'regex'  => '__meta_kubernetes_node_label_(.+)',
-            },{
-              'target_label' => '__address__',
-              'replacement'  => 'kubernetes.default.svc:443',
-              }, {
-                'source_labels' => ['__meta_kubernetes_node_name'],
-                'regex'         => '(.+)',
-                'target_label'  => '__metrics_path__',
-                'replacement'   => "/api/v1/nodes/\${1}:${port}/proxy/metrics",
-              }],
-        }
       }
     }
   }
@@ -131,13 +137,13 @@ class prometheus::node_exporter (
       provider          =>  'airworthy',
     }
     -> file { "${::prometheus::systemd_path}/node-exporter.service":
-      ensure  => file,
+      ensure  => $prometheus::ensure,
       content => template('prometheus/node-exporter.service.erb'),
       notify  => Exec["${module_name}-systemctl-daemon-reload"],
     }
     ~> service { 'node-exporter.service':
-      ensure  => running,
-      enable  => true,
+      ensure  => $::prometheus::service_ensure,
+      enable  => $::prometheus::service_enable,
       require => Exec["${module_name}-systemctl-daemon-reload"],
     }
   }

@@ -17,6 +17,7 @@ class calico::config{
     }
 
     kubernetes::apply{'calico-config':
+      ensure    => 'present',
       manifests => [
         template('calico/configmap_etcd.yaml.erb'),
       ],
@@ -26,6 +27,7 @@ class calico::config{
     $pod_network = $::calico::pod_network
 
     kubernetes::apply{'calico-config':
+      ensure    => 'present',
       manifests => [
         template('calico/configmap_kubernetes.yaml.erb'),
       ],

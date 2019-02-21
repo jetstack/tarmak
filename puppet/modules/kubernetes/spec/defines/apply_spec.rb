@@ -11,6 +11,9 @@ describe 'kubernetes::apply', :type => :define do
   ]}
 
   context 'not running on kubernetes master' do
+    let :params do
+      { :ensure => 'present'}
+    end
     let(:pre_condition) {[]}
     it { should compile.and_raise_error(/only be used on the kubernetes master/) }
   end
@@ -20,6 +23,7 @@ describe 'kubernetes::apply', :type => :define do
       let :params do
         {
           :type => 'manifests',
+          :ensure => 'present',
         }
       end
       it do
@@ -31,6 +35,7 @@ describe 'kubernetes::apply', :type => :define do
       let :params do
         {
           :type => 'concat',
+          :ensure => 'present',
         }
       end
       it do
@@ -46,6 +51,11 @@ describe 'kubernetes::apply', :type => :define do
       include kubernetes::apiserver
       '
     ]}
+    let :params do
+      {
+        :ensure => 'present',
+      }
+    end
 
     it do
       should contain_file("/etc/kubernetes/apply/#{title}.yaml")

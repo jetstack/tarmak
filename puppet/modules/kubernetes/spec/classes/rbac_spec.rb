@@ -13,7 +13,7 @@ describe 'kubernetes::rbac' do
         class{'kubernetes::master':}
         """
       ]}
-      it { should_not contain_file(crb_system_node_file) }
+      it { should contain_file(crb_system_node_file).with_ensure('absent') }
     end
 
     context 'enabled in 1.6' do
@@ -23,7 +23,7 @@ describe 'kubernetes::rbac' do
         class{'kubernetes::master':}
         """
       ]}
-      it { should_not contain_file(crb_system_node_file) }
+      it { should contain_file(crb_system_node_file).with_ensure('absent') }
     end
 
     context 'enabled in 1.5' do
@@ -33,8 +33,8 @@ describe 'kubernetes::rbac' do
         class{'kubernetes::master':}
         """
       ]}
-      it { should contain_file(crb_system_node_file).with_content(%r{cluster-admin}) }
-      it { should contain_file(crb_system_node_file).with_content(%r{system:node}) }
+      it { should contain_file(crb_system_node_file).with_content(%r{cluster-admin}).with_ensure('present') }
+      it { should contain_file(crb_system_node_file).with_content(%r{system:node}).with_ensure('present') }
     end
   end
 end

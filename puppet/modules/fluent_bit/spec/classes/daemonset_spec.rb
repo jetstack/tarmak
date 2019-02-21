@@ -1,9 +1,10 @@
 require 'spec_helper'
 describe 'fluent_bit::daemonset' do
   let(:pre_condition) do
-    [
-      'include kubernetes::apiserver'
-    ]
+    """
+      class{'fluent_bit': ensure => 'present'}
+      class{'kubernetes::apiserver':}
+    """
   end
 
   let :manifests_file do

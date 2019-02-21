@@ -6,11 +6,13 @@ describe 'kubernetes::dns' do
       "
         class{'kubernetes': version => '1.9.0'}
         define kubernetes::apply(
+          Enum['present', 'absent'] $ensure = 'present',
           $manifests,
         ){
-          kubernetes::addon_manager_labels($manifests[0])
+          if $manifests and $ensure == 'present' {
+            kubernetes::addon_manager_labels($manifests[0])
+          }
         }
-        define kubernetes::delete(){}
       "
     end
 
@@ -37,11 +39,13 @@ describe 'kubernetes::dns' do
       "
         class{'kubernetes': version => '1.11.0'}
         define kubernetes::apply(
+          Enum['present', 'absent'] $ensure = 'present',
           $manifests,
         ){
-          kubernetes::addon_manager_labels($manifests[0])
+          if $manifests and $ensure == 'present' {
+            kubernetes::addon_manager_labels($manifests[0])
+          }
         }
-        define kubernetes::delete(){}
       "
     end
 

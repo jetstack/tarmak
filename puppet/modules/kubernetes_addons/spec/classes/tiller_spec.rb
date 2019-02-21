@@ -7,9 +7,12 @@ describe 'kubernetes_addons::tiller' do
         $version = '1.10.6'
       }
       define kubernetes::apply(
+        Enum['present', 'absent'] $ensure = 'present',
         $manifests,
       ){
-        kubernetes::addon_manager_labels($manifests[0])
+        if $manifests and $ensure == 'present' {
+          kubernetes::addon_manager_labels($manifests[0])
+        }
       }
     "
   end

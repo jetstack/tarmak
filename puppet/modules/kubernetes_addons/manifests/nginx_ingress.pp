@@ -8,6 +8,7 @@ class kubernetes_addons::nginx_ingress(
   $namespace=$::kubernetes_addons::params::namespace,
   $replicas=undef,
   $host_port=false,
+  Enum['present', 'absent'] $ensure = 'present',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
   require ::kubernetes_addons::default_backend
@@ -28,6 +29,7 @@ class kubernetes_addons::nginx_ingress(
   }
 
   kubernetes::apply{'nginx-ingress':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/nginx-ingress-svc.yaml.erb'),
       template('kubernetes_addons/nginx-ingress-deployment.yaml.erb'),

@@ -174,13 +174,16 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 	}
 
 	// enable prometheus if set, default: enabled
+	hieraData.classes = append(hieraData.classes, `prometheus`)
 	if conf.Prometheus == nil || conf.Prometheus.Enabled {
 		mode := clusterv1alpha1.PrometheusModeFull
 		if conf.Prometheus != nil && conf.Prometheus.Mode != "" {
 			mode = conf.Prometheus.Mode
 		}
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf("prometheus::mode: %s", mode))
-		hieraData.classes = append(hieraData.classes, `prometheus`)
+		hieraData.variables = append(hieraData.variables, `prometheus::ensure: "present"`)
+	} else {
+		hieraData.variables = append(hieraData.variables, `prometheus::ensure: "absent"`)
 	}
 
 	globalGates := make(map[string]bool)
@@ -275,35 +278,40 @@ func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, rol
 		return
 	}
 
-	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.ClusterAutoscaler != nil && conf.ClusterAutoscaler.Enabled {
+	if roleName == clusterv1alpha1.KubernetesMasterRoleName {
 		hieraData.classes = append(hieraData.classes, `kubernetes_addons::cluster_autoscaler`)
-		if conf.ClusterAutoscaler.Image != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::image: "%s"`, conf.ClusterAutoscaler.Image))
-		}
-		if conf.ClusterAutoscaler.Version != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::version: "%s"`, conf.ClusterAutoscaler.Version))
-		}
-
-		if conf.ClusterAutoscaler.ScaleDownUtilizationThreshold != nil {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::scale_down_utilization_threshold: %v`, *conf.ClusterAutoscaler.ScaleDownUtilizationThreshold))
-		}
-
-		if conf.ClusterAutoscaler.Overprovisioning != nil && conf.ClusterAutoscaler.Overprovisioning.Enabled {
-			hieraData.variables = append(hieraData.variables, `kubernetes_addons::cluster_autoscaler::enable_overprovisioning: true`)
-			hieraData.variables = append(hieraData.variables, `kubernetes::enable_pod_priority: true`)
-
-			if conf.ClusterAutoscaler.Overprovisioning.Image != "" {
-				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::proportional_image: "%s"`, conf.ClusterAutoscaler.Overprovisioning.Image))
+		if conf.ClusterAutoscaler != nil && conf.ClusterAutoscaler.Enabled {
+			hieraData.variables = append(hieraData.variables, `kubernetes_addons::cluster_autoscaler::ensure: "present"`)
+			if conf.ClusterAutoscaler.Image != "" {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::image: "%s"`, conf.ClusterAutoscaler.Image))
 			}
-			if conf.ClusterAutoscaler.Overprovisioning.Version != "" {
-				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::proportional_version: "%s"`, conf.ClusterAutoscaler.Overprovisioning.Version))
+			if conf.ClusterAutoscaler.Version != "" {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::version: "%s"`, conf.ClusterAutoscaler.Version))
 			}
 
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::reserved_millicores_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica))
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::reserved_megabytes_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.ReservedMegabytesPerReplica))
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::cores_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.CoresPerReplica))
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::nodes_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.NodesPerReplica))
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::replica_count: %d`, conf.ClusterAutoscaler.Overprovisioning.ReplicaCount))
+			if conf.ClusterAutoscaler.ScaleDownUtilizationThreshold != nil {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::scale_down_utilization_threshold: %v`, *conf.ClusterAutoscaler.ScaleDownUtilizationThreshold))
+			}
+
+			if conf.ClusterAutoscaler.Overprovisioning != nil && conf.ClusterAutoscaler.Overprovisioning.Enabled {
+				hieraData.variables = append(hieraData.variables, `kubernetes_addons::cluster_autoscaler::enable_overprovisioning: true`)
+				hieraData.variables = append(hieraData.variables, `kubernetes::enable_pod_priority: true`)
+
+				if conf.ClusterAutoscaler.Overprovisioning.Image != "" {
+					hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::proportional_image: "%s"`, conf.ClusterAutoscaler.Overprovisioning.Image))
+				}
+				if conf.ClusterAutoscaler.Overprovisioning.Version != "" {
+					hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::proportional_version: "%s"`, conf.ClusterAutoscaler.Overprovisioning.Version))
+				}
+
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::reserved_millicores_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.ReservedMillicoresPerReplica))
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::reserved_megabytes_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.ReservedMegabytesPerReplica))
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::cores_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.CoresPerReplica))
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::nodes_per_replica: %d`, conf.ClusterAutoscaler.Overprovisioning.NodesPerReplica))
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::cluster_autoscaler::replica_count: %d`, conf.ClusterAutoscaler.Overprovisioning.ReplicaCount))
+			}
+		} else {
+			hieraData.variables = append(hieraData.variables, `kubernetes_addons::cluster_autoscaler::ensure: "absent"`)
 		}
 	}
 
@@ -313,36 +321,52 @@ func kubernetesClusterConfigPerRole(conf *clusterv1alpha1.ClusterKubernetes, rol
 		}
 	}
 
-	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.Tiller != nil && conf.Tiller.Enabled {
+	if roleName == clusterv1alpha1.KubernetesMasterRoleName {
 		hieraData.classes = append(hieraData.classes, `kubernetes_addons::tiller`)
-		if conf.Tiller.Image != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller::image: "%s"`, conf.Tiller.Image))
-		}
-		if conf.Tiller.Version != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller::version: "%s"`, conf.Tiller.Version))
+		if conf.Tiller != nil && conf.Tiller.Enabled {
+			hieraData.variables = append(hieraData.variables, `kubernetes_addons::tiller::ensure: "present"`)
+			if conf.Tiller.Image != "" {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller::image: "%s"`, conf.Tiller.Image))
+			}
+			if conf.Tiller.Version != "" {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::tiller::version: "%s"`, conf.Tiller.Version))
+			}
+		} else {
+			hieraData.variables = append(hieraData.variables, `kubernetes_addons::tiller::ensure: "absent"`)
 		}
 	}
 
-	if roleName == clusterv1alpha1.KubernetesMasterRoleName && conf.Dashboard != nil && conf.Dashboard.Enabled {
+	if roleName == clusterv1alpha1.KubernetesMasterRoleName {
 		hieraData.classes = append(hieraData.classes, `kubernetes_addons::dashboard`)
-		if conf.Dashboard.Image != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard::image: "%s"`, conf.Dashboard.Image))
+		if conf.Dashboard != nil && conf.Dashboard.Enabled {
+			hieraData.variables = append(hieraData.variables, `kubernetes_addons::dashboard::ensure: "present"`)
+			if conf.Dashboard.Image != "" {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard::image: "%s"`, conf.Dashboard.Image))
+			}
+			if conf.Dashboard.Version != "" {
+				hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard::version: "%s"`, conf.Dashboard.Version))
+			}
+		} else {
+			hieraData.variables = append(hieraData.variables, `kubernetes_addons::dashboard::ensure: "absent"`)
 		}
-		if conf.Dashboard.Version != "" {
-			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::dashboard::version: "%s"`, conf.Dashboard.Version))
-		}
 	}
 
-	if g := conf.Grafana; g != nil {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::grafana::enabled: %t`, conf.Grafana.Enabled))
+	if g := conf.Grafana; g != nil && conf.Grafana.Enabled {
+		hieraData.variables = append(hieraData.variables, `kubernetes_addons::grafana::ensure: "present"`)
+	} else {
+		hieraData.variables = append(hieraData.variables, `kubernetes_addons::grafana::ensure: "absent"`)
 	}
 
-	if h := conf.Heapster; h != nil {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::heapster::enabled: %t`, conf.Heapster.Enabled))
+	if h := conf.Heapster; h != nil && conf.Heapster.Enabled {
+		hieraData.variables = append(hieraData.variables, `kubernetes_addons::heapster::ensure: "present"`)
+	} else {
+		hieraData.variables = append(hieraData.variables, `kubernetes_addons::heapster::ensure: "absent"`)
 	}
 
-	if i := conf.Heapster; i != nil {
-		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes_addons::influxdb::enabled: %t`, conf.InfluxDB.Enabled))
+	if i := conf.Heapster; i != nil && conf.InfluxDB.Enabled {
+		hieraData.variables = append(hieraData.variables, `kubernetes_addons::influxdb::ensure: "present"`)
+	} else {
+		hieraData.variables = append(hieraData.variables, `kubernetes_addons::influxdb::ensure: "absent"`)
 	}
 
 	return
@@ -378,6 +402,9 @@ func (p *Puppet) contentClusterConfig(cluster interfaces.Cluster) ([]string, err
 			return nil, fmt.Errorf("unable to marshall logging sinks: %s", err)
 		}
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::fluent_bit_configs: %s`, string(jsonLoggingSink)))
+		hieraData.variables = append(hieraData.variables, `fluent_bit::ensure: "present"`)
+	} else {
+		hieraData.variables = append(hieraData.variables, `fluent_bit::ensure: "absent"`)
 	}
 
 	if v := cluster.Config().VaultHelper; v != nil {
