@@ -1,98 +1,51 @@
 require 'spec_helper_acceptance'
-require 'webrick'
 
-class ESMock
-  attr_reader :port, :magic_logline, :magic_prefix, :semaphore
-  attr_accessor :magic_logline_appeared, :magic_prefix_appeared
-
-  def initialize(hosts)
-    reset
-    @semaphore = Mutex.new
-    @port = 9200
-    @http_server = WEBrick::HTTPServer.new(Port: @port)
-    @http_server.mount '/', ESMockHandle, self
-    @hosts = hosts
-  end
-
-  def start
-    # listen to local ES port
-    trap('INT') { @http_server.shutdown }
-    @http_server_thread = Thread.start { @http_server.start }
-    @ssh_connetions = []
+module Helpers
+  def log_magic_line
     hosts.each do |host|
-      # setup a remote tunnel to forward local es mock
-      conn = host.connection.connect
-      conn.forward.remote(@port, "127.0.0.1", @port) # port on host, host on host, remote port
-      @ssh_connections << conn
+      on host, "logger \"#{@magic_logline}\""
     end
   end
 
-  def stop
-    @ssh_connections.each do |conn|
-      conn.forward.cancel_remote(@port)
+  def find_magic_line
+    hosts.each do |host|
+      result = JSON.parse(host.execute("curl --retry 5 --fail -s -X GET 'http://localhost:9200/_all/_search?q=MESSAGE:\"#{@magic_logline}\"'"))
+      return nil unless result.key? 'hits'
+      return nil unless result['hits'].key? 'total'
+      total = result['hits']['total']
+      fail 'more than a single result found' if total > 1
+      return nil if total < 1
+      return result['hits']['hits'][0]
     end
-    @http_server.shutdown
-    @http_server_thread.join
   end
 
-  def reset
-    @magic_logline = "magic-logline-#{SecureRandom.uuid}"
-    @magic_prefix = "magic-prefix-#{SecureRandom.uuid}"
-    @magic_logline_appeared = nil
-    @magic_prefix_appeared = nil
+  def retry_find_magic_line(tries=100)
+    count = 0
+    while true do
+      log_line = find_magic_line
+      return log_line unless log_line.nil?
+
+      count += 1
+      fail "could not find magic logline after #{count} tries" if count > tries
+      sleep 1
+    end
+    return nil
+  end
+
+  def document_count
+    count = 0
+    result = JSON.parse(host.execute("curl --retry 5 --fail -s -X GET 'http://localhost:9200/_cat/indices?format=json"))
+    $stderr.puts "indices = #{result}"
+    # TODO: Count here
+    count
   end
 end
 
-class ESMockHandle < WEBrick::HTTPServlet::AbstractServlet
-  @server = nil
-
-  def initialize(i, server)
-    super i
-    @server = server
-  end
-
-  def do_POST(request, response)
-    key_message = 'MESSAGE'
-    key_index = 'index'
-    key__index = '_index'
-
-    index = nil
-    count = 0
-    request.body.each_line do |line|
-      log_line = JSON.parse(line)
-
-      if log_line.key?(key_index) and log_line[key_index].key?(key__index)
-        index = log_line[key_index][key__index]
-        if index.include? @server.magic_prefix
-          $stderr.puts "magic prefix appeared: '#{log_line}'"
-          @server.semaphore.synchronize do
-            @server.magic_prefix_appeared = true
-          end
-        end
-        next
-      end
-
-      count += 1
-
-      if log_line.key?(key_message) and log_line[key_message].include?(@server.magic_logline)
-        $stderr.puts "magic logline appeared: '#{log_line}'"
-        @server.semaphore.synchronize do
-          @server.magic_logline_appeared = true
-        end
-      end
-    end
-
-    $stderr.puts "received #{count} log lines for index '#{index}'"
-
-    response.status = 200
-    response.body = '{"took":30,"errors":false,"items":[]}'
-  end
+RSpec.configure do |c|
+  c.include Helpers
 end
 
 describe '::fluent_bit' do
-
-
-
   before(:all) do
     hosts.each do |host|
       # clear firewall
@@ -103,29 +56,37 @@ describe '::fluent_bit' do
 
       # create some fake aws creds
       on host, 'echo -e "AWS_ACCESS_KEY_ID=AKID1234567890\nAWS_SECRET_ACCESS_KEY=MY-SECRET-KEY" > /etc/sysconfig/aws-es-proxy-test'
-    end
 
-    @mock_es = ESMock.new hosts
-    @mock_es.start
+      # setup a local elasticsearch instance
+      on host, "cp #{$module_path}fluent_bit/spec/fixtures/elasticsearch.repo /etc/yum.repos.d"
+      on host, 'rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+      on host, 'yum -y install java-1.8.0-openjdk elasticsearch wget'
+      on host, 'systemctl start elasticsearch.service'
+      on host, 'wget --retry-connrefused -T 60 http://localhost:9200/_cluster/health -O /dev/null 2> /dev/null'
+    end
   end
 
-
-  after(:all) do
-    @mock_es.stop
+  let(:port) do
+    9200
   end
 
   context 'fluentbit with aws-es proxy' do
+    before(:all) do
+      @magic_logline = "magic-logline-#{SecureRandom.uuid}"
+      @magic_prefix = "magic-prefix-#{SecureRandom.uuid}"
+    end
+
     let(:pp) do
       pp = <<-EOS
 host { 'fake.eu-west-1.es.amazonaws.com':
-  ensure => present,
-  ip => '127.0.0.1',
+ ensure => present,
+ ip => '127.0.0.1',
 }
 -> fluent_bit::output{"test":
     config => {
         "elasticsearch" => {
             "host" => "fake.eu-west-1.es.amazonaws.com",
-            "port" => #{@mock_es.port},
+            "port" => #{port},
             "tls" => false,
             "amazonESProxy" => {
               "port" => 9201
@@ -138,9 +99,6 @@ host { 'fake.eu-west-1.es.amazonaws.com':
       pp
     end
 
-    before(:all) do
-      @mock_es.reset
-    end
 
     it 'should setup fluent bit without errors in first apply' do
       hosts.each do |host|
@@ -152,50 +110,41 @@ host { 'fake.eu-west-1.es.amazonaws.com':
     end
 
     it 'should receive magic log line' do
-      hosts.each do |host|
-        on host, "logger \"#{@mock_es.magic_logline}\""
-      end
-
-      count = 0
-      while true
-        count += 1
-        fail "no log line received after 1000 tries" if count > 1000
-        break unless @mock_es.magic_logline_appeared.nil?
-        sleep(1)
-      end
-
-      expect(@mock_es.magic_logline_appeared).to equal(true)
-      expect(@mock_es.magic_prefix_appeared).to equal(nil)
+      log_magic_line
+      log_line = retry_find_magic_line
+      expect(log_line).not_to be_nil
+      expect(log_line['_index']).to start_with('logstash-')
     end
   end
 
   context 'fluentbit with aws-es proxy using custom index' do
-    let(:pp) do
-      pp = <<-EOS
- host { 'fake.eu-west-1.es.amazonaws.com':
-  ensure => present,
-  ip => '127.0.0.1',
- }
- -> fluent_bit::output{"test":
-     config => {
-         "elasticsearch" => {
-             "host" => "fake.eu-west-1.es.amazonaws.com",
-             "port" => #{@mock_es.port},
-             "tls" => false,
-             "logstashPrefix" => "#{@mock_es.magic_prefix}",
-             "amazonESProxy" => {
-               "port" => 9201
-             },
-           },
-         "types" => ["all"],
-     },
- }
-      EOS
-      pp
+    before(:all) do
+      @magic_logline = "magic-logline-#{SecureRandom.uuid}"
+      @magic_prefix = "magic-prefix-#{SecureRandom.uuid}"
     end
 
-    before(:all) do
-      @mock_es.reset
+    let(:pp) do
+      pp = <<-EOS
+host { 'fake.eu-west-1.es.amazonaws.com':
+ ensure => present,
+ ip => '127.0.0.1',
+}
+-> fluent_bit::output{"test":
+    config => {
+        "elasticsearch" => {
+            "host" => "fake.eu-west-1.es.amazonaws.com",
+            "port" => #{port},
+            "tls" => false,
+            "logstashPrefix" => "#{@magic_prefix}",
+            "amazonESProxy" => {
+              "port" => 9201
+            },
+          },
+        "types" => ["all"],
+    },
+}
+      EOS
+      pp
     end
 
     it 'should setup fluent bit without errors in first apply' do
@@ -208,41 +157,32 @@ host { 'fake.eu-west-1.es.amazonaws.com':
     end
 
     it 'should receive magic log line and prefix' do
-      hosts.each do |host|
-        on host, "logger \"#{@mock_es.magic_logline}\""
-      end
-
-      count = 0
-      while true
-        count += 1
-        fail "no log line received after 1000 tries" if count > 1000
-        break unless @mock_es.magic_logline_appeared.nil? or @mock_es.magic_logline_appeared.nil?
-        sleep(1)
-      end
-
-      expect(@mock_es.magic_logline_appeared).to equal(true)
-      expect(@mock_es.magic_prefix_appeared).to equal(true)
+      log_magic_line
+      log_line = retry_find_magic_line
+      expect(log_line).not_to be_nil
+      expect(log_line['_index']).to start_with(@magic_prefix)
     end
   end
 
   context 'fluentbit without any output' do
-    let(:pp) do
-      pp = <<-EOS
- host { 'fake.eu-west-1.es.amazonaws.com':
-  ensure => present,
-  ip => '127.0.0.1',
- }
- -> fluent_bit::output{"test":
-     config => {
-         "types" => ["all"],
-     },
- }
-      EOS
-      pp
+    before(:all) do
+      @magic_logline = "magic-logline-#{SecureRandom.uuid}"
+      @magic_prefix = "magic-prefix-#{SecureRandom.uuid}"
     end
 
-    before(:all) do
-      @mock_es.reset
+    let(:pp) do
+      pp = <<-EOS
+host { 'fake.eu-west-1.es.amazonaws.com':
+ ensure => present,
+ ip => '127.0.0.1',
+}
+-> fluent_bit::output{"test":
+    config => {
+        "types" => ["all"],
+    },
+}
+      EOS
+      pp
     end
 
     it 'should setup fluent bit without errors in first apply' do
@@ -255,14 +195,9 @@ host { 'fake.eu-west-1.es.amazonaws.com':
     end
 
     it 'should not receive magic log line and prefix' do
-      hosts.each do |host|
-        on host, "logger \"#{@mock_es.magic_logline}\""
-      end
+      log_magic_line
 
-      sleep(10)
-
-      expect(@mock_es.magic_logline_appeared).to equal(nil)
-      expect(@mock_es.magic_prefix_appeared).to equal(nil)
+      expect{retry_find_magic_line(tries=10)}.to raise_error(/could not find magic logline/)
     end
   end
 end
