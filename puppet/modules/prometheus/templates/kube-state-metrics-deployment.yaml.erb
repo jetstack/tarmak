@@ -117,9 +117,13 @@ rules:
   - daemonsets
   - deployments
   - replicasets
+  - ingresses
   verbs: ["list", "watch"]
 - apiGroups: ["apps"]
   resources:
+  - daemonsets
+  - deployments
+  - replicasets
   - statefulsets
   verbs: ["list", "watch"]
 - apiGroups: ["batch"]
@@ -130,6 +134,10 @@ rules:
 - apiGroups: ["autoscaling"]
   resources:
   - horizontalpodautoscalers
+  verbs: ["list", "watch"]
+- apiGroups: ["policy"]
+  resources:
+  - poddisruptionbudgets
   verbs: ["list", "watch"]
 ---
 <%- if @version_before_1_6 -%>
@@ -168,6 +176,11 @@ rules:
   resources:
   - pods
   verbs: ["get"]
+- apiGroups: ["apps"]
+  resources:
+  - deployments
+  resourceNames: ["kube-state-metrics"]
+  verbs: ["get", "update"]
 - apiGroups: ["extensions"]
   resources:
   - deployments
