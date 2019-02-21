@@ -5,6 +5,7 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
+EnvironmentFile=-/etc/sysconfig/<%= @service_name %>
 ExecStart=<%= scope['proxy_path'] %> \
   -listen localhost:<%= scope['listen_port'] %> \
   -endpoint <%= scope['endpoint'] %>

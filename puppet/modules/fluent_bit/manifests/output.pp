@@ -4,34 +4,32 @@ define fluent_bit::output (
   include ::fluent_bit
 
   $path = $::fluent_bit::path
-
   $types = $config['types']
+  $elasticsearch = $config['elasticsearch']
 
-  if $config['elasticsearch'] {
-
-    $elasticsearch = $config['elasticsearch']
-
-    if $elasticsearch['tlsCA'] and $elasticsearch['tlsCA'] != '' {
-      file { "/etc/td-agent-bit/ssl/${name}-ca.pem":
-        ensure  => file,
-        mode    => '0640',
-        owner   => 'root',
-        group   => 'root',
-        content => $elasticsearch['tlsCA'],
-      }
+  if $elasticsearch and $elasticsearch['tlsCA'] and $elasticsearch['tlsCA'] != '' {
+    file { "/etc/td-agent-bit/ssl/${name}-ca.pem":
+      ensure  => file,
+      mode    => '0640',
+      owner   => 'root',
+      group   => 'root',
+      content => $elasticsearch['tlsCA'],
     }
+  }
 
-    if $elasticsearch['amazonESProxy'] {
-
-      ::aws_es_proxy::instance{ $name:
-        tls          => $elasticsearch['tls'],
-        dest_port    => $elasticsearch['port'],
-        dest_address => $elasticsearch['host'],
-        listen_port  => $elasticsearch['amazonESProxy']['port'],
-      }
-
+  if $elasticsearch and $elasticsearch['amazonESProxy'] {
+    ::aws_es_proxy::instance{ $name:
+      tls          => $elasticsearch['tls'],
+      dest_port    => $elasticsearch['port'],
+      dest_address => $elasticsearch['host'],
+      listen_port  => $elasticsearch['amazonESProxy']['port'],
     }
-
+  } else {
+    ::aws_es_proxy::instance{ $name:
+      ensure_service => 'stopped',
+      enable_service => false,
+      dest_address   => '',
+    }
   }
 
   file { "/etc/td-agent-bit/td-agent-bit-output-${name}.conf":
