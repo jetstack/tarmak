@@ -7,9 +7,12 @@ describe 'calico' do
         $version = '1.7.10'
       }
       define kubernetes::apply(
-      $manifests,
+        Enum['present', 'absent'] $ensure = 'present',
+        $manifests,
       ){
-        kubernetes::addon_manager_labels($manifests[0])
+        if $manifests and $ensure == 'present' {
+          kubernetes::addon_manager_labels($manifests[0])
+        }
       }
     "
   end
@@ -55,9 +58,12 @@ describe 'calico' do
       class kubernetes::apiserver{}
       include kubernetes::apiserver
       define kubernetes::apply(
-      $manifests,
+        Enum['present', 'absent'] $ensure = 'present',
+        $manifests,
       ){
-        kubernetes::addon_manager_labels($manifests[0])
+        if $manifests and $ensure == 'present' {
+          kubernetes::addon_manager_labels($manifests[0])
+        }
       }
         "
       end

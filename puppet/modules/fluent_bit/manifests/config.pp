@@ -8,7 +8,7 @@ class fluent_bit::config {
   }
 
   file { '/etc/td-agent-bit/td-agent-bit.conf':
-    ensure  => file,
+    ensure  => $::fluent_bit::ensure,
     mode    => '0644',
     owner   => 'root',
     group   => 'root',

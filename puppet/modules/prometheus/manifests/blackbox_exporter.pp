@@ -11,6 +11,7 @@ class prometheus::blackbox_exporter(
 
   # Setup deployment for blackbox exporter in cluster
   kubernetes::apply{'blackbox-exporter':
+    ensure    => $::prometheus::ensure,
     manifests => [
       template('prometheus/prometheus-ns.yaml.erb'),
       template('prometheus/blackbox-exporter-deployment.yaml.erb'),

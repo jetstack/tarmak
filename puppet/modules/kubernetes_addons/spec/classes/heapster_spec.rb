@@ -7,9 +7,12 @@ describe 'kubernetes_addons::heapster' do
         $version = '1.6.4'
       }
       define kubernetes::apply(
+        Enum['present', 'absent'] $ensure = 'present',
         $manifests,
       ){
-        kubernetes::addon_manager_labels($manifests[0])
+        if $manifests and $ensure == 'present' {
+          kubernetes::addon_manager_labels($manifests[0])
+        }
       }
     "
   end

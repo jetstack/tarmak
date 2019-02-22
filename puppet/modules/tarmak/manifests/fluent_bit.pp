@@ -7,5 +7,4 @@ class tarmak::fluent_bit(
       config => $fluent_bit_config,
     }
   }
-
 }

@@ -21,9 +21,12 @@ describe 'calico::node' do
         $_apiserver_insecure_port = 1000
       }
       define kubernetes::apply(
-      $manifests,
+        Enum['present', 'absent'] $ensure = 'present',
+        $manifests,
       ){
-        kubernetes::addon_manager_labels($manifests[0])
+        if $manifests and $ensure == 'present' {
+          kubernetes::addon_manager_labels($manifests[0])
+        }
       }
       class{'calico':
         #{mtu}

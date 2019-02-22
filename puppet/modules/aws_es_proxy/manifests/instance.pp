@@ -3,8 +3,7 @@ define aws_es_proxy::instance (
   Boolean $tls = true,
   Integer $dest_port = 9200,
   Integer $listen_port = 9200,
-  Enum['running', 'stopped'] $ensure_service = 'running',
-  Boolean $enable_service = true
+  Enum['present', 'absent'] $ensure = 'present'
 ){
   include ::aws_es_proxy
 
@@ -27,6 +26,14 @@ define aws_es_proxy::instance (
     }
   }
 
+  if $ensure == 'present' {
+    $service_ensure = 'running'
+    $service_enable = true
+  } else {
+    $service_ensure = 'stopped'
+    $service_enable = false
+  }
+
   exec { "${service_name}-systemctl-daemon-reload":
     command     => 'systemctl daemon-reload',
     refreshonly => true,
@@ -34,7 +41,7 @@ define aws_es_proxy::instance (
   }
 
   file{ "/etc/systemd/system/${service_name}.service":
-    ensure  => 'file',
+    ensure  => file,
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
@@ -42,8 +49,8 @@ define aws_es_proxy::instance (
     notify  => Exec["${service_name}-systemctl-daemon-reload"]
   }
   ~> service { "${service_name}.service":
-    ensure     => $ensure_service,
-    enable     => $enable_service,
+    ensure     => $service_ensure,
+    enable     => $service_enable,
     hasstatus  => true,
     hasrestart => true,
     subscribe  => Class['aws_es_proxy::install']

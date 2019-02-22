@@ -20,6 +20,7 @@ class kubernetes_addons::cluster_autoscaler(
   $ca_mounts=$::kubernetes_addons::params::ca_mounts,
   $cloud_provider=$::kubernetes_addons::params::cloud_provider,
   $aws_region=$::kubernetes_addons::params::aws_region,
+  Enum['present', 'absent'] $ensure = 'present',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
@@ -96,15 +97,21 @@ class kubernetes_addons::cluster_autoscaler(
 
 
   if $_enable_overprovisioning and versioncmp($::kubernetes::version, '1.9.0') >= 0 {
-    kubernetes::apply{'cluster-autoscaler-overprovisioning':
-      manifests => [
-        template('kubernetes_addons/cluster-autoscaler-overprovisioning.yaml.erb'),
-        template('kubernetes_addons/cluster-autoscaler-overprovisioning-rbac.yaml.erb'),
-      ],
-    }
+    $overprovision_ensure = $ensure
+  } else {
+    $overprovision_ensure = 'absent'
+  }
+
+  kubernetes::apply{'cluster-autoscaler-overprovisioning':
+    ensure    => $overprovision_ensure,
+    manifests => [
+      template('kubernetes_addons/cluster-autoscaler-overprovisioning.yaml.erb'),
+      template('kubernetes_addons/cluster-autoscaler-overprovisioning-rbac.yaml.erb'),
+    ],
   }
 
   kubernetes::apply{'cluster-autoscaler':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/cluster-autoscaler-deployment.yaml.erb'),
       template('kubernetes_addons/cluster-autoscaler-rbac.yaml.erb'),

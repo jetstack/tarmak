@@ -28,6 +28,7 @@ class fluent_bit::daemonset(
   }
 
   kubernetes::apply{'fluent-bit':
+    ensure    => $::fluent_bit::ensure,
     manifests => [
       template('fluent_bit/fluent-bit-configmap.yaml.erb'),
       template('fluent_bit/fluent-bit-daemonset.yaml.erb'),

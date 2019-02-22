@@ -6,6 +6,7 @@ class kubernetes_addons::dashboard(
   String $request_cpu='10m',
   String $request_mem='64Mi',
   $replicas=undef,
+  Enum['present', 'absent'] $ensure = 'present',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
@@ -63,6 +64,7 @@ class kubernetes_addons::dashboard(
   }
 
   kubernetes::apply{'kube-dashboard':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/dashboard-deployment.yaml.erb'),
       template('kubernetes_addons/dashboard-rbac.yaml.erb'),

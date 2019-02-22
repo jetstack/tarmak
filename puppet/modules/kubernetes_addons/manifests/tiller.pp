@@ -2,6 +2,7 @@ class kubernetes_addons::tiller(
   String $image='gcr.io/kubernetes-helm/tiller',
   String $version='2.9.1',
   String $namespace='kube-system',
+  Enum['present', 'absent'] $ensure = 'present'
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
@@ -31,6 +32,7 @@ class kubernetes_addons::tiller(
   }
 
   kubernetes::apply{'tiller':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/tiller-deployment.yaml.erb'),
     ],

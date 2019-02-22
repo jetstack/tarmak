@@ -41,6 +41,7 @@ class calico::disable_source_destination_check(
     $aws_region = $::ec2_metadata['placement']['availability-zone'][0,-2]
 
     kubernetes::apply{'disable-srcdest-node':
+      ensure    => 'present',
       manifests => [
         template('calico/disable-source-destination.yaml.erb'),
       ],

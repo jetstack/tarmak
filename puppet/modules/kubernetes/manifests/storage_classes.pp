@@ -4,6 +4,7 @@ class kubernetes::storage_classes{
   if versioncmp($::kubernetes::version, '1.4.0') >= 0 {
     if $cloud_provider == 'aws' {
       kubernetes::apply{'storage-classes':
+        ensure    => 'present',
         manifests => [
           template('kubernetes/storage-classes-aws.yaml.erb'),
         ],

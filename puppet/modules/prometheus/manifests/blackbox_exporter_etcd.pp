@@ -109,12 +109,12 @@ class prometheus::blackbox_exporter_etcd (
       mode   => '0755',
     }
     -> file { "${config_dir}/blackbox_exporter.yaml":
-      ensure  => file,
+      ensure  => $::prometheus::ensure,
       content => template('prometheus/blackbox_exporter.yaml.erb'),
     }
 
     file { "${systemd_path}/blackbox-exporter.service":
-      ensure  => file,
+      ensure  => $::prometheus::ensure,
       content => template('prometheus/blackbox_exporter.service.erb'),
     }
     ~> exec { "${module_name}-systemctl-daemon-reload":
@@ -123,8 +123,8 @@ class prometheus::blackbox_exporter_etcd (
     }
 
     service { 'blackbox-exporter':
-      ensure    => running,
-      enable    => true,
+      ensure    => $::prometheus::service_ensure,
+      enable    => $::prometheus::service_enable,
       subscribe => [
         Archive["${dest_dir}/blackbox_exporter"],
         File["${config_dir}/blackbox_exporter.yaml"],

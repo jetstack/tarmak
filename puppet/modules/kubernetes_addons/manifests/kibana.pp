@@ -7,10 +7,12 @@ class kubernetes_addons::kibana(
   String $limit_cpu='1',
   String $limit_mem='2Gi',
   Integer $replicas=2,
+  Enum['present', 'absent'] $ensure = 'present',
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
   kubernetes::apply{'kibana':
+    ensure    => $ensure,
     manifests => [
       template('kubernetes_addons/kibana-svc.yaml.erb'),
       template('kubernetes_addons/kibana-deployment.yaml.erb'),
