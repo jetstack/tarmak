@@ -99,6 +99,8 @@ metadata:
 rules:
 - apiGroups: [""]
   resources:
+  - configmaps
+  - secrets
   - nodes
   - pods
   - services
@@ -106,10 +108,9 @@ rules:
   - replicationcontrollers
   - limitranges
   - persistentvolumeclaims
+  - persistentvolumes
   - namespaces
   - endpoints
-  - persistentvolumes
-  - horizontalpodautoscalers
   verbs: ["list", "watch"]
 - apiGroups: ["extensions"]
   resources:
