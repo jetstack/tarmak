@@ -1,10 +1,10 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: core-dns
+  name: coredns
   namespace: kube-system
   labels:
-    k8s-app: core-dns
+    k8s-app: coredns
     kubernetes.io/name: "CoreDNS"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
@@ -15,11 +15,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      k8s-app: core-dns
+      k8s-app: coredns
   template:
     metadata:
       labels:
-        k8s-app: core-dns
+        k8s-app: coredns
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '9153'
@@ -41,7 +41,7 @@ spec:
             - key: Corefile
               path: Corefile
       containers:
-      - name: core-dns
+      - name: coredns
         image: coredns/coredns:1.2.0
         imagePullPolicy: IfNotPresent
         resources:
@@ -84,5 +84,5 @@ spec:
           readOnlyRootFilesystem: true
       dnsPolicy: Default
 <%- if @rbac_enabled -%>
-      serviceAccountName: core-dns
+      serviceAccountName: coredns
 <%- end -%>

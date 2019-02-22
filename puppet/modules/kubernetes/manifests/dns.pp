@@ -31,18 +31,18 @@ class kubernetes::dns(
   $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
 
   if $post_1_10 {
-    $app_name = 'core-dns'
+    $app_name = 'coredns'
     $delete_app_name = 'kube-dns'
     $label_name = 'CoreDNS'
 
     $manifests = [
-      template('kubernetes/core-dns-config-map.yaml.erb'),
-      template('kubernetes/core-dns-deployment.yaml.erb'),
+      template('kubernetes/coredns-config-map.yaml.erb'),
+      template('kubernetes/coredns-deployment.yaml.erb'),
     ]
 
   } else {
     $app_name = 'kube-dns'
-    $delete_app_name = 'core-dns'
+    $delete_app_name = 'coredns'
     $label_name = 'KubeDNS'
 
     $manifests = [

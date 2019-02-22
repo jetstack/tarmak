@@ -46,7 +46,7 @@ describe 'kubernetes::dns' do
     end
 
     let(:manifests) do
-      catalogue.resource('Kubernetes::Apply', 'core-dns').send(:parameters)[:manifests]
+      catalogue.resource('Kubernetes::Apply', 'coredns').send(:parameters)[:manifests]
     end
 
     it 'be valid yaml' do
