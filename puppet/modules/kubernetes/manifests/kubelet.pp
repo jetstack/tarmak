@@ -61,6 +61,9 @@ class kubernetes::kubelet(
   $tls_min_version = $::kubernetes::tls_min_version
   $tls_cipher_suites = $::kubernetes::tls_cipher_suites
 
+  $max_user_instances = $::kubernetes::max_user_instances
+  $max_user_watches = $::kubernetes::max_user_watches
+
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
   $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
 
@@ -178,6 +181,27 @@ class kubernetes::kubelet(
     $_ca_file = '/var/run/kubernetes/apiserver.crt'
   } else {
     $_ca_file = $ca_file
+  }
+
+  exec {'sysctl-system':
+    command     => 'sysctl --system',
+    refreshonly => true,
+    path        => ['/usr/bin/', '/bin', '/usr/sbin'],
+  }
+
+  file{$::kubernetes::params::sysctl_dir:
+    ensure => 'directory',
+    mode   => '0755',
+    owner  => 'root',
+    group  => 'root',
+  }
+  -> file{"${::kubernetes::params::sysctl_dir}/fs.conf":
+    ensure  => file,
+    mode    => '0640',
+    owner   => 'root',
+    group   => 'root',
+    content => template('kubernetes/fs.conf.erb'),
+    notify  => Exec['sysctl-system'],
   }
 
   $seltype = 'container_file_t'
