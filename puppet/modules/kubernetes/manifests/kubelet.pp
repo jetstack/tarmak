@@ -186,7 +186,7 @@ class kubernetes::kubelet(
   exec {'sysctl-system':
     command     => 'sysctl --system',
     refreshonly => true,
-    path        => ['/usr/bin/', '/bin', '/usr/sbin'],
+    path        => $::kubernetes::path,
   }
 
   file{$::kubernetes::params::sysctl_dir:
