@@ -44,6 +44,8 @@ class kubernetes (
     'TLS_RSA_WITH_AES_256_GCM_SHA384',
     'TLS_RSA_WITH_AES_128_GCM_SHA256',
   ],
+  Integer $max_user_instances = 8192,
+  Integer $max_user_watches = 524288,
 ) inherits ::kubernetes::params
 {
 
@@ -185,5 +187,4 @@ class kubernetes (
     mode    => '0750',
     require => User[$user],
   }
-
 }

@@ -1,0 +1,6 @@
+# https://github.com/kubernetes/kops/blob/af4df08b694e2a1f8814a7b3649060477be67c86/nodeup/pkg/model/sysctls.go
+# Max number of inotify instances and watches for a user
+# Since dockerd runs as a single user, the default instances value of 128 per user is too low
+# e.g. uses of inotify: nginx ingress controller, kubectl logs -f
+fs.inotify.max_user_instances = <%= @max_user_instances %>
+fs.inotify.max_user_watches = <%= @max_user_watches %>

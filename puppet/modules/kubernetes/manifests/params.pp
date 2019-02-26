@@ -9,6 +9,7 @@ class kubernetes::params {
   $download_dir = '/tmp'
   $systemd_dir = '/etc/systemd/system'
   $download_url = 'https://storage.googleapis.com/kubernetes-release/release/v#VERSION#/bin/linux/amd64/hyperkube'
+  $sysctl_dir = '/etc/sysctl.d'
   $log_level = '1'
   $uid = 873
   $gid = 873
