@@ -4,13 +4,101 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]:
+## [0.6.0]: 0.6.0 - 2019-02-27
+
+The 0.6 release of Tarmak comes with many more features and improvements to
+internals. Notable new additions include pre-built AMI images that are used when
+one has not yet been built, making getting a cluster running for new users much
+faster. A new worker AMI image type that will pre-install and configure Kubernetes
+worker nodes so nodes become ready much faster during auto scaling. Finally, we
+have also included an option to deploy Calico using Kubernetes as a backend,
+rather than using Etcd directly.
+
+A large focus of this release has been on improving the use of SSH by now
+utilising the in package standard Go libraries. This has meant we now have
+better control of SSH connections whilst running. We have also developed a
+significant change to how SSH host keys are handled, whereby instances will now
+tag themselves with their public keys securely, via an Amazon Lambda function.
+These tags are then used to populate, verify and update our local host key file
+during SSH connections.
+
+We do not report any specific action required for upgrading to 0.6.0 from 0.5.3
+besides our normal upgrade method.
+
+More detailed and other changes not mentioned are as follows:
 
 ### Added
 
+* Add Packer image that pre-installs Kubernetes dependencies drastically improving node ready time (#390 [@MattiasGees](github.com/MattiasGees))
+* Expose feature flags for Kubernetes components in Tarmak configuration (#431 [@joshvanl](github.com/JoshVanL))
+* Use puppet to install and manage configuration and Systemd Units on Vault instances (#494 [@joshvanl](github.com/JoshVanL))
+* New command `tarmak environment destroy` to destroy all clusters in an environment (#527 [@MattiasGees](github.com/MattiasGees))
+* New command `tarmak cluster logs` to gather systemd logs from target instances (#575 [@JoshVanL](github.com/JoshVanL))
+* Allow custom Vault-Helper URLs to be used to download (#619 [@joshvanl](github.com/JoshVanL))
+* Proposal on how to manage the SSH known hosts file and securely propagate instance public keys (#643 [@joshvanl](github.com/JoshVanL))
+* Create OWNER files in sub paths of the Tarmak project (#656 [@simonswine](github.com/simonswine))
+* Documentation on how to install and use Ark in Tarmak (#657 [@alljames](github.com/alljames))
+* Wing tags its instance through an Amazon Lambda function securely to advertise it's public key with trust. Tarmak relies on these keys for SSH connection. (#664 [@joshvanl](github.com/JoshVanL))
+* Wing dev mode now also enabled for the bastion instance (#678 [@joshvanl](github.com/JoshVanL))
+* Release pre-built packer images with every release (#682 [@simonswine](github.com/simonswine))
+* Give optional Kubernetes backend to calico add-on (#683 [@joshvanl](github.com/JoshVanL))
+* Tarmak created Kubernetes resources have their life cycle managed by Kube-Addon-Manager (#688 [@joshvanl](github.com/JoshVanL))
+* Documentation on how to add Pod Security Policies to arbitrary Namespaces (#694 [@MattiasGees](github.com/MattiasGees))
+* Use Core-DNS DNS and Service Discovery project instead of Kube-DNS for clusters >= 0.10 (#715 [@joshvanl](github.com/JoshVanL))
+* programmatic end to end testing with Sonobuoy (#743 [@joshvanl](github.com/JoshVanL))
+* Disable Overlay ETCD servers when calico in Kubernetes backend mode (#724 [@joshvanl](github.com/JoshVanL))
+* More rigorous fluent-bit acceptance tests (#747 [@simonswine](github.com/simonswine))
+* Adds AddListener and RemoveListenerCertificates permissions to ELB nodes (#749 [@joshvanl](github.com/JoshVanL))
+* Adds de-register permissions to ELB nodes (#750 [@joshvanl](github.com/JoshVanL))
+
 ### Changed
 
+* Enable dry mode for vault-helper ensure to ensure to write during plan and when in a converged state (#572 [@joshvanl](github.com/JoshVanL))
+* Use in package SSH over a forked exec of OpenSSH. This gives greater control and efficiency of SSH connections in Tarmak (#635 [@joshvanl](github.com/JoshVanL))
+* Hard code Centos version to mitigate errors during minor releases (#649 [@simonswine](github.com/simonswine))
+* Upgrade Vault to 0.9.6 and Consul to 1.2.4 (#674 [@joshvanl](github.com/JoshVanL))
+* Upgrade Terraform to 0.11.11 (#675 [@joshvanl](github.com/JoshVanL))
+* Upgrade wing API server internals to upstream Kubernetes (1.13) (#677 [@joshvanl](github.com/JoshVanL))
+* Upgrade Golang to 1.11.4 (#680 [@simonswine](github.com/simonswine))
+* Change gobindata dependency to maintained project (#699 [@simonswine](github.com/simonswine))
+* Use upstream Kubernetes for binary versioning (#704 [@simonswine](github.com/simonswine))
+* Separate Tarmak binaries and assets (#705 [@simonswine](github.com/simonswine))
+* Makefile improvements (#709 [@simonswine](github.com/simonswine))
+* Use Jetstack's patch metrics-server to scrape Kubelet summary via the Kubernetes API server proxy. Enabled Scraping Kubelets on Master nodes. (#712 [@joshvanl](github.com/JoshVanL))
+* Remove gorelaser from Makefile(#714 [@simonswine](github.com/simonswine))
+* Known hosts keys managed by Tarmak and will update if the instance public key tags have updated (#721 [@joshvanl](github.com/JoshVanL))
+* If no private images have been built for non EBS encrypted clusters, fallback
+  to using Jetstack's pre-built images (#724 [@joshvanl](github.com/JoshVanL))
+* Upgrade Fluentbit to 1.0.4 (#725 [@simonswine](github.com/simonswine))
+* Upgrade Centos to 7.6.1810 (#726 [@simonswine](github.com/simonswine))
+* Improve Elastic Search settings (#732 [@simonswine](github.com/simonswine))
+* SSH tunnels have a timeout after 10 minutes of inactivity (#730 [@joshvanl](github.com/JoshVanL))
+* Heapster, InfluxDB and Grafana have toggles in the Tarmak configuration. They
+  are enabled for current clusters but disable by default for all newly created
+  clusters via init (#740 [@joshvanl](github.com/JoshVanL))
+* Upgrade default Kubernetes version to 1.12.5 (#753 [@simonswine](github.com/simonswine))
+
 ### Fixed
+
+* Correctly parse Kubectl arguments (#477 [@joshvanl](github.com/JoshVanL))
+* Ensure the latest kernel version is being used (#658 [@simonswine](github.com/simonswine))
+* Use correct Kubconfig certificate when using Kubernees API server with public ELB (#660 [@MattiasGees](github.com/MattiasGees))
+* Correctly mount NVME volumes for vault instances (#697 [@joshvanl](github.com/JoshVanL))
+* Spelling correction (#701 [@simonswine](github.com/simonswine))
+* Create fresh cluster directory in configuration if none existing (#702 [@joshvanl](github.com/JoshVanL))
+* Don't create VPC S3 endpoint when using an existing VPC (#707 [@joshvanl](github.com/JoshVanL))
+* Tarmak no longer falsely reports an instance type as unavailable in an available zone (#732 [@MattiasGees](github.com/MattiasGees))
+* Correct Tiller documentation (#693 [@MattiasGees](github.com/MattiasGees))
+* Tarmak no longer falsely over reports a bad connection to the Bastion instance (#710 [@joshvanl](github.com/JoshVanL))
+* Fix Hashsum of wing (#711 [@simonswine](github.com/simonswine))
+* Fix sources in Makefile (#713 [@simonswine](github.com/simonswine))
+* Fix heapster vertical pod autoscaler race condition (#720 [@simonswine](github.com/simonswine))
+* Update Heptio's Ark to the newly named Velero (#722 [@joshvanl](github.com/JoshVanL))
+* Fix the attachment of additional policies to non Kubernetes instances (#727 [@simonswine](github.com/simonswine))
+* Input query during Terraform running fixed from a breaking change (#729 [@joshvanl](github.com/JoshVanL))
+* Tunnels to the Kubernetes API server are re-used is available (#736 [@joshvanl](github.com/JoshVanL))
+* Fix Kube-state-metrics RBAC (#754 [@MattiasGees](github.com/MattiasGees))
+* Increase inotify watch limits of instances with Kubelet (#756 [@JoshVanL](github.com/joshvanl))
 
 ### Versions
 
