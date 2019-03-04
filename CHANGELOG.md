@@ -11,7 +11,7 @@ bug fix release.
 
 ### Fixed
 
-* Increase inotify watch limits of instances with Kubelet (#757 [@simonswine](github.com/simonswine))
+* Down grade upx to 3.94 to build working Darwin binaries during releases (#758, [@simonswine](https://github.com/simonswine))
 
 ### Versions
 
