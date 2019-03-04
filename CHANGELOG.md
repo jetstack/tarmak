@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.6.1]: 0.6.1 - 2019-03-04
+
+A problem during our build process has built a broken Darwin binary. Small
+bug fix release.
+
+### Fixed
+
+* Down grade upx to 3.94 to build working Darwin binaries during releases (#758, [@simonswine](https://github.com/simonswine))
+
+### Versions
+
+| Application | Supported versions  | Default   |
+|-------------|--------------------:|----------:|
+| Packer      |                     | `1.2.5`   |
+| Terraform   |                     | `0.11.11` |
+| Consul      |                     | `1.2.4`   |
+| Vault       |                     | `0.9.6`   |
+| Kubernetes  | `>= 1.10 && < 1.14` | `1.12.5`  |
+| Calico      |                     | `3.1.4`   |
+| Vault Helper|                     | `0.9.13`  |
+| Etcd        |                     | `3.2.25`  |
+
 ## [0.6.0]: 0.6.0 - 2019-02-27
 
 The 0.6 release of Tarmak comes with many more features and improvements to
@@ -451,6 +473,8 @@ This detailed changes have happend since the last minor version of Tarmak:
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
+[0.6.1]: https://github.com/jetstack/tarmak/compare/0.6.0...0.6.1
+[0.6.0]: https://github.com/jetstack/tarmak/compare/0.5.0...0.6.0
 [0.5.3]: https://github.com/jetstack/tarmak/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/jetstack/tarmak/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/jetstack/tarmak/compare/0.5.0...0.5.1
