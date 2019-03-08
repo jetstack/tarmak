@@ -1100,7 +1100,8 @@
   version = "v0.8.1"
 
 [[projects]]
-  digest = "1:29a94303ac8cfc8ae0addfc045287af6282bbfb1d15a3d3643821b0dc7b107ea"
+  branch = "v0.11.11-ignore-changes"
+  digest = "1:09c588fe9ac04c77e1ae7e45c00802a404537b8070c1fdcdbd3e4e5663fd160e"
   name = "github.com/hashicorp/terraform"
   packages = [
     "backend",
@@ -1173,8 +1174,8 @@
     "version",
   ]
   pruneopts = "NUT"
-  revision = "ac4fff416318bf0915a0ab80e062a99ef3724334"
-  version = "v0.11.11"
+  revision = "446d2678e53ab1057022e0fd321e42e5dc59cbd5"
+  source = "https://github.com/MattiasGees/terraform.git"
 
 [[projects]]
   digest = "1:88a0935f8819740dd6f50f25c5eea6d98fb79186d4b6b773a7f2ff46dfb6b644"
