@@ -103,7 +103,8 @@ required = [
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"
-  version = "0.11.11"
+  branch = "v0.11.11-ignore-changes"
+  source = "https://github.com/MattiasGees/terraform.git"
 
 [[override]]
   name = "github.com/hashicorp/go-tfe"
