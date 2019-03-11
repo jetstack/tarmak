@@ -236,7 +236,12 @@ func (n *EvalDiff) processIgnoreChanges(diff *InstanceDiff) error {
 				// id will always be changed if we intended to replace this instance
 				continue
 			}
-			if v.Empty() || v.NewComputed {
+			if v.Empty() {
+				continue
+			}
+
+			// Sometimes appear as RequiresNew e.g. null_resource.triggers.%
+			if strings.HasSuffix(k, "%") || strings.HasSuffix(k, "#") {
 				continue
 			}
 
