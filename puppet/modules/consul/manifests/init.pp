@@ -54,7 +54,7 @@ class consul(
   String $client_addr = '127.0.0.1',
   String $bind_addr = '0.0.0.0',
   String $log_level = 'INFO',
-  String $datacenter = 'dc1',
+  String $datacenter = $::vault_region,
   Optional[String] $advertise_network = undef,
   Optional[Array[String]] $retry_join = [''],
   Optional[String] $ca_file = undef,
