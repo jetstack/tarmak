@@ -35,6 +35,7 @@ consul::backup_bucket_prefix: "%{::consul_backup_bucket_prefix}"
 consul::private_ip: "%{::vault_private_ip}"
 consul::cloud_provider: aws
 consul::backup_schedule: "%{::consul_backup_schedule}"
+consul::datacenter: "%{::vault_region}"
 
 vault_server::region: "%{::vault_region}"
 vault_server::environment: "%{::vault_environment}"
