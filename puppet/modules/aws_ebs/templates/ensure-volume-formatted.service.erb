@@ -8,7 +8,7 @@ After=<%= @attach_service_name %>
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=<%= scope['aws_ebs::format_bin_path'] %> <%= @device %>
+ExecStart=<%= scope['aws_ebs::format_bin_path'] %> <%= @device %> <%= @filesystem %>
 
 [Install]
 WantedBy=multiuser.target
