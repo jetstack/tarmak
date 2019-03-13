@@ -23,7 +23,7 @@ class tarmak::vault (
       device          => "/dev/${ebs_device}",
       dest_path       => $data_dir,
       is_not_attached => $is_not_attached,
-      filesystem      => "ext4",
+      filesystem      => 'ext4',
     }
   }
 }
