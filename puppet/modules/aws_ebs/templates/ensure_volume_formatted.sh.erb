@@ -2,5 +2,6 @@
 
 PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin
 DEVICE=$1
+FILESYSTEM=$2
 
-blkid "${DEVICE}" || (wipefs -fa "${DEVICE}" && mkfs.xfs "${DEVICE}")
+blkid "${DEVICE}" || (wipefs -fa "${DEVICE}" && mkfs.${FILESYSTEM} "${DEVICE}")
