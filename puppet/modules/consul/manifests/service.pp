@@ -26,6 +26,8 @@ class consul::service(
 
   $bin_path = $consul::bin_path
   $config_path = $consul::config_path
+  $config_datacenter_override_path = "${consul::config_dir}/consul-datacenter.json"
+  $consul_detect_existing_datacenter_path = "${consul::_dest_dir}/consul-detect-existing-datacenter.sh"
 
   $consul_encrypt = $consul::_consul_encrypt
   $consul_master_token = $consul::_consul_master_token
