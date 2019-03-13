@@ -26,9 +26,12 @@ ExecStartPre=/bin/chown -c root:<%= @group %> <%= @data_dir %>
 ExecStartPre=/bin/chmod 0750 <%= @data_dir%>
 ExecStartPre=/bin/chown -cR <%= @user %>:<%= @group %> <%= @data_dir %>/data
 ExecStartPre=/bin/chmod 0750 <%= @data_dir %>/data
+# detect an already existing datacenter setting
+ExecStartPre=/bin/sh -c ". <%= @consul_detect_existing_datacenter_path %> <%= @data_dir %> > <%= @config_datacenter_override_path %>"
 ExecStart=<%= @bin_path %> \
    agent \
    -config-file=<%= @config_path %> \
+   -config-file=<%= @config_datacenter_override_path %> \
    -data-dir=<%= @data_dir %>/data
 Restart=on-failure
 RestartSec=10

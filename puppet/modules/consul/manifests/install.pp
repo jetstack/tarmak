@@ -129,6 +129,12 @@ class consul::install(
     target => "${consul::_backinator_dest_dir}/consul-backinator",
   }
 
+  file { "${consul::_dest_dir}/consul-detect-existing-datacenter.sh":
+    ensure  => file,
+    content => file('consul/consul-detect-existing-datacenter.sh'),
+    mode    => '0755'
+  }
+
   file { "${consul::_dest_dir}/consul-backup.sh":
     ensure  => file,
     content => file('consul/consul-backup.sh'),
