@@ -43,7 +43,7 @@ describe 'aws_ebs::mount', :type => :define do
 
     it 'should contain mount service' do
       should contain_service(mount_service_name).that_requires("Service[#{format_service_name}]")
-      should contain_file("/etc/systemd/system/#{mount_service_name}").with_content(%r{Type=xfs})
+      should contain_file("/etc/systemd/system/#{mount_service_name}").with_content(%r{Type=auto})
       should contain_file("/etc/systemd/system/#{mount_service_name}").with_content(%r{Where=/mnt/folder/test1})
       should contain_file("/etc/systemd/system/#{mount_service_name}").with_content(%r{What=/dev/xvdy})
     end
