@@ -41,8 +41,6 @@ data "template_file" "vault" {
     wing_binary_path = "${var.secrets_bucket}/${var.wing_binary_path}"
     wing_version     = "${var.wing_version}"
   }
-
-  depends_on = ["data.tarmak_bastion_instance.bastion", "aws_iam_policy_attachment.vault_tarmak_bucket_read"]
 }
 
 resource "aws_cloudwatch_metric_alarm" "vault-autorecover" {
@@ -94,6 +92,8 @@ resource "aws_instance" "vault" {
     Contact      = "${var.contact}"
     VaultCluster = "${var.environment}"
   }
+
+  depends_on = ["data.tarmak_bastion_instance.bastion", "aws_iam_policy_attachment.vault_tarmak_bucket_read"]
 
   lifecycle {
     ignore_changes = ["volume_tags"]
