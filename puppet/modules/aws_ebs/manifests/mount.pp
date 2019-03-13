@@ -17,7 +17,7 @@ define aws_ebs::mount(
   String $dest_path,
   String $device,
   Boolean $is_not_attached,
-  Enum['xfs'] $filesystem = 'xfs',
+  Enum['xfs', 'ext4'] $filesystem = 'xfs',
 ){
   require ::aws_ebs
 
