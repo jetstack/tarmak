@@ -23,7 +23,6 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 var _ interfaces.SSH = &SSH{}
@@ -61,7 +60,7 @@ func New(tarmak interfaces.Tarmak) *SSH {
 }
 
 func (s *SSH) WriteConfig(c interfaces.Cluster) error {
-	err := utils.EnsureDirectory(filepath.Dir(c.SSHConfigPath()), 0700)
+	err := os.MkdirAll(filepath.Dir(c.SSHConfigPath()), 0700)
 	if err != nil {
 		return err
 	}
