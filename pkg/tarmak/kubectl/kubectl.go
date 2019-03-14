@@ -21,7 +21,6 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 var _ interfaces.Kubectl = &Kubectl{}
@@ -209,7 +208,7 @@ func (k *Kubectl) ensureWorkingKubeconfig(configPath string, publicAPIEndpoint b
 		return err
 	}
 
-	if err := utils.EnsureDirectory(filepath.Dir(configPath), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(configPath), 0700); err != nil {
 		k.stopTunnel()
 		return err
 	}

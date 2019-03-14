@@ -18,7 +18,6 @@ import (
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
 type Config struct {
@@ -103,7 +102,7 @@ func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
 	encoder = json.NewYAMLSerializer(json.DefaultMetaFactory, c.scheme, c.scheme)
 	encoder = c.codecs.EncoderForVersion(encoder, tarmakv1alpha1.SchemeGroupVersion)
 
-	err := utils.EnsureDirectory(filepath.Dir(c.configPath()), 0750)
+	err := os.MkdirAll(filepath.Dir(c.configPath()), 0750)
 	if err != nil {
 		return err
 	}

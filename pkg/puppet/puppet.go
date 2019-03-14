@@ -461,7 +461,7 @@ func (p *Puppet) writeLines(filePath string, lines []string) error {
 		// TODO: delete a potentially existing file
 		return nil
 	}
-	err := utils.EnsureDirectory(filepath.Dir(filePath), 0750)
+	err := os.MkdirAll(filepath.Dir(filePath), 0750)
 	if err != nil {
 		return err
 	}
