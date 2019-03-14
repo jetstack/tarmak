@@ -192,7 +192,7 @@ func (e *Environment) getSSHPrivateKey() (interface{}, error) {
 	path := e.SSHPrivateKeyPath()
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := utils.EnsureDirectory(filepath.Dir(path), 0700); err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 			return nil, fmt.Errorf("error creating directory: %s", err)
 		}
 
