@@ -57,6 +57,7 @@ func (s *SSH) Tunnel(dest, destPort, localPort string, daemonize bool) interface
 		destPort:  destPort,
 		daemonize: daemonize,
 		localPort: localPort,
+		doneCh:    make(chan struct{}),
 	}
 
 	s.tunnels = append(s.tunnels, tunnel)
@@ -213,7 +214,12 @@ func (t *Tunnel) handleTimeout() {
 	t.connsLock.Unlock()
 
 	t.cleanup()
-	close(t.doneCh)
+
+	select {
+	case <-t.doneCh:
+	default:
+		close(t.doneCh)
+	}
 }
 
 func (t *Tunnel) Done() <-chan struct{} {
