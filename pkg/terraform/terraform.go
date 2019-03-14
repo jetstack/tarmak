@@ -63,7 +63,7 @@ func (t *Terraform) preparePlugins(c interfaces.Cluster) error {
 	}
 
 	pluginPath := t.pluginPath(c)
-	if err := utils.EnsureDirectory(pluginPath, 0755); err != nil {
+	if err := os.MkdirAll(pluginPath, 0755); err != nil {
 		return err
 	}
 

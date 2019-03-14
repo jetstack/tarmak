@@ -64,7 +64,7 @@ func (v *Vault) RootToken() (string, error) {
 	path := v.rootTokenPath()
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := utils.EnsureDirectory(filepath.Dir(path), 0700); err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 			return "", fmt.Errorf("error creating directory: %s", err)
 		}
 
