@@ -70,15 +70,14 @@ func (s *SSH) WriteConfig(c interfaces.Cluster) error {
 		return err
 	}
 
-	knownHostsPath := s.tarmak.Cluster().SSHHostKeysPath()
+	knownHostsPath := c.SSHHostKeysPath()
 
+	// open file for appending
 	knownHostsFile, err := os.OpenFile(
-		knownHostsPath,
-		os.O_APPEND|os.O_WRONLY|os.O_CREATE,
-		0600,
-	)
+		knownHostsPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+		0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open known hosts file: %s", err)
 	}
 	defer knownHostsFile.Close()
 

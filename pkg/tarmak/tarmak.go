@@ -178,6 +178,7 @@ func (t *Tarmak) writeSSHConfigForClusterHosts() error {
 		if errCluster != nil {
 			return fmt.Errorf("failed to retrieve current cluster name: %s", errCluster)
 		}
+
 		return fmt.Errorf("failed to write ssh config for current cluster '%s': %v", clusterName, err)
 	}
 
