@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.6.2]: 0.6.2 - 2019-03-15
+
+### Fixed
+
+* Ensure ssh_known_host file shares the same ssh_config directory. (#778, [@JoshVanL](https://github.com/JoshVanL))
+* Replace EnsureDirectoryExists by os.MkdirAll (#773, [@simonswine](https://github.com/simonswine))
+* Fixes route 53 domain name reporting while using network-existing-vpc (#775, [@simonswine](https://github.com/simonswine))
+* Fix bug with Terraform that causes problems on Tarmak upgrades. (#763, [@MattiasGees](https://github.com/MattiasGees))
+* Set correct datacenter in consul and respect existing datacenters (#766, [@simonswine](https://github.com/simonswine))
+* Support ext4/xfs for new filesystem. Detect fstype of existing ones automatically (#767, [@simonswine](https://github.com/simonswine))
+* Use depends_on on the resource rather than the data object (#768, [@simonswine](https://github.com/simonswine))
+
+### Versions
+
+| Application | Supported versions  | Default   |
+|-------------|--------------------:|----------:|
+| Packer      |                     | `1.2.5`   |
+| Terraform   |                     | `0.11.11` |
+| Consul      |                     | `1.2.4`   |
+| Vault       |                     | `0.9.6`   |
+| Kubernetes  | `>= 1.10 && < 1.14` | `1.12.5`  |
+| Calico      |                     | `3.1.4`   |
+| Vault Helper|                     | `0.9.13`  |
+| Etcd        |                     | `3.2.25`  |
+
 ## [0.6.1]: 0.6.1 - 2019-03-04
 
 A problem during our build process has built a broken Darwin binary. Small
@@ -473,6 +498,7 @@ This detailed changes have happend since the last minor version of Tarmak:
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
+[0.6.2]: https://github.com/jetstack/tarmak/compare/0.6.1...0.6.2
 [0.6.1]: https://github.com/jetstack/tarmak/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/jetstack/tarmak/compare/0.5.0...0.6.0
 [0.5.3]: https://github.com/jetstack/tarmak/compare/0.5.2...0.5.3
