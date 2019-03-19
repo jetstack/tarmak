@@ -49,6 +49,23 @@ describe 'kubernetes::apiserver' do
     end
   end
 
+  context 'iam authenticator' do
+    context 'default' do
+      it { should_not contain_file(service_file).with_content(%r{aws-iam-authenticator-init.service}) }
+    end
+
+    context 'iam authenticator enabled' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes::apiserver': aws_iam_authenticator_init => true}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('Requires=')}.*#{Regexp.escape('aws-iam-authenticator-init.service')}/) }
+      it { should contain_class('kubernetes::aws_iam_authenticator_init') }
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--authentication-token-webhook-config-file=/etc/kubernetes/aws-iam-authenticator/kubeconfig.yaml')}/) }
+    end
+  end
+
   context 'admission controllers' do
     context 'customized' do
       let(:params) { {'admission_control' => ['Test1'] } }
@@ -115,6 +132,24 @@ describe 'kubernetes::apiserver' do
       ]}
       it { should contain_file(service_file).with_content(/#{Regexp.escape('--storage-backend=etcd3')}/)}
     end
+  end
+
+  context 'auth token webhook file' do
+    let(:pre_condition) {[
+      """
+      class{'kubernetes::apiserver': auth_token_webhook_file => '/foo/bar/baz'}
+      """
+    ]}
+    it { should contain_file(service_file).with_content(/#{Regexp.escape('--authentication-token-webhook-config-file=/foo/bar/baz')}/)}
+    let(:pre_condition) {[
+      """
+      class{'kubernetes::apiserver':
+        aws_iam_authenticator_init => true,
+        auth_token_webhook_file    => '/foo/bar/baz'}
+      """
+    ]}
+    it { should contain_file(service_file).with_content(/#{Regexp.escape('--authentication-token-webhook-config-file=/foo/bar/baz')}/)}
+    it { should contain_class('kubernetes::aws_iam_authenticator_init').with('auth_token_webhook_file' => '/foo/bar/baz')}
   end
 
   context 'runtime_config' do

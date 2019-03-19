@@ -140,6 +140,9 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if @oidc_username_prefix -%>
   "--oidc-username-prefix=<%= @oidc_username_prefix %>" \
 <% end -%>
+<% if @_auth_token_webhook_file -%>
+  "--authentication-token-webhook-config-file=<%= @_auth_token_webhook_file %>" \
+<% end -%>
   --profiling=false \
 <% if @post_1_10 -%>
  "--tls-min-version=<%= @tls_min_version %>" \

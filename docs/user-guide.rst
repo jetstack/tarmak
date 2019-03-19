@@ -458,6 +458,24 @@ The following `tarmak.yaml` snippet shows how to enable encrypted EBS.
         ebsEncrypted: true
     ...
 
+IAM Authentication
+~~~~~~~~~~~~~~~~~~
+
+Tarmak supports authentication using aws-iam-authenticator. You can enable this using the following
+snippet, although this doesn't deploy the authenticator to the cluster - this will need configuring
+for your environment using the instructions `here <https://github.com/kubernetes-sigs/aws-iam-authenticator>`_.
+Effectively, the snippet below performs steps 2 and 3 of these instructions for you.
+
+.. code-block:: yaml
+
+    kubernetes:
+      apiServer:
+        amazon:
+          aws-iam-authenticator-init: true
+    ...
+
+See the examples section for yaml files to configure the authenticator daemon set, config map and kubeconfig.
+
 OIDC Authentication
 ~~~~~~~~~~~~~~~~~~~
 

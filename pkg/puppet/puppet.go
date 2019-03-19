@@ -165,6 +165,14 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		}
 	}
 
+        if conf.APIServer != nil && conf.APIServer.AuthTokenWebhookFile != "" {
+		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::auth_token_webhook_file: "%s"`, conf.APIServer.AuthTokenWebhookFile))
+	}
+
+        if conf.APIServer != nil && conf.APIServer.Amazon != nil && conf.APIServer.Amazon.AwsIamAuthenticatorInit {
+                hieraData.variables = append(hieraData.variables, "kubernetes::apiserver::aws_iam_authenticator_init: true")
+        }
+
 	if conf.PodSecurityPolicy != nil {
 		if conf.PodSecurityPolicy.Enabled {
 			hieraData.variables = append(hieraData.variables, fmt.Sprintf(`tarmak::kubernetes_pod_security_policy: true`))

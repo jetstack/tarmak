@@ -1,0 +1,21 @@
+[Unit]
+Description=Initialise heptio authenticator (AWS IAM authenticator)
+Documentation=https://github.com/kubernetes-sigs/aws-iam-authenticator
+After=network.target
+After=docker.service
+Requires=docker.service
+Before=kube-apiserver.service
+<%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
+[Service]
+ExecStartPre=/bin/docker run \
+  -u 0 -w /config \
+  -v /var/aws-iam-authenticator/:/config:Z \
+  <%= scope['kubernetes::aws_iam_authenticator_image'] %> \
+  init -i <%= scope['kubernetes::cluster_name'] %>
+ExecStartPre=/bin/mkdir -p /etc/kubernetes/aws-iam-authenticator
+ExecStart=/bin/cp \
+  /var/aws-iam-authenticator/heptio-authenticator-aws.kubeconfig \
+  <%= @auth_token_webhook_file %>
+
+[Install]
+WantedBy=multi-user.target
