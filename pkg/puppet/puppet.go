@@ -169,7 +169,7 @@ func kubernetesClusterConfig(conf *clusterv1alpha1.ClusterKubernetes, hieraData 
 		hieraData.variables = append(hieraData.variables, fmt.Sprintf(`kubernetes::apiserver::auth_token_webhook_file: "%s"`, conf.APIServer.AuthTokenWebhookFile))
 	}
 
-	if conf.APIServer != nil && conf.APIServer.Amazon != nil && conf.APIServer.Amazon.AwsIamAuthenticatorInit {
+	if conf.APIServer != nil && conf.APIServer.Amazon != nil && conf.APIServer.Amazon.AwsIAMAuthenticatorInit {
 		hieraData.variables = append(hieraData.variables, "kubernetes::apiserver::aws_iam_authenticator_init: true")
 	}
 

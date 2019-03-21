@@ -198,7 +198,7 @@ type ClusterKubernetesAPIServerOIDC struct {
 type ClusterKubernetesAPIServerAmazon struct {
 	PublicELBAccessLogs     *ClusterKubernetesAPIServerAmazonAccessLogs `json:"publicELBAccessLogs,omitempty"`
 	InternalELBAccessLogs   *ClusterKubernetesAPIServerAmazonAccessLogs `json:"internalELBAccessLogs,omitempty"`
-	AwsIamAuthenticatorInit bool                                        `json:"awsIAMAuthenticatorInit,omitempty"`
+	AwsIAMAuthenticatorInit bool                                        `json:"awsIAMAuthenticatorInit,omitempty"`
 }
 
 type ClusterKubernetesAPIServerAmazonAccessLogs struct {
