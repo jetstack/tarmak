@@ -3,6 +3,7 @@ class kubernetes::apiserver(
   $allow_privileged = true,
   Optional[Boolean] $audit_enabled = undef,
   Optional[Boolean] $aws_iam_authenticator_init = false,
+  String $aws_iam_authenticator_image = 'gcr.io/heptio-images/authenticator@sha256:8699a69cbd7274810a63cfb67b7053166897831c734011c62ce0aee32d66b3b8',
   String $audit_log_directory = '/var/log/kubernetes',
   Integer $audit_log_maxbackup = 1,
   Integer $audit_log_maxsize = 100,

@@ -8,11 +8,15 @@ api
 apiserver
 attestor
 auth
+authenticator
+Authenticator
+authorisation
 authorization
 authz
 autoscale
 autoscaler
 autoscaling
+aws
 backend
 backends
 calico
@@ -24,6 +28,10 @@ Config
 configmap
 cryptographic
 ctrl
+customise
+customised
+customisation
+daemonset
 doesn
 EBS
 ec
@@ -31,6 +39,7 @@ ecdsa
 Elasticsearch
 env
 etcd
+favour
 fluentbit
 Gi
 gid
@@ -45,6 +54,9 @@ heptio
 hostname
 iam
 init
+initialise
+Initialise
+initialised
 initialize
 initializers
 io
@@ -57,6 +69,8 @@ kubeconfig
 kubectl
 kubelet
 kubernetes
+licence
+license
 lifecycle
 localhost
 login
@@ -66,6 +80,7 @@ macOS
 masterless
 millicores
 minio
+modelling
 multi
 nameservers
 namespace
@@ -75,6 +90,9 @@ nistp
 offline
 oneshot
 ons
+optimise
+optimised
+optimisation
 overprovisioning
 pki
 plugable
@@ -85,6 +103,10 @@ postgresql
 preempted
 prepended
 prometheus
+realise
+realised
+recognise
+recognised
 refactoring
 ReplicaSet
 rolename
@@ -92,11 +114,14 @@ runtime
 setup
 sha
 stateful
+standardised
 stdin
 subcommand
 subdomain
 subtree
 subtrees
+summarises
+synchronised
 systemd
 tarmak
 templating
@@ -105,6 +130,7 @@ testability
 Todo
 toolkit
 ttl
+tunnelling
 typha
 ubuntu
 uid

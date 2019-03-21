@@ -45,7 +45,7 @@ Init Tokens
 Tokens are used as the main authentication method in Vault and provide a
 mapping to one or more policies. On first boot, each instance generates their
 own unique token via a given token - the init token. These init-tokens are role
-dependant meaning the same init-token is shared with instances only with the
+dependent meaning the same init-token is shared with instances only with the
 same role. Once generated, the init token is erased by all instances in favour
 of their own new unique token making the init token no longer accessible on any
 instance. Unlike the init-tokens, generated tokens are short lived and so need
@@ -64,7 +64,7 @@ requirements of the policy - if successful, returns a signed certificate.
 Instances can only obtain certificates from CSRs because of the permissions
 that its unique token provides. Upon receiving, the instance will store the
 signed certificate locally to be shared with its relevant services and start or
-restart all services which are dependant.
+restart all services which are dependent.
 
 Expiration of Tokens and Certificates
 -------------------------------------
