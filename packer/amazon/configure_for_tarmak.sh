@@ -55,3 +55,6 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 
 # disable kdump service
 systemctl disable kdump.service
+
+# Disable SCTP kernel module
+echo "install sctp /bin/true" > /etc/modprobe.d/sctp.conf
