@@ -5,6 +5,7 @@ After=network.target
 After=docker.service
 Requires=docker.service
 Before=kube-apiserver.service
+Type=oneshot
 <%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 [Service]
 ExecStartPre=/bin/docker run \

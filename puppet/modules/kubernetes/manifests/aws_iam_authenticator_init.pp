@@ -4,6 +4,8 @@ class kubernetes::aws_iam_authenticator_init(
   Array[String] $systemd_requires = [],
   Array[String] $systemd_after = [],
   Array[String] $systemd_before = [],
+  Enum['file','absent'] $file_ensure = 'file',
+  Boolean $service_enable = true,
 ){
   require ::kubernetes
 
@@ -15,7 +17,7 @@ class kubernetes::aws_iam_authenticator_init(
   $_systemd_before = $systemd_before
 
   file{"${::kubernetes::systemd_dir}/${service_name}.service":
-    ensure  => file,
+    ensure  => $file_ensure,
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
@@ -27,6 +29,6 @@ class kubernetes::aws_iam_authenticator_init(
     refreshonly => true,
   }
   -> service{ "${service_name}.service":
-    enable  => true,
+    enable  => $service_enable,
   }
 }

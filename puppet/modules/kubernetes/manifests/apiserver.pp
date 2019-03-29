@@ -66,6 +66,11 @@ class kubernetes::apiserver(
     $_systemd_after = ['network.target'] + $systemd_after
     $_systemd_requires = $systemd_requires
     $_auth_token_webhook_file = $auth_token_webhook_file
+    class{'kubernetes::aws_iam_authenticator_init':
+      file_ensure             => 'absent',
+      service_enable          => false,
+      auth_token_webhook_file => '',
+    }
   }
   $_systemd_before = $systemd_before
 

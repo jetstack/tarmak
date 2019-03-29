@@ -152,10 +152,10 @@ type ClusterKubernetesAPIServer struct {
 	// OIDC
 	OIDC *ClusterKubernetesAPIServerOIDC `json:"oidc,omitempty"`
 
-	// AWS specifc options
+	// AWS specific options
 	Amazon *ClusterKubernetesAPIServerAmazon `json:"amazon,omitempty"`
 
-	AuthTokenWebhookFile string `json:"authTokenWebhookFile"`
+	AuthTokenWebhookFile string `json:"authTokenWebhookFile,omitempty"`
 
 	FeatureGates map[string]bool `json:"featureGates,omitempty"`
 }

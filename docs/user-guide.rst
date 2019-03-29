@@ -658,6 +658,21 @@ This can be used together with `Secure public endpoints <user-guide.html#secure-
     apiServer:
       public: true
 
+Authenticator Token Webhook file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can configure an authentication token webhook for the apiserver - this is the path to the file
+containing said configuration. There is a *default* value for this if using the aws-iam-authenticator, 
+but if you are customising this component, or using an alternative webhook authentication system (e.g.
+Appscode Guard) you can set / override it here as appropriate. The file must exist for the apiserver
+to start up.
+
+.. code-block:: yaml
+
+  kubernetes:
+    apiServer:
+      authTokenWebhookFile: /etc/kubernetes/shiny-new-authenticator/kubeconfig.yaml
+
 Secure public endpoints
 ~~~~~~~~~~~~~~~~~~~~~~~
 

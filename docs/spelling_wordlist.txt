@@ -6,6 +6,7 @@ amoungst
 ansible
 api
 apiserver
+Appscode
 attestor
 auth
 authenticator
@@ -137,5 +138,7 @@ uid
 unsealer
 username
 velero
+webhook
+Webhook
 wrt
 yaml
