@@ -5,9 +5,9 @@ After=network.target
 After=docker.service
 Requires=docker.service
 Before=kube-apiserver.service
-Type=oneshot
 <%= scope.function_template(['kubernetes/_systemd_unit.erb']) %>
 [Service]
+Type=oneshot
 ExecStartPre=/bin/docker run \
   -u 0 -w /config \
   -v /var/aws-iam-authenticator/:/config:Z \
