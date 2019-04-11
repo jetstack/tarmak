@@ -55,6 +55,7 @@ class kubernetes::apiserver(
   $tls_min_version = $::kubernetes::tls_min_version
   $tls_cipher_suites = $::kubernetes::tls_cipher_suites
 
+  $post_1_14 = versioncmp($::kubernetes::version, '1.14.0') >= 0
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
   $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
   $post_1_9 = versioncmp($::kubernetes::version, '1.9.0') >= 0
@@ -74,7 +75,9 @@ class kubernetes::apiserver(
   # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
   if $admission_control == undef {
     $_admission_control = delete_undef_values([
-      $post_1_8 ? { true => 'Initializers', default => undef },
+      # The initializers admission plugin has been removed in 1.14 onward
+      # https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.14.md
+      ($post_1_8 and !$post_1_14) ? { true => 'Initializers', default => undef },
       'NamespaceLifecycle',
       'LimitRanger',
       'ServiceAccount',
