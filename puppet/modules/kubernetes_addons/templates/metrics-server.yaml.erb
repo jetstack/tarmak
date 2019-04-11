@@ -93,13 +93,6 @@ spec:
         - containerPort: 443
           name: https
           protocol: TCP
-        resources:
-          limits:
-            cpu: <%= @cpu %>
-            memory: <%= @mem %>
-          requests:
-            cpu: <%= @cpu %>
-            memory: <%= @mem %>
 <% unless @version_before_1_8 -%>
         volumeMounts:
         - name: tmp-dir
