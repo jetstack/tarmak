@@ -56,13 +56,13 @@ describe 'consul::install' do
       should contain_file('/opt/consul-backinator-1.3').with(
         :ensure => 'directory',
       )
-      should contain_file('/opt/consul-backinator-1.3/consul-backinator').with(
+      should contain_file('/opt/consul-backinator-1.3/consul-backinator-1.3').with(
         :ensure => 'file',
         :mode => '0755',
       )
       should contain_file('/opt/bin/consul-backinator').with(
         :ensure => 'link',
-        :target => '/opt/consul-backinator-1.3/consul-backinator',
+        :target => '/opt/consul-backinator-1.3/consul-backinator-1.3',
       )
     end
   end
