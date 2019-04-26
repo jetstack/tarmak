@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Versions
+
+| Application | Supported versions  | Default   |
+|-------------|--------------------:|----------:|
+| Packer      |                     | `1.2.5`   |
+| Terraform   |                     | `0.11.11` |
+| Consul      |                     | `1.2.4`   |
+| Vault       |                     | `0.9.6`   |
+| Kubernetes  | `>= 1.10 && < 1.14` | `1.12.7`  |
+| Calico      |                     | `3.1.4`   |
+| Vault Helper|                     | `0.9.15`  |
+| Etcd        |                     | `3.2.25`  |
+
 ## [0.6.4]: 0.6.4 - 2019-03-29
 
 ### Changed
