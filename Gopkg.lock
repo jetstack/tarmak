@@ -1241,12 +1241,12 @@
   revision = "9fbcaca9f9f868b9560463d0790aae33b2322945"
 
 [[projects]]
-  digest = "1:d17f46f871bcc34d92ed9a80c9b2e2f9d9b3d4daad5050a74a75384976be50df"
+  digest = "1:ce5e320790af7fa2112425f794975ac10f114ed63a1c71f7cae0619345083cd2"
   name = "github.com/jetstack/vault-helper"
   packages = ["pkg/kubernetes"]
   pruneopts = "NUT"
-  revision = "5f5e6092c69689f4d986c3aed3fb3e76159577a8"
-  version = "0.9.13"
+  revision = "516904741e65a1bc1ddefb3f45cc30946e0e59d1"
+  version = "0.9.15"
 
 [[projects]]
   digest = "1:ebaf6032045257249e9ad6844477320091a71a963c058a2243275163b3998eaa"

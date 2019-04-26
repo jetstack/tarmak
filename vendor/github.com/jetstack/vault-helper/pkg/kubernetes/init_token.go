@@ -4,6 +4,7 @@ package kubernetes
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-multierror"
 	vault "github.com/hashicorp/vault/api"
@@ -19,6 +20,10 @@ type InitToken struct {
 
 func (i *InitToken) Ensure() error {
 	var result error
+
+	if err := i.ensureCreated(); err != nil {
+		return err
+	}
 
 	// always ensure token role and init token policy is set (this is idempotent)
 	if err := i.writeTokenRole(); err != nil {
@@ -38,7 +43,45 @@ func (i *InitToken) Ensure() error {
 	}
 	i.token = &initToken
 
-	return result
+	// Renew token
+	_, err = i.kubernetes.vaultClient.Auth().Token().Renew(initToken, 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i *InitToken) ensureCreated() error {
+	token, err := i.InitToken()
+	if err != nil {
+		return err
+	}
+
+	_, err = i.kubernetes.vaultClient.Auth().Token().Lookup(token)
+	if err == nil {
+		return nil
+	}
+
+	if !strings.Contains(err.Error(), "Code: 403.") ||
+		!strings.Contains(err.Error(), "bad token") {
+		i.kubernetes.Log.Errorf("GOT ERROR HERE!\n%s\n", err)
+		return err
+	}
+
+	// token revoked or expired
+	_, err = i.kubernetes.vaultClient.Auth().Token().CreateOrphan(&vault.TokenCreateRequest{
+		ID:          token,
+		DisplayName: fmt.Sprintf("%s/secrets/init_token_%s", i.kubernetes.Path(), i.Role),
+		TTL:         fmt.Sprintf("%d", int(i.kubernetes.MaxValidityInitTokens.Seconds())),
+		Period:      fmt.Sprintf("%d", int(i.kubernetes.MaxValidityInitTokens.Seconds())),
+		Policies:    []string{"default", fmt.Sprintf("%s-creator", i.namePath())},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (i *InitToken) Delete() error {
@@ -57,6 +100,11 @@ func (i *InitToken) Delete() error {
 
 func (i *InitToken) EnsureDryRun() (bool, error) {
 	var result *multierror.Error
+
+	expDate, err := i.ensureDryRunExpDate()
+	if err != nil || expDate {
+		return expDate, err
+	}
 
 	secret, err := i.readTokenRole()
 	if err != nil {
@@ -85,6 +133,35 @@ func (i *InitToken) EnsureDryRun() (bool, error) {
 	}
 
 	return false, result.ErrorOrNil()
+}
+
+func (i *InitToken) ensureDryRunExpDate() (bool, error) {
+	token, err := i.InitToken()
+	if err != nil {
+		return true, err
+	}
+
+	s, err := i.kubernetes.vaultClient.Auth().Token().Lookup(token)
+	if err != nil {
+		if strings.Contains(err.Error(), "Code: 403.") &&
+			strings.Contains(err.Error(), "bad token") {
+			return true, nil
+		}
+
+		return true, err
+	}
+
+	ttl, err := s.TokenTTL()
+	if err != nil {
+		return true, err
+	}
+
+	// less than a year
+	if ttl.Hours() < 24*365 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // Get init token name
@@ -181,13 +258,10 @@ func (i *InitToken) secretsBackend() *GenericVaultBackend {
 }
 
 func (i *InitToken) writeData() map[string]interface{} {
-	policies := i.Policies
-	//policies = append(policies, "default")
-
 	return map[string]interface{}{
-		"period":           fmt.Sprintf("%d", int(i.kubernetes.MaxValidityComponents.Seconds())),
+		"period":           fmt.Sprintf("%d", int(i.kubernetes.MaxValidityInitTokens.Seconds())),
 		"orphan":           true,
-		"allowed_policies": policies,
+		"allowed_policies": i.Policies,
 		"path_suffix":      i.namePath(),
 	}
 }

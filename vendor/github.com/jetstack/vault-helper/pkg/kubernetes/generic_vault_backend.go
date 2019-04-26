@@ -32,7 +32,7 @@ func (g *GenericVaultBackend) Ensure() error {
 	}
 
 	if mount == nil {
-		g.Log.Debugf("No secrects mount found for: %s", g.Path())
+		g.Log.Debugf("No secrets mount found for: %s", g.Path())
 		err = g.kubernetes.vaultClient.Sys().Mount(
 			g.Path(),
 			&vault.MountInput{
@@ -119,7 +119,7 @@ func (g *GenericVaultBackend) Path() string {
 
 func (g *GenericVaultBackend) unMount() error {
 	if err := g.kubernetes.vaultClient.Sys().Unmount(g.Path()); err != nil {
-		return fmt.Errorf("failed to unmount secrects mount: %v", err)
+		return fmt.Errorf("failed to unmount secrets mount: %v", err)
 	}
 
 	return nil

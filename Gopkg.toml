@@ -55,7 +55,7 @@ required = [
 
 [[constraint]]
   name = "github.com/jetstack/vault-helper"
-  version = "0.9.13"
+  version = "0.9.15"
 
 [[constraint]]
   name = "github.com/cenkalti/backoff"
