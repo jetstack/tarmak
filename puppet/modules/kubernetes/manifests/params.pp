@@ -9,6 +9,8 @@ class kubernetes::params {
   $download_dir = '/tmp'
   $systemd_dir = '/etc/systemd/system'
   $download_url = 'https://storage.googleapis.com/kubernetes-release/release/v#VERSION#/bin/linux/amd64/hyperkube'
+  $aws_authenticator_download_url = 'https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v#VERSION#/aws-iam-authenticator_#VERSION#_linux_amd64'
+  $aws_authenticator_version = '0.4.0'
   $sysctl_dir = '/etc/sysctl.d'
   $log_level = '1'
   $uid = 873

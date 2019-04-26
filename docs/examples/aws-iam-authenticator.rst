@@ -70,7 +70,7 @@ including the ``-cluster`` suffix in a single cluster environment:
             operator: Exists
           containers:
           - name: aws-iam-authenticator
-            image: gcr.io/heptio-images/authenticator:v0.3.0
+            image: 602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-iam-authenticator:v0.4.0-scratch
             args:
             - server
             - --config=/etc/aws-iam-authenticator/config.yaml
