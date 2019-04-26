@@ -4,9 +4,9 @@ HOSTS:
     roles:
       - consul
       - vault_server
-    platform: el-7-x86_64
-    box: centos/7
-    box_version: 1804.02
+    platform: ubuntu-16.04-amd64
+    box: nrclark/xenial64-minimal-libvirt
+    box_verison: v1.1.1
     hypervisor: vagrant_libvirt
 CONFIG:
   type: foss
