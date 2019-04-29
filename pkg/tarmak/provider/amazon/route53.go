@@ -133,7 +133,7 @@ func (a *Amazon) verifyPublicZone() error {
 	sort.Strings(zoneNameservers)
 
 	if !reflect.DeepEqual(dnsNameservers, zoneNameservers) {
-		return fmt.Errorf("public root dns namesevers %v and zone nameservers %v mismatch", dnsNameservers, zoneNameservers)
+		return fmt.Errorf("public root dns nameservers %v and zone nameservers %v mismatch", dnsNameservers, zoneNameservers)
 	}
 
 	return nil
