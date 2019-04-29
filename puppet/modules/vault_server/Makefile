@@ -13,3 +13,6 @@ acceptance-centos: bundle_install
 
 acceptance-ubuntu: bundle_install
 	bundle exec rake beaker:ubuntu_1604_single_node
+
+acceptance-three-node: bundle_install
+	bundle exec rake beaker:3n-cluster
