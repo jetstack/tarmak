@@ -5,6 +5,7 @@ After=consul.service vault-assets.service
 
 [Service]
 Environment=AWS_REGION=<%= @region %>
+ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -k -w '%{http_code}' --request GET http://localhost:8500/v1/health/node/<%= @hostname %>); if [ $STATUS -eq 200 ]; then break; else sleep 5; fi; done"
 ExecStart=/opt/bin/vault server -config=/etc/vault/vault.hcl
 Restart=on-failure
 RestartSec=10

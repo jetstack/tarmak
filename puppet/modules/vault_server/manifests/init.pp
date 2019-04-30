@@ -4,6 +4,7 @@ class vault_server (
   String $vault_tls_cert_path = '',
   String $vault_tls_ca_path = '',
   String $vault_tls_key_path = '',
+  Optional[String]$hostname = undef,
   Optional[String] $vault_unsealer_kms_key_id = undef,
   Optional[String] $vault_unsealer_ssm_key_prefix = undef,
   Optional[String] $consul_master_token = undef,
@@ -29,6 +30,11 @@ class vault_server (
   $_consul_master_token = $consul_master_token ? {
     undef   => $::consul_master_token,
     default => $consul_master_token,
+  }
+
+  $_hostname = $hostname ? {
+    undef   => $trusted['hostname'],
+    default => $hostname,
   }
 
   $_dest_dir = "${dest_dir}/${app_name}-${version}"

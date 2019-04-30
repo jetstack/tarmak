@@ -45,5 +45,6 @@ vault_server::vault_tls_ca_path: "%{::vault_tls_ca_path}"
 vault_server::volume_id: "%{::vault_volume_id}"
 vault_server::vault_unsealer_kms_key_id: "%{::vault_unsealer_kms_key_id}"
 vault_server::vault_unsealer_ssm_key_prefix: "%{::vault_unsealer_ssm_key_prefix}"
+vault_server::hostname: "%{::tarmak_hostname}"
 vault_server::consul_master_token: "%{::consul_master_token}"
 vault_server::cloud_provider: aws
