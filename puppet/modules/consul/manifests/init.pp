@@ -75,7 +75,7 @@ class consul(
 
   $_dest_dir = "${dest_dir}/${app_name}-${version}"
   $_backinator_dest_dir = "${dest_dir}/${app_name}-backinator-${backinator_version}"
-  $_backinator_dest_path = "${_backinator_dest_dir}/${app_name}-backinator-${backinator_version}"
+  $_backinator_dest_path = "${_backinator_dest_dir}/${app_name}-backinator"
   $bin_path = "${_dest_dir}/${app_name}"
   $link_path = "${dest_dir}/bin"
   $config_path = "${config_dir}/consul.json"
