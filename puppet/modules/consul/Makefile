@@ -9,6 +9,8 @@ bundle_install:
 acceptance: bundle_install
 	bundle exec rake beaker:default
 
+acceptance-single-node: acceptance
+
 # provide backwards compatiblity
 acceptance_three_node: acceptance-three-node
 
