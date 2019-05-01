@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault       |                     | `0.9.6`   |
 | Kubernetes  | `>= 1.10 && < 1.14` | `1.12.7`  |
 | Calico      |                     | `3.1.4`   |
-| Vault Helper|                     | `0.9.13`  |
+| Vault Helper|                     | `0.9.15`  |
 | Etcd        |                     | `3.2.25`  |
 
 ## [0.6.4]: 0.6.4 - 2019-03-29
