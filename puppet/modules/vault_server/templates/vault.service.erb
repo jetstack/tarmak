@@ -5,6 +5,8 @@ After=consul.service vault-assets.service
 
 [Service]
 Environment=AWS_REGION=<%= @region %>
+EnvironmentFile=/etc/consul/master-token
+ExecStartPre=/bin/sh -c "while true; do STATUS=$(curl -s -o /dev/null -k -w '%{http_code}' --request GET http://127.0.0.1:8500/v1/acl/info/$CONSUL_HTTP_TOKEN); if [ $STATUS -eq 200 ]; then break; else sleep 5; fi; done"
 ExecStart=/opt/bin/vault server -config=/etc/vault/vault.hcl
 Restart=on-failure
 RestartSec=10
