@@ -106,7 +106,6 @@ class consul::install(
     }
   }
 
-
   file {$consul::_backinator_dest_dir:
     ensure => directory,
     mode   => '0755',
@@ -120,6 +119,10 @@ class consul::install(
     checksum_type   => 'sha256',
     extract_command => 'tar xfz %s --strip-components=2',
     extract_path    => $consul::_backinator_dest_dir,
+  }
+  -> exec {"${consul::_dest_dir}/consul-backinator":
+    command => "mv ${consul::_backinator_dest_path}-${consul::backinator_version} ${consul::_backinator_dest_path}",
+    onlyif  => "test -e ${consul::_backinator_dest_path}-${consul::backinator_version}",
   }
   -> file {$consul::_backinator_dest_path:
     ensure => file,
