@@ -106,27 +106,31 @@ class consul::install(
     }
   }
 
-
   file {$consul::_backinator_dest_dir:
     ensure => directory,
     mode   => '0755',
   }
   -> archive {"${consul::_dest_dir}/consul-backinator":
-    ensure        => present,
-    extract       => false,
-    source        => $backinator_download_url,
-    checksum      => $consul::backinator_sha256,
-    checksum_type => 'sha256',
-    cleanup       => false,
-    creates       => "${consul::_backinator_dest_dir}/consul-backinator",
+    ensure          => present,
+    extract         => true,
+    source          => $backinator_download_url,
+    cleanup         => false,
+    checksum        => $consul::backinator_sha256,
+    checksum_type   => 'sha256',
+    extract_command => 'tar xfz %s --strip-components=2',
+    extract_path    => $consul::_backinator_dest_dir,
   }
-  -> file {"${consul::_backinator_dest_dir}/consul-backinator":
+  -> exec {"${consul::_dest_dir}/consul-backinator":
+    command => "mv ${consul::_backinator_dest_path}-${consul::backinator_version} ${consul::_backinator_dest_path}",
+    onlyif  => "test -e ${consul::_backinator_dest_path}-${consul::backinator_version}",
+  }
+  -> file {$consul::_backinator_dest_path:
     ensure => file,
     mode   => '0755',
   }
   -> file {"${consul::link_path}/${consul::app_name}-backinator":
     ensure => link,
-    target => "${consul::_backinator_dest_dir}/consul-backinator",
+    target => $consul::_backinator_dest_path,
   }
 
   file { "${consul::_dest_dir}/consul-detect-existing-datacenter.sh":

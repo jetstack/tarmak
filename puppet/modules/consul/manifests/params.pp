@@ -7,7 +7,7 @@ class consul::params {
   $app_name = 'consul'
   $version = '1.2.4'
   $exporter_version = '0.3.0'
-  $backinator_version = '1.3'
+  $backinator_version = '1.6.5'
   $download_dir = '/tmp'
   $systemd_dir = '/etc/systemd/system'
   $data_dir = '/var/lib/consul'
@@ -19,5 +19,5 @@ class consul::params {
   $exporter_download_url = 'https://github.com/prometheus/consul_exporter/releases/download/v#VERSION#/consul_exporter-#VERSION#.linux-amd64.tar.gz'
   $exporter_signature_url = 'https://releases.tarmak.io/signatures/consul_exporter/#VERSION#/consul_exporter-#VERSION#.linux-amd64.tar.gz.asc'
   $backinator_download_url = 'https://github.com/myENA/consul-backinator/releases/download/v#VERSION#/consul-backinator-#VERSION#-amd64-linux.tar.gz'
-  $backinator_sha256 = '8ea624487a86007825884685dbc978ba87f7a448f11d59b9eb29fd5b1b2a0e87'
+  $backinator_sha256 = 'f48e92560d5d3cb9acf525e72b2bb861794cbd7fed6ebb670108b6c35a07bc77'
 }
