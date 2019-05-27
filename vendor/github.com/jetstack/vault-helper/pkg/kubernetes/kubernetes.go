@@ -2,9 +2,11 @@
 package kubernetes
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 	"unicode"
@@ -62,6 +64,7 @@ type VaultToken interface {
 	CreateOrphan(opts *vault.TokenCreateRequest) (*vault.Secret, error)
 	RevokeOrphan(token string) error
 	Lookup(token string) (*vault.Secret, error)
+	Renew(token string, increment int) (*vault.Secret, error)
 }
 
 type Vault interface {
@@ -220,6 +223,10 @@ func (k *Kubernetes) Ensure() error {
 		return fmt.Errorf("error '%s' is not a valid clusterID", k.clusterID)
 	}
 
+	if err := k.ensureMaxLeaseTTL(); err != nil {
+		return err
+	}
+
 	// setup backends
 	var result *multierror.Error
 	for _, backend := range k.backends() {
@@ -278,6 +285,10 @@ func (k *Kubernetes) EnsureDryRun() (bool, error) {
 
 	if len(k.initTokens) == 0 {
 		k.initTokens = k.NewInitTokens()
+	}
+
+	if d.changeNeeded(k.ensureDryRunMaxLeaseTTL()) {
+		return true, d.ErrorOrNil()
 	}
 
 	for _, b := range k.backends() {
@@ -449,6 +460,77 @@ func (k *Kubernetes) InitTokens() map[string]string {
 		}
 	}
 	return output
+}
+
+func (k *Kubernetes) ensureDryRunMaxLeaseTTL() (bool, error) {
+	s, err := k.vaultClient.Logical().Read("/sys/auth")
+	if err != nil {
+		return true, err
+	}
+
+	token, err := mapFromData("token/", s.Data)
+	if err != nil {
+		return true, fmt.Errorf("failed to get token data at /sys/auth: %s", err)
+	}
+
+	config, err := mapFromData("config", token)
+	if err != nil {
+		return true, fmt.Errorf("failed to get config data at /sys/auth: %s", err)
+	}
+
+	ttl, ok := config["max_lease_ttl"]
+	if !ok {
+		return true, errors.New("failed to get max_lease_ttl from /sys/auth")
+	}
+
+	ttlN, ok := ttl.(json.Number)
+	if !ok {
+		fmt.Println()
+		return true, fmt.Errorf("unexpected max_lease_ttl type: %v", reflect.TypeOf(ttl))
+	}
+
+	ttlF, err := ttlN.Float64()
+	if err != nil {
+		return true, fmt.Errorf("failed to get float64 from json number: %s", err)
+	}
+
+	if ttlF != k.MaxValidityInitTokens.Seconds() {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (k *Kubernetes) ensureMaxLeaseTTL() error {
+	b, err := k.ensureDryRunMaxLeaseTTL()
+	if err != nil || !b {
+		return err
+	}
+
+	k.Log.Infof("Tuning MaxLeaseTTL for mount /auth/token")
+
+	err = k.vaultClient.Sys().TuneMount("/auth/token", vault.MountConfigInput{
+		MaxLeaseTTL: fmt.Sprintf("%0.fs", k.MaxValidityInitTokens.Seconds()),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func mapFromData(key string, data map[string]interface{}) (map[string]interface{}, error) {
+	d, ok := data[key]
+	if !ok {
+		return nil, fmt.Errorf("failed to get %s key in map data", key)
+	}
+
+	dm, ok := d.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("returned key %s not map[string]string", key)
+	}
+
+	return dm, nil
 }
 
 func (k *Kubernetes) SetInitFlags(flags FlagInitTokens) {
