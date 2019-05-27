@@ -72,6 +72,24 @@ describe 'kubernetes::apiserver' do
       ]}
       it { should contain_file(service_file).with_content(/#{Regexp.escape('--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota')}/)}
     end
+
+    context 'default 1.13' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.13.0'}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--enable-admission-plugins=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,PodSecurityPolicy,NodeRestriction')}/)}
+    end
+
+    context 'default 1.14' do
+      let(:pre_condition) {[
+        """
+        class{'kubernetes': version => '1.14.0'}
+        """
+      ]}
+      it { should contain_file(service_file).with_content(/#{Regexp.escape('--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,PodSecurityPolicy,NodeRestriction')}/)}
+    end
   end
 
   context 'storage backend' do
