@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.6.5]: 0.6.5 - 2019-05-27
+
+### Changed
+
+* Upgrade golang to 1.11.10 (#814, [@jetstack-bot](https://github.com/jetstack-bot))
+* Upgrade default Kubernetes version to 1.12.8 (#812, [@jetstack-bot](https://github.com/jetstack-bot))
+
+### Fixed
+
+* Fix consul-backinator installation (#799, [@JoshVanL](https://github.com/JoshVanL))
+* Fix validity of vault init tokens by upgrading vault-helper to 0.9.15 (#803, [@JoshVanL](https://github.com/JoshVanL))
+* Remove Initializers apiserver admission plugin for versions >= 1.14  (#795, [@JoshVanL](https://github.com/JoshVanL))
+* Adds deployment update permissions to metrics-server-nanny container (#791, [@JoshVanL](https://github.com/JoshVanL))
 
 ### Versions
 
