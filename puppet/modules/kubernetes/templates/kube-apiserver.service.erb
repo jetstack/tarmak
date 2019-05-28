@@ -95,10 +95,10 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
 <% if @post_1_12 -%>
  "--service-account-signing-key-file=<%= scope['kubernetes::_service_account_key_file'] %>" \
  "--service-account-issuer=<%= @service_account_issuer %>" \
-<% if !@post_1_13 -%>
-  --service-account-api-audiences=<%= @_service_account_api_audiences.join(',') %> \
-<% else -%>
+<% if @post_1_13 -%>
   --api-audiences=<%= @_service_account_api_audiences.join(',') %> \
+<% else -%>
+  --service-account-api-audiences=<%= @_service_account_api_audiences.join(',') %> \
 <% end -%>
 <% end -%>
 <% end -%>
