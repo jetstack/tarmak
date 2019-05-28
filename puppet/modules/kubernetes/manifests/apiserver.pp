@@ -30,6 +30,7 @@ class kubernetes::apiserver(
   $cert_file = undef,
   $key_file = undef,
   String $service_account_issuer ='kubernetes.default.svc',
+  Optional[Array[String]] $service_account_api_audiences = undef,
   Optional[String] $oidc_client_id = undef,
   Optional[String] $oidc_groups_claim = undef,
   Optional[String] $oidc_groups_prefix = undef,
@@ -72,6 +73,12 @@ class kubernetes::apiserver(
     $_audit_enabled = $post_1_8
   } else {
     $_audit_enabled = $audit_enabled
+  }
+
+  if $service_account_api_audiences == undef {
+    $_service_account_api_audiences = [$service_account_issuer]
+  } else {
+    $_service_account_api_audiences = $service_account_api_audiences
   }
 
   # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
