@@ -29,6 +29,7 @@ class kubernetes::apiserver(
   $ca_file = undef,
   $cert_file = undef,
   $key_file = undef,
+  String $service_account_issuer ='kubernetes.default.svc',
   Optional[String] $oidc_client_id = undef,
   Optional[String] $oidc_groups_claim = undef,
   Optional[String] $oidc_groups_prefix = undef,
@@ -56,6 +57,7 @@ class kubernetes::apiserver(
   $tls_cipher_suites = $::kubernetes::tls_cipher_suites
 
   $post_1_14 = versioncmp($::kubernetes::version, '1.14.0') >= 0
+  $post_1_12 = versioncmp($::kubernetes::version, '1.12.0') >= 0
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
   $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
   $post_1_9 = versioncmp($::kubernetes::version, '1.9.0') >= 0
