@@ -336,7 +336,7 @@ describe 'kubernetes::apiserver' do
         should contain_file(service_file).with_content(/#{Regexp.escape('--service-account-api-audiences=kubernetes.default.svc')}/)
       end
     end
-    context 'with kubernetes 1.12+ with custom audiences' do
+    context 'with kubernetes 1.12+ and less then 1.13+ with custom audiences' do
       let(:pre_condition) {[
         """
             class{'kubernetes': version => '1.12.0', service_account_key_file => '/etc/kubernetes/sa.key'}
@@ -347,6 +347,19 @@ describe 'kubernetes::apiserver' do
         should contain_file(service_file).with_content(/#{Regexp.escape('--service-account-signing-key-file=/etc/kubernetes/sa.key')}/)
         should contain_file(service_file).with_content(/#{Regexp.escape('--service-account-issuer=kubernetes.default.svc')}/)
         should contain_file(service_file).with_content(/#{Regexp.escape('--service-account-api-audiences=kubernetes.default.svc,my.custom.aud.svc')}/)
+      end
+    end
+    context 'with kubernetes 1.13+ with custom audiences' do
+      let(:pre_condition) {[
+        """
+            class{'kubernetes': version => '1.13.0', service_account_key_file => '/etc/kubernetes/sa.key'}
+            class{'kubernetes::apiserver': service_account_api_audiences => ['kubernetes.default.svc', 'my.custom.aud.svc']}
+        """
+      ]}
+      it do
+        should contain_file(service_file).with_content(/#{Regexp.escape('--service-account-signing-key-file=/etc/kubernetes/sa.key')}/)
+        should contain_file(service_file).with_content(/#{Regexp.escape('--service-account-issuer=kubernetes.default.svc')}/)
+        should contain_file(service_file).with_content(/#{Regexp.escape('--api-audiences=kubernetes.default.svc,my.custom.aud.svc')}/)
       end
     end
     context 'with kubernetes before 1.12' do
