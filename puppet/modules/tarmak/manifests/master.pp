@@ -141,6 +141,7 @@ class tarmak::master(
       proxy_client_cert_file       => $proxy_client_cert_file ,
       proxy_client_key_file        => $proxy_client_key_file,
       encryption_config_file       => $encryption_config_file,
+      service_account_issuer       => "https://${::tarmak::kubernetes_api_prefix}.${::tarmak::cluster_name}.${::tarmak::dns_root}",
   }
 
   class { 'kubernetes::controller_manager':

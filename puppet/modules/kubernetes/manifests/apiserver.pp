@@ -29,6 +29,8 @@ class kubernetes::apiserver(
   $ca_file = undef,
   $cert_file = undef,
   $key_file = undef,
+  String $service_account_issuer ='kubernetes.default.svc',
+  Optional[Array[String]] $service_account_api_audiences = undef,
   Optional[String] $oidc_client_id = undef,
   Optional[String] $oidc_groups_claim = undef,
   Optional[String] $oidc_groups_prefix = undef,
@@ -56,6 +58,8 @@ class kubernetes::apiserver(
   $tls_cipher_suites = $::kubernetes::tls_cipher_suites
 
   $post_1_14 = versioncmp($::kubernetes::version, '1.14.0') >= 0
+  $post_1_13 = versioncmp($::kubernetes::version, '1.13.0') >= 0
+  $post_1_12 = versioncmp($::kubernetes::version, '1.12.0') >= 0
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
   $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
   $post_1_9 = versioncmp($::kubernetes::version, '1.9.0') >= 0
@@ -70,6 +74,12 @@ class kubernetes::apiserver(
     $_audit_enabled = $post_1_8
   } else {
     $_audit_enabled = $audit_enabled
+  }
+
+  if $service_account_api_audiences == undef {
+    $_service_account_api_audiences = [$service_account_issuer]
+  } else {
+    $_service_account_api_audiences = $service_account_api_audiences
   }
 
   # Admission controllers cf. https://kubernetes.io/docs/admin/admission-controllers/
