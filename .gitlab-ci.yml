@@ -7,7 +7,7 @@ test::tarmak::golang:
   stage: test
   tags:
   - docker
-  image: golang:1.11.10
+  image: golang:1.11.11
   script:
   - rm -rf /go/src/github.com/jetstack
   - mkdir -p /go/src/github.com/jetstack
@@ -63,7 +63,7 @@ release::tarmak::golang:
   stage: release
   tags:
   - docker
-  image: golang:1.11.10
+  image: golang:1.11.11
   only:
   - tags
   script:

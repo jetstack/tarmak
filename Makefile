@@ -1,7 +1,7 @@
 # Copyright Jetstack Ltd. See LICENSE for details.
 PACKAGE_NAME ?= github.com/jetstack/tarmak
 CONTAINER_DIR := /go/src/$(PACKAGE_NAME)
-GO_VERSION := 1.11.10
+GO_VERSION := 1.11.11
 
 BINDIR ?= $(CURDIR)/bin
 PATH   := $(BINDIR):$(PATH)
