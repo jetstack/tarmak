@@ -7,8 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.6.6]: 0.6.6 - 2019-06-24
 
 ### Changed
+
 * Upgrade golang to 1.11.11 (#823, [@jetstack-bot](https://github.com/jetstack-bot))
 * Upgrade default kubernetes version to 1.12.9 (#821, [@jetstack-bot](https://github.com/jetstack-bot))
+* Rebuilt AMI contains fixes for [MDS](https://access.redhat.com/security/vulnerabilities/mds) and [SACK DoS](https://access.redhat.com/errata/RHSA-2019:1481)
+
+### Versions
+
+| Application | Supported versions  | Default   |
+|-------------|--------------------:|----------:|
+| Packer      |                     | `1.2.5`   |
+| Terraform   |                     | `0.11.11` |
+| Consul      |                     | `1.2.4`   |
+| Vault       |                     | `0.9.6`   |
+| Kubernetes  | `>= 1.10 && < 1.14` | `1.12.9`  |
+| Calico      |                     | `3.1.4`   |
+| Vault Helper|                     | `0.9.15`  |
+| Etcd        |                     | `3.2.25`  |
 
 ## [0.6.5]: 0.6.5 - 2019-05-27
 
@@ -32,7 +47,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Terraform   |                     | `0.11.11` |
 | Consul      |                     | `1.2.4`   |
 | Vault       |                     | `0.9.6`   |
-| Kubernetes  | `>= 1.10 && < 1.14` | `1.12.9`  |
+| Kubernetes  | `>= 1.10 && < 1.14` | `1.12.8`  |
 | Calico      |                     | `3.1.4`   |
 | Vault Helper|                     | `0.9.15`  |
 | Etcd        |                     | `3.2.25`  |
