@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault Helper|                     | `0.9.15`  |
 | Etcd        |                     | `3.2.25`  |
 
+## [0.6.6]: 0.6.6 - 2019-06-24
+
+### Changed
+* Upgrade golang to 1.11.11 (#823, [@jetstack-bot](https://github.com/jetstack-bot))
+* Upgrade default kubernetes version to 1.12.9 (#821, [@jetstack-bot](https://github.com/jetstack-bot))
+
 ## [0.6.5]: 0.6.5 - 2019-05-27
 
 ### Changed
@@ -582,6 +588,8 @@ This detailed changes have happend since the last minor version of Tarmak:
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
+[0.6.6]: https://github.com/jetstack/tarmak/compare/0.6.5...0.6.6
+[0.6.5]: https://github.com/jetstack/tarmak/compare/0.6.4...0.6.5
 [0.6.4]: https://github.com/jetstack/tarmak/compare/0.6.3...0.6.4
 [0.6.3]: https://github.com/jetstack/tarmak/compare/0.6.2...0.6.3
 [0.6.2]: https://github.com/jetstack/tarmak/compare/0.6.1...0.6.2
