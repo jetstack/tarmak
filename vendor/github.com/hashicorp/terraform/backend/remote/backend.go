@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	tfe "github.com/hashicorp/go-tfe"
 	version "github.com/hashicorp/go-version"
@@ -23,13 +24,15 @@ import (
 	tfversion "github.com/hashicorp/terraform/version"
 	"github.com/mitchellh/cli"
 	"github.com/mitchellh/colorstring"
+
+	backendLocal "github.com/hashicorp/terraform/backend/local"
 )
 
 const (
 	defaultHostname    = "app.terraform.io"
 	defaultModuleDepth = -1
 	defaultParallelism = 10
-	tfeServiceID       = "tfe.v2"
+	tfeServiceID       = "tfe.v2.1"
 )
 
 // Remote is an implementation of EnhancedBackend that performs all
@@ -47,6 +50,9 @@ type Remote struct {
 
 	// client is the remote backend API client
 	client *tfe.Client
+
+	// lastRetry is set to the last time a request was retried
+	lastRetry time.Time
 
 	// hostname of the remote backend server
 	hostname string
@@ -66,6 +72,14 @@ type Remote struct {
 
 	// services is used for service discovery
 	services *disco.Disco
+
+	// local, if non-nil, will be used for all enhanced behavior. This
+	// allows local behavior with the remote backend functioning as remote
+	// state storage backend.
+	local backend.Enhanced
+
+	// forceLocal, if true, will force the use of the local backend.
+	forceLocal bool
 
 	// opLock locks operations
 	opLock sync.Mutex
@@ -135,8 +149,16 @@ func (b *Remote) configure(ctx context.Context) error {
 	b.hostname = d.Get("hostname").(string)
 	b.organization = d.Get("organization").(string)
 
+	// The backend schema for the workspaces attribute changed in terraform
+	// 0.12, and causes a panic when encountered by 0.11. While we don't support
+	// downgrading, we do want to protect users from that panic.
+	wsConfig := d.Get("workspaces").(*schema.Set).List()
+	if len(wsConfig) == 0 {
+		return fmt.Errorf("the cached backend configuration is not valid for this version of terraform")
+	}
+
 	// Get and assert the workspaces configuration block.
-	workspace := d.Get("workspaces").(*schema.Set).List()[0].(map[string]interface{})
+	workspace := wsConfig[0].(map[string]interface{})
 
 	// Get the default workspace name and prefix.
 	b.workspace = workspace["name"].(string)
@@ -154,22 +176,19 @@ func (b *Remote) configure(ctx context.Context) error {
 
 	// Discover the service URL for this host to confirm that it provides
 	// a remote backend API and to get the version constraints.
-	service, constraints, discoErr := b.discover()
-	if _, ok := discoErr.(*disco.ErrVersionNotSupported); !ok && discoErr != nil {
-		return discoErr
-	}
+	service, constraints, err := b.discover()
 
-	// Check any retrieved constraints to make sure we are compatible.
-	if constraints == nil {
+	// First check any contraints we might have received.<Paste>
+	if constraints != nil {
 		if err := b.checkConstraints(constraints); err != nil {
 			return err
 		}
 	}
 
-	// When checking version constraints silently failed, we return the
-	// more generic error we received during the service discovery.
-	if discoErr != nil {
-		return discoErr
+	// When we don't have any constraints errors, also check for discovery
+	// errors before we continue.
+	if err != nil {
+		return err
 	}
 
 	// Retrieve the token for this host as configured in the credentials
@@ -191,10 +210,11 @@ func (b *Remote) configure(ctx context.Context) error {
 	}
 
 	cfg := &tfe.Config{
-		Address:  service.String(),
-		BasePath: service.Path,
-		Token:    token,
-		Headers:  make(http.Header),
+		Address:      service.String(),
+		BasePath:     service.Path,
+		Token:        token,
+		Headers:      make(http.Header),
+		RetryLogHook: b.retryLogHook,
 	}
 
 	// Set the version header to the current version.
@@ -205,6 +225,22 @@ func (b *Remote) configure(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	// Check if the organization exists by reading its entitlements.
+	entitlements, err := b.client.Organizations.Entitlements(context.Background(), b.organization)
+	if err != nil {
+		if err == tfe.ErrResourceNotFound {
+			return fmt.Errorf("organization %s does not exist", b.organization)
+		}
+		return fmt.Errorf("failed to read organization entitlements: %v", err)
+	}
+
+	// Configure a local backend for when we need to run operations locally.
+	b.local = backendLocal.NewWithBackend(b)
+	b.forceLocal = !entitlements.Operations || os.Getenv("TF_FORCE_LOCAL_BACKEND") != ""
+
+	// Enable retries for server errors as the backend is now fully configured.
+	b.client.RetryServerErrors(true)
 
 	return nil
 }
@@ -225,11 +261,6 @@ func (b *Remote) discover() (*url.URL, *disco.Constraints, error) {
 	// Return the error, unless its a disco.ErrVersionNotSupported error.
 	if _, ok := err.(*disco.ErrVersionNotSupported); !ok && err != nil {
 		return nil, nil, err
-	}
-
-	// Return early if we are a development build.
-	if tfversion.Prerelease == "dev" {
-		return service, nil, err
 	}
 
 	// We purposefully ignore the error and return the previous error, as
@@ -261,7 +292,7 @@ func (b *Remote) checkConstraints(c *disco.Constraints) error {
 	}
 
 	// Create the version to check.
-	v, err := version.NewVersion(tfversion.String())
+	v, err := version.NewVersion(tfversion.Version)
 	if err != nil {
 		return checkConstraintsWarning(err)
 	}
@@ -282,8 +313,19 @@ func (b *Remote) checkConstraints(c *disco.Constraints) error {
 		return checkConstraintsWarning(err)
 	}
 
-	var action, toVersion string
 	var excludes []*version.Version
+	for _, exclude := range c.Excluding {
+		v, err := version.NewVersion(exclude)
+		if err != nil {
+			return checkConstraintsWarning(err)
+		}
+		excludes = append(excludes, v)
+	}
+
+	// Sort all the excludes.
+	sort.Sort(version.Collection(excludes))
+
+	var action, toVersion string
 	switch {
 	case minimum.GreaterThan(v):
 		action = "upgrade"
@@ -291,18 +333,7 @@ func (b *Remote) checkConstraints(c *disco.Constraints) error {
 	case maximum.LessThan(v):
 		action = "downgrade"
 		toVersion = "<= " + maximum.String()
-	case len(c.Excluding) > 0:
-		for _, exclude := range c.Excluding {
-			v, err := version.NewVersion(exclude)
-			if err != nil {
-				return checkConstraintsWarning(err)
-			}
-			excludes = append(excludes, v)
-		}
-
-		// Sort all the excludes.
-		sort.Sort(version.Collection(excludes))
-
+	case len(excludes) > 0:
 		// Get the latest excluded version.
 		action = "upgrade"
 		toVersion = "> " + excludes[len(excludes)-1].String()
@@ -324,7 +355,7 @@ func (b *Remote) checkConstraints(c *disco.Constraints) error {
 	summary := fmt.Sprintf("Incompatible Terraform version v%s", v.String())
 	details := fmt.Sprintf(
 		"The configured Terraform Enterprise backend is compatible with Terraform\n"+
-			"versions >= %s, < %s%s.", c.Minimum, c.Maximum, excluding,
+			"versions >= %s, <= %s%s.", c.Minimum, c.Maximum, excluding,
 	)
 
 	if action != "" && toVersion != "" {
@@ -354,6 +385,31 @@ func (b *Remote) token() (string, error) {
 	return "", nil
 }
 
+// retryLogHook is invoked each time a request is retried allowing the
+// backend to log any connection issues to prevent data loss.
+func (b *Remote) retryLogHook(attemptNum int, resp *http.Response) {
+	if b.CLI != nil {
+		// Ignore the first retry to make sure any delayed output will
+		// be written to the console before we start logging retries.
+		//
+		// The retry logic in the TFE client will retry both rate limited
+		// requests and server errors, but in the remote backend we only
+		// care about server errors so we ignore rate limit (429) errors.
+		if attemptNum == 0 || resp.StatusCode == 429 {
+			// Reset the last retry time.
+			b.lastRetry = time.Now()
+			return
+		}
+
+		if attemptNum == 1 {
+			b.CLI.Output(b.Colorize().Color(strings.TrimSpace(initialRetryError)))
+		} else {
+			b.CLI.Output(b.Colorize().Color(strings.TrimSpace(
+				fmt.Sprintf(repeatedRetryError, time.Since(b.lastRetry).Round(time.Second)))))
+		}
+	}
+}
+
 // Input is called to ask the user for input for completing the configuration.
 func (b *Remote) Input(ui terraform.UIInput, c *terraform.ResourceConfig) (*terraform.ResourceConfig, error) {
 	return b.schema.Input(ui, c)
@@ -372,38 +428,30 @@ func (b *Remote) Configure(c *terraform.ResourceConfig) error {
 
 // State returns the latest state of the given remote workspace. The workspace
 // will be created if it doesn't exist.
-func (b *Remote) State(workspace string) (state.State, error) {
-	if b.workspace == "" && workspace == backend.DefaultStateName {
+func (b *Remote) State(name string) (state.State, error) {
+	if b.workspace == "" && name == backend.DefaultStateName {
 		return nil, backend.ErrDefaultStateNotSupported
 	}
-	if b.prefix == "" && workspace != backend.DefaultStateName {
+	if b.prefix == "" && name != backend.DefaultStateName {
 		return nil, backend.ErrNamedStatesNotSupported
-	}
-
-	workspaces, err := b.states()
-	if err != nil {
-		return nil, fmt.Errorf("Error retrieving workspaces: %v", err)
-	}
-
-	exists := false
-	for _, name := range workspaces {
-		if workspace == name {
-			exists = true
-			break
-		}
 	}
 
 	// Configure the remote workspace name.
 	switch {
-	case workspace == backend.DefaultStateName:
-		workspace = b.workspace
-	case b.prefix != "" && !strings.HasPrefix(workspace, b.prefix):
-		workspace = b.prefix + workspace
+	case name == backend.DefaultStateName:
+		name = b.workspace
+	case b.prefix != "" && !strings.HasPrefix(name, b.prefix):
+		name = b.prefix + name
 	}
 
-	if !exists {
+	workspace, err := b.client.Workspaces.Read(context.Background(), b.organization, name)
+	if err != nil && err != tfe.ErrResourceNotFound {
+		return nil, fmt.Errorf("Failed to retrieve workspace %s: %v", name, err)
+	}
+
+	if err == tfe.ErrResourceNotFound {
 		options := tfe.WorkspaceCreateOptions{
-			Name: tfe.String(workspace),
+			Name: tfe.String(name),
 		}
 
 		// We only set the Terraform Version for the new workspace if this is
@@ -412,9 +460,9 @@ func (b *Remote) State(workspace string) (state.State, error) {
 			options.TerraformVersion = tfe.String(tfversion.String())
 		}
 
-		_, err = b.client.Workspaces.Create(context.Background(), b.organization, options)
+		workspace, err = b.client.Workspaces.Create(context.Background(), b.organization, options)
 		if err != nil {
-			return nil, fmt.Errorf("Error creating workspace %s: %v", workspace, err)
+			return nil, fmt.Errorf("Error creating workspace %s: %v", name, err)
 		}
 	}
 
@@ -431,35 +479,28 @@ func (b *Remote) State(workspace string) (state.State, error) {
 }
 
 // DeleteState removes the remote workspace if it exists.
-func (b *Remote) DeleteState(workspace string) error {
-	if b.workspace == "" && workspace == backend.DefaultStateName {
+func (b *Remote) DeleteState(name string) error {
+	if b.workspace == "" && name == backend.DefaultStateName {
 		return backend.ErrDefaultStateNotSupported
 	}
-	if b.prefix == "" && workspace != backend.DefaultStateName {
+	if b.prefix == "" && name != backend.DefaultStateName {
 		return backend.ErrNamedStatesNotSupported
 	}
 
 	// Configure the remote workspace name.
 	switch {
-	case workspace == backend.DefaultStateName:
-		workspace = b.workspace
-	case b.prefix != "" && !strings.HasPrefix(workspace, b.prefix):
-		workspace = b.prefix + workspace
-	}
-
-	// Check if the configured organization exists.
-	_, err := b.client.Organizations.Read(context.Background(), b.organization)
-	if err != nil {
-		if err == tfe.ErrResourceNotFound {
-			return fmt.Errorf("organization %s does not exist", b.organization)
-		}
-		return err
+	case name == backend.DefaultStateName:
+		name = b.workspace
+	case b.prefix != "" && !strings.HasPrefix(name, b.prefix):
+		name = b.prefix + name
 	}
 
 	client := &remoteClient{
 		client:       b.client,
 		organization: b.organization,
-		workspace:    workspace,
+		workspace: &tfe.Workspace{
+			Name: name,
+		},
 	}
 
 	return client.Delete()
@@ -474,15 +515,6 @@ func (b *Remote) States() ([]string, error) {
 }
 
 func (b *Remote) states() ([]string, error) {
-	// Check if the configured organization exists.
-	_, err := b.client.Organizations.Read(context.Background(), b.organization)
-	if err != nil {
-		if err == tfe.ErrResourceNotFound {
-			return nil, fmt.Errorf("organization %s does not exist", b.organization)
-		}
-		return nil, err
-	}
-
 	options := tfe.WorkspaceListOptions{}
 	switch {
 	case b.workspace != "":
@@ -528,15 +560,50 @@ func (b *Remote) states() ([]string, error) {
 // Operation implements backend.Enhanced
 func (b *Remote) Operation(ctx context.Context, op *backend.Operation) (*backend.RunningOperation, error) {
 	// Configure the remote workspace name.
+	name := op.Workspace
 	switch {
 	case op.Workspace == backend.DefaultStateName:
-		op.Workspace = b.workspace
+		name = b.workspace
 	case b.prefix != "" && !strings.HasPrefix(op.Workspace, b.prefix):
-		op.Workspace = b.prefix + op.Workspace
+		name = b.prefix + op.Workspace
 	}
 
+	// Retrieve the workspace for this operation.
+	w, err := b.client.Workspaces.Read(ctx, b.organization, name)
+	if err != nil {
+		switch err {
+		case context.Canceled:
+			return nil, err
+		case tfe.ErrResourceNotFound:
+			return nil, fmt.Errorf(
+				"workspace %s not found\n\n"+
+					"The configured \"remote\" backend returns '404 Not Found' errors for resources\n"+
+					"that do not exist, as well as for resources that a user doesn't have access\n"+
+					"to. If the resource does exists, please check the rights for the used token.",
+				name,
+			)
+		default:
+			return nil, fmt.Errorf(
+				"%s\n\n"+
+					"The configured \"remote\" backend encountered an unexpected error. Sometimes\n"+
+					"this is caused by network connection problems, in which case you could retry\n"+
+					"the command. If the issue persists please open a support ticket to get help\n"+
+					"resolving the problem.",
+				err,
+			)
+		}
+	}
+
+	// Check if we need to use the local backend to run the operation.
+	if b.forceLocal || !w.Operations {
+		return b.local.Operation(ctx, op)
+	}
+
+	// Set the remote workspace name.
+	op.Workspace = w.Name
+
 	// Determine the function to call for our operation
-	var f func(context.Context, context.Context, *backend.Operation) (*tfe.Run, error)
+	var f func(context.Context, context.Context, *backend.Operation, *tfe.Workspace) (*tfe.Run, error)
 	switch op.Type {
 	case backend.OperationTypePlan:
 		f = b.opPlan
@@ -575,9 +642,14 @@ func (b *Remote) Operation(ctx context.Context, op *backend.Operation) (*backend
 
 		defer b.opLock.Unlock()
 
-		r, opErr := f(stopCtx, cancelCtx, op)
+		r, opErr := f(stopCtx, cancelCtx, op, w)
 		if opErr != nil && opErr != context.Canceled {
 			runningOp.Err = opErr
+			return
+		}
+
+		if r == nil && opErr == context.Canceled {
+			runningOp.ExitCode = 1
 			return
 		}
 
@@ -596,7 +668,7 @@ func (b *Remote) Operation(ctx context.Context, op *backend.Operation) (*backend
 				runningOp.Err = b.cancel(cancelCtx, op, r)
 			}
 
-			if runningOp.Err == nil && r.Status == tfe.RunErrored {
+			if runningOp.Err == nil && (r.Status == tfe.RunCanceled || r.Status == tfe.RunErrored) {
 				runningOp.ExitCode = 1
 			}
 		}
@@ -607,13 +679,13 @@ func (b *Remote) Operation(ctx context.Context, op *backend.Operation) (*backend
 }
 
 func (b *Remote) cancel(cancelCtx context.Context, op *backend.Operation, r *tfe.Run) error {
-	if r.Status == tfe.RunPending && r.Actions.IsCancelable {
+	if r.Actions.IsCancelable {
 		// Only ask if the remote operation should be canceled
 		// if the auto approve flag is not set.
 		if !op.AutoApprove {
-			v, err := op.UIIn.Input(&terraform.InputOpts{
+			v, err := op.UIIn.Input(cancelCtx, &terraform.InputOpts{
 				Id:          "cancel",
-				Query:       "\nDo you want to cancel the pending remote operation?",
+				Query:       "\nDo you want to cancel the remote operation?",
 				Description: "Only 'yes' will be accepted to cancel.",
 			})
 			if err != nil {
@@ -648,16 +720,18 @@ func (b *Remote) cancel(cancelCtx context.Context, op *backend.Operation, r *tfe
 // Colorize returns the Colorize structure that can be used for colorizing
 // output. This is guaranteed to always return a non-nil value and so useful
 // as a helper to wrap any potentially colored strings.
-// func (b *Remote) Colorize() *colorstring.Colorize {
-// 	if b.CLIColor != nil {
-// 		return b.CLIColor
-// 	}
+//
+// TODO SvH: Rename this back to Colorize as soon as we can pass -no-color.
+func (b *Remote) cliColorize() *colorstring.Colorize {
+	if b.CLIColor != nil {
+		return b.CLIColor
+	}
 
-// 	return &colorstring.Colorize{
-// 		Colors:  colorstring.DefaultColors,
-// 		Disable: true,
-// 	}
-// }
+	return &colorstring.Colorize{
+		Colors:  colorstring.DefaultColors,
+		Disable: true,
+	}
+}
 
 func generalError(msg string, err error) error {
 	if urlErr, ok := err.(*url.Error); ok {
@@ -697,6 +771,17 @@ const notFoundErr = `
 The configured "remote" backend returns '404 Not Found' errors for resources
 that do not exist, as well as for resources that a user doesn't have access
 to. When the resource does exists, please check the rights for the used token.
+`
+
+// The newline in this error is to make it look good in the CLI!
+const initialRetryError = `
+[reset][yellow]There was an error connecting to the remote backend. Please do not exit
+Terraform to prevent data loss! Trying to restore the connection...
+[reset]
+`
+
+const repeatedRetryError = `
+[reset][yellow]Still trying to restore the connection... (%s elapsed)[reset]
 `
 
 const operationCanceled = `

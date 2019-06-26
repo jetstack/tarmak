@@ -31,6 +31,9 @@ type Workspaces interface {
 	// Delete a workspace by its name.
 	Delete(ctx context.Context, organization string, workspace string) error
 
+	// RemoveVCSConnection from a workspace.
+	RemoveVCSConnection(ctx context.Context, organization, workspace string) (*Workspace, error)
+
 	// Lock a workspace by its ID.
 	Lock(ctx context.Context, workspaceID string, options WorkspaceLockOptions) (*Workspace, error)
 
@@ -66,12 +69,15 @@ type Workspace struct {
 	CanQueueDestroyPlan  bool                  `jsonapi:"attr,can-queue-destroy-plan"`
 	CreatedAt            time.Time             `jsonapi:"attr,created-at,iso8601"`
 	Environment          string                `jsonapi:"attr,environment"`
+	FileTriggersEnabled  bool                  `jsonapi:"attr,file-triggers-enabled"`
 	Locked               bool                  `jsonapi:"attr,locked"`
 	MigrationEnvironment string                `jsonapi:"attr,migration-environment"`
 	Name                 string                `jsonapi:"attr,name"`
 	Operations           bool                  `jsonapi:"attr,operations"`
 	Permissions          *WorkspacePermissions `jsonapi:"attr,permissions"`
+	QueueAllRuns         bool                  `jsonapi:"attr,queue-all-runs"`
 	TerraformVersion     string                `jsonapi:"attr,terraform-version"`
+	TriggerPrefixes      []string              `jsonapi:"attr,trigger-prefixes"`
 	VCSRepo              *VCSRepo              `jsonapi:"attr,vcs-repo"`
 	WorkingDirectory     string                `jsonapi:"attr,working-directory"`
 
@@ -97,10 +103,13 @@ type WorkspaceActions struct {
 // WorkspacePermissions represents the workspace permissions.
 type WorkspacePermissions struct {
 	CanDestroy        bool `json:"can-destroy"`
+	CanForceUnlock    bool `json:"can-force-unlock"`
 	CanLock           bool `json:"can-lock"`
+	CanQueueApply     bool `json:"can-queue-apply"`
 	CanQueueDestroy   bool `json:"can-queue-destroy"`
 	CanQueueRun       bool `json:"can-queue-run"`
 	CanReadSettings   bool `json:"can-read-settings"`
+	CanUnlock         bool `json:"can-unlock"`
 	CanUpdate         bool `json:"can-update"`
 	CanUpdateVariable bool `json:"can-update-variable"`
 }
@@ -142,6 +151,12 @@ type WorkspaceCreateOptions struct {
 	// Whether to automatically apply changes when a Terraform plan is successful.
 	AutoApply *bool `jsonapi:"attr,auto-apply,omitempty"`
 
+	// Whether to filter runs based on the changed files in a VCS push. If
+	// enabled, the working directory and trigger prefixes describe a set of
+	// paths which must contain changes for a VCS push to trigger a run. If
+	// disabled, any push will trigger a run.
+	FileTriggersEnabled *bool `jsonapi:"attr,file-triggers-enabled,omitempty"`
+
 	// The legacy TFE environment to use as the source of the migration, in the
 	// form organization/environment. Omit this unless you are migrating a legacy
 	// environment.
@@ -152,9 +167,17 @@ type WorkspaceCreateOptions struct {
 	// organization.
 	Name *string `jsonapi:"attr,name"`
 
+	// Whether to queue all runs. Unless this is set to true, runs triggered by
+	// a webhook will not be queued until at least one run is manually queued.
+	QueueAllRuns *bool `jsonapi:"attr,queue-all-runs,omitempty"`
+
 	// The version of Terraform to use for this workspace. Upon creating a
 	// workspace, the latest version is selected unless otherwise specified.
 	TerraformVersion *string `jsonapi:"attr,terraform-version,omitempty"`
+
+	// List of repository-root-relative paths which list all locations to be
+	// tracked for changes. See FileTriggersEnabled above for more details.
+	TriggerPrefixes []string `jsonapi:"attr,trigger-prefixes,omitempty"`
 
 	// Settings for the workspace's VCS repository. If omitted, the workspace is
 	// created without a VCS repo. If included, you must specify at least the
@@ -254,14 +277,28 @@ type WorkspaceUpdateOptions struct {
 	// API and UI.
 	Name *string `jsonapi:"attr,name,omitempty"`
 
+	// Whether to filter runs based on the changed files in a VCS push. If
+	// enabled, the working directory and trigger prefixes describe a set of
+	// paths which must contain changes for a VCS push to trigger a run. If
+	// disabled, any push will trigger a run.
+	FileTriggersEnabled *bool `jsonapi:"attr,file-triggers-enabled,omitempty"`
+
+	// Whether to queue all runs. Unless this is set to true, runs triggered by
+	// a webhook will not be queued until at least one run is manually queued.
+	QueueAllRuns *bool `jsonapi:"attr,queue-all-runs,omitempty"`
+
 	// The version of Terraform to use for this workspace.
 	TerraformVersion *string `jsonapi:"attr,terraform-version,omitempty"`
+
+	// List of repository-root-relative paths which list all locations to be
+	// tracked for changes. See FileTriggersEnabled above for more details.
+	TriggerPrefixes []string `jsonapi:"attr,trigger-prefixes,omitempty"`
 
 	// To delete a workspace's existing VCS repo, specify null instead of an
 	// object. To modify a workspace's existing VCS repo, include whichever of
 	// the keys below you wish to modify. To add a new VCS repo to a workspace
 	// that didn't previously have one, include at least the oauth-token-id and
-	// identifier keys.  VCSRepo *VCSRepo `jsonapi:"relation,vcs-repo,om-tempty"`
+	// identifier keys.
 	VCSRepo *VCSRepoOptions `jsonapi:"attr,vcs-repo,omitempty"`
 
 	// A relative path that Terraform will execute within. This defaults to the
@@ -322,6 +359,41 @@ func (s *workspaces) Delete(ctx context.Context, organization, workspace string)
 	}
 
 	return s.client.do(ctx, req, nil)
+}
+
+// workspaceRemoveVCSConnectionOptions
+type workspaceRemoveVCSConnectionOptions struct {
+	ID      string          `jsonapi:"primary,workspaces"`
+	VCSRepo *VCSRepoOptions `jsonapi:"attr,vcs-repo"`
+}
+
+// RemoveVCSConnection from a workspace.
+func (s *workspaces) RemoveVCSConnection(ctx context.Context, organization, workspace string) (*Workspace, error) {
+	if !validStringID(&organization) {
+		return nil, errors.New("invalid value for organization")
+	}
+	if !validStringID(&workspace) {
+		return nil, errors.New("invalid value for workspace")
+	}
+
+	u := fmt.Sprintf(
+		"organizations/%s/workspaces/%s",
+		url.QueryEscape(organization),
+		url.QueryEscape(workspace),
+	)
+
+	req, err := s.client.newRequest("PATCH", u, &workspaceRemoveVCSConnectionOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	w := &Workspace{}
+	err = s.client.do(ctx, req, w)
+	if err != nil {
+		return nil, err
+	}
+
+	return w, nil
 }
 
 // WorkspaceLockOptions represents the options for locking a workspace.

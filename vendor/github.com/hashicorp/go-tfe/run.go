@@ -49,12 +49,14 @@ type RunStatus string
 //List all available run statuses.
 const (
 	RunApplied            RunStatus = "applied"
+	RunApplyQueued        RunStatus = "apply_queued"
 	RunApplying           RunStatus = "applying"
 	RunCanceled           RunStatus = "canceled"
 	RunConfirmed          RunStatus = "confirmed"
 	RunDiscarded          RunStatus = "discarded"
 	RunErrored            RunStatus = "errored"
 	RunPending            RunStatus = "pending"
+	RunPlanQueued         RunStatus = "plan_queued"
 	RunPlanned            RunStatus = "planned"
 	RunPlannedAndFinished RunStatus = "planned_and_finished"
 	RunPlanning           RunStatus = "planning"
@@ -122,10 +124,16 @@ type RunPermissions struct {
 
 // RunStatusTimestamps holds the timestamps for individual run statuses.
 type RunStatusTimestamps struct {
-	ErroredAt  time.Time `json:"errored-at"`
-	FinishedAt time.Time `json:"finished-at"`
-	QueuedAt   time.Time `json:"queued-at"`
-	StartedAt  time.Time `json:"started-at"`
+	ErroredAt            time.Time `json:"errored-at"`
+	FinishedAt           time.Time `json:"finished-at"`
+	QueuedAt             time.Time `json:"queued-at"`
+	StartedAt            time.Time `json:"started-at"`
+	ApplyingAt           time.Time `json:"applying-at"`
+	AppliedAt            time.Time `json:"applied-at"`
+	PlanningAt           time.Time `json:"planning-at"`
+	PlannedAt            time.Time `json:"planned-at"`
+	PlannedAndFinishedAt time.Time `json:"planned-and-finished-at"`
+	PlanQueuabledAt      time.Time `json:"plan-queueable-at"`
 }
 
 // RunListOptions represents the options for listing runs.
@@ -268,7 +276,7 @@ func (s *runs) Cancel(ctx context.Context, runID string, options RunCancelOption
 	return s.client.do(ctx, req, nil)
 }
 
-// RunCancelOptions represents the options for force-canceling a run.
+// RunForceCancelOptions represents the options for force-canceling a run.
 type RunForceCancelOptions struct {
 	// An optional comment explaining the reason for the force-cancel.
 	Comment *string `json:"comment,omitempty"`
