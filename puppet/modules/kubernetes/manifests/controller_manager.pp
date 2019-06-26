@@ -17,21 +17,24 @@ class kubernetes::controller_manager(
   $_systemd_after = ['network.target'] + $systemd_after
   $_systemd_before = $systemd_before
 
+  $post_1_15 = versioncmp($::kubernetes::version, '1.15.0') >= 0
+  $post_1_6 = versioncmp($::kubernetes::version, '1.6.0') >= 0
+
   $service_name = 'kube-controller-manager'
+
+  if $post_1_15 {
+    $command_name = 'kube-controller-manager'
+  } else {
+    $command_name = 'controller-manager'
+  }
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-controller-manager"
 
   $authorization_mode = $kubernetes::_authorization_mode
 
-  if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
-    $version_before_1_6 = false
-  } else {
-    $version_before_1_6 = true
-  }
-
   $_feature_gates = $feature_gates
 
-  kubernetes::symlink{'controller-manager':}
+  kubernetes::symlink{$command_name:}
   -> file{$kubeconfig_path:
     ensure  => file,
     mode    => '0640',

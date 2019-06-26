@@ -16,7 +16,15 @@ class kubernetes::scheduler(
   $_systemd_after = ['network.target'] + $systemd_after
   $_systemd_before = $systemd_before
 
+  $post_1_15 = versioncmp($::kubernetes::version, '1.15.0') >= 0
+
   $service_name = 'kube-scheduler'
+
+  if $post_1_15 {
+    $command_name = 'kube-scheduler'
+  } else {
+    $command_name = 'scheduler'
+  }
 
   $kubeconfig_path = "${::kubernetes::config_dir}/kubeconfig-scheduler"
 
@@ -29,7 +37,7 @@ class kubernetes::scheduler(
     $_feature_gates = $feature_gates
   }
 
-  kubernetes::symlink{'scheduler':}
+  kubernetes::symlink{$command_name:}
   -> file{$kubeconfig_path:
     ensure  => file,
     mode    => '0640',

@@ -10,7 +10,7 @@ Group=<%= scope['kubernetes::group'] %>
 <%- if scope['kubernetes::_service_account_key_file'] and scope['kubernetes::service_account_key_generate'] -%>
 ExecStartPre=/bin/sh -c "test -e <%= scope['kubernetes::_service_account_key_file'] %> || { openssl genrsa -out <%= scope['kubernetes::_service_account_key_file'] %> 2048 && chmod 640 <%= scope['kubernetes::_service_account_key_file'] %>; }"
 <% end -%>
-ExecStart=<%= scope['kubernetes::_dest_dir'] %>/controller-manager \
+ExecStart=<%= scope['kubernetes::_dest_dir'] %>/<%= @command_name %> \
   --v=<%= scope['kubernetes::log_level'] %> \
 <% if scope['kubernetes::cloud_provider'] != '' -%>
   --cloud-provider=<%= scope['kubernetes::cloud_provider'] %> \
@@ -29,7 +29,7 @@ ExecStart=<%= scope['kubernetes::_dest_dir'] %>/controller-manager \
 <% if @_feature_gates && @_feature_gates.length > 0 -%>
   --feature-gates=<% g = @_feature_gates.to_a.collect{|k| k.join('=')}.join(',') -%><%= g %> \
 <% end -%>
-<%- if @authorization_mode.include? 'RBAC' and not @version_before_1_6 -%>
+<%- if @authorization_mode.include? 'RBAC' and @post_1_6 -%>
   --use-service-account-credentials \
 <% end -%>
   --leader-elect=true \

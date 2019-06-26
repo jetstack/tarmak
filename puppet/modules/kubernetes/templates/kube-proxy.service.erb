@@ -7,7 +7,7 @@ After=network.target
 [Service]
 ExecStartPre=/sbin/sysctl -w net.bridge.bridge-nf-call-iptables=1
 ExecStartPre=/sbin/sysctl -w net.bridge.bridge-nf-call-ip6tables=1
-ExecStart=<%= scope['kubernetes::_dest_dir'] %>/proxy \
+ExecStart=<%= scope['kubernetes::_dest_dir'] %>/<%= @command_name %> \
   --v=<%= scope['kubernetes::log_level'] %> \
 <% if @post_1_11 -%>
   --config=<%= @config_file  %> \

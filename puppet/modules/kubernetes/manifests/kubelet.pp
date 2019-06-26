@@ -64,6 +64,7 @@ class kubernetes::kubelet(
   $max_user_instances = $::kubernetes::max_user_instances
   $max_user_watches = $::kubernetes::max_user_watches
 
+  $post_1_15 = versioncmp($::kubernetes::version, '1.15.0') >= 0
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
   $post_1_10 = versioncmp($::kubernetes::version, '1.10.0') >= 0
 
