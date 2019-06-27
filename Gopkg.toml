@@ -103,12 +103,12 @@ required = [
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"
-  branch = "v0.11.11-ignore-changes"
-  source = "https://github.com/MattiasGees/terraform.git"
+  branch = "0.11.14-cherrypick-#17856"
+  source = "https://github.com/simonswine/terraform.git"
 
 [[override]]
   name = "github.com/hashicorp/go-tfe"
-  revision = "11c62815d5735b1eb5227b4d683cc354fe411a3f"
+  version = "0.3.14"
 
 [[override]]
   name = "github.com/hashicorp/go-slug"
@@ -134,9 +134,9 @@ required = [
   name = "github.com/terraform-providers/terraform-provider-template"
   version = "1.0.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/terraform-providers/terraform-provider-openstack"
-  version = "1.9.0"
+  version = "1.15.0"
 
 [[override]]
   name = "github.com/Azure/azure-sdk-for-go"
@@ -156,7 +156,7 @@ required = [
 
 [[override]]
   name = "github.com/gophercloud/gophercloud"
-  revision = "3027adb1ce72bc52b87b2decccc7852574b90031"
+  revision = "bc37892e196848d7d56ba0db974ba1d7d5c43b2a"
 
 [[override]]
   name = "github.com/chzyer/readline"

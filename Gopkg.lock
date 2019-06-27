@@ -786,14 +786,19 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:302ddc9856c3d0ec9d8080c37fc57289f63da77d59d00fb12206c82d1d3194a1"
+  digest = "1:9bfc39387480629db1ae6e972abfa5de0aa4ed48fc5914a559b27133326704dd"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
+    "internal",
     "openstack",
     "openstack/blockstorage/extensions/volumeactions",
     "openstack/blockstorage/v1/volumes",
+    "openstack/blockstorage/v2/snapshots",
     "openstack/blockstorage/v2/volumes",
+    "openstack/blockstorage/v3/snapshots",
+    "openstack/blockstorage/v3/volumes",
+    "openstack/compute/v2/extensions/attachinterfaces",
     "openstack/compute/v2/extensions/availabilityzones",
     "openstack/compute/v2/extensions/bootfromvolume",
     "openstack/compute/v2/extensions/floatingips",
@@ -807,23 +812,41 @@
     "openstack/compute/v2/flavors",
     "openstack/compute/v2/images",
     "openstack/compute/v2/servers",
+    "openstack/containerinfra/v1/clusters",
+    "openstack/containerinfra/v1/clustertemplates",
+    "openstack/db/v1/configurations",
+    "openstack/db/v1/databases",
+    "openstack/db/v1/datastores",
+    "openstack/db/v1/instances",
+    "openstack/db/v1/users",
     "openstack/dns/v2/recordsets",
     "openstack/dns/v2/zones",
     "openstack/identity/v2/tenants",
     "openstack/identity/v2/tokens",
+    "openstack/identity/v3/endpoints",
+    "openstack/identity/v3/groups",
+    "openstack/identity/v3/projects",
+    "openstack/identity/v3/roles",
+    "openstack/identity/v3/services",
     "openstack/identity/v3/tokens",
+    "openstack/identity/v3/users",
     "openstack/imageservice/v2/imagedata",
     "openstack/imageservice/v2/images",
+    "openstack/networking/v2/extensions/attributestags",
+    "openstack/networking/v2/extensions/external",
+    "openstack/networking/v2/extensions/extradhcpopts",
     "openstack/networking/v2/extensions/fwaas/firewalls",
     "openstack/networking/v2/extensions/fwaas/policies",
     "openstack/networking/v2/extensions/fwaas/routerinsertion",
     "openstack/networking/v2/extensions/fwaas/rules",
+    "openstack/networking/v2/extensions/layer3/addressscopes",
     "openstack/networking/v2/extensions/layer3/floatingips",
     "openstack/networking/v2/extensions/layer3/routers",
     "openstack/networking/v2/extensions/lbaas/members",
     "openstack/networking/v2/extensions/lbaas/monitors",
     "openstack/networking/v2/extensions/lbaas/pools",
     "openstack/networking/v2/extensions/lbaas/vips",
+    "openstack/networking/v2/extensions/lbaas_v2/l7policies",
     "openstack/networking/v2/extensions/lbaas_v2/listeners",
     "openstack/networking/v2/extensions/lbaas_v2/loadbalancers",
     "openstack/networking/v2/extensions/lbaas_v2/monitors",
@@ -831,6 +854,14 @@
     "openstack/networking/v2/extensions/provider",
     "openstack/networking/v2/extensions/security/groups",
     "openstack/networking/v2/extensions/security/rules",
+    "openstack/networking/v2/extensions/subnetpools",
+    "openstack/networking/v2/extensions/trunks",
+    "openstack/networking/v2/extensions/vlantransparent",
+    "openstack/networking/v2/extensions/vpnaas/endpointgroups",
+    "openstack/networking/v2/extensions/vpnaas/ikepolicies",
+    "openstack/networking/v2/extensions/vpnaas/ipsecpolicies",
+    "openstack/networking/v2/extensions/vpnaas/services",
+    "openstack/networking/v2/extensions/vpnaas/siteconnections",
     "openstack/networking/v2/networks",
     "openstack/networking/v2/ports",
     "openstack/networking/v2/subnets",
@@ -838,11 +869,25 @@
     "openstack/objectstorage/v1/containers",
     "openstack/objectstorage/v1/objects",
     "openstack/objectstorage/v1/swauth",
+    "openstack/sharedfilesystems/v2/errors",
+    "openstack/sharedfilesystems/v2/messages",
+    "openstack/sharedfilesystems/v2/securityservices",
+    "openstack/sharedfilesystems/v2/sharenetworks",
+    "openstack/sharedfilesystems/v2/shares",
+    "openstack/sharedfilesystems/v2/snapshots",
     "openstack/utils",
     "pagination",
   ]
   pruneopts = "NUT"
-  revision = "3027adb1ce72bc52b87b2decccc7852574b90031"
+  revision = "bc37892e196848d7d56ba0db974ba1d7d5c43b2a"
+
+[[projects]]
+  branch = "master"
+  digest = "1:4a14c92687d36a3875744de509bae52334a00ba487eb285b8a57645ec46acc7e"
+  name = "github.com/gophercloud/utils"
+  packages = ["openstack/clientconfig"]
+  pruneopts = "NUT"
+  revision = "25f1b77b8c0367b43939dbb20f5dd12e3c9b0053"
 
 [[projects]]
   branch = "master"
@@ -873,6 +918,14 @@
   ]
   pruneopts = "NUT"
   revision = "8261ea0801056858f57a58ee6ce37b9365a78ce9"
+
+[[projects]]
+  digest = "1:df21c2ff4fa960870ca75c87a68810a6f02b245b4de81528fd02ce99d1b35953"
+  name = "github.com/hashicorp/aws-sdk-go-base"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "51281492b48141180c0d50b814d73b7d438872db"
+  version = "v0.3.0"
 
 [[projects]]
   digest = "1:58622dbf6fac92cb7bddfed5cb82a138815e22495912fc1ba6fa65d4fbaaba9a"
@@ -972,11 +1025,12 @@
   revision = "98c6f0ec89d1cf8f4e487810d666ce3c0b6d4b44"
 
 [[projects]]
-  digest = "1:9fecc8f4ae909c4eb6e9b59228cb10b9225bf7e31316d735a146d4b2f3cbbb2b"
+  digest = "1:1bb2e9ff5065d3dd2e199f7d72d3ee7684f50da5bde4edf617e4ed61fa320046"
   name = "github.com/hashicorp/go-tfe"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "11c62815d5735b1eb5227b4d683cc354fe411a3f"
+  revision = "48570a05a874feeb16197f86d4b1ee37faf5711e"
+  version = "v0.3.18"
 
 [[projects]]
   branch = "master"
@@ -1100,8 +1154,8 @@
   version = "v0.8.1"
 
 [[projects]]
-  branch = "v0.11.11-ignore-changes"
-  digest = "1:09c588fe9ac04c77e1ae7e45c00802a404537b8070c1fdcdbd3e4e5663fd160e"
+  branch = "0.11.14-cherrypick-#17856"
+  digest = "1:d87bf8ae1110f1f4175f55c95b0b8b18fad8793d8d84bd8896836db5b8bc7f94"
   name = "github.com/hashicorp/terraform"
   packages = [
     "backend",
@@ -1174,8 +1228,8 @@
     "version",
   ]
   pruneopts = "NUT"
-  revision = "446d2678e53ab1057022e0fd321e42e5dc59cbd5"
-  source = "https://github.com/MattiasGees/terraform.git"
+  revision = "728993ae5afd45c3e42eb473e5a401058bfaba2e"
+  source = "https://github.com/simonswine/terraform.git"
 
 [[projects]]
   digest = "1:88a0935f8819740dd6f50f25c5eea6d98fb79186d4b6b773a7f2ff46dfb6b644"
@@ -1821,12 +1875,12 @@
   version = "v1.47.0"
 
 [[projects]]
-  digest = "1:e9233f43efbc563025a92aa3b26266d4670ca579b2f5a14e37c8c50badd79d98"
+  digest = "1:e1c03b9be47df81a131b46c7c9879acecadf4590a5efe3f70c7e959183e94aec"
   name = "github.com/terraform-providers/terraform-provider-openstack"
   packages = ["openstack"]
   pruneopts = "NUT"
-  revision = "808e7d1f5280fdc59733443c5605e11d9cbd8357"
-  version = "v0.1.0"
+  revision = "c3ed4eb64be2b0e31f560a3118e72deafd750e1b"
+  version = "v1.16.0"
 
 [[projects]]
   digest = "1:31a7f8bae17ec284242aa6c319a5119619342ec8ecc7984214d04b4efb4860c4"
