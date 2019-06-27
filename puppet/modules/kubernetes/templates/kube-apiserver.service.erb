@@ -10,7 +10,7 @@ Group=<%= scope['kubernetes::group'] %>
 <%- if scope['kubernetes::_service_account_key_file'] and scope['kubernetes::service_account_key_generate'] -%>
 ExecStartPre=/bin/sh -c "test -e <%= scope['kubernetes::_service_account_key_file'] %> || { openssl genrsa -out <%= scope['kubernetes::_service_account_key_file'] %> 2048 && chmod 640 <%= scope['kubernetes::_service_account_key_file'] %>; }"
 <% end -%>
-ExecStart=<%= scope['kubernetes::_dest_dir'] %>/apiserver \
+ExecStart=<%= scope['kubernetes::_dest_dir'] %>/<%= @command_name %> \
   --v=<%= scope['kubernetes::log_level'] %> \
 <% if @allow_privileged -%>
   --allow-privileged=true \

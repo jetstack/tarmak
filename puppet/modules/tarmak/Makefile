@@ -1,5 +1,6 @@
 BUNDLE_DIR ?= .bundle
 
+VERSION_1_15 := 1.15.0
 VERSION_1_14 := 1.14.3
 VERSION_1_13 := 1.13.7
 VERSION_1_12 := 1.12.9
@@ -60,6 +61,10 @@ acceptance-1-14-centos: export KUBERNETES_VERSION = $(VERSION_1_14)
 acceptance-1-14-centos: bundle_install
 	bundle exec rake beaker:default
 
+acceptance-1-15-centos: export KUBERNETES_VERSION = $(VERSION_1_15)
+acceptance-1-15-centos: bundle_install
+	bundle exec rake beaker:default
+
 acceptance-1-7-ubuntu: export KUBERNETES_VERSION = $(VERSION_1_7)
 acceptance-1-7-ubuntu: bundle_install
 	bundle exec rake beaker:ubuntu_1604_single_node
@@ -90,4 +95,8 @@ acceptance-1-13-ubuntu: bundle_install
 
 acceptance-1-14-ubuntu: export KUBERNETES_VERSION = $(VERSION_1_14)
 acceptance-1-14-ubuntu: bundle_install
+	bundle exec rake beaker:ubuntu_1604_single_node
+
+acceptance-1-15-ubuntu: export KUBERNETES_VERSION = $(VERSION_1_15)
+acceptance-1-15-ubuntu: bundle_install
 	bundle exec rake beaker:ubuntu_1604_single_node

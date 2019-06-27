@@ -29,7 +29,14 @@ class kubernetes::proxy(
     $_feature_gates = $feature_gates
   }
 
+  $post_1_15 = versioncmp($::kubernetes::version, '1.15.0') >= 0
   $post_1_11 = versioncmp($::kubernetes::version, '1.11.0') >= 0
+
+  if $post_1_15 {
+    $command_name = 'kube-proxy'
+  } else {
+    $command_name = 'proxy'
+  }
 
   # ensure ipvsadm and contrack installed (for kube-proxy)
   $conntrack_package_name = 'conntrack'
@@ -58,7 +65,7 @@ class kubernetes::proxy(
     }
   }
 
-  kubernetes::symlink{'proxy':}
+  kubernetes::symlink{$command_name:}
   -> file{"${::kubernetes::systemd_dir}/${service_name}.service":
     ensure  => file,
     mode    => '0644',

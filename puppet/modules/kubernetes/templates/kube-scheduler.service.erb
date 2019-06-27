@@ -7,7 +7,7 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 Slice=podruntime.slice
 User=<%= scope['kubernetes::user'] %>
 Group=<%= scope['kubernetes::group'] %>
-ExecStart=<%= scope['kubernetes::_dest_dir'] %>/scheduler \
+ExecStart=<%= scope['kubernetes::_dest_dir'] %>/<%= @command_name %> \
   --v=<%= scope['kubernetes::log_level'] %> \
   --kubeconfig=<%= @kubeconfig_path %> \
   --leader-elect=true \
