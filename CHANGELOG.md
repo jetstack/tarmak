@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Kubernetes  | `>= 1.10 && < 1.14` | `1.12.9`  |
 | Calico      |                     | `3.1.4`   |
 | Vault Helper|                     | `0.9.15`  |
-| Etcd        |                     | `3.2.25`  |
+| Etcd        |                     | `3.2.26`  |
 
 ## [0.6.6]: 0.6.6 - 2019-06-24
 

@@ -20,8 +20,8 @@ write_files:
     After=network.target
 
     [Service]
-    Environment=ETCD_VERSION=3.2.25
-    Environment=ETCD_HASH=8a509ffb1443088d501f19e339a0d9c0058ce20599752c3baef83c1c68790ef7
+    Environment=ETCD_VERSION=3.2.26
+    Environment=ETCD_HASH=127d4f2097c09d929beb9d3784590cc11102f4b4d4d4da7ad82d5c9e856afd38
     Environment=ETCD_DATA_DIR=/var/lib/etcd
     PermissionsStartOnly=true
     Restart=on-failure

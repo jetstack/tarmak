@@ -6,11 +6,13 @@ verify: bundle_install
 bundle_install:
 	bundle install --path $(BUNDLE_DIR)
 
-acceptance: bundle_install
+acceptance-single-node: bundle_install
 	bundle exec rake beaker:default
-
-# provide backwards compatiblity
-acceptance_three_node: acceptance-three-node
 
 acceptance-three-node: bundle_install
 	bundle exec rake beaker:3n-cluster
+
+# provide backwards compatiblity
+acceptance: acceptance-single-node
+acceptance_three_node: acceptance-three-node
+
