@@ -152,8 +152,10 @@ type ClusterKubernetesAPIServer struct {
 	// OIDC
 	OIDC *ClusterKubernetesAPIServerOIDC `json:"oidc,omitempty"`
 
-	// AWS specifc options
+	// AWS specific options
 	Amazon *ClusterKubernetesAPIServerAmazon `json:"amazon,omitempty"`
+
+	AuthTokenWebhookFile string `json:"authTokenWebhookFile,omitempty"`
 
 	FeatureGates map[string]bool `json:"featureGates,omitempty"`
 }
@@ -194,8 +196,9 @@ type ClusterKubernetesAPIServerOIDC struct {
 }
 
 type ClusterKubernetesAPIServerAmazon struct {
-	PublicELBAccessLogs   *ClusterKubernetesAPIServerAmazonAccessLogs `json:"publicELBAccessLogs,omitempty"`
-	InternalELBAccessLogs *ClusterKubernetesAPIServerAmazonAccessLogs `json:"internalELBAccessLogs,omitempty"`
+	PublicELBAccessLogs     *ClusterKubernetesAPIServerAmazonAccessLogs `json:"publicELBAccessLogs,omitempty"`
+	InternalELBAccessLogs   *ClusterKubernetesAPIServerAmazonAccessLogs `json:"internalELBAccessLogs,omitempty"`
+	AwsIAMAuthenticatorInit bool                                        `json:"awsIAMAuthenticatorInit,omitempty"`
 }
 
 type ClusterKubernetesAPIServerAmazonAccessLogs struct {

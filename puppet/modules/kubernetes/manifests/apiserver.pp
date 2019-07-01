@@ -2,6 +2,8 @@
 class kubernetes::apiserver(
   $allow_privileged = true,
   Optional[Boolean] $audit_enabled = undef,
+  Optional[Boolean] $aws_iam_authenticator_init = false,
+  String $aws_iam_authenticator_image = 'gcr.io/heptio-images/authenticator@sha256:8699a69cbd7274810a63cfb67b7053166897831c734011c62ce0aee32d66b3b8',
   String $audit_log_directory = '/var/log/kubernetes',
   Integer $audit_log_maxbackup = 1,
   Integer $audit_log_maxsize = 100,
@@ -38,6 +40,7 @@ class kubernetes::apiserver(
   Array[String] $oidc_signing_algs = [],
   Optional[String] $oidc_username_claim = undef,
   Optional[String] $oidc_username_prefix = undef,
+  Optional[String] $auth_token_webhook_file = undef,
   $systemd_wants = [],
   $systemd_requires = [],
   $systemd_after = [],
@@ -50,8 +53,27 @@ class kubernetes::apiserver(
   require ::kubernetes
 
   $_systemd_wants = $systemd_wants
-  $_systemd_requires = $systemd_requires
-  $_systemd_after = ['network.target'] + $systemd_after
+  if $aws_iam_authenticator_init {
+    $_systemd_after = ['aws-iam-authenticator-init.service'] + ['network.target'] + $systemd_after
+    $_systemd_requires = ['aws-iam-authenticator-init.service'] + $systemd_requires
+    if $auth_token_webhook_file == undef {
+      $_auth_token_webhook_file = '/etc/kubernetes/aws-iam-authenticator/kubeconfig.yaml'
+    } else {
+      $_auth_token_webhook_file = $auth_token_webhook_file
+    }
+    class{'kubernetes::aws_iam_authenticator_init':
+      auth_token_webhook_file => $_auth_token_webhook_file,
+    }
+  } else {
+    $_systemd_after = ['network.target'] + $systemd_after
+    $_systemd_requires = $systemd_requires
+    $_auth_token_webhook_file = $auth_token_webhook_file
+    class{'kubernetes::aws_iam_authenticator_init':
+      file_ensure             => 'absent',
+      service_enable          => false,
+      auth_token_webhook_file => '',
+    }
+  }
   $_systemd_before = $systemd_before
 
   $tls_min_version = $::kubernetes::tls_min_version
