@@ -47,7 +47,7 @@ class{'vault_client':
           on(host, 'systemctl daemon-reload')
         elsif fact_on(host, 'osfamily') == 'Debian'
           on(host, 'apt-get install -y unzip apt-transport-https ca-certificates curl python-software-properties')
-          on(host, 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D')
+          on(host, 'apt-key add /etc/puppetlabs/code/modules/tarmak/spec/files/ubuntu-16-04-docker.gpg')
           on(host, 'echo "deb https://apt.dockerproject.org/repo debian-jessie main" > /etc/apt/sources.list.d/docker.list')
           on(host, 'apt-get update')
           on(host, 'apt-get -y install docker-engine')
