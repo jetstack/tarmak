@@ -19,6 +19,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 | Vault Helper|                     | `0.9.15`  |
 | Etcd        |                     | `3.2.26`  |
 
+## [0.6.7]: 0.6.7 - 2019-08-05
+
+### Changed
+
+* Mark Vault certificates for renewal 30 days before expiry (#828, [@joshvanl](https://github.com/joshvanl)
+
+### Versions
+
+| Application | Supported versions  | Default   |
+|-------------|--------------------:|----------:|
+| Packer      |                     | `1.2.5`   |
+| Terraform   |                     | `0.11.11` |
+| Consul      |                     | `1.2.4`   |
+| Vault       |                     | `0.9.6`   |
+| Kubernetes  | `>= 1.10 && < 1.14` | `1.12.9`  |
+| Calico      |                     | `3.1.4`   |
+| Vault Helper|                     | `0.9.15`  |
+| Etcd        |                     | `3.2.25`  |
+
 ## [0.6.6]: 0.6.6 - 2019-06-24
 
 ### Changed
@@ -603,6 +622,7 @@ This detailed changes have happend since the last minor version of Tarmak:
 | Vault       |                    | `0.7.3`  |
 | Kubernetes  | `>= 1.5 && < 1.8`  | `1.7.7`  |
 
+[0.6.6]: https://github.com/jetstack/tarmak/compare/0.6.6...0.6.7
 [0.6.6]: https://github.com/jetstack/tarmak/compare/0.6.5...0.6.6
 [0.6.5]: https://github.com/jetstack/tarmak/compare/0.6.4...0.6.5
 [0.6.4]: https://github.com/jetstack/tarmak/compare/0.6.3...0.6.4
