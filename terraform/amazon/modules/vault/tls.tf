@@ -65,6 +65,9 @@ resource "tls_locally_signed_cert" "vault" {
   # 1 year
   validity_period_hours = 8766
 
+  # mark the certificate for renewal 30 days before expiry
+  early_renewal_hours = 720
+
   allowed_uses = [
     "key_encipherment",
     "digital_signature",
