@@ -142,3 +142,8 @@ webhook
 Webhook
 wrt
 yaml
+gid
+Alertmanager
+Adapter
+autoscale
+ServiceMonitors
